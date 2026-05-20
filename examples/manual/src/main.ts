@@ -28,6 +28,7 @@ const debugOutcomes = document.querySelector<HTMLPreElement>("#debug-outcomes");
 const debugTemplateValues = document.querySelector<HTMLPreElement>("#debug-template-values");
 const debugCatalogs = document.querySelector<HTMLPreElement>("#debug-catalogs");
 const debugStylesheets = document.querySelector<HTMLPreElement>("#debug-stylesheets");
+const debugPackage = document.querySelector<HTMLPreElement>("#debug-package");
 const debugValidation = document.querySelector<HTMLPreElement>("#debug-validation");
 const debugDiagnostics = document.querySelector<HTMLPreElement>("#debug-diagnostics");
 const debugState = document.querySelector<HTMLPreElement>("#debug-state");
@@ -62,6 +63,7 @@ if (
   !debugTemplateValues ||
   !debugCatalogs ||
   !debugStylesheets ||
+  !debugPackage ||
   !debugValidation ||
   !debugDiagnostics ||
   !debugState ||
@@ -85,13 +87,26 @@ interface ZipEntry {
   bytes: Uint8Array;
 }
 
+interface PackageDebugState {
+  status: "none" | "loaded" | "empty" | "error";
+  message: string;
+  xmlFiles: string[];
+  assetFiles: string[];
+  loadableItems: string[];
+  selectedItem?: string;
+  selectedIndex?: number;
+  errors?: string[];
+}
+
 let loadedFiles: LoadedFile[] = [];
 let selectedFileIndex = -1;
 let assetUrls = new Map<string, string>();
+let packageAssetPaths: string[] = [];
 let latestDiagnostics: unknown[] = [];
 let latestValidationMessages: unknown[] = [];
 let latestCatalogs: unknown[] = [];
 let latestStylesheets: unknown[] = [];
+let latestPackage: PackageDebugState = emptyPackageDebugState();
 let currentInteractionTypes: string[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
@@ -256,6 +271,7 @@ function renderDebugPanels(): void {
   debugTemplateValues.textContent = stableJson(state?.templateValues ?? {});
   debugCatalogs.textContent = stableJson(latestCatalogs);
   debugStylesheets.textContent = stableJson(latestStylesheets);
+  debugPackage.textContent = stableJson(latestPackage);
   debugValidation.textContent = stableJson(latestValidationMessages);
   debugDiagnostics.textContent = stableJson(latestDiagnostics);
   debugState.textContent = stableJson(state ?? {});
@@ -272,6 +288,16 @@ function appendActionLog(action: string, detail: unknown): void {
     detail: actionLogDetail(detail),
   });
   actionLog.splice(25);
+}
+
+function emptyPackageDebugState(): PackageDebugState {
+  return {
+    status: "none",
+    message: "No QTI package loaded.",
+    xmlFiles: [],
+    assetFiles: [],
+    loadableItems: [],
+  };
 }
 
 function actionLogDetail(detail: unknown): unknown {
@@ -463,12 +489,26 @@ async function loadSelectedLocalFile(): Promise<void> {
   const file = loadedFiles[selectedFileIndex];
   if (!file) {
     showPackageStatus("No QTI package loaded. Upload a ZIP package.");
+    latestPackage =
+      latestPackage.status === "none"
+        ? emptyPackageDebugState()
+        : {
+            ...latestPackage,
+            selectedItem: undefined,
+            selectedIndex: undefined,
+          };
+    renderDebugPanels();
     return;
   }
 
   localFiles.value = String(selectedFileIndex);
   xmlInput.value = file.xml;
   fileSummary.textContent = `${selectedFileIndex + 1} of ${loadedFiles.length}: ${file.name}`;
+  latestPackage = {
+    ...latestPackage,
+    selectedItem: file.name,
+    selectedIndex: selectedFileIndex,
+  };
   previousFile.disabled = selectedFileIndex <= 0;
   nextFile.disabled = selectedFileIndex >= loadedFiles.length - 1;
   await player.loadXml(file.xml, {
@@ -484,13 +524,35 @@ async function loadLocalFiles(fileList: FileList | null): Promise<void> {
     files = await readPackageXmlFiles(fileList);
     loadableItems = resolveLoadableItems(files);
   } catch (error) {
+    const message = errorMessage(error);
     loadedFiles = [];
     localFiles.replaceChildren();
     selectedFileIndex = -1;
-    showPackageStatus(`Unable to read QTI package: ${errorMessage(error)}`);
+    latestPackage = {
+      status: "error",
+      message: `Unable to read QTI package: ${message}`,
+      xmlFiles: [],
+      assetFiles: [],
+      loadableItems: [],
+      errors: [message],
+    };
+    showPackageStatus(latestPackage.message);
+    appendActionLog("package-error", latestPackage);
+    renderDebugPanels();
     return;
   }
   loadedFiles = loadableItems;
+  latestPackage = {
+    status: loadedFiles.length > 0 ? "loaded" : "empty",
+    message:
+      loadedFiles.length > 0
+        ? `Loaded ${loadedFiles.length} QTI item${loadedFiles.length === 1 ? "" : "s"}.`
+        : "No loadable QTI item files were found in the package.",
+    xmlFiles: files.map((file) => file.source),
+    assetFiles: packageAssetPaths,
+    loadableItems: loadedFiles.map((file) => file.source),
+  };
+  appendActionLog("package-load", latestPackage);
   localFiles.replaceChildren(
     ...loadedFiles.map((file, index) => {
       const option = document.createElement("option");
@@ -511,12 +573,17 @@ function showPackageStatus(message: string): void {
 
 async function readPackageXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
   const [file] = [...(fileList ?? [])];
+  packageAssetPaths = [];
   if (!file || !file.name.toLowerCase().endsWith(".zip")) return [];
   return (await readZipXmlFiles(file)).sort((left, right) => left.name.localeCompare(right.name));
 }
 
 async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
   const entries = await readZipEntries(await file.arrayBuffer());
+  packageAssetPaths = entries
+    .filter((entry) => !entry.name.endsWith(".xml"))
+    .map((entry) => entry.name)
+    .sort((left, right) => left.localeCompare(right));
   for (const entry of entries) {
     if (entry.name.endsWith(".xml")) continue;
     assetUrls.set(

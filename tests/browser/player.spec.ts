@@ -589,9 +589,18 @@ test.describe("manual harness", () => {
 
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
     await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await expect(page.locator("#debug-package")).toContainText('"status": "loaded"');
+    await expect(page.locator("#debug-package")).toContainText('"items/choice.xml"');
+    await expect(page.locator("#debug-package")).toContainText(
+      '"selectedItem": "items/choice.xml"',
+    );
+    await expect(page.locator("#debug-action-log")).toContainText("package-load");
     await page.locator("#next-file").click();
     await expect(page.locator("#file-summary")).toContainText("2 of 2");
     await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
+    await expect(page.locator("#debug-package")).toContainText(
+      '"selectedItem": "items/text-entry.xml"',
+    );
     await page.locator("#previous-file").click();
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
   });
@@ -683,6 +692,9 @@ test.describe("manual harness", () => {
 
     await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
     await expect(page.locator("#file-summary")).toContainText("No ZIP central directory");
+    await expect(page.locator("#debug-package")).toContainText('"status": "error"');
+    await expect(page.locator("#debug-package")).toContainText("No ZIP central directory");
+    await expect(page.locator("#debug-action-log")).toContainText("package-error");
   });
 
   test("rejects package zip entries that escape the package root", async ({ page }) => {
