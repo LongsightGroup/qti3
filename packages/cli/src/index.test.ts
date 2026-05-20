@@ -370,6 +370,40 @@ describe("@qti3/cli", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("reports package item references that do not exist", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-missing-ref-"));
+    const file = join(directory, "package.zip");
+
+    try {
+      await writeFile(
+        file,
+        createStoredZip({
+          "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/missing.xml"/>
+  </resources>
+</manifest>`,
+        }),
+      );
+
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await expect(main(["inspect-package", file])).resolves.toBe(1);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      log.mockRestore();
+
+      expect(report).toMatchObject({
+        checked: 0,
+        failed: 1,
+        discoveredReferences: ["items/missing.xml"],
+        packageErrors: ["package reference items/missing.xml was not found."],
+      });
+    } finally {
+      vi.restoreAllMocks();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 function createStoredZip(entries: Record<string, string | Uint8Array>): Buffer {

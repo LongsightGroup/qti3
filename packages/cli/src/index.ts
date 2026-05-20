@@ -325,6 +325,9 @@ async function inspectPackage(file: string): Promise<{
   const byPath = new Map(xmlFiles.map((entry) => [entry.path, entry]));
   const itemSources = new Map<string, "assessment-test" | "manifest" | "direct">();
   const discoveredReferences: string[] = [];
+  const packageErrors = xmlFiles.flatMap((xmlFile) => {
+    return xmlFile.errors.map((error) => `${xmlFile.path}: ${error}`);
+  });
 
   for (const xmlFile of xmlFiles) {
     const rootName = xmlFile.root?.localName;
@@ -338,6 +341,8 @@ async function inspectPackage(file: string): Promise<{
       discoveredReferences.push(ref);
       if (byPath.has(ref) && !itemSources.has(ref)) {
         itemSources.set(ref, rootName === "manifest" ? "manifest" : "assessment-test");
+      } else if (!byPath.has(ref)) {
+        packageErrors.push(`package reference ${ref} was not found.`);
       }
     }
     if (rootName === "qti-assessment-item" && !itemSources.has(xmlFile.path)) {
@@ -361,8 +366,8 @@ async function inspectPackage(file: string): Promise<{
   return {
     file,
     checked: results.length,
-    failed: results.filter((result) => !result.ok).length,
-    packageErrors: [],
+    failed: results.filter((result) => !result.ok).length + packageErrors.length,
+    packageErrors,
     xmlFiles: xmlFiles.map((entry) => entry.path),
     assetFiles: entries
       .filter((entry) => !entry.name.toLowerCase().endsWith(".xml"))
