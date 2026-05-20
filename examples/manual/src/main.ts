@@ -669,7 +669,11 @@ function resolveLoadableItems(files: LoadedFile[]): LoadedFile[] {
           ? manifestItemResources(file.xml, file.source)
           : [];
     for (const ref of refs) {
-      if (byPath.has(ref) && !packageOrder.includes(ref)) packageOrder.push(ref);
+      if (byPath.has(ref) && !packageOrder.includes(ref)) {
+        packageOrder.push(ref);
+      } else if (!byPath.has(ref)) {
+        throw new Error(`Package item reference ${ref} was not found.`);
+      }
     }
   }
 
