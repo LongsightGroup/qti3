@@ -1349,12 +1349,18 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   if (node.localName === "qti-match") {
     const variable = childElements(node, "qti-variable")[0];
     const correct = childElements(node, "qti-correct")[0];
-    return {
-      type: "matchCorrect",
-      identifier: variable?.attributes.identifier ?? "",
-      correctIdentifier: correct?.attributes.identifier ?? "",
-      source: node.source,
-    };
+    if (variable && correct) {
+      return {
+        type: "matchCorrect",
+        identifier: variable?.attributes.identifier ?? "",
+        correctIdentifier: correct?.attributes.identifier ?? "",
+        source: node.source,
+      };
+    }
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (left && right) return { type: "match", left, right, source: node.source };
   }
 
   return undefined;

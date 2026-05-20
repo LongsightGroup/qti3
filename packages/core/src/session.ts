@@ -763,6 +763,32 @@ function evaluateValue(
         )
       : false;
   }
+  if (expression.type === "match") {
+    return valuesEqual(
+      evaluateValue(
+        expression.left,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
+      ),
+      evaluateValue(
+        expression.right,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
+      ),
+      expressionIsOrdered(expression.left, document) ||
+        expressionIsOrdered(expression.right, document),
+    );
+  }
   if (expression.type === "mapResponse") {
     const declaration = getResponseDeclaration(document, expression.identifier);
     return declaration
@@ -1598,6 +1624,31 @@ function getResponseDeclaration(
 ): QtiResponseDeclaration | undefined {
   return document.item.responseDeclarations.find(
     (declaration) => declaration.identifier === identifier,
+  );
+}
+
+function expressionIsOrdered(expression: QtiProcessingExpression, document: QtiDocument): boolean {
+  if (expression.type === "ordered") return true;
+  if (
+    (expression.type === "variable" ||
+      expression.type === "correct" ||
+      expression.type === "default" ||
+      expression.type === "isNull") &&
+    variableCardinality(document, expression.identifier) === "ordered"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function variableCardinality(document: QtiDocument, identifier: string): string | undefined {
+  return (
+    document.item.responseDeclarations.find((declaration) => declaration.identifier === identifier)
+      ?.cardinality ??
+    document.item.outcomeDeclarations.find((declaration) => declaration.identifier === identifier)
+      ?.cardinality ??
+    document.item.templateDeclarations.find((declaration) => declaration.identifier === identifier)
+      ?.cardinality
   );
 }
 

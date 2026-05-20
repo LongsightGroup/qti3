@@ -1362,6 +1362,7 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "power" ||
     expression.type === "integerDivide" ||
     expression.type === "integerModulus" ||
+    expression.type === "match" ||
     expression.type === "equal" ||
     expression.type === "equalRounded" ||
     expression.type === "numericCompare" ||

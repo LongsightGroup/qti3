@@ -1227,6 +1227,49 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("evaluates generic qti-match expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="generic-match-processing">
+        <qti-response-declaration identifier="ORDERED_RESPONSE" cardinality="ordered" base-type="identifier"/>
+        <qti-outcome-declaration identifier="BASE_MATCH" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="ORDERED_MATCH" cardinality="single" base-type="boolean"/>
+        <qti-item-body/>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="BASE_MATCH">
+                <qti-match>
+                  <qti-base-value base-type="identifier">A</qti-base-value>
+                  <qti-base-value base-type="identifier">A</qti-base-value>
+                </qti-match>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="ORDERED_MATCH">
+                <qti-match>
+                  <qti-variable identifier="ORDERED_RESPONSE"/>
+                  <qti-ordered>
+                    <qti-base-value base-type="identifier">A</qti-base-value>
+                    <qti-base-value base-type="identifier">B</qti-base-value>
+                  </qti-ordered>
+                </qti-match>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("ORDERED_RESPONSE", ["A", "B"]);
+    expect(session.score().outcomes).toMatchObject({
+      BASE_MATCH: true,
+      ORDERED_MATCH: true,
+    });
+    session.respond("ORDERED_RESPONSE", ["B", "A"]);
+    expect(session.score().outcomes.ORDERED_MATCH).toBe(false);
+  });
+
   it("does not mask missing processing identifiers with parser defaults", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-processing-ids">

@@ -437,6 +437,7 @@ export type QtiProcessingExpression = (
   | { type: "null" }
   | { type: "isNull"; identifier: string }
   | { type: "matchCorrect"; identifier: string; correctIdentifier: string }
+  | { type: "match"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "correct"; identifier: string }
   | { type: "default"; identifier: string }
   | { type: "mapResponse"; identifier: string }
