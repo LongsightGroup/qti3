@@ -1513,7 +1513,7 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-choice-list {
       display: grid;
       gap: 0.5rem;
-      grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+      grid-template-columns: minmax(0, 42rem);
     }
 
     .qti3-choice-option {

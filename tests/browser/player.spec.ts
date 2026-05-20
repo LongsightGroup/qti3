@@ -74,6 +74,18 @@ test.describe("manual harness", () => {
     ).toBeVisible();
   });
 
+  test("renders choice options as a vertical list", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "choice");
+
+    const options = page.locator("qti-assessment-item-player .qti3-choice-option");
+    const first = await options.nth(0).boundingBox();
+    const second = await options.nth(1).boundingBox();
+    if (!first || !second) throw new Error("Missing choice option boxes.");
+
+    expect(second.y).toBeGreaterThan(first.y + first.height - 1);
+  });
+
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">
