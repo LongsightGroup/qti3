@@ -241,6 +241,9 @@ describe("@qti3/core", () => {
   it("rejects incompatible restored attempt state", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-target">
+        <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body><p>State target.</p></qti-item-body>
       </qti-assessment-item>
     `);
@@ -259,6 +262,30 @@ describe("@qti3/core", () => {
         itemIdentifier: "other-item",
       }),
     ).toThrow("Cannot restore state for other-item into state-target.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        responses: { UNKNOWN_RESPONSE: "A" },
+      }),
+    ).toThrow("Cannot restore unknown response identifier UNKNOWN_RESPONSE.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        outcomes: { UNKNOWN_OUTCOME: 1 },
+      }),
+    ).toThrow("Cannot restore unknown outcome identifier UNKNOWN_OUTCOME.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        templateValues: { UNKNOWN_TEMPLATE: 1 },
+      }),
+    ).toThrow("Cannot restore unknown template identifier UNKNOWN_TEMPLATE.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        outcomes: { completionStatus: "finished" },
+      }),
+    ).toThrow("Cannot restore unsupported completionStatus finished.");
   });
 
   it("exposes a runtime guard for the public attempt state contract", () => {

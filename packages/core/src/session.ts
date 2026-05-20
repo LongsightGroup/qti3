@@ -213,6 +213,38 @@ function assertCompatiblePriorState(
       `Cannot restore state for ${priorState.itemIdentifier} into ${document.item.identifier}.`,
     );
   }
+  const responseIdentifiers = new Set(
+    document.item.responseDeclarations.map((declaration) => declaration.identifier),
+  );
+  const outcomeIdentifiers = new Set([
+    ...document.item.outcomeDeclarations.map((declaration) => declaration.identifier),
+    COMPLETION_STATUS,
+  ]);
+  const templateIdentifiers = new Set(
+    document.item.templateDeclarations.map((declaration) => declaration.identifier),
+  );
+  assertKnownStateIdentifiers("response", priorState.responses, responseIdentifiers);
+  assertKnownStateIdentifiers("outcome", priorState.outcomes, outcomeIdentifiers);
+  assertKnownStateIdentifiers("template", priorState.templateValues ?? {}, templateIdentifiers);
+  const completionStatus = priorState.outcomes[COMPLETION_STATUS];
+  if (
+    completionStatus !== undefined &&
+    completionStatus !== COMPLETION_NOT_ATTEMPTED &&
+    completionStatus !== COMPLETION_UNKNOWN &&
+    completionStatus !== COMPLETION_COMPLETED &&
+    completionStatus !== "incomplete"
+  ) {
+    throw new Error(`Cannot restore unsupported completionStatus ${String(completionStatus)}.`);
+  }
+}
+
+function assertKnownStateIdentifiers(
+  kind: string,
+  record: Record<string, QtiValue>,
+  allowed: Set<string>,
+): void {
+  const unknown = Object.keys(record).find((identifier) => !allowed.has(identifier));
+  if (unknown) throw new Error(`Cannot restore unknown ${kind} identifier ${unknown}.`);
 }
 
 function attemptStateErrors(value: unknown): string[] {
