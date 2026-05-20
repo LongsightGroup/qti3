@@ -663,8 +663,137 @@ function validateExpressionReferences(
     validateBaseValueExpression(expression, diagnostics);
   }
 
+  if (expression.type === "equalRounded") {
+    validateRounding(
+      "qti-equal-rounded",
+      expression.roundingMode,
+      expression.figures,
+      diagnostics,
+      expression.source,
+    );
+  }
+
+  if (expression.type === "mathConstant" && !mathConstantNames.has(expression.name)) {
+    diagnostics.push({
+      code: "processing.mathConstant.name",
+      severity: "error",
+      message: `qti-math-constant has unsupported name ${expression.name}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+
+  if (expression.type === "mathOperator" && !mathOperatorNames.has(expression.name)) {
+    diagnostics.push({
+      code: "processing.mathOperator.name",
+      severity: "error",
+      message: `qti-math-operator has unsupported name ${expression.name}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+
+  if (expression.type === "statsOperator" && !statsOperatorNames.has(expression.name)) {
+    diagnostics.push({
+      code: "processing.statsOperator.name",
+      severity: "error",
+      message: `qti-stats-operator has unsupported name ${expression.name}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+
+  if (expression.type === "repeat") {
+    validateRepeatExpression(expression, variables, diagnostics);
+  }
+
   for (const child of expressionChildren(expression)) {
     validateExpressionReferences(child, responses, variables, diagnostics);
+  }
+}
+
+const mathConstantNames = new Set(["pi", "e"]);
+const mathOperatorNames = new Set([
+  "abs",
+  "acos",
+  "acot",
+  "acsc",
+  "asec",
+  "asin",
+  "atan",
+  "atan2",
+  "ceil",
+  "cos",
+  "cosh",
+  "cot",
+  "coth",
+  "csc",
+  "csch",
+  "exp",
+  "floor",
+  "ln",
+  "log",
+  "sec",
+  "sech",
+  "signum",
+  "sin",
+  "sinh",
+  "tan",
+  "tanh",
+  "toDegrees",
+  "toRadians",
+]);
+const statsOperatorNames = new Set(["mean", "sampleVariance", "sampleSD", "popVariance", "popSD"]);
+
+function validateRounding(
+  qtiName: string,
+  roundingMode: string,
+  figures: number,
+  diagnostics: QtiDiagnostic[],
+  source: QtiDiagnostic["source"],
+): void {
+  if (roundingMode !== "decimalPlaces" && roundingMode !== "significantFigures") {
+    diagnostics.push({
+      code: "processing.roundingMode",
+      severity: "error",
+      message: `${qtiName} requires rounding-mode decimalPlaces or significantFigures.`,
+      path: source?.path,
+      source,
+    });
+  }
+  const validFigures =
+    Number.isInteger(figures) && (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0);
+  if (!validFigures) {
+    diagnostics.push({
+      code: "processing.roundingFigures",
+      severity: "error",
+      message: `${qtiName} requires valid figures for its rounding mode.`,
+      path: source?.path,
+      source,
+    });
+  }
+}
+
+function validateRepeatExpression(
+  expression: Extract<QtiProcessingExpression, { type: "repeat" }>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (isInteger(expression.numberRepeats)) return;
+  validateProcessingIdentifier(
+    expression.numberRepeats,
+    "processing.repeat.numberRepeats",
+    expression.source,
+    diagnostics,
+  );
+  if (expression.numberRepeats && !variables.has(expression.numberRepeats)) {
+    diagnostics.push({
+      code: "processing.repeat.numberRepeats.reference",
+      severity: "error",
+      message: `qti-repeat references missing template or outcome variable ${expression.numberRepeats}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
   }
 }
 
@@ -862,7 +991,11 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "max" ||
     expression.type === "and" ||
     expression.type === "anyN" ||
-    expression.type === "or"
+    expression.type === "or" ||
+    expression.type === "gcd" ||
+    expression.type === "lcm" ||
+    expression.type === "mathOperator" ||
+    expression.type === "repeat"
   ) {
     return expression.expressions;
   }
@@ -873,6 +1006,7 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "integerDivide" ||
     expression.type === "integerModulus" ||
     expression.type === "equal" ||
+    expression.type === "equalRounded" ||
     expression.type === "numericCompare"
   ) {
     return [expression.left, expression.right];
@@ -900,6 +1034,9 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
   }
   if (expression.type === "contains") {
     return [expression.collection, expression.values];
+  }
+  if (expression.type === "statsOperator") {
+    return [expression.expression];
   }
   return [];
 }

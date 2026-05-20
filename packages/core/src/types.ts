@@ -313,6 +313,13 @@ export type QtiProcessingExpression = (
   | { type: "not"; expression: QtiProcessingExpression }
   | { type: "equal"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | {
+      type: "equalRounded";
+      left: QtiProcessingExpression;
+      right: QtiProcessingExpression;
+      roundingMode: string;
+      figures: number;
+    }
+  | {
       type: "numericCompare";
       operator: "lt" | "lte" | "gt" | "gte";
       left: QtiProcessingExpression;
@@ -335,6 +342,12 @@ export type QtiProcessingExpression = (
   | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
   | { type: "delete"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
   | { type: "contains"; collection: QtiProcessingExpression; values: QtiProcessingExpression }
+  | { type: "gcd"; expressions: QtiProcessingExpression[] }
+  | { type: "lcm"; expressions: QtiProcessingExpression[] }
+  | { type: "mathConstant"; name: string }
+  | { type: "mathOperator"; name: string; expressions: QtiProcessingExpression[] }
+  | { type: "repeat"; numberRepeats: string; expressions: QtiProcessingExpression[] }
+  | { type: "statsOperator"; name: string; expression: QtiProcessingExpression }
 ) & { source?: QtiSourceLocation | undefined };
 
 export interface QtiDocument {

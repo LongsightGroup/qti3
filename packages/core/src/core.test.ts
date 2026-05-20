@@ -1770,4 +1770,89 @@ describe("@qti3/core", () => {
     expect(score.outcomes.SIZE).toBe(2);
     expect(score.outcomes.FIRST_REMAINING).toBe("B");
   });
+
+  it("evaluates advanced math, repeat, and stats expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="advanced-math-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="ROUNDED" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="GCD_VALUE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="LCM_VALUE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="TRIG_VALUE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="MEAN_VALUE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="REPEATED" cardinality="ordered" base-type="identifier"/>
+        <qti-outcome-declaration identifier="REPEATED_SIZE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-text-entry-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="ROUNDED">
+                <qti-equal-rounded rounding-mode="decimalPlaces" figures="2">
+                  <qti-base-value base-type="float">3.141</qti-base-value>
+                  <qti-base-value base-type="float">3.142</qti-base-value>
+                </qti-equal-rounded>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="GCD_VALUE">
+                <qti-gcd>
+                  <qti-base-value base-type="integer">24</qti-base-value>
+                  <qti-multiple>
+                    <qti-base-value base-type="integer">18</qti-base-value>
+                    <qti-base-value base-type="integer">30</qti-base-value>
+                  </qti-multiple>
+                </qti-gcd>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="LCM_VALUE">
+                <qti-lcm>
+                  <qti-base-value base-type="integer">4</qti-base-value>
+                  <qti-base-value base-type="integer">6</qti-base-value>
+                </qti-lcm>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="TRIG_VALUE">
+                <qti-math-operator name="sin">
+                  <qti-math-constant name="pi"/>
+                </qti-math-operator>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="MEAN_VALUE">
+                <qti-stats-operator name="mean">
+                  <qti-multiple>
+                    <qti-base-value base-type="integer">2</qti-base-value>
+                    <qti-base-value base-type="integer">4</qti-base-value>
+                    <qti-base-value base-type="integer">6</qti-base-value>
+                  </qti-multiple>
+                </qti-stats-operator>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="REPEATED">
+                <qti-repeat number-repeats="2">
+                  <qti-base-value base-type="identifier">A</qti-base-value>
+                  <qti-ordered>
+                    <qti-base-value base-type="identifier">B</qti-base-value>
+                    <qti-base-value base-type="identifier">C</qti-base-value>
+                  </qti-ordered>
+                </qti-repeat>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="REPEATED_SIZE">
+                <qti-container-size>
+                  <qti-variable identifier="REPEATED"/>
+                </qti-container-size>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const score = session.score();
+    expect(score.outcomes.ROUNDED).toBe(true);
+    expect(score.outcomes.GCD_VALUE).toBe(6);
+    expect(score.outcomes.LCM_VALUE).toBe(12);
+    expect(score.outcomes.TRIG_VALUE).toBeCloseTo(0);
+    expect(score.outcomes.MEAN_VALUE).toBe(4);
+    expect(score.outcomes.REPEATED).toEqual(["A", "B", "C", "A", "B", "C"]);
+    expect(score.outcomes.REPEATED_SIZE).toBe(6);
+  });
 });

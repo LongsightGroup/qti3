@@ -95,6 +95,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-or", "packages/core/src/core.test.ts"),
   processingEntry("qti-not", "packages/core/src/core.test.ts"),
   processingEntry("qti-equal", "packages/core/src/core.test.ts"),
+  processingEntry("qti-equal-rounded", "packages/core/src/core.test.ts"),
   processingEntry("qti-lt", "packages/core/src/core.test.ts"),
   processingEntry("qti-lte", "packages/core/src/core.test.ts"),
   processingEntry("qti-gt", "packages/core/src/core.test.ts"),
@@ -104,6 +105,12 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-pattern-match", "packages/core/src/core.test.ts"),
   processingEntry("qti-member", "packages/core/src/core.test.ts"),
   processingEntry("qti-delete", "packages/core/src/core.test.ts"),
+  processingEntry("qti-gcd", "packages/core/src/core.test.ts"),
+  processingEntry("qti-lcm", "packages/core/src/core.test.ts"),
+  processingEntry("qti-math-constant", "packages/core/src/core.test.ts"),
+  processingEntry("qti-math-operator", "packages/core/src/core.test.ts"),
+  processingEntry("qti-repeat", "packages/core/src/core.test.ts"),
+  processingEntry("qti-stats-operator", "packages/core/src/core.test.ts"),
 ];
 
 export const elementSupport: QtiElementSupport[] = [

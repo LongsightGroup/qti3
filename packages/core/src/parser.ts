@@ -733,6 +733,17 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     if (left && right) return { type: "equal", left, right, source: node.source };
   }
 
+  if (node.localName === "qti-equal-rounded") {
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    const roundingMode = node.attributes["rounding-mode"] ?? "";
+    const figures = Number(node.attributes.figures ?? 0);
+    if (left && right) {
+      return { type: "equalRounded", left, right, roundingMode, figures, source: node.source };
+    }
+  }
+
   const numericCompareOperator = numericCompareOperatorFor(node.localName);
   if (numericCompareOperator) {
     const [left, right] = childElements(node)
@@ -811,6 +822,54 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     if (collection && values) return { type: "contains", collection, values, source: node.source };
+  }
+
+  if (node.localName === "qti-gcd" || node.localName === "qti-lcm") {
+    return {
+      type: node.localName === "qti-gcd" ? "gcd" : "lcm",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-math-constant") {
+    return { type: "mathConstant", name: node.attributes.name ?? "", source: node.source };
+  }
+
+  if (node.localName === "qti-math-operator") {
+    return {
+      type: "mathOperator",
+      name: node.attributes.name ?? "",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-repeat") {
+    return {
+      type: "repeat",
+      numberRepeats: node.attributes["number-repeats"] ?? "",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-stats-operator") {
+    const expression = parseFirstExpression(node);
+    if (expression) {
+      return {
+        type: "statsOperator",
+        name: node.attributes.name ?? "",
+        expression,
+        source: node.source,
+      };
+    }
   }
 
   if (node.localName === "qti-match") {
