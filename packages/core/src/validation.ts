@@ -12,6 +12,7 @@ import type {
   QtiSetOutcomeValue,
   QtiTemplateDeclaration,
   QtiTemplateRule,
+  QtiValue,
   QtiValidationResult,
 } from "./types.js";
 
@@ -83,9 +84,79 @@ function validateDeclarationValueMetadata(
   declaration: QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration,
   diagnostics: QtiDiagnostic[],
 ): void {
+  validateDeclarationValue(declaration, declaration.defaultValue, "defaultValue", diagnostics);
+  if (declaration.kind === "response") {
+    validateDeclarationValue(
+      declaration,
+      declaration.correctResponse,
+      "correctResponse",
+      diagnostics,
+    );
+  }
   if (declaration.kind !== "response") return;
   validateMapping(declaration, diagnostics);
   validateAreaMapping(declaration, diagnostics);
+}
+
+function validateDeclarationValue(
+  declaration: QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration,
+  value: QtiValue,
+  role: "defaultValue" | "correctResponse",
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (value === null || declaration.cardinality === "record" || !declaration.baseType) return;
+  if (!isBaseType(declaration.baseType)) return;
+
+  if (declaration.cardinality === "single" && Array.isArray(value)) {
+    diagnostics.push({
+      code: `declaration.${role}.cardinality`,
+      severity: "error",
+      message: `${declaration.kind} declaration ${declaration.identifier} ${role} must contain one value for single cardinality.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+    return;
+  }
+
+  for (const entry of declarationValueEntries(value)) {
+    if (isValidDeclarationBaseValue(entry, declaration.baseType)) continue;
+    diagnostics.push({
+      code: `declaration.${role}.baseType`,
+      severity: "error",
+      message: `${declaration.kind} declaration ${declaration.identifier} ${role} value ${entry} is not valid for base-type ${declaration.baseType}.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+  }
+}
+
+function declarationValueEntries(value: QtiValue): string[] {
+  if (value === null) return [];
+  if (Array.isArray(value)) return value.map(String);
+  return [String(value)];
+}
+
+function isValidDeclarationBaseValue(value: string, baseType: QtiBaseType): boolean {
+  switch (baseType) {
+    case "integer":
+      return isInteger(value);
+    case "float":
+      return isFiniteNumber(value);
+    case "boolean":
+      return value === "true" || value === "false";
+    case "point":
+      return isPoint(value);
+    case "pair":
+    case "directedPair":
+      return isPair(value);
+    case "identifier":
+      return value.trim().length > 0 && !/\s/.test(value);
+    case "string":
+    case "duration":
+    case "file":
+    case "uri":
+      return true;
+  }
 }
 
 function validateMapping(declaration: QtiResponseDeclaration, diagnostics: QtiDiagnostic[]): void {
@@ -1261,6 +1332,16 @@ function isInteger(value: string): boolean {
 
 function isNonNegativeInteger(value: string): boolean {
   return /^\d+$/.test(value);
+}
+
+function isPoint(value: string): boolean {
+  const parts = value.trim().split(/\s+/);
+  return parts.length === 2 && parts.every(isFiniteNumber);
+}
+
+function isPair(value: string): boolean {
+  const parts = value.trim().split(/\s+/);
+  return parts.length === 2 && parts.every((part) => part.length > 0);
 }
 
 function expectedResponseShape(

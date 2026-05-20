@@ -252,6 +252,77 @@ describe("@qti3/core", () => {
     expect(validateAssessmentItem(result.document!).ok).toBe(true);
   });
 
+  it("validates declaration default and correct response values against base types", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-declaration-values">
+        <qti-response-declaration identifier="INT_RESPONSE" cardinality="single" base-type="integer">
+          <qti-correct-response>
+            <qti-value>abc</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="POINT_RESPONSE" cardinality="single" base-type="point">
+          <qti-correct-response>
+            <qti-value>10</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="PAIR_RESPONSE" cardinality="multiple" base-type="directedPair">
+          <qti-correct-response>
+            <qti-value>A</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="SINGLE_RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response>
+            <qti-value>A</qti-value>
+            <qti-value>B</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="BOOLEAN_OUTCOME" cardinality="single" base-type="boolean">
+          <qti-default-value>
+            <qti-value>yes</qti-value>
+          </qti-default-value>
+        </qti-outcome-declaration>
+        <qti-template-declaration identifier="FLOAT_TEMPLATE" cardinality="single" base-type="float">
+          <qti-default-value>
+            <qti-value>not-a-float</qti-value>
+          </qti-default-value>
+        </qti-template-declaration>
+        <qti-item-body>
+          <qti-custom-interaction response-identifier="INT_RESPONSE"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("INT_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("POINT_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("PAIR_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.correctResponse.cardinality",
+          message: expect.stringContaining("SINGLE_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("BOOLEAN_OUTCOME"),
+        }),
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("FLOAT_TEMPLATE"),
+        }),
+      ]),
+    );
+  });
+
   it("validates correct response choice references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs">
