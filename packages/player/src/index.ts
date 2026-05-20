@@ -487,16 +487,38 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       const interaction = interactionsByResponse.get(declaration.identifier);
       const minimum = minimumRequiredResponses(interaction);
       const count = responseCount(state.responses[declaration.identifier] ?? null);
-      if (count >= minimum) continue;
-      diagnostics.push({
-        code: "response.required",
-        severity: "error",
-        message:
-          minimum === 1
-            ? `${declaration.identifier} requires a response.`
-            : `${declaration.identifier} requires at least ${minimum} responses.`,
-        path: declaration.identifier,
-      });
+      const maximum = maximumAllowedResponses(interaction);
+      if (count < minimum) {
+        diagnostics.push({
+          code: "response.required",
+          severity: "error",
+          message:
+            interaction?.attributes["data-min-selections-message"] ??
+            (minimum === 1
+              ? `${declaration.identifier} requires a response.`
+              : `${declaration.identifier} requires at least ${minimum} responses.`),
+          path: declaration.identifier,
+        });
+      }
+      if (maximum !== undefined && count > maximum) {
+        diagnostics.push({
+          code: "response.maximum",
+          severity: "error",
+          message:
+            interaction?.attributes["data-max-selections-message"] ??
+            `${declaration.identifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`,
+          path: declaration.identifier,
+        });
+      }
+      if (interaction) {
+        diagnostics.push(
+          ...matchMaxDiagnostics(
+            declaration.identifier,
+            interaction,
+            state.responses[declaration.identifier] ?? null,
+          ),
+        );
+      }
     }
     return diagnostics;
   }
@@ -2385,6 +2407,16 @@ function responseCount(value: QtiValue): number {
   return responseIsEmpty(value) ? 0 : Array.isArray(value) ? value.length : 1;
 }
 
+function maximumAllowedResponses(interaction: QtiInteraction | undefined): number | undefined {
+  if (!interaction) return undefined;
+  const explicit =
+    interaction.attributes["max-choices"] ?? interaction.attributes["max-associations"];
+  if (explicit === undefined) return undefined;
+  const parsed = Number(explicit);
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
+  return parsed;
+}
+
 function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
   if (!interaction) return 1;
   const explicit =
@@ -2392,6 +2424,46 @@ function minimumRequiredResponses(interaction: QtiInteraction | undefined): numb
   if (explicit === undefined) return 1;
   const parsed = Number(explicit);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
+}
+
+function matchMaxDiagnostics(
+  responseIdentifier: string,
+  interaction: QtiInteraction,
+  response: QtiValue,
+): QtiDiagnostic[] {
+  const identifiers = responseChoiceIdentifiers(response);
+  if (identifiers.length === 0) return [];
+  const counts = new Map<string, number>();
+  for (const identifier of identifiers) {
+    counts.set(identifier, (counts.get(identifier) ?? 0) + 1);
+  }
+
+  const diagnostics: QtiDiagnostic[] = [];
+  for (const choice of interaction.choices) {
+    const maximum = parseUnlimitedMaximum(choice.attributes["match-max"]);
+    if (maximum === undefined) continue;
+    const count = counts.get(choice.identifier) ?? 0;
+    if (count <= maximum) continue;
+    diagnostics.push({
+      code: "response.matchMax",
+      severity: "error",
+      message: `${choice.text || choice.identifier} may be used at most ${maximum} time${maximum === 1 ? "" : "s"}.`,
+      path: responseIdentifier,
+    });
+  }
+  return diagnostics;
+}
+
+function responseChoiceIdentifiers(response: QtiValue): string[] {
+  const values = Array.isArray(response) ? response : response === null ? [] : [response];
+  return values.flatMap((value) => String(value).split(/\s+/).filter(Boolean));
+}
+
+function parseUnlimitedMaximum(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
+  return parsed;
 }
 
 async function defaultFetchXml(url: string): Promise<string> {

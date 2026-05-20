@@ -1206,6 +1206,85 @@ test.describe("manual harness", () => {
     expect(state.validationMessages).toEqual([]);
   });
 
+  test("honors authored maximum response counts during validation", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-choice" title="maximum-choice">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" min-choices="0" max-choices="1" data-max-selections-message="Select no more than one option.">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`);
+    await page.locator("#load-xml").click();
+
+    await page.getByRole("checkbox", { name: "A" }).check();
+    await page.getByRole("checkbox", { name: "B" }).check();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
+
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
+    await expect(page.locator("#events")).toContainText("response.maximum");
+    await expect(page.locator("#events")).toContainText("Select no more than one option.");
+    await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("honors authored match-max counts during validation", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-max-associate" title="match-max-associate">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+    <qti-correct-response>
+      <qti-value>A B</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-associate-interaction response-identifier="RESPONSE" min-associations="0" max-associations="0">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="1">Alpha</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="B" match-max="0">Beta</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="C" match-max="1">Gamma</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-associate-interaction>
+  </qti-item-body>
+</qti-assessment-item>`);
+    await page.locator("#load-xml").click();
+
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="A"]',
+      )
+      .click();
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="B"]',
+      )
+      .click();
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="A"]',
+      )
+      .click();
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="C"]',
+      )
+      .click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
+
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
+    await expect(page.locator("#events")).toContainText("response.matchMax");
+    await expect(page.locator("#events")).toContainText("Alpha may be used at most 1 time.");
+  });
+
   test("allows optional responses when authored minimum is zero", async ({ page }) => {
     await page.goto("/");
     await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
