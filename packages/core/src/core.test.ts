@@ -1413,6 +1413,84 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(1);
   });
 
+  it("tracks built-in completionStatus and adaptive outcome retention", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive" adaptive="true">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="TRACE" cardinality="single" base-type="identifier">
+          <qti-default-value><qti-value>start</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-match>
+                <qti-variable identifier="RESPONSE"/>
+                <qti-correct identifier="RESPONSE"/>
+              </qti-match>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">1</qti-base-value>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="completionStatus">
+                <qti-base-value base-type="identifier">completed</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="TRACE">
+                <qti-base-value base-type="identifier">wrong-first</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    expect(session.serialize().outcomes.completionStatus).toBe("not_attempted");
+
+    session.respond("RESPONSE", "B");
+    expect(session.serialize().outcomes.completionStatus).toBe("unknown");
+    expect(session.score().outcomes).toMatchObject({
+      SCORE: "0",
+      TRACE: "wrong-first",
+      completionStatus: "unknown",
+    });
+
+    session.respond("RESPONSE", "A");
+    const scored = session.score();
+    expect(scored.outcomes).toMatchObject({
+      SCORE: 1,
+      TRACE: "wrong-first",
+      completionStatus: "completed",
+    });
+    expect(scored.state.status).toBe("completed");
+  });
+
+  it("rejects explicit declarations for built-in completionStatus", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-completion">
+        <qti-outcome-declaration identifier="completionStatus" cardinality="single" base-type="identifier"/>
+        <qti-item-body><p>Bad item.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "declaration.outcome.builtIn" })]),
+    );
+  });
+
   it("runs deterministic template processing before scoring", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated">

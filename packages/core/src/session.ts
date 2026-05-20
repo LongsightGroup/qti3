@@ -26,6 +26,11 @@ export interface QtiCustomOperatorContext {
 export type QtiCustomOperatorHandler = (context: QtiCustomOperatorContext) => QtiValue;
 export type QtiCustomOperatorRegistry = Record<string, QtiCustomOperatorHandler>;
 
+const COMPLETION_STATUS = "completionStatus";
+const COMPLETION_NOT_ATTEMPTED = "not_attempted";
+const COMPLETION_UNKNOWN = "unknown";
+const COMPLETION_COMPLETED = "completed";
+
 export interface QtiItemSessionOptions {
   randomSeed?: string | number | undefined;
   customOperators?: QtiCustomOperatorRegistry | undefined;
@@ -77,6 +82,7 @@ export function createItemSession(
   for (const outcome of document.item.outcomeDeclarations) {
     outcomes[outcome.identifier] = outcome.defaultValue;
   }
+  outcomes[COMPLETION_STATUS] = COMPLETION_NOT_ATTEMPTED;
 
   applyTemplateProcessing(
     document,
@@ -98,14 +104,21 @@ export function createItemSession(
     },
     respond(identifier: string, value: QtiValue) {
       responses[identifier] = value;
-      if (status === "initialized" || status === "suspended") status = "interacting";
+      startAttempt();
     },
     setStatus(nextStatus: QtiAttemptStatus) {
       status = nextStatus;
     },
     score() {
       const diagnostics: QtiDiagnostic[] = [];
-      resetRecord(outcomes, defaultOutcomes);
+      if (document.item.adaptive || status !== "initialized" || Object.keys(responses).length > 0) {
+        startAttempt();
+      }
+      const completionStatus = outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
+      if (!document.item.adaptive) {
+        resetRecord(outcomes, defaultOutcomes);
+        outcomes[COMPLETION_STATUS] = completionStatus;
+      }
       applyResponseProcessing(
         document,
         responses,
@@ -115,6 +128,7 @@ export function createItemSession(
         random,
         customOperators,
       );
+      if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
       const state = serialize(
         document.item.identifier,
         status,
@@ -129,6 +143,13 @@ export function createItemSession(
       return serialize(document.item.identifier, status, responses, outcomes, templateValues, []);
     },
   };
+
+  function startAttempt(): void {
+    if (status === "initialized" || status === "suspended") status = "interacting";
+    if (outcomes[COMPLETION_STATUS] === COMPLETION_NOT_ATTEMPTED) {
+      outcomes[COMPLETION_STATUS] = COMPLETION_UNKNOWN;
+    }
+  }
 }
 
 function resetRecord<T>(target: Record<string, T>, source: Record<string, T>): void {

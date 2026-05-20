@@ -17,6 +17,8 @@ import type {
   QtiValidationResult,
 } from "./types.js";
 
+const BUILT_IN_COMPLETION_STATUS = "completionStatus";
+
 export function validateAssessmentItem(document: QtiDocument): QtiValidationResult {
   const diagnostics: QtiDiagnostic[] = [];
   const item = document.item;
@@ -69,6 +71,16 @@ function validateDeclarationIdentifiers(
     );
     validateDeclarationRequiredAttributes(declaration, diagnostics);
     validateDeclarationValueMetadata(declaration, diagnostics);
+    if (declaration.kind === "outcome" && declaration.identifier === BUILT_IN_COMPLETION_STATUS) {
+      diagnostics.push({
+        code: "declaration.outcome.builtIn",
+        severity: "error",
+        message:
+          "completionStatus is a built-in QTI outcome variable and must not be declared explicitly.",
+        path: declaration.source?.path,
+        source: declaration.source,
+      });
+    }
     if (seen.has(declaration.identifier)) {
       diagnostics.push({
         code: "identifier.duplicate",
@@ -474,6 +486,7 @@ function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDi
 function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
   const responses = new Set(item.responseDeclarations.map((declaration) => declaration.identifier));
   const outcomes = new Set(item.outcomeDeclarations.map((declaration) => declaration.identifier));
+  outcomes.add(BUILT_IN_COMPLETION_STATUS);
   const templates = new Set(item.templateDeclarations.map((declaration) => declaration.identifier));
   const variables = new Set([...responses, ...outcomes, ...templates]);
 

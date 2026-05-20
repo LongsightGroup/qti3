@@ -255,6 +255,7 @@ export interface QtiFeedbackContent {
 export interface QtiAssessmentItem {
   identifier: string;
   title?: string | undefined;
+  adaptive: boolean;
   prompt?: string | undefined;
   responseDeclarations: QtiResponseDeclaration[];
   outcomeDeclarations: QtiOutcomeDeclaration[];
