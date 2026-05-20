@@ -154,6 +154,14 @@ function defaultResponse(interactionType: QtiInteractionType): {
       correct: "upload.txt",
     };
   }
+  if (interactionType === "drawing") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "single",
+      baseType: "string",
+      correct: "10 10 90 90",
+    };
+  }
   return { identifier: "RESPONSE", cardinality: "single", baseType: "string", correct: "A" };
 }
 
@@ -197,11 +205,10 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
   if (interactionType === "upload") {
     return `<${qtiName} response-identifier="RESPONSE"/>`;
   }
-  if (
-    interactionType === "custom" ||
-    interactionType === "portableCustom" ||
-    interactionType === "drawing"
-  ) {
+  if (interactionType === "drawing") {
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Draw a diagonal line.</qti-prompt></${qtiName}>`;
+  }
+  if (interactionType === "custom" || interactionType === "portableCustom") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter A.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "match" || interactionType === "associate") {

@@ -299,6 +299,11 @@ test.describe("manual harness", () => {
     await page.locator("qti-assessment-item-player .qti3-point-surface").focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, "10 10");
+
+    await loadFixture(page, "drawing");
+    await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, "10 10 90 90");
   });
 
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {
@@ -315,6 +320,33 @@ test.describe("manual harness", () => {
       return element.serialize();
     });
     expect(state.outcomes.SCORE).toBe(1);
+  });
+
+  test("captures drawing responses as deterministic stroke data", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "drawing");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    await surface.dispatchEvent("pointerdown", {
+      pointerId: 1,
+      clientX: 10,
+      clientY: 10,
+    });
+    await surface.dispatchEvent("pointerup", {
+      pointerId: 1,
+      clientX: 90,
+      clientY: 90,
+    });
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.RESPONSE).toMatch(/\d+ \d+ \d+ \d+/);
+    await expect(surface.locator("line")).toHaveCount(1);
+
+    await page.getByRole("button", { name: "Clear drawing" }).click();
+    await expectResponse(page, "");
+    await expect(surface.locator("line")).toHaveCount(0);
   });
 
   test("renders object-backed hotspot choices as positioned buttons", async ({ page }) => {
@@ -471,6 +503,12 @@ async function provideResponse(
     await page
       .locator("qti-assessment-item-player .qti3-point-surface")
       .click({ position: { x, y } });
+    return;
+  }
+
+  if (interactionType === "drawing") {
+    await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
+    await page.keyboard.press("Enter");
     return;
   }
 

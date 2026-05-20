@@ -249,11 +249,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
-    if (
-      interaction.type === "textEntry" ||
-      interaction.type === "portableCustom" ||
-      interaction.type === "drawing"
-    ) {
+    if (interaction.type === "drawing") {
+      field.append(renderDrawingResponse(interaction, update));
+      return field;
+    }
+
+    if (interaction.type === "textEntry" || interaction.type === "portableCustom") {
       const input = document.createElement("input");
       input.setAttribute("aria-label", heading.textContent ?? "Response");
       input.addEventListener("input", () => update(input.value));
@@ -614,6 +615,72 @@ function renderPointResponse(
   return group;
 }
 
+function renderDrawingResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("div");
+  group.role = "group";
+  group.setAttribute("aria-label", `${readableType(interaction.type)} response`);
+
+  const surface = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  surface.classList.add("qti3-drawing-surface");
+  surface.setAttribute("role", "img");
+  surface.setAttribute("aria-label", "Drawing response surface");
+  surface.setAttribute("tabindex", "0");
+  surface.setAttribute("viewBox", "0 0 160 120");
+  surface.style.display = "block";
+  surface.style.inlineSize = "160px";
+  surface.style.blockSize = "120px";
+  surface.style.maxInlineSize = "100%";
+  surface.style.border = "1px solid CanvasText";
+  surface.style.background = "Canvas";
+  surface.style.touchAction = "none";
+
+  let start: { x: number; y: number } | undefined;
+  const draw = (stroke: string) => {
+    const [x1, y1, x2, y2] = stroke.split(" ").map((value) => Number(value));
+    if (
+      x1 === undefined ||
+      y1 === undefined ||
+      x2 === undefined ||
+      y2 === undefined ||
+      [x1, y1, x2, y2].some((value) => !Number.isFinite(value))
+    ) {
+      return;
+    }
+    surface.replaceChildren(lineElement(x1, y1, x2, y2));
+    update(stroke);
+  };
+
+  surface.addEventListener("pointerdown", (event) => {
+    start = svgPoint(surface, event);
+  });
+  surface.addEventListener("pointerup", (event) => {
+    if (!start) return;
+    const end = svgPoint(surface, event);
+    const stroke = `${start.x} ${start.y} ${end.x} ${end.y}`;
+    start = undefined;
+    draw(stroke);
+  });
+  surface.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    draw("10 10 90 90");
+  });
+
+  const clear = document.createElement("button");
+  clear.type = "button";
+  clear.textContent = "Clear drawing";
+  clear.addEventListener("click", () => {
+    surface.replaceChildren();
+    update("");
+  });
+
+  group.append(surface, clear);
+  return group;
+}
+
 function renderHotspotResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -821,6 +888,28 @@ function placeHotspotButton(button: HTMLButtonElement, choice: QtiChoice): void 
 
   button.style.insetInlineStart = "0";
   button.style.insetBlockStart = "0";
+}
+
+function svgPoint(surface: SVGSVGElement, event: PointerEvent): { x: number; y: number } {
+  const rect = surface.getBoundingClientRect();
+  const x = Math.round(((event.clientX - rect.left) / rect.width) * 160);
+  const y = Math.round(((event.clientY - rect.top) / rect.height) * 120);
+  return {
+    x: Math.max(0, Math.min(160, x)),
+    y: Math.max(0, Math.min(120, y)),
+  };
+}
+
+function lineElement(x1: number, y1: number, x2: number, y2: number): SVGLineElement {
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", String(x1));
+  line.setAttribute("y1", String(y1));
+  line.setAttribute("x2", String(x2));
+  line.setAttribute("y2", String(y2));
+  line.setAttribute("stroke", "CanvasText");
+  line.setAttribute("stroke-width", "3");
+  line.setAttribute("stroke-linecap", "round");
+  return line;
 }
 
 function readableType(type: string): string {

@@ -2,7 +2,7 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-reference" title="drawing-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
-        <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>10 10 90 90</qti-value></qti-correct-response>
         
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
@@ -10,7 +10,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for drawing-reference.</p>
-    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Enter A.</qti-prompt></qti-drawing-interaction>
+    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Draw a diagonal line.</qti-prompt></qti-drawing-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>
