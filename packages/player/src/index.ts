@@ -1161,9 +1161,11 @@ function renderHotspotResponse(
 
   const surface = document.createElement("div");
   surface.className = "qti3-hotspot-surface";
+  const width = objectWidth(interaction);
+  const height = objectHeight(interaction);
   surface.style.position = "relative";
-  surface.style.inlineSize = `${objectWidth(interaction)}px`;
-  surface.style.blockSize = `${objectHeight(interaction)}px`;
+  surface.style.inlineSize = `${width}px`;
+  surface.style.aspectRatio = `${width} / ${height}`;
   surface.style.maxInlineSize = "100%";
   surface.style.border = "1px solid CanvasText";
   surface.style.background = "Canvas";
@@ -1201,14 +1203,10 @@ function renderHotspotResponse(
     button.className = "qti3-hotspot-button";
     button.dataset.choiceIdentifier = choice.identifier;
     button.textContent = choice.text;
+    button.title = choice.text;
     button.setAttribute("aria-pressed", "false");
     button.style.position = "absolute";
-    button.style.border = "2px solid CanvasText";
-    button.style.background = "transparent";
-    button.style.color = "CanvasText";
-    button.style.minInlineSize = "2rem";
-    button.style.minBlockSize = "2rem";
-    placeHotspotButton(button, choice);
+    placeHotspotButton(button, choice, width, height);
     button.addEventListener("click", () => {
       if (multiple) {
         if (selected.has(choice.identifier)) selected.delete(choice.identifier);
@@ -1373,7 +1371,12 @@ function dimension(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function placeHotspotButton(button: HTMLButtonElement, choice: QtiChoice): void {
+function placeHotspotButton(
+  button: HTMLButtonElement,
+  choice: QtiChoice,
+  width: number,
+  height: number,
+): void {
   const coords = (choice.attributes.coords ?? "")
     .split(",")
     .map((value) => Number(value.trim()))
@@ -1382,20 +1385,20 @@ function placeHotspotButton(button: HTMLButtonElement, choice: QtiChoice): void 
 
   if (shape === "circle" && coords.length >= 3) {
     const [x, y, radius] = coords as [number, number, number];
-    button.style.insetInlineStart = `${x - radius}px`;
-    button.style.insetBlockStart = `${y - radius}px`;
-    button.style.inlineSize = `${radius * 2}px`;
-    button.style.blockSize = `${radius * 2}px`;
+    button.style.insetInlineStart = `${percent(x - radius, width)}%`;
+    button.style.insetBlockStart = `${percent(y - radius, height)}%`;
+    button.style.inlineSize = `${percent(radius * 2, width)}%`;
+    button.style.blockSize = `${percent(radius * 2, height)}%`;
     button.style.borderRadius = "50%";
     return;
   }
 
   if (shape === "rect" && coords.length >= 4) {
     const [left, top, right, bottom] = coords as [number, number, number, number];
-    button.style.insetInlineStart = `${left}px`;
-    button.style.insetBlockStart = `${top}px`;
-    button.style.inlineSize = `${Math.max(1, right - left)}px`;
-    button.style.blockSize = `${Math.max(1, bottom - top)}px`;
+    button.style.insetInlineStart = `${percent(left, width)}%`;
+    button.style.insetBlockStart = `${percent(top, height)}%`;
+    button.style.inlineSize = `${percent(Math.max(1, right - left), width)}%`;
+    button.style.blockSize = `${percent(Math.max(1, bottom - top), height)}%`;
     return;
   }
 
@@ -1406,15 +1409,20 @@ function placeHotspotButton(button: HTMLButtonElement, choice: QtiChoice): void 
     const top = Math.min(...ys);
     const right = Math.max(...xs);
     const bottom = Math.max(...ys);
-    button.style.insetInlineStart = `${left}px`;
-    button.style.insetBlockStart = `${top}px`;
-    button.style.inlineSize = `${Math.max(1, right - left)}px`;
-    button.style.blockSize = `${Math.max(1, bottom - top)}px`;
+    button.style.insetInlineStart = `${percent(left, width)}%`;
+    button.style.insetBlockStart = `${percent(top, height)}%`;
+    button.style.inlineSize = `${percent(Math.max(1, right - left), width)}%`;
+    button.style.blockSize = `${percent(Math.max(1, bottom - top), height)}%`;
     return;
   }
 
   button.style.insetInlineStart = "0";
   button.style.insetBlockStart = "0";
+}
+
+function percent(value: number, total: number): number {
+  if (total <= 0) return 0;
+  return (value / total) * 100;
 }
 
 function svgPoint(surface: SVGSVGElement, event: PointerEvent): { x: number; y: number } {
@@ -1494,6 +1502,10 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-interaction {
       display: grid;
       gap: 0.75rem;
+    }
+
+    .qti3-player fieldset {
+      min-inline-size: 0;
     }
 
     .qti3-actions,
@@ -1660,6 +1672,25 @@ function playerStyleElement(): HTMLStyleElement {
       color: HighlightText !important;
       outline: 3px solid Highlight;
       outline-offset: 2px;
+    }
+
+    .qti3-hotspot-button {
+      display: grid;
+      place-items: start;
+      padding: 0.25rem;
+      border: 2px solid CanvasText;
+      background: color-mix(in srgb, Canvas 65%, transparent);
+      color: CanvasText;
+      font-size: 0.8rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    @supports not (background: color-mix(in srgb, Canvas 65%, transparent)) {
+      .qti3-hotspot-button {
+        background: Canvas;
+      }
     }
 
     .qti3-selection-summary {

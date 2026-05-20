@@ -626,9 +626,13 @@ test.describe("manual harness", () => {
 
     const surface = page.locator("qti-assessment-item-player .qti3-hotspot-surface");
     await expect(surface).toBeVisible();
+    await expect(surface.locator("img")).toHaveAttribute("src", "hotspot-flow.svg");
     await expectImageLoaded(surface.locator("img"));
     const hotspot = surface.getByRole("button", { name: "A" });
     await expect(hotspot).toHaveCSS("position", "absolute");
+    const box = await surface.boundingBox();
+    expect(box?.width).toBeGreaterThan(300);
+    expect(box?.height).toBeGreaterThan(180);
     await hotspot.click();
     await expectResponse(page, "A");
     await expect(hotspot).toHaveAttribute("aria-pressed", "true");
