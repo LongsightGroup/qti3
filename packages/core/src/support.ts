@@ -31,6 +31,11 @@ export const deprecatedInteractionSupport: QtiElementSupport[] = [
     category: "interaction",
     support: "deprecated",
     specReference: "QTI 3.0.1 ASI Q-31",
+    parse: true,
+    validate: false,
+    render: false,
+    process: false,
+    tests: ["packages/core/src/core.test.ts"],
     notes: "Deprecated in favor of qti-portable-custom-interaction.",
   },
 ];
@@ -52,5 +57,15 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiElement
     category: "interaction",
     support: "supported",
     specReference: "QTI 3.0.1 ASI",
+    parse: true,
+    validate: true,
+    render: true,
+    process: true,
+    tests: [
+      "packages/fixtures/src/fixtures.test.ts",
+      "packages/conformance/src/conformance.test.ts",
+      "packages/a11y/src/a11y.test.ts",
+      "tests/browser/player.spec.ts",
+    ],
   };
 }

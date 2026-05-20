@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseQtiXml } from "@qti3/core";
+import { interactionSupport, parseQtiXml } from "@qti3/core";
 import { interactionFixtures } from "@qti3/fixtures";
 import { describe, expect, it } from "vitest";
 import { main } from "./index.js";
@@ -28,6 +28,17 @@ describe("@qti3/cli", () => {
 
   it("prints the support matrix", async () => {
     await expect(main(["support-matrix"])).resolves.toBe(0);
+  });
+
+  it("exposes evidence metadata in support entries", async () => {
+    const choice = interactionSupport.find((support) => support.interactionType === "choice");
+    expect(choice).toMatchObject({
+      parse: true,
+      validate: true,
+      render: true,
+      process: true,
+    });
+    expect(choice?.tests).toContain("tests/browser/player.spec.ts");
   });
 
   it("scores template-generated correct responses", async () => {

@@ -220,5 +220,10 @@ export interface QtiElementSupport {
   interactionType: QtiInteractionType;
   support: QtiSupportStatus;
   specReference: string;
+  parse: boolean;
+  validate: boolean;
+  render: boolean;
+  process: boolean;
+  tests: string[];
   notes?: string | undefined;
 }
