@@ -124,6 +124,12 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     return 0;
   }
 
+  if (command === "assert-support") {
+    const report = assertSupportMatrix();
+    console.log(JSON.stringify(report, null, 2));
+    return report.failed === 0 ? 0 : 1;
+  }
+
   if (command === "run-fixtures") {
     const report = runCanonicalFixtures();
     console.log(JSON.stringify(report, null, 2));
@@ -131,13 +137,70 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 run-fixtures",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 assert-support | qti3 run-fixtures",
   );
   return 1;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   process.exitCode = await main();
+}
+
+function assertSupportMatrix(): {
+  checked: number;
+  failed: number;
+  failures: string[];
+} {
+  const failures: string[] = [];
+  const requiredInteractionTests = [
+    "packages/fixtures/src/fixtures.test.ts",
+    "packages/conformance/src/conformance.test.ts",
+    "packages/a11y/src/a11y.test.ts",
+    "tests/browser/player.spec.ts",
+  ];
+
+  for (const support of interactionSupport) {
+    if (support.support !== "supported") {
+      failures.push(`${support.qtiName} must be supported.`);
+    }
+    for (const flag of ["parse", "validate", "render", "process"] as const) {
+      if (!support[flag]) failures.push(`${support.qtiName} must have ${flag}=true.`);
+    }
+    if (support.fixtures.length === 0) {
+      failures.push(`${support.qtiName} must have a reference fixture.`);
+    }
+    for (const test of requiredInteractionTests) {
+      if (!support.tests.includes(test)) {
+        failures.push(`${support.qtiName} is missing evidence test ${test}.`);
+      }
+    }
+  }
+
+  for (const support of deprecatedInteractionSupport) {
+    if (support.support !== "deprecated") {
+      failures.push(`${support.qtiName} must remain explicitly deprecated.`);
+    }
+    if (!support.notes) failures.push(`${support.qtiName} must explain its deprecated status.`);
+  }
+
+  for (const support of processingSupport) {
+    if (support.support !== "supported") {
+      failures.push(`${support.qtiName} processing entry must be supported.`);
+    }
+    if (!support.parse || !support.validate || !support.process) {
+      failures.push(`${support.qtiName} processing entry must parse, validate, and process.`);
+    }
+    if (support.render) failures.push(`${support.qtiName} processing entry must not render.`);
+    if (support.tests.length === 0) {
+      failures.push(`${support.qtiName} processing entry must have test evidence.`);
+    }
+  }
+
+  return {
+    checked: elementSupport.length,
+    failed: failures.length,
+    failures,
+  };
 }
 
 async function findXmlFiles(root: string): Promise<string[]> {

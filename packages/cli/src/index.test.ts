@@ -61,6 +61,21 @@ describe("@qti3/cli", () => {
     await expect(main(["run-fixtures"])).resolves.toBe(0);
   });
 
+  it("fails release support assertions when matrix evidence regresses", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await expect(main(["assert-support"])).resolves.toBe(0);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      expect(report).toMatchObject({
+        checked: elementSupport.length,
+        failed: 0,
+        failures: [],
+      });
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it("keeps checked-in XML fixture artifacts aligned with canonical fixtures", async () => {
     const fixtureDirectory = join(process.cwd(), "packages/fixtures/xml");
     const expectedFiles = canonicalFixtures.map((fixture) => `${fixture.id}.xml`).sort();
