@@ -813,7 +813,14 @@ test.describe("manual harness", () => {
         await provideResponse(page, fixture.interactionType, response, responseIdentifier);
       }
 
-      await page.getByRole("button", { name: "Score", exact: true }).click();
+      const stateBeforeScore = await page
+        .locator("qti-assessment-item-player")
+        .evaluate((element) => {
+          return element.serialize();
+        });
+      if (stateBeforeScore.status !== "completed") {
+        await page.getByRole("button", { name: "Score", exact: true }).click();
+      }
       const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
         return element.serialize();
       });
@@ -995,6 +1002,60 @@ test.describe("manual harness", () => {
       page.locator('qti-assessment-item-player [data-choice-identifier="A"] input'),
     ).toHaveAttribute("aria-invalid", "true");
     expect(restoredState.validationMessages).toEqual(state.validationMessages);
+  });
+
+  test("completed attempts render as non-mutable review state", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="completed-review" title="completed-review" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="END" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Correct</qti-simple-choice>
+      <qti-simple-choice identifier="B">Incorrect</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-end-attempt-interaction response-identifier="END" title="Finish"/>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+    await page.getByRole("button", { name: "Finish" }).click();
+
+    await expect(page.locator("qti-assessment-item-player")).toHaveAttribute(
+      "data-status",
+      "completed",
+    );
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="A"] input'),
+    ).toBeDisabled();
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="B"] input'),
+    ).toBeDisabled();
+    await expect(
+      page.locator('qti-assessment-item-player [data-interaction-type="endAttempt"] button'),
+    ).toBeDisabled();
+    await expect(page.locator("qti-assessment-item-player .qti3-actions button")).toBeDisabled();
+
+    const completedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(completedState.responses.RESPONSE).toBe("A");
+
+    await page.locator("#debug-reset").click();
+    await expect(page.locator("qti-assessment-item-player")).toHaveAttribute(
+      "data-status",
+      "initialized",
+    );
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="B"] input'),
+    ).toBeEnabled();
   });
 
   test("restores serialized responses into visible controls", async ({ page }) => {

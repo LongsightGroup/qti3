@@ -72,6 +72,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (options.status) this.session.setStatus(options.status);
     this.render();
     this.renderValidationMessages();
+    this.updateAttemptAvailability();
     this.dispatchEvent(new CustomEvent("qti-ready", { detail: { item: result.document.item } }));
     this.emitStateChange();
   }
@@ -101,6 +102,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     const result = session.score();
     this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
     this.updateDynamicBodyState();
+    this.updateAttemptAvailability();
     if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
     return result;
@@ -111,6 +113,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.session = createItemSession(this.documentModel);
     this.validationMessages = [];
     this.render();
+    this.updateAttemptAvailability();
     this.dispatchEvent(new CustomEvent("qti-reset", { detail: { state: this.serialize() } }));
     this.emitStateChange();
   }
@@ -129,6 +132,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.validationMessages = cloneDiagnostics(state.validationMessages);
     this.render();
     this.renderValidationMessages();
+    this.updateAttemptAvailability();
     this.dispatchEvent(new CustomEvent("qti-restore", { detail: { state: this.serialize() } }));
     this.emitStateChange();
   }
@@ -148,6 +152,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     ) {
       this.session?.setStatus("completed");
     }
+    this.updateAttemptAvailability();
     this.dispatchEvent(new CustomEvent("qti-endattempt", { detail: { state: this.serialize() } }));
     this.emitStateChange();
   }
@@ -232,6 +237,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     const responseIdentifier = interaction.responseIdentifier;
     const update = (value: QtiValue) => {
+      if (this.attemptIsCompleted()) return;
       if (!responseIdentifier || !this.session) return;
       this.session.respond(responseIdentifier, value);
       this.clearValidationMessage(responseIdentifier);
@@ -349,6 +355,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     const responseIdentifier = interaction.responseIdentifier;
     const update = (value: QtiValue) => {
+      if (this.attemptIsCompleted()) return;
       if (!responseIdentifier || !this.session) return;
       this.session.respond(responseIdentifier, value);
       this.clearValidationMessage(responseIdentifier);
@@ -474,6 +481,42 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     )) {
       element.hidden = !this.isTemplateContentVisible(element);
     }
+  }
+
+  private updateAttemptAvailability(): void {
+    const completed = this.attemptIsCompleted();
+    this.dataset.status = this.session?.serialize().status ?? "unloaded";
+    const article = this.querySelector<HTMLElement>(".qti3-player");
+    if (article) article.dataset.status = this.dataset.status;
+
+    for (const control of this.querySelectorAll<
+      HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >(
+      ".qti3-interaction button, .qti3-interaction input, .qti3-interaction select, .qti3-interaction textarea, .qti3-actions button",
+    )) {
+      control.disabled = completed;
+    }
+
+    for (const element of this.querySelectorAll<HTMLElement>(
+      ".qti3-interaction [tabindex]:not(button):not(input):not(select):not(textarea)",
+    )) {
+      if (completed) {
+        element.dataset.previousTabIndex = element.getAttribute("tabindex") ?? "0";
+        element.tabIndex = -1;
+        element.setAttribute("aria-disabled", "true");
+      } else {
+        const previous = element.dataset.previousTabIndex;
+        if (previous !== undefined) {
+          element.tabIndex = Number(previous);
+          delete element.dataset.previousTabIndex;
+        }
+        element.removeAttribute("aria-disabled");
+      }
+    }
+  }
+
+  private attemptIsCompleted(): boolean {
+    return this.session?.serialize().status === "completed";
   }
 
   private isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean {
