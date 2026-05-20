@@ -337,8 +337,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function loadSelectedLocalFile(): Promise<void> {
   const file = loadedFiles[selectedFileIndex];
   if (!file) {
-    fileSummary.textContent =
-      "No QTI item files loaded. Upload item XML files or a QTI package zip.";
+    fileSummary.textContent = "No QTI package loaded. Upload a ZIP package.";
     previousFile.disabled = true;
     nextFile.disabled = true;
     return;
@@ -356,7 +355,7 @@ async function loadSelectedLocalFile(): Promise<void> {
 
 async function loadLocalFiles(fileList: FileList | null): Promise<void> {
   clearAssetUrls();
-  const files = await readXmlFiles(fileList);
+  const files = await readPackageXmlFiles(fileList);
   loadedFiles = resolveLoadableItems(files);
   localFiles.replaceChildren(
     ...loadedFiles.map((file, index) => {
@@ -370,20 +369,10 @@ async function loadLocalFiles(fileList: FileList | null): Promise<void> {
   await loadSelectedLocalFile();
 }
 
-async function readXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
-  const loadedGroups = await Promise.all(
-    [...(fileList ?? [])].map(async (file) => {
-      if (file.name.endsWith(".zip")) return readZipXmlFiles(file);
-      if (!file.name.endsWith(".xml")) return [];
-      const source = normalizePath(file.name);
-      return {
-        name: source,
-        source,
-        xml: await file.text(),
-      } satisfies LoadedFile;
-    }),
-  );
-  return loadedGroups.flat().sort((left, right) => left.name.localeCompare(right.name));
+async function readPackageXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
+  const [file] = [...(fileList ?? [])];
+  if (!file || !file.name.toLowerCase().endsWith(".zip")) return [];
+  return (await readZipXmlFiles(file)).sort((left, right) => left.name.localeCompare(right.name));
 }
 
 async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {

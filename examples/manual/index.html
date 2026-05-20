@@ -187,13 +187,11 @@
           <select id="fixture"></select>
         </label>
         <button id="load-fixture" type="button">Load fixture</button>
-        <h2>Open QTI XML or package zip</h2>
-        <input
-          id="file"
-          type="file"
-          accept=".xml,.zip,text/xml,application/xml,application/zip"
-          multiple
-        />
+        <h2>Open QTI package zip</h2>
+        <label>
+          QTI package zip
+          <input id="file" type="file" accept=".zip,application/zip,application/x-zip-compressed" />
+        </label>
         <label>
           Loaded file
           <select id="local-files"></select>

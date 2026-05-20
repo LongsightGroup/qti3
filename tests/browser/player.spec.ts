@@ -393,24 +393,31 @@ test.describe("manual harness", () => {
     await expect(page.locator("#events")).not.toContainText("response.required");
   });
 
-  test("loads and navigates multiple local XML files", async ({ page }) => {
+  test("requires a single zip upload for local package loading", async ({ page }) => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");
     if (!choice || !textEntry) throw new Error("Missing local-file fixtures.");
 
     await page.goto("/");
-    await page.locator("#file").setInputFiles([
-      {
-        name: "choice-reference.xml",
-        mimeType: "application/xml",
-        buffer: Buffer.from(choice.xml),
-      },
-      {
-        name: "textEntry-reference.xml",
-        mimeType: "application/xml",
-        buffer: Buffer.from(textEntry.xml),
-      },
-    ]);
+    await expect(page.locator("#file")).not.toHaveAttribute("multiple", "");
+    await expect(page.locator("#file")).toHaveAttribute("accept", /\.zip/);
+    await page.locator("#file").setInputFiles({
+      name: "choice-reference.xml",
+      mimeType: "application/xml",
+      buffer: Buffer.from(choice.xml),
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("No QTI package loaded");
+
+    const zip = createStoredZip({
+      "items/choice.xml": choice.xml,
+      "items/text-entry.xml": textEntry.xml,
+    });
+    await page.locator("#file").setInputFiles({
+      name: "loose-items.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
 
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
     await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
