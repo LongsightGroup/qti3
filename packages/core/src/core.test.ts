@@ -1828,6 +1828,48 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(1);
   });
 
+  it("restores generated template values before deriving correct responses", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated-restore">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-random-integer min="1" max="100"/>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="B">
+            <qti-sum>
+              <qti-variable identifier="A"/>
+              <qti-base-value base-type="integer">3</qti-base-value>
+            </qti-sum>
+          </qti-set-template-value>
+          <qti-set-correct-response identifier="RESPONSE">
+            <qti-variable identifier="B"/>
+          </qti-set-correct-response>
+        </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="200"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const original = createItemSession(result.document!, undefined, { randomSeed: "first" });
+    const generated = original.serialize().templateValues?.B;
+    expect(typeof generated).toBe("number");
+
+    original.respond("RESPONSE", generated ?? null);
+    const saved = original.serialize();
+    const restored = createItemSession(result.document!, saved, { randomSeed: "different" });
+
+    expect(restored.serialize().templateValues).toEqual(saved.templateValues);
+    expect(restored.serialize().responses.RESPONSE).toBe(generated);
+    expect(restored.correctResponses()).toEqual({ RESPONSE: generated });
+    expect(restored.score().outcomes.SCORE).toBe(1);
+  });
+
   it("evaluates template conditions and templated default values", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-condition">

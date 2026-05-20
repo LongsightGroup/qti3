@@ -192,6 +192,8 @@ Serialized attempt state uses `qti3.attempt-state.v1` and includes responses, ou
 Hosts that persist state can validate restored JSON with `isQtiAttemptStateV1()` or
 `assertQtiAttemptStateV1()` before passing it back to `createItemSession()` or the
 player restore API.
+For templated items, saved template values are restored before generated correct
+responses are derived again, so resume does not require the original random seed.
 
 ## Roadmap Focus
 

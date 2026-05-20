@@ -72,7 +72,10 @@ export function createItemSession(
 ): QtiItemSession {
   assertCompatiblePriorState(document, priorState);
 
-  const responses: Record<string, QtiValue> = cloneValueRecord(priorState?.responses ?? {});
+  const priorResponses = cloneValueRecord(priorState?.responses ?? {});
+  const priorOutcomes = cloneValueRecord(priorState?.outcomes ?? {});
+  const priorTemplateValues = cloneValueRecord(priorState?.templateValues ?? {});
+  const responses: Record<string, QtiValue> = {};
   const outcomes: Record<string, QtiValue> = {};
   const templateValues: Record<string, QtiValue> = {};
   const correctResponses: Record<string, QtiValue> = {};
@@ -103,9 +106,23 @@ export function createItemSession(
     random,
     customOperators,
   );
+  if (priorState) {
+    Object.assign(templateValues, priorTemplateValues);
+    resetCorrectResponses(document, correctResponses);
+    applyTemplateProcessing(
+      document,
+      templateValues,
+      responses,
+      outcomes,
+      correctResponses,
+      random,
+      customOperators,
+      new Set(Object.keys(priorTemplateValues)),
+    );
+  }
   const defaultOutcomes = cloneValueRecord(outcomes);
-  Object.assign(templateValues, cloneValueRecord(priorState?.templateValues ?? {}));
-  Object.assign(outcomes, cloneValueRecord(priorState?.outcomes ?? {}));
+  Object.assign(responses, priorResponses);
+  Object.assign(outcomes, priorOutcomes);
 
   return {
     item: document.item,
@@ -229,6 +246,7 @@ function applyTemplateProcessing(
   correctResponses: Record<string, QtiValue>,
   random: () => number,
   customOperators: QtiCustomOperatorRegistry,
+  preservedTemplateIdentifiers = new Set<string>(),
 ): void {
   const rules = document.item.templateProcessing?.rules ?? [];
   let restarts = 0;
@@ -243,6 +261,7 @@ function applyTemplateProcessing(
       correctResponses,
       random,
       customOperators,
+      preservedTemplateIdentifiers,
     );
     if (shouldExit) return;
     if (rule.type === "templateConstraint") {
@@ -277,6 +296,15 @@ function resetTemplateValues(
   }
 }
 
+function resetCorrectResponses(
+  document: QtiDocument,
+  correctResponses: Record<string, QtiValue>,
+): void {
+  for (const declaration of document.item.responseDeclarations) {
+    correctResponses[declaration.identifier] = cloneValue(declaration.correctResponse);
+  }
+}
+
 function applyTemplateRule(
   rule: QtiTemplateRule,
   document: QtiDocument,
@@ -286,6 +314,7 @@ function applyTemplateRule(
   correctResponses: Record<string, QtiValue>,
   random: () => number,
   customOperators: QtiCustomOperatorRegistry,
+  preservedTemplateIdentifiers: Set<string>,
 ): boolean {
   if (rule.type === "exitTemplate") return true;
   if (rule.type === "templateConstraint") return false;
@@ -333,6 +362,7 @@ function applyTemplateRule(
         correctResponses,
         random,
         customOperators,
+        preservedTemplateIdentifiers,
       );
       if (shouldExit) return true;
     }
@@ -350,6 +380,7 @@ function applyTemplateRule(
     customOperators,
   );
   if (rule.type === "setTemplateValue") {
+    if (preservedTemplateIdentifiers.has(rule.identifier)) return false;
     templateValues[rule.identifier] = value;
     return false;
   }
