@@ -2059,8 +2059,9 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
       ]);
     case "hotspot":
       return setOf(common, ["object", "qti-hotspot-choice"]);
-    case "selectPoint":
     case "positionObject":
+      return setOf(common, ["object", "img", "qti-position-object-stage"]);
+    case "selectPoint":
     case "media":
       return setOf(common, ["object", "img"]);
     case "drawing":

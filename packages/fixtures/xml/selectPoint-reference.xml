@@ -10,7 +10,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for selectPoint-reference: QTI 3.0 item-player conformance fixture.</p>
-    <qti-select-point-interaction response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-select-point-interaction>
+    <qti-select-point-interaction response-identifier="RESPONSE"><qti-prompt>Mark the exact point where the candidate response enters the player pipeline.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-select-point-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml"/>
 </qti-assessment-item>

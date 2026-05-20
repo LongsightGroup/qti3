@@ -295,8 +295,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
-    if (interaction.type === "positionObject" || interaction.type === "selectPoint") {
-      field.append(renderPointResponse(interaction, update, currentValue));
+    if (interaction.type === "selectPoint") {
+      field.append(renderSelectPointResponse(interaction, update, currentValue));
+      return field;
+    }
+
+    if (interaction.type === "positionObject") {
+      field.append(renderPositionObjectResponse(interaction, update, currentValue));
       return field;
     }
 
@@ -402,6 +407,14 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (node.kind === "feedback") return this.renderFeedbackContent(node);
     if (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline") {
       return [this.renderTemplateContent(node)];
+    }
+    if (node.qtiName === "qti-position-object-stage") {
+      return this.renderContentNodes(
+        node.children.filter(
+          (child) =>
+            !("qtiName" in child) || (child.qtiName !== "object" && child.qtiName !== "img"),
+        ),
+      );
     }
     if (node.qtiName === "qti-prompt") {
       const prompt = document.createElement("p");
@@ -870,7 +883,9 @@ function usesChoiceSet(interaction: QtiInteraction): boolean {
   if (interaction.type === "choice" || interaction.type === "hotspot") {
     return true;
   }
-  return interaction.responseCardinality === "multiple";
+  return (
+    interaction.responseCardinality === "multiple" && interaction.responseBaseType === "identifier"
+  );
 }
 
 function usesOrderedResponse(interaction: QtiInteraction): boolean {
@@ -1619,7 +1634,7 @@ function appendGraphicContext(group: HTMLElement, interaction: QtiInteraction): 
   group.append(context);
 }
 
-function renderPointResponse(
+function renderSelectPointResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
@@ -1627,6 +1642,8 @@ function renderPointResponse(
   const group = document.createElement("div");
   group.role = "group";
   group.setAttribute("aria-label", `${readableType(interaction.type)} coordinate response`);
+  const isMultiple = interaction.responseCardinality === "multiple";
+  const maxPoints = isMultiple ? maximumAllowedResponses(interaction) : 1;
 
   const surface = document.createElement("button");
   surface.type = "button";
@@ -1657,68 +1674,102 @@ function renderPointResponse(
     surface.append(image);
   }
 
-  const marker = document.createElement("span");
-  marker.className = "qti3-point-marker";
-  marker.setAttribute("aria-hidden", "true");
-  marker.style.position = "absolute";
-  marker.style.inlineSize = "8px";
-  marker.style.blockSize = "8px";
-  marker.style.border = "2px solid CanvasText";
-  marker.style.borderRadius = "50%";
-  marker.style.transform = "translate(-50%, -50%)";
-  marker.style.pointerEvents = "none";
-  surface.append(marker);
-
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
-  let point = parsePointValue(currentValue);
+  let points = parsePointValues(currentValue);
+  let activeIndex = points.length > 0 ? points.length - 1 : -1;
   const coordinate = document.createElement("output");
   coordinate.className = "qti3-coordinate-output";
   const initialPoint = () => ({
     x: Math.round(width / 2),
     y: Math.round(height / 2),
   });
+  const emitValue = (): QtiValue => {
+    const values = points.map(pointToString);
+    if (isMultiple) return values;
+    return values[0] ?? "";
+  };
   const commit = () => {
-    if (!point) return;
-    update(`${point.x} ${point.y}`);
+    update(emitValue());
   };
   const syncMarker = () => {
-    if (!point) {
-      marker.hidden = true;
+    surface.querySelectorAll(".qti3-point-marker").forEach((marker) => marker.remove());
+    if (points.length === 0) {
       coordinate.value = "";
       coordinate.textContent = "No point selected";
       surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
       return;
     }
-    marker.hidden = false;
-    marker.style.insetInlineStart = `${(point.x / width) * 100}%`;
-    marker.style.insetBlockStart = `${(point.y / height) * 100}%`;
-    coordinate.value = `${point.x} ${point.y}`;
-    coordinate.textContent = `Selected point ${point.x}, ${point.y}`;
+    points.forEach((point, index) => {
+      const marker = document.createElement("span");
+      marker.className = "qti3-point-marker";
+      marker.setAttribute("aria-hidden", "true");
+      marker.style.position = "absolute";
+      marker.style.inlineSize = "8px";
+      marker.style.blockSize = "8px";
+      marker.style.border = "2px solid CanvasText";
+      marker.style.borderRadius = "50%";
+      marker.style.transform = "translate(-50%, -50%)";
+      marker.style.pointerEvents = "none";
+      marker.style.insetInlineStart = `${(point.x / width) * 100}%`;
+      marker.style.insetBlockStart = `${(point.y / height) * 100}%`;
+      if (index === activeIndex) marker.dataset.active = "true";
+      surface.append(marker);
+    });
+    const text = points.map(pointToString).join("; ");
+    coordinate.value = isMultiple
+      ? points.map(pointToString).join(" | ")
+      : pointToString(points[0]);
+    coordinate.textContent = isMultiple
+      ? `${points.length} selected point${points.length === 1 ? "" : "s"}: ${text}`
+      : `Selected point ${pointToString(points[0])}`;
     surface.setAttribute(
       "aria-label",
-      `${readableType(interaction.type)} coordinate area, selected ${point.x} ${point.y}`,
+      `${readableType(interaction.type)} coordinate area, selected ${text}`,
     );
   };
-  const clampPoint = () => {
-    if (!point) return;
+  const clampPoint = (point: { x: number; y: number }) => {
     point.x = Math.max(0, Math.min(width, point.x));
     point.y = Math.max(0, Math.min(height, point.y));
+  };
+  const setActivePoint = (point: { x: number; y: number }) => {
+    clampPoint(point);
+    if (!isMultiple) {
+      points = [point];
+      activeIndex = 0;
+      return;
+    }
+    if (maxPoints !== undefined && points.length >= maxPoints) {
+      points[points.length - 1] = point;
+      activeIndex = points.length - 1;
+      return;
+    }
+    points.push(point);
+    activeIndex = points.length - 1;
+  };
+  const mutableActivePoint = () => {
+    if (points.length === 0) setActivePoint(initialPoint());
+    if (activeIndex < 0 || activeIndex >= points.length) activeIndex = points.length - 1;
+    const point = points[activeIndex];
+    if (point) return point;
+    const fallback = initialPoint();
+    points = [fallback];
+    activeIndex = 0;
+    return fallback;
   };
 
   surface.addEventListener("click", (event) => {
     if (event.detail === 0) return;
     const rect = surface.getBoundingClientRect();
-    point = {
+    setActivePoint({
       x: Math.round(((event.clientX - rect.left) / rect.width) * width),
       y: Math.round(((event.clientY - rect.top) / rect.height) * height),
-    };
-    clampPoint();
+    });
     syncMarker();
     commit();
   });
   surface.addEventListener("keydown", (event) => {
-    point ??= initialPoint();
+    const point = mutableActivePoint();
     const step = event.shiftKey ? 10 : 1;
     if (event.key === "ArrowLeft") point.x -= step;
     else if (event.key === "ArrowRight") point.x += step;
@@ -1731,7 +1782,7 @@ function renderPointResponse(
     } else return;
 
     event.preventDefault();
-    clampPoint();
+    clampPoint(point);
     syncMarker();
   });
 
@@ -1749,16 +1800,208 @@ function renderPointResponse(
     button.textContent = label;
     button.setAttribute("aria-label", `Move point ${label.toLowerCase()}`);
     button.addEventListener("click", () => {
-      point ??= initialPoint();
+      const point = mutableActivePoint();
       point.x += dx;
       point.y += dy;
-      clampPoint();
+      clampPoint(point);
       syncMarker();
       commit();
     });
     controls.append(button);
   }
+  if (isMultiple) {
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.textContent = "Clear points";
+    clear.addEventListener("click", () => {
+      points = [];
+      activeIndex = -1;
+      syncMarker();
+      commit();
+    });
+    controls.append(clear);
+  }
   group.append(surface, coordinate, controls);
+  return group;
+}
+
+function renderPositionObjectResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
+  const group = document.createElement("div");
+  group.role = "group";
+  group.setAttribute("aria-label", `${readableType(interaction.type)} object placement response`);
+
+  const stageObject = interaction.positionObjectStage ?? interaction.object;
+  const movableObject = interaction.positionObjectStage ? interaction.object : undefined;
+  const width = objectAssetWidth(stageObject, 480);
+  const height = objectAssetHeight(stageObject, 300);
+  const movableWidth = objectAssetWidth(movableObject, Math.max(32, Math.round(width * 0.12)));
+  const movableHeight = objectAssetHeight(movableObject, Math.max(32, Math.round(height * 0.12)));
+  let point = parsePointValue(currentValue) ?? {
+    x: Math.round(width / 2),
+    y: Math.round(height / 2),
+  };
+
+  const stage = document.createElement("div");
+  stage.className = "qti3-position-object-stage";
+  stage.tabIndex = 0;
+  stage.role = "group";
+  stage.setAttribute("aria-label", `${readableType(interaction.type)} placement stage`);
+  stage.style.position = "relative";
+  stage.style.inlineSize = `min(100%, ${width}px)`;
+  stage.style.aspectRatio = `${width} / ${height}`;
+  stage.style.boxSizing = "border-box";
+  stage.style.border = "1px solid CanvasText";
+  stage.style.background = "Canvas";
+  stage.style.color = "CanvasText";
+  stage.style.overflow = "hidden";
+  stage.style.touchAction = "none";
+
+  if (stageObject?.data && objectIsImage(stageObject)) {
+    const image = document.createElement("img");
+    image.src = stageObject.data;
+    image.alt = stageObject.text || "";
+    image.style.position = "absolute";
+    image.style.inset = "0";
+    image.style.inlineSize = "100%";
+    image.style.blockSize = "100%";
+    image.style.objectFit = "contain";
+    image.style.pointerEvents = "none";
+    stage.append(image);
+  }
+
+  const marker = document.createElement("button");
+  marker.type = "button";
+  marker.className = "qti3-position-object-marker";
+  marker.setAttribute("aria-label", "Movable object");
+  marker.style.position = "absolute";
+  marker.style.inlineSize = `${movableWidth}px`;
+  marker.style.blockSize = `${movableHeight}px`;
+  marker.style.transform = "translate(-50%, -50%)";
+  marker.style.border = "2px solid CanvasText";
+  marker.style.background = "Canvas";
+  marker.style.color = "CanvasText";
+  marker.style.padding = "0";
+  marker.style.cursor = "grab";
+  marker.style.touchAction = "none";
+  marker.draggable = false;
+
+  if (movableObject?.data && objectIsImage(movableObject)) {
+    const image = document.createElement("img");
+    image.src = movableObject.data;
+    image.alt = "";
+    image.style.inlineSize = "100%";
+    image.style.blockSize = "100%";
+    image.style.objectFit = "contain";
+    image.style.pointerEvents = "none";
+    marker.append(image);
+  } else {
+    marker.textContent = "Place";
+  }
+  stage.append(marker);
+
+  const coordinate = document.createElement("output");
+  coordinate.className = "qti3-coordinate-output";
+  const clamp = () => {
+    point.x = Math.max(0, Math.min(width, point.x));
+    point.y = Math.max(0, Math.min(height, point.y));
+  };
+  const commit = () => {
+    update(pointToString(point));
+  };
+  const syncMarker = () => {
+    clamp();
+    marker.style.insetInlineStart = `${percent(point.x, width)}%`;
+    marker.style.insetBlockStart = `${percent(point.y, height)}%`;
+    coordinate.value = pointToString(point);
+    coordinate.textContent = `Object positioned at ${pointToString(point)}`;
+    stage.setAttribute(
+      "aria-label",
+      `${readableType(interaction.type)} placement stage, object at ${pointToString(point)}`,
+    );
+  };
+  const pointFromPointer = (event: MouseEvent | PointerEvent) => {
+    const rect = stage.getBoundingClientRect();
+    point = {
+      x: Math.round(((event.clientX - rect.left) / rect.width) * width),
+      y: Math.round(((event.clientY - rect.top) / rect.height) * height),
+    };
+    clamp();
+  };
+  const moveBy = (dx: number, dy: number, emit = true) => {
+    point.x += dx;
+    point.y += dy;
+    syncMarker();
+    if (emit) commit();
+  };
+  const handleKey = (event: KeyboardEvent) => {
+    const step = event.shiftKey ? 10 : 1;
+    if (event.key === "ArrowLeft") moveBy(-step, 0, false);
+    else if (event.key === "ArrowRight") moveBy(step, 0, false);
+    else if (event.key === "ArrowUp") moveBy(0, -step, false);
+    else if (event.key === "ArrowDown") moveBy(0, step, false);
+    else if (event.key === "Enter" || event.key === " ") commit();
+    else return;
+    event.preventDefault();
+  };
+
+  let dragging = false;
+  marker.addEventListener("pointerdown", (event) => {
+    dragging = true;
+    marker.setPointerCapture(event.pointerId);
+    marker.style.cursor = "grabbing";
+    pointFromPointer(event);
+    syncMarker();
+    event.preventDefault();
+  });
+  marker.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    pointFromPointer(event);
+    syncMarker();
+  });
+  marker.addEventListener("pointerup", (event) => {
+    if (!dragging) return;
+    dragging = false;
+    marker.releasePointerCapture(event.pointerId);
+    marker.style.cursor = "grab";
+    pointFromPointer(event);
+    syncMarker();
+    commit();
+  });
+  marker.addEventListener("pointercancel", () => {
+    dragging = false;
+    marker.style.cursor = "grab";
+  });
+  stage.addEventListener("click", (event) => {
+    if (event.target === marker) return;
+    pointFromPointer(event);
+    syncMarker();
+    commit();
+  });
+  stage.addEventListener("keydown", handleKey);
+  marker.addEventListener("keydown", handleKey);
+
+  const controls = document.createElement("div");
+  controls.className = "qti3-point-controls";
+  for (const [label, dx, dy] of [
+    ["Up", 0, -1],
+    ["Left", -1, 0],
+    ["Right", 1, 0],
+    ["Down", 0, 1],
+  ] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.setAttribute("aria-label", `Move object ${label.toLowerCase()}`);
+    button.addEventListener("click", () => moveBy(dx, dy));
+    controls.append(button);
+  }
+
+  syncMarker();
+  group.append(stage, coordinate, controls);
   return group;
 }
 
@@ -2170,6 +2413,17 @@ function orderChoicesFromValue(choices: QtiChoice[], value: QtiValue): QtiChoice
 
 function parsePointValue(value: QtiValue): { x: number; y: number } | undefined {
   const [raw] = valueToStrings(value);
+  return parsePointString(raw);
+}
+
+function parsePointValues(value: QtiValue): Array<{ x: number; y: number }> {
+  return valueToStrings(value).flatMap((raw) => {
+    const point = parsePointString(raw);
+    return point ? [point] : [];
+  });
+}
+
+function parsePointString(raw: string | undefined): { x: number; y: number } | undefined {
   if (!raw) return undefined;
   const values = raw.split(/\s+/).map(Number);
   const x = values[0];
@@ -2177,6 +2431,10 @@ function parsePointValue(value: QtiValue): { x: number; y: number } | undefined 
   if (typeof x !== "number" || typeof y !== "number") return undefined;
   if (!Number.isFinite(x) || !Number.isFinite(y)) return undefined;
   return { x, y };
+}
+
+function pointToString(point: { x: number; y: number } | undefined): string {
+  return point ? `${point.x} ${point.y}` : "";
 }
 
 function parseDrawingValue(value: QtiValue): Array<Array<{ x: number; y: number }>> {
@@ -2205,6 +2463,14 @@ function objectWidth(interaction: QtiInteraction): number {
 
 function objectHeight(interaction: QtiInteraction): number {
   return dimension(interaction.object?.height, 120);
+}
+
+function objectAssetWidth(object: QtiObjectAsset | undefined, fallback: number): number {
+  return dimension(object?.width, fallback);
+}
+
+function objectAssetHeight(object: QtiObjectAsset | undefined, fallback: number): number {
+  return dimension(object?.height, fallback);
 }
 
 function drawingWidth(interaction: QtiInteraction): number {

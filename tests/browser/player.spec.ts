@@ -1327,13 +1327,13 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player output")).toHaveText("50");
 
     await loadFixture(page, "positionObject");
-    await page.locator("qti-assessment-item-player .qti3-point-surface").focus();
+    await page.locator("qti-assessment-item-player .qti3-position-object-stage").focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, "240 150");
-    await page.getByRole("button", { name: "Move point right" }).click();
+    await page.getByRole("button", { name: "Move object right" }).click();
     await expectResponse(page, "241 150");
     await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
-      "Selected point 241, 150",
+      "Object positioned at 241 150",
     );
 
     await loadFixture(page, "drawing");
@@ -1716,27 +1716,70 @@ test.describe("manual harness", () => {
     expect(state.outcomes.SCORE).toBe(1);
   });
 
-  test("renders object-backed coordinate surfaces for point interactions", async ({ page }) => {
+  test("captures multiple select point responses when authored", async ({ page }) => {
     await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="select-point-multiple" title="select-point-multiple">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="point"/>
+  <qti-item-body>
+    <qti-select-point-interaction response-identifier="RESPONSE" max-choices="2">
+      <qti-prompt>Mark two points on the diagram.</qti-prompt>
+      <object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/>
+    </qti-select-point-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
 
-    for (const fixture of ["selectPoint", "positionObject"]) {
-      await loadFixture(page, fixture);
+    const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
+    await surface.click({ position: { x: 23, y: 51 } });
+    await expectResponse(page, ["24 52"]);
+    await surface.click({ position: { x: 183, y: 51 } });
+    await expectResponse(page, ["24 52", "184 52"]);
+    await expect(page.locator("qti-assessment-item-player .qti3-point-marker")).toHaveCount(2);
+  });
 
-      const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
-      await expect(surface.locator("img")).toHaveAttribute("src", "hotspot-flow.svg");
-      await expect(surface.locator("img")).toHaveAttribute("alt", "");
-      await expectImageLoaded(surface.locator("img"));
+  test("renders object-backed coordinate surfaces for select point interactions", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await loadFixture(page, "selectPoint");
 
-      const box = await surface.boundingBox();
-      expect(box?.width).toBe(480);
-      expect(box?.height).toBe(300);
+    const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
+    await expect(surface.locator("img")).toHaveAttribute("src", "hotspot-flow.svg");
+    await expect(surface.locator("img")).toHaveAttribute("alt", "");
+    await expectImageLoaded(surface.locator("img"));
 
-      await expect(
-        page.locator("qti-assessment-item-player .qti3-coordinate-output"),
-      ).toContainText("No point selected");
-      await surface.click({ position: { x: 239, y: 87 } });
-      await expectResponse(page, "240 88");
-    }
+    const box = await surface.boundingBox();
+    expect(box?.width).toBe(480);
+    expect(box?.height).toBe(300);
+
+    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
+      "No point selected",
+    );
+    await surface.click({ position: { x: 239, y: 87 } });
+    await expectResponse(page, "240 88");
+  });
+
+  test("renders position object as a draggable object on a stage", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "positionObject");
+
+    const stage = page.locator("qti-assessment-item-player .qti3-position-object-stage");
+    await expect(stage.locator("img").first()).toHaveAttribute("src", "hotspot-flow.svg");
+    await expectImageLoaded(stage.locator("img").first());
+    await expect(stage.getByRole("button", { name: "Movable object" })).toBeVisible();
+
+    const box = await stage.boundingBox();
+    expect(box?.width).toBe(480);
+    expect(box?.height).toBe(300);
+
+    await stage.click({ position: { x: 239, y: 87 } });
+    await expectResponse(page, "240 88");
+    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
+      "Object positioned at 240 88",
+    );
   });
 
   test("captures drawing responses as deterministic stroke data", async ({ page }) => {
@@ -2242,12 +2285,22 @@ async function provideResponse(
     return;
   }
 
-  if (interactionType === "selectPoint" || interactionType === "positionObject") {
+  if (interactionType === "selectPoint") {
     const [x, y] = String(response)
       .split(" ")
       .map((coordinate) => Number(coordinate));
     await page
       .locator("qti-assessment-item-player .qti3-point-surface")
+      .click({ position: { x, y } });
+    return;
+  }
+
+  if (interactionType === "positionObject") {
+    const [x, y] = String(response)
+      .split(" ")
+      .map((coordinate) => Number(coordinate));
+    await page
+      .locator("qti-assessment-item-player .qti3-position-object-stage")
       .click({ position: { x, y } });
     return;
   }

@@ -444,6 +444,11 @@ function parseInteraction(
     });
   }
 
+  const objectNode =
+    interactionType === "positionObject"
+      ? positionObjectInteractionObject(node)
+      : descendants(node, (child) => child.localName === "object" || child.localName === "img")[0];
+
   return {
     type: interactionType ?? "custom",
     qtiName: node.localName,
@@ -452,9 +457,11 @@ function parseInteraction(
     responseBaseType: responseDeclaration?.baseType,
     prompt: prompt ? textContent(prompt) : undefined,
     contextText: inlineInteractionContext(node, interactionType),
-    object: parseObjectAsset(
-      descendants(node, (child) => child.localName === "object" || child.localName === "img")[0],
-    ),
+    object: parseObjectAsset(objectNode),
+    positionObjectStage:
+      interactionType === "positionObject"
+        ? parseObjectAsset(positionObjectStageObject(node))
+        : undefined,
     choices: parseChoices(node),
     hottextSegments: interactionType === "hottext" ? parseHottextSegments(node) : undefined,
     childElements: childElements(node).map((child) => ({
@@ -465,6 +472,28 @@ function parseInteraction(
     text: textContent(node),
     source: node.source,
   };
+}
+
+function positionObjectInteractionObject(node: XmlNode): XmlNode | undefined {
+  return childElements(node).find(
+    (child) => child.localName === "object" || child.localName === "img",
+  );
+}
+
+function positionObjectStageObject(node: XmlNode): XmlNode | undefined {
+  const ancestorStage = nearestAncestor(node, "qti-position-object-stage");
+  const stage = ancestorStage ?? childElements(node, "qti-position-object-stage")[0];
+  if (!stage) return undefined;
+  return childElements(stage).find(
+    (child) => child.localName === "object" || child.localName === "img",
+  );
+}
+
+function nearestAncestor(node: XmlNode, localName: string): XmlNode | undefined {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (parent.localName === localName) return parent;
+  }
+  return undefined;
 }
 
 function parseHottextSegments(node: XmlNode): QtiInteraction["hottextSegments"] {

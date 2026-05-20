@@ -10,7 +10,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for positionObject-reference: QTI 3.0 item-player conformance fixture.</p>
-    <qti-position-object-interaction response-identifier="RESPONSE"><qti-prompt>Position the marker on the response-processing boundary.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-position-object-interaction>
+    <qti-position-object-stage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-position-object-interaction response-identifier="RESPONSE"><qti-prompt>Drag the marker onto the response capture step.</qti-prompt><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"/></qti-position-object-interaction></qti-position-object-stage>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml"/>
 </qti-assessment-item>

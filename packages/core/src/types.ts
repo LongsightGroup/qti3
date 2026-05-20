@@ -187,6 +187,7 @@ export interface QtiInteraction {
   prompt?: string | undefined;
   contextText?: string | undefined;
   object?: QtiObjectAsset | undefined;
+  positionObjectStage?: QtiObjectAsset | undefined;
   choices: QtiChoice[];
   hottextSegments?: QtiHottextSegment[] | undefined;
   childElements: QtiElementChild[];

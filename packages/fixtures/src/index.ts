@@ -679,10 +679,10 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-associable-hotspot identifier="A" hotspot-label="Item XML" shape="rect" coords="24,52,136,124" match-max="1"/><qti-associable-hotspot identifier="B" hotspot-label="Response capture" shape="rect" coords="184,52,296,124" match-max="1"/><qti-associable-hotspot identifier="C" hotspot-label="Processing rules" shape="rect" coords="344,52,456,124" match-max="1"/><qti-associable-hotspot identifier="D" hotspot-label="Outcomes" shape="rect" coords="184,178,296,250" match-max="1"/></${qtiName}>`;
   }
   if (interactionType === "selectPoint") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Mark the exact point where the candidate response enters the player pipeline.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></${qtiName}>`;
   }
   if (interactionType === "positionObject") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Position the marker on the response-processing boundary.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></${qtiName}>`;
+    return `<qti-position-object-stage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><${qtiName} response-identifier="RESPONSE"><qti-prompt>Drag the marker onto the response capture step.</qti-prompt><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"/></${qtiName}></qti-position-object-stage>`;
   }
   if (interactionType === "upload") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a short implementation note describing how your item player records response state.</qti-prompt></${qtiName}>`;

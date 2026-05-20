@@ -148,6 +148,36 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("parses position object stage separately from the movable object", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="position-stage">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point"/>
+        <qti-item-body>
+          <qti-position-object-stage>
+            <object data="stage.svg" type="image/svg+xml" width="480" height="300"/>
+            <qti-position-object-interaction response-identifier="RESPONSE">
+              <object data="marker.svg" type="image/svg+xml" width="64" height="48"/>
+            </qti-position-object-interaction>
+          </qti-position-object-stage>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const interaction = result.document?.item.interactions.find(
+      (item) => item.type === "positionObject",
+    );
+    expect(interaction?.object).toMatchObject({ data: "marker.svg", width: "64", height: "48" });
+    expect(interaction?.positionObjectStage).toMatchObject({
+      data: "stage.svg",
+      width: "480",
+      height: "300",
+    });
+    expect(result.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "interaction.child.unsupported" }),
+    );
+  });
+
   it("parses and scores a choice item", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">
