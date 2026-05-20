@@ -1,4 +1,4 @@
-import type { QtiInteractionType } from "@qti3/core";
+import { interactionSupport, type QtiInteractionType } from "@qti3/core";
 
 export interface InteractionA11yContract {
   interactionType: QtiInteractionType;
@@ -7,32 +7,9 @@ export interface InteractionA11yContract {
   requiresValidationMessageAssociation: boolean;
 }
 
-export const a11yContracts: InteractionA11yContract[] = [
-  "associate",
-  "choice",
-  "custom",
-  "drawing",
-  "endAttempt",
-  "extendedText",
-  "gapMatch",
-  "graphicAssociate",
-  "graphicGapMatch",
-  "graphicOrder",
-  "hotspot",
-  "hottext",
-  "inlineChoice",
-  "match",
-  "media",
-  "order",
-  "positionObject",
-  "portableCustom",
-  "selectPoint",
-  "slider",
-  "textEntry",
-  "upload",
-].map((interactionType) => ({
-  interactionType: interactionType as QtiInteractionType,
-  keyboardRequired: interactionType !== "media",
+export const a11yContracts: InteractionA11yContract[] = interactionSupport.map((support) => ({
+  interactionType: support.interactionType as QtiInteractionType,
+  keyboardRequired: support.interactionType !== "media",
   requiresAccessibleName: true,
   requiresValidationMessageAssociation: true,
 }));

@@ -3,7 +3,6 @@ import type { QtiElementSupport, QtiInteractionType } from "./types.js";
 export const interactionSupport: QtiElementSupport[] = [
   entry("qti-associate-interaction", "associate"),
   entry("qti-choice-interaction", "choice"),
-  entry("qti-custom-interaction", "custom"),
   entry("qti-drawing-interaction", "drawing"),
   entry("qti-end-attempt-interaction", "endAttempt"),
   entry("qti-extended-text-interaction", "extendedText"),
@@ -25,12 +24,25 @@ export const interactionSupport: QtiElementSupport[] = [
   entry("qti-upload-interaction", "upload"),
 ];
 
+export const deprecatedInteractionSupport: QtiElementSupport[] = [
+  {
+    qtiName: "qti-custom-interaction",
+    interactionType: "custom",
+    category: "interaction",
+    support: "deprecated",
+    specReference: "QTI 3.0.1 ASI Q-31",
+    notes: "Deprecated in favor of qti-portable-custom-interaction.",
+  },
+];
+
+const allInteractionSupport = [...interactionSupport, ...deprecatedInteractionSupport];
+
 export const interactionNameToType = new Map<string, QtiInteractionType>(
-  interactionSupport.map((item) => [item.qtiName, item.interactionType]),
+  allInteractionSupport.map((item) => [item.qtiName, item.interactionType]),
 );
 
 export function getInteractionSupport(qtiName: string): QtiElementSupport | undefined {
-  return interactionSupport.find((item) => item.qtiName === qtiName);
+  return allInteractionSupport.find((item) => item.qtiName === qtiName);
 }
 
 function entry(qtiName: string, interactionType: QtiInteractionType): QtiElementSupport {

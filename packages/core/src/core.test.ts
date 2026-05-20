@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createItemSession, interactionSupport, parseQtiXml } from "./index.js";
+import {
+  createItemSession,
+  deprecatedInteractionSupport,
+  interactionSupport,
+  parseQtiXml,
+} from "./index.js";
 
 describe("@qti3/core", () => {
   it("tracks every target QTI 3 interaction type", () => {
@@ -7,7 +12,6 @@ describe("@qti3/core", () => {
       [
         "qti-associate-interaction",
         "qti-choice-interaction",
-        "qti-custom-interaction",
         "qti-drawing-interaction",
         "qti-end-attempt-interaction",
         "qti-extended-text-interaction",
@@ -29,6 +33,29 @@ describe("@qti3/core", () => {
         "qti-upload-interaction",
       ]
     `);
+  });
+
+  it("tracks deprecated interactions outside the runtime target set", () => {
+    expect(deprecatedInteractionSupport).toMatchObject([
+      {
+        qtiName: "qti-custom-interaction",
+        support: "deprecated",
+      },
+    ]);
+
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="deprecated-custom">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-custom-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "interaction.deprecated", severity: "warning" }),
+    );
   });
 
   it("parses and scores a choice item", () => {

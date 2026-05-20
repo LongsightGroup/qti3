@@ -1,4 +1,4 @@
-import { interactionNameToType } from "./support.js";
+import { getInteractionSupport, interactionNameToType } from "./support.js";
 import type {
   QtiAssessmentItem,
   QtiCardinality,
@@ -142,6 +142,14 @@ function parseInteraction(
       code: "interaction.unsupported",
       severity: "warning",
       message: `${node.localName} is not currently in the support registry.`,
+    });
+  }
+  const support = getInteractionSupport(node.localName);
+  if (support?.support === "deprecated") {
+    diagnostics.push({
+      code: "interaction.deprecated",
+      severity: "warning",
+      message: `${node.localName} is deprecated. ${support.notes ?? ""}`.trim(),
     });
   }
 

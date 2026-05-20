@@ -1,6 +1,11 @@
 export { parseQtiXml } from "./parser.js";
 export { createItemSession, type QtiItemSession } from "./session.js";
-export { getInteractionSupport, interactionNameToType, interactionSupport } from "./support.js";
+export {
+  deprecatedInteractionSupport,
+  getInteractionSupport,
+  interactionNameToType,
+  interactionSupport,
+} from "./support.js";
 export type {
   QtiAssessmentItem,
   QtiAttemptStateV1,

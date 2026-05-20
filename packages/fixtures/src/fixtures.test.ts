@@ -3,7 +3,8 @@ import { interactionFixtures } from "./index.js";
 
 describe("@qti3/fixtures", () => {
   it("has one reference fixture for every target interaction", () => {
-    expect(interactionFixtures).toHaveLength(22);
-    expect(new Set(interactionFixtures.map((fixture) => fixture.interactionType)).size).toBe(22);
+    expect(interactionFixtures).toHaveLength(21);
+    expect(new Set(interactionFixtures.map((fixture) => fixture.interactionType)).size).toBe(21);
+    expect(interactionFixtures.some((fixture) => fixture.interactionType === "custom")).toBe(false);
   });
 });

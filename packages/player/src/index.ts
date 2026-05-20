@@ -119,7 +119,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     if (
       interaction.type === "textEntry" ||
-      interaction.type === "custom" ||
       interaction.type === "portableCustom" ||
       interaction.type === "drawing" ||
       interaction.type === "positionObject" ||
