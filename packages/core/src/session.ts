@@ -123,7 +123,10 @@ function applyTemplateProcessing(
   correctResponses: Record<string, QtiValue>,
   random: () => number,
 ): void {
-  for (const rule of document.item.templateProcessing?.rules ?? []) {
+  const rules = document.item.templateProcessing?.rules ?? [];
+  let restarts = 0;
+  for (let index = 0; index < rules.length; index += 1) {
+    const rule = rules[index]!;
     const shouldExit = applyTemplateRule(
       rule,
       document,
@@ -134,6 +137,34 @@ function applyTemplateProcessing(
       random,
     );
     if (shouldExit) return;
+    if (rule.type === "templateConstraint") {
+      const satisfied = evaluateBoolean(
+        rule.expression,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      );
+      if (!satisfied) {
+        resetTemplateValues(document, templateValues);
+        restarts += 1;
+        if (restarts <= 100) index = -1;
+      }
+    }
+  }
+}
+
+function resetTemplateValues(
+  document: QtiDocument,
+  templateValues: Record<string, QtiValue>,
+): void {
+  for (const key of Object.keys(templateValues)) {
+    delete templateValues[key];
+  }
+  for (const declaration of document.item.templateDeclarations) {
+    templateValues[declaration.identifier] = declaration.defaultValue;
   }
 }
 
@@ -147,6 +178,7 @@ function applyTemplateRule(
   random: () => number,
 ): boolean {
   if (rule.type === "exitTemplate") return true;
+  if (rule.type === "templateConstraint") return false;
 
   if (rule.type === "templateCondition") {
     let branch = evaluateBoolean(

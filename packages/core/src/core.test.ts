@@ -1398,6 +1398,44 @@ describe("@qti3/core", () => {
     expect(session.serialize().templateValues).toEqual({ A: 1 });
   });
 
+  it("restarts template processing until template constraints are satisfied", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-template-declaration>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-template-declaration>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-random-integer min="1" max="3"/>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="B">
+            <qti-random-integer min="1" max="3"/>
+          </qti-set-template-value>
+          <qti-template-constraint>
+            <qti-not>
+              <qti-equal>
+                <qti-variable identifier="A"/>
+                <qti-variable identifier="B"/>
+              </qti-equal>
+            </qti-not>
+          </qti-template-constraint>
+        </qti-template-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!, undefined, { randomSeed: "constraint" });
+    const values = session.serialize().templateValues!;
+    expect(values.A).not.toBe(values.B);
+  });
+
   it("validates random integer processing attributes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-random-integer">

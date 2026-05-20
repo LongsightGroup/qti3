@@ -500,6 +500,10 @@ function validateTemplateRule(
   diagnostics: QtiDiagnostic[],
 ): void {
   if (rule.type === "exitTemplate") return;
+  if (rule.type === "templateConstraint") {
+    validateExpressionReferences(rule.expression, responses, variables, diagnostics);
+    return;
+  }
 
   if (rule.type === "templateCondition") {
     validateExpressionReferences(rule.ifExpression, responses, variables, diagnostics);

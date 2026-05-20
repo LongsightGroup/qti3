@@ -490,6 +490,18 @@ function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
     };
   }
 
+  if (node.localName === "qti-template-constraint") {
+    return {
+      type: "templateConstraint",
+      expression: parseFirstExpression(node) ?? {
+        type: "baseValue",
+        value: null,
+        source: node.source,
+      },
+      source: node.source,
+    };
+  }
+
   return undefined;
 }
 

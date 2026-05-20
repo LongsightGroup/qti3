@@ -298,6 +298,11 @@ export type QtiTemplateRule =
   | {
       type: "exitTemplate";
       source?: QtiSourceLocation | undefined;
+    }
+  | {
+      type: "templateConstraint";
+      expression: QtiProcessingExpression;
+      source?: QtiSourceLocation | undefined;
     };
 
 export interface QtiTemplateBranch {

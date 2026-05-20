@@ -56,6 +56,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-template-if", "packages/core/src/core.test.ts"),
   processingEntry("qti-template-else-if", "packages/core/src/core.test.ts"),
   processingEntry("qti-template-else", "packages/core/src/core.test.ts"),
+  processingEntry("qti-template-constraint", "packages/core/src/core.test.ts"),
   processingEntry("qti-response-condition", "packages/core/src/core.test.ts"),
   processingEntry("qti-response-if", "packages/core/src/core.test.ts"),
   processingEntry("qti-response-else-if", "packages/core/src/core.test.ts"),
