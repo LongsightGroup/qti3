@@ -164,6 +164,27 @@ test.describe("manual harness", () => {
     );
   });
 
+  test("scores advanced processing fixtures through the manual debugger", async ({ page }) => {
+    await page.goto("/");
+
+    const fixture = processingFixtures.find((item) => item.id === "advanced-processing-reference");
+    if (!fixture) throw new Error("Missing advanced processing fixture.");
+
+    await page.locator("#fixture").selectOption(fixture.id);
+    await page.locator("#load-fixture").click();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+    await page.locator("#debug-score").click();
+
+    await expect(page.locator("#debug-outcomes")).toContainText('"ROUNDED": true');
+    await expect(page.locator("#debug-outcomes")).toContainText('"GCD_VALUE": 6');
+    await expect(page.locator("#debug-outcomes")).toContainText('"LCM_VALUE": 12');
+    await expect(page.locator("#debug-outcomes")).toContainText('"MEAN_VALUE": 4');
+    await expect(page.locator("#debug-outcomes")).toContainText('"ANY_INSIDE": true');
+    await expect(page.locator("#debug-outcomes")).toContainText('"NONE_INSIDE": false');
+    await expect(page.locator("#debug-outcomes")).toContainText('"IN_POLY": true');
+    await expect(page.locator("#debug-action-log")).toContainText("qti-score");
+  });
+
   test("renders item-body prompts before interactions", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??
