@@ -581,7 +581,7 @@ describe("@qti3/core", () => {
         <qti-item-body><p>Unsupported processing expression.</p></qti-item-body>
         <qti-response-processing>
           <qti-set-outcome-value identifier="SCORE">
-            <qti-number-selected/>
+            <qti-unsupported-expression/>
           </qti-set-outcome-value>
         </qti-response-processing>
       </qti-assessment-item>
@@ -591,8 +591,9 @@ describe("@qti3/core", () => {
     expect(unsupported.diagnostics).toContainEqual(
       expect.objectContaining({
         code: "processing.unsupported",
-        message: "qti-number-selected is not currently supported as a QTI processing element.",
-        path: "/qti-assessment-item/qti-response-processing[1]/qti-set-outcome-value[1]/qti-number-selected[1]",
+        message:
+          "qti-unsupported-expression is not currently supported as a QTI processing element.",
+        path: "/qti-assessment-item/qti-response-processing[1]/qti-set-outcome-value[1]/qti-unsupported-expression[1]",
       }),
     );
 
@@ -609,6 +610,34 @@ describe("@qti3/core", () => {
     `);
 
     expect(forbidden.ok).toBe(false);
+    for (const name of [
+      "qti-number-correct",
+      "qti-number-incorrect",
+      "qti-number-presented",
+      "qti-number-responded",
+      "qti-number-selected",
+      "qti-outcome-minimum",
+      "qti-outcome-maximum",
+      "qti-test-variables",
+    ]) {
+      const result = parseQtiXml(`
+        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${name}">
+          <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+          <qti-item-body><p>Forbidden processing expression.</p></qti-item-body>
+          <qti-response-processing>
+            <qti-set-outcome-value identifier="SCORE"><${name}/></qti-set-outcome-value>
+          </qti-response-processing>
+        </qti-assessment-item>
+      `);
+
+      expect(result.ok, name).toBe(false);
+      expect(result.diagnostics, name).toContainEqual(
+        expect.objectContaining({
+          code: "processing.response.forbidden",
+          message: `${name} must not be used in qti-response-processing.`,
+        }),
+      );
+    }
     expect(forbidden.diagnostics).toContainEqual(
       expect.objectContaining({
         code: "processing.response.forbidden",

@@ -40,6 +40,11 @@ import { childElements, descendants, parseXmlTree, textContent, type XmlNode } f
 const supportedProcessingNames = new Set(processingSupport.map((entry) => entry.qtiName));
 const processingContainerNames = new Set(["qti-template-processing", "qti-response-processing"]);
 const responseProcessingForbiddenNames = new Set([
+  "qti-number-correct",
+  "qti-number-incorrect",
+  "qti-number-presented",
+  "qti-number-responded",
+  "qti-number-selected",
   "qti-outcome-minimum",
   "qti-outcome-maximum",
   "qti-test-variables",
@@ -158,12 +163,6 @@ function diagnoseProcessingElements(
   for (const node of [processingNode, ...descendants(processingNode, () => true)]) {
     if (!node.localName.startsWith("qti-")) continue;
     if (
-      processingContainerNames.has(node.localName) ||
-      supportedProcessingNames.has(node.localName)
-    ) {
-      continue;
-    }
-    if (
       processingNode.localName === "qti-response-processing" &&
       responseProcessingForbiddenNames.has(node.localName)
     ) {
@@ -174,6 +173,12 @@ function diagnoseProcessingElements(
         path: node.source.path,
         source: node.source,
       });
+      continue;
+    }
+    if (
+      processingContainerNames.has(node.localName) ||
+      supportedProcessingNames.has(node.localName)
+    ) {
       continue;
     }
     diagnostics.push({
