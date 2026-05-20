@@ -530,6 +530,22 @@ test.describe("manual harness", () => {
 
     await page.locator("qti-assessment-item-player .qti3-pair-list button").click();
     await expectResponse(page, []);
+
+    const source = page
+      .locator('qti-assessment-item-player [aria-label="Associate sources"]')
+      .locator('[data-choice-identifier="A"]');
+    const target = page
+      .locator('qti-assessment-item-player [aria-label="Associate targets"]')
+      .locator('[data-choice-identifier="B"]');
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) throw new Error("Missing associate drag boxes.");
+
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+    await page.mouse.up();
+    await expectResponse(page, ["A B"]);
   });
 
   test("creates match pairs and preserves graphic association context", async ({ page }) => {

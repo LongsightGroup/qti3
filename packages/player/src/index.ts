@@ -609,6 +609,7 @@ function renderPairResponse(
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
   pairList.setAttribute("aria-label", `${readableType(interaction.type)} selected pairs`);
+  let draggedSource: string | undefined;
 
   const commit = () => {
     if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
@@ -648,6 +649,14 @@ function renderPairResponse(
     renderPairs();
     commit();
   };
+  const addPair = (sourceIdentifier: string | undefined, targetIdentifier: string): void => {
+    const source = sources.find((choice) => choice.identifier === sourceIdentifier);
+    const target = targets.find((choice) => choice.identifier === targetIdentifier);
+    if (!source || !target) return;
+    selectedSource = source;
+    selectedTarget = target;
+    addSelectedPair();
+  };
   const renderPairs = () => {
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
@@ -674,6 +683,16 @@ function renderPairResponse(
 
   for (const choice of sources) {
     const button = tokenButton(choice);
+    button.draggable = true;
+    button.addEventListener("dragstart", (event) => {
+      draggedSource = choice.identifier;
+      event.dataTransfer?.setData("text/plain", choice.identifier);
+      event.dataTransfer?.setDragImage(button, 8, 8);
+    });
+    button.addEventListener("dragend", () => {
+      draggedSource = undefined;
+      syncPressed();
+    });
     button.addEventListener("click", () => {
       selectedSource = choice;
       syncPressed();
@@ -683,6 +702,16 @@ function renderPairResponse(
   }
   for (const choice of targets) {
     const button = tokenButton(choice);
+    button.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      button.classList.add("qti3-drop-target");
+    });
+    button.addEventListener("dragleave", () => button.classList.remove("qti3-drop-target"));
+    button.addEventListener("drop", (event) => {
+      event.preventDefault();
+      button.classList.remove("qti3-drop-target");
+      addPair(event.dataTransfer?.getData("text/plain") || draggedSource, choice.identifier);
+    });
     button.addEventListener("click", () => {
       selectedTarget = choice;
       syncPressed();
