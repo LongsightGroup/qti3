@@ -18,6 +18,7 @@ describe("@qti3/fixtures", () => {
       "mapping-processing-reference",
       "generic-match-processing-reference",
       "template-processing-reference",
+      "template-content-reference",
     ]);
     expect(adaptiveFixtures.map((fixture) => fixture.id)).toEqual(["adaptive-feedback-reference"]);
     expect(canonicalFixtures).toHaveLength(

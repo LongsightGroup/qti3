@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-content-reference" title="template-content-reference" time-dependent="false" xml:lang="en">
+  <qti-template-declaration identifier="PATH" cardinality="single" base-type="identifier"/>
+  <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer" math-variable="true"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-template-processing>
+    <qti-set-template-value identifier="PATH"><qti-base-value base-type="identifier">reference</qti-base-value></qti-set-template-value>
+    <qti-set-template-value identifier="COUNT"><qti-base-value base-type="integer">3</qti-base-value></qti-set-template-value>
+  </qti-template-processing>
+  <qti-item-body>
+    <qti-template-block template-identifier="PATH" identifier="reference" show-hide="show">
+      <qti-content-body><p>The generated reference branch is visible.</p></qti-content-body>
+    </qti-template-block>
+    <qti-template-block template-identifier="PATH" identifier="distractor" show-hide="show">
+      <qti-content-body><p>The distractor branch should be hidden.</p></qti-content-body>
+    </qti-template-block>
+    <p>The generated count appears in MathML as <math><mrow><mi>COUNT</mi><mo>+</mo><mn>1</mn></mrow></math>.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Template content is controlled by template variables.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Template content ignores template variables.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>
