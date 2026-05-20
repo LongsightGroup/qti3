@@ -375,6 +375,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (node.kind === "printedVariable")
       return [this.renderPrintedVariable(node.identifier, node.format)];
     if (node.kind === "feedback") return this.renderFeedbackContent(node);
+    if (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline") {
+      return [this.renderTemplateContent(node)];
+    }
     if (node.qtiName === "qti-prompt") {
       const prompt = document.createElement("p");
       prompt.className = "qti3-item-prompt";
@@ -388,6 +391,20 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     copySafeAttributes(element, node.attributes);
     element.append(...this.renderContentNodes(node.children));
     return [element];
+  }
+
+  private renderTemplateContent(node: Extract<QtiContentNode, { kind: "element" }>): HTMLElement {
+    const element = document.createElement(node.qtiName === "qti-template-block" ? "div" : "span");
+    copySafeAttributes(element, node.attributes);
+    element.classList.add(
+      node.qtiName === "qti-template-block" ? "qti3-template-block" : "qti3-template-inline",
+    );
+    element.dataset.templateIdentifier = node.attributes["template-identifier"] ?? "";
+    element.dataset.templateValueIdentifier = node.attributes.identifier ?? "";
+    element.dataset.showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
+    element.hidden = !this.isTemplateContentVisible(element);
+    element.append(...this.renderContentNodes(node.children));
+    return element;
   }
 
   private renderPrintedVariable(identifier: string, format: string | undefined): HTMLElement {
@@ -434,6 +451,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         : String(value ?? "") === identifier;
       element.hidden = element.dataset.showHide === "hide" ? hasIdentifier : !hasIdentifier;
     }
+
+    for (const element of this.querySelectorAll<HTMLElement>(
+      ".qti3-template-block, .qti3-template-inline",
+    )) {
+      element.hidden = !this.isTemplateContentVisible(element);
+    }
   }
 
   private isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean {
@@ -444,6 +467,17 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     return node.showHide === "show" ? hasIdentifier : !hasIdentifier;
   }
 
+  private isTemplateContentVisible(element: HTMLElement): boolean {
+    const templateIdentifier = element.dataset.templateIdentifier;
+    const identifier = element.dataset.templateValueIdentifier;
+    if (!templateIdentifier || !identifier) return true;
+    const value = this.currentTemplateValue(templateIdentifier);
+    const hasIdentifier = Array.isArray(value)
+      ? value.map(String).includes(identifier)
+      : String(value ?? "") === identifier;
+    return element.dataset.showHide === "hide" ? !hasIdentifier : hasIdentifier;
+  }
+
   private currentVariableValue(identifier: string): QtiValue {
     const state = this.session?.serialize();
     return (
@@ -452,6 +486,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       state?.responses[identifier] ??
       null
     );
+  }
+
+  private currentTemplateValue(identifier: string): QtiValue {
+    return this.session?.serialize().templateValues?.[identifier] ?? null;
   }
 
   private currentResponseValue(identifier: string): QtiValue {

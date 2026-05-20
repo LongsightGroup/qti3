@@ -326,6 +326,49 @@ test.describe("manual harness", () => {
     );
   });
 
+  test("renders template block and inline content from generated template values", async ({
+    page,
+  }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-content" title="template-content" time-dependent="false">
+  <qti-template-declaration identifier="PATH" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-template-processing>
+    <qti-set-template-value identifier="PATH">
+      <qti-base-value base-type="identifier">reference</qti-base-value>
+    </qti-set-template-value>
+  </qti-template-processing>
+  <qti-item-body>
+    <qti-template-block template-identifier="PATH" identifier="reference" show-hide="show" class="reference-path">
+      <qti-content-body><p>The reference path is active.</p></qti-content-body>
+    </qti-template-block>
+    <qti-template-block template-identifier="PATH" identifier="distractor" show-hide="show">
+      <qti-content-body><p>The distractor path is hidden.</p></qti-content-body>
+    </qti-template-block>
+    <p>This item uses the <qti-template-inline template-identifier="PATH" identifier="reference" show-hide="show">generated reference</qti-template-inline><qti-template-inline template-identifier="PATH" identifier="reference" show-hide="hide">hidden fallback</qti-template-inline> branch.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Continue</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-template-block.reference-path")).toContainText(
+      "The reference path is active.",
+    );
+    await expect(player.locator(".qti3-template-block", { hasText: "distractor" })).toBeHidden();
+    await expect(
+      player.locator(".qti3-template-inline", { hasText: "generated reference" }),
+    ).toBeVisible();
+    await expect(
+      player.locator(".qti3-template-inline", { hasText: "hidden fallback" }),
+    ).toBeHidden();
+  });
+
   test("preserves safe HTML and MathML body content", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="math-body" title="math-body" time-dependent="false">
