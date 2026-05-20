@@ -203,6 +203,54 @@ describe("@qti3/core", () => {
     });
   });
 
+  it("preserves item body mixed-content order with embedded interactions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mixed-body">
+        <qti-response-declaration identifier="FIRST" cardinality="single" base-type="identifier"/>
+        <qti-response-declaration identifier="SECOND" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <p>Choose <qti-inline-choice-interaction response-identifier="FIRST">
+            <qti-inline-choice identifier="A">response</qti-inline-choice>
+            <qti-inline-choice identifier="B">outcome</qti-inline-choice>
+          </qti-inline-choice-interaction> and type <qti-text-entry-interaction response-identifier="SECOND"/>.</p>
+          <p>Score: <qti-printed-variable identifier="SCORE"/></p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions.map((interaction) => interaction.type)).toEqual([
+      "inlineChoice",
+      "textEntry",
+    ]);
+    const [firstParagraph, secondParagraph] = result.document?.item.body ?? [];
+    expect(firstParagraph).toMatchObject({ kind: "element", qtiName: "p" });
+    expect(firstParagraph?.kind === "element" ? firstParagraph.children : []).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "text", text: expect.stringContaining("Choose") }),
+        expect.objectContaining({
+          kind: "interaction",
+          interactionIndex: 0,
+          responseIdentifier: "FIRST",
+        }),
+        expect.objectContaining({ kind: "text", text: expect.stringContaining("and type") }),
+        expect.objectContaining({
+          kind: "interaction",
+          interactionIndex: 1,
+          responseIdentifier: "SECOND",
+        }),
+      ]),
+    );
+    expect(secondParagraph).toMatchObject({ kind: "element", qtiName: "p" });
+    expect(secondParagraph?.kind === "element" ? secondParagraph.children : []).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "text", text: expect.stringContaining("Score") }),
+        expect.objectContaining({ kind: "printedVariable", identifier: "SCORE" }),
+      ]),
+    );
+  });
+
   it("validates response declaration references and response shape", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid">

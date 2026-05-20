@@ -204,6 +204,54 @@ export interface QtiObjectAsset {
   source?: QtiSourceLocation | undefined;
 }
 
+export type QtiContentNode =
+  | QtiTextContent
+  | QtiElementContent
+  | QtiInteractionContent
+  | QtiPrintedVariableContent
+  | QtiFeedbackContent;
+
+export interface QtiTextContent {
+  kind: "text";
+  text: string;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiElementContent {
+  kind: "element";
+  qtiName: string;
+  attributes: Record<string, string>;
+  children: QtiContentNode[];
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiInteractionContent {
+  kind: "interaction";
+  interactionIndex: number;
+  qtiName: string;
+  responseIdentifier?: string | undefined;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiPrintedVariableContent {
+  kind: "printedVariable";
+  identifier: string;
+  format?: string | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiFeedbackContent {
+  kind: "feedback";
+  feedbackType: "block" | "inline";
+  identifier: string;
+  outcomeIdentifier: string;
+  showHide: "show" | "hide";
+  attributes: Record<string, string>;
+  children: QtiContentNode[];
+  source?: QtiSourceLocation | undefined;
+}
+
 export interface QtiAssessmentItem {
   identifier: string;
   title?: string | undefined;
@@ -215,6 +263,7 @@ export interface QtiAssessmentItem {
   responseProcessing?: QtiResponseProcessing | undefined;
   interactions: QtiInteraction[];
   modalFeedback: QtiModalFeedback[];
+  body: QtiContentNode[];
   bodyText: string;
   source?: QtiSourceLocation | undefined;
 }

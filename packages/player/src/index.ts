@@ -5,6 +5,7 @@ import {
   type QtiAttemptStatus,
   type QtiAttemptStateV1,
   type QtiChoice,
+  type QtiContentNode,
   type QtiDiagnostic,
   type QtiDocument,
   type QtiInteraction,
@@ -91,6 +92,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.renderValidationMessages();
     const result = session.score();
     this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
+    this.updateDynamicBodyState();
     if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
   }
@@ -154,15 +156,22 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     title.textContent = documentModel.item.title ?? documentModel.item.identifier;
     root.append(title);
 
-    if (documentModel.item.prompt) {
+    if (documentModel.item.prompt && documentModel.item.body.length === 0) {
       const prompt = document.createElement("p");
       prompt.className = "qti3-item-prompt";
       prompt.textContent = documentModel.item.prompt;
       root.append(prompt);
     }
 
-    for (const interaction of documentModel.item.interactions) {
-      root.append(this.renderInteraction(interaction));
+    if (documentModel.item.body.length > 0) {
+      const body = document.createElement("div");
+      body.className = "qti3-item-body";
+      body.append(...this.renderContentNodes(documentModel.item.body));
+      root.append(body);
+    } else {
+      for (const interaction of documentModel.item.interactions) {
+        root.append(this.renderInteraction(interaction));
+      }
     }
 
     const actions = document.createElement("div");
@@ -298,6 +307,135 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     field.append(renderSelect(interaction, update));
     return field;
+  }
+
+  private renderEmbeddedInteraction(interaction: QtiInteraction): HTMLElement {
+    if (interaction.type !== "inlineChoice" && interaction.type !== "textEntry") {
+      return this.renderInteraction(interaction);
+    }
+
+    const wrapper = document.createElement("span");
+    wrapper.className = `qti3-interaction qti3-${interaction.type} qti3-embedded-interaction`;
+    wrapper.dataset.interactionType = interaction.type;
+    if (interaction.responseIdentifier)
+      wrapper.dataset.responseIdentifier = interaction.responseIdentifier;
+
+    const responseIdentifier = interaction.responseIdentifier;
+    const update = (value: QtiValue) => {
+      if (!responseIdentifier || !this.session) return;
+      this.session.respond(responseIdentifier, value);
+      this.clearValidationMessage(responseIdentifier);
+      this.dispatchEvent(
+        new CustomEvent("qti-responsechange", {
+          detail: { responseIdentifier, value },
+        }),
+      );
+      this.dispatchEvent(
+        new CustomEvent("qti-statechange", { detail: { state: this.session.serialize() } }),
+      );
+    };
+
+    if (interaction.responseIdentifier) {
+      wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));
+    }
+    wrapper.append(
+      interaction.type === "inlineChoice"
+        ? renderSelect(interaction, update)
+        : renderInlineTextEntry(interaction, update),
+    );
+    return wrapper;
+  }
+
+  private renderContentNodes(nodes: QtiContentNode[]): Node[] {
+    return nodes.flatMap((node) => this.renderContentNode(node));
+  }
+
+  private renderContentNode(node: QtiContentNode): Node[] {
+    if (node.kind === "text") return [document.createTextNode(node.text)];
+    if (node.kind === "interaction") {
+      const interaction = this.documentModel?.item.interactions[node.interactionIndex];
+      return interaction ? [this.renderEmbeddedInteraction(interaction)] : [];
+    }
+    if (node.kind === "printedVariable")
+      return [this.renderPrintedVariable(node.identifier, node.format)];
+    if (node.kind === "feedback") return this.renderFeedbackContent(node);
+    if (node.qtiName === "qti-prompt") {
+      const prompt = document.createElement("p");
+      prompt.className = "qti3-item-prompt";
+      prompt.append(...this.renderContentNodes(node.children));
+      return [prompt];
+    }
+
+    const elementName = contentElementName(node.qtiName);
+    if (!elementName) return this.renderContentNodes(node.children);
+    const element = createContentElement(elementName);
+    copySafeAttributes(element, node.attributes);
+    element.append(...this.renderContentNodes(node.children));
+    return [element];
+  }
+
+  private renderPrintedVariable(identifier: string, format: string | undefined): HTMLElement {
+    const output = document.createElement("output");
+    output.className = "qti3-printed-variable";
+    output.dataset.identifier = identifier;
+    if (format) output.dataset.format = format;
+    output.value = formatPrintedValue(this.currentVariableValue(identifier), format);
+    output.textContent = output.value;
+    return output;
+  }
+
+  private renderFeedbackContent(node: Extract<QtiContentNode, { kind: "feedback" }>): Node[] {
+    const element = document.createElement(node.feedbackType === "block" ? "section" : "span");
+    element.className = `qti3-feedback-${node.feedbackType}`;
+    element.dataset.feedbackIdentifier = node.identifier;
+    element.dataset.outcomeIdentifier = node.outcomeIdentifier;
+    element.dataset.showHide = node.showHide;
+    element.hidden = !this.isFeedbackVisible(node);
+    element.append(...this.renderContentNodes(node.children));
+    return [element];
+  }
+
+  private updateDynamicBodyState(): void {
+    for (const output of this.querySelectorAll<HTMLOutputElement>(".qti3-printed-variable")) {
+      const identifier = output.dataset.identifier;
+      if (!identifier) continue;
+      output.value = formatPrintedValue(
+        this.currentVariableValue(identifier),
+        output.dataset.format,
+      );
+      output.textContent = output.value;
+    }
+
+    for (const element of this.querySelectorAll<HTMLElement>(
+      ".qti3-feedback-block, .qti3-feedback-inline",
+    )) {
+      const identifier = element.dataset.feedbackIdentifier;
+      const outcomeIdentifier = element.dataset.outcomeIdentifier;
+      if (!identifier || !outcomeIdentifier) continue;
+      const value = this.currentVariableValue(outcomeIdentifier);
+      const hasIdentifier = Array.isArray(value)
+        ? value.map(String).includes(identifier)
+        : String(value ?? "") === identifier;
+      element.hidden = element.dataset.showHide === "hide" ? hasIdentifier : !hasIdentifier;
+    }
+  }
+
+  private isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean {
+    const value = this.currentVariableValue(node.outcomeIdentifier);
+    const hasIdentifier = Array.isArray(value)
+      ? value.map(String).includes(node.identifier)
+      : String(value ?? "") === node.identifier;
+    return node.showHide === "show" ? hasIdentifier : !hasIdentifier;
+  }
+
+  private currentVariableValue(identifier: string): QtiValue {
+    const state = this.session?.serialize();
+    return (
+      state?.outcomes[identifier] ??
+      state?.templateValues?.[identifier] ??
+      state?.responses[identifier] ??
+      null
+    );
   }
 
   private applyDefaultStyles(): void {
@@ -908,7 +1046,7 @@ function renderTextResponse(
   if (mode === "entry" && expectedLength > 0) {
     (control as HTMLInputElement).maxLength = expectedLength;
   }
-  const sync = () => {
+  const sync = (emitResponse = true) => {
     const value = control.value;
     const words = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
     const lengthText =
@@ -916,12 +1054,45 @@ function renderTextResponse(
         ? `${value.length} of ${expectedLength} characters`
         : `${value.length} characters`;
     counter.textContent = mode === "extended" ? `${lengthText}, ${words} words` : lengthText;
-    update(value);
+    if (emitResponse) update(value);
   };
-  control.addEventListener("input", sync);
-  control.addEventListener("change", sync);
-  sync();
+  control.addEventListener("input", () => sync());
+  control.addEventListener("change", () => sync());
+  sync(false);
   group.append(control, counter);
+  return group;
+}
+
+function renderInlineTextEntry(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("span");
+  group.className = "qti3-inline-text-response";
+  const input = document.createElement("input");
+  input.className = "qti3-text-input qti3-inline-text-input";
+  input.setAttribute(
+    "aria-label",
+    interaction.prompt ?? interaction.contextText ?? "Text response",
+  );
+  const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
+  if (expectedLength > 0) input.maxLength = expectedLength;
+  const counter = document.createElement("output");
+  counter.className = "qti3-counter qti3-inline-counter";
+  counter.setAttribute("aria-live", "polite");
+  const sync = (emitResponse = true) => {
+    const lengthText =
+      expectedLength > 0
+        ? `${input.value.length} of ${expectedLength} characters`
+        : `${input.value.length} characters`;
+    counter.value = lengthText;
+    counter.textContent = lengthText;
+    if (emitResponse) update(input.value);
+  };
+  input.addEventListener("input", () => sync());
+  input.addEventListener("change", () => sync());
+  sync(false);
+  group.append(input, counter);
   return group;
 }
 
@@ -1576,6 +1747,169 @@ function portableCustomEventValue(event: Event): QtiValue | undefined {
   return detail as QtiValue;
 }
 
+const htmlContentElements = new Set([
+  "a",
+  "abbr",
+  "b",
+  "blockquote",
+  "br",
+  "caption",
+  "cite",
+  "code",
+  "dd",
+  "dfn",
+  "div",
+  "dl",
+  "dt",
+  "em",
+  "figcaption",
+  "figure",
+  "hr",
+  "i",
+  "img",
+  "kbd",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "q",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+  "var",
+]);
+
+const mathMlElements = new Set([
+  "math",
+  "maction",
+  "maligngroup",
+  "malignmark",
+  "menclose",
+  "merror",
+  "mfenced",
+  "mfrac",
+  "mglyph",
+  "mi",
+  "mlabeledtr",
+  "mlongdiv",
+  "mmultiscripts",
+  "mn",
+  "mo",
+  "mover",
+  "mpadded",
+  "mphantom",
+  "mroot",
+  "mrow",
+  "ms",
+  "mscarries",
+  "mscarry",
+  "msgroup",
+  "msline",
+  "mspace",
+  "msqrt",
+  "msrow",
+  "mstack",
+  "mstyle",
+  "msub",
+  "msubsup",
+  "msup",
+  "mtable",
+  "mtd",
+  "mtext",
+  "mtr",
+  "munder",
+  "munderover",
+  "semantics",
+]);
+
+function contentElementName(qtiName: string): string | undefined {
+  if (qtiName === "qti-content-body" || qtiName === "qti-prompt") return undefined;
+  if (htmlContentElements.has(qtiName) || mathMlElements.has(qtiName)) return qtiName;
+  if (qtiName === "object") return "object";
+  if (qtiName === "qti-rubric-block") return "section";
+  if (qtiName === "qti-template-block") return "div";
+  if (qtiName === "qti-template-inline") return "span";
+  return undefined;
+}
+
+function createContentElement(name: string): HTMLElement | MathMLElement {
+  if (mathMlElements.has(name)) {
+    return document.createElementNS("http://www.w3.org/1998/Math/MathML", name) as MathMLElement;
+  }
+  return document.createElement(name);
+}
+
+function copySafeAttributes(element: Element, attributes: Record<string, string>): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (!isSafeContentAttribute(name, value)) continue;
+    element.setAttribute(name, value);
+  }
+}
+
+function isSafeContentAttribute(name: string, value: string): boolean {
+  if (name.startsWith("on")) return false;
+  if (name === "style") return false;
+  if (name === "href" || name === "src" || name === "data") {
+    return isSafeUrl(value);
+  }
+  return (
+    name === "alt" ||
+    name === "aria-label" ||
+    name === "aria-describedby" ||
+    name === "class" ||
+    name === "colspan" ||
+    name === "height" ||
+    name === "id" ||
+    name === "lang" ||
+    name === "role" ||
+    name === "rowspan" ||
+    name === "scope" ||
+    name === "title" ||
+    name === "type" ||
+    name === "width" ||
+    name.startsWith("data-")
+  );
+}
+
+function isSafeUrl(value: string): boolean {
+  return (
+    value.startsWith("#") ||
+    value.startsWith("/") ||
+    value.startsWith("./") ||
+    value.startsWith("../") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("data:image/") ||
+    value.startsWith("data:audio/") ||
+    value.startsWith("data:video/")
+  );
+}
+
+function formatPrintedValue(value: QtiValue, format?: string): string {
+  if (value === null || value === undefined) return "";
+  const numericValue =
+    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+  if (Number.isFinite(numericValue) && format) {
+    const fixed = /^%\.(\d+)f$/.exec(format);
+    if (fixed) return numericValue.toFixed(Number(fixed[1]));
+    if (format === "%d" || format === "%i") return String(Math.trunc(numericValue));
+  }
+  if (Array.isArray(value)) return value.map((item) => String(item)).join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
 function readableType(type: string): string {
   return type
     .replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)
@@ -1603,6 +1937,15 @@ function validationMessageElement(responseIdentifier: string): HTMLElement {
   return element;
 }
 
+function inlineValidationMessageElement(responseIdentifier: string): HTMLElement {
+  const element = document.createElement("span");
+  element.id = validationMessageId(responseIdentifier);
+  element.dataset.validationFor = responseIdentifier;
+  element.hidden = true;
+  element.role = "alert";
+  return element;
+}
+
 function validationMessageId(responseIdentifier: string): string {
   return `qti3-validation-${responseIdentifier}`;
 }
@@ -1620,6 +1963,40 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-interaction {
       display: grid;
       gap: 0.75rem;
+    }
+
+    .qti3-item-body {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .qti3-item-body > * {
+      margin-block: 0;
+    }
+
+    .qti3-embedded-interaction {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: baseline;
+      vertical-align: baseline;
+    }
+
+    .qti3-inline-text-input {
+      inline-size: auto;
+      min-inline-size: 8ch;
+      max-inline-size: 18ch;
+      margin-inline: 0.25rem;
+    }
+
+    .qti3-printed-variable {
+      font-weight: 700;
+    }
+
+    .qti3-feedback-block {
+      padding: 0.75rem;
+      border-inline-start: 4px solid Highlight;
+      background: Canvas;
+      color: CanvasText;
     }
 
     .qti3-player fieldset {

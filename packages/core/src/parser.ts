@@ -4,6 +4,7 @@ import type {
   QtiCardinality,
   QtiChoice,
   QtiChoiceRole,
+  QtiContentNode,
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
@@ -93,11 +94,19 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const responseProcessing = parseResponseProcessing(
     childElements(node, "qti-response-processing")[0],
   );
-  const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
-  const interactions = descendants(node, isInteractionElement).map((interactionNode) =>
-    parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
-  );
   const itemBody = childElements(node, "qti-item-body")[0];
+  const interactions: QtiInteraction[] = [];
+  const body = itemBody
+    ? parseContentChildren(itemBody, diagnostics, responseDeclarationMap, interactions)
+    : [];
+  if (!itemBody) {
+    interactions.push(
+      ...descendants(node, isInteractionElement).map((interactionNode) =>
+        parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
+      ),
+    );
+  }
+  const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
   const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
 
   return {
@@ -111,6 +120,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     responseProcessing,
     interactions,
     modalFeedback,
+    body,
     bodyText: textContent(node),
     source: node.source,
   };
@@ -127,6 +137,74 @@ function parseModalFeedback(node: XmlNode): QtiModalFeedback {
     outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
     showHide,
     text: textContent(node),
+    source: node.source,
+  };
+}
+
+function parseContentChildren(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+  responseDeclarationMap: Map<string, QtiResponseDeclaration>,
+  interactions: QtiInteraction[],
+): QtiContentNode[] {
+  const content: QtiContentNode[] = [];
+  for (const entry of node.content) {
+    if (typeof entry === "string") {
+      if (entry.length > 0) content.push({ kind: "text", text: entry, source: node.source });
+      continue;
+    }
+    const parsed = parseContentNode(entry, diagnostics, responseDeclarationMap, interactions);
+    if (parsed) content.push(parsed);
+  }
+  return content;
+}
+
+function parseContentNode(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+  responseDeclarationMap: Map<string, QtiResponseDeclaration>,
+  interactions: QtiInteraction[],
+): QtiContentNode | undefined {
+  if (isInteractionElement(node)) {
+    const interaction = parseInteraction(node, diagnostics, responseDeclarationMap);
+    const interactionIndex = interactions.push(interaction) - 1;
+    return {
+      kind: "interaction",
+      interactionIndex,
+      qtiName: node.localName,
+      responseIdentifier: interaction.responseIdentifier,
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-printed-variable") {
+    return {
+      kind: "printedVariable",
+      identifier: node.attributes.identifier ?? "",
+      format: node.attributes.format,
+      attributes: node.attributes,
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-feedback-block" || node.localName === "qti-feedback-inline") {
+    return {
+      kind: "feedback",
+      feedbackType: node.localName === "qti-feedback-block" ? "block" : "inline",
+      identifier: node.attributes.identifier ?? "",
+      outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
+      showHide: node.attributes["show-hide"] === "hide" ? "hide" : "show",
+      attributes: node.attributes,
+      children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
+      source: node.source,
+    };
+  }
+
+  return {
+    kind: "element",
+    qtiName: node.localName,
+    attributes: node.attributes,
+    children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
     source: node.source,
   };
 }

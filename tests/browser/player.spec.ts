@@ -71,8 +71,11 @@ test.describe("manual harness", () => {
 
     const player = page.locator("qti-assessment-item-player");
     await expect(player.locator(".qti3-inlineChoice")).toHaveCount(2);
-    await expect(player.locator(".qti3-inlineChoice").first()).toContainText(
-      "interaction writes a candidate answer",
+    await expect(player.locator(".qti3-item-body p").nth(1)).toContainText(
+      "In QTI 3.0, an interaction writes a candidate answer to a",
+    );
+    await expect(player.locator(".qti3-item-body p").nth(1)).toContainText(
+      "and response processing writes derived values such as SCORE to an",
     );
     await expect(
       player.locator('[data-response-identifier="RESPONSE_DECLARATION"] select'),
@@ -150,6 +153,57 @@ test.describe("manual harness", () => {
     await expect(feedback).toContainText("Correct feedback.");
     await expect(feedback).not.toContainText("Incorrect feedback.");
     await expect(feedback).toHaveAttribute("aria-live", "polite");
+  });
+
+  test("renders printed variables and body feedback from current outcomes", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="body-feedback" title="body-feedback" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Choose the correct response.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Correct</qti-simple-choice>
+      <qti-simple-choice identifier="B">Incorrect</qti-simple-choice>
+    </qti-choice-interaction>
+    <p>Current score: <qti-printed-variable identifier="SCORE" format="%.2f"/></p>
+    <qti-feedback-block outcome-identifier="FEEDBACK" identifier="correct" show-hide="show">
+      <qti-content-body><p>Body feedback is now visible.</p></qti-content-body>
+    </qti-feedback-block>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">correct</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+    await expect(
+      page.locator('qti-assessment-item-player .qti3-printed-variable[data-identifier="SCORE"]'),
+    ).toHaveText("0.00");
+    await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toBeHidden();
+
+    await page.getByRole("radio", { name: "A. Correct" }).check();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
+
+    await expect(
+      page.locator('qti-assessment-item-player .qti3-printed-variable[data-identifier="SCORE"]'),
+    ).toHaveText("1.00");
+    await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toContainText(
+      "Body feedback is now visible.",
+    );
   });
 
   test("renders object-backed media interactions with native controls", async ({ page }) => {

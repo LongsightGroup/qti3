@@ -5,6 +5,7 @@ export interface XmlNode {
   localName: string;
   attributes: Record<string, string>;
   children: XmlNode[];
+  content: Array<string | XmlNode>;
   text: string;
   source: XmlSourceLocation;
   parent?: XmlNode;
@@ -41,6 +42,7 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
         localName: event.localName ?? event.name,
         attributes: event.attributes,
         children: [],
+        content: [],
         text: "",
         source: sourceLocation(xml, offset, nodePath(parent, event.localName ?? event.name)),
       };
@@ -48,6 +50,7 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
       if (parent) {
         node.parent = parent;
         parent.children.push(node);
+        parent.content.push(node);
       } else {
         root = node;
       }
@@ -62,7 +65,10 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
 
     if (event.type === XmlEventType.CHARACTERS || event.type === XmlEventType.CDATA) {
       const node = stack.at(-1);
-      if (node) node.text += event.value;
+      if (node) {
+        node.text += event.value;
+        node.content.push(event.value);
+      }
     }
   }
 
@@ -83,8 +89,9 @@ export function descendants(node: XmlNode, predicate: (node: XmlNode) => boolean
 }
 
 export function textContent(node: XmlNode): string {
-  const parts = [node.text];
-  for (const child of node.children) parts.push(textContent(child));
+  const parts = node.content.map((entry) =>
+    typeof entry === "string" ? entry : textContent(entry),
+  );
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 

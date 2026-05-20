@@ -23,6 +23,7 @@ export type {
   QtiAttemptStateV1,
   QtiChoice,
   QtiChoiceRole,
+  QtiContentNode,
   QtiDiagnostic,
   QtiDocument,
   QtiElementSupport,
