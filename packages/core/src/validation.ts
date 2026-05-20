@@ -411,9 +411,10 @@ function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnost
 }
 
 function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
-  const responseIdentifiers = new Set(
-    item.responseDeclarations.map((declaration) => declaration.identifier),
+  const responseDeclarations = new Map(
+    item.responseDeclarations.map((declaration) => [declaration.identifier, declaration]),
   );
+  const responseIdentifiers = new Set(responseDeclarations.keys());
   for (const interaction of item.interactions) {
     validateInteractionResponseReference(interaction, responseIdentifiers, diagnostics);
     validateInteractionResponseShape(interaction, diagnostics);
@@ -421,6 +422,13 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionChildren(interaction, diagnostics);
     validateInteractionRequiredAttributes(interaction, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
+    validateCorrectResponseReferences(
+      interaction,
+      interaction.responseIdentifier
+        ? responseDeclarations.get(interaction.responseIdentifier)
+        : undefined,
+      diagnostics,
+    );
   }
 }
 
@@ -520,6 +528,61 @@ function validateInteractionChoices(
   for (const choice of interaction.choices) {
     validateChoiceLimitAttributes(choice, diagnostics);
   }
+}
+
+function validateCorrectResponseReferences(
+  interaction: QtiInteraction,
+  declaration: QtiResponseDeclaration | undefined,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!declaration || declaration.correctResponse === null) return;
+  if (
+    declaration.baseType !== "identifier" &&
+    declaration.baseType !== "pair" &&
+    declaration.baseType !== "directedPair"
+  ) {
+    return;
+  }
+
+  const identifiers = new Set(
+    interaction.choices
+      .map((choice) => choice.identifier)
+      .filter((identifier) => identifier.length > 0),
+  );
+  if (identifiers.size === 0) return;
+
+  for (const value of responseValues(declaration.correctResponse)) {
+    if (declaration.baseType === "identifier") {
+      if (identifiers.has(value)) continue;
+      invalidCorrectResponseReference(interaction, declaration, value, diagnostics);
+      continue;
+    }
+
+    const parts = value.trim().split(/\s+/);
+    if (parts.length !== 2 || parts.some((part) => !identifiers.has(part))) {
+      invalidCorrectResponseReference(interaction, declaration, value, diagnostics);
+    }
+  }
+}
+
+function responseValues(value: QtiResponseDeclaration["correctResponse"]): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  return [String(value)];
+}
+
+function invalidCorrectResponseReference(
+  interaction: QtiInteraction,
+  declaration: QtiResponseDeclaration,
+  value: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  diagnostics.push({
+    code: "response.correctResponse.reference",
+    severity: "error",
+    message: `Response declaration ${declaration.identifier} correct response ${value} does not reference choices in ${interaction.qtiName}.`,
+    path: declaration.source?.path,
+    source: declaration.source,
+  });
 }
 
 function validateInteractionChildren(

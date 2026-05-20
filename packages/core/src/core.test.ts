@@ -252,6 +252,46 @@ describe("@qti3/core", () => {
     expect(validateAssessmentItem(result.document!).ok).toBe(true);
   });
 
+  it("validates correct response choice references", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs">
+        <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>MISSING</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="MATCH" cardinality="multiple" base-type="directedPair">
+          <qti-correct-response><qti-value>A MISSING</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="CHOICE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-match-interaction response-identifier="MATCH">
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice>
+            </qti-simple-match-set>
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice>
+            </qti-simple-match-set>
+          </qti-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "response.correctResponse.reference",
+          path: "/qti-assessment-item/qti-response-declaration[1]",
+        }),
+        expect.objectContaining({
+          code: "response.correctResponse.reference",
+          path: "/qti-assessment-item/qti-response-declaration[2]",
+        }),
+      ]),
+    );
+  });
+
   it("scores an inline response condition with map-response", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped">
