@@ -68,8 +68,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     this.documentModel = result.document;
     this.session = createItemSession(result.document, options.state);
+    this.validationMessages = cloneDiagnostics(options.state?.validationMessages ?? []);
     if (options.status) this.session.setStatus(options.status);
     this.render();
+    this.renderValidationMessages();
     this.dispatchEvent(new CustomEvent("qti-ready", { detail: { item: result.document.item } }));
     this.emitStateChange();
   }
@@ -107,6 +109,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   reset(): void {
     if (!this.documentModel) return;
     this.session = createItemSession(this.documentModel);
+    this.validationMessages = [];
     this.render();
     this.dispatchEvent(new CustomEvent("qti-reset", { detail: { state: this.serialize() } }));
     this.emitStateChange();
@@ -123,7 +126,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       );
     }
     this.session = createItemSession(this.documentModel, state);
+    this.validationMessages = cloneDiagnostics(state.validationMessages);
     this.render();
+    this.renderValidationMessages();
     this.dispatchEvent(new CustomEvent("qti-restore", { detail: { state: this.serialize() } }));
     this.emitStateChange();
   }
@@ -149,7 +154,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   serialize() {
     const state = this.session?.serialize();
-    if (state) state.validationMessages = [...this.validationMessages];
+    if (state) state.validationMessages = cloneDiagnostics(this.validationMessages);
     return state;
   }
 
@@ -2185,6 +2190,13 @@ function inlineValidationMessageElement(responseIdentifier: string): HTMLElement
 
 function validationMessageId(responseIdentifier: string): string {
   return `qti3-validation-${responseIdentifier}`;
+}
+
+function cloneDiagnostics(diagnostics: QtiDiagnostic[]): QtiDiagnostic[] {
+  return diagnostics.map((diagnostic) => ({
+    ...diagnostic,
+    source: diagnostic.source ? { ...diagnostic.source } : undefined,
+  }));
 }
 
 function playerStyleElement(): HTMLStyleElement {

@@ -932,6 +932,19 @@ test.describe("manual harness", () => {
     await expect(page.locator("#score-status")).toHaveText(
       "Score blocked by 1 validation message.",
     );
+
+    const restoredState = await page
+      .locator("qti-assessment-item-player")
+      .evaluate((element, attemptState) => {
+        element.reset();
+        element.restore(attemptState);
+        attemptState.validationMessages[0]!.message = "mutated after restore";
+        return element.serialize();
+      }, state);
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="A"] input'),
+    ).toHaveAttribute("aria-invalid", "true");
+    expect(restoredState.validationMessages).toEqual(state.validationMessages);
   });
 
   test("restores serialized responses into visible controls", async ({ page }) => {

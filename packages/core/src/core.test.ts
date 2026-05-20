@@ -238,6 +238,46 @@ describe("@qti3/core", () => {
     expect(restored.serialize().responses.ORDER).toEqual(["A", "B"]);
   });
 
+  it("preserves restored validation messages until the attempt changes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-state">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const state = createItemSession(result.document!).serialize();
+    state.validationMessages = [
+      {
+        code: "response.required",
+        severity: "error",
+        message: "RESPONSE requires a response.",
+        path: "RESPONSE",
+        source: { line: 1, column: 2, offset: 3, path: "/qti-assessment-item" },
+      },
+    ];
+
+    const restored = createItemSession(result.document!, state);
+    expect(restored.serialize().validationMessages).toEqual(state.validationMessages);
+
+    state.validationMessages[0]!.message = "mutated";
+    state.validationMessages[0]!.source!.line = 99;
+    expect(restored.serialize().validationMessages[0]).toMatchObject({
+      message: "RESPONSE requires a response.",
+      source: { line: 1 },
+    });
+
+    restored.respond("RESPONSE", "A");
+    expect(restored.serialize().validationMessages).toEqual([]);
+  });
+
   it("rejects incompatible restored attempt state", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-target">

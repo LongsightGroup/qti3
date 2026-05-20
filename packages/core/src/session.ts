@@ -76,6 +76,7 @@ export function createItemSession(
   const priorResponses = cloneValueRecord(priorState?.responses ?? {});
   const priorOutcomes = cloneValueRecord(priorState?.outcomes ?? {});
   const priorTemplateValues = cloneValueRecord(priorState?.templateValues ?? {});
+  let validationMessages = cloneDiagnostics(priorState?.validationMessages ?? []);
   const responses: Record<string, QtiValue> = {};
   const outcomes: Record<string, QtiValue> = {};
   const templateValues: Record<string, QtiValue> = {};
@@ -139,6 +140,7 @@ export function createItemSession(
     },
     respond(identifier: string, value: QtiValue) {
       responses[identifier] = cloneValue(value);
+      validationMessages = [];
       startAttempt();
     },
     setStatus(nextStatus: QtiAttemptStatus) {
@@ -164,6 +166,7 @@ export function createItemSession(
         customOperators,
       );
       if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
+      validationMessages = diagnostics;
       const state = serialize(
         document.item.identifier,
         status,
@@ -175,7 +178,14 @@ export function createItemSession(
       return { outcomes: { ...outcomes }, diagnostics, state };
     },
     serialize() {
-      return serialize(document.item.identifier, status, responses, outcomes, templateValues, []);
+      return serialize(
+        document.item.identifier,
+        status,
+        responses,
+        outcomes,
+        templateValues,
+        validationMessages,
+      );
     },
   };
 
@@ -1799,6 +1809,13 @@ function cloneValue(value: QtiValue): QtiValue {
   if (Array.isArray(value)) return [...value];
   if (isRecordValue(value)) return cloneValueRecord(value);
   return value;
+}
+
+function cloneDiagnostics(diagnostics: QtiDiagnostic[]): QtiDiagnostic[] {
+  return diagnostics.map((diagnostic) => ({
+    ...diagnostic,
+    source: diagnostic.source ? { ...diagnostic.source } : undefined,
+  }));
 }
 
 function scoreMapping(
