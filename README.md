@@ -111,6 +111,12 @@ The CLI can parse local QTI directories, including external reference sets:
 pnpm --filter @qti3/cli exec qti3 parse-dir /path/to/items
 ```
 
+It can also score each item by applying its declared correct responses:
+
+```sh
+pnpm --filter @qti3/cli exec qti3 score-correct-dir /path/to/items
+```
+
 It can also write standalone reference items for every currently targeted interaction:
 
 ```sh

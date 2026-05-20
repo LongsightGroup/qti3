@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { deprecatedInteractionSupport, interactionSupport, parseQtiXml } from "@qti3/core";
+import {
+  createItemSession,
+  deprecatedInteractionSupport,
+  interactionSupport,
+  parseQtiXml,
+  type QtiValue,
+} from "@qti3/core";
 import { interactionFixtures } from "@qti3/fixtures";
 
 export async function main(args = process.argv.slice(2)): Promise<number> {
@@ -14,24 +20,21 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   if (command === "parse-dir" && file) {
-    const files = await findXmlFiles(file);
-    const results = [];
-    let failed = 0;
-    for (const xmlFile of files) {
-      const xml = await readFile(xmlFile, "utf8");
-      if (!xml.includes("qti-assessment-item")) continue;
-      const result = parseQtiXml(xml);
-      if (!result.ok) failed += 1;
-      results.push({
-        file: xmlFile,
-        ok: result.ok,
-        diagnostics: result.diagnostics,
-        interactions:
-          result.document?.item.interactions.map((interaction) => interaction.qtiName) ?? [],
-      });
-    }
-    console.log(JSON.stringify({ checked: results.length, failed, results }, null, 2));
-    return failed === 0 ? 0 : 1;
+    const report = await parseDirectory(file);
+    console.log(JSON.stringify(report, null, 2));
+    return report.failed === 0 ? 0 : 1;
+  }
+
+  if (command === "score-correct" && file) {
+    const result = await scoreCorrectFile(file);
+    console.log(JSON.stringify(result, null, 2));
+    return result.ok && (!result.scorable || result.scorePositive) ? 0 : 1;
+  }
+
+  if (command === "score-correct-dir" && file) {
+    const report = await scoreCorrectDirectory(file);
+    console.log(JSON.stringify(report, null, 2));
+    return report.failed === 0 ? 0 : 1;
   }
 
   if (command === "write-fixtures" && file) {
@@ -62,7 +65,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix",
   );
   return 1;
 }
@@ -80,4 +83,91 @@ async function findXmlFiles(root: string): Promise<string[]> {
     else if (entry.isFile() && entry.name.endsWith(".xml")) files.push(path);
   }
   return files;
+}
+
+async function parseDirectory(root: string): Promise<{
+  checked: number;
+  failed: number;
+  results: {
+    file: string;
+    ok: boolean;
+    diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
+    interactions: string[];
+  }[];
+}> {
+  const files = await findXmlFiles(root);
+  const results = [];
+  let failed = 0;
+  for (const xmlFile of files) {
+    const xml = await readFile(xmlFile, "utf8");
+    if (!xml.includes("qti-assessment-item")) continue;
+    const result = parseQtiXml(xml);
+    if (!result.ok) failed += 1;
+    results.push({
+      file: xmlFile,
+      ok: result.ok,
+      diagnostics: result.diagnostics,
+      interactions:
+        result.document?.item.interactions.map((interaction) => interaction.qtiName) ?? [],
+    });
+  }
+  return { checked: results.length, failed, results };
+}
+
+async function scoreCorrectDirectory(root: string): Promise<{
+  checked: number;
+  failed: number;
+  results: Awaited<ReturnType<typeof scoreCorrectFile>>[];
+}> {
+  const files = await findXmlFiles(root);
+  const results = [];
+  let failed = 0;
+  for (const xmlFile of files) {
+    const xml = await readFile(xmlFile, "utf8");
+    if (!xml.includes("qti-assessment-item")) continue;
+    const result = await scoreCorrectFile(xmlFile);
+    if (!result.ok || (result.scorable && !result.scorePositive)) failed += 1;
+    results.push(result);
+  }
+  return { checked: results.length, failed, results };
+}
+
+async function scoreCorrectFile(file: string): Promise<{
+  file: string;
+  ok: boolean;
+  scorable: boolean;
+  scorePositive: boolean;
+  outcomes: Record<string, QtiValue>;
+  diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
+}> {
+  const xml = await readFile(file, "utf8");
+  const result = parseQtiXml(xml);
+  if (!result.document || !result.ok) {
+    return {
+      file,
+      ok: false,
+      scorable: false,
+      scorePositive: false,
+      outcomes: {},
+      diagnostics: result.diagnostics,
+    };
+  }
+
+  const session = createItemSession(result.document);
+  let scorable = false;
+  for (const declaration of result.document.item.responseDeclarations) {
+    if (declaration.correctResponse !== null) {
+      scorable = true;
+      session.respond(declaration.identifier, declaration.correctResponse);
+    }
+  }
+  const scored = session.score();
+  return {
+    file,
+    ok: scored.diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
+    scorable,
+    scorePositive: typeof scored.outcomes.SCORE === "number" && scored.outcomes.SCORE > 0,
+    outcomes: scored.outcomes,
+    diagnostics: [...result.diagnostics, ...scored.diagnostics],
+  };
 }

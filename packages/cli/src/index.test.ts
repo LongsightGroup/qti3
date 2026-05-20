@@ -18,6 +18,8 @@ describe("@qti3/cli", () => {
         expect(result.ok, fixture.id).toBe(true);
         expect(result.document?.item.interactions[0]?.type).toBe(fixture.interactionType);
       }
+
+      await expect(main(["score-correct-dir", directory])).resolves.toBe(0);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
