@@ -117,6 +117,12 @@ It can also write standalone reference items for every currently targeted intera
 pnpm --filter @qti3/cli exec qti3 write-fixtures packages/fixtures/xml
 ```
 
+The support matrix is intentionally machine-readable:
+
+```sh
+pnpm --filter @qti3/cli exec qti3 support-matrix
+```
+
 The intended enforcement model is strict:
 
 - `oxfmt` is the only formatter.

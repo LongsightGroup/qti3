@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { parseQtiXml } from "@qti3/core";
+import { deprecatedInteractionSupport, interactionSupport, parseQtiXml } from "@qti3/core";
 import { interactionFixtures } from "@qti3/fixtures";
 
 export async function main(args = process.argv.slice(2)): Promise<number> {
@@ -47,8 +47,22 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     return 0;
   }
 
+  if (command === "support-matrix") {
+    console.log(
+      JSON.stringify(
+        {
+          target: "QTI 3.0.1 ASI interactions",
+          interactions: [...interactionSupport, ...deprecatedInteractionSupport],
+        },
+        null,
+        2,
+      ),
+    );
+    return 0;
+  }
+
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 write-fixtures <directory>",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix",
   );
   return 1;
 }

@@ -22,4 +22,8 @@ describe("@qti3/cli", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("prints the support matrix", async () => {
+    await expect(main(["support-matrix"])).resolves.toBe(0);
+  });
 });
