@@ -8,6 +8,9 @@
       "import": "./dist/index.js"
     }
   },
+  "scripts": {
+    "prepublishOnly": "pnpm --dir ../.. release:check"
+  },
   "dependencies": {
     "stax-xml": "^0.7.0"
   }

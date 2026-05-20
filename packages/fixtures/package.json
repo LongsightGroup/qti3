@@ -9,6 +9,9 @@
     },
     "./xml/*": "./xml/*"
   },
+  "scripts": {
+    "prepublishOnly": "pnpm --dir ../.. release:check"
+  },
   "dependencies": {
     "@qti3/core": "workspace:*"
   }

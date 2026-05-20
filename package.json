@@ -16,7 +16,8 @@
     "check:deps": "node scripts/check-dependencies.mjs",
     "build": "tsc -b",
     "dev": "vite --host 127.0.0.1 examples/manual",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build"
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build",
+    "release:check": "pnpm verify && pnpm test:browser && node packages/cli/dist/index.js run-fixtures"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

@@ -28,3 +28,4 @@ jobs:
       - run: pnpm check:deps
       - run: pnpm test:browser
       - run: pnpm build
+      - run: node packages/cli/dist/index.js run-fixtures

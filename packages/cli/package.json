@@ -11,6 +11,9 @@
       "import": "./dist/index.js"
     }
   },
+  "scripts": {
+    "prepublishOnly": "pnpm --dir ../.. release:check"
+  },
   "dependencies": {
     "@qti3/conformance": "workspace:*",
     "@qti3/core": "workspace:*",
