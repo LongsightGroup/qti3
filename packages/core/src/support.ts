@@ -35,6 +35,7 @@ export const deprecatedInteractionSupport: QtiElementSupport[] = [
     validate: false,
     render: false,
     process: false,
+    fixtures: [],
     tests: ["packages/core/src/core.test.ts"],
     notes: "Deprecated in favor of qti-portable-custom-interaction.",
   },
@@ -61,6 +62,7 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiElement
     validate: true,
     render: true,
     process: true,
+    fixtures: [`packages/fixtures/xml/${interactionType}-reference.xml`],
     tests: [
       "packages/fixtures/src/fixtures.test.ts",
       "packages/conformance/src/conformance.test.ts",

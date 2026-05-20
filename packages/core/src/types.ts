@@ -315,6 +315,7 @@ export interface QtiElementSupport {
   validate: boolean;
   render: boolean;
   process: boolean;
+  fixtures: string[];
   tests: string[];
   notes?: string | undefined;
 }

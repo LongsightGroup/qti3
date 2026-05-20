@@ -41,8 +41,30 @@ describe("@qti3/cli", () => {
       validate: true,
       render: true,
       process: true,
+      fixtures: ["packages/fixtures/xml/choice-reference.xml"],
     });
     expect(choice?.tests).toContain("tests/browser/player.spec.ts");
+  });
+
+  it("keeps supported interactions tied to concrete reference fixtures", () => {
+    const fixtureIds = new Set(interactionFixtures.map((fixture) => fixture.id));
+
+    for (const support of interactionSupport) {
+      expect(support.fixtures, support.interactionType).toEqual([
+        `packages/fixtures/xml/${support.interactionType}-reference.xml`,
+      ]);
+      expect(fixtureIds.has(`${support.interactionType}-reference`), support.interactionType).toBe(
+        true,
+      );
+      expect(support.tests, support.interactionType).toEqual(
+        expect.arrayContaining([
+          "packages/fixtures/src/fixtures.test.ts",
+          "packages/conformance/src/conformance.test.ts",
+          "packages/a11y/src/a11y.test.ts",
+          "tests/browser/player.spec.ts",
+        ]),
+      );
+    }
   });
 
   it("scores template-generated correct responses", async () => {
