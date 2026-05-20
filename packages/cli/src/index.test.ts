@@ -30,6 +30,32 @@ describe("@qti3/cli", () => {
     await expect(main(["support-matrix"])).resolves.toBe(0);
   });
 
+  it("prints the accessibility proof matrix", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await expect(main(["a11y-proof"])).resolves.toBe(0);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      expect(report.target).toContain("accessibility proof");
+      expect(report.interactions).toHaveLength(interactionSupport.length);
+      expect(report.manualAssistiveTechnologyScripts).toHaveLength(3);
+      expect(report.interactions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            interactionType: "order",
+            proof: expect.objectContaining({
+              automated: expect.arrayContaining([
+                "manual harness reference fixture renders without axe-core violations",
+              ]),
+              manual: expect.arrayContaining(["keyboard-only completion without pointer input"]),
+            }),
+          }),
+        ]),
+      );
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it("runs the canonical conformance fixture suite", async () => {
     await expect(main(["run-fixtures"])).resolves.toBe(0);
   });

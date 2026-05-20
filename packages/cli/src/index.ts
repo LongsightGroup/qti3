@@ -2,6 +2,7 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { inflateRawSync } from "node:zlib";
+import { accessibilityProofMatrix, manualAssistiveTechnologyScripts } from "@qti3/a11y";
 import { runFixture } from "@qti3/conformance";
 import {
   createItemSession,
@@ -108,6 +109,21 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     return 0;
   }
 
+  if (command === "a11y-proof") {
+    console.log(
+      JSON.stringify(
+        {
+          target: "QTI 3.0.1 ASI item interaction accessibility proof",
+          interactions: accessibilityProofMatrix,
+          manualAssistiveTechnologyScripts,
+        },
+        null,
+        2,
+      ),
+    );
+    return 0;
+  }
+
   if (command === "run-fixtures") {
     const report = runCanonicalFixtures();
     console.log(JSON.stringify(report, null, 2));
@@ -115,7 +131,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 run-fixtures",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 run-fixtures",
   );
   return 1;
 }

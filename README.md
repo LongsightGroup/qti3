@@ -167,6 +167,13 @@ interaction, and processing element evidence:
 pnpm --filter @qti3/cli exec qti3 support-matrix
 ```
 
+The accessibility proof matrix is also machine-readable. It lists each interaction's role,
+keyboard contract, automated evidence, and manual assistive-technology scripts:
+
+```sh
+pnpm --filter @qti3/cli exec qti3 a11y-proof
+```
+
 The intended enforcement model is strict:
 
 - `oxfmt` is the only formatter.

@@ -21,8 +21,32 @@ export interface ManualAssistiveTechnologyScript {
   expectedResults: string[];
 }
 
+export interface AccessibilityProofEntry {
+  interactionType: QtiInteractionType;
+  primaryRole: string;
+  keyboardRequired: boolean;
+  keyboardModel: string[];
+  proof: {
+    automated: string[];
+    manual: string[];
+  };
+}
+
 export const a11yContracts: InteractionA11yContract[] = interactionSupport.map((support) =>
   contractForInteraction(support.interactionType as QtiInteractionType),
+);
+
+export const accessibilityProofMatrix: AccessibilityProofEntry[] = a11yContracts.map(
+  (contract) => ({
+    interactionType: contract.interactionType,
+    primaryRole: contract.primaryRole,
+    keyboardRequired: contract.keyboardRequired,
+    keyboardModel: contract.keyboardModel,
+    proof: {
+      automated: automatedProofFor(contract),
+      manual: manualProofFor(contract),
+    },
+  }),
 );
 
 export const manualAssistiveTechnologyScripts: ManualAssistiveTechnologyScript[] = [
@@ -129,10 +153,16 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       ...base,
       primaryRole: "group",
       keyboardModel: [
-        "Tab moves through ordered position controls.",
-        "Arrow keys or native select commands choose each ordered option.",
+        "Tab moves through each item handle and its move buttons.",
+        "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
+        "Move up and move down buttons provide an explicit button fallback.",
       ],
-      requiredStates: ["value", "aria-invalid", "aria-describedby"],
+      requiredStates: [
+        "position in accessible name",
+        "disabled",
+        "aria-invalid",
+        "aria-describedby",
+      ],
     };
   }
 
@@ -145,10 +175,12 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       ...base,
       primaryRole: "group",
       keyboardModel: [
-        "Tab moves through source and target controls.",
-        "Native select commands choose the source and target pair.",
+        "Tab moves through source tokens, target tokens, selected pair chips, and remove controls.",
+        "Enter or Space selects one source token and one target token to create a pair.",
+        "Remove buttons delete selected pairs.",
+        "Pointer drag from a source token to a target token is a progressive enhancement.",
       ],
-      requiredStates: ["value", "aria-invalid", "aria-describedby"],
+      requiredStates: ["aria-pressed", "selected pair text", "aria-invalid", "aria-describedby"],
     };
   }
 
@@ -156,12 +188,20 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     return {
       ...base,
       primaryRole: "group",
-      focusStrategy: "Focus moves through one labeled target-gap control per gap.",
+      focusStrategy:
+        "Focus moves through source tokens, target-gap buttons, and remove controls in DOM order.",
       keyboardModel: [
-        "Tab moves through target-gap controls.",
-        "Native select commands choose the source for each target gap.",
+        "Enter or Space selects a source token.",
+        "Enter or Space on a target gap assigns the selected source.",
+        "Remove buttons clear assigned gaps.",
+        "Pointer drag from a source token to a target gap is a progressive enhancement.",
       ],
-      requiredStates: ["value", "aria-invalid", "aria-describedby"],
+      requiredStates: [
+        "aria-pressed",
+        "assigned source in accessible name",
+        "aria-invalid",
+        "aria-describedby",
+      ],
     };
   }
 
@@ -232,9 +272,9 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       primaryRole: "img",
       focusStrategy: "Focus lands on the drawing surface and then on auxiliary commands.",
       keyboardModel: [
-        "Pointer input draws a stroke.",
-        "Enter creates a deterministic keyboard stroke.",
-        "Clear button removes the stroke.",
+        "Pointer input draws freehand strokes.",
+        "Enter or Space creates a deterministic keyboard stroke.",
+        "Clear drawing removes all strokes.",
       ],
       requiredStates: ["accessible name", "aria-invalid", "aria-describedby"],
     };
@@ -296,4 +336,30 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
 
 function targetInteractions(): QtiInteractionType[] {
   return interactionSupport.map((support) => support.interactionType as QtiInteractionType);
+}
+
+function automatedProofFor(contract: InteractionA11yContract): string[] {
+  const proof = [
+    "accessibility contract unit coverage in @qti3/a11y",
+    "manual harness reference fixture renders without axe-core violations",
+    "operable fixture controls expose accessible names in Playwright",
+    "response serialization and fixture scoring coverage",
+  ];
+  if (contract.requiresValidationMessageAssociation) {
+    proof.push("validation message association contract");
+  }
+  proof.push("forced-colors, reduced-motion, and narrow viewport browser checks");
+  return proof;
+}
+
+function manualProofFor(contract: InteractionA11yContract): string[] {
+  const proof = [
+    "VoiceOver manual script",
+    "NVDA manual script",
+    "JAWS manual script",
+    "focus order inspection",
+    "accessible name, role, state, and value announcement inspection",
+  ];
+  if (contract.keyboardRequired) proof.push("keyboard-only completion without pointer input");
+  return proof;
 }

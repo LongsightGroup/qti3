@@ -1,6 +1,10 @@
 import { interactionSupport } from "@qti3/core";
 import { describe, expect, it } from "vitest";
-import { a11yContracts, manualAssistiveTechnologyScripts } from "./index.js";
+import {
+  a11yContracts,
+  accessibilityProofMatrix,
+  manualAssistiveTechnologyScripts,
+} from "./index.js";
 
 describe("@qti3/a11y", () => {
   it("defines an accessibility contract for every target interaction", () => {
@@ -31,5 +35,44 @@ describe("@qti3/a11y", () => {
         interactionSupport.map((support) => support.interactionType).sort(),
       );
     }
+  });
+
+  it("defines a proof matrix for every target interaction", () => {
+    expect(accessibilityProofMatrix.map((entry) => entry.interactionType).sort()).toEqual(
+      interactionSupport.map((support) => support.interactionType).sort(),
+    );
+
+    for (const entry of accessibilityProofMatrix) {
+      expect(entry.proof.automated, entry.interactionType).toEqual(
+        expect.arrayContaining([
+          "accessibility contract unit coverage in @qti3/a11y",
+          "manual harness reference fixture renders without axe-core violations",
+          "response serialization and fixture scoring coverage",
+          "forced-colors, reduced-motion, and narrow viewport browser checks",
+        ]),
+      );
+      expect(entry.proof.manual, entry.interactionType).toEqual(
+        expect.arrayContaining([
+          "VoiceOver manual script",
+          "NVDA manual script",
+          "JAWS manual script",
+          "focus order inspection",
+        ]),
+      );
+    }
+  });
+
+  it("matches rich interaction keyboard contracts to rendered controls", () => {
+    const byType = new Map(a11yContracts.map((contract) => [contract.interactionType, contract]));
+    expect(byType.get("order")?.keyboardModel).toContain(
+      "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
+    );
+    expect(byType.get("associate")?.keyboardModel).toContain(
+      "Remove buttons delete selected pairs.",
+    );
+    expect(byType.get("gapMatch")?.keyboardModel).toContain(
+      "Enter or Space on a target gap assigns the selected source.",
+    );
+    expect(byType.get("drawing")?.keyboardModel).toContain("Pointer input draws freehand strokes.");
   });
 });
