@@ -39,7 +39,10 @@ function assertFilesManifest(packageDirectory, manifest) {
 }
 
 async function assertPackContents(packageDirectory, packageRoot, manifest) {
-  const { stdout } = await runPnpm(["pack", "--dry-run", "--json"], packageRoot);
+  const result = await runPnpm(["pack", "--dry-run", "--json"], packageRoot);
+  if (!result) return;
+
+  const { stdout } = result;
   const pack = parsePackJson(stdout, manifest.name);
   if (!pack) return;
 
@@ -83,12 +86,8 @@ function isAllowedDistPath(path) {
 }
 
 async function runPnpm(args, cwd) {
-  const npmExecPath = process.env.npm_execpath;
-  const command = npmExecPath?.includes("pnpm") ? process.execPath : "pnpm";
-  const commandArgs = npmExecPath?.includes("pnpm") ? [npmExecPath, ...args] : args;
-
   try {
-    return await execFileAsync(command, commandArgs, {
+    return await execFileAsync(pnpmCommand(), args, {
       cwd,
       maxBuffer: 1024 * 1024 * 10,
     });
@@ -96,8 +95,12 @@ async function runPnpm(args, cwd) {
     failures.push(
       `pnpm ${args.join(" ")} failed in ${relative(root, cwd)}: ${errorMessage(error)}`,
     );
-    return { stdout: "" };
+    return undefined;
   }
+}
+
+function pnpmCommand() {
+  return process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 }
 
 function parsePackJson(stdout, packageName) {
