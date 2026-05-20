@@ -509,6 +509,14 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     if (left && right) return { type: "subtract", left, right, source: node.source };
   }
 
+  if (node.localName === "qti-divide") {
+    const expressions = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    const [left, right] = expressions;
+    if (left && right) return { type: "divide", left, right, source: node.source };
+  }
+
   if (node.localName === "qti-and") {
     return {
       type: "and",
@@ -539,6 +547,22 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     if (left && right) return { type: "equal", left, right, source: node.source };
+  }
+
+  const numericCompareOperator = numericCompareOperatorFor(node.localName);
+  if (numericCompareOperator) {
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (left && right) {
+      return {
+        type: "numericCompare",
+        operator: numericCompareOperator,
+        left,
+        right,
+        source: node.source,
+      };
+    }
   }
 
   if (node.localName === "qti-string-match") {
@@ -575,6 +599,14 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  return undefined;
+}
+
+function numericCompareOperatorFor(localName: string): "lt" | "lte" | "gt" | "gte" | undefined {
+  if (localName === "qti-lt") return "lt";
+  if (localName === "qti-lte") return "lte";
+  if (localName === "qti-gt") return "gt";
+  if (localName === "qti-gte") return "gte";
   return undefined;
 }
 

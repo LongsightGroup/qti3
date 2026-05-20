@@ -259,10 +259,17 @@ export type QtiProcessingExpression = (
   | { type: "sum"; expressions: QtiProcessingExpression[] }
   | { type: "product"; expressions: QtiProcessingExpression[] }
   | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | { type: "divide"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "and"; expressions: QtiProcessingExpression[] }
   | { type: "or"; expressions: QtiProcessingExpression[] }
   | { type: "not"; expression: QtiProcessingExpression }
   | { type: "equal"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | {
+      type: "numericCompare";
+      operator: "lt" | "lte" | "gt" | "gte";
+      left: QtiProcessingExpression;
+      right: QtiProcessingExpression;
+    }
   | {
       type: "stringMatch";
       left: QtiProcessingExpression;

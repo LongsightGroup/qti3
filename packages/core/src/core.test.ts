@@ -1383,4 +1383,50 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE", "Washington");
     expect(session.score().outcomes.SCORE).toBe(3);
   });
+
+  it("evaluates numeric division and comparison processing expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-and>
+                <qti-gte>
+                  <qti-variable identifier="RESPONSE"/>
+                  <qti-base-value base-type="float">8</qti-base-value>
+                </qti-gte>
+                <qti-lt>
+                  <qti-variable identifier="RESPONSE"/>
+                  <qti-base-value base-type="float">10</qti-base-value>
+                </qti-lt>
+              </qti-and>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-divide>
+                  <qti-variable identifier="RESPONSE"/>
+                  <qti-base-value base-type="float">2</qti-base-value>
+                </qti-divide>
+              </qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">0</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", 8);
+    expect(session.score().outcomes.SCORE).toBe(4);
+    session.respond("RESPONSE", 10);
+    expect(session.score().outcomes.SCORE).toBe(0);
+  });
 });

@@ -403,6 +403,33 @@ function evaluateValue(
       )
     );
   }
+  if (expression.type === "divide") {
+    const divisor = numericValue(
+      evaluateValue(
+        expression.right,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    if (divisor === 0) return 0;
+    return (
+      numericValue(
+        evaluateValue(
+          expression.left,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ) / divisor
+    );
+  }
   if (expression.type === "and") {
     return expression.expressions.every((item) =>
       booleanValue(
@@ -467,6 +494,34 @@ function evaluateValue(
         random,
       ),
     );
+  }
+  if (expression.type === "numericCompare") {
+    const left = numericValue(
+      evaluateValue(
+        expression.left,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    const right = numericValue(
+      evaluateValue(
+        expression.right,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    if (expression.operator === "lt") return left < right;
+    if (expression.operator === "lte") return left <= right;
+    if (expression.operator === "gt") return left > right;
+    return left >= right;
   }
   if (expression.type === "stringMatch") {
     return stringMatch(

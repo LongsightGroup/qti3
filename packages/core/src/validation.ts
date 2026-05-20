@@ -733,7 +733,12 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
   ) {
     return expression.expressions;
   }
-  if (expression.type === "subtract" || expression.type === "equal") {
+  if (
+    expression.type === "subtract" ||
+    expression.type === "divide" ||
+    expression.type === "equal" ||
+    expression.type === "numericCompare"
+  ) {
     return [expression.left, expression.right];
   }
   if (expression.type === "not") {
