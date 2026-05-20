@@ -66,6 +66,10 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-variable", "packages/core/src/core.test.ts"),
   processingEntry("qti-random-integer", "packages/core/src/core.test.ts"),
   processingEntry("qti-random", "packages/core/src/core.test.ts"),
+  processingEntry("qti-multiple", "packages/core/src/core.test.ts"),
+  processingEntry("qti-ordered", "packages/core/src/core.test.ts"),
+  processingEntry("qti-index", "packages/core/src/core.test.ts"),
+  processingEntry("qti-contains", "packages/core/src/core.test.ts"),
   processingEntry("qti-sum", "packages/core/src/core.test.ts"),
   processingEntry("qti-product", "packages/core/src/core.test.ts"),
   processingEntry("qti-subtract", "packages/core/src/core.test.ts"),
@@ -75,6 +79,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-round", "packages/core/src/core.test.ts"),
   processingEntry("qti-round-to", "packages/core/src/core.test.ts"),
   processingEntry("qti-truncate", "packages/core/src/core.test.ts"),
+  processingEntry("qti-integer-to-float", "packages/core/src/core.test.ts"),
   processingEntry("qti-and", "packages/core/src/core.test.ts"),
   processingEntry("qti-or", "packages/core/src/core.test.ts"),
   processingEntry("qti-not", "packages/core/src/core.test.ts"),
@@ -84,6 +89,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-gt", "packages/core/src/core.test.ts"),
   processingEntry("qti-gte", "packages/core/src/core.test.ts"),
   processingEntry("qti-string-match", "packages/core/src/core.test.ts"),
+  processingEntry("qti-substring", "packages/core/src/core.test.ts"),
   processingEntry("qti-member", "packages/core/src/core.test.ts"),
 ];
 

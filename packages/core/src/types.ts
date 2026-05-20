@@ -42,7 +42,8 @@ export type QtiBaseType =
 
 export type QtiCardinality = "single" | "multiple" | "ordered" | "record";
 
-export type QtiValue = string | number | boolean | string[] | null;
+export type QtiScalarValue = string | number | boolean;
+export type QtiValue = QtiScalarValue | QtiScalarValue[] | null;
 
 export type QtiAttemptStatus = "initialized" | "interacting" | "suspended" | "completed";
 
@@ -259,6 +260,9 @@ export type QtiProcessingExpression = (
       attributes: Record<string, string>;
     }
   | { type: "random"; values: QtiProcessingExpression[] }
+  | { type: "multiple"; expressions: QtiProcessingExpression[] }
+  | { type: "ordered"; expressions: QtiProcessingExpression[] }
+  | { type: "index"; expression: QtiProcessingExpression; n: string }
   | { type: "sum"; expressions: QtiProcessingExpression[] }
   | { type: "product"; expressions: QtiProcessingExpression[] }
   | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression }
@@ -273,6 +277,7 @@ export type QtiProcessingExpression = (
       figures: number;
     }
   | { type: "truncate"; expression: QtiProcessingExpression }
+  | { type: "integerToFloat"; expression: QtiProcessingExpression }
   | { type: "and"; expressions: QtiProcessingExpression[] }
   | { type: "or"; expressions: QtiProcessingExpression[] }
   | { type: "not"; expression: QtiProcessingExpression }
@@ -290,7 +295,14 @@ export type QtiProcessingExpression = (
       caseSensitive: boolean;
       substring: boolean;
     }
+  | {
+      type: "substring";
+      left: QtiProcessingExpression;
+      right: QtiProcessingExpression;
+      caseSensitive: boolean;
+    }
   | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
+  | { type: "contains"; collection: QtiProcessingExpression; values: QtiProcessingExpression }
 ) & { source?: QtiSourceLocation | undefined };
 
 export interface QtiDocument {

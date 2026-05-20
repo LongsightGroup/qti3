@@ -7,6 +7,7 @@ import type {
   QtiModalFeedback,
   QtiProcessingExpression,
   QtiResponseDeclaration,
+  QtiScalarValue,
   QtiSetOutcomeValue,
   QtiScoreResult,
   QtiTemplateRule,
@@ -353,6 +354,38 @@ function evaluateValue(
       random,
     );
   }
+  if (expression.type === "multiple" || expression.type === "ordered") {
+    const values = expression.expressions.flatMap((item) =>
+      valueContainer(
+        evaluateValue(
+          item,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ),
+    );
+    return values.length > 0 ? values : null;
+  }
+  if (expression.type === "index") {
+    const values = valueContainer(
+      evaluateValue(
+        expression.expression,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    const n = indexValue(expression.n, outcomes, templateValues);
+    if (n === undefined || n < 1 || n > values.length) return null;
+    return values[n - 1] ?? null;
+  }
   if (expression.type === "sum") {
     return expression.expressions.reduce(
       (sum, item) =>
@@ -537,6 +570,18 @@ function evaluateValue(
       ),
     );
   }
+  if (expression.type === "integerToFloat") {
+    const value = evaluateValue(
+      expression.expression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    return value === null ? null : numericValue(value);
+  }
   if (expression.type === "and") {
     return expression.expressions.every((item) =>
       booleanValue(
@@ -654,6 +699,30 @@ function evaluateValue(
       expression.substring,
     );
   }
+  if (expression.type === "substring") {
+    return stringMatch(
+      evaluateValue(
+        expression.right,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+      evaluateValue(
+        expression.left,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+      expression.caseSensitive,
+      true,
+    );
+  }
   if (expression.type === "member") {
     const value = evaluateValue(
       expression.value,
@@ -673,12 +742,34 @@ function evaluateValue(
       correctResponses,
       random,
     );
-    const values = Array.isArray(collection)
-      ? collection
-      : collection === null
-        ? []
-        : [String(collection)];
-    return values.includes(String(value ?? ""));
+    const values = valueContainer(collection);
+    return value === null ? null : values.some((item) => valuesEqual(item, value));
+  }
+  if (expression.type === "contains") {
+    const collection = valueContainer(
+      evaluateValue(
+        expression.collection,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    const values = valueContainer(
+      evaluateValue(
+        expression.values,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    if (collection.length === 0 || values.length === 0) return null;
+    return containsValues(collection, values);
   }
   return null;
 }
@@ -721,7 +812,7 @@ function scoreAreaMapping(
   const points = Array.isArray(response) ? response : response === null ? [] : [String(response)];
   let score = 0;
   for (const point of points) {
-    const parsed = parsePoint(point);
+    const parsed = parsePoint(String(point));
     if (!parsed) {
       score += areaMapping.defaultValue;
       continue;
@@ -817,7 +908,10 @@ function scoreMapping(
       .map((entry) => [entry.mapKey!, entry.mappedValue]),
   );
   if (Array.isArray(response)) {
-    const score = response.reduce((sum, value) => sum + (values[value] ?? mapping.defaultValue), 0);
+    const score = response.reduce<number>(
+      (sum, value) => sum + (values[String(value)] ?? mapping.defaultValue),
+      0,
+    );
     return clampMappedScore(score, mapping.attributes);
   }
   const score = typeof response === "string" ? (values[response] ?? mapping.defaultValue) : 0;
@@ -841,17 +935,13 @@ function numericBound(value: string | undefined): number | undefined {
 
 function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {
   if (Array.isArray(actual) || Array.isArray(expected)) {
-    const actualValues = Array.isArray(actual) ? actual : actual === null ? [] : [String(actual)];
-    const expectedValues = Array.isArray(expected)
-      ? expected
-      : expected === null
-        ? []
-        : [String(expected)];
+    const actualValues = valueContainer(actual);
+    const expectedValues = Array.isArray(expected) ? expected : expected === null ? [] : [expected];
     if (actualValues.length !== expectedValues.length) return false;
     if (ordered) return actualValues.every((value, index) => value === expectedValues[index]);
     return [...actualValues]
-      .sort()
-      .every((value, index) => value === [...expectedValues].sort()[index]);
+      .sort(compareScalarValues)
+      .every((value, index) => value === [...expectedValues].sort(compareScalarValues)[index]);
   }
   return actual === expected;
 }
@@ -865,9 +955,40 @@ function normalizeValueForCardinality(
     value !== null &&
     !Array.isArray(value)
   ) {
-    return [String(value)];
+    return [value];
   }
   return value;
+}
+
+function valueContainer(value: QtiValue): QtiScalarValue[] {
+  if (value === null) return [];
+  return Array.isArray(value) ? value.filter((item) => item !== null) : [value];
+}
+
+function indexValue(
+  n: string,
+  outcomes: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue>,
+): number | undefined {
+  const parsed = Number(n);
+  if (Number.isInteger(parsed)) return parsed;
+  const value = outcomes[n] ?? templateValues[n] ?? null;
+  const numeric = numericValue(value);
+  return Number.isInteger(numeric) ? numeric : undefined;
+}
+
+function containsValues(collection: QtiScalarValue[], values: QtiScalarValue[]): boolean {
+  const remaining = [...collection];
+  for (const value of values) {
+    const index = remaining.findIndex((candidate) => valuesEqual(candidate, value));
+    if (index === -1) return false;
+    remaining.splice(index, 1);
+  }
+  return true;
+}
+
+function compareScalarValues(left: QtiScalarValue, right: QtiScalarValue): number {
+  return String(left).localeCompare(String(right));
 }
 
 function numericValue(value: QtiValue): number {

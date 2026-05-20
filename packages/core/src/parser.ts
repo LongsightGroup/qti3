@@ -505,6 +505,33 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  if (node.localName === "qti-multiple") {
+    return {
+      type: "multiple",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-ordered") {
+    return {
+      type: "ordered",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-index") {
+    const expression = parseFirstExpression(node);
+    if (expression) {
+      return { type: "index", expression, n: node.attributes.n ?? "", source: node.source };
+    }
+  }
+
   if (node.localName === "qti-sum") {
     return {
       type: "sum",
@@ -581,6 +608,11 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     if (expression) return { type: "truncate", expression, source: node.source };
   }
 
+  if (node.localName === "qti-integer-to-float") {
+    const expression = parseFirstExpression(node);
+    if (expression) return { type: "integerToFloat", expression, source: node.source };
+  }
+
   if (node.localName === "qti-and") {
     return {
       type: "and",
@@ -645,11 +677,33 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     }
   }
 
+  if (node.localName === "qti-substring") {
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (left && right) {
+      return {
+        type: "substring",
+        left,
+        right,
+        caseSensitive: node.attributes["case-sensitive"] !== "false",
+        source: node.source,
+      };
+    }
+  }
+
   if (node.localName === "qti-member") {
     const [value, collection] = childElements(node)
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     if (value && collection) return { type: "member", value, collection, source: node.source };
+  }
+
+  if (node.localName === "qti-contains") {
+    const [collection, values] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (collection && values) return { type: "contains", collection, values, source: node.source };
   }
 
   if (node.localName === "qti-match") {
@@ -692,7 +746,7 @@ function normalizeValueForCardinality(value: QtiValue, cardinality: QtiCardinali
     value !== null &&
     !Array.isArray(value)
   ) {
-    return [String(value)];
+    return [value];
   }
   return value;
 }

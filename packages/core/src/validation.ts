@@ -762,6 +762,8 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     return expression.values;
   }
   if (
+    expression.type === "multiple" ||
+    expression.type === "ordered" ||
     expression.type === "sum" ||
     expression.type === "product" ||
     expression.type === "and" ||
@@ -783,15 +785,20 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "not" ||
     expression.type === "round" ||
     expression.type === "roundTo" ||
-    expression.type === "truncate"
+    expression.type === "truncate" ||
+    expression.type === "integerToFloat" ||
+    expression.type === "index"
   ) {
     return [expression.expression];
   }
-  if (expression.type === "stringMatch") {
+  if (expression.type === "stringMatch" || expression.type === "substring") {
     return [expression.left, expression.right];
   }
   if (expression.type === "member") {
     return [expression.value, expression.collection];
+  }
+  if (expression.type === "contains") {
+    return [expression.collection, expression.values];
   }
   return [];
 }

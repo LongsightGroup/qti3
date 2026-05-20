@@ -104,7 +104,7 @@ function assessmentItem(
 
 function valuesXml(value: QtiValue): string {
   if (Array.isArray(value))
-    return value.map((item) => `<qti-value>${escapeXml(item)}</qti-value>`).join("");
+    return value.map((item) => `<qti-value>${escapeXml(String(item))}</qti-value>`).join("");
   return `<qti-value>${escapeXml(String(value ?? ""))}</qti-value>`;
 }
 

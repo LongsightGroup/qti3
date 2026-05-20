@@ -1531,4 +1531,67 @@ describe("@qti3/core", () => {
     const session = createItemSession(result.document!);
     expect(session.score().outcomes.SCORE).toBe(1203.14);
   });
+
+  it("evaluates container, index, substring, and conversion expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="container-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="SECOND" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="CONTAINS" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="SUBSTRING" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="FLOAT_VALUE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-text-entry-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="SECOND">
+                <qti-index n="2">
+                  <qti-ordered>
+                    <qti-base-value base-type="identifier">A</qti-base-value>
+                    <qti-base-value base-type="identifier">B</qti-base-value>
+                    <qti-base-value base-type="identifier">C</qti-base-value>
+                  </qti-ordered>
+                </qti-index>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="CONTAINS">
+                <qti-contains>
+                  <qti-multiple>
+                    <qti-base-value base-type="identifier">A</qti-base-value>
+                    <qti-base-value base-type="identifier">B</qti-base-value>
+                    <qti-base-value base-type="identifier">C</qti-base-value>
+                  </qti-multiple>
+                  <qti-multiple>
+                    <qti-base-value base-type="identifier">C</qti-base-value>
+                    <qti-base-value base-type="identifier">A</qti-base-value>
+                  </qti-multiple>
+                </qti-contains>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="SUBSTRING">
+                <qti-substring case-sensitive="false">
+                  <qti-base-value base-type="string">president</qti-base-value>
+                  <qti-base-value base-type="string">President Washington</qti-base-value>
+                </qti-substring>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FLOAT_VALUE">
+                <qti-integer-to-float>
+                  <qti-base-value base-type="integer">7</qti-base-value>
+                </qti-integer-to-float>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const score = session.score();
+    expect(score.outcomes.SECOND).toBe("B");
+    expect(score.outcomes.CONTAINS).toBe(true);
+    expect(score.outcomes.SUBSTRING).toBe(true);
+    expect(score.outcomes.FLOAT_VALUE).toBe(7);
+  });
 });
