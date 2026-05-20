@@ -77,9 +77,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     await this.loadXml(await fetchXml(url), options);
   }
 
-  scoreAttempt(): void {
+  scoreAttempt(): boolean {
     const session = this.session;
-    if (!session) return;
+    if (!session) return false;
     const validationMessages = this.sessionControl.validateResponses
       ? this.validateResponses()
       : [];
@@ -90,7 +90,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       state.validationMessages = validationMessages;
       this.dispatchEvent(new CustomEvent("qti-validation", { detail: { validationMessages } }));
       this.emitStateChange(state);
-      return;
+      return false;
     }
     this.validationMessages = [];
     this.renderValidationMessages();
@@ -99,6 +99,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.updateDynamicBodyState();
     if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
+    return true;
   }
 
   reset(): void {
@@ -131,14 +132,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   endAttempt(): void {
-    this.scoreAttempt();
+    if (!this.scoreAttempt()) return;
     this.session?.setStatus("completed");
     this.dispatchEvent(new CustomEvent("qti-endattempt", { detail: { state: this.serialize() } }));
     this.emitStateChange();
   }
 
   serialize() {
-    return this.session?.serialize();
+    const state = this.session?.serialize();
+    if (state) state.validationMessages = [...this.validationMessages];
+    return state;
   }
 
   private emitStateChange(state = this.serialize()): void {
@@ -302,7 +305,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = interaction.attributes.title ?? "End attempt";
-      button.addEventListener("click", () => this.endAttempt());
+      button.addEventListener("click", () => {
+        if (responseIdentifier) update(true);
+        this.endAttempt();
+      });
       field.append(button);
       return field;
     }

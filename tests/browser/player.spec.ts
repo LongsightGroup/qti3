@@ -585,6 +585,84 @@ test.describe("manual harness", () => {
     expect(restoredState.outcomes.SCORE).toBe(1);
   });
 
+  test("end-attempt interaction writes its boolean response and reveals adaptive feedback", async ({
+    page,
+  }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hint-end" title="hint-end" adaptive="true" time-dependent="false">
+  <qti-response-declaration identifier="HINTREQUEST" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Use the hint control to request adaptive feedback.</p>
+    <qti-end-attempt-interaction response-identifier="HINTREQUEST" title="Show Hint"/>
+    <qti-feedback-block identifier="HINT" outcome-identifier="FEEDBACK" show-hide="show">
+      <qti-content-body><p>Hint feedback is now visible.</p></qti-content-body>
+    </qti-feedback-block>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-variable identifier="HINTREQUEST"/>
+        <qti-set-outcome-value identifier="FEEDBACK">
+          <qti-base-value base-type="identifier">HINT</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+    await page.getByRole("button", { name: "Show Hint" }).click();
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.HINTREQUEST).toBe(true);
+    expect(state.outcomes.FEEDBACK).toBe("HINT");
+    expect(state.status).toBe("completed");
+    await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toContainText(
+      "Hint feedback is now visible.",
+    );
+  });
+
+  test("end-attempt does not complete an invalid attempt", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="blocked-end" title="blocked-end" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="END" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Correct</qti-simple-choice>
+      <qti-simple-choice identifier="B">Incorrect</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-end-attempt-interaction response-identifier="END" title="Finish"/>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+    await page.getByRole("button", { name: "Finish" }).click();
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.END).toBe(true);
+    expect(state.status).toBe("interacting");
+    expect(state.validationMessages).toEqual([
+      expect.objectContaining({ code: "response.required", path: "RESPONSE" }),
+    ]);
+    await expect(page.locator("#score-status")).toHaveText(
+      "Score blocked by 1 validation message.",
+    );
+  });
+
   test("restores serialized responses into visible controls", async ({ page }) => {
     await page.goto("/");
     const restoreCurrentAttempt = async () => {
@@ -1323,6 +1401,14 @@ async function provideResponse(
           }),
         );
       }, response);
+    return;
+  }
+
+  if (interactionType === "endAttempt") {
+    await page
+      .locator('qti-assessment-item-player [data-interaction-type="endAttempt"]')
+      .getByRole("button")
+      .click();
     return;
   }
 

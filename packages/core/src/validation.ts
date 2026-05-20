@@ -2116,7 +2116,10 @@ function isPair(value: string): boolean {
 function expectedResponseShape(
   interaction: QtiInteraction,
 ): { cardinalities: QtiCardinality[]; baseTypes: QtiBaseType[] } | undefined {
-  if (interaction.type === "endAttempt" || interaction.type === "media") return undefined;
+  if (interaction.type === "endAttempt") {
+    return { cardinalities: ["single"], baseTypes: ["boolean"] };
+  }
+  if (interaction.type === "media") return undefined;
   if (interaction.type === "custom") return undefined;
   if (interaction.type === "order" || interaction.type === "graphicOrder") {
     return { cardinalities: ["ordered"], baseTypes: ["identifier"] };

@@ -1537,10 +1537,22 @@ function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boo
     const actualValues = valueContainer(actual);
     const expectedValues = Array.isArray(expected) ? expected : expected === null ? [] : [expected];
     if (actualValues.length !== expectedValues.length) return false;
-    if (ordered) return actualValues.every((value, index) => value === expectedValues[index]);
+    if (ordered)
+      return actualValues.every((value, index) => scalarValuesEqual(value, expectedValues[index]!));
+    const sortedExpected = [...expectedValues].sort(compareScalarValues);
     return [...actualValues]
       .sort(compareScalarValues)
-      .every((value, index) => value === [...expectedValues].sort(compareScalarValues)[index]);
+      .every((value, index) => scalarValuesEqual(value, sortedExpected[index]!));
+  }
+  return scalarValuesEqual(actual, expected);
+}
+
+function scalarValuesEqual(actual: QtiValue, expected: QtiValue): boolean {
+  if (typeof actual === "boolean" && typeof expected === "string") {
+    return String(actual) === expected;
+  }
+  if (typeof actual === "string" && typeof expected === "boolean") {
+    return actual === String(expected);
   }
   return actual === expected;
 }

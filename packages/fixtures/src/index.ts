@@ -163,8 +163,11 @@ function defaultResponse(interactionType: QtiInteractionType): {
   baseType: string;
   correct: QtiValue;
 } {
-  if (interactionType === "endAttempt" || interactionType === "media") {
+  if (interactionType === "media") {
     return { cardinality: "single", baseType: "identifier", correct: null };
+  }
+  if (interactionType === "endAttempt") {
+    return { identifier: "RESPONSE", cardinality: "single", baseType: "boolean", correct: true };
   }
   if (interactionType === "choice") {
     return {
@@ -256,7 +259,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
 
 function renderInteractionXml(qtiName: string, interactionType: QtiInteractionType): string {
   if (interactionType === "endAttempt") {
-    return `<${qtiName} title="End attempt"/>`;
+    return `<${qtiName} response-identifier="RESPONSE" title="Show hint"/>`;
   }
   if (interactionType === "media") {
     return `<${qtiName} autostart="false"><object data="media.mp3" type="audio/mpeg"/></${qtiName}>`;

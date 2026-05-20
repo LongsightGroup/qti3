@@ -518,6 +518,33 @@ describe("@qti3/core", () => {
     expect(validateAssessmentItem(result.document!).ok).toBe(true);
   });
 
+  it("requires bound end-attempt interactions to use a single boolean response", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="end-attempt-shape">
+        <qti-response-declaration identifier="END" cardinality="single" base-type="boolean"/>
+        <qti-response-declaration identifier="WRONG" cardinality="multiple" base-type="identifier"/>
+        <qti-item-body>
+          <qti-end-attempt-interaction response-identifier="END" title="Show hint"/>
+          <qti-end-attempt-interaction response-identifier="WRONG" title="Finish"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.cardinality",
+          message: "qti-end-attempt-interaction expects single cardinality, got multiple.",
+        }),
+        expect.objectContaining({
+          code: "interaction.baseType",
+          message: "qti-end-attempt-interaction expects boolean base type, got identifier.",
+        }),
+      ]),
+    );
+  });
+
   it("validates declaration default and correct response values against base types", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-declaration-values">

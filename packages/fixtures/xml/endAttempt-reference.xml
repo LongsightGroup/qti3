@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="endAttempt-reference" title="endAttempt-reference" time-dependent="false" xml:lang="en">
   
+      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="boolean">
+        <qti-correct-response><qti-value>true</qti-value></qti-correct-response>
+
+      </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for endAttempt-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
-    <qti-end-attempt-interaction title="End attempt"/>
+    <qti-end-attempt-interaction response-identifier="RESPONSE" title="Show hint"/>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>
