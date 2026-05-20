@@ -603,6 +603,8 @@ function renderPairResponse(
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   const labels = pairRegionLabels(interaction);
+  const requiresDistinctPair =
+    interaction.type === "associate" || interaction.type === "graphicAssociate";
 
   const sourceRegion = tokenRegion(`${readableType(interaction.type)} sources`, labels.source);
   const targetRegion = tokenRegion(`${readableType(interaction.type)} targets`, labels.target);
@@ -617,6 +619,9 @@ function renderPairResponse(
     else update([...selectedPairs]);
   };
   const syncPressed = () => {
+    if (requiresDistinctPair && selectedSource?.identifier === selectedTarget?.identifier) {
+      selectedTarget = undefined;
+    }
     for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
       button.setAttribute(
         "aria-pressed",
@@ -624,14 +629,21 @@ function renderPairResponse(
       );
     }
     for (const button of targetRegion.querySelectorAll<HTMLButtonElement>("button")) {
+      const isSelfTarget =
+        requiresDistinctPair && button.dataset.choiceIdentifier === selectedSource?.identifier;
+      button.hidden = isSelfTarget;
+      button.disabled = isSelfTarget;
       button.setAttribute(
         "aria-pressed",
-        button.dataset.choiceIdentifier === selectedTarget?.identifier ? "true" : "false",
+        !isSelfTarget && button.dataset.choiceIdentifier === selectedTarget?.identifier
+          ? "true"
+          : "false",
       );
     }
   };
   const addSelectedPair = () => {
     if (!selectedSource || !selectedTarget) return;
+    if (requiresDistinctPair && selectedSource.identifier === selectedTarget.identifier) return;
     const pair = `${selectedSource.identifier} ${selectedTarget.identifier}`;
     if (!selectedPairs.includes(pair)) selectedPairs.push(pair);
     selectedSource = undefined;
