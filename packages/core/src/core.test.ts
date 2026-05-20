@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertQtiAttemptStateV1,
   createItemSession,
   deprecatedInteractionSupport,
   interactionSupport,
+  isQtiAttemptStateV1,
   parseQtiXml,
   validateAssessmentItem,
   visibleModalFeedback,
@@ -257,6 +259,38 @@ describe("@qti3/core", () => {
         itemIdentifier: "other-item",
       }),
     ).toThrow("Cannot restore state for other-item into state-target.");
+  });
+
+  it("exposes a runtime guard for the public attempt state contract", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-guard">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body><p>State guard.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const state = createItemSession(result.document!).serialize();
+    expect(isQtiAttemptStateV1(state)).toBe(true);
+    expect(() => assertQtiAttemptStateV1(state)).not.toThrow();
+
+    const badStatus = { ...state, status: "reviewing" };
+    expect(isQtiAttemptStateV1(badStatus)).toBe(false);
+    expect(() => createItemSession(result.document!, badStatus as never)).toThrow(
+      "QTI attempt state status reviewing is not supported.",
+    );
+
+    const badResponses = { ...state, responses: { RESPONSE: Number.NaN } };
+    expect(isQtiAttemptStateV1(badResponses)).toBe(false);
+    expect(() => assertQtiAttemptStateV1(badResponses)).toThrow(
+      "QTI attempt state responses must be a record of QTI values.",
+    );
+
+    const badDiagnostics = { ...state, validationMessages: [{ code: "x", severity: "fatal" }] };
+    expect(isQtiAttemptStateV1(badDiagnostics)).toBe(false);
+    expect(() => assertQtiAttemptStateV1(badDiagnostics)).toThrow(
+      "QTI attempt state validationMessages must be an array of diagnostics.",
+    );
   });
 
   it("preserves item body mixed-content order with embedded interactions", () => {

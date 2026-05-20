@@ -1,6 +1,8 @@
 export { parseQtiXml } from "./parser.js";
 export {
+  assertQtiAttemptStateV1,
   createItemSession,
+  isQtiAttemptStateV1,
   visibleModalFeedback,
   type QtiCustomOperatorContext,
   type QtiCustomOperatorHandler,

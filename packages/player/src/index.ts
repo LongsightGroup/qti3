@@ -1,4 +1,5 @@
 import {
+  assertQtiAttemptStateV1,
   createItemSession,
   parseQtiXml,
   visibleModalFeedback,
@@ -114,6 +115,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!this.documentModel) {
       throw new Error("Cannot restore QTI state before loading an item.");
     }
+    assertQtiAttemptStateV1(state);
     if (state.itemIdentifier !== this.documentModel.item.identifier) {
       throw new Error(
         `Cannot restore state for ${state.itemIdentifier} into ${this.documentModel.item.identifier}.`,

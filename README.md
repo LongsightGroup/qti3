@@ -189,6 +189,9 @@ The intended enforcement model is strict:
 This repository is an early reference implementation. It has a strict TypeScript core, a native web component player, fixture-based scoring, a manual browser harness, automated accessibility checks, Playwright coverage, and standalone XML reference items under `packages/fixtures/xml`.
 
 Serialized attempt state uses `qti3.attempt-state.v1` and includes responses, outcomes, generated template values, validation messages, lifecycle status, and QTI's built-in `completionStatus` outcome. Adaptive items retain outcome values across response-processing runs; non-adaptive items reset authored outcomes before each scoring run.
+Hosts that persist state can validate restored JSON with `isQtiAttemptStateV1()` or
+`assertQtiAttemptStateV1()` before passing it back to `createItemSession()` or the
+player restore API.
 
 ## Roadmap Focus
 

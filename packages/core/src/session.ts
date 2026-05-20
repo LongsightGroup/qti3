@@ -31,6 +31,13 @@ const COMPLETION_STATUS = "completionStatus";
 const COMPLETION_NOT_ATTEMPTED = "not_attempted";
 const COMPLETION_UNKNOWN = "unknown";
 const COMPLETION_COMPLETED = "completed";
+const ATTEMPT_STATE_SCHEMA = "qti3.attempt-state.v1";
+const ATTEMPT_STATUSES = new Set<QtiAttemptStatus>([
+  "initialized",
+  "interacting",
+  "suspended",
+  "completed",
+]);
 
 export interface QtiItemSessionOptions {
   randomSeed?: string | number | undefined;
@@ -155,6 +162,15 @@ export function createItemSession(
   }
 }
 
+export function isQtiAttemptStateV1(value: unknown): value is QtiAttemptStateV1 {
+  return attemptStateErrors(value).length === 0;
+}
+
+export function assertQtiAttemptStateV1(value: unknown): asserts value is QtiAttemptStateV1 {
+  const [firstError] = attemptStateErrors(value);
+  if (firstError) throw new Error(firstError);
+}
+
 function resetRecord<T>(target: Record<string, T>, source: Record<string, T>): void {
   for (const key of Object.keys(target)) {
     delete target[key];
@@ -167,14 +183,42 @@ function assertCompatiblePriorState(
   priorState: QtiAttemptStateV1 | undefined,
 ): void {
   if (!priorState) return;
-  if (priorState.schema !== "qti3.attempt-state.v1") {
-    throw new Error(`Unsupported QTI attempt state schema ${String(priorState.schema)}.`);
-  }
+  assertQtiAttemptStateV1(priorState);
   if (priorState.itemIdentifier !== document.item.identifier) {
     throw new Error(
       `Cannot restore state for ${priorState.itemIdentifier} into ${document.item.identifier}.`,
     );
   }
+}
+
+function attemptStateErrors(value: unknown): string[] {
+  if (!isRecord(value)) return ["QTI attempt state must be an object."];
+
+  const schema = value.schema;
+  if (schema !== ATTEMPT_STATE_SCHEMA) {
+    return [`Unsupported QTI attempt state schema ${String(schema)}.`];
+  }
+
+  const errors: string[] = [];
+  if (typeof value.itemIdentifier !== "string" || value.itemIdentifier.length === 0) {
+    errors.push("QTI attempt state itemIdentifier must be a non-empty string.");
+  }
+  if (typeof value.status !== "string" || !ATTEMPT_STATUSES.has(value.status as QtiAttemptStatus)) {
+    errors.push(`QTI attempt state status ${String(value.status)} is not supported.`);
+  }
+  if (!isQtiValueRecord(value.responses)) {
+    errors.push("QTI attempt state responses must be a record of QTI values.");
+  }
+  if (!isQtiValueRecord(value.outcomes)) {
+    errors.push("QTI attempt state outcomes must be a record of QTI values.");
+  }
+  if (value.templateValues !== undefined && !isQtiValueRecord(value.templateValues)) {
+    errors.push("QTI attempt state templateValues must be a record of QTI values.");
+  }
+  if (!isDiagnosticArray(value.validationMessages)) {
+    errors.push("QTI attempt state validationMessages must be an array of diagnostics.");
+  }
+  return errors;
 }
 
 function applyTemplateProcessing(
@@ -1530,7 +1574,7 @@ function serialize(
   validationMessages: QtiDiagnostic[],
 ): QtiAttemptStateV1 {
   return {
-    schema: "qti3.attempt-state.v1",
+    schema: ATTEMPT_STATE_SCHEMA,
     itemIdentifier,
     status,
     responses: cloneValueRecord(responses),
@@ -1641,6 +1685,43 @@ function valueContainer(value: QtiValue): QtiScalarValue[] {
 }
 
 function isRecordValue(value: QtiValue): value is QtiRecordValue {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isQtiValue(value: unknown): value is QtiValue {
+  if (value === null) return true;
+  if (isQtiScalarValue(value)) return true;
+  if (Array.isArray(value)) return value.every(isQtiScalarValue);
+  return isQtiValueRecord(value);
+}
+
+function isQtiScalarValue(value: unknown): value is QtiScalarValue {
+  return (
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    (typeof value === "number" && Number.isFinite(value))
+  );
+}
+
+function isQtiValueRecord(value: unknown): value is Record<string, QtiValue> {
+  if (!isRecord(value)) return false;
+  return Object.values(value).every(isQtiValue);
+}
+
+function isDiagnosticArray(value: unknown): value is QtiDiagnostic[] {
+  if (!Array.isArray(value)) return false;
+  return value.every((item) => {
+    if (!isRecord(item)) return false;
+    if (typeof item.code !== "string" || item.code.length === 0) return false;
+    if (item.severity !== "info" && item.severity !== "warning" && item.severity !== "error") {
+      return false;
+    }
+    if (typeof item.message !== "string" || item.message.length === 0) return false;
+    return item.path === undefined || typeof item.path === "string";
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
