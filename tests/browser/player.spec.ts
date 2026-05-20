@@ -1271,9 +1271,7 @@ test.describe("manual harness", () => {
     await expect(
       page.locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])'),
     ).toHaveValue("SCORE");
-    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText(
-      "5 of 10 characters",
-    );
+    await expect(page.locator("qti-assessment-item-player .qti3-inline-counter")).toHaveCount(0);
 
     await loadFixture(page, "order");
     await page
@@ -1318,9 +1316,7 @@ test.describe("manual harness", () => {
       .focus();
     await page.keyboard.type("A");
     await expectResponse(page, "A");
-    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText(
-      "1 of 10 characters",
-    );
+    await expect(page.locator("qti-assessment-item-player .qti3-inline-counter")).toHaveCount(0);
 
     await loadFixture(page, "slider");
     await page.locator('qti-assessment-item-player input[type="range"]').focus();

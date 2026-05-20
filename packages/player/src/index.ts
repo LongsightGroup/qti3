@@ -1511,9 +1511,6 @@ function renderTextResponse(
 ): HTMLElement {
   const group = document.createElement("div");
   group.className = "qti3-text-response";
-  const counter = document.createElement("p");
-  counter.className = "qti3-counter";
-  counter.setAttribute("aria-live", "polite");
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
   const expectedLines = Number(interaction.attributes["expected-lines"] ?? 0);
   const control =
@@ -1527,24 +1524,37 @@ function renderTextResponse(
   if (mode === "extended" && expectedLines > 0) {
     (control as HTMLTextAreaElement).rows = expectedLines;
   }
-  if (mode === "entry" && expectedLength > 0) {
-    (control as HTMLInputElement).maxLength = expectedLength;
+  if (mode === "entry") {
+    applyExpectedTextEntryWidth(control, expectedLength);
+  }
+  const counter = mode === "extended" ? document.createElement("p") : undefined;
+  if (counter) {
+    counter.className = "qti3-counter";
+    counter.setAttribute("aria-live", "polite");
   }
   const sync = (emitResponse = true) => {
     const value = control.value;
-    const words = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
-    const lengthText =
-      expectedLength > 0
-        ? `${value.length} of ${expectedLength} characters`
-        : `${value.length} characters`;
-    counter.textContent = mode === "extended" ? `${lengthText}, ${words} words` : lengthText;
+    if (counter) {
+      const words = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
+      counter.textContent = `${value.length} characters, ${words} words`;
+    }
     if (emitResponse) update(value);
   };
   control.addEventListener("input", () => sync());
   control.addEventListener("change", () => sync());
   sync(false);
-  group.append(control, counter);
+  group.append(control);
+  if (counter) group.append(counter);
   return group;
+}
+
+function applyExpectedTextEntryWidth(
+  control: HTMLInputElement | HTMLTextAreaElement,
+  expectedLength: number,
+): void {
+  if (!(control instanceof HTMLInputElement) || expectedLength <= 0) return;
+  const width = Math.max(8, Math.min(expectedLength + 2, 72));
+  control.style.inlineSize = `${width}ch`;
 }
 
 function renderInlineTextEntry(
@@ -1562,23 +1572,14 @@ function renderInlineTextEntry(
     interaction.prompt ?? interaction.contextText ?? "Text response",
   );
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
-  if (expectedLength > 0) input.maxLength = expectedLength;
-  const counter = document.createElement("output");
-  counter.className = "qti3-counter qti3-inline-counter";
-  counter.setAttribute("aria-live", "polite");
+  applyExpectedTextEntryWidth(input, expectedLength);
   const sync = (emitResponse = true) => {
-    const lengthText =
-      expectedLength > 0
-        ? `${input.value.length} of ${expectedLength} characters`
-        : `${input.value.length} characters`;
-    counter.value = lengthText;
-    counter.textContent = lengthText;
     if (emitResponse) update(input.value);
   };
   input.addEventListener("input", () => sync());
   input.addEventListener("change", () => sync());
   sync(false);
-  group.append(input, counter);
+  group.append(input);
   return group;
 }
 
