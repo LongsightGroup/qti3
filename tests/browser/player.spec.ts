@@ -44,6 +44,24 @@ test.describe("manual harness", () => {
     await expect(page.locator("#score-details")).toContainText('"SCORE": 1');
   });
 
+  test("switches harness preview themes without bundling external CSS", async ({ page }) => {
+    await page.route("https://cdn.jsdelivr.net/**", async (route) => route.abort());
+    await page.goto("/");
+
+    await expect(page.locator("#theme-note")).toContainText("No external stylesheet loaded");
+    await expect(page.locator("#external-theme")).not.toHaveAttribute("href", /./);
+
+    await page.locator("#theme").selectOption("bootswatch-materia");
+    await expect(page.locator("#external-theme")).toHaveAttribute(
+      "href",
+      "https://cdn.jsdelivr.net/npm/bootswatch@5.3.8/dist/materia/bootstrap.min.css",
+    );
+    await expect(page.locator("#theme-note")).toContainText("harness preview only");
+
+    await page.locator("#theme").selectOption("reference");
+    await expect(page.locator("#external-theme")).not.toHaveAttribute("href", /./);
+  });
+
   test("renders item-body prompts before interactions", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>qti3 manual harness</title>
+    <link id="external-theme" rel="stylesheet" />
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -78,6 +79,12 @@
 
       .qti3-interaction {
         margin-block: 1rem;
+      }
+
+      .theme-note {
+        margin-block: 0.35rem 1rem;
+        color: #555;
+        font-size: 0.9rem;
       }
 
       .score-panel {
@@ -155,6 +162,13 @@
           <select id="fixture"></select>
         </label>
         <button id="load-fixture" type="button">Load fixture</button>
+        <label>
+          Harness theme
+          <select id="theme"></select>
+        </label>
+        <p id="theme-note" class="theme-note" aria-live="polite">
+          Harness-only CSS. Not bundled with @qti3/player.
+        </p>
         <h2>Open local QTI files</h2>
         <input id="file" type="file" accept=".xml,text/xml,application/xml" multiple />
         <label>
