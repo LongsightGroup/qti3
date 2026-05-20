@@ -260,6 +260,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
+    if (interaction.type === "graphicAssociate") {
+      field.append(renderGraphicAssociateResponse(interaction, update, currentValue));
+      return field;
+    }
+
     if (usesPairResponse(interaction)) {
       field.append(renderPairResponse(interaction, update, currentValue));
       return field;
@@ -1147,10 +1152,216 @@ function renderPairResponse(
 
 function pairRegionLabels(interaction: QtiInteraction): { source: string; target: string } {
   if (interaction.type === "associate") return { source: "First concept", target: "Pair with" };
-  if (interaction.type === "graphicAssociate")
-    return { source: "First hotspot", target: "Pair with" };
   if (interaction.type === "match") return { source: "Prompt", target: "Match" };
   return { source: "Source", target: "Target" };
+}
+
+function renderGraphicAssociateResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = readableType(interaction.type);
+  group.append(legend);
+
+  const width = objectWidth(interaction);
+  const height = objectHeight(interaction);
+  const choices = choicesOrFallback(interaction).filter((choice) => choice.role === "hotspot");
+  const selectedPairs = valueToStrings(currentValue);
+  const maximumAssociations =
+    interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
+  let selectedHotspot: QtiChoice | undefined;
+
+  const surface = document.createElement("div");
+  surface.className = "qti3-graphic-associate-surface";
+  surface.role = "group";
+  surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
+  surface.style.position = "relative";
+  surface.style.inlineSize = `${width}px`;
+  surface.style.aspectRatio = `${width} / ${height}`;
+  surface.style.maxInlineSize = "100%";
+  surface.style.border = "1px solid CanvasText";
+  surface.style.background = "Canvas";
+  surface.style.overflow = "hidden";
+
+  const object = interaction.object;
+  if (object?.data && objectIsImage(object)) {
+    const image = document.createElement("img");
+    image.src = object.data;
+    image.alt = object.text || `${readableType(interaction.type)} image`;
+    image.style.inlineSize = "100%";
+    image.style.blockSize = "100%";
+    image.style.objectFit = "contain";
+    surface.append(image);
+  }
+
+  const connections = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  connections.classList.add("qti3-graphic-associate-lines");
+  connections.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  connections.setAttribute("aria-hidden", "true");
+  surface.append(connections);
+
+  const summary = document.createElement("p");
+  summary.className = "qti3-selection-summary";
+  summary.setAttribute("aria-live", "polite");
+  const pairList = document.createElement("ul");
+  pairList.className = "qti3-pair-list";
+  pairList.setAttribute("aria-label", `${readableType(interaction.type)} selected pairs`);
+
+  const commit = () => {
+    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
+    else update([...selectedPairs]);
+  };
+  const removePair = (pair: string) => {
+    const index = selectedPairs.indexOf(pair);
+    if (index < 0) return;
+    selectedPairs.splice(index, 1);
+    renderState();
+    commit();
+  };
+  const removePairsForHotspot = (identifier: string) => {
+    let removed = false;
+    for (let index = selectedPairs.length - 1; index >= 0; index -= 1) {
+      const [source, target] = selectedPairs[index]?.split(" ") ?? [];
+      if (source === identifier || target === identifier) {
+        selectedPairs.splice(index, 1);
+        removed = true;
+      }
+    }
+    if (!removed) return;
+    renderState();
+    commit();
+  };
+  const addPair = (source: QtiChoice, target: QtiChoice) => {
+    if (source.identifier === target.identifier) {
+      selectedHotspot = undefined;
+      renderState();
+      return;
+    }
+    const pair = `${source.identifier} ${target.identifier}`;
+    if (!selectedPairs.includes(pair)) {
+      if (interaction.responseCardinality === "single") selectedPairs.splice(0);
+      if (
+        maximumAssociations !== undefined &&
+        selectedPairs.length >= maximumAssociations &&
+        interaction.responseCardinality !== "single"
+      ) {
+        selectedHotspot = undefined;
+        renderState();
+        return;
+      }
+      if (
+        exceedsHotspotMatchMax(source, selectedPairs) ||
+        exceedsHotspotMatchMax(target, selectedPairs)
+      ) {
+        selectedHotspot = undefined;
+        renderState();
+        return;
+      }
+      selectedPairs.push(pair);
+    }
+    selectedHotspot = undefined;
+    renderState();
+    commit();
+  };
+  const chooseHotspot = (choice: QtiChoice) => {
+    if (!selectedHotspot) {
+      selectedHotspot = choice;
+      renderState();
+      return;
+    }
+    addPair(selectedHotspot, choice);
+  };
+  const focusRelativeHotspot = (choice: QtiChoice, delta: number) => {
+    const index = choices.findIndex((entry) => entry.identifier === choice.identifier);
+    const next = choices[(index + delta + choices.length) % choices.length];
+    if (!next) return;
+    surface
+      .querySelector<HTMLButtonElement>(`[data-choice-identifier="${next.identifier}"]`)
+      ?.focus();
+  };
+  const renderState = () => {
+    connections.replaceChildren(
+      ...selectedPairs.flatMap((pair) => {
+        const [sourceIdentifier, targetIdentifier] = pair.split(" ");
+        const source = choices.find((choice) => choice.identifier === sourceIdentifier);
+        const target = choices.find((choice) => choice.identifier === targetIdentifier);
+        if (!source || !target) return [];
+        const start = hotspotCenter(source, width, height);
+        const end = hotspotCenter(target, width, height);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(start.x));
+        line.setAttribute("y1", String(start.y));
+        line.setAttribute("x2", String(end.x));
+        line.setAttribute("y2", String(end.y));
+        return [line];
+      }),
+    );
+    for (const button of surface.querySelectorAll<HTMLButtonElement>(".qti3-hotspot-button")) {
+      const identifier = button.dataset.choiceIdentifier ?? "";
+      const isActive = identifier === selectedHotspot?.identifier;
+      const isPaired = selectedPairs.some((pair) => pair.split(" ").includes(identifier));
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      button.dataset.selected = isActive || isPaired ? "true" : "false";
+    }
+    summary.textContent = selectedHotspot
+      ? `${hotspotDisplayLabel(selectedHotspot, choices)} selected. Choose another hotspot.`
+      : selectedPairs.length > 0
+        ? `${selectedPairs.length} ${selectedPairs.length === 1 ? "association" : "associations"} made.`
+        : "No associations made";
+    pairList.replaceChildren(
+      ...selectedPairs.map((pair) => {
+        const [source, target] = pair.split(" ");
+        const sourceChoice = choices.find((choice) => choice.identifier === source);
+        const targetChoice = choices.find((choice) => choice.identifier === target);
+        const pairLabel = `${sourceChoice ? hotspotDisplayLabel(sourceChoice, choices) : source} to ${targetChoice ? hotspotDisplayLabel(targetChoice, choices) : target}`;
+        const item = document.createElement("li");
+        item.className = "qti3-pair-chip";
+        const text = document.createElement("span");
+        text.textContent = pairLabel;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", `Remove ${pairLabel}`);
+        remove.addEventListener("click", () => removePair(pair));
+        item.append(text, remove);
+        return item;
+      }),
+    );
+  };
+
+  for (const [index, choice] of choices.entries()) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "qti3-hotspot-button qti3-graphic-associate-hotspot";
+    button.dataset.choiceIdentifier = choice.identifier;
+    button.textContent = hotspotDisplayLabel(choice, choices);
+    button.title = hotspotAccessibleLabel(choice, index);
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
+    button.style.position = "absolute";
+    placeHotspotButton(button, choice, width, height);
+    button.addEventListener("click", () => chooseHotspot(choice));
+    button.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        event.preventDefault();
+        focusRelativeHotspot(choice, 1);
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault();
+        focusRelativeHotspot(choice, -1);
+      } else if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        removePairsForHotspot(choice.identifier);
+      }
+    });
+    surface.append(button);
+  }
+
+  renderState();
+  group.append(surface, summary, pairList);
+  return group;
 }
 
 function renderGapMatchResponse(
@@ -2049,6 +2260,54 @@ function placeHotspotButton(
   button.style.insetBlockStart = "0";
 }
 
+function hotspotCenter(choice: QtiChoice, width: number, height: number): { x: number; y: number } {
+  const coords = hotspotCoords(choice);
+  const shape = choice.attributes.shape;
+  if ((shape === "circle" || shape === "ellipse") && coords.length >= 2) {
+    const [x, y] = coords as [number, number];
+    return { x, y };
+  }
+  if (shape === "rect" && coords.length >= 4) {
+    const [left, top, right, bottom] = coords as [number, number, number, number];
+    return { x: (left + right) / 2, y: (top + bottom) / 2 };
+  }
+  if (shape === "poly" && coords.length >= 6) {
+    const xs = coords.filter((_, index) => index % 2 === 0);
+    const ys = coords.filter((_, index) => index % 2 === 1);
+    return {
+      x: (Math.min(...xs) + Math.max(...xs)) / 2,
+      y: (Math.min(...ys) + Math.max(...ys)) / 2,
+    };
+  }
+  return { x: width / 2, y: height / 2 };
+}
+
+function hotspotCoords(choice: QtiChoice): number[] {
+  return (choice.attributes.coords ?? "")
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value));
+}
+
+function hotspotDisplayLabel(choice: QtiChoice, choices: QtiChoice[]): string {
+  return choice.attributes["hotspot-label"] || `Region ${choices.indexOf(choice) + 1}`;
+}
+
+function hotspotAccessibleLabel(choice: QtiChoice, index: number): string {
+  return (
+    choice.attributes["aria-label"] || choice.attributes["hotspot-label"] || `Region ${index + 1}`
+  );
+}
+
+function exceedsHotspotMatchMax(choice: QtiChoice, selectedPairs: string[]): boolean {
+  const maximum = parseUnlimitedMaximum(choice.attributes["match-max"]);
+  if (maximum === undefined) return false;
+  const currentUseCount = selectedPairs
+    .flatMap((pair) => pair.split(" "))
+    .filter((identifier) => identifier === choice.identifier).length;
+  return currentUseCount + 1 > maximum;
+}
+
 function percent(value: number, total: number): number {
   if (total <= 0) return 0;
   return (value / total) * 100;
@@ -2673,6 +2932,30 @@ function playerStyleElement(): HTMLStyleElement {
         color: CanvasText;
         background: Canvas;
       }
+    }
+
+    .qti3-graphic-associate-surface {
+      touch-action: manipulation;
+    }
+
+    .qti3-graphic-associate-lines {
+      position: absolute;
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .qti3-graphic-associate-lines line {
+      stroke: Highlight;
+      stroke-width: 4;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .qti3-graphic-associate-hotspot {
+      z-index: 2;
     }
 
     .qti3-selection-summary {

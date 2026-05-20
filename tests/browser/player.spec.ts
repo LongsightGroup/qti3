@@ -498,6 +498,16 @@ test.describe("manual harness", () => {
 
     for (const interactionType of ["graphicOrder", "graphicAssociate", "graphicGapMatch"]) {
       await loadFixture(page, interactionType);
+      if (interactionType === "graphicAssociate") {
+        const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+        await expect(surface, interactionType).toBeVisible();
+        await expect(surface.locator("img"), interactionType).toHaveAttribute(
+          "src",
+          /hotspot-flow\.svg$/,
+        );
+        await expectImageLoaded(surface.locator("img"));
+        continue;
+      }
       const context = page.locator("qti-assessment-item-player .qti3-graphic-context");
       await expect(context, interactionType).toBeVisible();
       await expect(context.locator("img"), interactionType).toHaveAttribute(
@@ -1620,20 +1630,64 @@ test.describe("manual harness", () => {
     await expectResponse(page, ["A B"]);
   });
 
-  test("creates match pairs and preserves graphic association context", async ({ page }) => {
+  test("creates match pairs", async ({ page }) => {
     await page.goto("/");
 
     await loadFixture(page, "match");
     await addPair(page, "Match", "A", "G1");
     await expectResponse(page, ["A G1"]);
+  });
+
+  test("creates graphic associate pairs on positioned hotspots", async ({ page }) => {
+    await page.goto("/");
 
     await loadFixture(page, "graphicAssociate");
-    await expect(
-      page.locator("qti-assessment-item-player .qti3-graphic-context img"),
-    ).toHaveAttribute("src", /hotspot-flow\.svg$/);
-    await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
-    await addPair(page, "Graphic associate", "A", "B");
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    await expect(surface.locator("img")).toHaveAttribute("src", /hotspot-flow\.svg$/);
+    await expect(surface.getByRole("button", { name: "Item XML" })).toHaveAttribute(
+      "data-choice-identifier",
+      "A",
+    );
+    await expect(surface.getByRole("button", { name: "Response capture" })).toHaveCSS(
+      "position",
+      "absolute",
+    );
+    await expectImageLoaded(surface.locator("img"));
+
+    await surface.getByRole("button", { name: "Item XML" }).click();
+    await expect(surface.getByRole("button", { name: "Item XML" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await surface.getByRole("button", { name: "Response capture" }).click();
     await expectResponse(page, ["A B"]);
+    await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(1);
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-list")).toContainText(
+      "Item XML to Response capture",
+    );
+    await surface.getByRole("button", { name: "Item XML" }).click();
+    await surface.getByRole("button", { name: "Processing rules" }).click();
+    await expectResponse(page, ["A B"]);
+
+    await page.getByRole("button", { name: "Remove Item XML to Response capture" }).click();
+    await expectResponse(page, []);
+    await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(0);
+  });
+
+  test("supports keyboard graphic associate pairing and deletion", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "graphicAssociate");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    await surface.getByRole("button", { name: "Item XML" }).focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("ArrowRight");
+    await expect(surface.getByRole("button", { name: "Response capture" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["A B"]);
+
+    await page.keyboard.press("Delete");
+    await expectResponse(page, []);
   });
 
   test("assigns graphic gap match choices with pointer drag and removal", async ({ page }) => {
@@ -2244,6 +2298,16 @@ async function provideResponse(
         source,
         target,
       );
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "graphicAssociate") {
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await surface.locator(`[data-choice-identifier="${source}"]`).click();
+      await surface.locator(`[data-choice-identifier="${target}"]`).click();
     }
     return;
   }

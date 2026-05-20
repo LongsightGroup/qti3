@@ -9,7 +9,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for graphicAssociate-reference: QTI 3.0 item-player conformance fixture.</p>
-    <qti-graphic-associate-interaction response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-associable-hotspot identifier="A" shape="rect" coords="24,52,136,124" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="184,52,296,124" match-max="1"/><qti-associable-hotspot identifier="C" shape="rect" coords="344,52,456,124" match-max="1"/><qti-associable-hotspot identifier="D" shape="rect" coords="184,178,296,250" match-max="1"/></qti-graphic-associate-interaction>
+    <qti-graphic-associate-interaction response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-associable-hotspot identifier="A" hotspot-label="Item XML" shape="rect" coords="24,52,136,124" match-max="1"/><qti-associable-hotspot identifier="B" hotspot-label="Response capture" shape="rect" coords="184,52,296,124" match-max="1"/><qti-associable-hotspot identifier="C" hotspot-label="Processing rules" shape="rect" coords="344,52,456,124" match-max="1"/><qti-associable-hotspot identifier="D" hotspot-label="Outcomes" shape="rect" coords="184,178,296,250" match-max="1"/></qti-graphic-associate-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>
