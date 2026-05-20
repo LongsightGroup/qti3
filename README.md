@@ -166,11 +166,13 @@ The intended enforcement model is strict:
 
 This repository is an early reference implementation. It has a strict TypeScript core, a native web component player, fixture-based scoring, a manual browser harness, automated accessibility checks, Playwright coverage, and standalone XML reference items under `packages/fixtures/xml`.
 
+Serialized attempt state uses `qti3.attempt-state.v1` and includes responses, outcomes, generated template values, validation messages, lifecycle status, and QTI's built-in `completionStatus` outcome. Adaptive items retain outcome values across response-processing runs; non-adaptive items reset authored outcomes before each scoring run.
+
 ## Roadmap Focus
 
 - Bring every QTI 3 interaction/question type to reference quality.
-- Complete item processing coverage for realistic QTI: template processing, response processing, adaptive item flows, feedback, printed variables, catalogs, and portable custom interaction boundaries.
+- Complete item processing coverage for realistic QTI: template processing, response processing, feedback, printed variables, catalogs, and portable custom interaction boundaries.
 - Harden item state serialization and restore for host-owned save/resume/review workflows.
-- Improve the manual harness into an item debugger with diagnostics, responses, outcomes, template values, serialized state, validation messages, and action history.
+- Continue improving the manual harness debugger with richer fixture/package inspection and manual accessibility scripts.
 - Keep public fixtures synthetic and clearly licensed; keep private/generated/customer packages outside the public repository unless explicitly approved for publication.
 - Keep assessment-test support limited to package traversal and item-reference loading unless a separate optional example runner is intentionally created.
