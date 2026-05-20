@@ -481,6 +481,64 @@ test.describe("manual harness", () => {
     expect(restoredState.outcomes.SCORE).toBe(1);
   });
 
+  test("restores serialized responses into visible controls", async ({ page }) => {
+    await page.goto("/");
+    const restoreCurrentAttempt = async () => {
+      const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+        return element.serialize();
+      });
+      await page.locator("qti-assessment-item-player").evaluate((element, attemptState) => {
+        element.reset();
+        element.restore(attemptState);
+      }, state);
+    };
+
+    await loadFixture(page, "choice");
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+    await restoreCurrentAttempt();
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="A"] input'),
+    ).toBeChecked();
+    await expect(
+      page.locator('qti-assessment-item-player .qti3-choice-option[data-choice-identifier="A"]'),
+    ).toHaveAttribute("data-selected", "true");
+
+    await loadFixture(page, "textEntry");
+    await page
+      .locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])')
+      .fill("SCORE");
+    await restoreCurrentAttempt();
+    await expect(
+      page.locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])'),
+    ).toHaveValue("SCORE");
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText(
+      "5 of 10 characters",
+    );
+
+    await loadFixture(page, "order");
+    await page
+      .locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]')
+      .focus();
+    await page.keyboard.press("ArrowUp");
+    await restoreCurrentAttempt();
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-reorder-item").first(),
+    ).toHaveAttribute("data-choice-identifier", "B");
+
+    await loadFixture(page, "hotspot");
+    await page
+      .locator("qti-assessment-item-player .qti3-hotspot-surface")
+      .getByRole("button", { name: "A" })
+      .click();
+    await restoreCurrentAttempt();
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-hotspot-button[data-choice-identifier='A']"),
+    ).toHaveAttribute("data-selected", "true");
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toContainText(
+      "Selected A",
+    );
+  });
+
   test("supports keyboard-only response entry for representative native controls", async ({
     page,
   }) => {
@@ -614,7 +672,7 @@ test.describe("manual harness", () => {
       page
         .locator('qti-assessment-item-player [aria-label="Associate targets"]')
         .locator('[data-choice-identifier="A"]'),
-    ).toBeDisabled();
+    ).toBeEnabled();
     await expect(
       page
         .locator('qti-assessment-item-player [aria-label="Associate targets"]')

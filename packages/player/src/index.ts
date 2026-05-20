@@ -221,64 +221,65 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         new CustomEvent("qti-statechange", { detail: { state: this.session.serialize() } }),
       );
     };
+    const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
     if (usesOrderedResponse(interaction)) {
-      field.append(renderOrderedResponse(interaction, update));
+      field.append(renderOrderedResponse(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "gapMatch" || interaction.type === "graphicGapMatch") {
-      field.append(renderGapMatchResponse(interaction, update));
+      field.append(renderGapMatchResponse(interaction, update, currentValue));
       return field;
     }
 
     if (usesPairResponse(interaction)) {
-      field.append(renderPairResponse(interaction, update));
+      field.append(renderPairResponse(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "hotspot" && interaction.object) {
-      field.append(renderHotspotResponse(interaction, update));
+      field.append(renderHotspotResponse(interaction, update, currentValue));
       return field;
     }
 
     if (usesChoiceSet(interaction)) {
-      field.append(renderChoice(interaction, update));
+      field.append(renderChoice(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "inlineChoice") {
-      field.append(renderSelect(interaction, update));
+      field.append(renderSelect(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "extendedText") {
-      field.append(renderTextResponse(interaction, update, "extended"));
+      field.append(renderTextResponse(interaction, update, "extended", currentValue));
       return field;
     }
 
     if (interaction.type === "positionObject" || interaction.type === "selectPoint") {
-      field.append(renderPointResponse(interaction, update));
+      field.append(renderPointResponse(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "drawing") {
-      field.append(renderDrawingResponse(interaction, update));
+      field.append(renderDrawingResponse(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "portableCustom") {
-      field.append(renderPortableCustomResponse(interaction, update));
+      field.append(renderPortableCustomResponse(interaction, update, currentValue));
       return field;
     }
 
     if (interaction.type === "textEntry") {
-      field.append(renderTextResponse(interaction, update, "entry"));
+      field.append(renderTextResponse(interaction, update, "entry", currentValue));
       return field;
     }
 
     if (interaction.type === "slider") {
-      field.append(renderSliderResponse(interaction, update));
+      field.append(renderSliderResponse(interaction, update, currentValue));
       return field;
     }
 
@@ -305,7 +306,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
-    field.append(renderSelect(interaction, update));
+    field.append(renderSelect(interaction, update, currentValue));
     return field;
   }
 
@@ -334,14 +335,15 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         new CustomEvent("qti-statechange", { detail: { state: this.session.serialize() } }),
       );
     };
+    const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
     if (interaction.responseIdentifier) {
       wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));
     }
     wrapper.append(
       interaction.type === "inlineChoice"
-        ? renderSelect(interaction, update)
-        : renderInlineTextEntry(interaction, update),
+        ? renderSelect(interaction, update, currentValue)
+        : renderInlineTextEntry(interaction, update, currentValue),
     );
     return wrapper;
   }
@@ -436,6 +438,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       state?.responses[identifier] ??
       null
     );
+  }
+
+  private currentResponseValue(identifier: string): QtiValue {
+    return this.session?.serialize().responses[identifier] ?? null;
   }
 
   private applyDefaultStyles(): void {
@@ -542,7 +548,11 @@ declare global {
   }
 }
 
-function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {
+function renderChoice(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
   const group = document.createElement("fieldset");
   group.className = "qti3-choice-group";
   const legend = document.createElement("legend");
@@ -551,7 +561,7 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
 
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
-  const selected = new Set<string>();
+  const selected = new Set(valueToStrings(currentValue));
   const list = document.createElement("div");
   list.className = "qti3-choice-list";
   list.role = "group";
@@ -570,6 +580,7 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
     input.type = multiple ? "checkbox" : "radio";
     input.name = interaction.responseIdentifier ?? interaction.type;
     input.value = choice.identifier;
+    input.checked = selected.has(choice.identifier);
     input.addEventListener("change", () => {
       if (multiple) {
         if (input.checked) selected.add(choice.identifier);
@@ -598,6 +609,7 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
     label.append(...optionParts);
     list.append(label);
   }
+  syncSelected();
   group.append(list);
   return group;
 }
@@ -653,6 +665,7 @@ function usesPairResponse(interaction: QtiInteraction): boolean {
 function renderOrderedResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("fieldset");
   const legend = document.createElement("legend");
@@ -661,7 +674,7 @@ function renderOrderedResponse(
   appendGraphicContext(group, interaction);
 
   const choices = choicesOrFallback(interaction).filter((choice) => choice.role !== "gap");
-  const ordered = [...choices];
+  const ordered = orderChoicesFromValue(choices, currentValue);
   const list = document.createElement("ol");
   list.className = "qti3-reorder-list";
   list.setAttribute("aria-label", `${readableType(interaction.type)} current order`);
@@ -752,6 +765,7 @@ function renderOrderedResponse(
 function renderPairResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("fieldset");
   const legend = document.createElement("legend");
@@ -761,12 +775,10 @@ function renderPairResponse(
 
   const sources = sourceChoices(interaction);
   const targets = targetChoices(interaction);
-  const selectedPairs: string[] = [];
+  const selectedPairs: string[] = valueToStrings(currentValue);
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   const labels = pairRegionLabels(interaction);
-  const requiresDistinctPair =
-    interaction.type === "associate" || interaction.type === "graphicAssociate";
 
   const sourceRegion = tokenRegion(`${readableType(interaction.type)} sources`, labels.source);
   const targetRegion = tokenRegion(`${readableType(interaction.type)} targets`, labels.target);
@@ -782,9 +794,6 @@ function renderPairResponse(
     else update([...selectedPairs]);
   };
   const syncPressed = () => {
-    if (requiresDistinctPair && selectedSource?.identifier === selectedTarget?.identifier) {
-      selectedTarget = undefined;
-    }
     for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
       button.setAttribute(
         "aria-pressed",
@@ -792,21 +801,14 @@ function renderPairResponse(
       );
     }
     for (const button of targetRegion.querySelectorAll<HTMLButtonElement>("button")) {
-      const isSelfTarget =
-        requiresDistinctPair && button.dataset.choiceIdentifier === selectedSource?.identifier;
-      button.disabled = isSelfTarget;
-      button.setAttribute("aria-disabled", isSelfTarget ? "true" : "false");
       button.setAttribute(
         "aria-pressed",
-        !isSelfTarget && button.dataset.choiceIdentifier === selectedTarget?.identifier
-          ? "true"
-          : "false",
+        button.dataset.choiceIdentifier === selectedTarget?.identifier ? "true" : "false",
       );
     }
   };
   const addSelectedPair = () => {
     if (!selectedSource || !selectedTarget) return;
-    if (requiresDistinctPair && selectedSource.identifier === selectedTarget.identifier) return;
     const pair = `${selectedSource.identifier} ${selectedTarget.identifier}`;
     if (!selectedPairs.includes(pair)) selectedPairs.push(pair);
     selectedSource = undefined;
@@ -887,6 +889,7 @@ function renderPairResponse(
   }
 
   selector.append(sourceRegion, targetRegion);
+  renderPairs();
   group.append(selector, pairList);
   return group;
 }
@@ -902,6 +905,7 @@ function pairRegionLabels(interaction: QtiInteraction): { source: string; target
 function renderGapMatchResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("fieldset");
   const legend = document.createElement("legend");
@@ -920,6 +924,11 @@ function renderGapMatchResponse(
   gapRegion.className = "qti3-gap-region";
   gapRegion.role = "group";
   gapRegion.setAttribute("aria-label", `${readableType(interaction.type)} targets`);
+  for (const pair of valueToStrings(currentValue)) {
+    const [sourceIdentifier, gapIdentifier] = pair.split(/\s+/);
+    const source = sources.find((choice) => choice.identifier === sourceIdentifier);
+    if (source && gapIdentifier) assignments.set(gapIdentifier, source);
+  }
 
   const commit = () => {
     update(
@@ -1008,11 +1017,17 @@ function renderGapMatchResponse(
   return group;
 }
 
-function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {
+function renderSelect(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
   const select = document.createElement("select");
   select.className = "qti3-inline-select";
   select.setAttribute("aria-label", interactionLabel(interaction));
   appendOptions(select, choicesOrFallback(interaction));
+  const [selected] = valueToStrings(currentValue);
+  if (selected) select.value = selected;
   select.addEventListener("change", () => update(select.value));
   return select;
 }
@@ -1025,6 +1040,7 @@ function renderTextResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   mode: "entry" | "extended",
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("div");
   group.className = "qti3-text-response";
@@ -1036,6 +1052,7 @@ function renderTextResponse(
   const control =
     mode === "extended" ? document.createElement("textarea") : document.createElement("input");
   control.className = mode === "extended" ? "qti3-textarea" : "qti3-text-input";
+  control.value = scalarString(currentValue);
   control.setAttribute(
     "aria-label",
     interaction.prompt ?? (mode === "extended" ? "Extended text response" : "Text response"),
@@ -1066,11 +1083,13 @@ function renderTextResponse(
 function renderInlineTextEntry(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("span");
   group.className = "qti3-inline-text-response";
   const input = document.createElement("input");
   input.className = "qti3-text-input qti3-inline-text-input";
+  input.value = scalarString(currentValue);
   input.setAttribute(
     "aria-label",
     interaction.prompt ?? interaction.contextText ?? "Text response",
@@ -1099,6 +1118,7 @@ function renderInlineTextEntry(
 function renderSliderResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("div");
   group.className = "qti3-slider-response";
@@ -1107,7 +1127,7 @@ function renderSliderResponse(
   input.min = interaction.attributes["lower-bound"] ?? "0";
   input.max = interaction.attributes["upper-bound"] ?? "100";
   input.step = interaction.attributes.step ?? "1";
-  input.value = interaction.attributes["lower-bound"] ?? "0";
+  input.value = scalarString(currentValue) || interaction.attributes["lower-bound"] || "0";
   input.setAttribute("aria-label", interaction.prompt ?? "Slider response");
   const output = document.createElement("output");
   output.className = "qti3-slider-output";
@@ -1134,6 +1154,7 @@ function appendGraphicContext(group: HTMLElement, interaction: QtiInteraction): 
 function renderPointResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
@@ -1180,7 +1201,7 @@ function renderPointResponse(
   marker.style.pointerEvents = "none";
   surface.append(marker);
 
-  const point = { x: 10, y: 10 };
+  const point = parsePointValue(currentValue) ?? { x: 10, y: 10 };
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
   const coordinate = document.createElement("output");
@@ -1255,6 +1276,7 @@ function renderPointResponse(
 function renderDrawingResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
@@ -1304,6 +1326,11 @@ function renderDrawingResponse(
         : `Drawing response surface, ${count} stroke${count === 1 ? "" : "s"}`,
     );
   };
+  for (const points of parseDrawingValue(currentValue)) {
+    const element = polylineElement(points);
+    strokes.push({ points, element });
+    surface.append(element);
+  }
   const addPoint = (event: PointerEvent) => {
     if (!activeStroke) return;
     const point = svgPoint(surface, event);
@@ -1369,6 +1396,7 @@ function renderDrawingResponse(
 function renderPortableCustomResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
@@ -1389,6 +1417,7 @@ function renderPortableCustomResponse(
   host.style.marginBlockEnd = "0.5rem";
 
   const fallback = document.createElement("input");
+  fallback.value = scalarString(currentValue);
   fallback.setAttribute("aria-label", `${interaction.prompt ?? "Portable custom"} response`);
   fallback.addEventListener("input", () => update(fallback.value));
   fallback.addEventListener("change", () => update(fallback.value));
@@ -1413,6 +1442,7 @@ function renderPortableCustomResponse(
 function renderHotspotResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
+  currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("fieldset");
   const legend = document.createElement("legend");
@@ -1442,7 +1472,7 @@ function renderHotspotResponse(
     surface.append(image);
   }
 
-  const selected = new Set<string>();
+  const selected = new Set(valueToStrings(currentValue));
   const multiple = interaction.responseCardinality === "multiple";
   const selectedSummary = document.createElement("p");
   selectedSummary.className = "qti3-selection-summary";
@@ -1624,6 +1654,60 @@ function choicesOrFallback(interaction: QtiInteraction): QtiChoice[] {
       attributes: {},
     },
   ];
+}
+
+function valueToStrings(value: QtiValue): string[] {
+  if (value === null) return [];
+  if (Array.isArray(value)) return value.map((item) => String(item));
+  return [String(value)];
+}
+
+function scalarString(value: QtiValue): string {
+  if (value === null || Array.isArray(value) || typeof value === "object") return "";
+  return String(value);
+}
+
+function orderChoicesFromValue(choices: QtiChoice[], value: QtiValue): QtiChoice[] {
+  const identifiers = valueToStrings(value);
+  if (identifiers.length === 0) return [...choices];
+  const byIdentifier = new Map(choices.map((choice) => [choice.identifier, choice]));
+  const ordered = identifiers
+    .map((identifier) => byIdentifier.get(identifier))
+    .filter((choice): choice is QtiChoice => Boolean(choice));
+  const used = new Set(ordered.map((choice) => choice.identifier));
+  ordered.push(...choices.filter((choice) => !used.has(choice.identifier)));
+  return ordered;
+}
+
+function parsePointValue(value: QtiValue): { x: number; y: number } | undefined {
+  const [raw] = valueToStrings(value);
+  if (!raw) return undefined;
+  const values = raw.split(/\s+/).map(Number);
+  const x = values[0];
+  const y = values[1];
+  if (typeof x !== "number" || typeof y !== "number") return undefined;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return undefined;
+  return { x, y };
+}
+
+function parseDrawingValue(value: QtiValue): Array<Array<{ x: number; y: number }>> {
+  const raw = scalarString(value);
+  if (!raw) return [];
+  return raw
+    .split("|")
+    .map((stroke) => {
+      const numbers = stroke
+        .trim()
+        .split(/\s+/)
+        .map(Number)
+        .filter((item) => Number.isFinite(item));
+      const points: Array<{ x: number; y: number }> = [];
+      for (let index = 0; index + 1 < numbers.length; index += 2) {
+        points.push({ x: numbers[index]!, y: numbers[index + 1]! });
+      }
+      return points;
+    })
+    .filter((points) => points.length > 0);
 }
 
 function objectWidth(interaction: QtiInteraction): number {
