@@ -691,29 +691,100 @@ function renderGapMatchResponse(
 
   const sources = sourceChoices(interaction);
   const gaps = targetChoices(interaction);
-  const selects: HTMLSelectElement[] = [];
+  const assignments = new Map<string, QtiChoice>();
+  let selectedSource: QtiChoice | undefined;
+  let draggedSource: string | undefined;
 
-  for (const gap of gaps) {
-    const label = document.createElement("label");
-    label.textContent = `${gap.text} `;
+  const sourceRegion = tokenRegion(`${readableType(interaction.type)} choices`);
+  const gapRegion = document.createElement("div");
+  gapRegion.className = "qti3-gap-region";
+  gapRegion.role = "group";
+  gapRegion.setAttribute("aria-label", `${readableType(interaction.type)} targets`);
 
-    const select = document.createElement("select");
-    select.dataset.gapIdentifier = gap.identifier;
-    select.setAttribute("aria-label", `${readableType(interaction.type)} ${gap.text}`);
-    appendOptions(select, sources);
-    select.addEventListener("change", () => {
-      update(
-        selects
-          .filter((item) => item.value.length > 0)
-          .map((item) => `${item.value} ${item.dataset.gapIdentifier}`),
+  const commit = () => {
+    update(
+      [...assignments.entries()].map(
+        ([gapIdentifier, source]) => `${source.identifier} ${gapIdentifier}`,
+      ),
+    );
+  };
+  const syncSources = () => {
+    for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
+      button.setAttribute(
+        "aria-pressed",
+        button.dataset.choiceIdentifier === selectedSource?.identifier ? "true" : "false",
       );
-    });
+    }
+  };
+  const assign = (gap: QtiChoice, sourceIdentifier: string | undefined) => {
+    const source = sources.find((choice) => choice.identifier === sourceIdentifier);
+    if (!source) return;
+    assignments.set(gap.identifier, source);
+    selectedSource = undefined;
+    syncSources();
+    renderGaps();
+    commit();
+  };
+  const renderGaps = () => {
+    gapRegion.replaceChildren(
+      ...gaps.map((gap) => {
+        const assigned = assignments.get(gap.identifier);
+        const target = document.createElement("div");
+        target.className = "qti3-gap-target";
+        target.dataset.gapIdentifier = gap.identifier;
+        target.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          target.classList.add("qti3-drop-target");
+        });
+        target.addEventListener("dragleave", () => target.classList.remove("qti3-drop-target"));
+        target.addEventListener("drop", (event) => {
+          event.preventDefault();
+          target.classList.remove("qti3-drop-target");
+          assign(gap, event.dataTransfer?.getData("text/plain") || draggedSource);
+        });
 
-    selects.push(select);
-    label.append(select);
-    group.append(label);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "qti3-gap-button";
+        button.textContent = assigned ? `${gap.text}: ${assigned.text}` : `${gap.text}: empty`;
+        button.setAttribute(
+          "aria-label",
+          assigned ? `${gap.text}, assigned ${assigned.text}` : `${gap.text}, empty`,
+        );
+        button.addEventListener("click", () => assign(gap, selectedSource?.identifier));
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.disabled = !assigned;
+        remove.setAttribute("aria-label", `Remove ${gap.text} assignment`);
+        remove.addEventListener("click", () => {
+          assignments.delete(gap.identifier);
+          renderGaps();
+          commit();
+        });
+        target.append(button, remove);
+        return target;
+      }),
+    );
+  };
+
+  for (const source of sources) {
+    const button = tokenButton(source);
+    button.draggable = true;
+    button.addEventListener("dragstart", (event) => {
+      draggedSource = source.identifier;
+      event.dataTransfer?.setData("text/plain", source.identifier);
+    });
+    button.addEventListener("click", () => {
+      selectedSource = source;
+      syncSources();
+    });
+    sourceRegion.append(button);
   }
 
+  renderGaps();
+  group.append(sourceRegion, gapRegion);
   return group;
 }
 
@@ -1248,7 +1319,9 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-actions,
     .qti3-reorder-item,
     .qti3-token-region,
-    .qti3-pair-chip {
+    .qti3-pair-chip,
+    .qti3-gap-region,
+    .qti3-gap-target {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
@@ -1306,6 +1379,17 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-pair-chip {
       width: fit-content;
       padding: 0.35rem 0.5rem;
+    }
+
+    .qti3-gap-target {
+      min-block-size: 2.75rem;
+      padding: 0.5rem;
+      border: 1px dashed CanvasText;
+    }
+
+    .qti3-gap-button {
+      min-inline-size: 8rem;
+      text-align: start;
     }
 
     .qti3-token:focus-visible,

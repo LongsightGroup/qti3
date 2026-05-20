@@ -156,8 +156,8 @@ test.describe("manual harness", () => {
     await page.locator("#xml").fill(xml);
     await page.locator("#load-xml").click();
 
-    await page.getByLabel("Gap match G1").selectOption("A");
-    await page.getByLabel("Gap match G2").selectOption("B");
+    await assignGap(page, "Gap match", "A", "G1");
+    await assignGap(page, "Gap match", "B", "G2");
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -443,6 +443,30 @@ test.describe("manual harness", () => {
     await expectResponse(page, ["A B"]);
   });
 
+  test("assigns graphic gap match choices with pointer drag and removal", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "graphicGapMatch");
+
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-graphic-context img"),
+    ).toHaveAttribute("src", /image\.png$/);
+
+    const source = page.locator('qti-assessment-item-player [data-choice-identifier="A"]').first();
+    const target = page.locator('qti-assessment-item-player [data-gap-identifier="G1"]').first();
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) throw new Error("Missing graphic gap drag boxes.");
+
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+    await page.mouse.up();
+    await expectResponse(page, ["A G1"]);
+
+    await page.getByRole("button", { name: "Remove G1 assignment" }).click();
+    await expectResponse(page, []);
+  });
+
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "selectPoint");
@@ -715,6 +739,28 @@ async function addPair(
     .click();
 }
 
+async function assignGap(
+  page: import("@playwright/test").Page,
+  interactionLabel: string,
+  source: string,
+  gapIdentifier: string,
+): Promise<void> {
+  const choices = page.locator(
+    `qti-assessment-item-player [aria-label="${interactionLabel} choices"]`,
+  );
+  const sourceToken = choices.locator(`[data-choice-identifier="${source}"]`).first();
+  if (await sourceToken.isVisible().catch(() => false)) {
+    await sourceToken.click();
+  } else {
+    await choices.getByRole("button", { name: source }).click();
+  }
+  await page
+    .locator(`qti-assessment-item-player [data-gap-identifier="${gapIdentifier}"]`)
+    .getByRole("button")
+    .first()
+    .click();
+}
+
 async function clickToken(
   page: import("@playwright/test").Page,
   regionSuffix: "sources" | "targets",
@@ -797,9 +843,12 @@ async function provideResponse(
   ) {
     for (const pair of response) {
       const [source, target] = String(pair).split(" ");
-      await page
-        .locator(`qti-assessment-item-player select[data-gap-identifier="${target}"]`)
-        .selectOption(source);
+      await assignGap(
+        page,
+        interactionType === "gapMatch" ? "Gap match" : "Graphic gap match",
+        source,
+        target,
+      );
     }
     return;
   }
