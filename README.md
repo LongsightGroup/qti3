@@ -188,7 +188,6 @@ pnpm test:a11y
 pnpm check:deps
 pnpm build
 pnpm check:exports
-pnpm check:pack
 pnpm test:browser
 ```
 
@@ -261,7 +260,7 @@ Quality expectations are part of the public contract:
 - Supported interactions need parser, validation, scoring, rendering, keyboard, and accessibility evidence.
 - Accessibility checks cover real operation, not just automated scans.
 - Dependencies are kept small, exact, and reviewed.
-- Published packages are checked so they contain only runtime files, package metadata, and public fixture XML.
+- Published packages use explicit npm `files` allowlists so package contents stay small and intentional.
 - Release checks must pass before publishing.
 
 ## Status

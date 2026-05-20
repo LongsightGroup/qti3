@@ -10,7 +10,10 @@
     "qti3": "./dist/index.js"
   },
   "files": [
-    "dist",
+    "dist/*.d.ts",
+    "dist/*.d.ts.map",
+    "dist/*.js",
+    "dist/*.js.map",
     "!dist/*.test.*"
   ],
   "type": "module",

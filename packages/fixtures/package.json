@@ -7,9 +7,12 @@
     "url": "https://github.com/ottenhoff"
   },
   "files": [
-    "dist",
+    "dist/*.d.ts",
+    "dist/*.d.ts.map",
+    "dist/*.js",
+    "dist/*.js.map",
     "!dist/*.test.*",
-    "xml"
+    "xml/*.xml"
   ],
   "type": "module",
   "exports": {
