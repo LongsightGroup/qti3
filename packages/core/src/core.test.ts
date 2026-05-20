@@ -332,6 +332,61 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(2);
   });
 
+  it("uses mapping default-value for unmapped responses", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-default">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="-1">
+            <qti-map-entry map-key="A" mapped-value="2"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", "B");
+    expect(session.score().outcomes.SCORE).toBe(-1);
+  });
+
+  it("validates mapping entry attributes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="none">
+            <qti-map-entry mapped-value="1"/>
+            <qti-map-entry map-key="A"/>
+            <qti-map-entry map-key="B" mapped-value="many"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "mapping.defaultValue" }),
+        expect.objectContaining({ code: "mapEntry.mapKey.required" }),
+        expect.objectContaining({ code: "mapEntry.mappedValue.required" }),
+        expect.objectContaining({ code: "mapEntry.mappedValue" }),
+      ]),
+    );
+  });
+
   it("validates processing rule targets and variable references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-processing-refs">

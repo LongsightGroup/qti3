@@ -84,7 +84,61 @@ function validateDeclarationValueMetadata(
   diagnostics: QtiDiagnostic[],
 ): void {
   if (declaration.kind !== "response") return;
+  validateMapping(declaration, diagnostics);
   validateAreaMapping(declaration, diagnostics);
+}
+
+function validateMapping(declaration: QtiResponseDeclaration, diagnostics: QtiDiagnostic[]): void {
+  const mapping = declaration.mapping;
+  if (!mapping) return;
+  if (!Number.isFinite(mapping.defaultValue)) {
+    diagnostics.push({
+      code: "mapping.defaultValue",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} mapping requires numeric default-value.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+  }
+
+  for (const entry of mapping.entries) {
+    validateMapEntry(declaration, entry, diagnostics);
+  }
+}
+
+function validateMapEntry(
+  declaration: QtiResponseDeclaration,
+  entry: NonNullable<QtiResponseDeclaration["mapping"]>["entries"][number],
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!entry.attributes["map-key"]) {
+    diagnostics.push({
+      code: "mapEntry.mapKey.required",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} map entry requires map-key.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  }
+
+  const mappedValue = entry.attributes["mapped-value"];
+  if (mappedValue === undefined) {
+    diagnostics.push({
+      code: "mapEntry.mappedValue.required",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} map entry requires mapped-value.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  } else if (!isFiniteNumber(mappedValue)) {
+    diagnostics.push({
+      code: "mapEntry.mappedValue",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} map entry requires numeric mapped-value.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  }
 }
 
 function validateAreaMapping(

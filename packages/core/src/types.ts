@@ -58,8 +58,20 @@ export interface QtiVariableDeclaration {
 export interface QtiResponseDeclaration extends QtiVariableDeclaration {
   kind: "response";
   correctResponse: QtiValue;
-  mapping?: Record<string, number> | undefined;
+  mapping?: QtiMapping | undefined;
   areaMapping?: QtiAreaMapping | undefined;
+}
+
+export interface QtiMapping {
+  defaultValue: number;
+  entries: QtiMapEntry[];
+}
+
+export interface QtiMapEntry {
+  mapKey?: string | undefined;
+  mappedValue: number;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiAreaMapping {

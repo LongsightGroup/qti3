@@ -618,11 +618,19 @@ function serialize(
   };
 }
 
-function scoreMapping(response: QtiValue, mapping: Record<string, number>): number {
+function scoreMapping(
+  response: QtiValue,
+  mapping: NonNullable<QtiResponseDeclaration["mapping"]>,
+): number {
+  const values = Object.fromEntries(
+    mapping.entries
+      .filter((entry) => entry.mapKey !== undefined)
+      .map((entry) => [entry.mapKey!, entry.mappedValue]),
+  );
   if (Array.isArray(response)) {
-    return response.reduce((sum, value) => sum + (mapping[value] ?? 0), 0);
+    return response.reduce((sum, value) => sum + (values[value] ?? mapping.defaultValue), 0);
   }
-  return typeof response === "string" ? (mapping[response] ?? 0) : 0;
+  return typeof response === "string" ? (values[response] ?? mapping.defaultValue) : 0;
 }
 
 function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {

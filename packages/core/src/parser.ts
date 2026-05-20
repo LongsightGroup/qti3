@@ -298,16 +298,17 @@ function parseVariableValue(node: XmlNode | undefined): QtiValue {
   return values;
 }
 
-function parseMapping(node: XmlNode | undefined): Record<string, number> | undefined {
+function parseMapping(node: XmlNode | undefined): QtiResponseDeclaration["mapping"] | undefined {
   if (!node) return undefined;
-  const entries = childElements(node, "qti-map-entry");
-  const mapping: Record<string, number> = {};
-  for (const entry of entries) {
-    const key = entry.attributes["map-key"];
-    const value = entry.attributes["mapped-value"];
-    if (key && value !== undefined) mapping[key] = Number(value);
-  }
-  return mapping;
+  return {
+    defaultValue: Number(node.attributes["default-value"] ?? 0),
+    entries: childElements(node, "qti-map-entry").map((entry) => ({
+      mapKey: entry.attributes["map-key"],
+      mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
 }
 
 function parseAreaMapping(
