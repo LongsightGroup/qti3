@@ -216,6 +216,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
+    if (interaction.type === "gapMatch" || interaction.type === "graphicGapMatch") {
+      field.append(renderGapMatchResponse(interaction, update));
+      return field;
+    }
+
     if (usesPairResponse(interaction)) {
       field.append(renderPairResponse(interaction, update));
       return field;
@@ -522,6 +527,44 @@ function renderPairResponse(
   targetLabel.textContent = "Target ";
   targetLabel.append(target);
   group.append(sourceLabel, targetLabel);
+  return group;
+}
+
+function renderGapMatchResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = `${readableType(interaction.type)} gaps`;
+  group.append(legend);
+  appendGraphicContext(group, interaction);
+
+  const sources = sourceChoices(interaction);
+  const gaps = targetChoices(interaction);
+  const selects: HTMLSelectElement[] = [];
+
+  for (const gap of gaps) {
+    const label = document.createElement("label");
+    label.textContent = `${gap.text} `;
+
+    const select = document.createElement("select");
+    select.dataset.gapIdentifier = gap.identifier;
+    select.setAttribute("aria-label", `${readableType(interaction.type)} ${gap.text}`);
+    appendOptions(select, sources);
+    select.addEventListener("change", () => {
+      update(
+        selects
+          .filter((item) => item.value.length > 0)
+          .map((item) => `${item.value} ${item.dataset.gapIdentifier}`),
+      );
+    });
+
+    selects.push(select);
+    label.append(select);
+    group.append(label);
+  }
+
   return group;
 }
 

@@ -132,6 +132,45 @@ test.describe("manual harness", () => {
     }
   });
 
+  test("captures one directed pair per gap in gap match interactions", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="multi-gap" title="multi-gap" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response>
+      <qti-value>A G1</qti-value>
+      <qti-value>B G2</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE">
+      <qti-gap-text identifier="A" match-max="1">Nixon</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Lincoln</qti-gap-text>
+      <p><qti-gap identifier="G1"/> resigned. <qti-gap identifier="G2"/> issued the Emancipation Proclamation.</p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+
+    await page.getByLabel("Gap match G1").selectOption("A");
+    await page.getByLabel("Gap match G2").selectOption("B");
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.RESPONSE).toEqual(["A G1", "B G2"]);
+
+    await page.getByRole("button", { name: "Score" }).click();
+    const scored = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(scored.outcomes.SCORE).toBe(1);
+  });
+
   test("exposes a portable custom host contract and accepts response events", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "portableCustom");
@@ -581,6 +620,19 @@ async function provideResponse(
       .locator("qti-assessment-item-player .qti3-hotspot-surface")
       .getByRole("button", { name: String(response) })
       .click();
+    return;
+  }
+
+  if (
+    Array.isArray(response) &&
+    (interactionType === "gapMatch" || interactionType === "graphicGapMatch")
+  ) {
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await page
+        .locator(`qti-assessment-item-player select[data-gap-identifier="${target}"]`)
+        .selectOption(source);
+    }
     return;
   }
 
