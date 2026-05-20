@@ -1103,7 +1103,6 @@ function renderDrawingResponse(
   surface.style.touchAction = "none";
 
   let start: { x: number; y: number } | undefined;
-  let lastStroke = "";
   const draw = (stroke: string) => {
     const [x1, y1, x2, y2] = stroke.split(" ").map((value) => Number(value));
     if (
@@ -1115,7 +1114,6 @@ function renderDrawingResponse(
     ) {
       return;
     }
-    lastStroke = stroke;
     surface.replaceChildren(lineElement(x1, y1, x2, y2));
     update(stroke);
   };
@@ -1140,20 +1138,13 @@ function renderDrawingResponse(
   clear.type = "button";
   clear.textContent = "Clear drawing";
   clear.addEventListener("click", () => {
-    lastStroke = "";
     surface.replaceChildren();
     update("");
-  });
-  const replay = document.createElement("button");
-  replay.type = "button";
-  replay.textContent = "Replay last stroke";
-  replay.addEventListener("click", () => {
-    if (lastStroke) draw(lastStroke);
   });
 
   const tools = document.createElement("div");
   tools.className = "qti3-drawing-tools";
-  tools.append(clear, replay);
+  tools.append(clear);
   group.append(surface, tools);
   return group;
 }

@@ -646,9 +646,7 @@ test.describe("manual harness", () => {
     await page.getByRole("button", { name: "Clear drawing" }).click();
     await expectResponse(page, "");
     await expect(surface.locator("line")).toHaveCount(0);
-
-    await page.getByRole("button", { name: "Replay last stroke" }).click();
-    await expect(surface.locator("line")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Replay last stroke" })).toHaveCount(0);
   });
 
   test("renders object-backed hotspot choices as positioned buttons", async ({ page }) => {
