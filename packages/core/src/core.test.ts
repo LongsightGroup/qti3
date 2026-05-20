@@ -1594,4 +1594,58 @@ describe("@qti3/core", () => {
     expect(score.outcomes.SUBSTRING).toBe(true);
     expect(score.outcomes.FLOAT_VALUE).toBe(7);
   });
+
+  it("evaluates min, max, power, and seeded random float expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-helper-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="MIN_VALUE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="MAX_VALUE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="POWER_VALUE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="RANDOM_VALUE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-text-entry-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="MIN_VALUE">
+                <qti-min>
+                  <qti-base-value base-type="integer">8</qti-base-value>
+                  <qti-multiple>
+                    <qti-base-value base-type="integer">3</qti-base-value>
+                    <qti-base-value base-type="integer">5</qti-base-value>
+                  </qti-multiple>
+                </qti-min>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="MAX_VALUE">
+                <qti-max>
+                  <qti-base-value base-type="float">2.5</qti-base-value>
+                  <qti-base-value base-type="float">9.25</qti-base-value>
+                </qti-max>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="POWER_VALUE">
+                <qti-power>
+                  <qti-base-value base-type="integer">2</qti-base-value>
+                  <qti-base-value base-type="integer">5</qti-base-value>
+                </qti-power>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="RANDOM_VALUE">
+                <qti-random-float min="4.5" max="4.5"/>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!, undefined, { randomSeed: "fixed" });
+    const score = session.score();
+    expect(score.outcomes.MIN_VALUE).toBe(3);
+    expect(score.outcomes.MAX_VALUE).toBe(9.25);
+    expect(score.outcomes.POWER_VALUE).toBe(32);
+    expect(score.outcomes.RANDOM_VALUE).toBe(4.5);
+  });
 });

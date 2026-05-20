@@ -259,14 +259,23 @@ export type QtiProcessingExpression = (
       step: number;
       attributes: Record<string, string>;
     }
+  | {
+      type: "randomFloat";
+      min: number;
+      max: number;
+      attributes: Record<string, string>;
+    }
   | { type: "random"; values: QtiProcessingExpression[] }
   | { type: "multiple"; expressions: QtiProcessingExpression[] }
   | { type: "ordered"; expressions: QtiProcessingExpression[] }
   | { type: "index"; expression: QtiProcessingExpression; n: string }
   | { type: "sum"; expressions: QtiProcessingExpression[] }
   | { type: "product"; expressions: QtiProcessingExpression[] }
+  | { type: "min"; expressions: QtiProcessingExpression[] }
+  | { type: "max"; expressions: QtiProcessingExpression[] }
   | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "divide"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | { type: "power"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "integerDivide"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "integerModulus"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "round"; expression: QtiProcessingExpression }

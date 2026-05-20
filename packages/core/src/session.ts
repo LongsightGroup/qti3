@@ -341,6 +341,9 @@ function evaluateValue(
     const count = Math.floor((expression.max - expression.min) / step) + 1;
     return expression.min + Math.floor(random() * count) * step;
   }
+  if (expression.type === "randomFloat") {
+    return expression.min + random() * (expression.max - expression.min);
+  }
   if (expression.type === "random") {
     if (expression.values.length === 0) return null;
     const index = Math.floor(random() * expression.values.length);
@@ -422,6 +425,24 @@ function evaluateValue(
       1,
     );
   }
+  if (expression.type === "min" || expression.type === "max") {
+    const values = expression.expressions.flatMap((item) =>
+      valueContainer(
+        evaluateValue(
+          item,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ),
+    );
+    if (values.length === 0) return null;
+    const numericValues = values.map((value) => numericValue(value));
+    return expression.type === "min" ? Math.min(...numericValues) : Math.max(...numericValues);
+  }
   if (expression.type === "subtract") {
     return (
       numericValue(
@@ -474,6 +495,33 @@ function evaluateValue(
         ),
       ) / divisor
     );
+  }
+  if (expression.type === "power") {
+    const value = Math.pow(
+      numericValue(
+        evaluateValue(
+          expression.left,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ),
+      numericValue(
+        evaluateValue(
+          expression.right,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ),
+    );
+    return Number.isFinite(value) ? value : null;
   }
   if (expression.type === "integerDivide") {
     const dividendValue = evaluateValue(

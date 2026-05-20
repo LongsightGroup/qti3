@@ -619,6 +619,10 @@ function validateExpressionReferences(
     validateRandomIntegerExpression(expression, diagnostics);
   }
 
+  if (expression.type === "randomFloat") {
+    validateRandomFloatExpression(expression, diagnostics);
+  }
+
   if (expression.type === "baseValue") {
     validateBaseValueExpression(expression, diagnostics);
   }
@@ -741,6 +745,58 @@ function validateRandomIntegerAttribute(
   });
 }
 
+function validateRandomFloatExpression(
+  expression: Extract<QtiProcessingExpression, { type: "randomFloat" }>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateRandomFloatAttribute(expression, "max", diagnostics);
+  if (expression.attributes.min !== undefined)
+    validateRandomFloatAttribute(expression, "min", diagnostics);
+
+  const min = expression.attributes.min ?? "0";
+  const max = expression.attributes.max;
+  if (
+    max !== undefined &&
+    isFiniteNumber(min) &&
+    isFiniteNumber(max) &&
+    Number(min) > Number(max)
+  ) {
+    diagnostics.push({
+      code: "processing.randomFloat.bounds",
+      severity: "error",
+      message: "qti-random-float requires min to be less than or equal to max.",
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+}
+
+function validateRandomFloatAttribute(
+  expression: Extract<QtiProcessingExpression, { type: "randomFloat" }>,
+  attribute: "min" | "max",
+  diagnostics: QtiDiagnostic[],
+): void {
+  const value = expression.attributes[attribute];
+  if (value === undefined) {
+    diagnostics.push({
+      code: "processing.randomFloat.attribute",
+      severity: "error",
+      message: `qti-random-float requires ${attribute}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+    return;
+  }
+  if (isFiniteNumber(value)) return;
+  diagnostics.push({
+    code: "processing.randomFloat.numeric",
+    severity: "error",
+    message: `qti-random-float requires numeric ${attribute}, got ${value}.`,
+    path: expression.source?.path,
+    source: expression.source,
+  });
+}
+
 function validateProcessingIdentifier(
   identifier: string,
   code: string,
@@ -766,6 +822,8 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "ordered" ||
     expression.type === "sum" ||
     expression.type === "product" ||
+    expression.type === "min" ||
+    expression.type === "max" ||
     expression.type === "and" ||
     expression.type === "or"
   ) {
@@ -774,6 +832,7 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
   if (
     expression.type === "subtract" ||
     expression.type === "divide" ||
+    expression.type === "power" ||
     expression.type === "integerDivide" ||
     expression.type === "integerModulus" ||
     expression.type === "equal" ||

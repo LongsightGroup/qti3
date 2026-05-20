@@ -494,6 +494,16 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  if (node.localName === "qti-random-float") {
+    return {
+      type: "randomFloat",
+      min: Number(node.attributes.min ?? 0),
+      max: Number(node.attributes.max ?? 0),
+      attributes: node.attributes,
+      source: node.source,
+    };
+  }
+
   if (node.localName === "qti-random") {
     const multiple = childElements(node, "qti-multiple")[0];
     return {
@@ -552,6 +562,26 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  if (node.localName === "qti-min") {
+    return {
+      type: "min",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-max") {
+    return {
+      type: "max",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
   if (node.localName === "qti-subtract") {
     const expressions = childElements(node)
       .map(parseExpression)
@@ -566,6 +596,14 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     const [left, right] = expressions;
     if (left && right) return { type: "divide", left, right, source: node.source };
+  }
+
+  if (node.localName === "qti-power") {
+    const expressions = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    const [left, right] = expressions;
+    if (left && right) return { type: "power", left, right, source: node.source };
   }
 
   if (node.localName === "qti-integer-divide") {
