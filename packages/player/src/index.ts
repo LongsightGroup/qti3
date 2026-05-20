@@ -602,9 +602,12 @@ function renderPairResponse(
   const selectedPairs: string[] = [];
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
+  const labels = pairRegionLabels(interaction);
 
-  const sourceRegion = tokenRegion(`${readableType(interaction.type)} sources`);
-  const targetRegion = tokenRegion(`${readableType(interaction.type)} targets`);
+  const sourceRegion = tokenRegion(`${readableType(interaction.type)} sources`, labels.source);
+  const targetRegion = tokenRegion(`${readableType(interaction.type)} targets`, labels.target);
+  const selector = document.createElement("div");
+  selector.className = "qti3-pair-selector";
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
   pairList.setAttribute("aria-label", `${readableType(interaction.type)} selected pairs`);
@@ -680,8 +683,17 @@ function renderPairResponse(
     targetRegion.append(button);
   }
 
-  group.append(sourceRegion, targetRegion, pairList);
+  selector.append(sourceRegion, targetRegion);
+  group.append(selector, pairList);
   return group;
+}
+
+function pairRegionLabels(interaction: QtiInteraction): { source: string; target: string } {
+  if (interaction.type === "associate") return { source: "First concept", target: "Pair with" };
+  if (interaction.type === "graphicAssociate")
+    return { source: "First hotspot", target: "Pair with" };
+  if (interaction.type === "match") return { source: "Prompt", target: "Match" };
+  return { source: "Source", target: "Target" };
 }
 
 function renderGapMatchResponse(
@@ -1272,11 +1284,17 @@ function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {
   }
 }
 
-function tokenRegion(label: string): HTMLElement {
+function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
   const region = document.createElement("div");
   region.className = "qti3-token-region";
   region.role = "group";
   region.setAttribute("aria-label", label);
+  if (visibleLabel) {
+    const heading = document.createElement("strong");
+    heading.className = "qti3-region-label";
+    heading.textContent = visibleLabel;
+    region.append(heading);
+  }
   return region;
 }
 
@@ -1477,6 +1495,19 @@ function playerStyleElement(): HTMLStyleElement {
       display: grid;
       gap: 0.5rem;
       padding-inline-start: 1.5rem;
+    }
+
+    .qti3-pair-selector {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+      align-items: start;
+    }
+
+    .qti3-region-label {
+      flex-basis: 100%;
+      font-size: 0.9rem;
+      font-weight: 700;
     }
 
     .qti3-choice-list {

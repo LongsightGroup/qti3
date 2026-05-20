@@ -454,6 +454,12 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "associate");
 
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-selector")).toContainText(
+      "First concept",
+    );
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-selector")).toContainText(
+      "Pair with",
+    );
     await page
       .locator('qti-assessment-item-player [aria-label="Associate sources"]')
       .locator('[data-choice-identifier="A"]')
