@@ -144,6 +144,30 @@ describe("@qti3/cli", () => {
     );
   });
 
+  it("ties processing support evidence to public reference fixtures where available", () => {
+    const fixturePaths = new Set(
+      canonicalFixtures.map((fixture) => `packages/fixtures/xml/${fixture.id}.xml`),
+    );
+    const expectedFixtureEvidence = new Map([
+      ["qti-template-processing", "packages/fixtures/xml/template-processing-reference.xml"],
+      ["qti-response-processing", "packages/fixtures/xml/advanced-processing-reference.xml"],
+      ["qti-gcd", "packages/fixtures/xml/advanced-processing-reference.xml"],
+      ["qti-inside", "packages/fixtures/xml/advanced-processing-reference.xml"],
+      ["qti-stats-operator", "packages/fixtures/xml/advanced-processing-reference.xml"],
+    ]);
+
+    for (const [qtiName, fixturePath] of expectedFixtureEvidence) {
+      const support = processingSupport.find((entry) => entry.qtiName === qtiName);
+      expect(support?.fixtures, qtiName).toContain(fixturePath);
+    }
+
+    for (const support of processingSupport) {
+      for (const fixturePath of support.fixtures) {
+        expect(fixturePaths.has(fixturePath), `${support.qtiName} ${fixturePath}`).toBe(true);
+      }
+    }
+  });
+
   it("keeps supported interactions tied to concrete reference fixtures", () => {
     const fixtureIds = new Set(interactionFixtures.map((fixture) => fixture.id));
 
