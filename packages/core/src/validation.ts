@@ -577,6 +577,13 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
         : undefined,
       diagnostics,
     );
+    validateMappingReferences(
+      interaction,
+      interaction.responseIdentifier
+        ? responseDeclarations.get(interaction.responseIdentifier)
+        : undefined,
+      diagnostics,
+    );
   }
 }
 
@@ -730,6 +737,58 @@ function invalidCorrectResponseReference(
     message: `Response declaration ${declaration.identifier} correct response ${value} does not reference choices in ${interaction.qtiName}.`,
     path: declaration.source?.path,
     source: declaration.source,
+  });
+}
+
+function validateMappingReferences(
+  interaction: QtiInteraction,
+  declaration: QtiResponseDeclaration | undefined,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!declaration?.mapping) return;
+  if (
+    declaration.baseType !== "identifier" &&
+    declaration.baseType !== "pair" &&
+    declaration.baseType !== "directedPair"
+  ) {
+    return;
+  }
+
+  const identifiers = new Set(
+    interaction.choices
+      .map((choice) => choice.identifier)
+      .filter((identifier) => identifier.length > 0),
+  );
+  if (identifiers.size === 0) return;
+
+  for (const entry of declaration.mapping.entries) {
+    const mapKey = entry.mapKey;
+    if (!mapKey) continue;
+    if (declaration.baseType === "identifier") {
+      if (identifiers.has(mapKey)) continue;
+      invalidMappingReference(interaction, declaration, entry, diagnostics);
+      continue;
+    }
+
+    const parts = mapKey.trim().split(/\s+/);
+    if (parts.length !== 2 || parts.some((part) => !identifiers.has(part))) {
+      invalidMappingReference(interaction, declaration, entry, diagnostics);
+    }
+  }
+}
+
+function invalidMappingReference(
+  interaction: QtiInteraction,
+  declaration: QtiResponseDeclaration,
+  entry: NonNullable<QtiResponseDeclaration["mapping"]>["entries"][number],
+  diagnostics: QtiDiagnostic[],
+): void {
+  diagnostics.push({
+    code: "mapping.mapKey.reference",
+    severity: "error",
+    message: `Response declaration ${declaration.identifier} map-key ${entry.mapKey ?? ""} does not reference choices in ${interaction.qtiName}.`,
+    path: entry.source?.path ?? declaration.source?.path,
+    source: entry.source ?? declaration.source,
   });
 }
 

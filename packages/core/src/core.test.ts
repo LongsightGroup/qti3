@@ -387,6 +387,50 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("validates mapping keys against interaction choices", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping-refs">
+        <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="MISSING" mapped-value="1"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="MATCH" cardinality="multiple" base-type="directedPair">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="A MISSING" mapped-value="1"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="CHOICE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-match-interaction response-identifier="MATCH">
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice>
+            </qti-simple-match-set>
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice>
+            </qti-simple-match-set>
+          </qti-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "mapping.mapKey.reference",
+          path: "/qti-assessment-item/qti-response-declaration[1]/qti-mapping[1]/qti-map-entry[1]",
+        }),
+        expect.objectContaining({
+          code: "mapping.mapKey.reference",
+          path: "/qti-assessment-item/qti-response-declaration[2]/qti-mapping[1]/qti-map-entry[1]",
+        }),
+      ]),
+    );
+  });
+
   it("validates processing rule targets and variable references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-processing-refs">
