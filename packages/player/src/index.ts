@@ -2356,6 +2356,7 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-embedded-interaction {
       display: inline-flex;
       gap: 0.35rem;
+      margin-inline: 0.18rem;
       align-items: baseline;
       vertical-align: baseline;
     }
