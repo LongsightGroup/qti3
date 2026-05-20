@@ -394,7 +394,7 @@ async function inspectPackageSafely(
 function readZipEntries(buffer: Uint8Array): ZipEntry[] {
   const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
   const eocdOffset = findEndOfCentralDirectory(view);
-  if (eocdOffset < 0) return [];
+  if (eocdOffset < 0) throw new Error("No ZIP central directory was found.");
 
   const entryCount = view.getUint16(eocdOffset + 10, true);
   let offset = view.getUint32(eocdOffset + 16, true);

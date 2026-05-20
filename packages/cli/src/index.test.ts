@@ -310,6 +310,29 @@ describe("@qti3/cli", () => {
     }
   });
 
+  it("rejects unreadable package zips", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-broken-"));
+    const file = join(directory, "package.zip");
+
+    try {
+      await writeFile(file, "not a zip");
+
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await expect(main(["inspect-package", file])).resolves.toBe(1);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      log.mockRestore();
+
+      expect(report).toMatchObject({
+        checked: 0,
+        failed: 1,
+        packageErrors: ["No ZIP central directory was found."],
+      });
+    } finally {
+      vi.restoreAllMocks();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("rejects package item references that escape the package root", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-package-refs-"));
     const file = join(directory, "package.zip");
