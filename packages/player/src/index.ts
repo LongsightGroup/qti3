@@ -1775,12 +1775,12 @@ function renderDrawingResponse(
   surface.setAttribute("role", "img");
   surface.setAttribute("aria-label", "Drawing response surface");
   surface.setAttribute("tabindex", "0");
-  const width = objectWidth(interaction);
-  const height = objectHeight(interaction);
+  const width = drawingWidth(interaction);
+  const height = drawingHeight(interaction);
   surface.setAttribute("viewBox", `0 0 ${width} ${height}`);
   surface.style.display = "block";
   surface.style.inlineSize = `${width}px`;
-  surface.style.blockSize = `${height}px`;
+  surface.style.aspectRatio = `${width} / ${height}`;
   surface.style.maxInlineSize = "100%";
   surface.style.border = "1px solid CanvasText";
   surface.style.background = "Canvas";
@@ -2204,6 +2204,14 @@ function objectWidth(interaction: QtiInteraction): number {
 
 function objectHeight(interaction: QtiInteraction): number {
   return dimension(interaction.object?.height, 120);
+}
+
+function drawingWidth(interaction: QtiInteraction): number {
+  return dimension(interaction.object?.width, 640);
+}
+
+function drawingHeight(interaction: QtiInteraction): number {
+  return dimension(interaction.object?.height, 360);
 }
 
 function dimension(value: string | undefined, fallback: number): number {

@@ -1794,6 +1794,9 @@ test.describe("manual harness", () => {
     const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
     const box = await surface.boundingBox();
     if (!box) throw new Error("Missing drawing surface box.");
+    expect(box.width).toBe(640);
+    expect(box.height).toBe(360);
+    await expect(surface).toHaveAttribute("viewBox", "0 0 640 360");
 
     await page.mouse.move(box.x + 10, box.y + 10);
     await page.mouse.down();
@@ -1819,6 +1822,29 @@ test.describe("manual harness", () => {
     await expectResponse(page, "");
     await expect(surface.locator("polyline")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Replay last stroke" })).toHaveCount(0);
+  });
+
+  test("honors authored drawing object dimensions", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-sized" title="drawing-sized">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-drawing-interaction response-identifier="RESPONSE">
+      <qti-prompt>Annotate the diagram.</qti-prompt>
+      <object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/>
+    </qti-drawing-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    await expect(surface).toHaveAttribute("viewBox", "0 0 480 300");
+    const box = await surface.boundingBox();
+    expect(box?.width).toBe(480);
+    expect(box?.height).toBe(300);
   });
 
   test("renders object-backed hotspot choices as positioned buttons", async ({ page }) => {

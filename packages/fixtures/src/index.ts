@@ -688,7 +688,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a short implementation note describing how your item player records response state.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "drawing") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Draw a simple line connecting response capture to scoring.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch a simple flow showing how a candidate response moves from capture to scoring.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "portableCustom") {
     return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom contract to return the fixture response value A.</qti-prompt></${qtiName}>`;
