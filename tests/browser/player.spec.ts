@@ -1644,6 +1644,13 @@ test.describe("manual harness", () => {
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /hotspot-flow\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
+    await expect(page.getByRole("group", { name: "Graphic gap match", exact: true })).toBeVisible();
+    await expect(page.locator("qti-assessment-item-player .qti3-gap-button").first()).toHaveText(
+      "Empty",
+    );
+    await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).not.toContainText(
+      "G1",
+    );
 
     const source = page.locator('qti-assessment-item-player [data-choice-identifier="A"]').first();
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="G1"]').first();
@@ -1656,8 +1663,11 @@ test.describe("manual harness", () => {
     await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
     await page.mouse.up();
     await expectResponse(page, ["A G1"]);
+    await expect(
+      target.getByRole("button", { name: "Gap 1, assigned response declaration" }),
+    ).toHaveText("response declaration");
 
-    await page.getByRole("button", { name: "Remove G1 assignment" }).click();
+    await page.getByRole("button", { name: "Remove gap 1 assignment" }).click();
     await expectResponse(page, []);
   });
 

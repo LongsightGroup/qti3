@@ -1160,7 +1160,7 @@ function renderGapMatchResponse(
 ): HTMLElement {
   const group = document.createElement("fieldset");
   const legend = document.createElement("legend");
-  legend.textContent = `${readableType(interaction.type)} gaps`;
+  legend.textContent = readableType(interaction.type);
   group.append(legend);
   appendGraphicContext(group, interaction);
 
@@ -1207,8 +1207,9 @@ function renderGapMatchResponse(
   };
   const renderGaps = () => {
     gapRegion.replaceChildren(
-      ...gaps.map((gap) => {
+      ...gaps.map((gap, index) => {
         const assigned = assignments.get(gap.identifier);
+        const gapLabel = `Gap ${index + 1}`;
         const target = document.createElement("div");
         target.className = "qti3-gap-target";
         target.dataset.gapIdentifier = gap.identifier;
@@ -1226,10 +1227,10 @@ function renderGapMatchResponse(
         const button = document.createElement("button");
         button.type = "button";
         button.className = "qti3-gap-button";
-        button.textContent = assigned ? `${gap.text}: ${assigned.text}` : `${gap.text}: empty`;
+        button.textContent = assigned ? assigned.text : "Empty";
         button.setAttribute(
           "aria-label",
-          assigned ? `${gap.text}, assigned ${assigned.text}` : `${gap.text}, empty`,
+          assigned ? `${gapLabel}, assigned ${assigned.text}` : `${gapLabel}, empty`,
         );
         button.addEventListener("click", () => assign(gap, selectedSource?.identifier));
 
@@ -1237,7 +1238,7 @@ function renderGapMatchResponse(
         remove.type = "button";
         remove.textContent = "Remove";
         remove.disabled = !assigned;
-        remove.setAttribute("aria-label", `Remove ${gap.text} assignment`);
+        remove.setAttribute("aria-label", `Remove ${gapLabel.toLowerCase()} assignment`);
         remove.addEventListener("click", () => {
           assignments.delete(gap.identifier);
           renderGaps();
