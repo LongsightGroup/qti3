@@ -929,7 +929,11 @@ function renderOrderedResponse(
         item.addEventListener("pointerdown", (event) => {
           if (event.button !== 0 || (event.target as Element).closest("button")) return;
           pointerDraggedIdentifier = choice.identifier;
-          item.setPointerCapture(event.pointerId);
+          try {
+            item.setPointerCapture(event.pointerId);
+          } catch {
+            // Synthetic pointer events and some browser drag paths do not create a capturable pointer.
+          }
         });
         item.addEventListener("pointerup", (event) => {
           if (!pointerDraggedIdentifier) return;

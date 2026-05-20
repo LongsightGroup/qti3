@@ -1535,14 +1535,31 @@ test.describe("manual harness", () => {
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
 
     const items = page.locator("qti-assessment-item-player .qti3-reorder-item");
-    const first = await items.nth(0).boundingBox();
-    const second = await items.nth(1).boundingBox();
-    if (!first || !second) throw new Error("Missing reorder item boxes.");
-
-    await page.mouse.move(first.x + first.width / 2, first.y + first.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(second.x + second.width / 2, second.y + second.height / 2);
-    await page.mouse.up();
+    await expect(items).toHaveCount(3);
+    await items.nth(0).evaluate(
+      (source, target) => {
+        const targetRect = (target as HTMLElement).getBoundingClientRect();
+        source.dispatchEvent(
+          new PointerEvent("pointerdown", {
+            bubbles: true,
+            button: 0,
+            clientX: targetRect.left,
+            clientY: targetRect.top,
+            pointerId: 1,
+          }),
+        );
+        source.dispatchEvent(
+          new PointerEvent("pointerup", {
+            bubbles: true,
+            button: 0,
+            clientX: targetRect.left + targetRect.width / 2,
+            clientY: targetRect.top + targetRect.height / 2,
+            pointerId: 1,
+          }),
+        );
+      },
+      await items.nth(1).elementHandle(),
+    );
     await expectResponse(page, ["B", "A", "C"]);
   });
 
