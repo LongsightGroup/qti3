@@ -1,7 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { expect, test } from "@playwright/test";
-import { interactionFixtures } from "../../packages/fixtures/src/index.js";
+import {
+  adaptiveFixtures,
+  interactionFixtures,
+  processingFixtures,
+} from "../../packages/fixtures/src/index.js";
 
 const require = createRequire(import.meta.url);
 
@@ -128,6 +132,34 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-at-scripts")).toContainText("JAWS on Windows");
     await expect(page.locator("#debug-at-scripts ol li").first()).toContainText(
       "Navigate from the item heading",
+    );
+  });
+
+  test("loads processing and adaptive canonical fixtures from the picker", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.locator("#fixture optgroup[label='Processing references']")).toHaveCount(1);
+    await expect(page.locator("#fixture optgroup[label='Adaptive references']")).toHaveCount(1);
+
+    const templateFixture = processingFixtures.find(
+      (fixture) => fixture.id === "template-processing-reference",
+    );
+    const adaptiveFixture = adaptiveFixtures.find(
+      (fixture) => fixture.id === "adaptive-feedback-reference",
+    );
+    if (!templateFixture || !adaptiveFixture) throw new Error("Missing canonical fixtures.");
+
+    await page.locator("#fixture").selectOption(templateFixture.id);
+    await page.locator("#load-fixture").click();
+    await expect(page.locator("qti-assessment-item-player")).toContainText(templateFixture.id);
+    await expect(page.locator("#debug-template-values")).toContainText('"ANSWER": 5');
+
+    await page.locator("#fixture").selectOption(adaptiveFixture.id);
+    await page.locator("#load-fixture").click();
+    await expect(page.locator("qti-assessment-item-player")).toContainText(adaptiveFixture.id);
+    await page.getByRole("button", { name: "Show hint" }).click();
+    await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toContainText(
+      "Hint feedback is visible",
     );
   });
 

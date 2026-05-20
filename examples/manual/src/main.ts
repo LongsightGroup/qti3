@@ -1,5 +1,5 @@
 import { accessibilityProofMatrix, manualAssistiveTechnologyScripts } from "@qti3/a11y";
-import { interactionFixtures } from "@qti3/fixtures";
+import { canonicalFixtures } from "@qti3/fixtures";
 import { defineQtiAssessmentItemPlayer } from "@qti3/player";
 
 defineQtiAssessmentItemPlayer();
@@ -95,16 +95,26 @@ let latestStylesheets: unknown[] = [];
 let currentInteractionTypes: string[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
-for (const fixture of interactionFixtures) {
-  const option = document.createElement("option");
-  option.value = fixture.id;
-  option.textContent = `${fixture.interactionType} (${fixture.qtiName})`;
-  fixtureSelect.append(option);
+for (const category of ["interaction", "processing", "adaptive"] as const) {
+  const fixtures = canonicalFixtures.filter((fixture) => fixture.category === category);
+  if (fixtures.length === 0) continue;
+  const group = document.createElement("optgroup");
+  group.label = categoryLabel(category);
+  for (const fixture of fixtures) {
+    const option = document.createElement("option");
+    option.value = fixture.id;
+    option.textContent =
+      fixture.category === "interaction"
+        ? `${fixture.interactionType} (${fixture.qtiName})`
+        : fixture.title;
+    group.append(option);
+  }
+  fixtureSelect.append(group);
 }
 
 loadFixture.addEventListener("click", async () => {
   const fixture =
-    interactionFixtures.find((item) => item.id === fixtureSelect.value) ?? interactionFixtures[0];
+    canonicalFixtures.find((item) => item.id === fixtureSelect.value) ?? canonicalFixtures[0];
   if (!fixture) return;
   xmlInput.value = fixture.xml;
   await player.loadXml(fixture.xml);
@@ -181,6 +191,12 @@ for (const eventName of [
 }
 
 loadFixture.click();
+
+function categoryLabel(category: (typeof canonicalFixtures)[number]["category"]): string {
+  if (category === "processing") return "Processing references";
+  if (category === "adaptive") return "Adaptive references";
+  return "Interaction references";
+}
 
 function resetScorePanel(): void {
   scorePanel.dataset.status = "idle";
