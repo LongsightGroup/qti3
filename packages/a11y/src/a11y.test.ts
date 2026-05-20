@@ -8,4 +8,13 @@ describe("@qti3/a11y", () => {
       interactionSupport.map((support) => support.interactionType).sort(),
     );
   });
+
+  it("defines concrete semantics, focus behavior, keyboard behavior, and states", () => {
+    for (const contract of a11yContracts) {
+      expect(contract.primaryRole, contract.interactionType).not.toHaveLength(0);
+      expect(contract.focusStrategy, contract.interactionType).not.toHaveLength(0);
+      expect(contract.keyboardModel.length, contract.interactionType).toBeGreaterThan(0);
+      expect(contract.requiredStates.length, contract.interactionType).toBeGreaterThan(0);
+    }
+  });
 });
