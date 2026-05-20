@@ -808,6 +808,39 @@ test.describe("manual harness", () => {
     await expectResponse(page, "A");
   });
 
+  test("supports keyboard-only response entry for remaining fixture controls", async ({ page }) => {
+    await page.goto("/");
+
+    await loadFixture(page, "hottext");
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').focus();
+    await page.keyboard.press("Space");
+    await expectResponse(page, "A");
+
+    await loadFixture(page, "gapMatch");
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"]').focus();
+    await page.keyboard.press("Enter");
+    await page
+      .locator('qti-assessment-item-player [data-gap-identifier="G1"]')
+      .getByRole("button")
+      .first()
+      .focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["A G1"]);
+
+    await loadFixture(page, "extendedText");
+    await page.locator("qti-assessment-item-player textarea").focus();
+    await page.keyboard.type("A concise answer");
+    await expectResponse(page, "A concise answer");
+
+    await loadFixture(page, "endAttempt");
+    await page
+      .locator('qti-assessment-item-player [data-interaction-type="endAttempt"]')
+      .getByRole("button")
+      .focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, true);
+  });
+
   test("exposes accessible names for every operable fixture control", async ({ page }) => {
     await page.goto("/");
 
