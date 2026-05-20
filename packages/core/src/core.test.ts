@@ -122,6 +122,26 @@ describe("@qti3/core", () => {
     expect(restored.serialize().status).toBe("suspended");
   });
 
+  it("captures parent prose for inline interactions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-choice">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <p>Choose <qti-inline-choice-interaction response-identifier="RESPONSE">
+            <qti-inline-choice identifier="A">A</qti-inline-choice>
+            <qti-inline-choice identifier="B">B</qti-inline-choice>
+          </qti-inline-choice-interaction>.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]).toMatchObject({
+      type: "inlineChoice",
+      contextText: "Choose.",
+    });
+  });
+
   it("validates response declaration references and response shape", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid">

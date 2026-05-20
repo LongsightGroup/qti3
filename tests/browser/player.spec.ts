@@ -61,6 +61,15 @@ test.describe("manual harness", () => {
     await expect(player.getByRole("radio", { name: "A" })).toBeVisible();
   });
 
+  test("renders inline choice parent prose as the interaction label", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "inlineChoice");
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-inlineChoice h3")).toHaveText("Choose.");
+    await expect(player.getByLabel("Choose.")).toBeVisible();
+  });
+
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">

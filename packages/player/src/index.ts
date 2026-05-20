@@ -191,7 +191,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       field.dataset.responseIdentifier = interaction.responseIdentifier;
 
     const heading = document.createElement("h3");
-    heading.textContent = interaction.prompt || readableType(interaction.type);
+    heading.textContent = interactionLabel(interaction);
     field.append(heading);
     if (interaction.responseIdentifier) {
       field.append(validationMessageElement(interaction.responseIdentifier));
@@ -796,10 +796,14 @@ function renderGapMatchResponse(
 function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {
   const select = document.createElement("select");
   select.className = "qti3-inline-select";
-  select.setAttribute("aria-label", readableType(interaction.type));
+  select.setAttribute("aria-label", interactionLabel(interaction));
   appendOptions(select, choicesOrFallback(interaction));
   select.addEventListener("change", () => update(select.value));
   return select;
+}
+
+function interactionLabel(interaction: QtiInteraction): string {
+  return interaction.prompt ?? interaction.contextText ?? readableType(interaction.type);
 }
 
 function renderTextResponse(

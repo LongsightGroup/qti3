@@ -7,6 +7,7 @@ import type {
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
+  QtiInteractionType,
   QtiLookupOutcomeValue,
   QtiLookupTable,
   QtiModalFeedback,
@@ -213,6 +214,7 @@ function parseInteraction(
     responseCardinality: responseDeclaration?.cardinality,
     responseBaseType: responseDeclaration?.baseType,
     prompt: prompt ? textContent(prompt) : undefined,
+    contextText: inlineInteractionContext(node, interactionType),
     object: parseObjectAsset(descendants(node, (child) => child.localName === "object")[0]),
     choices: parseChoices(node),
     childElements: childElements(node).map((child) => ({
@@ -223,6 +225,24 @@ function parseInteraction(
     text: textContent(node),
     source: node.source,
   };
+}
+
+function inlineInteractionContext(
+  node: XmlNode,
+  interactionType: QtiInteractionType | undefined,
+): string | undefined {
+  if (interactionType !== "inlineChoice" && interactionType !== "textEntry") return undefined;
+  const parent = node.parent;
+  if (!parent) return undefined;
+  return normalizeInlineContext(parent.text) ?? normalizeInlineContext(textContent(parent));
+}
+
+function normalizeInlineContext(value: string): string | undefined {
+  const normalized = value
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .trim();
+  return normalized.length > 0 ? normalized : undefined;
 }
 
 function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined {

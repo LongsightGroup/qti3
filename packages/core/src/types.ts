@@ -185,6 +185,7 @@ export interface QtiInteraction {
   responseCardinality?: QtiCardinality | undefined;
   responseBaseType?: QtiBaseType | undefined;
   prompt?: string | undefined;
+  contextText?: string | undefined;
   object?: QtiObjectAsset | undefined;
   choices: QtiChoice[];
   childElements: QtiElementChild[];
