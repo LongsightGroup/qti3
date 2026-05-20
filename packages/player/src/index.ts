@@ -221,6 +221,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
+    if (interaction.type === "hotspot" && interaction.object) {
+      field.append(renderHotspotResponse(interaction, update));
+      return field;
+    }
+
     if (usesChoiceSet(interaction)) {
       field.append(renderChoice(interaction, update));
       return field;
@@ -599,6 +604,71 @@ function renderPointResponse(
   return group;
 }
 
+function renderHotspotResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = `${readableType(interaction.type)} regions`;
+  group.append(legend);
+
+  const surface = document.createElement("div");
+  surface.className = "qti3-hotspot-surface";
+  surface.style.position = "relative";
+  surface.style.inlineSize = `${objectWidth(interaction)}px`;
+  surface.style.blockSize = `${objectHeight(interaction)}px`;
+  surface.style.maxInlineSize = "100%";
+  surface.style.border = "1px solid CanvasText";
+  surface.style.background = "Canvas";
+  surface.style.overflow = "hidden";
+
+  const object = interaction.object;
+  if (object?.data && object.type?.startsWith("image/")) {
+    const image = document.createElement("img");
+    image.src = object.data;
+    image.alt = object.text || `${readableType(interaction.type)} image`;
+    image.style.inlineSize = "100%";
+    image.style.blockSize = "100%";
+    image.style.objectFit = "contain";
+    surface.append(image);
+  }
+
+  const selected = new Set<string>();
+  const multiple = interaction.responseCardinality === "multiple";
+  for (const choice of choicesOrFallback(interaction)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = choice.text;
+    button.setAttribute("aria-pressed", "false");
+    button.style.position = "absolute";
+    button.style.border = "2px solid CanvasText";
+    button.style.background = "transparent";
+    button.style.color = "CanvasText";
+    button.style.minInlineSize = "2rem";
+    button.style.minBlockSize = "2rem";
+    placeHotspotButton(button, choice);
+    button.addEventListener("click", () => {
+      if (multiple) {
+        if (selected.has(choice.identifier)) selected.delete(choice.identifier);
+        else selected.add(choice.identifier);
+        button.setAttribute("aria-pressed", selected.has(choice.identifier) ? "true" : "false");
+        update([...selected]);
+      } else {
+        for (const item of surface.querySelectorAll("button")) {
+          item.setAttribute("aria-pressed", "false");
+        }
+        button.setAttribute("aria-pressed", "true");
+        update(choice.identifier);
+      }
+    });
+    surface.append(button);
+  }
+
+  group.append(surface);
+  return group;
+}
+
 function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
   const object = interaction.object;
   const type = object?.type ?? "";
@@ -683,9 +753,64 @@ function targetChoices(interaction: QtiInteraction): QtiChoice[] {
 function choicesOrFallback(interaction: QtiInteraction): QtiChoice[] {
   if (interaction.choices.length > 0) return interaction.choices;
   return [
-    { identifier: "A", text: "A", role: "simpleChoice", qtiName: "qti-simple-choice" },
-    { identifier: "B", text: "B", role: "simpleChoice", qtiName: "qti-simple-choice" },
+    {
+      identifier: "A",
+      text: "A",
+      role: "simpleChoice",
+      qtiName: "qti-simple-choice",
+      attributes: {},
+    },
+    {
+      identifier: "B",
+      text: "B",
+      role: "simpleChoice",
+      qtiName: "qti-simple-choice",
+      attributes: {},
+    },
   ];
+}
+
+function objectWidth(interaction: QtiInteraction): number {
+  return dimension(interaction.object?.width, 160);
+}
+
+function objectHeight(interaction: QtiInteraction): number {
+  return dimension(interaction.object?.height, 120);
+}
+
+function dimension(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function placeHotspotButton(button: HTMLButtonElement, choice: QtiChoice): void {
+  const coords = (choice.attributes.coords ?? "")
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value));
+  const shape = choice.attributes.shape;
+
+  if (shape === "circle" && coords.length >= 3) {
+    const [x, y, radius] = coords as [number, number, number];
+    button.style.insetInlineStart = `${x - radius}px`;
+    button.style.insetBlockStart = `${y - radius}px`;
+    button.style.inlineSize = `${radius * 2}px`;
+    button.style.blockSize = `${radius * 2}px`;
+    button.style.borderRadius = "50%";
+    return;
+  }
+
+  if (shape === "rect" && coords.length >= 4) {
+    const [left, top, right, bottom] = coords as [number, number, number, number];
+    button.style.insetInlineStart = `${left}px`;
+    button.style.insetBlockStart = `${top}px`;
+    button.style.inlineSize = `${Math.max(1, right - left)}px`;
+    button.style.blockSize = `${Math.max(1, bottom - top)}px`;
+    return;
+  }
+
+  button.style.insetInlineStart = "0";
+  button.style.insetBlockStart = "0";
 }
 
 function readableType(type: string): string {

@@ -76,6 +76,7 @@ export interface QtiChoice {
   text: string;
   role: QtiChoiceRole;
   qtiName: string;
+  attributes: Record<string, string>;
 }
 
 export type QtiChoiceRole =

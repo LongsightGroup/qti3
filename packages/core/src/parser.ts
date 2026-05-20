@@ -228,6 +228,7 @@ function parseChoices(node: XmlNode): QtiChoice[] {
       text: textContent(choice) || identifier || `Choice ${index + 1}`,
       role: choiceRole(choice),
       qtiName: choice.localName,
+      attributes: choice.attributes,
     };
   });
 }

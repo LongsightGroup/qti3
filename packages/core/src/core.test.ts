@@ -435,6 +435,27 @@ describe("@qti3/core", () => {
     });
   });
 
+  it("preserves hotspot geometry on choice metadata", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <object data="image.png" type="image/png"/>
+            <qti-hotspot-choice identifier="A" shape="rect" coords="10,20,60,80"/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.choices[0]).toMatchObject({
+      identifier: "A",
+      role: "hotspot",
+      attributes: { shape: "rect", coords: "10,20,60,80" },
+    });
+  });
+
   it("keeps ordered cardinality order-sensitive", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order">

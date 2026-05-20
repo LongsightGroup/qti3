@@ -306,6 +306,38 @@ test.describe("manual harness", () => {
     expect(state.outcomes.SCORE).toBe(1);
   });
 
+  test("renders object-backed hotspot choices as positioned buttons", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "hotspot");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-hotspot-surface");
+    await expect(surface).toBeVisible();
+    const hotspot = surface.getByRole("button", { name: "A" });
+    await expect(hotspot).toHaveCSS("position", "absolute");
+    await hotspot.click();
+    await expectResponse(page, "A");
+
+    await page.getByRole("button", { name: "Score" }).click();
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.outcomes.SCORE).toBe(1);
+  });
+
+  test("supports keyboard hotspot selection", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "hotspot");
+
+    await page
+      .locator("qti-assessment-item-player .qti3-hotspot-surface")
+      .getByRole("button", {
+        name: "A",
+      })
+      .focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, "A");
+  });
+
   test("associates validation messages with unanswered controls", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??
@@ -428,6 +460,14 @@ async function provideResponse(
     await page
       .locator("qti-assessment-item-player .qti3-point-surface")
       .click({ position: { x, y } });
+    return;
+  }
+
+  if (interactionType === "hotspot") {
+    await page
+      .locator("qti-assessment-item-player .qti3-hotspot-surface")
+      .getByRole("button", { name: String(response) })
+      .click();
     return;
   }
 
