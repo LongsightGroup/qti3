@@ -1004,6 +1004,69 @@ test.describe("manual harness", () => {
     expect(restoredState.validationMessages).toEqual(state.validationMessages);
   });
 
+  test("response state events preserve remaining restored validation messages", async ({
+    page,
+  }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="multi-validation" title="multi-validation" time-dependent="false">
+  <qti-response-declaration identifier="FIRST" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="SECOND" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>C</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p>Answer both required choices.</p>
+    <qti-choice-interaction response-identifier="FIRST">
+      <qti-simple-choice identifier="A">First answer</qti-simple-choice>
+      <qti-simple-choice identifier="B">Other first answer</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="SECOND">
+      <qti-simple-choice identifier="C">Second answer</qti-simple-choice>
+      <qti-simple-choice identifier="D">Other second answer</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
+
+    const blockedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(blockedState.validationMessages.map((message) => message.path)).toEqual([
+      "FIRST",
+      "SECOND",
+    ]);
+
+    const emittedState = await page
+      .locator("qti-assessment-item-player")
+      .evaluate(async (element, attemptState) => {
+        element.reset();
+        element.restore(attemptState);
+        const nextState = new Promise((resolve) => {
+          element.addEventListener("qti-statechange", (event) => resolve(event.detail.state), {
+            once: true,
+          });
+        });
+        const firstChoice = element.querySelector<HTMLInputElement>(
+          '[data-response-identifier="FIRST"] [data-choice-identifier="A"] input',
+        );
+        if (!firstChoice) throw new Error("Missing first choice control.");
+        firstChoice.click();
+        return nextState;
+      }, blockedState);
+
+    expect(emittedState.responses.FIRST).toBe("A");
+    expect(emittedState.validationMessages).toEqual([
+      expect.objectContaining({ code: "response.required", path: "SECOND" }),
+    ]);
+  });
+
   test("completed attempts render as non-mutable review state", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="completed-review" title="completed-review" time-dependent="false">

@@ -246,9 +246,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
           detail: { responseIdentifier, value },
         }),
       );
-      this.dispatchEvent(
-        new CustomEvent("qti-statechange", { detail: { state: this.session.serialize() } }),
-      );
+      this.emitStateChange();
     };
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
@@ -364,9 +362,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
           detail: { responseIdentifier, value },
         }),
       );
-      this.dispatchEvent(
-        new CustomEvent("qti-statechange", { detail: { state: this.session.serialize() } }),
-      );
+      this.emitStateChange();
     };
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
