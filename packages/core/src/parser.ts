@@ -8,6 +8,7 @@ import type {
   QtiDocument,
   QtiInteraction,
   QtiModalFeedback,
+  QtiObjectAsset,
   QtiOutcomeDeclaration,
   QtiParseResult,
   QtiProcessingExpression,
@@ -188,9 +189,22 @@ function parseInteraction(
     responseCardinality: responseDeclaration?.cardinality,
     responseBaseType: responseDeclaration?.baseType,
     prompt: prompt ? textContent(prompt) : undefined,
+    object: parseObjectAsset(descendants(node, (child) => child.localName === "object")[0]),
     choices: parseChoices(node),
     attributes: node.attributes,
     text: textContent(node),
+  };
+}
+
+function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined {
+  if (!node) return undefined;
+  return {
+    data: node.attributes.data,
+    type: node.attributes.type,
+    width: node.attributes.width,
+    height: node.attributes.height,
+    text: textContent(node),
+    attributes: node.attributes,
   };
 }
 

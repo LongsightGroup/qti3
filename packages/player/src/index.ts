@@ -289,11 +289,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
 
     if (interaction.type === "media") {
-      const media = document.createElement("div");
-      media.role = "group";
-      media.setAttribute("aria-label", "Media interaction");
-      media.textContent = "Media interaction";
-      field.append(media);
+      field.append(renderObjectAsset(interaction));
       return field;
     }
 
@@ -600,6 +596,54 @@ function renderPointResponse(
 
   syncMarker();
   group.append(surface);
+  return group;
+}
+
+function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
+  const object = interaction.object;
+  const type = object?.type ?? "";
+  const label = interaction.prompt ?? object?.text ?? "Media interaction";
+
+  if (object?.data && type.startsWith("audio/")) {
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = object.data;
+    audio.setAttribute("aria-label", label);
+    return audio;
+  }
+
+  if (object?.data && type.startsWith("video/")) {
+    const video = document.createElement("video");
+    video.controls = true;
+    video.preload = "none";
+    video.src = object.data;
+    video.setAttribute("aria-label", label);
+    if (object.width) video.width = Number(object.width);
+    if (object.height) video.height = Number(object.height);
+    return video;
+  }
+
+  if (object?.data && type.startsWith("image/")) {
+    const image = document.createElement("img");
+    image.src = object.data;
+    image.alt = label;
+    if (object.width) image.width = Number(object.width);
+    if (object.height) image.height = Number(object.height);
+    return image;
+  }
+
+  const group = document.createElement("div");
+  group.role = "group";
+  group.setAttribute("aria-label", label);
+  if (object?.data) {
+    const link = document.createElement("a");
+    link.href = object.data;
+    link.textContent = object.text || object.data;
+    group.append(link);
+  } else {
+    group.textContent = label;
+  }
   return group;
 }
 

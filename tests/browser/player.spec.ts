@@ -110,6 +110,17 @@ test.describe("manual harness", () => {
     await expect(feedback).toHaveAttribute("aria-live", "polite");
   });
 
+  test("renders object-backed media interactions with native controls", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "media");
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    await expect(audio).toBeVisible();
+    await expect(audio).toHaveAttribute("controls", "");
+    await expect(audio).toHaveAttribute("preload", "none");
+    await expect(audio).toHaveAttribute("src", /media\.mp3$/);
+  });
+
   test("honors load session controls and injected XML fetchers", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

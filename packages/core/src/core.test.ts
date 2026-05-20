@@ -412,6 +412,29 @@ describe("@qti3/core", () => {
     ]);
   });
 
+  it("preserves object asset metadata on media-backed interactions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media">
+        <qti-item-body>
+          <qti-media-interaction autostart="false">
+            <object data="clips/washington.mp3" type="audio/mpeg" width="320" height="32">
+              Washington audio
+            </object>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.object).toMatchObject({
+      data: "clips/washington.mp3",
+      type: "audio/mpeg",
+      width: "320",
+      height: "32",
+      text: "Washington audio",
+    });
+  });
+
   it("keeps ordered cardinality order-sensitive", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order">

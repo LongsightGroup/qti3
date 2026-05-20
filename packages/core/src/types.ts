@@ -120,9 +120,19 @@ export interface QtiInteraction {
   responseCardinality?: QtiCardinality | undefined;
   responseBaseType?: QtiBaseType | undefined;
   prompt?: string | undefined;
+  object?: QtiObjectAsset | undefined;
   choices: QtiChoice[];
   attributes: Record<string, string>;
   text: string;
+}
+
+export interface QtiObjectAsset {
+  data?: string | undefined;
+  type?: string | undefined;
+  width?: string | undefined;
+  height?: string | undefined;
+  text: string;
+  attributes: Record<string, string>;
 }
 
 export interface QtiAssessmentItem {
