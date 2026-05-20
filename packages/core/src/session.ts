@@ -62,6 +62,7 @@ export function createItemSession(
   for (const outcome of document.item.outcomeDeclarations) {
     outcomes[outcome.identifier] = outcome.defaultValue;
   }
+  const defaultOutcomes = { ...outcomes };
 
   applyTemplateProcessing(document, templateValues, responses, correctResponses, random);
   Object.assign(templateValues, priorState?.templateValues ?? {});
@@ -81,6 +82,7 @@ export function createItemSession(
     },
     score() {
       const diagnostics: QtiDiagnostic[] = [];
+      resetRecord(outcomes, defaultOutcomes);
       applyResponseProcessing(
         document,
         responses,
@@ -103,6 +105,13 @@ export function createItemSession(
       return serialize(document.item.identifier, status, responses, outcomes, templateValues, []);
     },
   };
+}
+
+function resetRecord<T>(target: Record<string, T>, source: Record<string, T>): void {
+  for (const key of Object.keys(target)) {
+    delete target[key];
+  }
+  Object.assign(target, source);
 }
 
 function applyTemplateProcessing(

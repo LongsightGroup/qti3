@@ -947,6 +947,7 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE1", "A");
     session.respond("RESPONSE2", "B");
     expect(session.score().outcomes.SCORE).toBe(3);
+    expect(session.score().outcomes.SCORE).toBe(3);
   });
 
   it("validates modal feedback outcome references", () => {
