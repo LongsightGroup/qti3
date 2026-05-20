@@ -490,7 +490,7 @@ function renderOrderedResponse(
 ): HTMLElement {
   const group = document.createElement("fieldset");
   const legend = document.createElement("legend");
-  legend.textContent = `${readableType(interaction.type)} order`;
+  legend.textContent = orderedResponseLegend(interaction.type);
   group.append(legend);
   appendGraphicContext(group, interaction);
 
@@ -1442,6 +1442,11 @@ function readableType(type: string): string {
   return type
     .replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)
     .replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function orderedResponseLegend(type: QtiInteraction["type"]): string {
+  if (type === "order" || type === "graphicOrder") return readableType(type);
+  return `${readableType(type)} order`;
 }
 
 function errorView(message: string): HTMLElement {

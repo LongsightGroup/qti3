@@ -454,6 +454,12 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "graphicOrder");
 
+    await expect(page.locator("qti-assessment-item-player legend")).toContainText([
+      "Graphic order",
+    ]);
+    await expect(page.locator("qti-assessment-item-player")).not.toContainText(
+      "Graphic order order",
+    );
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /image\.png$/);
