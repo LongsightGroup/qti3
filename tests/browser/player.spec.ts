@@ -111,6 +111,31 @@ test.describe("manual harness", () => {
     expect(restoredState.responses.RESPONSE).toBe("A");
     expect(restoredState.outcomes.SCORE).toBe(1);
   });
+
+  test("supports keyboard-only response entry for representative native controls", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await loadFixture(page, "choice");
+    await page.getByRole("radio", { name: "A" }).focus();
+    await page.keyboard.press("Space");
+    await expectResponse(page, "A");
+
+    await loadFixture(page, "textEntry");
+    await page
+      .locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])')
+      .focus();
+    await page.keyboard.type("A");
+    await expectResponse(page, "A");
+
+    await loadFixture(page, "slider");
+    await page.locator('qti-assessment-item-player input[type="range"]').focus();
+    for (let index = 0; index < 50; index += 1) {
+      await page.keyboard.press("ArrowRight");
+    }
+    await expectResponse(page, "50");
+  });
 });
 
 declare global {
@@ -119,6 +144,23 @@ declare global {
       run: (context: Element | null) => Promise<{ violations: unknown[] }>;
     };
   }
+}
+
+async function loadFixture(page: import("@playwright/test").Page, interactionType: string) {
+  const fixture = interactionFixtures.find((item) => item.interactionType === interactionType);
+  if (!fixture) throw new Error(`Missing ${interactionType} fixture.`);
+  await page.locator("#fixture").selectOption(fixture.id);
+  await page.locator("#load-fixture").click();
+}
+
+async function expectResponse(
+  page: import("@playwright/test").Page,
+  expected: unknown,
+): Promise<void> {
+  const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+    return element.serialize();
+  });
+  expect(state.responses.RESPONSE).toEqual(expected);
 }
 
 async function provideResponse(
