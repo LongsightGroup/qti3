@@ -389,7 +389,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!elementName) return this.renderContentNodes(node.children);
     const element = createContentElement(elementName);
     copySafeAttributes(element, node.attributes);
-    element.append(...this.renderContentNodes(node.children));
+    const mathTemplateValue = this.mathTemplateValue(node);
+    if (mathTemplateValue === undefined) {
+      element.append(...this.renderContentNodes(node.children));
+    } else {
+      element.textContent = mathTemplateValue;
+    }
     return [element];
   }
 
@@ -490,6 +495,21 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   private currentTemplateValue(identifier: string): QtiValue {
     return this.session?.serialize().templateValues?.[identifier] ?? null;
+  }
+
+  private mathTemplateValue(
+    node: Extract<QtiContentNode, { kind: "element" }>,
+  ): string | undefined {
+    if (node.qtiName !== "mi" && node.qtiName !== "mo") return undefined;
+    const identifier = contentNodeText(node).trim();
+    if (!identifier) return undefined;
+    const declaration = this.documentModel?.item.templateDeclarations.find(
+      (template) =>
+        template.identifier === identifier && template.attributes["math-variable"] === "true",
+    );
+    if (!declaration) return undefined;
+    const value = this.currentTemplateValue(identifier);
+    return value === null ? "" : String(value);
   }
 
   private currentResponseValue(identifier: string): QtiValue {
@@ -2112,6 +2132,12 @@ function formatPrintedValue(value: QtiValue, format?: string): string {
   if (Array.isArray(value)) return value.map((item) => String(item)).join(", ");
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+function contentNodeText(node: QtiContentNode): string {
+  if (node.kind === "text") return node.text;
+  if ("children" in node) return node.children.map(contentNodeText).join("");
+  return "";
 }
 
 function readableType(type: string): string {

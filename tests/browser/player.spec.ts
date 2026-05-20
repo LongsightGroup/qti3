@@ -369,6 +369,36 @@ test.describe("manual harness", () => {
     ).toBeHidden();
   });
 
+  test("expands math-variable template values in MathML identifiers", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="math-template" title="math-template" time-dependent="false">
+  <qti-template-declaration identifier="A" cardinality="single" base-type="integer" math-variable="true"/>
+  <qti-template-declaration identifier="B" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-template-processing>
+    <qti-set-template-value identifier="A"><qti-base-value base-type="integer">7</qti-base-value></qti-set-template-value>
+    <qti-set-template-value identifier="B"><qti-base-value base-type="identifier">unchanged</qti-base-value></qti-set-template-value>
+  </qti-template-processing>
+  <qti-item-body>
+    <p>Rendered formula: <math><mrow><mi>A</mi><mo>+</mo><mi>B</mi></mrow></math></p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Continue</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+
+    const math = page.locator("qti-assessment-item-player math");
+    await expect(math.locator("mi").nth(0)).toHaveText("7");
+    await expect(math.locator("mi").nth(1)).toHaveText("B");
+    expect(await math.evaluate((element) => element.namespaceURI)).toBe(
+      "http://www.w3.org/1998/Math/MathML",
+    );
+  });
+
   test("preserves safe HTML and MathML body content", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="math-body" title="math-body" time-dependent="false">
