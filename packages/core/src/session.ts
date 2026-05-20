@@ -1802,7 +1802,7 @@ function serialize(
     responses: cloneValueRecord(responses),
     outcomes: cloneValueRecord(outcomes),
     templateValues: cloneValueRecord(templateValues),
-    validationMessages: [...validationMessages],
+    validationMessages: cloneDiagnostics(validationMessages),
   };
 }
 

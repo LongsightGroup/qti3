@@ -274,6 +274,14 @@ describe("@qti3/core", () => {
       source: { line: 1 },
     });
 
+    const restoredState = restored.serialize();
+    restoredState.validationMessages[0]!.message = "mutated serialized snapshot";
+    restoredState.validationMessages[0]!.source!.line = 101;
+    expect(restored.serialize().validationMessages[0]).toMatchObject({
+      message: "RESPONSE requires a response.",
+      source: { line: 1 },
+    });
+
     restored.respond("RESPONSE", "A");
     expect(restored.serialize().validationMessages).toEqual([]);
   });
