@@ -539,6 +539,11 @@ test.describe("manual harness", () => {
     await expect(hotspot).toHaveCSS("position", "absolute");
     await hotspot.click();
     await expectResponse(page, "A");
+    await expect(hotspot).toHaveAttribute("aria-pressed", "true");
+    await expect(hotspot).toHaveAttribute("data-selected", "true");
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toContainText(
+      "Selected A",
+    );
 
     await page.getByRole("button", { name: "Score" }).click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -559,6 +564,9 @@ test.describe("manual harness", () => {
       .focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, "A");
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-hotspot-button[data-choice-identifier='A']"),
+    ).toHaveAttribute("data-selected", "true");
   });
 
   test("associates validation messages with unanswered controls", async ({ page }) => {

@@ -1042,9 +1042,24 @@ function renderHotspotResponse(
 
   const selected = new Set<string>();
   const multiple = interaction.responseCardinality === "multiple";
+  const selectedSummary = document.createElement("p");
+  selectedSummary.className = "qti3-selection-summary";
+  selectedSummary.setAttribute("aria-live", "polite");
+  selectedSummary.textContent = "No region selected";
+  const syncSelected = () => {
+    for (const button of surface.querySelectorAll<HTMLButtonElement>("button")) {
+      const isSelected = selected.has(button.dataset.choiceIdentifier ?? "");
+      button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      button.dataset.selected = isSelected ? "true" : "false";
+    }
+    selectedSummary.textContent =
+      selected.size > 0 ? `Selected ${[...selected].join(", ")}` : "No region selected";
+  };
   for (const choice of choicesOrFallback(interaction)) {
     const button = document.createElement("button");
     button.type = "button";
+    button.className = "qti3-hotspot-button";
+    button.dataset.choiceIdentifier = choice.identifier;
     button.textContent = choice.text;
     button.setAttribute("aria-pressed", "false");
     button.style.position = "absolute";
@@ -1058,20 +1073,20 @@ function renderHotspotResponse(
       if (multiple) {
         if (selected.has(choice.identifier)) selected.delete(choice.identifier);
         else selected.add(choice.identifier);
-        button.setAttribute("aria-pressed", selected.has(choice.identifier) ? "true" : "false");
+        syncSelected();
         update([...selected]);
       } else {
-        for (const item of surface.querySelectorAll("button")) {
-          item.setAttribute("aria-pressed", "false");
-        }
-        button.setAttribute("aria-pressed", "true");
+        selected.clear();
+        selected.add(choice.identifier);
+        syncSelected();
         update(choice.identifier);
       }
     });
     surface.append(button);
   }
 
-  group.append(surface);
+  syncSelected();
+  group.append(surface, selectedSummary);
   return group;
 }
 
@@ -1238,6 +1253,20 @@ function placeHotspotButton(button: HTMLButtonElement, choice: QtiChoice): void 
     return;
   }
 
+  if (shape === "poly" && coords.length >= 6) {
+    const xs = coords.filter((_, index) => index % 2 === 0);
+    const ys = coords.filter((_, index) => index % 2 === 1);
+    const left = Math.min(...xs);
+    const top = Math.min(...ys);
+    const right = Math.max(...xs);
+    const bottom = Math.max(...ys);
+    button.style.insetInlineStart = `${left}px`;
+    button.style.insetBlockStart = `${top}px`;
+    button.style.inlineSize = `${Math.max(1, right - left)}px`;
+    button.style.blockSize = `${Math.max(1, bottom - top)}px`;
+    return;
+  }
+
   button.style.insetInlineStart = "0";
   button.style.insetBlockStart = "0";
 }
@@ -1390,6 +1419,17 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-gap-button {
       min-inline-size: 8rem;
       text-align: start;
+    }
+
+    .qti3-hotspot-button[data-selected="true"] {
+      background: Highlight !important;
+      color: HighlightText !important;
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    .qti3-selection-summary {
+      margin: 0;
     }
 
     .qti3-token:focus-visible,
