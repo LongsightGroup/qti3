@@ -243,10 +243,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
 
     if (interaction.type === "extendedText") {
-      const textarea = document.createElement("textarea");
-      textarea.setAttribute("aria-label", heading.textContent ?? "Extended text response");
-      textarea.addEventListener("input", () => update(textarea.value));
-      field.append(textarea);
+      field.append(renderTextResponse(interaction, update, "extended"));
       return field;
     }
 
@@ -266,24 +263,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
 
     if (interaction.type === "textEntry") {
-      const input = document.createElement("input");
-      input.setAttribute("aria-label", heading.textContent ?? "Response");
-      input.addEventListener("input", () => update(input.value));
-      input.addEventListener("change", () => update(input.value));
-      field.append(input);
+      field.append(renderTextResponse(interaction, update, "entry"));
       return field;
     }
 
     if (interaction.type === "slider") {
-      const input = document.createElement("input");
-      input.type = "range";
-      input.min = interaction.attributes["lower-bound"] ?? "0";
-      input.max = interaction.attributes["upper-bound"] ?? "100";
-      input.step = interaction.attributes.step ?? "1";
-      input.value = interaction.attributes["lower-bound"] ?? "0";
-      input.setAttribute("aria-label", heading.textContent ?? "Slider response");
-      input.addEventListener("input", () => update(input.value));
-      field.append(input);
+      field.append(renderSliderResponse(interaction, update));
       return field;
     }
 
@@ -810,10 +795,80 @@ function renderGapMatchResponse(
 
 function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {
   const select = document.createElement("select");
+  select.className = "qti3-inline-select";
   select.setAttribute("aria-label", readableType(interaction.type));
   appendOptions(select, choicesOrFallback(interaction));
   select.addEventListener("change", () => update(select.value));
   return select;
+}
+
+function renderTextResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  mode: "entry" | "extended",
+): HTMLElement {
+  const group = document.createElement("div");
+  group.className = "qti3-text-response";
+  const counter = document.createElement("p");
+  counter.className = "qti3-counter";
+  counter.setAttribute("aria-live", "polite");
+  const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
+  const expectedLines = Number(interaction.attributes["expected-lines"] ?? 0);
+  const control =
+    mode === "extended" ? document.createElement("textarea") : document.createElement("input");
+  control.className = mode === "extended" ? "qti3-textarea" : "qti3-text-input";
+  control.setAttribute(
+    "aria-label",
+    interaction.prompt ?? (mode === "extended" ? "Extended text response" : "Text response"),
+  );
+  if (mode === "extended" && expectedLines > 0) {
+    (control as HTMLTextAreaElement).rows = expectedLines;
+  }
+  if (mode === "entry" && expectedLength > 0) {
+    (control as HTMLInputElement).maxLength = expectedLength;
+  }
+  const sync = () => {
+    const value = control.value;
+    const words = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
+    const lengthText =
+      expectedLength > 0
+        ? `${value.length} of ${expectedLength} characters`
+        : `${value.length} characters`;
+    counter.textContent = mode === "extended" ? `${lengthText}, ${words} words` : lengthText;
+    update(value);
+  };
+  control.addEventListener("input", sync);
+  control.addEventListener("change", sync);
+  sync();
+  group.append(control, counter);
+  return group;
+}
+
+function renderSliderResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("div");
+  group.className = "qti3-slider-response";
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = interaction.attributes["lower-bound"] ?? "0";
+  input.max = interaction.attributes["upper-bound"] ?? "100";
+  input.step = interaction.attributes.step ?? "1";
+  input.value = interaction.attributes["lower-bound"] ?? "0";
+  input.setAttribute("aria-label", interaction.prompt ?? "Slider response");
+  const output = document.createElement("output");
+  output.className = "qti3-slider-output";
+  output.value = input.value;
+  output.textContent = input.value;
+  const sync = () => {
+    output.value = input.value;
+    output.textContent = input.value;
+    update(input.value);
+  };
+  input.addEventListener("input", sync);
+  group.append(input, output);
+  return group;
 }
 
 function appendGraphicContext(group: HTMLElement, interaction: QtiInteraction): void {
@@ -1462,6 +1517,39 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-gap-button {
       min-inline-size: 8rem;
       text-align: start;
+    }
+
+    .qti3-text-response,
+    .qti3-slider-response {
+      display: grid;
+      gap: 0.4rem;
+      max-inline-size: 42rem;
+    }
+
+    .qti3-text-input,
+    .qti3-textarea {
+      inline-size: 100%;
+      box-sizing: border-box;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid CanvasText;
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    .qti3-textarea {
+      min-block-size: 8rem;
+      resize: vertical;
+    }
+
+    .qti3-counter,
+    .qti3-slider-output {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .qti3-slider-response {
+      grid-template-columns: minmax(8rem, 1fr) auto;
+      align-items: center;
     }
 
     .qti3-hotspot-button[data-selected="true"] {

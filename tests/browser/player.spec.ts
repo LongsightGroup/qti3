@@ -355,6 +355,9 @@ test.describe("manual harness", () => {
       .focus();
     await page.keyboard.type("A");
     await expectResponse(page, "A");
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText(
+      "1 of 10 characters",
+    );
 
     await loadFixture(page, "slider");
     await page.locator('qti-assessment-item-player input[type="range"]').focus();
@@ -362,6 +365,7 @@ test.describe("manual harness", () => {
       await page.keyboard.press("ArrowRight");
     }
     await expectResponse(page, "50");
+    await expect(page.locator("qti-assessment-item-player output")).toHaveText("50");
 
     await loadFixture(page, "positionObject");
     await page.locator("qti-assessment-item-player .qti3-point-surface").focus();
@@ -377,6 +381,17 @@ test.describe("manual harness", () => {
     await page.locator("qti-assessment-item-player .qti3-portable-custom-host + input").focus();
     await page.keyboard.type("A");
     await expectResponse(page, "A");
+  });
+
+  test("shows extended text word and character feedback", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "extendedText");
+
+    await page.locator("qti-assessment-item-player textarea").fill("A concise answer");
+    await expectResponse(page, "A concise answer");
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText(
+      "16 characters, 3 words",
+    );
   });
 
   test("reorders order interactions with keyboard controls", async ({ page }) => {
