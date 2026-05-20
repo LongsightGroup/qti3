@@ -191,15 +191,17 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
+    if (interaction.type === "positionObject" || interaction.type === "selectPoint") {
+      field.append(renderPointResponse(interaction, update));
+      return field;
+    }
+
     if (
       interaction.type === "textEntry" ||
       interaction.type === "portableCustom" ||
-      interaction.type === "drawing" ||
-      interaction.type === "positionObject" ||
-      interaction.type === "selectPoint"
+      interaction.type === "drawing"
     ) {
       const input = document.createElement("input");
-      input.value = interaction.responseBaseType === "point" ? "10 10" : "";
       input.setAttribute("aria-label", heading.textContent ?? "Response");
       input.addEventListener("input", () => update(input.value));
       input.addEventListener("change", () => update(input.value));
@@ -455,6 +457,85 @@ function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => 
   appendOptions(select, choicesOrFallback(interaction));
   select.addEventListener("change", () => update(select.value));
   return select;
+}
+
+function renderPointResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("div");
+  group.role = "group";
+  group.setAttribute("aria-label", `${readableType(interaction.type)} coordinate response`);
+
+  const surface = document.createElement("button");
+  surface.type = "button";
+  surface.className = "qti3-point-surface";
+  surface.textContent = "Select point";
+  surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
+  surface.style.display = "block";
+  surface.style.position = "relative";
+  surface.style.inlineSize = "160px";
+  surface.style.blockSize = "120px";
+  surface.style.border = "1px solid CanvasText";
+  surface.style.background = "Canvas";
+  surface.style.color = "CanvasText";
+  surface.style.cursor = "crosshair";
+
+  const marker = document.createElement("span");
+  marker.className = "qti3-point-marker";
+  marker.setAttribute("aria-hidden", "true");
+  marker.style.position = "absolute";
+  marker.style.inlineSize = "8px";
+  marker.style.blockSize = "8px";
+  marker.style.border = "2px solid CanvasText";
+  marker.style.borderRadius = "50%";
+  marker.style.transform = "translate(-50%, -50%)";
+  marker.style.pointerEvents = "none";
+  surface.append(marker);
+
+  const point = { x: 10, y: 10 };
+  const commit = () => update(`${point.x} ${point.y}`);
+  const syncMarker = () => {
+    marker.style.insetInlineStart = `${point.x}px`;
+    marker.style.insetBlockStart = `${point.y}px`;
+    surface.setAttribute(
+      "aria-label",
+      `${readableType(interaction.type)} coordinate area, selected ${point.x} ${point.y}`,
+    );
+  };
+  const clampPoint = () => {
+    point.x = Math.max(0, Math.min(160, point.x));
+    point.y = Math.max(0, Math.min(120, point.y));
+  };
+
+  surface.addEventListener("click", (event) => {
+    if (event.detail === 0) return;
+    point.x = Math.round(event.offsetX);
+    point.y = Math.round(event.offsetY);
+    clampPoint();
+    syncMarker();
+    commit();
+  });
+  surface.addEventListener("keydown", (event) => {
+    const step = event.shiftKey ? 10 : 1;
+    if (event.key === "ArrowLeft") point.x -= step;
+    else if (event.key === "ArrowRight") point.x += step;
+    else if (event.key === "ArrowUp") point.y -= step;
+    else if (event.key === "ArrowDown") point.y += step;
+    else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      commit();
+      return;
+    } else return;
+
+    event.preventDefault();
+    clampPoint();
+    syncMarker();
+  });
+
+  syncMarker();
+  group.append(surface);
+  return group;
 }
 
 function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {

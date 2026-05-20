@@ -135,6 +135,27 @@ test.describe("manual harness", () => {
       await page.keyboard.press("ArrowRight");
     }
     await expectResponse(page, "50");
+
+    await loadFixture(page, "positionObject");
+    await page.locator("qti-assessment-item-player .qti3-point-surface").focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, "10 10");
+  });
+
+  test("captures pointer coordinate responses for point interactions", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "selectPoint");
+
+    await page
+      .locator("qti-assessment-item-player .qti3-point-surface")
+      .click({ position: { x: 10, y: 10 } });
+    await expectResponse(page, "10 10");
+
+    await page.getByRole("button", { name: "Score" }).click();
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.outcomes.SCORE).toBe(1);
   });
 
   test("associates validation messages with unanswered controls", async ({ page }) => {
@@ -226,6 +247,16 @@ async function provideResponse(
       mimeType: "text/plain",
       buffer: Buffer.from("qti3 upload fixture"),
     });
+    return;
+  }
+
+  if (interactionType === "selectPoint" || interactionType === "positionObject") {
+    const [x, y] = String(response)
+      .split(" ")
+      .map((coordinate) => Number(coordinate));
+    await page
+      .locator("qti-assessment-item-player .qti3-point-surface")
+      .click({ position: { x, y } });
     return;
   }
 
