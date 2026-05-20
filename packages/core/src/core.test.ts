@@ -184,6 +184,33 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("does not mask missing or unsupported declaration attributes with parser defaults", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0">
+        <qti-response-declaration cardinality="many" base-type="nonsense"/>
+        <qti-outcome-declaration identifier="SCORE"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.identifier).toBe("");
+    expect(result.document?.item.responseDeclarations[0]?.identifier).toBe("");
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "identifier.required" }),
+        expect.objectContaining({ code: "declaration.cardinality" }),
+        expect.objectContaining({ code: "declaration.baseType" }),
+        expect.objectContaining({ code: "declaration.cardinality.required" }),
+        expect.objectContaining({ code: "declaration.baseType.required" }),
+      ]),
+    );
+  });
+
   it("exposes validation independent of XML parsing", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">

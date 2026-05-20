@@ -69,7 +69,7 @@ export function parseQtiXml(xml: string): QtiParseResult {
 }
 
 function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAssessmentItem {
-  const identifier = node.attributes.identifier ?? "ITEM";
+  const identifier = node.attributes.identifier ?? "";
   const responseDeclarations = childElements(node, "qti-response-declaration").map(
     parseResponseDeclaration,
   );
@@ -114,8 +114,8 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
 function parseModalFeedback(node: XmlNode): QtiModalFeedback {
   const showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
   return {
-    identifier: node.attributes.identifier ?? "FEEDBACK",
-    outcomeIdentifier: node.attributes["outcome-identifier"] ?? "FEEDBACK",
+    identifier: node.attributes.identifier ?? "",
+    outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
     showHide,
     text: textContent(node),
     source: node.source,
@@ -126,7 +126,7 @@ function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
   const cardinality = parseCardinality(node.attributes.cardinality);
   return {
     kind: "response",
-    identifier: node.attributes.identifier ?? "RESPONSE",
+    identifier: node.attributes.identifier ?? "",
     cardinality,
     baseType: node.attributes["base-type"] as QtiResponseDeclaration["baseType"],
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
@@ -136,6 +136,7 @@ function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
     ),
     mapping: parseMapping(childElements(node, "qti-mapping")[0]),
     areaMapping: parseAreaMapping(childElements(node, "qti-area-mapping")[0]),
+    attributes: node.attributes,
     source: node.source,
   };
 }
@@ -143,10 +144,11 @@ function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
 function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
   return {
     kind: "outcome",
-    identifier: node.attributes.identifier ?? "SCORE",
+    identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType: node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"],
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    attributes: node.attributes,
     source: node.source,
   };
 }
@@ -154,10 +156,11 @@ function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
 function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
   return {
     kind: "template",
-    identifier: node.attributes.identifier ?? "TEMPLATE",
+    identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType: node.attributes["base-type"] as QtiTemplateDeclaration["baseType"],
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    attributes: node.attributes,
     source: node.source,
   };
 }

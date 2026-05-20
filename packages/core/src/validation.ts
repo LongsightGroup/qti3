@@ -5,6 +5,9 @@ import type {
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
+  QtiOutcomeDeclaration,
+  QtiResponseDeclaration,
+  QtiTemplateDeclaration,
   QtiValidationResult,
 } from "./types.js";
 
@@ -56,6 +59,7 @@ function validateDeclarationIdentifiers(
       diagnostics,
       declaration.source,
     );
+    validateDeclarationRequiredAttributes(declaration, diagnostics);
     if (seen.has(declaration.identifier)) {
       diagnostics.push({
         code: "identifier.duplicate",
@@ -66,6 +70,49 @@ function validateDeclarationIdentifiers(
       });
     }
     seen.add(declaration.identifier);
+  }
+}
+
+function validateDeclarationRequiredAttributes(
+  declaration: QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!declaration.attributes.cardinality) {
+    diagnostics.push({
+      code: "declaration.cardinality.required",
+      severity: "error",
+      message: `${declaration.kind} declaration ${declaration.identifier || "(missing identifier)"} requires cardinality.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+  } else if (!isCardinality(declaration.attributes.cardinality)) {
+    diagnostics.push({
+      code: "declaration.cardinality",
+      severity: "error",
+      message: `${declaration.kind} declaration ${declaration.identifier || "(missing identifier)"} has unsupported cardinality ${declaration.attributes.cardinality}.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+  }
+
+  if (declaration.cardinality === "record") return;
+
+  if (!declaration.attributes["base-type"]) {
+    diagnostics.push({
+      code: "declaration.baseType.required",
+      severity: "error",
+      message: `${declaration.kind} declaration ${declaration.identifier || "(missing identifier)"} requires base-type unless cardinality is record.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+  } else if (!isBaseType(declaration.attributes["base-type"])) {
+    diagnostics.push({
+      code: "declaration.baseType",
+      severity: "error",
+      message: `${declaration.kind} declaration ${declaration.identifier || "(missing identifier)"} has unsupported base-type ${declaration.attributes["base-type"]}.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
   }
 }
 
@@ -271,6 +318,26 @@ function staticContentNames(): string[] {
 
 function setOf(...items: string[][]): Set<string> {
   return new Set(items.flat());
+}
+
+function isCardinality(value: string): value is QtiCardinality {
+  return value === "single" || value === "multiple" || value === "ordered" || value === "record";
+}
+
+function isBaseType(value: string): value is QtiBaseType {
+  return (
+    value === "identifier" ||
+    value === "boolean" ||
+    value === "integer" ||
+    value === "float" ||
+    value === "string" ||
+    value === "point" ||
+    value === "pair" ||
+    value === "directedPair" ||
+    value === "duration" ||
+    value === "file" ||
+    value === "uri"
+  );
 }
 
 function expectedResponseShape(

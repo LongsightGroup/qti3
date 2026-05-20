@@ -51,6 +51,7 @@ export interface QtiVariableDeclaration {
   baseType?: QtiBaseType | undefined;
   cardinality: QtiCardinality;
   defaultValue: QtiValue;
+  attributes: Record<string, string>;
   source?: QtiSourceLocation | undefined;
 }
 
