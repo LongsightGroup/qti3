@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { elementSupport, interactionSupport, parseQtiXml, processingSupport } from "@qti3/core";
 import { interactionFixtures } from "@qti3/fixtures";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { main } from "./index.js";
 
 describe("@qti3/cli", () => {
@@ -140,4 +140,123 @@ describe("@qti3/cli", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("inspects package zips and enumerates loadable item references", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-"));
+    const file = join(directory, "package.zip");
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    const textEntry = interactionFixtures.find(
+      (fixture) => fixture.interactionType === "textEntry",
+    );
+    if (!choice || !textEntry) throw new Error("Missing package fixtures.");
+
+    try {
+      await writeFile(
+        file,
+        createStoredZip({
+          "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0p1">
+      <file href="items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+          "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Package">
+  <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
+    <qti-assessment-section identifier="section-1" visible="true">
+      <qti-assessment-item-ref identifier="text-ref" href="items/text-entry.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`,
+          "items/choice.xml": choice.xml,
+          "items/text-entry.xml": textEntry.xml,
+          "items/image.png": Buffer.from([0]),
+        }),
+      );
+
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await expect(main(["inspect-package", file])).resolves.toBe(0);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      log.mockRestore();
+
+      expect(report).toMatchObject({
+        checked: 2,
+        failed: 0,
+        discoveredReferences: ["items/choice.xml", "items/text-entry.xml"],
+      });
+      expect(report.assetFiles).toEqual(["items/image.png"]);
+      expect(report.results).toEqual([
+        expect.objectContaining({ file: "items/choice.xml", source: "manifest", ok: true }),
+        expect.objectContaining({
+          file: "items/text-entry.xml",
+          source: "assessment-test",
+          ok: true,
+        }),
+      ]);
+    } finally {
+      vi.restoreAllMocks();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
+
+function createStoredZip(entries: Record<string, string | Uint8Array>): Buffer {
+  const localParts: Buffer[] = [];
+  const centralParts: Buffer[] = [];
+  let offset = 0;
+  let index = 0;
+
+  for (const [name, content] of Object.entries(entries)) {
+    const nameBuffer = Buffer.from(name);
+    const data = typeof content === "string" ? Buffer.from(content) : Buffer.from(content);
+    const crc = crc32(data);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0, 6);
+    local.writeUInt16LE(0, 8);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBuffer.length, 26);
+    localParts.push(local, nameBuffer, data);
+
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8);
+    central.writeUInt16LE(0, 10);
+    central.writeUInt32LE(crc, 16);
+    central.writeUInt32LE(data.length, 20);
+    central.writeUInt32LE(data.length, 24);
+    central.writeUInt16LE(nameBuffer.length, 28);
+    central.writeUInt32LE(offset, 42);
+    centralParts.push(central, nameBuffer);
+
+    offset += local.length + nameBuffer.length + data.length;
+    index += 1;
+  }
+
+  const centralDirectory = Buffer.concat(centralParts);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(index, 8);
+  eocd.writeUInt16LE(index, 10);
+  eocd.writeUInt32LE(centralDirectory.length, 12);
+  eocd.writeUInt32LE(offset, 16);
+  return Buffer.concat([...localParts, centralDirectory, eocd]);
+}
+
+function crc32(data: Buffer): number {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = crc & 1 ? 0xedb88320 ^ (crc >>> 1) : crc >>> 1;
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}

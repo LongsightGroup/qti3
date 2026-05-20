@@ -63,6 +63,9 @@ importers:
       '@qti3/fixtures':
         specifier: workspace:*
         version: link:../fixtures
+      stax-xml:
+        specifier: ^0.7.0
+        version: 0.7.0
 
   packages/conformance:
     dependencies:

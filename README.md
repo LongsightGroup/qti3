@@ -145,6 +145,15 @@ It can also score each item by applying its declared correct responses:
 pnpm --filter @qti3/cli exec qti3 score-correct-dir /path/to/items
 ```
 
+For package-level inspection without creating an open-source runner, use:
+
+```sh
+pnpm --filter @qti3/cli exec qti3 inspect-package /path/to/package.zip
+```
+
+This enumerates XML files, assets, manifest/test item references, and parse diagnostics
+for loadable assessment items.
+
 It can also write standalone reference items for every currently targeted interaction:
 
 ```sh
