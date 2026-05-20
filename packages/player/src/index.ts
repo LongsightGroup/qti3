@@ -146,6 +146,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     const root = document.createElement("article");
     root.className = "qti3-player";
     root.setAttribute("aria-labelledby", "qti3-item-title");
+    root.append(playerStyleElement());
 
     const title = document.createElement("h2");
     title.id = "qti3-item-title";
@@ -489,20 +490,95 @@ function renderOrderedResponse(
   appendGraphicContext(group, interaction);
 
   const choices = choicesOrFallback(interaction).filter((choice) => choice.role !== "gap");
-  const selects: HTMLSelectElement[] = [];
-  for (const [index] of choices.entries()) {
-    const label = document.createElement("label");
-    label.textContent = `Position ${index + 1} `;
-    const select = document.createElement("select");
-    select.setAttribute("aria-label", `Position ${index + 1}`);
-    appendOptions(select, choices);
-    select.addEventListener("change", () => {
-      update(selects.map((item) => item.value).filter((value) => value.length > 0));
-    });
-    selects.push(select);
-    label.append(select);
-    group.append(label);
-  }
+  const ordered = [...choices];
+  const list = document.createElement("ol");
+  list.className = "qti3-reorder-list";
+  list.setAttribute("aria-label", `${readableType(interaction.type)} current order`);
+  let draggedIdentifier: string | undefined;
+
+  const commit = () => update(ordered.map((choice) => choice.identifier));
+  const moveChoice = (from: number, to: number) => {
+    if (from === to || from < 0 || from >= ordered.length || to < 0 || to >= ordered.length) return;
+    const [choice] = ordered.splice(from, 1);
+    if (!choice) return;
+    ordered.splice(to, 0, choice);
+    renderList();
+    commit();
+    list
+      .querySelector<HTMLButtonElement>(`[data-choice-identifier="${choice.identifier}"]`)
+      ?.focus();
+  };
+  const renderList = () => {
+    list.replaceChildren(
+      ...ordered.map((choice, index) => {
+        const item = document.createElement("li");
+        item.className = "qti3-reorder-item";
+        item.draggable = true;
+        item.dataset.choiceIdentifier = choice.identifier;
+        item.addEventListener("dragstart", (event) => {
+          draggedIdentifier = choice.identifier;
+          event.dataTransfer?.setData("text/plain", choice.identifier);
+          event.dataTransfer?.setDragImage(item, 12, 12);
+        });
+        item.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          item.classList.add("qti3-drop-target");
+        });
+        item.addEventListener("dragleave", () => item.classList.remove("qti3-drop-target"));
+        item.addEventListener("drop", (event) => {
+          event.preventDefault();
+          item.classList.remove("qti3-drop-target");
+          const dragged = event.dataTransfer?.getData("text/plain") || draggedIdentifier;
+          const from = ordered.findIndex((entry) => entry.identifier === dragged);
+          moveChoice(from, index);
+        });
+
+        const handle = document.createElement("button");
+        handle.type = "button";
+        handle.className = "qti3-token qti3-reorder-handle";
+        handle.dataset.choiceIdentifier = choice.identifier;
+        handle.setAttribute(
+          "aria-label",
+          `${choice.text}, position ${index + 1} of ${ordered.length}`,
+        );
+        handle.textContent = choice.text;
+        handle.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            moveChoice(index, index - 1);
+          } else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+            event.preventDefault();
+            moveChoice(index, index + 1);
+          }
+        });
+
+        const up = document.createElement("button");
+        up.type = "button";
+        up.className = "qti3-icon-button";
+        up.textContent = "Up";
+        up.disabled = index === 0;
+        up.setAttribute("aria-label", `Move ${choice.text} up`);
+        up.addEventListener("click", () => moveChoice(index, index - 1));
+
+        const down = document.createElement("button");
+        down.type = "button";
+        down.className = "qti3-icon-button";
+        down.textContent = "Down";
+        down.disabled = index === ordered.length - 1;
+        down.setAttribute("aria-label", `Move ${choice.text} down`);
+        down.addEventListener("click", () => moveChoice(index, index + 1));
+
+        item.append(handle, up, down);
+        return item;
+      }),
+    );
+  };
+  const confirm = document.createElement("button");
+  confirm.type = "button";
+  confirm.textContent = "Use current order";
+  confirm.addEventListener("click", commit);
+  renderList();
+  group.append(list, confirm);
   return group;
 }
 
@@ -1070,6 +1146,83 @@ function validationMessageElement(responseIdentifier: string): HTMLElement {
 
 function validationMessageId(responseIdentifier: string): string {
   return `qti3-validation-${responseIdentifier}`;
+}
+
+function playerStyleElement(): HTMLStyleElement {
+  const style = document.createElement("style");
+  style.textContent = `
+    .qti3-player {
+      display: grid;
+      gap: 1rem;
+      max-inline-size: 72rem;
+      font: 16px/1.45 system-ui, sans-serif;
+    }
+
+    .qti3-interaction {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .qti3-actions,
+    .qti3-reorder-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .qti3-reorder-list {
+      display: grid;
+      gap: 0.5rem;
+      padding-inline-start: 1.5rem;
+    }
+
+    .qti3-reorder-item {
+      padding: 0.5rem;
+      border: 1px solid CanvasText;
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    .qti3-drop-target {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    .qti3-token,
+    .qti3-icon-button,
+    .qti3-player button,
+    .qti3-player select,
+    .qti3-player input,
+    .qti3-player textarea {
+      font: inherit;
+    }
+
+    .qti3-token {
+      min-inline-size: 2.5rem;
+      padding: 0.35rem 0.65rem;
+      border: 1px solid CanvasText;
+      background: Canvas;
+      color: CanvasText;
+      cursor: grab;
+    }
+
+    .qti3-token:focus-visible,
+    .qti3-player button:focus-visible,
+    .qti3-player select:focus-visible,
+    .qti3-player input:focus-visible,
+    .qti3-player textarea:focus-visible {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .qti3-player * {
+        scroll-behavior: auto;
+      }
+    }
+  `;
+  return style;
 }
 
 function responseIsEmpty(value: QtiValue): boolean {

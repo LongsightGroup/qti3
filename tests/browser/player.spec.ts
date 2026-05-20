@@ -376,6 +376,38 @@ test.describe("manual harness", () => {
     await expectResponse(page, "A");
   });
 
+  test("reorders order interactions with keyboard controls", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "order");
+
+    await page.getByRole("button", { name: /B, position 2 of 2/ }).focus();
+    await page.keyboard.press("ArrowUp");
+    await expectResponse(page, ["B", "A"]);
+
+    await page.getByRole("button", { name: "Move B down" }).click();
+    await expectResponse(page, ["A", "B"]);
+  });
+
+  test("reorders graphic order interactions with pointer drag", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "graphicOrder");
+
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-graphic-context img"),
+    ).toHaveAttribute("src", /image\.png$/);
+
+    const items = page.locator("qti-assessment-item-player .qti3-reorder-item");
+    const first = await items.nth(0).boundingBox();
+    const second = await items.nth(1).boundingBox();
+    if (!first || !second) throw new Error("Missing reorder item boxes.");
+
+    await page.mouse.move(first.x + first.width / 2, first.y + first.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(second.x + second.width / 2, second.y + second.height / 2);
+    await page.mouse.up();
+    await expectResponse(page, ["B", "A"]);
+  });
+
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "selectPoint");
@@ -721,10 +753,27 @@ async function provideResponse(
     Array.isArray(response) &&
     (interactionType === "order" || interactionType === "graphicOrder")
   ) {
-    const selects = page.locator("qti-assessment-item-player select");
-    for (const [index, value] of response.entries()) {
-      await selects.nth(index).selectOption(String(value));
+    const current = await page.locator("qti-assessment-item-player").evaluate(() => {
+      return [...document.querySelectorAll(".qti3-reorder-item")].map(
+        (item) => (item as HTMLElement).dataset.choiceIdentifier,
+      );
+    });
+    for (const [targetIndex, value] of response.map(String).entries()) {
+      let currentIndex = current.indexOf(value);
+      while (currentIndex > targetIndex) {
+        await page.getByRole("button", { name: `Move ${value} up` }).click();
+        current.splice(currentIndex, 1);
+        current.splice(currentIndex - 1, 0, value);
+        currentIndex -= 1;
+      }
+      while (currentIndex < targetIndex) {
+        await page.getByRole("button", { name: `Move ${value} down` }).click();
+        current.splice(currentIndex, 1);
+        current.splice(currentIndex + 1, 0, value);
+        currentIndex += 1;
+      }
     }
+    await page.getByRole("button", { name: "Use current order" }).click();
     return;
   }
 
