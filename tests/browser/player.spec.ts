@@ -515,12 +515,17 @@ test.describe("manual harness", () => {
       page
         .locator('qti-assessment-item-player [aria-label="Associate targets"]')
         .locator('[data-choice-identifier="A"]'),
-    ).toBeHidden();
+    ).toBeVisible();
+    await expect(
+      page
+        .locator('qti-assessment-item-player [aria-label="Associate targets"]')
+        .locator('[data-choice-identifier="A"]'),
+    ).toBeDisabled();
     await expect(
       page
         .locator('qti-assessment-item-player [aria-label="Associate targets"]')
         .locator(".qti3-token:visible"),
-    ).toHaveCount(2);
+    ).toHaveCount(3);
     await page
       .locator('qti-assessment-item-player [aria-label="Associate targets"]')
       .locator('[data-choice-identifier="B"]')

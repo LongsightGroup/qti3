@@ -628,8 +628,8 @@ function renderPairResponse(
     for (const button of targetRegion.querySelectorAll<HTMLButtonElement>("button")) {
       const isSelfTarget =
         requiresDistinctPair && button.dataset.choiceIdentifier === selectedSource?.identifier;
-      button.hidden = isSelfTarget;
       button.disabled = isSelfTarget;
+      button.setAttribute("aria-disabled", isSelfTarget ? "true" : "false");
       button.setAttribute(
         "aria-pressed",
         !isSelfTarget && button.dataset.choiceIdentifier === selectedTarget?.identifier
