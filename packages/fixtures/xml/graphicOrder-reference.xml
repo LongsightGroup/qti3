@@ -8,7 +8,7 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for graphicOrder-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <p>Reference item for graphicOrder-reference: QTI 3.0 item-player conformance fixture.</p>
     <qti-graphic-order-interaction response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,40"/><qti-hotspot-choice identifier="B" shape="rect" coords="55,0,105,40"/><qti-hotspot-choice identifier="C" shape="rect" coords="110,0,158,40"/></qti-graphic-order-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>

@@ -191,7 +191,7 @@ test.describe("manual harness", () => {
       interactionFixtures[0];
     if (!fixture) throw new Error("Missing choice fixture.");
     const xml = fixture.xml.replace(
-      "<p>Reference item for choice-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>",
+      "<p>Reference item for choice-reference: QTI 3.0 item-player conformance fixture.</p>",
       "<qti-prompt>Which president resigned after Watergate?</qti-prompt>",
     );
 

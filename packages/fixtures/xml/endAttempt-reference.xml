@@ -8,7 +8,7 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for endAttempt-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <p>Reference item for endAttempt-reference: QTI 3.0 item-player conformance fixture.</p>
     <qti-end-attempt-interaction response-identifier="RESPONSE" title="Show hint"/>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>

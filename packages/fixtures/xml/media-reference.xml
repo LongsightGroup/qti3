@@ -5,7 +5,7 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for media-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <p>Reference item for media-reference: QTI 3.0 item-player conformance fixture.</p>
     <qti-media-interaction autostart="false"><object data="media.mp3" type="audio/mpeg"/></qti-media-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>

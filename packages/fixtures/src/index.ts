@@ -116,7 +116,7 @@ function createInlineChoiceFixture(qtiName: string): QtiFixture {
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for ${id}: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <p>Reference item for ${id}: QTI 3.0 item-player conformance fixture.</p>
     <p>In QTI 3.0, an interaction writes a candidate answer to a <${qtiName} response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">response declaration</qti-inline-choice><qti-inline-choice identifier="B">template declaration</qti-inline-choice><qti-inline-choice identifier="C">rubric block</qti-inline-choice></${qtiName}>, and response processing writes derived values such as SCORE to an <${qtiName} response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">item body</qti-inline-choice><qti-inline-choice identifier="B">outcome declaration</qti-inline-choice><qti-inline-choice identifier="C">choice interaction</qti-inline-choice></${qtiName}>.</p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
@@ -534,7 +534,7 @@ function assessmentItem(
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for ${identifier}: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <p>Reference item for ${identifier}: QTI 3.0 item-player conformance fixture.</p>
     ${interactionXml}
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/${response.baseType === "point" ? "map_response_point.xml" : "match_correct"}"/>
