@@ -302,6 +302,8 @@ function parseMapping(node: XmlNode | undefined): QtiResponseDeclaration["mappin
   if (!node) return undefined;
   return {
     defaultValue: Number(node.attributes["default-value"] ?? 0),
+    attributes: node.attributes,
+    source: node.source,
     entries: childElements(node, "qti-map-entry").map((entry) => ({
       mapKey: entry.attributes["map-key"],
       mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
@@ -317,6 +319,8 @@ function parseAreaMapping(
   if (!node) return undefined;
   return {
     defaultValue: Number(node.attributes["default-value"] ?? 0),
+    attributes: node.attributes,
+    source: node.source,
     entries: childElements(node, "qti-area-map-entry").map((entry) => ({
       shape: parseShape(entry.attributes.shape),
       coords: (entry.attributes.coords ?? "")

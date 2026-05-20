@@ -428,14 +428,48 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(-1);
   });
 
+  it("applies mapping lower and upper bounds to mapped scores", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-bounds">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+          <qti-mapping default-value="-2" lower-bound="0" upper-bound="3">
+            <qti-map-entry map-key="A" mapped-value="2"/>
+            <qti-map-entry map-key="B" mapped-value="2"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE" max-choices="3">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+            <qti-simple-choice identifier="C">C</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", ["A", "B"]);
+    expect(session.score().outcomes.SCORE).toBe(3);
+    session.respond("RESPONSE", ["C"]);
+    expect(session.score().outcomes.SCORE).toBe(0);
+  });
+
   it("validates mapping entry attributes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
-          <qti-mapping default-value="none">
+          <qti-mapping default-value="none" lower-bound="high" upper-bound="low">
             <qti-map-entry mapped-value="1"/>
             <qti-map-entry map-key="A"/>
             <qti-map-entry map-key="B" mapped-value="many"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="BOUNDED" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="0" lower-bound="5" upper-bound="1">
+            <qti-map-entry map-key="A" mapped-value="1"/>
           </qti-mapping>
         </qti-response-declaration>
         <qti-item-body>
@@ -451,6 +485,9 @@ describe("@qti3/core", () => {
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "mapping.defaultValue" }),
+        expect.objectContaining({ code: "mapping.lowerBound" }),
+        expect.objectContaining({ code: "mapping.upperBound" }),
+        expect.objectContaining({ code: "mapping.bounds" }),
         expect.objectContaining({ code: "mapEntry.mapKey.required" }),
         expect.objectContaining({ code: "mapEntry.mappedValue.required" }),
         expect.objectContaining({ code: "mapEntry.mappedValue" }),
@@ -862,7 +899,7 @@ describe("@qti3/core", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-area-mapping">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point">
-          <qti-area-mapping default-value="none">
+          <qti-area-mapping default-value="none" lower-bound="low" upper-bound="high">
             <qti-area-map-entry coords="93,not-a-number,16"/>
             <qti-area-map-entry shape="ellipse" mapped-value="one"/>
             <qti-area-map-entry shape="rect" coords="1,2,3" mapped-value="1"/>
@@ -880,6 +917,8 @@ describe("@qti3/core", () => {
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "areaMapping.defaultValue" }),
+        expect.objectContaining({ code: "areaMapping.lowerBound" }),
+        expect.objectContaining({ code: "areaMapping.upperBound" }),
         expect.objectContaining({ code: "areaMapEntry.shape.required" }),
         expect.objectContaining({ code: "areaMapEntry.shape" }),
         expect.objectContaining({ code: "areaMapEntry.coords.required" }),

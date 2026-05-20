@@ -65,6 +65,8 @@ export interface QtiResponseDeclaration extends QtiVariableDeclaration {
 export interface QtiMapping {
   defaultValue: number;
   entries: QtiMapEntry[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiMapEntry {
@@ -77,6 +79,8 @@ export interface QtiMapEntry {
 export interface QtiAreaMapping {
   defaultValue: number;
   entries: QtiAreaMapEntry[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiAreaMapEntry {

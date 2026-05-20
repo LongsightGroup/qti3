@@ -540,7 +540,7 @@ function scoreAreaMapping(
     const entry = areaMapping.entries.find((candidate) => pointInsideArea(parsed, candidate));
     score += entry?.mappedValue ?? areaMapping.defaultValue;
   }
-  return score;
+  return clampMappedScore(score, areaMapping.attributes);
 }
 
 function parsePoint(value: string): { x: number; y: number } | undefined {
@@ -628,9 +628,26 @@ function scoreMapping(
       .map((entry) => [entry.mapKey!, entry.mappedValue]),
   );
   if (Array.isArray(response)) {
-    return response.reduce((sum, value) => sum + (values[value] ?? mapping.defaultValue), 0);
+    const score = response.reduce((sum, value) => sum + (values[value] ?? mapping.defaultValue), 0);
+    return clampMappedScore(score, mapping.attributes);
   }
-  return typeof response === "string" ? (values[response] ?? mapping.defaultValue) : 0;
+  const score = typeof response === "string" ? (values[response] ?? mapping.defaultValue) : 0;
+  return clampMappedScore(score, mapping.attributes);
+}
+
+function clampMappedScore(score: number, attributes: Record<string, string>): number {
+  const lower = numericBound(attributes["lower-bound"]);
+  const upper = numericBound(attributes["upper-bound"]);
+  let clamped = score;
+  if (lower !== undefined) clamped = Math.max(clamped, lower);
+  if (upper !== undefined) clamped = Math.min(clamped, upper);
+  return clamped;
+}
+
+function numericBound(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : undefined;
 }
 
 function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {

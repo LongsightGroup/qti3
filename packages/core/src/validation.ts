@@ -171,6 +171,7 @@ function validateMapping(declaration: QtiResponseDeclaration, diagnostics: QtiDi
       source: declaration.source,
     });
   }
+  validateMappingBounds(declaration, mapping.attributes, mapping.source, "mapping", diagnostics);
 
   for (const entry of mapping.entries) {
     validateMapEntry(declaration, entry, diagnostics);
@@ -227,9 +228,60 @@ function validateAreaMapping(
       source: declaration.source,
     });
   }
+  validateMappingBounds(
+    declaration,
+    areaMapping.attributes,
+    areaMapping.source,
+    "areaMapping",
+    diagnostics,
+  );
 
   for (const entry of areaMapping.entries) {
     validateAreaMapEntry(declaration, entry, diagnostics);
+  }
+}
+
+function validateMappingBounds(
+  declaration: QtiResponseDeclaration,
+  attributes: Record<string, string>,
+  source: QtiDiagnostic["source"],
+  codePrefix: "mapping" | "areaMapping",
+  diagnostics: QtiDiagnostic[],
+): void {
+  const lower = attributes["lower-bound"];
+  const upper = attributes["upper-bound"];
+  if (lower !== undefined && !isFiniteNumber(lower)) {
+    diagnostics.push({
+      code: `${codePrefix}.lowerBound`,
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} ${codePrefix} requires numeric lower-bound.`,
+      path: source?.path ?? declaration.source?.path,
+      source: source ?? declaration.source,
+    });
+  }
+  if (upper !== undefined && !isFiniteNumber(upper)) {
+    diagnostics.push({
+      code: `${codePrefix}.upperBound`,
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} ${codePrefix} requires numeric upper-bound.`,
+      path: source?.path ?? declaration.source?.path,
+      source: source ?? declaration.source,
+    });
+  }
+  if (
+    lower !== undefined &&
+    upper !== undefined &&
+    isFiniteNumber(lower) &&
+    isFiniteNumber(upper) &&
+    Number(lower) > Number(upper)
+  ) {
+    diagnostics.push({
+      code: `${codePrefix}.bounds`,
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} ${codePrefix} requires lower-bound to be less than or equal to upper-bound.`,
+      path: source?.path ?? declaration.source?.path,
+      source: source ?? declaration.source,
+    });
   }
 }
 
