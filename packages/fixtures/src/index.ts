@@ -197,10 +197,10 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,50" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="60,0,110,50" match-max="1"/></${qtiName}>`;
   }
   if (interactionType === "selectPoint") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
   }
   if (interactionType === "positionObject") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
   }
   if (interactionType === "upload") {
     return `<${qtiName} response-identifier="RESPONSE"/>`;

@@ -552,16 +552,31 @@ function renderPointResponse(
   const surface = document.createElement("button");
   surface.type = "button";
   surface.className = "qti3-point-surface";
-  surface.textContent = "Select point";
   surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
   surface.style.display = "block";
   surface.style.position = "relative";
-  surface.style.inlineSize = "160px";
-  surface.style.blockSize = "120px";
+  surface.style.inlineSize = `${objectWidth(interaction)}px`;
+  surface.style.blockSize = `${objectHeight(interaction)}px`;
+  surface.style.maxInlineSize = "100%";
   surface.style.border = "1px solid CanvasText";
   surface.style.background = "Canvas";
   surface.style.color = "CanvasText";
   surface.style.cursor = "crosshair";
+  surface.style.overflow = "hidden";
+
+  const object = interaction.object;
+  if (object?.data && object.type?.startsWith("image/")) {
+    const image = document.createElement("img");
+    image.src = object.data;
+    image.alt = "";
+    image.style.position = "absolute";
+    image.style.inset = "0";
+    image.style.inlineSize = "100%";
+    image.style.blockSize = "100%";
+    image.style.objectFit = "contain";
+    image.style.pointerEvents = "none";
+    surface.append(image);
+  }
 
   const marker = document.createElement("span");
   marker.className = "qti3-point-marker";
@@ -576,6 +591,8 @@ function renderPointResponse(
   surface.append(marker);
 
   const point = { x: 10, y: 10 };
+  const width = objectWidth(interaction);
+  const height = objectHeight(interaction);
   const commit = () => update(`${point.x} ${point.y}`);
   const syncMarker = () => {
     marker.style.insetInlineStart = `${point.x}px`;
@@ -586,8 +603,8 @@ function renderPointResponse(
     );
   };
   const clampPoint = () => {
-    point.x = Math.max(0, Math.min(160, point.x));
-    point.y = Math.max(0, Math.min(120, point.y));
+    point.x = Math.max(0, Math.min(width, point.x));
+    point.y = Math.max(0, Math.min(height, point.y));
   };
 
   surface.addEventListener("click", (event) => {

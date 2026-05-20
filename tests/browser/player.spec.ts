@@ -353,6 +353,25 @@ test.describe("manual harness", () => {
     expect(state.outcomes.SCORE).toBe(1);
   });
 
+  test("renders object-backed coordinate surfaces for point interactions", async ({ page }) => {
+    await page.goto("/");
+
+    for (const fixture of ["selectPoint", "positionObject"]) {
+      await loadFixture(page, fixture);
+
+      const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
+      await expect(surface.locator("img")).toHaveAttribute("src", "image.png");
+      await expect(surface.locator("img")).toHaveAttribute("alt", "");
+
+      const box = await surface.boundingBox();
+      expect(box?.width).toBe(160);
+      expect(box?.height).toBe(120);
+
+      await surface.click({ position: { x: 10, y: 10 } });
+      await expectResponse(page, "10 10");
+    }
+  });
+
   test("captures drawing responses as deterministic stroke data", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "drawing");
