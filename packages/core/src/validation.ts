@@ -393,7 +393,40 @@ function validateExpressionReferences(
     }
   }
 
-  if (expression.type === "matchCorrect" || expression.type === "mapResponse") {
+  if (expression.type === "matchCorrect") {
+    validateProcessingIdentifier(
+      expression.identifier,
+      "processing.response",
+      expression.source,
+      diagnostics,
+    );
+    if (expression.identifier && !responses.has(expression.identifier)) {
+      diagnostics.push({
+        code: "processing.response.reference",
+        severity: "error",
+        message: `Processing expression references missing response declaration ${expression.identifier}.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+    validateProcessingIdentifier(
+      expression.correctIdentifier,
+      "processing.correct",
+      expression.source,
+      diagnostics,
+    );
+    if (expression.correctIdentifier && !responses.has(expression.correctIdentifier)) {
+      diagnostics.push({
+        code: "processing.correct.reference",
+        severity: "error",
+        message: `Processing expression references missing correct response declaration ${expression.correctIdentifier}.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+  }
+
+  if (expression.type === "mapResponse") {
     validateProcessingIdentifier(
       expression.identifier,
       "processing.response",

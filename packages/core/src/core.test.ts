@@ -477,6 +477,46 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("validates qti-match variable and correct identifiers", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-match-correct">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-match>
+                <qti-variable identifier="MISSING_RESPONSE"/>
+                <qti-correct identifier="MISSING_CORRECT"/>
+              </qti-match>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">1</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.responseProcessing?.conditions[0]?.ifExpression).toMatchObject({
+      type: "matchCorrect",
+      identifier: "MISSING_RESPONSE",
+      correctIdentifier: "MISSING_CORRECT",
+    });
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.response.reference" }),
+        expect.objectContaining({ code: "processing.correct.reference" }),
+      ]),
+    );
+  });
+
   it("does not mask missing processing identifiers with parser defaults", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-processing-ids">
@@ -499,11 +539,17 @@ describe("@qti3/core", () => {
         <qti-response-processing>
           <qti-response-condition>
             <qti-response-if>
-              <qti-variable/>
+              <qti-match>
+                <qti-variable/>
+                <qti-correct/>
+              </qti-match>
               <qti-set-outcome-value>
                 <qti-map-response/>
               </qti-set-outcome-value>
             </qti-response-if>
+            <qti-response-else-if>
+              <qti-variable/>
+            </qti-response-else-if>
           </qti-response-condition>
         </qti-response-processing>
       </qti-assessment-item>
@@ -521,6 +567,7 @@ describe("@qti3/core", () => {
         expect.objectContaining({ code: "processing.outcomeTarget" }),
         expect.objectContaining({ code: "processing.variable" }),
         expect.objectContaining({ code: "processing.response" }),
+        expect.objectContaining({ code: "processing.correct" }),
       ]),
     );
   });

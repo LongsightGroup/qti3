@@ -556,13 +556,12 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   if (node.localName === "qti-match") {
     const variable = childElements(node, "qti-variable")[0];
     const correct = childElements(node, "qti-correct")[0];
-    if (variable?.attributes.identifier && correct?.attributes.identifier) {
-      return {
-        type: "matchCorrect",
-        identifier: variable.attributes.identifier,
-        source: node.source,
-      };
-    }
+    return {
+      type: "matchCorrect",
+      identifier: variable?.attributes.identifier ?? "",
+      correctIdentifier: correct?.attributes.identifier ?? "",
+      source: node.source,
+    };
   }
 
   return undefined;

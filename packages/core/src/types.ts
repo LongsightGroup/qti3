@@ -236,7 +236,7 @@ export type QtiTemplateRule =
 export type QtiProcessingExpression = (
   | { type: "baseValue"; value: QtiValue }
   | { type: "isNull"; identifier: string }
-  | { type: "matchCorrect"; identifier: string }
+  | { type: "matchCorrect"; identifier: string; correctIdentifier: string }
   | { type: "mapResponse"; identifier: string }
   | { type: "variable"; identifier: string }
   | {

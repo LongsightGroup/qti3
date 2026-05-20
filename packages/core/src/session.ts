@@ -281,11 +281,11 @@ function evaluateValue(
   if (expression.type === "baseValue") return expression.value;
   if (expression.type === "isNull") return isNullResponse(responses[expression.identifier] ?? null);
   if (expression.type === "matchCorrect") {
-    const declaration = getResponseDeclaration(document, expression.identifier);
+    const declaration = getResponseDeclaration(document, expression.correctIdentifier);
     return declaration
       ? valuesEqual(
           responses[expression.identifier] ?? null,
-          correctResponses[expression.identifier] ?? null,
+          correctResponses[expression.correctIdentifier] ?? null,
           declaration.cardinality === "ordered",
         )
       : false;
