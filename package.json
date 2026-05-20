@@ -15,10 +15,11 @@
     "test:browser": "playwright test",
     "check:deps": "node scripts/check-dependencies.mjs",
     "check:exports": "node scripts/check-package-exports.mjs",
+    "check:pack": "node scripts/check-pack-contents.mjs",
     "build": "tsc -b",
     "pages:build": "vite build examples/manual --base /qti3/ --outDir ../../dist/pages --emptyOutDir",
     "dev": "vite --host 127.0.0.1 examples/manual",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build && pnpm check:exports",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build && pnpm check:exports && pnpm check:pack",
     "release:check": "pnpm verify && pnpm test:browser && node packages/cli/dist/index.js assert-support && node packages/cli/dist/index.js run-fixtures"
   },
   "devDependencies": {

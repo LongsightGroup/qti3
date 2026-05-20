@@ -80,3 +80,4 @@ temp/
 
 # Private planning / decision records
 docs/decisions/
+.agents/

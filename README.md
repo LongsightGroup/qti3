@@ -1,10 +1,79 @@
-# qti3-ts
+# qti3
 
-`qti3-ts` is a dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.
+`qti3` is a dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.
 
-The goal is not to build another framework-specific item player. The goal is to build a clean, auditable implementation that can parse, validate, render, score, serialize, restore, and test QTI 3 items across products.
+The project is being prepared for its first public release. The release target is a clean,
+auditable item engine that can parse, validate, render, score, serialize, restore, and test
+QTI 3 items across products without binding the core implementation to a UI framework.
 
-The public project is focused on QTI item/question-type conformance. Runners, controllers, LMS shells, candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations are expected to be owned by host products.
+This is not another framework-specific item player. The public project is focused on QTI
+item and question-type conformance. Runners, controllers, LMS shells, candidate attempt
+policy, analytics, proctoring, rostering, and gradebook integrations are expected to be
+owned by host products.
+
+## First Release Intent
+
+The first release is intended to establish a trustworthy foundation for external users:
+
+- A strict TypeScript core for parsing, validation, response processing, scoring, and saved attempt state.
+- A native web component player that host products can embed without adopting a framework.
+- Public, synthetic fixtures for every supported current QTI 3 item interaction.
+- Machine-readable support metadata instead of marketing-only compatibility claims.
+- Explicit diagnostics for unsupported, deprecated, invalid, or ambiguous item behavior.
+- Small, justified dependencies with release checks that block formatting, linting, type, test, accessibility, conformance, browser, package, and dependency-policy failures.
+
+## Question-Type Support
+
+The target is the current public QTI 3 item interaction set described by the
+[1EdTech QTI 3 Implementation Guide](https://www.imsglobal.org/spec/qti/v3p0/impl)
+with element names from the
+[QTI 3 XML Binding](https://www.imsglobal.org/spec/qti/v3p0/bind/) and tracked
+internally as the `QTI 3.0.1 ASI item profile`.
+
+In this README, **Supported** means the interaction is parsed into the typed model,
+validated against its response and element contract, rendered by the browser player,
+processed/scored by the core runtime, covered by a public reference fixture, covered by
+fixture/conformance tests, covered by accessibility metadata, and exercised by browser
+rendering tests.
+
+| Spec interaction  | QTI element                         | qti3 status           | Evidence                                                                          |
+| ----------------- | ----------------------------------- | --------------------- | --------------------------------------------------------------------------------- |
+| Choice            | `qti-choice-interaction`            | Supported             | `choice-reference.xml`; core, fixture, conformance, a11y, browser tests           |
+| Text Entry        | `qti-text-entry-interaction`        | Supported             | `textEntry-reference.xml`; core, fixture, conformance, a11y, browser tests        |
+| Extended Text     | `qti-extended-text-interaction`     | Supported             | `extendedText-reference.xml`; core, fixture, conformance, a11y, browser tests     |
+| Gap Match         | `qti-gap-match-interaction`         | Supported             | `gapMatch-reference.xml`; core, fixture, conformance, a11y, browser tests         |
+| Hotspot           | `qti-hotspot-interaction`           | Supported             | `hotspot-reference.xml`; core, fixture, conformance, a11y, browser tests          |
+| Hot Text          | `qti-hottext-interaction`           | Supported             | `hottext-reference.xml`; core, fixture, conformance, a11y, browser tests          |
+| Inline Choice     | `qti-inline-choice-interaction`     | Supported             | `inlineChoice-reference.xml`; core, fixture, conformance, a11y, browser tests     |
+| Match             | `qti-match-interaction`             | Supported             | `match-reference.xml`; core, fixture, conformance, a11y, browser tests            |
+| Order             | `qti-order-interaction`             | Supported             | `order-reference.xml`; core, fixture, conformance, a11y, browser tests            |
+| Graphic Order     | `qti-graphic-order-interaction`     | Supported             | `graphicOrder-reference.xml`; core, fixture, conformance, a11y, browser tests     |
+| Associate         | `qti-associate-interaction`         | Supported             | `associate-reference.xml`; core, fixture, conformance, a11y, browser tests        |
+| Graphic Associate | `qti-graphic-associate-interaction` | Supported             | `graphicAssociate-reference.xml`; core, fixture, conformance, a11y, browser tests |
+| Graphic Gap Match | `qti-graphic-gap-match-interaction` | Supported             | `graphicGapMatch-reference.xml`; core, fixture, conformance, a11y, browser tests  |
+| Media             | `qti-media-interaction`             | Supported             | `media-reference.xml`; core, fixture, conformance, a11y, browser tests            |
+| Position Object   | `qti-position-object-interaction`   | Supported             | `positionObject-reference.xml`; core, fixture, conformance, a11y, browser tests   |
+| Select Point      | `qti-select-point-interaction`      | Supported             | `selectPoint-reference.xml`; core, fixture, conformance, a11y, browser tests      |
+| Slider            | `qti-slider-interaction`            | Supported             | `slider-reference.xml`; core, fixture, conformance, a11y, browser tests           |
+| Upload            | `qti-upload-interaction`            | Supported             | `upload-reference.xml`; core, fixture, conformance, a11y, browser tests           |
+| Drawing           | `qti-drawing-interaction`           | Supported             | `drawing-reference.xml`; core, fixture, conformance, a11y, browser tests          |
+| Portable Custom   | `qti-portable-custom-interaction`   | Supported             | `portableCustom-reference.xml`; core, fixture, conformance, a11y, browser tests   |
+| Custom            | `qti-custom-interaction`            | Deprecated diagnostic | Parsed for explicit warning; not a supported runtime target                       |
+| End Attempt       | `qti-end-attempt-interaction`       | Supported             | `endAttempt-reference.xml`; core, fixture, conformance, a11y, browser tests       |
+
+The source of truth for support status is `packages/core/src/support.ts`. The CLI emits the
+same data as JSON:
+
+```sh
+node packages/cli/dist/index.js support-matrix
+```
+
+Release checks also assert that supported interactions have fixture, conformance,
+accessibility, and browser evidence:
+
+```sh
+node packages/cli/dist/index.js assert-support
+```
 
 ## Goals
 
@@ -117,8 +186,10 @@ pnpm test
 pnpm test:conformance
 pnpm test:a11y
 pnpm check:deps
-pnpm test:browser
 pnpm build
+pnpm check:exports
+pnpm check:pack
+pnpm test:browser
 ```
 
 The browser harness is available with:
@@ -127,37 +198,38 @@ The browser harness is available with:
 pnpm dev
 ```
 
-The same harness is published from `main` through GitHub Pages at
-`https://www.longsight.com/qti3/`. The `longsightgroup.github.io` project URL
-redirects there because the organization Pages site uses a custom domain. Build
-the static artifact locally with:
+The same harness is published from `main` through the GitHub Pages workflow for
+`longsightgroup/qti3`. Build the static artifact locally with:
 
 ```sh
 pnpm pages:build
 ```
 
+From a source checkout, run `pnpm build` before using the built CLI entry point.
+Published packages expose the same commands through the `qti3` binary.
+
 The CLI can parse local QTI directories, including external reference sets:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 parse-dir /path/to/items
+node packages/cli/dist/index.js parse-dir /path/to/items
 ```
 
 Use validation when diagnostics should fail the command:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 validate-dir /path/to/items
+node packages/cli/dist/index.js validate-dir /path/to/items
 ```
 
 It can also score each item by applying its declared correct responses:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 score-correct-dir /path/to/items
+node packages/cli/dist/index.js score-correct-dir /path/to/items
 ```
 
 For package-level inspection without creating an open-source runner, use:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 inspect-package /path/to/package.zip
+node packages/cli/dist/index.js inspect-package /path/to/package.zip
 ```
 
 This enumerates XML files, assets, manifest/test item references, and parse diagnostics
@@ -167,33 +239,30 @@ It can also write standalone canonical reference items for targeted interactions
 processing patterns, and adaptive behavior:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 write-fixtures packages/fixtures/xml
+node packages/cli/dist/index.js write-fixtures packages/fixtures/xml
 ```
 
 The support matrix is intentionally machine-readable and includes interaction, deprecated
 interaction, and processing element evidence:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 support-matrix
+node packages/cli/dist/index.js support-matrix
 ```
 
 The accessibility proof matrix is also machine-readable. It lists each interaction's role,
 keyboard contract, automated evidence, and manual assistive-technology scripts:
 
 ```sh
-pnpm --filter @longsightgroup/qti3-cli exec qti3 a11y-proof
+node packages/cli/dist/index.js a11y-proof
 ```
 
-The intended enforcement model is strict:
+Quality expectations are part of the public contract:
 
-- `oxfmt` is the only formatter.
-- `oxlint` runs with zero warnings for source and tests.
-- TypeScript runs in strict mode with no emitted JavaScript from failed type checks.
-- Vitest covers pure core behavior and fixture-based scoring.
-- Playwright covers browser interactions, keyboard flows, focus, and rendering.
-- axe-core is required but not sufficient; accessibility tests must also assert keyboard behavior, accessible names, ARIA states, validation messaging, forced colors, and reflow.
-- Direct dependency specs are exact. `pnpm check:deps` also compares every workspace dependency block and every `pnpm-lock.yaml` package entry against `scripts/dependency-policy.json`.
-- CI blocks release when formatting, linting, typing, tests, conformance, accessibility, browser checks, package builds, or dependency policy checks fail.
+- Supported interactions need parser, validation, scoring, rendering, keyboard, and accessibility evidence.
+- Accessibility checks cover real operation, not just automated scans.
+- Dependencies are kept small, exact, and reviewed.
+- Published packages are checked so they contain only runtime files, package metadata, and public fixture XML.
+- Release checks must pass before publishing.
 
 ## Status
 
@@ -220,7 +289,7 @@ responses are derived again, so resume does not require the original random seed
 
 ## Publishing
 
-Packages publish under the Longsight npm scope:
+Packages publish under the `longsightgroup` npm organization:
 
 - `@longsightgroup/qti3-core`
 - `@longsightgroup/qti3-player`
@@ -229,4 +298,6 @@ Packages publish under the Longsight npm scope:
 - `@longsightgroup/qti3-a11y`
 - `@longsightgroup/qti3-cli`
 
-Publishing is handled by GitHub Actions from `longsightgroup/qti3` using npm Trusted Publishing/OIDC. The publish workflow uses npm's trusted-publisher path without `NPM_TOKEN`, requires `id-token: write`, runs `pnpm release:check`, packs packages with pnpm so workspace dependencies are rewritten to exact versions, then publishes the generated tarballs with npm.
+Releases are published from the `longsightgroup/qti3` repository after the full release
+check passes. Package tarballs are generated from the same checked build output that CI
+verifies.
