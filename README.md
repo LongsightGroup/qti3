@@ -1,16 +1,19 @@
 # qti3-ts
 
-`qti3-ts` is a planned dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.
+`qti3-ts` is a dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.
 
 The goal is not to build another framework-specific item player. The goal is to build a clean, auditable implementation that can parse, validate, render, score, serialize, restore, and test QTI 3 items across products.
+
+The public project is focused on QTI item/question-type conformance. Runners, controllers, LMS shells, candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations are expected to be owned by host products.
 
 ## Goals
 
 - Implement the latest public QTI 3 item behavior faithfully and explicitly, tracking QTI 3.0.1 ASI documents where applicable.
-- Support all QTI 3 interaction types in the target item profile.
+- Support all QTI 3 interaction/question types in the target item profile.
 - Make scoring and response processing runnable in Node without a browser.
 - Provide an accessible browser player that can be embedded in any product.
 - Publish a reusable conformance test suite.
+- Load QTI package zips and assessment-test item references where useful for item-focused testing.
 - Keep dependencies as small and justified as possible.
 - Make unsupported or invalid behavior visible through structured diagnostics.
 
@@ -19,6 +22,8 @@ The goal is not to build another framework-specific item player. The goal is to 
 - No Vue-centered rewrite.
 - No React-centered rewrite.
 - No dependency on a heavy UI framework such as React or Vue.
+- No reusable LMS runner/controller.
+- No product-owned attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
 - No hidden fallback behavior for required production configuration.
 - No compiling QTI XML as framework templates.
 - No global singleton state store.
@@ -36,6 +41,8 @@ packages/
   fixtures/      # QTI item fixtures and expected outcomes
   cli/           # validation, scoring, fixture, and support-matrix CLI
 ```
+
+Assessment-test/package support belongs in tooling and examples only when it helps discover, load, and verify item references. The player package renders one item at a time and exposes state/events for host-owned runners.
 
 The default embedding surface should be a native web component:
 
@@ -158,3 +165,12 @@ The intended enforcement model is strict:
 ## Status
 
 This repository is an early reference implementation. It has a strict TypeScript core, a native web component player, fixture-based scoring, a manual browser harness, automated accessibility checks, Playwright coverage, and standalone XML reference items under `packages/fixtures/xml`.
+
+## Roadmap Focus
+
+- Bring every QTI 3 interaction/question type to reference quality.
+- Complete item processing coverage for realistic QTI: template processing, response processing, adaptive item flows, feedback, printed variables, catalogs, and portable custom interaction boundaries.
+- Harden item state serialization and restore for host-owned save/resume/review workflows.
+- Improve the manual harness into an item debugger with diagnostics, responses, outcomes, template values, serialized state, validation messages, and action history.
+- Keep public fixtures synthetic and clearly licensed; keep private/generated/customer packages outside the public repository unless explicitly approved for publication.
+- Keep assessment-test support limited to package traversal and item-reference loading unless a separate optional example runner is intentionally created.
