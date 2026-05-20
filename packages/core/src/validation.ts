@@ -23,6 +23,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
 
   requireIdentifier("qti-assessment-item", item.identifier, diagnostics, item.source);
   validateDeclarationIdentifiers(item, diagnostics);
+  validateOutcomeLookupTables(item, diagnostics);
   validateInteractions(item, diagnostics);
   validateModalFeedback(item, diagnostics);
   validateProcessingReferences(item, diagnostics);
@@ -405,6 +406,64 @@ function validateDeclarationRequiredAttributes(
   }
 }
 
+function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  for (const outcome of item.outcomeDeclarations) {
+    const lookupTable = outcome.lookupTable;
+    if (!lookupTable) continue;
+    if (outcome.cardinality !== "single") {
+      diagnostics.push({
+        code: "lookupTable.outcome.cardinality",
+        severity: "error",
+        message: `Outcome declaration ${outcome.identifier} lookup table requires single cardinality.`,
+        path: lookupTable.source?.path,
+        source: lookupTable.source,
+      });
+    }
+    if (lookupTable.entries.length === 0) {
+      diagnostics.push({
+        code: "lookupTable.entries.required",
+        severity: "error",
+        message: `${lookupTable.type} lookup table requires at least one entry.`,
+        path: lookupTable.source?.path,
+        source: lookupTable.source,
+      });
+    }
+    for (const entry of lookupTable.entries) {
+      if (!isFiniteNumber(entry.attributes["source-value"] ?? "")) {
+        diagnostics.push({
+          code: "lookupTable.entry.sourceValue",
+          severity: "error",
+          message: "Lookup table entry requires numeric source-value.",
+          path: entry.source?.path,
+          source: entry.source,
+        });
+      }
+      if (entry.attributes["target-value"] === undefined) {
+        diagnostics.push({
+          code: "lookupTable.entry.targetValue",
+          severity: "error",
+          message: "Lookup table entry requires target-value.",
+          path: entry.source?.path,
+          source: entry.source,
+        });
+      }
+      if (
+        lookupTable.type === "match" &&
+        entry.attributes["source-value"] !== undefined &&
+        !isInteger(entry.attributes["source-value"])
+      ) {
+        diagnostics.push({
+          code: "lookupTable.match.sourceValue",
+          severity: "error",
+          message: "qti-match-table-entry source-value must be an integer.",
+          path: entry.source?.path,
+          source: entry.source,
+        });
+      }
+    }
+  }
+}
+
 function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
   const responses = new Set(item.responseDeclarations.map((declaration) => declaration.identifier));
   const outcomes = new Set(item.outcomeDeclarations.map((declaration) => declaration.identifier));
@@ -530,7 +589,36 @@ function validateResponseRule(
     }
     return;
   }
+  if (rule.type === "lookupOutcomeValue") {
+    validateLookupOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+    return;
+  }
   validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+}
+
+function validateLookupOutcomeRule(
+  rule: Extract<QtiResponseRule, { type: "lookupOutcomeValue" }>,
+  outcomes: Set<string>,
+  responses: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateProcessingIdentifier(
+    rule.identifier,
+    "processing.lookupOutcomeTarget",
+    rule.source,
+    diagnostics,
+  );
+  if (rule.identifier && !outcomes.has(rule.identifier)) {
+    diagnostics.push({
+      code: "processing.lookupOutcomeTarget.reference",
+      severity: "error",
+      message: `qti-lookup-outcome-value references missing outcome declaration ${rule.identifier}.`,
+      path: rule.source?.path,
+      source: rule.source,
+    });
+  }
+  validateExpressionReferences(rule.expression, responses, variables, diagnostics);
 }
 
 function validateSetOutcomeRule(

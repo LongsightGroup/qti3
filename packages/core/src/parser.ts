@@ -7,6 +7,8 @@ import type {
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
+  QtiLookupOutcomeValue,
+  QtiLookupTable,
   QtiModalFeedback,
   QtiObjectAsset,
   QtiOutcomeDeclaration,
@@ -147,12 +149,14 @@ function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
 }
 
 function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
+  const baseType = node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"];
   return {
     kind: "outcome",
     identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
-    baseType: node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"],
+    baseType,
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    lookupTable: parseLookupTable(node, baseType),
     attributes: node.attributes,
     source: node.source,
   };
@@ -336,6 +340,58 @@ function parseAreaMapping(
   };
 }
 
+function parseLookupTable(
+  node: XmlNode,
+  baseType: QtiOutcomeDeclaration["baseType"],
+): QtiLookupTable | undefined {
+  const matchTable = childElements(node, "qti-match-table")[0];
+  if (matchTable) return parseMatchTable(matchTable, baseType);
+  const interpolationTable = childElements(node, "qti-interpolation-table")[0];
+  if (interpolationTable) return parseInterpolationTable(interpolationTable, baseType);
+  return undefined;
+}
+
+function parseMatchTable(
+  node: XmlNode,
+  baseType: QtiOutcomeDeclaration["baseType"],
+): QtiLookupTable {
+  return {
+    type: "match",
+    defaultValue: parseLookupValue(node.attributes["default-value"], baseType),
+    attributes: node.attributes,
+    source: node.source,
+    entries: childElements(node, "qti-match-table-entry").map((entry) => ({
+      sourceValue: Number(entry.attributes["source-value"]),
+      targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
+}
+
+function parseInterpolationTable(
+  node: XmlNode,
+  baseType: QtiOutcomeDeclaration["baseType"],
+): QtiLookupTable {
+  return {
+    type: "interpolation",
+    defaultValue: parseLookupValue(node.attributes["default-value"], baseType),
+    attributes: node.attributes,
+    source: node.source,
+    entries: childElements(node, "qti-interpolation-table-entry").map((entry) => ({
+      sourceValue: Number(entry.attributes["source-value"]),
+      targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
+      includeBoundary: entry.attributes["include-boundary"] !== "false",
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
+}
+
+function parseLookupValue(value: string | undefined, baseType: string | undefined): QtiValue {
+  return value === undefined ? null : coerceValue(value, baseType);
+}
+
 function parseShape(
   shape: string | undefined,
 ): NonNullable<QtiResponseDeclaration["areaMapping"]>["entries"][number]["shape"] {
@@ -469,6 +525,7 @@ function parseResponseRules(node: XmlNode): QtiResponseRule[] {
 
 function parseResponseRule(node: XmlNode): QtiResponseRule | undefined {
   if (node.localName === "qti-set-outcome-value") return parseSetOutcomeValue(node);
+  if (node.localName === "qti-lookup-outcome-value") return parseLookupOutcomeValue(node);
   if (node.localName === "qti-exit-response") {
     return { type: "exitResponse", source: node.source };
   }
@@ -480,6 +537,19 @@ function parseResponseRule(node: XmlNode): QtiResponseRule | undefined {
     };
   }
   return undefined;
+}
+
+function parseLookupOutcomeValue(node: XmlNode): QtiLookupOutcomeValue {
+  return {
+    type: "lookupOutcomeValue",
+    identifier: node.attributes.identifier ?? "",
+    expression: parseFirstExpression(node) ?? {
+      type: "baseValue",
+      value: null,
+      source: node.source,
+    },
+    source: node.source,
+  };
 }
 
 function parseSetOutcomeValue(setNode: XmlNode): QtiSetOutcomeValue {

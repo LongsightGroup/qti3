@@ -343,6 +343,22 @@ function applyResponseRules(
       if (shouldExit) return true;
       continue;
     }
+    if (rule.type === "lookupOutcomeValue") {
+      outcomes[rule.identifier] = lookupOutcomeValue(
+        document,
+        rule.identifier,
+        evaluateValue(
+          rule.expression,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      );
+      continue;
+    }
     outcomes[rule.identifier] = evaluateValue(
       rule.expression,
       document,
@@ -1126,6 +1142,30 @@ function defaultValueForIdentifier(document: QtiDocument, identifier: string): Q
       ?.defaultValue ??
     null
   );
+}
+
+function lookupOutcomeValue(document: QtiDocument, identifier: string, value: QtiValue): QtiValue {
+  const declaration = document.item.outcomeDeclarations.find(
+    (outcome) => outcome.identifier === identifier,
+  );
+  const lookupTable = declaration?.lookupTable;
+  if (!lookupTable) return null;
+  if (value === null) return lookupTable.defaultValue;
+  const numeric = numericValue(value);
+  if (lookupTable.type === "match") {
+    return (
+      lookupTable.entries.find((entry) => entry.sourceValue === numeric)?.targetValue ??
+      lookupTable.defaultValue
+    );
+  }
+  const entry = [...lookupTable.entries]
+    .sort((left, right) => left.sourceValue - right.sourceValue)
+    .find(
+      (candidate) =>
+        numeric < candidate.sourceValue ||
+        (candidate.includeBoundary !== false && numeric === candidate.sourceValue),
+    );
+  return entry?.targetValue ?? lookupTable.defaultValue;
 }
 
 function mapOrMatchResponse(

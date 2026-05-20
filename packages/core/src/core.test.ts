@@ -1568,6 +1568,54 @@ describe("@qti3/core", () => {
     expect(score.outcomes.TRACE).toBe("0");
   });
 
+  it("looks up outcome values from match and interpolation tables", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="lookup-outcome">
+        <qti-response-declaration identifier="RAW" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="CODE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="GRADE" cardinality="single" base-type="identifier">
+          <qti-interpolation-table default-value="F">
+            <qti-interpolation-table-entry source-value="60" target-value="D"/>
+            <qti-interpolation-table-entry source-value="80" target-value="B"/>
+            <qti-interpolation-table-entry source-value="100" target-value="A"/>
+          </qti-interpolation-table>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="LABEL" cardinality="single" base-type="string">
+          <qti-match-table default-value="unknown">
+            <qti-match-table-entry source-value="1" target-value="first"/>
+            <qti-match-table-entry source-value="2" target-value="second"/>
+          </qti-match-table>
+        </qti-outcome-declaration>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RAW" lower-bound="0" upper-bound="100"/>
+          <qti-slider-interaction response-identifier="CODE" lower-bound="1" upper-bound="3"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-lookup-outcome-value identifier="GRADE">
+                <qti-variable identifier="RAW"/>
+              </qti-lookup-outcome-value>
+              <qti-lookup-outcome-value identifier="LABEL">
+                <qti-variable identifier="CODE"/>
+              </qti-lookup-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RAW", 85);
+    session.respond("CODE", 2);
+    expect(session.score().outcomes).toMatchObject({ GRADE: "A", LABEL: "second" });
+    session.respond("RAW", 101);
+    session.respond("CODE", 3);
+    expect(session.score().outcomes).toMatchObject({ GRADE: "F", LABEL: "unknown" });
+  });
+
   it("evaluates numeric division and comparison processing expressions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-processing">

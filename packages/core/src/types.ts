@@ -94,6 +94,32 @@ export interface QtiAreaMapEntry {
 
 export interface QtiOutcomeDeclaration extends QtiVariableDeclaration {
   kind: "outcome";
+  lookupTable?: QtiLookupTable | undefined;
+}
+
+export type QtiLookupTable = QtiMatchTable | QtiInterpolationTable;
+
+export interface QtiLookupTableBase {
+  defaultValue: QtiValue;
+  entries: QtiLookupTableEntry[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiMatchTable extends QtiLookupTableBase {
+  type: "match";
+}
+
+export interface QtiInterpolationTable extends QtiLookupTableBase {
+  type: "interpolation";
+}
+
+export interface QtiLookupTableEntry {
+  sourceValue: number;
+  targetValue: QtiValue;
+  includeBoundary?: boolean | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiTemplateDeclaration extends QtiVariableDeclaration {
@@ -216,6 +242,7 @@ export interface QtiResponseBranch {
 
 export type QtiResponseRule =
   | QtiSetOutcomeValue
+  | QtiLookupOutcomeValue
   | { type: "exitResponse"; source?: QtiSourceLocation | undefined }
   | {
       type: "responseProcessingFragment";
@@ -225,6 +252,13 @@ export type QtiResponseRule =
 
 export interface QtiSetOutcomeValue {
   type: "setOutcomeValue";
+  identifier: string;
+  expression: QtiProcessingExpression;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiLookupOutcomeValue {
+  type: "lookupOutcomeValue";
   identifier: string;
   expression: QtiProcessingExpression;
   source?: QtiSourceLocation | undefined;
