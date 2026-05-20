@@ -7,8 +7,11 @@ import type {
   QtiDocument,
   QtiInteraction,
   QtiOutcomeDeclaration,
+  QtiProcessingExpression,
   QtiResponseDeclaration,
+  QtiSetOutcomeValue,
   QtiTemplateDeclaration,
+  QtiTemplateRule,
   QtiValidationResult,
 } from "./types.js";
 
@@ -20,6 +23,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateDeclarationIdentifiers(item, diagnostics);
   validateInteractions(item, diagnostics);
   validateModalFeedback(item, diagnostics);
+  validateProcessingReferences(item, diagnostics);
 
   return {
     ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
@@ -115,6 +119,196 @@ function validateDeclarationRequiredAttributes(
       source: declaration.source,
     });
   }
+}
+
+function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  const responses = new Set(item.responseDeclarations.map((declaration) => declaration.identifier));
+  const outcomes = new Set(item.outcomeDeclarations.map((declaration) => declaration.identifier));
+  const templates = new Set(item.templateDeclarations.map((declaration) => declaration.identifier));
+  const variables = new Set([...responses, ...outcomes, ...templates]);
+
+  for (const rule of item.templateProcessing?.rules ?? []) {
+    validateTemplateRule(rule, responses, templates, variables, diagnostics);
+  }
+
+  for (const condition of item.responseProcessing?.conditions ?? []) {
+    validateExpressionReferences(condition.ifExpression, responses, variables, diagnostics);
+    for (const rule of condition.thenRules) {
+      validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+    }
+    for (const branch of condition.elseIfs) {
+      validateExpressionReferences(branch.expression, responses, variables, diagnostics);
+      for (const rule of branch.rules) {
+        validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+      }
+    }
+    for (const rule of condition.elseRules) {
+      validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+    }
+  }
+}
+
+function validateTemplateRule(
+  rule: QtiTemplateRule,
+  responses: Set<string>,
+  templates: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (rule.type === "setTemplateValue") {
+    validateProcessingIdentifier(
+      rule.identifier,
+      "processing.templateTarget",
+      rule.source,
+      diagnostics,
+    );
+    if (rule.identifier && !templates.has(rule.identifier)) {
+      diagnostics.push({
+        code: "processing.templateTarget.reference",
+        severity: "error",
+        message: `qti-set-template-value references missing template declaration ${rule.identifier}.`,
+        path: rule.source?.path,
+        source: rule.source,
+      });
+    }
+  }
+
+  if (rule.type === "setCorrectResponse") {
+    validateProcessingIdentifier(
+      rule.identifier,
+      "processing.correctResponse",
+      rule.source,
+      diagnostics,
+    );
+    if (rule.identifier && !responses.has(rule.identifier)) {
+      diagnostics.push({
+        code: "processing.correctResponse.reference",
+        severity: "error",
+        message: `qti-set-correct-response references missing response declaration ${rule.identifier}.`,
+        path: rule.source?.path,
+        source: rule.source,
+      });
+    }
+  }
+
+  validateExpressionReferences(rule.expression, responses, variables, diagnostics);
+}
+
+function validateSetOutcomeRule(
+  rule: QtiSetOutcomeValue,
+  outcomes: Set<string>,
+  responses: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateProcessingIdentifier(
+    rule.identifier,
+    "processing.outcomeTarget",
+    rule.source,
+    diagnostics,
+  );
+  if (rule.identifier && !outcomes.has(rule.identifier)) {
+    diagnostics.push({
+      code: "processing.outcomeTarget.reference",
+      severity: "error",
+      message: `qti-set-outcome-value references missing outcome declaration ${rule.identifier}.`,
+      path: rule.source?.path,
+      source: rule.source,
+    });
+  }
+  validateExpressionReferences(rule.expression, responses, variables, diagnostics);
+}
+
+function validateExpressionReferences(
+  expression: QtiProcessingExpression | undefined,
+  responses: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!expression) return;
+
+  if (expression.type === "variable" || expression.type === "isNull") {
+    validateProcessingIdentifier(
+      expression.identifier,
+      "processing.variable",
+      expression.source,
+      diagnostics,
+    );
+    if (expression.identifier && !variables.has(expression.identifier)) {
+      diagnostics.push({
+        code: "processing.variable.reference",
+        severity: "error",
+        message: `Processing expression references missing variable ${expression.identifier}.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+  }
+
+  if (expression.type === "matchCorrect" || expression.type === "mapResponse") {
+    validateProcessingIdentifier(
+      expression.identifier,
+      "processing.response",
+      expression.source,
+      diagnostics,
+    );
+    if (expression.identifier && !responses.has(expression.identifier)) {
+      diagnostics.push({
+        code: "processing.response.reference",
+        severity: "error",
+        message: `Processing expression references missing response declaration ${expression.identifier}.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+  }
+
+  for (const child of expressionChildren(expression)) {
+    validateExpressionReferences(child, responses, variables, diagnostics);
+  }
+}
+
+function validateProcessingIdentifier(
+  identifier: string,
+  code: string,
+  source: QtiDiagnostic["source"],
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (identifier.trim().length > 0) return;
+  diagnostics.push({
+    code,
+    severity: "error",
+    message: "Processing rule requires a non-empty identifier.",
+    path: source?.path,
+    source,
+  });
+}
+
+function expressionChildren(expression: QtiProcessingExpression): QtiProcessingExpression[] {
+  if (expression.type === "random") {
+    return expression.values;
+  }
+  if (
+    expression.type === "sum" ||
+    expression.type === "product" ||
+    expression.type === "and" ||
+    expression.type === "or"
+  ) {
+    return expression.expressions;
+  }
+  if (expression.type === "subtract" || expression.type === "equal") {
+    return [expression.left, expression.right];
+  }
+  if (expression.type === "not") {
+    return [expression.expression];
+  }
+  if (expression.type === "stringMatch") {
+    return [expression.left, expression.right];
+  }
+  if (expression.type === "member") {
+    return [expression.value, expression.collection];
+  }
+  return [];
 }
 
 function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {

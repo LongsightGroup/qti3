@@ -198,6 +198,7 @@ export interface QtiResponseBranch {
 export interface QtiSetOutcomeValue {
   identifier: string;
   expression: QtiProcessingExpression;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiTemplateProcessing {
@@ -205,10 +206,20 @@ export interface QtiTemplateProcessing {
 }
 
 export type QtiTemplateRule =
-  | { type: "setTemplateValue"; identifier: string; expression: QtiProcessingExpression }
-  | { type: "setCorrectResponse"; identifier: string; expression: QtiProcessingExpression };
+  | {
+      type: "setTemplateValue";
+      identifier: string;
+      expression: QtiProcessingExpression;
+      source?: QtiSourceLocation | undefined;
+    }
+  | {
+      type: "setCorrectResponse";
+      identifier: string;
+      expression: QtiProcessingExpression;
+      source?: QtiSourceLocation | undefined;
+    };
 
-export type QtiProcessingExpression =
+export type QtiProcessingExpression = (
   | { type: "baseValue"; value: QtiValue }
   | { type: "isNull"; identifier: string }
   | { type: "matchCorrect"; identifier: string }
@@ -230,7 +241,8 @@ export type QtiProcessingExpression =
       caseSensitive: boolean;
       substring: boolean;
     }
-  | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression };
+  | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
+) & { source?: QtiSourceLocation | undefined };
 
 export interface QtiDocument {
   item: QtiAssessmentItem;

@@ -292,6 +292,100 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(2);
   });
 
+  it("validates processing rule targets and variable references", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-processing-refs">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-template-processing>
+          <qti-set-template-value identifier="MISSING_TEMPLATE">
+            <qti-variable identifier="MISSING_VARIABLE"/>
+          </qti-set-template-value>
+          <qti-set-correct-response identifier="MISSING_RESPONSE">
+            <qti-base-value base-type="identifier">A</qti-base-value>
+          </qti-set-correct-response>
+        </qti-template-processing>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-is-null>
+                <qti-variable identifier="MISSING_VARIABLE"/>
+              </qti-is-null>
+              <qti-set-outcome-value identifier="MISSING_OUTCOME">
+                <qti-map-response identifier="MISSING_RESPONSE"/>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.templateTarget.reference" }),
+        expect.objectContaining({ code: "processing.correctResponse.reference" }),
+        expect.objectContaining({ code: "processing.outcomeTarget.reference" }),
+        expect.objectContaining({ code: "processing.variable.reference" }),
+        expect.objectContaining({ code: "processing.response.reference" }),
+      ]),
+    );
+  });
+
+  it("does not mask missing processing identifiers with parser defaults", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-processing-ids">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-template-processing>
+          <qti-set-template-value>
+            <qti-base-value base-type="integer">1</qti-base-value>
+          </qti-set-template-value>
+          <qti-set-correct-response>
+            <qti-base-value base-type="identifier">A</qti-base-value>
+          </qti-set-correct-response>
+        </qti-template-processing>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-variable/>
+              <qti-set-outcome-value>
+                <qti-map-response/>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.templateProcessing?.rules[0]?.identifier).toBe("");
+    expect(result.document?.item.responseProcessing?.conditions[0]?.thenRules[0]?.identifier).toBe(
+      "",
+    );
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.templateTarget" }),
+        expect.objectContaining({ code: "processing.correctResponse" }),
+        expect.objectContaining({ code: "processing.outcomeTarget" }),
+        expect.objectContaining({ code: "processing.variable" }),
+        expect.objectContaining({ code: "processing.response" }),
+      ]),
+    );
+  });
+
   it("parses, validates, and resolves modal feedback", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback">

@@ -355,16 +355,26 @@ function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
   if (node.localName === "qti-set-template-value") {
     return {
       type: "setTemplateValue",
-      identifier: node.attributes.identifier ?? "TEMPLATE",
-      expression: parseFirstExpression(node) ?? { type: "baseValue", value: null },
+      identifier: node.attributes.identifier ?? "",
+      expression: parseFirstExpression(node) ?? {
+        type: "baseValue",
+        value: null,
+        source: node.source,
+      },
+      source: node.source,
     };
   }
 
   if (node.localName === "qti-set-correct-response") {
     return {
       type: "setCorrectResponse",
-      identifier: node.attributes.identifier ?? "RESPONSE",
-      expression: parseFirstExpression(node) ?? { type: "baseValue", value: null },
+      identifier: node.attributes.identifier ?? "",
+      expression: parseFirstExpression(node) ?? {
+        type: "baseValue",
+        value: null,
+        source: node.source,
+      },
+      source: node.source,
     };
   }
 
@@ -387,8 +397,13 @@ function parseResponseCondition(node: XmlNode): QtiResponseCondition {
 
 function parseSetOutcomeValues(node: XmlNode): QtiSetOutcomeValue[] {
   return childElements(node, "qti-set-outcome-value").map((setNode) => ({
-    identifier: setNode.attributes.identifier ?? "SCORE",
-    expression: parseFirstExpression(setNode) ?? { type: "baseValue", value: null },
+    identifier: setNode.attributes.identifier ?? "",
+    expression: parseFirstExpression(setNode) ?? {
+      type: "baseValue",
+      value: null,
+      source: setNode.source,
+    },
+    source: setNode.source,
   }));
 }
 
@@ -405,20 +420,29 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     return {
       type: "baseValue",
       value: coerceValue(textContent(node), node.attributes["base-type"]),
+      source: node.source,
     };
   }
 
   if (node.localName === "qti-is-null") {
     const variable = childElements(node, "qti-variable")[0];
-    return { type: "isNull", identifier: variable?.attributes.identifier ?? "RESPONSE" };
+    return {
+      type: "isNull",
+      identifier: variable?.attributes.identifier ?? "",
+      source: node.source,
+    };
   }
 
   if (node.localName === "qti-map-response") {
-    return { type: "mapResponse", identifier: node.attributes.identifier ?? "RESPONSE" };
+    return {
+      type: "mapResponse",
+      identifier: node.attributes.identifier ?? "",
+      source: node.source,
+    };
   }
 
   if (node.localName === "qti-variable") {
-    return { type: "variable", identifier: node.attributes.identifier ?? "RESPONSE" };
+    return { type: "variable", identifier: node.attributes.identifier ?? "", source: node.source };
   }
 
   if (node.localName === "qti-random-integer") {
@@ -427,6 +451,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       min: Number(node.attributes.min ?? 0),
       max: Number(node.attributes.max ?? 0),
       step: Number(node.attributes.step ?? 1),
+      source: node.source,
     };
   }
 
@@ -437,6 +462,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       values: childElements(multiple ?? node)
         .map(parseExpression)
         .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
     };
   }
 
@@ -446,6 +472,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       expressions: childElements(node)
         .map(parseExpression)
         .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
     };
   }
 
@@ -455,6 +482,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       expressions: childElements(node)
         .map(parseExpression)
         .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
     };
   }
 
@@ -463,7 +491,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     const [left, right] = expressions;
-    if (left && right) return { type: "subtract", left, right };
+    if (left && right) return { type: "subtract", left, right, source: node.source };
   }
 
   if (node.localName === "qti-and") {
@@ -472,6 +500,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       expressions: childElements(node)
         .map(parseExpression)
         .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
     };
   }
 
@@ -481,19 +510,20 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       expressions: childElements(node)
         .map(parseExpression)
         .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
     };
   }
 
   if (node.localName === "qti-not") {
     const expression = parseFirstExpression(node);
-    if (expression) return { type: "not", expression };
+    if (expression) return { type: "not", expression, source: node.source };
   }
 
   if (node.localName === "qti-equal") {
     const [left, right] = childElements(node)
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
-    if (left && right) return { type: "equal", left, right };
+    if (left && right) return { type: "equal", left, right, source: node.source };
   }
 
   if (node.localName === "qti-string-match") {
@@ -507,6 +537,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
         right,
         caseSensitive: node.attributes["case-sensitive"] !== "false",
         substring: node.attributes.substring === "true",
+        source: node.source,
       };
     }
   }
@@ -515,14 +546,18 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     const [value, collection] = childElements(node)
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
-    if (value && collection) return { type: "member", value, collection };
+    if (value && collection) return { type: "member", value, collection, source: node.source };
   }
 
   if (node.localName === "qti-match") {
     const variable = childElements(node, "qti-variable")[0];
     const correct = childElements(node, "qti-correct")[0];
     if (variable?.attributes.identifier && correct?.attributes.identifier) {
-      return { type: "matchCorrect", identifier: variable.attributes.identifier };
+      return {
+        type: "matchCorrect",
+        identifier: variable.attributes.identifier,
+        source: node.source,
+      };
     }
   }
 
