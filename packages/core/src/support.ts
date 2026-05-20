@@ -122,6 +122,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-math-operator", "packages/core/src/core.test.ts"),
   processingEntry("qti-repeat", "packages/core/src/core.test.ts"),
   processingEntry("qti-stats-operator", "packages/core/src/core.test.ts"),
+  processingEntry("qti-custom-operator", "packages/core/src/core.test.ts"),
 ];
 
 export const elementSupport: QtiElementSupport[] = [

@@ -2,6 +2,9 @@ export { parseQtiXml } from "./parser.js";
 export {
   createItemSession,
   visibleModalFeedback,
+  type QtiCustomOperatorContext,
+  type QtiCustomOperatorHandler,
+  type QtiCustomOperatorRegistry,
   type QtiItemSession,
   type QtiItemSessionOptions,
 } from "./session.js";

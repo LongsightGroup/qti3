@@ -1037,6 +1037,19 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     }
   }
 
+  if (node.localName === "qti-custom-operator") {
+    return {
+      type: "customOperator",
+      definition: node.attributes.definition,
+      className: node.attributes.class,
+      attributes: node.attributes,
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
   if (node.localName === "qti-match") {
     const variable = childElements(node, "qti-variable")[0];
     const correct = childElements(node, "qti-correct")[0];

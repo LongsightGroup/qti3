@@ -412,6 +412,13 @@ export type QtiProcessingExpression = (
   | { type: "mathOperator"; name: string; expressions: QtiProcessingExpression[] }
   | { type: "repeat"; numberRepeats: string; expressions: QtiProcessingExpression[] }
   | { type: "statsOperator"; name: string; expression: QtiProcessingExpression }
+  | {
+      type: "customOperator";
+      definition?: string | undefined;
+      className?: string | undefined;
+      attributes: Record<string, string>;
+      expressions: QtiProcessingExpression[];
+    }
 ) & { source?: QtiSourceLocation | undefined };
 
 export interface QtiDocument {

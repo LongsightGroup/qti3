@@ -15,8 +15,20 @@ import type {
   QtiValue,
 } from "./types.js";
 
+export interface QtiCustomOperatorContext {
+  definition?: string | undefined;
+  className?: string | undefined;
+  attributes: Record<string, string>;
+  values: QtiValue[];
+  expression: Extract<QtiProcessingExpression, { type: "customOperator" }>;
+}
+
+export type QtiCustomOperatorHandler = (context: QtiCustomOperatorContext) => QtiValue;
+export type QtiCustomOperatorRegistry = Record<string, QtiCustomOperatorHandler>;
+
 export interface QtiItemSessionOptions {
   randomSeed?: string | number | undefined;
+  customOperators?: QtiCustomOperatorRegistry | undefined;
 }
 
 export interface QtiItemSession {
@@ -51,6 +63,7 @@ export function createItemSession(
   const correctResponses: Record<string, QtiValue> = {};
   let status: QtiAttemptStatus = priorState?.status ?? "initialized";
   const random = seededRandom(options.randomSeed ?? document.item.identifier);
+  const customOperators = options.customOperators ?? {};
 
   for (const declaration of document.item.responseDeclarations) {
     correctResponses[declaration.identifier] = declaration.correctResponse;
@@ -65,7 +78,15 @@ export function createItemSession(
     outcomes[outcome.identifier] = outcome.defaultValue;
   }
 
-  applyTemplateProcessing(document, templateValues, responses, outcomes, correctResponses, random);
+  applyTemplateProcessing(
+    document,
+    templateValues,
+    responses,
+    outcomes,
+    correctResponses,
+    random,
+    customOperators,
+  );
   const defaultOutcomes = { ...outcomes };
   Object.assign(templateValues, priorState?.templateValues ?? {});
   Object.assign(outcomes, priorState?.outcomes ?? {});
@@ -92,6 +113,7 @@ export function createItemSession(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       );
       const state = serialize(
         document.item.identifier,
@@ -123,6 +145,7 @@ function applyTemplateProcessing(
   outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
+  customOperators: QtiCustomOperatorRegistry,
 ): void {
   const rules = document.item.templateProcessing?.rules ?? [];
   let restarts = 0;
@@ -136,6 +159,7 @@ function applyTemplateProcessing(
       outcomes,
       correctResponses,
       random,
+      customOperators,
     );
     if (shouldExit) return;
     if (rule.type === "templateConstraint") {
@@ -147,6 +171,7 @@ function applyTemplateProcessing(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       );
       if (!satisfied) {
         resetTemplateValues(document, templateValues);
@@ -177,6 +202,7 @@ function applyTemplateRule(
   outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
+  customOperators: QtiCustomOperatorRegistry,
 ): boolean {
   if (rule.type === "exitTemplate") return true;
   if (rule.type === "templateConstraint") return false;
@@ -190,6 +216,7 @@ function applyTemplateRule(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     )
       ? rule.thenRules
       : undefined;
@@ -204,6 +231,7 @@ function applyTemplateRule(
             templateValues,
             correctResponses,
             random,
+            customOperators,
           )
         ) {
           branch = elseIf.rules;
@@ -221,6 +249,7 @@ function applyTemplateRule(
         outcomes,
         correctResponses,
         random,
+        customOperators,
       );
       if (shouldExit) return true;
     }
@@ -235,6 +264,7 @@ function applyTemplateRule(
     templateValues,
     correctResponses,
     random,
+    customOperators,
   );
   if (rule.type === "setTemplateValue") {
     templateValues[rule.identifier] = value;
@@ -275,6 +305,7 @@ function applyResponseProcessing(
   templateValues: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
+  customOperators: QtiCustomOperatorRegistry,
 ): void {
   const processing = document.item.responseProcessing;
   if (processing?.conditions.length) {
@@ -287,6 +318,7 @@ function applyResponseProcessing(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       )
         ? condition.thenRules
         : undefined;
@@ -301,6 +333,7 @@ function applyResponseProcessing(
               templateValues,
               correctResponses,
               random,
+              customOperators,
             )
           ) {
             branch = elseIf.rules;
@@ -317,6 +350,7 @@ function applyResponseProcessing(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       );
       if (shouldExit) return;
     }
@@ -360,6 +394,7 @@ function applyResponseRules(
   templateValues: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
+  customOperators: QtiCustomOperatorRegistry,
 ): boolean {
   for (const rule of rules) {
     if (rule.type === "exitResponse") return true;
@@ -372,6 +407,7 @@ function applyResponseRules(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       );
       if (shouldExit) return true;
       continue;
@@ -388,6 +424,7 @@ function applyResponseRules(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       );
       continue;
@@ -400,6 +437,7 @@ function applyResponseRules(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
   }
   return false;
@@ -413,6 +451,7 @@ function evaluateBoolean(
   templateValues: Record<string, QtiValue> = {},
   correctResponses: Record<string, QtiValue> = {},
   random: () => number = Math.random,
+  customOperators: QtiCustomOperatorRegistry = {},
 ): boolean {
   if (!expression) return false;
   return booleanValue(
@@ -424,6 +463,7 @@ function evaluateBoolean(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     ),
   );
 }
@@ -436,6 +476,7 @@ function evaluateValue(
   templateValues: Record<string, QtiValue> = {},
   correctResponses: Record<string, QtiValue> = {},
   random: () => number = Math.random,
+  customOperators: QtiCustomOperatorRegistry = {},
 ): QtiValue {
   if (expression.type === "baseValue") return expression.value;
   if (expression.type === "isNull") return isNullResponse(responses[expression.identifier] ?? null);
@@ -498,6 +539,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
   }
   if (expression.type === "multiple" || expression.type === "ordered") {
@@ -511,6 +553,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -526,6 +569,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     const n = indexValue(expression.n, outcomes, templateValues);
@@ -542,6 +586,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     ).length;
   }
@@ -558,6 +603,7 @@ function evaluateValue(
             templateValues,
             correctResponses,
             random,
+            customOperators,
           ),
         ),
       0,
@@ -576,6 +622,7 @@ function evaluateValue(
             templateValues,
             correctResponses,
             random,
+            customOperators,
           ),
         ),
       1,
@@ -592,6 +639,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -610,6 +658,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ) -
       numericValue(
@@ -621,6 +670,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       )
     );
@@ -635,6 +685,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     if (divisor === 0) return 0;
@@ -648,6 +699,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ) / divisor
     );
@@ -663,6 +715,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
       numericValue(
@@ -674,6 +727,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -688,6 +742,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     const divisorValue = evaluateValue(
       expression.right,
@@ -697,6 +752,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     if (dividendValue === null || divisorValue === null) return null;
     const divisor = numericValue(divisorValue);
@@ -712,6 +768,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     const divisorValue = evaluateValue(
       expression.right,
@@ -721,6 +778,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     if (dividendValue === null || divisorValue === null) return null;
     const divisor = numericValue(divisorValue);
@@ -739,6 +797,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -753,6 +812,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     return expression.roundingMode === "decimalPlaces"
@@ -770,6 +830,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -783,6 +844,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     return value === null ? null : numericValue(value);
   }
@@ -797,6 +859,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -805,7 +868,16 @@ function evaluateValue(
     const min = indexValue(expression.min, outcomes, templateValues) ?? 0;
     const max = indexValue(expression.max, outcomes, templateValues) ?? 0;
     const values = expression.expressions.map((item) =>
-      evaluateValue(item, document, responses, outcomes, templateValues, correctResponses, random),
+      evaluateValue(
+        item,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
+      ),
     );
     const trueCount = values.filter((value) => value === true).length;
     const nullCount = values.filter((value) => value === null).length;
@@ -824,6 +896,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         ),
       ),
     );
@@ -838,6 +911,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
   }
@@ -851,6 +925,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
       evaluateValue(
         expression.right,
@@ -860,6 +935,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
   }
@@ -872,6 +948,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     const right = evaluateValue(
       expression.right,
@@ -881,6 +958,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     if (left === null || right === null) return null;
     const roundedLeft = roundWithMode(
@@ -905,6 +983,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     const right = numericValue(
@@ -916,6 +995,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     if (expression.operator === "lt") return left < right;
@@ -933,6 +1013,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
       evaluateValue(
         expression.right,
@@ -942,6 +1023,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
       expression.caseSensitive,
       expression.substring,
@@ -957,6 +1039,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
       evaluateValue(
         expression.left,
@@ -966,6 +1049,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
       expression.caseSensitive,
       true,
@@ -980,6 +1064,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     if (value === null) return null;
     const patternValue =
@@ -1002,6 +1087,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     return isRecordValue(value) ? (value[expression.fieldIdentifier] ?? null) : null;
   }
@@ -1014,6 +1100,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     const collection = evaluateValue(
       expression.collection,
@@ -1023,6 +1110,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     const values = valueContainer(collection);
     return value === null ? null : values.some((item) => valuesEqual(item, value));
@@ -1036,6 +1124,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     const collection = valueContainer(
       evaluateValue(
@@ -1046,6 +1135,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     if (value === null || collection.length === 0) return null;
@@ -1062,6 +1152,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     const values = valueContainer(
@@ -1073,6 +1164,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       ),
     );
     if (collection.length === 0 || values.length === 0) return null;
@@ -1088,6 +1180,7 @@ function evaluateValue(
         templateValues,
         correctResponses,
         random,
+        customOperators,
       );
       return value === null ? [null] : valueContainer(value);
     });
@@ -1104,6 +1197,7 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     if (value === null) return null;
     if (expression.shape === "default") return true;
@@ -1126,7 +1220,16 @@ function evaluateValue(
   }
   if (expression.type === "mathOperator") {
     const values = expression.expressions.map((item) =>
-      evaluateValue(item, document, responses, outcomes, templateValues, correctResponses, random),
+      evaluateValue(
+        item,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
+      ),
     );
     if (values.length === 0 || values.some((value) => value === null)) return null;
     return mathOperatorValue(expression.name, values.map(numericValue));
@@ -1145,6 +1248,7 @@ function evaluateValue(
           templateValues,
           correctResponses,
           random,
+          customOperators,
         );
         container.push(...valueContainer(value));
       }
@@ -1160,10 +1264,34 @@ function evaluateValue(
       templateValues,
       correctResponses,
       random,
+      customOperators,
     );
     if (value === null) return null;
     const values = valueContainer(value).map(numericValue);
     return statsOperatorValue(expression.name, values);
+  }
+  if (expression.type === "customOperator") {
+    const operatorKey = expression.definition ?? expression.className ?? "";
+    const handler = customOperators[operatorKey];
+    if (!handler) return null;
+    return handler({
+      definition: expression.definition,
+      className: expression.className,
+      attributes: expression.attributes,
+      values: expression.expressions.map((item) =>
+        evaluateValue(
+          item,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+          customOperators,
+        ),
+      ),
+      expression,
+    });
   }
   return null;
 }

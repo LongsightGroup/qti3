@@ -1171,7 +1171,8 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "gcd" ||
     expression.type === "lcm" ||
     expression.type === "mathOperator" ||
-    expression.type === "repeat"
+    expression.type === "repeat" ||
+    expression.type === "customOperator"
   ) {
     return expression.expressions;
   }

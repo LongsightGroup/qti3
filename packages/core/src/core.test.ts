@@ -2109,4 +2109,39 @@ describe("@qti3/core", () => {
     expect(score.outcomes.LABEL).toBe("Washington");
     expect(score.outcomes.MISSING).toBeNull();
   });
+
+  it("evaluates custom operators through a host extension hook", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="custom-operator-processing">
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body/>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-sum>
+                  <qti-custom-operator definition="double">
+                    <qti-base-value base-type="integer">4</qti-base-value>
+                  </qti-custom-operator>
+                  <qti-base-value base-type="integer">1</qti-base-value>
+                </qti-sum>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!, undefined, {
+      customOperators: {
+        double: ({ definition, values }) => {
+          expect(definition).toBe("double");
+          return Number(values[0]) * 2;
+        },
+      },
+    });
+    expect(session.score().outcomes.SCORE).toBe(9);
+  });
 });
