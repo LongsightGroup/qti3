@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { parseQtiXml } from "@qti3/core";
+import { createItemSession, parseQtiXml } from "@qti3/core";
 import { describe, expect, it } from "vitest";
 
 const externalDir = process.env.QTI3_EXTERNAL_QTI_DIR;
@@ -25,6 +25,39 @@ runIfConfigured("@qti3/conformance external QTI directory", () => {
 
     expect(failures).toEqual([]);
   });
+
+  it.runIf(process.env.QTI3_EXTERNAL_SCORE_CORRECT === "1")(
+    "scores each XML assessment item with its declared correct responses",
+    async () => {
+      const files = await findXmlFiles(externalDir!);
+      const failures: string[] = [];
+
+      for (const file of files) {
+        const xml = await readFile(file, "utf8");
+        if (!xml.includes("qti-assessment-item")) continue;
+
+        const result = parseQtiXml(xml);
+        if (!result.document || !result.ok) {
+          failures.push(`${file}: parse failed`);
+          continue;
+        }
+
+        const session = createItemSession(result.document);
+        for (const declaration of result.document.item.responseDeclarations) {
+          if (declaration.correctResponse !== null) {
+            session.respond(declaration.identifier, declaration.correctResponse);
+          }
+        }
+
+        const scored = session.score();
+        if (typeof scored.outcomes.SCORE !== "number" || scored.outcomes.SCORE <= 0) {
+          failures.push(`${file}: expected positive SCORE, got ${String(scored.outcomes.SCORE)}`);
+        }
+      }
+
+      expect(failures).toEqual([]);
+    },
+  );
 });
 
 async function findXmlFiles(root: string): Promise<string[]> {
