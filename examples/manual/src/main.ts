@@ -1,3 +1,4 @@
+import { accessibilityProofMatrix, manualAssistiveTechnologyScripts } from "@qti3/a11y";
 import { interactionFixtures } from "@qti3/fixtures";
 import { defineQtiAssessmentItemPlayer } from "@qti3/player";
 
@@ -31,6 +32,8 @@ const debugValidation = document.querySelector<HTMLPreElement>("#debug-validatio
 const debugDiagnostics = document.querySelector<HTMLPreElement>("#debug-diagnostics");
 const debugState = document.querySelector<HTMLPreElement>("#debug-state");
 const debugActionLog = document.querySelector<HTMLPreElement>("#debug-action-log");
+const debugA11yProof = document.querySelector<HTMLElement>("#debug-a11y-proof");
+const debugAtScripts = document.querySelector<HTMLElement>("#debug-at-scripts");
 const events = document.querySelector<HTMLPreElement>("#events");
 const player = document.querySelector("qti-assessment-item-player");
 
@@ -63,6 +66,8 @@ if (
   !debugDiagnostics ||
   !debugState ||
   !debugActionLog ||
+  !debugA11yProof ||
+  !debugAtScripts ||
   !events ||
   !player
 ) {
@@ -87,6 +92,7 @@ let latestDiagnostics: unknown[] = [];
 let latestValidationMessages: unknown[] = [];
 let latestCatalogs: unknown[] = [];
 let latestStylesheets: unknown[] = [];
+let currentInteractionTypes: string[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
 for (const fixture of interactionFixtures) {
@@ -155,6 +161,7 @@ for (const eventName of [
       latestValidationMessages = [];
       latestCatalogs = catalogsFromDetail(detail);
       latestStylesheets = stylesheetsFromDetail(detail);
+      currentInteractionTypes = interactionTypesFromDetail(detail);
       resetScorePanel();
     } else if (eventName === "qti-responsechange") {
       latestValidationMessages = [];
@@ -237,6 +244,7 @@ function renderDebugPanels(): void {
   debugDiagnostics.textContent = stableJson(latestDiagnostics);
   debugState.textContent = stableJson(state ?? {});
   debugActionLog.textContent = stableJson(actionLog);
+  renderAccessibilityProof();
 }
 
 function appendActionLog(action: string, detail: unknown): void {
@@ -291,6 +299,107 @@ function stylesheetsFromDetail(detail: unknown): unknown[] {
   if (!isRecord(detail) || !isRecord(detail.item)) return [];
   const stylesheets = detail.item.stylesheets;
   return Array.isArray(stylesheets) ? stylesheets : [];
+}
+
+function interactionTypesFromDetail(detail: unknown): string[] {
+  if (!isRecord(detail) || !isRecord(detail.item) || !Array.isArray(detail.item.interactions)) {
+    return [];
+  }
+  return detail.item.interactions
+    .map((interaction) => (isRecord(interaction) ? interaction.type : undefined))
+    .filter((type): type is string => typeof type === "string");
+}
+
+function renderAccessibilityProof(): void {
+  const interactionTypes = [...new Set(currentInteractionTypes)];
+  if (interactionTypes.length === 0) {
+    debugA11yProof.textContent = "No interaction loaded.";
+    debugAtScripts.textContent = "No interaction loaded.";
+    return;
+  }
+
+  const proofNodes = interactionTypes.map((interactionType) => {
+    const proof = accessibilityProofMatrix.find(
+      (entry) => entry.interactionType === interactionType,
+    );
+    if (!proof) {
+      const missing = document.createElement("p");
+      missing.textContent = `No accessibility proof entry for ${interactionType}.`;
+      return missing;
+    }
+
+    const section = document.createElement("section");
+    const heading = document.createElement("h3");
+    heading.textContent = `${interactionType} accessibility contract`;
+
+    const summary = document.createElement("p");
+    summary.textContent = `Primary role: ${proof.primaryRole}. Keyboard required: ${
+      proof.keyboardRequired ? "yes" : "no"
+    }.`;
+
+    section.replaceChildren(
+      heading,
+      summary,
+      proofList("Keyboard model", proof.keyboardModel),
+      proofList("Automated evidence", proof.proof.automated),
+      proofList("Manual evidence", proof.proof.manual),
+    );
+    return section;
+  });
+  debugA11yProof.replaceChildren(...proofNodes);
+
+  const scripts = manualAssistiveTechnologyScripts.filter((script) =>
+    script.appliesTo.some((type) => interactionTypes.includes(type)),
+  );
+  if (scripts.length === 0) {
+    debugAtScripts.textContent = `No manual assistive-technology scripts for ${interactionTypes.join(
+      ", ",
+    )}.`;
+    return;
+  }
+  debugAtScripts.replaceChildren(...scripts.map(renderManualScript));
+}
+
+function proofList(label: string, values: string[]): HTMLElement {
+  const section = document.createElement("section");
+  const heading = document.createElement("h3");
+  heading.textContent = label;
+  const list = document.createElement("ul");
+  list.append(...values.map((value) => listItem(value)));
+  section.append(heading, list);
+  return section;
+}
+
+function renderManualScript(
+  script: (typeof manualAssistiveTechnologyScripts)[number],
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "at-script";
+  const heading = document.createElement("h3");
+  heading.textContent = `${script.assistiveTechnology} on ${script.platform} (${script.browser})`;
+  section.append(
+    heading,
+    proofList("Setup", script.setup),
+    orderedList("Procedure", script.procedure),
+    proofList("Expected results", script.expectedResults),
+  );
+  return section;
+}
+
+function orderedList(label: string, values: string[]): HTMLElement {
+  const section = document.createElement("section");
+  const heading = document.createElement("h3");
+  heading.textContent = label;
+  const list = document.createElement("ol");
+  list.append(...values.map((value) => listItem(value)));
+  section.append(heading, list);
+  return section;
+}
+
+function listItem(value: string): HTMLLIElement {
+  const item = document.createElement("li");
+  item.textContent = value;
+  return item;
 }
 
 function scoreResultFromDetail(detail: unknown): {

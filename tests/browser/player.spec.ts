@@ -112,6 +112,25 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-stylesheets")).toContainText('"media": "screen"');
   });
 
+  test("shows accessibility proof and manual assistive technology scripts", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "associate");
+
+    await expect(page.locator("#debug-a11y-proof")).toContainText(
+      "associate accessibility contract",
+    );
+    await expect(page.locator("#debug-a11y-proof")).toContainText("Keyboard model");
+    await expect(page.locator("#debug-a11y-proof")).toContainText(
+      "Remove buttons delete selected pairs.",
+    );
+    await expect(page.locator("#debug-at-scripts")).toContainText("VoiceOver on macOS");
+    await expect(page.locator("#debug-at-scripts")).toContainText("NVDA on Windows");
+    await expect(page.locator("#debug-at-scripts")).toContainText("JAWS on Windows");
+    await expect(page.locator("#debug-at-scripts ol li").first()).toContainText(
+      "Navigate from the item heading",
+    );
+  });
+
   test("renders item-body prompts before interactions", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

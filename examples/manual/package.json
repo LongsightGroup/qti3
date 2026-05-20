@@ -1,6 +1,7 @@
 {
   "type": "module",
   "dependencies": {
+    "@qti3/a11y": "workspace:*",
     "@qti3/fixtures": "workspace:*",
     "@qti3/player": "workspace:*"
   },

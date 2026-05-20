@@ -166,6 +166,38 @@
         font-size: 0.9rem;
       }
 
+      .a11y-proof,
+      .at-scripts {
+        display: grid;
+        gap: 0.75rem;
+        padding: 0.65rem;
+        border-top: 1px solid #d8d8d8;
+        background: #f7f7f7;
+      }
+
+      .a11y-proof h3,
+      .at-script h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .a11y-proof ul,
+      .at-script ol,
+      .at-script ul {
+        margin-block: 0.35rem 0;
+        padding-inline-start: 1.35rem;
+      }
+
+      .at-script {
+        padding-block-end: 0.75rem;
+        border-bottom: 1px solid #d8d8d8;
+      }
+
+      .at-script:last-child {
+        padding-block-end: 0;
+        border-bottom: 0;
+      }
+
       @media (max-width: 48rem) {
         main {
           grid-template-columns: 1fr;
@@ -268,6 +300,14 @@
           <details class="debug-panel" open>
             <summary>Action log</summary>
             <pre id="debug-action-log" aria-live="polite">[]</pre>
+          </details>
+          <details class="debug-panel">
+            <summary>Accessibility proof</summary>
+            <div id="debug-a11y-proof" class="a11y-proof">No interaction loaded.</div>
+          </details>
+          <details class="debug-panel">
+            <summary>Manual AT scripts</summary>
+            <div id="debug-at-scripts" class="at-scripts">No interaction loaded.</div>
           </details>
         </div>
         <h2>Latest event</h2>

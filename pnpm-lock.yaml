@@ -35,6 +35,9 @@ importers:
 
   examples/manual:
     dependencies:
+      '@qti3/a11y':
+        specifier: workspace:*
+        version: link:../../packages/a11y
       '@qti3/fixtures':
         specifier: workspace:*
         version: link:../../packages/fixtures
