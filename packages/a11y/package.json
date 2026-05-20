@@ -1,6 +1,11 @@
 {
-  "name": "@qti3/a11y",
+  "name": "@longsightgroup/qti3-a11y",
   "version": "0.0.0",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "!dist/*.test.*"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -8,10 +13,14 @@
       "import": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "scripts": {
     "prepublishOnly": "pnpm --dir ../.. release:check"
   },
   "dependencies": {
-    "@qti3/core": "workspace:*"
+    "@longsightgroup/qti3-core": "workspace:*"
   }
 }

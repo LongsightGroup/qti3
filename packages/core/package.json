@@ -1,12 +1,21 @@
 {
-  "name": "@qti3/core",
+  "name": "@longsightgroup/qti3-core",
   "version": "0.0.0",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "!dist/*.test.*"
+  ],
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "scripts": {
     "prepublishOnly": "pnpm --dir ../.. release:check"

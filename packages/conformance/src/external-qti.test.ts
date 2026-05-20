@@ -1,12 +1,12 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { createItemSession, parseQtiXml } from "@qti3/core";
+import { createItemSession, parseQtiXml } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 
 const externalDir = process.env.QTI3_EXTERNAL_QTI_DIR;
 const runIfConfigured = externalDir ? describe : describe.skip;
 
-runIfConfigured("@qti3/conformance external QTI directory", () => {
+runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () => {
   it("parses every XML assessment item under QTI3_EXTERNAL_QTI_DIR", async () => {
     const files = await findXmlFiles(externalDir!);
     expect(files.length).toBeGreaterThan(0);

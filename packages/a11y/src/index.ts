@@ -1,4 +1,4 @@
-import { interactionSupport, type QtiInteractionType } from "@qti3/core";
+import { interactionSupport, type QtiInteractionType } from "@longsightgroup/qti3-core";
 
 export interface InteractionA11yContract {
   interactionType: QtiInteractionType;
@@ -340,7 +340,7 @@ function targetInteractions(): QtiInteractionType[] {
 
 function automatedProofFor(contract: InteractionA11yContract): string[] {
   const proof = [
-    "accessibility contract unit coverage in @qti3/a11y",
+    "accessibility contract unit coverage in @longsightgroup/qti3-a11y",
     "manual harness reference fixture renders without axe-core violations",
     "operable fixture controls expose accessible names in Playwright",
     "operable fixture controls use standard tab order in Playwright",

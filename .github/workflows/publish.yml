@@ -1,0 +1,45 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.repository == 'longsightgroup/qti3'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - run: npm --version
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm release:check
+      - run: |
+          mkdir -p .release
+          pnpm --dir packages/core pack --pack-destination ../../.release
+          pnpm --dir packages/fixtures pack --pack-destination ../../.release
+          pnpm --dir packages/a11y pack --pack-destination ../../.release
+          pnpm --dir packages/conformance pack --pack-destination ../../.release
+          pnpm --dir packages/player pack --pack-destination ../../.release
+          pnpm --dir packages/cli pack --pack-destination ../../.release
+      - run: |
+          npm publish .release/longsightgroup-qti3-core-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-fixtures-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-a11y-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-conformance-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-player-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-cli-*.tgz --access public

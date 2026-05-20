@@ -98,7 +98,7 @@ The initial player should use native custom elements directly. Lit is not part o
 
 - TypeScript 6+
 - pnpm
-- Vite
+- Vite 8+
 - Vitest
 - Playwright
 - axe-core
@@ -130,25 +130,25 @@ pnpm dev
 The CLI can parse local QTI directories, including external reference sets:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 parse-dir /path/to/items
+pnpm --filter @longsightgroup/qti3-cli exec qti3 parse-dir /path/to/items
 ```
 
 Use validation when diagnostics should fail the command:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 validate-dir /path/to/items
+pnpm --filter @longsightgroup/qti3-cli exec qti3 validate-dir /path/to/items
 ```
 
 It can also score each item by applying its declared correct responses:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 score-correct-dir /path/to/items
+pnpm --filter @longsightgroup/qti3-cli exec qti3 score-correct-dir /path/to/items
 ```
 
 For package-level inspection without creating an open-source runner, use:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 inspect-package /path/to/package.zip
+pnpm --filter @longsightgroup/qti3-cli exec qti3 inspect-package /path/to/package.zip
 ```
 
 This enumerates XML files, assets, manifest/test item references, and parse diagnostics
@@ -158,21 +158,21 @@ It can also write standalone canonical reference items for targeted interactions
 processing patterns, and adaptive behavior:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 write-fixtures packages/fixtures/xml
+pnpm --filter @longsightgroup/qti3-cli exec qti3 write-fixtures packages/fixtures/xml
 ```
 
 The support matrix is intentionally machine-readable and includes interaction, deprecated
 interaction, and processing element evidence:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 support-matrix
+pnpm --filter @longsightgroup/qti3-cli exec qti3 support-matrix
 ```
 
 The accessibility proof matrix is also machine-readable. It lists each interaction's role,
 keyboard contract, automated evidence, and manual assistive-technology scripts:
 
 ```sh
-pnpm --filter @qti3/cli exec qti3 a11y-proof
+pnpm --filter @longsightgroup/qti3-cli exec qti3 a11y-proof
 ```
 
 The intended enforcement model is strict:
@@ -207,3 +207,16 @@ responses are derived again, so resume does not require the original random seed
 - The manual harness debugger exposes responses, outcomes, template values, diagnostics, validation messages, serialized state, package item navigation, action history, and accessibility proof scripts.
 - Public fixtures are synthetic and MIT-licensed. Private, generated, or customer packages stay outside this repository unless explicitly scrubbed and licensed for publication.
 - Package and assessment-test support is intentionally limited to item discovery, item-reference traversal, asset resolution, validation, and item loading. A full runner/controller remains a host-product concern.
+
+## Publishing
+
+Packages publish under the Longsight npm scope:
+
+- `@longsightgroup/qti3-core`
+- `@longsightgroup/qti3-player`
+- `@longsightgroup/qti3-fixtures`
+- `@longsightgroup/qti3-conformance`
+- `@longsightgroup/qti3-a11y`
+- `@longsightgroup/qti3-cli`
+
+Publishing is handled by GitHub Actions from `longsightgroup/qti3` using npm Trusted Publishing/OIDC. The publish workflow uses npm's trusted-publisher path without `NPM_TOKEN`, requires `id-token: write`, runs `pnpm release:check`, packs packages with pnpm so workspace dependencies are rewritten to exact versions, then publishes the generated tarballs with npm.

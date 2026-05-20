@@ -1,9 +1,14 @@
 {
-  "name": "@qti3/cli",
+  "name": "@longsightgroup/qti3-cli",
   "version": "0.0.0",
+  "license": "MIT",
   "bin": {
     "qti3": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "!dist/*.test.*"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -11,14 +16,18 @@
       "import": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "scripts": {
     "prepublishOnly": "pnpm --dir ../.. release:check"
   },
   "dependencies": {
-    "@qti3/a11y": "workspace:*",
-    "@qti3/conformance": "workspace:*",
-    "@qti3/core": "workspace:*",
-    "@qti3/fixtures": "workspace:*",
+    "@longsightgroup/qti3-a11y": "workspace:*",
+    "@longsightgroup/qti3-conformance": "workspace:*",
+    "@longsightgroup/qti3-core": "workspace:*",
+    "@longsightgroup/qti3-fixtures": "workspace:*",
     "stax-xml": "^0.7.0"
   }
 }

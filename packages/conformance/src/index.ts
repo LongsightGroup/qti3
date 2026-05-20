@@ -5,8 +5,8 @@ import {
   type QtiAttemptStateV1,
   type QtiDiagnostic,
   type QtiValue,
-} from "@qti3/core";
-import type { QtiExpectedDiagnostic, QtiFixture } from "@qti3/fixtures";
+} from "@longsightgroup/qti3-core";
+import type { QtiExpectedDiagnostic, QtiFixture } from "@longsightgroup/qti3-fixtures";
 
 export interface QtiConformanceResult {
   fixtureId: string;

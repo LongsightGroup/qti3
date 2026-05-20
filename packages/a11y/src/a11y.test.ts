@@ -1,4 +1,4 @@
-import { interactionSupport } from "@qti3/core";
+import { interactionSupport } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import {
   a11yContracts,
@@ -6,7 +6,7 @@ import {
   manualAssistiveTechnologyScripts,
 } from "./index.js";
 
-describe("@qti3/a11y", () => {
+describe("@longsightgroup/qti3-a11y", () => {
   it("defines an accessibility contract for every target interaction", () => {
     expect(a11yContracts.map((contract) => contract.interactionType).sort()).toEqual(
       interactionSupport.map((support) => support.interactionType).sort(),
@@ -45,7 +45,7 @@ describe("@qti3/a11y", () => {
     for (const entry of accessibilityProofMatrix) {
       expect(entry.proof.automated, entry.interactionType).toEqual(
         expect.arrayContaining([
-          "accessibility contract unit coverage in @qti3/a11y",
+          "accessibility contract unit coverage in @longsightgroup/qti3-a11y",
           "manual harness reference fixture renders without axe-core violations",
           "operable fixture controls use standard tab order in Playwright",
           "response serialization and fixture scoring coverage",

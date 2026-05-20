@@ -2,12 +2,17 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
-import { elementSupport, interactionSupport, parseQtiXml, processingSupport } from "@qti3/core";
-import { canonicalFixtures, interactionFixtures } from "@qti3/fixtures";
+import {
+  elementSupport,
+  interactionSupport,
+  parseQtiXml,
+  processingSupport,
+} from "@longsightgroup/qti3-core";
+import { canonicalFixtures, interactionFixtures } from "@longsightgroup/qti3-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { main } from "./index.js";
 
-describe("@qti3/cli", () => {
+describe("@longsightgroup/qti3-cli", () => {
   it("writes standalone reference XML fixtures", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-fixtures-"));
     try {

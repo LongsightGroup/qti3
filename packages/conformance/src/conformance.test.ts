@@ -1,8 +1,8 @@
-import { interactionFixtures } from "@qti3/fixtures";
+import { interactionFixtures } from "@longsightgroup/qti3-fixtures";
 import { describe, expect, it } from "vitest";
 import { runFixture } from "./index.js";
 
-describe("@qti3/conformance", () => {
+describe("@longsightgroup/qti3-conformance", () => {
   for (const fixture of interactionFixtures) {
     it(`passes ${fixture.interactionType}`, () => {
       const result = runFixture(fixture);

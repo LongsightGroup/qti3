@@ -1,6 +1,12 @@
 {
-  "name": "@qti3/fixtures",
+  "name": "@longsightgroup/qti3-fixtures",
   "version": "0.0.0",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "!dist/*.test.*",
+    "xml"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -9,10 +15,14 @@
     },
     "./xml/*": "./xml/*"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "scripts": {
     "prepublishOnly": "pnpm --dir ../.. release:check"
   },
   "dependencies": {
-    "@qti3/core": "workspace:*"
+    "@longsightgroup/qti3-core": "workspace:*"
   }
 }

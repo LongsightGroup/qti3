@@ -1,6 +1,9 @@
-import { accessibilityProofMatrix, manualAssistiveTechnologyScripts } from "@qti3/a11y";
-import { canonicalFixtures } from "@qti3/fixtures";
-import { defineQtiAssessmentItemPlayer } from "@qti3/player";
+import {
+  accessibilityProofMatrix,
+  manualAssistiveTechnologyScripts,
+} from "@longsightgroup/qti3-a11y";
+import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
+import { defineQtiAssessmentItemPlayer } from "@longsightgroup/qti3-player";
 
 defineQtiAssessmentItemPlayer();
 

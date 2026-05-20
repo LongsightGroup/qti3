@@ -4,7 +4,7 @@ import {
   type QtiDiagnostic,
   type QtiInteractionType,
   type QtiValue,
-} from "@qti3/core";
+} from "@longsightgroup/qti3-core";
 
 export interface QtiExpectedDiagnostic {
   code: string;

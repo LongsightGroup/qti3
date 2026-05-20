@@ -10,7 +10,7 @@ import {
   visibleModalFeedback,
 } from "./index.js";
 
-describe("@qti3/core", () => {
+describe("@longsightgroup/qti3-core", () => {
   it("tracks every target QTI 3 interaction type", () => {
     expect(interactionSupport.map((item) => item.qtiName)).toMatchInlineSnapshot(`
       [

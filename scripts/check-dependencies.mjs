@@ -35,7 +35,9 @@ async function checkWorkspaceRuntimeDependencies() {
   const dependencies = Object.keys(corePackage.dependencies ?? {});
   for (const dependency of dependencies) {
     if (coreProhibitedDependencies.has(dependency)) {
-      failures.push(`@qti3/core may not depend on prohibited runtime package ${dependency}.`);
+      failures.push(
+        `@longsightgroup/qti3-core may not depend on prohibited runtime package ${dependency}.`,
+      );
     }
   }
 }

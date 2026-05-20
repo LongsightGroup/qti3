@@ -2,8 +2,11 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { inflateRawSync } from "node:zlib";
-import { accessibilityProofMatrix, manualAssistiveTechnologyScripts } from "@qti3/a11y";
-import { runFixture } from "@qti3/conformance";
+import {
+  accessibilityProofMatrix,
+  manualAssistiveTechnologyScripts,
+} from "@longsightgroup/qti3-a11y";
+import { runFixture } from "@longsightgroup/qti3-conformance";
 import {
   createItemSession,
   deprecatedInteractionSupport,
@@ -13,8 +16,8 @@ import {
   processingSupport,
   validateAssessmentItem,
   type QtiValue,
-} from "@qti3/core";
-import { canonicalFixtures } from "@qti3/fixtures";
+} from "@longsightgroup/qti3-core";
+import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
 import { StaxXmlParserSync, XmlEventType } from "stax-xml";
 
 interface ZipEntry {
