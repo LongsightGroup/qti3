@@ -51,8 +51,8 @@ await player.loadXml(xml, {
   status: "interacting",
   sessionControl: {
     validateResponses: true,
-    showFeedback: false
-  }
+    showFeedback: false,
+  },
 });
 
 player.addEventListener("qti-statechange", (event) => {

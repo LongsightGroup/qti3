@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>qti3 manual harness</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #151515;
+        background: #fafafa;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: minmax(18rem, 24rem) 1fr;
+        min-height: 100vh;
+      }
+
+      aside {
+        padding: 1rem;
+        border-right: 1px solid #d8d8d8;
+        background: #fff;
+      }
+
+      section {
+        padding: 1rem;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 14rem;
+        font: inherit;
+      }
+
+      qti-assessment-item-player {
+        display: block;
+        padding: 1rem;
+        background: #fff;
+        border: 1px solid #d8d8d8;
+      }
+
+      .qti3-interaction {
+        margin-block: 1rem;
+      }
+
+      label {
+        display: block;
+        margin-block: 0.35rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <aside>
+        <h1>qti3 manual harness</h1>
+        <label>
+          Reference fixture
+          <select id="fixture"></select>
+        </label>
+        <button id="load-fixture" type="button">Load fixture</button>
+        <h2>Paste QTI XML</h2>
+        <textarea id="xml" spellcheck="false"></textarea>
+        <button id="load-xml" type="button">Load XML</button>
+        <pre id="events" aria-live="polite"></pre>
+      </aside>
+      <section>
+        <qti-assessment-item-player id="player"></qti-assessment-item-player>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

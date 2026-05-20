@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@qti3/fixtures": "workspace:*",
+    "@qti3/player": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "7.3.3"
+  }
+}

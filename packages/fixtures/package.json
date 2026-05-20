@@ -1,0 +1,14 @@
+{
+  "name": "@qti3/fixtures",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@qti3/core": "workspace:*"
+  }
+}

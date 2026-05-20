@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@qti3/core": ["packages/core/src/index.ts"],
+      "@qti3/fixtures": ["packages/fixtures/src/index.ts"],
+      "@qti3/player": ["packages/player/src/index.ts"],
+      "@qti3/conformance": ["packages/conformance/src/index.ts"],
+      "@qti3/a11y": ["packages/a11y/src/index.ts"]
+    }
+  }
+}

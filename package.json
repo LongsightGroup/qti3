@@ -1,0 +1,33 @@
+{
+  "name": "qti3",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --deny-warnings",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:conformance": "vitest run packages/conformance",
+    "test:a11y": "vitest run packages/a11y",
+    "test:browser": "playwright test",
+    "build": "tsc -b",
+    "dev": "vite --host 127.0.0.1 examples/manual",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^22.15.0",
+    "axe-core": "^4.11.4",
+    "oxfmt": "0.49.0",
+    "oxlint": "1.64.0",
+    "typescript": "^6.0.3",
+    "vite": "7.3.3",
+    "vitest": "^4.1.6"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.30.1"
+}

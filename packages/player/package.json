@@ -1,0 +1,15 @@
+{
+  "name": "@qti3/player",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@qti3/core": "workspace:*",
+    "@qti3/fixtures": "workspace:*"
+  }
+}
