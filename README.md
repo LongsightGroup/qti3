@@ -127,6 +127,13 @@ The browser harness is available with:
 pnpm dev
 ```
 
+The same harness is published from `main` through GitHub Pages at
+`https://longsightgroup.github.io/qti3/`. Build the static artifact locally with:
+
+```sh
+pnpm pages:build
+```
+
 The CLI can parse local QTI directories, including external reference sets:
 
 ```sh
