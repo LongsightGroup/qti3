@@ -99,9 +99,32 @@ export interface QtiAssessmentItem {
   title?: string | undefined;
   responseDeclarations: QtiResponseDeclaration[];
   outcomeDeclarations: QtiOutcomeDeclaration[];
+  responseProcessing?: QtiResponseProcessing | undefined;
   interactions: QtiInteraction[];
   bodyText: string;
 }
+
+export interface QtiResponseProcessing {
+  template?: string | undefined;
+  conditions: QtiResponseCondition[];
+}
+
+export interface QtiResponseCondition {
+  ifExpression?: QtiProcessingExpression | undefined;
+  thenRules: QtiSetOutcomeValue[];
+  elseRules: QtiSetOutcomeValue[];
+}
+
+export interface QtiSetOutcomeValue {
+  identifier: string;
+  expression: QtiProcessingExpression;
+}
+
+export type QtiProcessingExpression =
+  | { type: "baseValue"; value: QtiValue }
+  | { type: "isNull"; identifier: string }
+  | { type: "matchCorrect"; identifier: string }
+  | { type: "mapResponse"; identifier: string };
 
 export interface QtiDocument {
   item: QtiAssessmentItem;

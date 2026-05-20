@@ -8,7 +8,11 @@ import type {
   QtiInteraction,
   QtiOutcomeDeclaration,
   QtiParseResult,
+  QtiProcessingExpression,
+  QtiResponseCondition,
   QtiResponseDeclaration,
+  QtiResponseProcessing,
+  QtiSetOutcomeValue,
   QtiValue,
 } from "./types.js";
 import { childElements, descendants, parseXmlTree, textContent, type XmlNode } from "./xml.js";
@@ -64,6 +68,9 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const outcomeDeclarations = childElements(node, "qti-outcome-declaration").map(
     parseOutcomeDeclaration,
   );
+  const responseProcessing = parseResponseProcessing(
+    childElements(node, "qti-response-processing")[0],
+  );
   const interactions = descendants(node, (child) => interactionNameToType.has(child.localName)).map(
     (interactionNode) => parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
   );
@@ -87,6 +94,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     title: node.attributes.title,
     responseDeclarations,
     outcomeDeclarations,
+    responseProcessing,
     interactions,
     bodyText: textContent(node),
   };
@@ -189,6 +197,74 @@ function parseMapping(node: XmlNode | undefined): Record<string, number> | undef
     if (key && value !== undefined) mapping[key] = Number(value);
   }
   return mapping;
+}
+
+function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessing | undefined {
+  if (!node) return undefined;
+  return {
+    template: node.attributes.template,
+    conditions: childElements(node, "qti-response-condition").map(parseResponseCondition),
+  };
+}
+
+function parseResponseCondition(node: XmlNode): QtiResponseCondition {
+  const responseIf = childElements(node, "qti-response-if")[0];
+  const responseElse = childElements(node, "qti-response-else")[0];
+  return {
+    ifExpression: responseIf ? parseFirstExpression(responseIf) : undefined,
+    thenRules: responseIf ? parseSetOutcomeValues(responseIf) : [],
+    elseRules: responseElse ? parseSetOutcomeValues(responseElse) : [],
+  };
+}
+
+function parseSetOutcomeValues(node: XmlNode): QtiSetOutcomeValue[] {
+  return childElements(node, "qti-set-outcome-value").map((setNode) => ({
+    identifier: setNode.attributes.identifier ?? "SCORE",
+    expression: parseFirstExpression(setNode) ?? { type: "baseValue", value: null },
+  }));
+}
+
+function parseFirstExpression(node: XmlNode): QtiProcessingExpression | undefined {
+  for (const child of node.children) {
+    const expression = parseExpression(child);
+    if (expression) return expression;
+  }
+  return undefined;
+}
+
+function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
+  if (node.localName === "qti-base-value") {
+    return {
+      type: "baseValue",
+      value: coerceValue(textContent(node), node.attributes["base-type"]),
+    };
+  }
+
+  if (node.localName === "qti-is-null") {
+    const variable = childElements(node, "qti-variable")[0];
+    return { type: "isNull", identifier: variable?.attributes.identifier ?? "RESPONSE" };
+  }
+
+  if (node.localName === "qti-map-response") {
+    return { type: "mapResponse", identifier: node.attributes.identifier ?? "RESPONSE" };
+  }
+
+  if (node.localName === "qti-match") {
+    const variable = childElements(node, "qti-variable")[0];
+    const correct = childElements(node, "qti-correct")[0];
+    if (variable?.attributes.identifier && correct?.attributes.identifier) {
+      return { type: "matchCorrect", identifier: variable.attributes.identifier };
+    }
+  }
+
+  return undefined;
+}
+
+function coerceValue(value: string, baseType: string | undefined): QtiValue {
+  if (baseType === "integer") return Number.parseInt(value, 10);
+  if (baseType === "float") return Number.parseFloat(value);
+  if (baseType === "boolean") return value === "true";
+  return value;
 }
 
 function parseCardinality(value: string | undefined): QtiCardinality {

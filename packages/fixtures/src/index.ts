@@ -69,6 +69,7 @@ function assessmentItem(
     <p>Reference item for ${identifier}.</p>
     ${interactionXml}
   </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`;
 }
 
