@@ -1417,6 +1417,35 @@ test.describe("manual harness", () => {
     }
   });
 
+  test("shows visible focus indicators for custom controls", async ({ page }) => {
+    await page.goto("/");
+
+    for (const interactionType of ["order", "associate", "hotspot"]) {
+      await loadFixture(page, interactionType);
+      const result = await page.locator("qti-assessment-item-player").evaluate((player) => {
+        const control = player.querySelector<HTMLElement>(".qti3-token, .qti3-hotspot-button");
+        if (!control) return { found: false };
+        control.focus();
+        const style = window.getComputedStyle(control);
+        const outlineWidth = Number.parseFloat(style.outlineWidth || "0");
+        const hasOutline = style.outlineStyle !== "none" && outlineWidth >= 2;
+        const hasShadow = style.boxShadow !== "none";
+        return {
+          found: true,
+          active: document.activeElement === control,
+          outlineStyle: style.outlineStyle,
+          outlineWidth,
+          boxShadow: style.boxShadow,
+          hasIndicator: hasOutline || hasShadow,
+        };
+      });
+
+      expect(result.found, interactionType).toBe(true);
+      expect(result.active, interactionType).toBe(true);
+      expect(result.hasIndicator, `${interactionType} focus indicator`).toBe(true);
+    }
+  });
+
   test("shows extended text word and character feedback", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "extendedText");

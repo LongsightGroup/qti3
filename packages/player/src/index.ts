@@ -2526,7 +2526,8 @@ function playerStyleElement(): HTMLStyleElement {
       margin: 0;
     }
 
-    .qti3-token:focus-visible,
+    .qti3-token:focus,
+    .qti3-hotspot-button:focus,
     .qti3-player button:focus-visible,
     .qti3-player select:focus-visible,
     .qti3-player input:focus-visible,
