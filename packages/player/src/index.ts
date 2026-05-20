@@ -905,6 +905,7 @@ function renderOrderedResponse(
   list.className = "qti3-reorder-list";
   list.setAttribute("aria-label", `${readableType(interaction.type)} current order`);
   let draggedIdentifier: string | undefined;
+  let pointerDraggedIdentifier: string | undefined;
 
   const commit = () => update(ordered.map((choice) => choice.identifier));
   const moveChoice = (from: number, to: number) => {
@@ -925,6 +926,26 @@ function renderOrderedResponse(
         item.className = "qti3-reorder-item";
         item.draggable = true;
         item.dataset.choiceIdentifier = choice.identifier;
+        item.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0 || (event.target as Element).closest("button")) return;
+          pointerDraggedIdentifier = choice.identifier;
+          item.setPointerCapture(event.pointerId);
+        });
+        item.addEventListener("pointerup", (event) => {
+          if (!pointerDraggedIdentifier) return;
+          const target = document
+            .elementFromPoint(event.clientX, event.clientY)
+            ?.closest<HTMLElement>(".qti3-reorder-item");
+          const targetIdentifier = target?.dataset.choiceIdentifier;
+          pointerDraggedIdentifier = undefined;
+          if (!targetIdentifier) return;
+          const from = ordered.findIndex((entry) => entry.identifier === choice.identifier);
+          const to = ordered.findIndex((entry) => entry.identifier === targetIdentifier);
+          moveChoice(from, to);
+        });
+        item.addEventListener("pointercancel", () => {
+          pointerDraggedIdentifier = undefined;
+        });
         item.addEventListener("dragstart", (event) => {
           draggedIdentifier = choice.identifier;
           event.dataTransfer?.setData("text/plain", choice.identifier);
