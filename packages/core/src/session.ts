@@ -3,6 +3,7 @@ import type {
   QtiAttemptStateV1,
   QtiDiagnostic,
   QtiDocument,
+  QtiModalFeedback,
   QtiProcessingExpression,
   QtiResponseDeclaration,
   QtiSetOutcomeValue,
@@ -21,6 +22,18 @@ export interface QtiItemSession {
   respond(identifier: string, value: QtiValue): void;
   score(): QtiScoreResult;
   serialize(): QtiAttemptStateV1;
+}
+
+export function visibleModalFeedback(
+  item: QtiAssessmentItem,
+  outcomes: Record<string, QtiValue>,
+): QtiModalFeedback[] {
+  return item.modalFeedback.filter((feedback) => {
+    if (feedback.showHide === "hide") return false;
+    const outcome = outcomes[feedback.outcomeIdentifier];
+    if (Array.isArray(outcome)) return outcome.includes(feedback.identifier);
+    return String(outcome ?? "") === feedback.identifier;
+  });
 }
 
 export function createItemSession(

@@ -5,6 +5,7 @@ import {
   interactionSupport,
   parseQtiXml,
   validateAssessmentItem,
+  visibleModalFeedback,
 } from "./index.js";
 
 describe("@qti3/core", () => {
@@ -166,6 +167,81 @@ describe("@qti3/core", () => {
     const session = createItemSession(result.document!);
     session.respond("RESPONSE", "A");
     expect(session.score().outcomes.SCORE).toBe(2);
+  });
+
+  it("parses, validates, and resolves modal feedback", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-match>
+                <qti-variable identifier="RESPONSE"/>
+                <qti-correct identifier="RESPONSE"/>
+              </qti-match>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">1</qti-base-value>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FEEDBACK">
+                <qti-base-value base-type="identifier">correct</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">0</qti-base-value>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FEEDBACK">
+                <qti-base-value base-type="identifier">incorrect</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>
+        </qti-response-processing>
+        <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="correct" show-hide="show">
+          Correct feedback.
+        </qti-modal-feedback>
+        <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="incorrect" show-hide="show">
+          Incorrect feedback.
+        </qti-modal-feedback>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.modalFeedback).toHaveLength(2);
+
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", "A");
+    const scored = session.score();
+    expect(scored.outcomes.FEEDBACK).toBe("correct");
+    expect(visibleModalFeedback(result.document!.item, scored.outcomes)).toMatchObject([
+      { identifier: "correct", text: "Correct feedback." },
+    ]);
+  });
+
+  it("validates modal feedback outcome references", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-invalid">
+        <qti-item-body>
+          <p>No interaction.</p>
+        </qti-item-body>
+        <qti-modal-feedback outcome-identifier="MISSING" identifier="shown">Shown</qti-modal-feedback>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "feedback.outcomeIdentifier.reference" }),
+    );
   });
 
   it("scores map-response-point with circular area mapping", () => {

@@ -1,5 +1,10 @@
 export { parseQtiXml } from "./parser.js";
-export { createItemSession, type QtiItemSession, type QtiItemSessionOptions } from "./session.js";
+export {
+  createItemSession,
+  visibleModalFeedback,
+  type QtiItemSession,
+  type QtiItemSessionOptions,
+} from "./session.js";
 export {
   deprecatedInteractionSupport,
   getInteractionSupport,
@@ -17,6 +22,7 @@ export type {
   QtiElementSupport,
   QtiInteraction,
   QtiInteractionType,
+  QtiModalFeedback,
   QtiParseResult,
   QtiScoreResult,
   QtiSupportStatus,

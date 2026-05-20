@@ -133,7 +133,15 @@ export interface QtiAssessmentItem {
   templateProcessing?: QtiTemplateProcessing | undefined;
   responseProcessing?: QtiResponseProcessing | undefined;
   interactions: QtiInteraction[];
+  modalFeedback: QtiModalFeedback[];
   bodyText: string;
+}
+
+export interface QtiModalFeedback {
+  identifier: string;
+  outcomeIdentifier: string;
+  showHide: "show" | "hide";
+  text: string;
 }
 
 export interface QtiResponseProcessing {

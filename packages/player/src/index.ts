@@ -1,6 +1,7 @@
 import {
   createItemSession,
   parseQtiXml,
+  visibleModalFeedback,
   type QtiAttemptStateV1,
   type QtiChoice,
   type QtiDiagnostic,
@@ -61,6 +62,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.renderValidationMessages();
     const result = session.score();
     this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
+    this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
   }
 
@@ -137,6 +139,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     score.addEventListener("click", () => this.scoreAttempt());
     actions.append(score);
     root.append(actions);
+
+    const feedback = document.createElement("section");
+    feedback.className = "qti3-feedback";
+    feedback.role = "status";
+    feedback.setAttribute("aria-live", "polite");
+    feedback.hidden = true;
+    root.append(feedback);
 
     this.replaceChildren(root);
   }
@@ -318,6 +327,23 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       (message) => message.path !== responseIdentifier,
     );
     if (this.validationMessages.length !== before) this.renderValidationMessages();
+  }
+
+  private renderFeedback(outcomes: Record<string, QtiValue>): void {
+    const documentModel = this.documentModel;
+    const feedback = this.querySelector<HTMLElement>(".qti3-feedback");
+    if (!documentModel || !feedback) return;
+
+    const visibleFeedback = visibleModalFeedback(documentModel.item, outcomes);
+    feedback.replaceChildren(
+      ...visibleFeedback.map((item) => {
+        const element = document.createElement("p");
+        element.dataset.feedbackIdentifier = item.identifier;
+        element.textContent = item.text;
+        return element;
+      }),
+    );
+    feedback.hidden = visibleFeedback.length === 0;
   }
 }
 

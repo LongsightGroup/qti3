@@ -7,6 +7,7 @@ import type {
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
+  QtiModalFeedback,
   QtiOutcomeDeclaration,
   QtiParseResult,
   QtiProcessingExpression,
@@ -84,6 +85,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const responseProcessing = parseResponseProcessing(
     childElements(node, "qti-response-processing")[0],
   );
+  const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
   const interactions = descendants(node, (child) => interactionNameToType.has(child.localName)).map(
     (interactionNode) => parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
   );
@@ -100,7 +102,18 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     templateProcessing,
     responseProcessing,
     interactions,
+    modalFeedback,
     bodyText: textContent(node),
+  };
+}
+
+function parseModalFeedback(node: XmlNode): QtiModalFeedback {
+  const showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
+  return {
+    identifier: node.attributes.identifier ?? "FEEDBACK",
+    outcomeIdentifier: node.attributes["outcome-identifier"] ?? "FEEDBACK",
+    showHide,
+    text: textContent(node),
   };
 }
 

@@ -15,6 +15,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   requireIdentifier("qti-assessment-item", item.identifier, diagnostics);
   validateDeclarationIdentifiers(item, diagnostics);
   validateInteractions(item, diagnostics);
+  validateModalFeedback(item, diagnostics);
 
   return {
     ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
@@ -55,6 +56,32 @@ function validateDeclarationIdentifiers(
       });
     }
     seen.add(declaration.identifier);
+  }
+}
+
+function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  const outcomeIdentifiers = new Set(
+    item.outcomeDeclarations.map((declaration) => declaration.identifier),
+  );
+  const seen = new Set<string>();
+  for (const feedback of item.modalFeedback) {
+    requireIdentifier("qti-modal-feedback", feedback.identifier, diagnostics);
+    const key = `${feedback.outcomeIdentifier}\n${feedback.identifier}`;
+    if (seen.has(key)) {
+      diagnostics.push({
+        code: "feedback.identifier.duplicate",
+        severity: "error",
+        message: `Duplicate modal feedback ${feedback.identifier} for outcome ${feedback.outcomeIdentifier}.`,
+      });
+    }
+    seen.add(key);
+    if (!outcomeIdentifiers.has(feedback.outcomeIdentifier)) {
+      diagnostics.push({
+        code: "feedback.outcomeIdentifier.reference",
+        severity: "error",
+        message: `qti-modal-feedback ${feedback.identifier} references missing outcome declaration ${feedback.outcomeIdentifier}.`,
+      });
+    }
   }
 }
 
