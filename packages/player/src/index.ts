@@ -12,6 +12,7 @@ import {
   type QtiInteraction,
   type QtiItemSession,
   type QtiObjectAsset,
+  type QtiScoreResult,
   type QtiValue,
 } from "@qti3/core";
 
@@ -78,9 +79,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     await this.loadXml(await fetchXml(url), options);
   }
 
-  scoreAttempt(): boolean {
+  scoreAttempt(): QtiScoreResult | undefined {
     const session = this.session;
-    if (!session) return false;
+    if (!session) return undefined;
     const validationMessages = this.sessionControl.validateResponses
       ? this.validateResponses()
       : [];
@@ -91,7 +92,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       state.validationMessages = validationMessages;
       this.dispatchEvent(new CustomEvent("qti-validation", { detail: { validationMessages } }));
       this.emitStateChange(state);
-      return false;
+      return undefined;
     }
     this.validationMessages = [];
     this.renderValidationMessages();
@@ -100,7 +101,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.updateDynamicBodyState();
     if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
-    return true;
+    return result;
   }
 
   reset(): void {
@@ -134,8 +135,14 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   endAttempt(): void {
-    if (!this.scoreAttempt()) return;
-    this.session?.setStatus("completed");
+    const result = this.scoreAttempt();
+    if (!result) return;
+    if (
+      !this.documentModel?.item.adaptive ||
+      result.state.outcomes.completionStatus === "completed"
+    ) {
+      this.session?.setStatus("completed");
+    }
     this.dispatchEvent(new CustomEvent("qti-endattempt", { detail: { state: this.serialize() } }));
     this.emitStateChange();
   }

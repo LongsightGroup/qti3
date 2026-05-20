@@ -833,10 +833,18 @@ test.describe("manual harness", () => {
   }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hint-end" title="hint-end" adaptive="true" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
   <qti-response-declaration identifier="HINTREQUEST" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
   <qti-item-body>
     <p>Use the hint control to request adaptive feedback.</p>
+    <qti-choice-interaction response-identifier="RESPONSE" min-choices="0">
+      <qti-simple-choice identifier="A">Correct</qti-simple-choice>
+      <qti-simple-choice identifier="B">Incorrect</qti-simple-choice>
+    </qti-choice-interaction>
     <qti-end-attempt-interaction response-identifier="HINTREQUEST" title="Show Hint"/>
     <qti-feedback-block identifier="HINT" outcome-identifier="FEEDBACK" show-hide="show">
       <qti-content-body><p>Hint feedback is now visible.</p></qti-content-body>
@@ -848,6 +856,17 @@ test.describe("manual harness", () => {
         <qti-variable identifier="HINTREQUEST"/>
         <qti-set-outcome-value identifier="FEEDBACK">
           <qti-base-value base-type="identifier">HINT</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-base-value base-type="float">1</qti-base-value>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="completionStatus">
+          <qti-base-value base-type="identifier">completed</qti-base-value>
         </qti-set-outcome-value>
       </qti-response-if>
     </qti-response-condition>
@@ -864,10 +883,19 @@ test.describe("manual harness", () => {
     });
     expect(state.responses.HINTREQUEST).toBe(true);
     expect(state.outcomes.FEEDBACK).toBe("HINT");
-    expect(state.status).toBe("completed");
+    expect(state.status).toBe("interacting");
     await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toContainText(
       "Hint feedback is now visible.",
     );
+
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
+
+    const completedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(completedState.outcomes.completionStatus).toBe("completed");
+    expect(completedState.status).toBe("completed");
   });
 
   test("end-attempt does not complete an invalid attempt", async ({ page }) => {
