@@ -1,12 +1,17 @@
 import {
   createItemSession,
   parseQtiXml,
+  type QtiAttemptStateV1,
   type QtiChoice,
   type QtiDocument,
   type QtiInteraction,
   type QtiItemSession,
   type QtiValue,
 } from "@qti3/core";
+
+export interface QtiPlayerLoadOptions {
+  state?: QtiAttemptStateV1 | undefined;
+}
 
 const HTMLElementBase: typeof HTMLElement =
   globalThis.HTMLElement ??
@@ -20,7 +25,7 @@ const HTMLElementBase: typeof HTMLElement =
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
-  async loadXml(xml: string): Promise<void> {
+  async loadXml(xml: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
     const result = parseQtiXml(xml);
     this.dispatchEvent(
       new CustomEvent("qti-diagnostics", { detail: { diagnostics: result.diagnostics } }),
@@ -31,9 +36,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
 
     this.documentModel = result.document;
-    this.session = createItemSession(result.document);
+    this.session = createItemSession(result.document, options.state);
     this.render();
     this.dispatchEvent(new CustomEvent("qti-ready", { detail: { item: result.document.item } }));
+    this.emitStateChange();
   }
 
   scoreAttempt(): void {
@@ -41,11 +47,47 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!session) return;
     const result = session.score();
     this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
-    this.dispatchEvent(new CustomEvent("qti-statechange", { detail: { state: result.state } }));
+    this.emitStateChange(result.state);
+  }
+
+  reset(): void {
+    if (!this.documentModel) return;
+    this.session = createItemSession(this.documentModel);
+    this.render();
+    this.dispatchEvent(new CustomEvent("qti-reset", { detail: { state: this.serialize() } }));
+    this.emitStateChange();
+  }
+
+  restore(state: QtiAttemptStateV1): void {
+    if (!this.documentModel) {
+      throw new Error("Cannot restore QTI state before loading an item.");
+    }
+    if (state.itemIdentifier !== this.documentModel.item.identifier) {
+      throw new Error(
+        `Cannot restore state for ${state.itemIdentifier} into ${this.documentModel.item.identifier}.`,
+      );
+    }
+    this.session = createItemSession(this.documentModel, state);
+    this.render();
+    this.dispatchEvent(new CustomEvent("qti-restore", { detail: { state: this.serialize() } }));
+    this.emitStateChange();
+  }
+
+  suspend(): void {
+    this.dispatchEvent(new CustomEvent("qti-suspend", { detail: { state: this.serialize() } }));
+  }
+
+  endAttempt(): void {
+    this.scoreAttempt();
+    this.dispatchEvent(new CustomEvent("qti-endattempt", { detail: { state: this.serialize() } }));
   }
 
   serialize() {
     return this.session?.serialize();
+  }
+
+  private emitStateChange(state = this.serialize()): void {
+    this.dispatchEvent(new CustomEvent("qti-statechange", { detail: { state } }));
   }
 
   private render(): void {
@@ -170,7 +212,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = interaction.attributes.title ?? "End attempt";
-      button.addEventListener("click", () => this.scoreAttempt());
+      button.addEventListener("click", () => this.endAttempt());
       field.append(button);
       return field;
     }

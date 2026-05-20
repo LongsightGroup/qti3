@@ -48,6 +48,10 @@ for (const eventName of [
   "qti-score",
   "qti-statechange",
   "qti-diagnostics",
+  "qti-reset",
+  "qti-restore",
+  "qti-suspend",
+  "qti-endattempt",
 ]) {
   player.addEventListener(eventName, (event) => {
     events.textContent = `${eventName}\n${JSON.stringify((event as CustomEvent).detail, null, 2)}`;

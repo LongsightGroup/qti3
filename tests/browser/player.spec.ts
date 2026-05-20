@@ -66,6 +66,51 @@ test.describe("manual harness", () => {
       }
     }
   });
+
+  test("supports host lifecycle methods for state restore and attempt control", async ({
+    page,
+  }) => {
+    const fixture =
+      interactionFixtures.find((item) => item.interactionType === "choice") ??
+      interactionFixtures[0];
+    if (!fixture) throw new Error("Missing choice fixture.");
+
+    await page.goto("/");
+    await page.locator("#xml").fill(fixture.xml);
+    await page.locator("#load-xml").click();
+    await page.getByRole("radio", { name: "A" }).check();
+
+    const answeredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(answeredState.responses.RESPONSE).toBe("A");
+
+    const resetState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      element.reset();
+      return element.serialize();
+    });
+    expect(resetState.responses.RESPONSE).toBeUndefined();
+
+    const lifecycleEvents = await page
+      .locator("qti-assessment-item-player")
+      .evaluate((element, state) => {
+        const events: string[] = [];
+        for (const eventName of ["qti-restore", "qti-suspend", "qti-endattempt"]) {
+          element.addEventListener(eventName, () => events.push(eventName));
+        }
+        element.restore(state);
+        element.suspend();
+        element.endAttempt();
+        return events;
+      }, answeredState);
+
+    expect(lifecycleEvents).toEqual(["qti-restore", "qti-suspend", "qti-endattempt"]);
+    const restoredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(restoredState.responses.RESPONSE).toBe("A");
+    expect(restoredState.outcomes.SCORE).toBe(1);
+  });
 });
 
 declare global {
