@@ -2567,6 +2567,10 @@ function playerStyleElement(): HTMLStyleElement {
       border: 1px dashed CanvasText;
     }
 
+    .qti3-gap-region {
+      margin-block-start: 0.5rem;
+    }
+
     .qti3-gap-button {
       min-inline-size: 8rem;
       text-align: start;

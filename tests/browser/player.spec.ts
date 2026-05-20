@@ -1651,6 +1651,14 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).not.toContainText(
       "G1",
     );
+    const gapRowSpacing = await page
+      .locator("qti-assessment-item-player .qti3-gap-region")
+      .evaluate((gapRegion) => {
+        const sourceRegion = gapRegion.previousElementSibling;
+        if (!sourceRegion) return 0;
+        return gapRegion.getBoundingClientRect().top - sourceRegion.getBoundingClientRect().bottom;
+      });
+    expect(gapRowSpacing).toBeGreaterThanOrEqual(6);
 
     const source = page.locator('qti-assessment-item-player [data-choice-identifier="A"]').first();
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="G1"]').first();
