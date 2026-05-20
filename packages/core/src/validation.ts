@@ -825,6 +825,7 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "min" ||
     expression.type === "max" ||
     expression.type === "and" ||
+    expression.type === "anyN" ||
     expression.type === "or"
   ) {
     return expression.expressions;
@@ -846,7 +847,9 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "roundTo" ||
     expression.type === "truncate" ||
     expression.type === "integerToFloat" ||
-    expression.type === "index"
+    expression.type === "index" ||
+    expression.type === "containerSize" ||
+    expression.type === "patternMatch"
   ) {
     return [expression.expression];
   }
@@ -854,6 +857,9 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     return [expression.left, expression.right];
   }
   if (expression.type === "member") {
+    return [expression.value, expression.collection];
+  }
+  if (expression.type === "delete") {
     return [expression.value, expression.collection];
   }
   if (expression.type === "contains") {

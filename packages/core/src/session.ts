@@ -389,6 +389,19 @@ function evaluateValue(
     if (n === undefined || n < 1 || n > values.length) return null;
     return values[n - 1] ?? null;
   }
+  if (expression.type === "containerSize") {
+    return valueContainer(
+      evaluateValue(
+        expression.expression,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    ).length;
+  }
   if (expression.type === "sum") {
     return expression.expressions.reduce(
       (sum, item) =>
@@ -645,6 +658,18 @@ function evaluateValue(
       ),
     );
   }
+  if (expression.type === "anyN") {
+    const min = indexValue(expression.min, outcomes, templateValues) ?? 0;
+    const max = indexValue(expression.max, outcomes, templateValues) ?? 0;
+    const values = expression.expressions.map((item) =>
+      evaluateValue(item, document, responses, outcomes, templateValues, correctResponses, random),
+    );
+    const trueCount = values.filter((value) => value === true).length;
+    const nullCount = values.filter((value) => value === null).length;
+    if (min > max || trueCount > max || trueCount + nullCount < min) return false;
+    if (trueCount >= min && trueCount <= max) return true;
+    return null;
+  }
   if (expression.type === "or") {
     return expression.expressions.some((item) =>
       booleanValue(
@@ -771,6 +796,28 @@ function evaluateValue(
       true,
     );
   }
+  if (expression.type === "patternMatch") {
+    const value = evaluateValue(
+      expression.expression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    if (value === null) return null;
+    const patternValue =
+      responses[expression.pattern] ??
+      outcomes[expression.pattern] ??
+      templateValues[expression.pattern] ??
+      expression.pattern;
+    try {
+      return new RegExp(String(patternValue)).test(String(value));
+    } catch {
+      return null;
+    }
+  }
   if (expression.type === "member") {
     const value = evaluateValue(
       expression.value,
@@ -792,6 +839,31 @@ function evaluateValue(
     );
     const values = valueContainer(collection);
     return value === null ? null : values.some((item) => valuesEqual(item, value));
+  }
+  if (expression.type === "delete") {
+    const value = evaluateValue(
+      expression.value,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    const collection = valueContainer(
+      evaluateValue(
+        expression.collection,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    if (value === null || collection.length === 0) return null;
+    const filtered = collection.filter((item) => !valuesEqual(item, value));
+    return filtered.length > 0 ? filtered : null;
   }
   if (expression.type === "contains") {
     const collection = valueContainer(

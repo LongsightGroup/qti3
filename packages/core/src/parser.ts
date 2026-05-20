@@ -542,6 +542,11 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     }
   }
 
+  if (node.localName === "qti-container-size") {
+    const expression = parseFirstExpression(node);
+    if (expression) return { type: "containerSize", expression, source: node.source };
+  }
+
   if (node.localName === "qti-sum") {
     return {
       type: "sum",
@@ -661,6 +666,18 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  if (node.localName === "qti-any-n") {
+    return {
+      type: "anyN",
+      min: node.attributes.min ?? "",
+      max: node.attributes.max ?? "",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+      source: node.source,
+    };
+  }
+
   if (node.localName === "qti-or") {
     return {
       type: "or",
@@ -730,11 +747,30 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     }
   }
 
+  if (node.localName === "qti-pattern-match") {
+    const expression = parseFirstExpression(node);
+    if (expression) {
+      return {
+        type: "patternMatch",
+        expression,
+        pattern: node.attributes.pattern ?? "",
+        source: node.source,
+      };
+    }
+  }
+
   if (node.localName === "qti-member") {
     const [value, collection] = childElements(node)
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     if (value && collection) return { type: "member", value, collection, source: node.source };
+  }
+
+  if (node.localName === "qti-delete") {
+    const [value, collection] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (value && collection) return { type: "delete", value, collection, source: node.source };
   }
 
   if (node.localName === "qti-contains") {

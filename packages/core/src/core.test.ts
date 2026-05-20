@@ -1648,4 +1648,70 @@ describe("@qti3/core", () => {
     expect(score.outcomes.POWER_VALUE).toBe(32);
     expect(score.outcomes.RANDOM_VALUE).toBe(4.5);
   });
+
+  it("evaluates pattern, delete, any-n, and container-size expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="collection-helper-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="PATTERN_OK" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="ANY_OK" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="SIZE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="FIRST_REMAINING" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-text-entry-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="PATTERN_OK">
+                <qti-pattern-match pattern="^Pres.*ton$">
+                  <qti-base-value base-type="string">President Washington</qti-base-value>
+                </qti-pattern-match>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="ANY_OK">
+                <qti-any-n min="2" max="2">
+                  <qti-base-value base-type="boolean">true</qti-base-value>
+                  <qti-base-value base-type="boolean">false</qti-base-value>
+                  <qti-base-value base-type="boolean">true</qti-base-value>
+                </qti-any-n>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="SIZE">
+                <qti-container-size>
+                  <qti-delete>
+                    <qti-base-value base-type="identifier">A</qti-base-value>
+                    <qti-multiple>
+                      <qti-base-value base-type="identifier">A</qti-base-value>
+                      <qti-base-value base-type="identifier">B</qti-base-value>
+                      <qti-base-value base-type="identifier">C</qti-base-value>
+                    </qti-multiple>
+                  </qti-delete>
+                </qti-container-size>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FIRST_REMAINING">
+                <qti-index n="1">
+                  <qti-delete>
+                    <qti-base-value base-type="identifier">A</qti-base-value>
+                    <qti-ordered>
+                      <qti-base-value base-type="identifier">A</qti-base-value>
+                      <qti-base-value base-type="identifier">B</qti-base-value>
+                      <qti-base-value base-type="identifier">C</qti-base-value>
+                    </qti-ordered>
+                  </qti-delete>
+                </qti-index>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const score = session.score();
+    expect(score.outcomes.PATTERN_OK).toBe(true);
+    expect(score.outcomes.ANY_OK).toBe(true);
+    expect(score.outcomes.SIZE).toBe(2);
+    expect(score.outcomes.FIRST_REMAINING).toBe("B");
+  });
 });

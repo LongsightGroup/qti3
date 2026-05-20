@@ -269,6 +269,7 @@ export type QtiProcessingExpression = (
   | { type: "multiple"; expressions: QtiProcessingExpression[] }
   | { type: "ordered"; expressions: QtiProcessingExpression[] }
   | { type: "index"; expression: QtiProcessingExpression; n: string }
+  | { type: "containerSize"; expression: QtiProcessingExpression }
   | { type: "sum"; expressions: QtiProcessingExpression[] }
   | { type: "product"; expressions: QtiProcessingExpression[] }
   | { type: "min"; expressions: QtiProcessingExpression[] }
@@ -288,6 +289,7 @@ export type QtiProcessingExpression = (
   | { type: "truncate"; expression: QtiProcessingExpression }
   | { type: "integerToFloat"; expression: QtiProcessingExpression }
   | { type: "and"; expressions: QtiProcessingExpression[] }
+  | { type: "anyN"; expressions: QtiProcessingExpression[]; min: string; max: string }
   | { type: "or"; expressions: QtiProcessingExpression[] }
   | { type: "not"; expression: QtiProcessingExpression }
   | { type: "equal"; left: QtiProcessingExpression; right: QtiProcessingExpression }
@@ -310,7 +312,9 @@ export type QtiProcessingExpression = (
       right: QtiProcessingExpression;
       caseSensitive: boolean;
     }
+  | { type: "patternMatch"; expression: QtiProcessingExpression; pattern: string }
   | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
+  | { type: "delete"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
   | { type: "contains"; collection: QtiProcessingExpression; values: QtiProcessingExpression }
 ) & { source?: QtiSourceLocation | undefined };
 
