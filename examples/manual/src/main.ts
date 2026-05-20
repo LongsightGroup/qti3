@@ -6,9 +6,6 @@ defineQtiAssessmentItemPlayer();
 const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
 const loadXml = document.querySelector<HTMLButtonElement>("#load-xml");
-const themeSelect = document.querySelector<HTMLSelectElement>("#theme");
-const themeLink = document.querySelector<HTMLLinkElement>("#external-theme");
-const themeNote = document.querySelector<HTMLParagraphElement>("#theme-note");
 const fileInput = document.querySelector<HTMLInputElement>("#file");
 const localFiles = document.querySelector<HTMLSelectElement>("#local-files");
 const previousFile = document.querySelector<HTMLButtonElement>("#previous-file");
@@ -28,9 +25,6 @@ if (
   !fixtureSelect ||
   !loadFixture ||
   !loadXml ||
-  !themeSelect ||
-  !themeLink ||
-  !themeNote ||
   !fileInput ||
   !localFiles ||
   !previousFile ||
@@ -54,46 +48,6 @@ interface LoadedFile {
   xml: string;
 }
 
-interface HarnessTheme {
-  id: string;
-  label: string;
-  href?: string | undefined;
-}
-
-const themes: HarnessTheme[] = [
-  { id: "reference", label: "Reference / no external CSS" },
-  {
-    id: "bootstrap",
-    label: "Bootstrap 5.3",
-    href: "https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css",
-  },
-  {
-    id: "bootswatch-materia",
-    label: "Bootswatch Materia",
-    href: "https://cdn.jsdelivr.net/npm/bootswatch@5.3.8/dist/materia/bootstrap.min.css",
-  },
-  {
-    id: "pico",
-    label: "Pico 2",
-    href: "https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css",
-  },
-  {
-    id: "bulma",
-    label: "Bulma 1.0",
-    href: "https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css",
-  },
-  {
-    id: "foundation",
-    label: "Foundation 6",
-    href: "https://cdn.jsdelivr.net/npm/foundation-sites@6.9.0/dist/css/foundation.min.css",
-  },
-  {
-    id: "water",
-    label: "Water.css",
-    href: "https://cdn.jsdelivr.net/npm/water.css@2.1.1/out/water.min.css",
-  },
-];
-
 let loadedFiles: LoadedFile[] = [];
 let selectedFileIndex = -1;
 
@@ -104,23 +58,12 @@ for (const fixture of interactionFixtures) {
   fixtureSelect.append(option);
 }
 
-for (const theme of themes) {
-  const option = document.createElement("option");
-  option.value = theme.id;
-  option.textContent = theme.label;
-  themeSelect.append(option);
-}
-
 loadFixture.addEventListener("click", async () => {
   const fixture =
     interactionFixtures.find((item) => item.id === fixtureSelect.value) ?? interactionFixtures[0];
   if (!fixture) return;
   xmlInput.value = fixture.xml;
   await player.loadXml(fixture.xml);
-});
-
-themeSelect.addEventListener("change", () => {
-  applyTheme(themeSelect.value);
 });
 
 loadXml.addEventListener("click", async () => {
@@ -188,21 +131,6 @@ for (const eventName of [
 }
 
 loadFixture.click();
-applyTheme(themeSelect.value);
-
-function applyTheme(themeId: string): void {
-  const theme = themes.find((item) => item.id === themeId) ?? themes[0];
-  if (!theme?.href) {
-    themeLink.removeAttribute("href");
-    themeLink.disabled = true;
-    themeNote.textContent = "Reference harness CSS only. No external stylesheet loaded.";
-    return;
-  }
-
-  themeLink.disabled = false;
-  themeLink.href = theme.href;
-  themeNote.textContent = `${theme.label} loaded from CDN for harness preview only. Not bundled with @qti3/player.`;
-}
 
 function resetScorePanel(): void {
   scorePanel.dataset.status = "idle";
