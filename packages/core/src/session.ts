@@ -14,6 +14,7 @@ import type {
   QtiScoreResult,
   QtiTemplateRule,
   QtiValue,
+  QtiVariableDeclaration,
 } from "./types.js";
 
 export interface QtiCustomOperatorContext {
@@ -226,6 +227,15 @@ function assertCompatiblePriorState(
   assertKnownStateIdentifiers("response", priorState.responses, responseIdentifiers);
   assertKnownStateIdentifiers("outcome", priorState.outcomes, outcomeIdentifiers);
   assertKnownStateIdentifiers("template", priorState.templateValues ?? {}, templateIdentifiers);
+  for (const declaration of document.item.responseDeclarations) {
+    assertRestoredValueMatchesDeclaration("response", declaration, priorState.responses);
+  }
+  for (const declaration of document.item.outcomeDeclarations) {
+    assertRestoredValueMatchesDeclaration("outcome", declaration, priorState.outcomes);
+  }
+  for (const declaration of document.item.templateDeclarations) {
+    assertRestoredValueMatchesDeclaration("template", declaration, priorState.templateValues ?? {});
+  }
   const completionStatus = priorState.outcomes[COMPLETION_STATUS];
   if (
     completionStatus !== undefined &&
@@ -245,6 +255,79 @@ function assertKnownStateIdentifiers(
 ): void {
   const unknown = Object.keys(record).find((identifier) => !allowed.has(identifier));
   if (unknown) throw new Error(`Cannot restore unknown ${kind} identifier ${unknown}.`);
+}
+
+function assertRestoredValueMatchesDeclaration(
+  kind: string,
+  declaration: QtiVariableDeclaration,
+  record: Record<string, QtiValue>,
+): void {
+  if (!(declaration.identifier in record)) return;
+  const value = record[declaration.identifier] ?? null;
+  const error = restoredValueError(declaration, value);
+  if (error) throw new Error(`Cannot restore ${kind} ${declaration.identifier}: ${error}.`);
+}
+
+function restoredValueError(
+  declaration: QtiVariableDeclaration,
+  value: QtiValue,
+): string | undefined {
+  if (value === null) return undefined;
+  if (declaration.cardinality === "record") {
+    return isRecordValue(value) ? undefined : "expected record value";
+  }
+  if (isRecordValue(value)) return "expected scalar value";
+  if (declaration.cardinality === "single" && Array.isArray(value)) {
+    return "expected single value";
+  }
+  if (
+    (declaration.cardinality === "multiple" || declaration.cardinality === "ordered") &&
+    !Array.isArray(value)
+  ) {
+    return `expected ${declaration.cardinality} value container`;
+  }
+  if (!declaration.baseType) return undefined;
+  for (const entry of restoredValueEntries(value)) {
+    if (!restoredScalarMatchesBaseType(entry, declaration.baseType)) {
+      return `value ${String(entry)} is not valid for base-type ${declaration.baseType}`;
+    }
+  }
+  return undefined;
+}
+
+function restoredValueEntries(value: QtiValue): QtiScalarValue[] {
+  if (value === null || isRecordValue(value)) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function restoredScalarMatchesBaseType(
+  value: QtiScalarValue,
+  baseType: QtiVariableDeclaration["baseType"],
+): boolean {
+  if (!baseType) return true;
+  if (baseType === "integer") {
+    return typeof value === "number" ? Number.isInteger(value) : /^-?\d+$/.test(String(value));
+  }
+  if (baseType === "float") {
+    return typeof value === "number" ? Number.isFinite(value) : Number.isFinite(Number(value));
+  }
+  if (baseType === "boolean")
+    return typeof value === "boolean" || value === "true" || value === "false";
+  if (baseType === "point") return pointValueIsValid(value);
+  if (baseType === "pair" || baseType === "directedPair") return pairValueIsValid(value);
+  if (baseType === "identifier")
+    return typeof value === "string" && value.trim().length > 0 && !/\s/.test(value);
+  return typeof value === "string";
+}
+
+function pointValueIsValid(value: QtiScalarValue): boolean {
+  const parts = String(value).trim().split(/\s+/);
+  return parts.length === 2 && parts.every((part) => Number.isFinite(Number(part)));
+}
+
+function pairValueIsValid(value: QtiScalarValue): boolean {
+  const parts = String(value).trim().split(/\s+/);
+  return parts.length === 2 && parts.every((part) => part.length > 0);
 }
 
 function attemptStateErrors(value: unknown): string[] {

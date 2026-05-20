@@ -288,6 +288,56 @@ describe("@qti3/core", () => {
     ).toThrow("Cannot restore unsupported completionStatus finished.");
   });
 
+  it("rejects restored state values that do not match declarations", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-value-shape">
+        <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier"/>
+        <qti-response-declaration identifier="ORDER" cardinality="ordered" base-type="identifier"/>
+        <qti-response-declaration identifier="POINT" cardinality="single" base-type="point"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="CHOICE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const state = createItemSession(result.document!).serialize();
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        responses: { CHOICE: ["A"] },
+      }),
+    ).toThrow("Cannot restore response CHOICE: expected single value.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        responses: { ORDER: "A" },
+      }),
+    ).toThrow("Cannot restore response ORDER: expected ordered value container.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        responses: { POINT: "10" },
+      }),
+    ).toThrow("Cannot restore response POINT: value 10 is not valid for base-type point.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        outcomes: { SCORE: "high" },
+      }),
+    ).toThrow("Cannot restore outcome SCORE: value high is not valid for base-type float.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        templateValues: { COUNT: "many" },
+      }),
+    ).toThrow("Cannot restore template COUNT: value many is not valid for base-type integer.");
+  });
+
   it("exposes a runtime guard for the public attempt state contract", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-guard">
