@@ -177,6 +177,20 @@ function assertExpectedState(
       }
     }
   }
+  if (expected.templateValues) {
+    for (const [identifier, expectedValue] of Object.entries(expected.templateValues)) {
+      if (!valuesEqual(actual.templateValues?.[identifier] ?? null, expectedValue)) {
+        stateMismatch(
+          fixture,
+          attemptName,
+          `templateValues.${identifier}`,
+          expectedValue,
+          actual.templateValues?.[identifier] ?? null,
+          diagnostics,
+        );
+      }
+    }
+  }
 }
 
 function stateMismatch(

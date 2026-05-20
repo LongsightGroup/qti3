@@ -14,7 +14,7 @@ import {
   validateAssessmentItem,
   type QtiValue,
 } from "@qti3/core";
-import { interactionFixtures } from "@qti3/fixtures";
+import { canonicalFixtures } from "@qti3/fixtures";
 import { StaxXmlParserSync, XmlEventType } from "stax-xml";
 
 interface ZipEntry {
@@ -83,7 +83,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   if (command === "write-fixtures" && file) {
     await mkdir(file, { recursive: true });
     const written: string[] = [];
-    for (const fixture of interactionFixtures) {
+    for (const fixture of canonicalFixtures) {
       const filename = `${fixture.id}.xml`;
       const path = join(file, filename);
       await writeFile(path, `${fixture.xml}\n`, "utf8");
@@ -156,7 +156,7 @@ function runCanonicalFixtures(): {
   failed: number;
   results: ReturnType<typeof runFixture>[];
 } {
-  const results = interactionFixtures.map(runFixture);
+  const results = canonicalFixtures.map(runFixture);
   return {
     checked: results.length,
     failed: results.filter((result) => !result.ok).length,

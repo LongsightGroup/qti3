@@ -22,8 +22,9 @@ export interface QtiFixtureAttempt {
 
 export interface QtiFixture {
   id: string;
-  interactionType: QtiInteractionType;
-  qtiName: string;
+  category: "interaction" | "processing" | "adaptive";
+  interactionType?: QtiInteractionType | undefined;
+  qtiName?: string | undefined;
   title: string;
   xml: string;
   expectedParseDiagnostics: QtiExpectedDiagnostic[];
@@ -35,8 +36,21 @@ export const interactionFixtures: QtiFixture[] = interactionSupport.map((support
   createInteractionFixture(support.interactionType, support.qtiName),
 );
 
+export const processingFixtures: QtiFixture[] = [
+  createMappingProcessingFixture(),
+  createTemplateProcessingFixture(),
+];
+
+export const adaptiveFixtures: QtiFixture[] = [createAdaptiveFeedbackFixture()];
+
+export const canonicalFixtures: QtiFixture[] = [
+  ...interactionFixtures,
+  ...processingFixtures,
+  ...adaptiveFixtures,
+];
+
 export function getFixtureById(id: string): QtiFixture | undefined {
-  return interactionFixtures.find((fixture) => fixture.id === id);
+  return canonicalFixtures.find((fixture) => fixture.id === id);
 }
 
 function createInteractionFixture(
@@ -51,6 +65,7 @@ function createInteractionFixture(
 
   return {
     id,
+    category: "interaction",
     interactionType,
     qtiName,
     title: `${interactionType} reference fixture`,
@@ -82,6 +97,7 @@ function createInlineChoiceFixture(qtiName: string): QtiFixture {
 
   return {
     id,
+    category: "interaction",
     interactionType: "inlineChoice",
     qtiName,
     title: "inlineChoice reference fixture",
@@ -115,6 +131,151 @@ function createInlineChoiceFixture(qtiName: string): QtiFixture {
           itemIdentifier: id,
           status: "interacting",
         },
+      },
+    ],
+  };
+}
+
+function createMappingProcessingFixture(): QtiFixture {
+  const id = "mapping-processing-reference";
+  return {
+    id,
+    category: "processing",
+    title: "Mapping response-processing reference fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-mapping default-value="0">
+      <qti-map-entry map-key="A" mapped-value="2"/>
+      <qti-map-entry map-key="B" mapped-value="1"/>
+    </qti-mapping>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>Choose the best-supported scoring expression for a mapped response.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">qti-map-response</qti-simple-choice>
+      <qti-simple-choice identifier="B">qti-match</qti-simple-choice>
+      <qti-simple-choice identifier="C">qti-null</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "mapped",
+        responses: { RESPONSE: "A" },
+        expectedOutcomes: { SCORE: 2 },
+        expectedResponses: { RESPONSE: "A" },
+      },
+    ],
+  };
+}
+
+function createTemplateProcessingFixture(): QtiFixture {
+  const id = "template-processing-reference";
+  return {
+    id,
+    category: "processing",
+    title: "Template-processing reference fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-template-declaration identifier="BASE" cardinality="single" base-type="integer"/>
+  <qti-template-declaration identifier="ANSWER" cardinality="single" base-type="integer"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-template-processing>
+    <qti-set-template-value identifier="BASE"><qti-base-value base-type="integer">2</qti-base-value></qti-set-template-value>
+    <qti-set-template-value identifier="ANSWER">
+      <qti-sum><qti-variable identifier="BASE"/><qti-base-value base-type="integer">3</qti-base-value></qti-sum>
+    </qti-set-template-value>
+    <qti-set-correct-response identifier="RESPONSE"><qti-variable identifier="ANSWER"/></qti-set-correct-response>
+  </qti-template-processing>
+  <qti-item-body>
+    <p>Template processing generates the correct numeric response before delivery.</p>
+    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10" step="1"/>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "generated-correct",
+        responses: { RESPONSE: 5 },
+        expectedOutcomes: { SCORE: 1 },
+        expectedResponses: { RESPONSE: 5 },
+        expectedState: { templateValues: { BASE: 2, ANSWER: 5 } },
+      },
+    ],
+  };
+}
+
+function createAdaptiveFeedbackFixture(): QtiFixture {
+  const id = "adaptive-feedback-reference";
+  return {
+    id,
+    category: "adaptive",
+    title: "Adaptive feedback reference fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" adaptive="true" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="HINT" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Use the hint control or answer the item.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Reference implementations expose feedback through outcomes.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Reference implementations hide all outcomes.</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/>
+    <qti-feedback-block identifier="HINT_FEEDBACK" outcome-identifier="FEEDBACK" show-hide="show">
+      <qti-content-body><p>Hint feedback is visible after the end-attempt interaction.</p></qti-content-body>
+    </qti-feedback-block>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-variable identifier="HINT"/>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">HINT_FEEDBACK</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "hint",
+        responses: { HINT: true },
+        expectedOutcomes: { SCORE: "0", FEEDBACK: "HINT_FEEDBACK", completionStatus: "unknown" },
+        expectedResponses: { HINT: true },
+        expectedState: { status: "interacting" },
+      },
+      {
+        name: "completed",
+        responses: { RESPONSE: "A" },
+        expectedOutcomes: { SCORE: 1, completionStatus: "completed" },
+        expectedResponses: { RESPONSE: "A" },
+        expectedState: { status: "completed" },
       },
     ],
   };

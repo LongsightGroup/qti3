@@ -14,6 +14,7 @@ describe("@qti3/conformance", () => {
   it("checks expected responses, outcomes, and serialized state from fixture attempts", () => {
     const result = runFixture({
       id: "conformance-state",
+      category: "interaction",
       interactionType: "choice",
       qtiName: "qti-choice-interaction",
       title: "Conformance state",
@@ -57,6 +58,7 @@ describe("@qti3/conformance", () => {
   it("accepts expected validation diagnostics in negative fixtures", () => {
     const result = runFixture({
       id: "conformance-diagnostic",
+      category: "interaction",
       interactionType: "slider",
       qtiName: "qti-slider-interaction",
       title: "Conformance diagnostic",
