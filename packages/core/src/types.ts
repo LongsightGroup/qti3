@@ -188,9 +188,25 @@ export interface QtiInteraction {
   contextText?: string | undefined;
   object?: QtiObjectAsset | undefined;
   choices: QtiChoice[];
+  hottextSegments?: QtiHottextSegment[] | undefined;
   childElements: QtiElementChild[];
   attributes: Record<string, string>;
   text: string;
+  source?: QtiSourceLocation | undefined;
+}
+
+export type QtiHottextSegment = QtiHottextTextSegment | QtiHottextChoiceSegment;
+
+export interface QtiHottextTextSegment {
+  kind: "text";
+  text: string;
+}
+
+export interface QtiHottextChoiceSegment {
+  kind: "hottext";
+  identifier: string;
+  text: string;
+  attributes: Record<string, string>;
   source?: QtiSourceLocation | undefined;
 }
 

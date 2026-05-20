@@ -270,6 +270,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
+    if (interaction.type === "hottext") {
+      field.append(renderHottextResponse(interaction, update, currentValue));
+      return field;
+    }
+
     if (usesChoiceSet(interaction)) {
       field.append(renderChoice(interaction, update, currentValue));
       return field;
@@ -770,6 +775,75 @@ function renderChoice(
   return group;
 }
 
+function renderHottextResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
+  const group = document.createElement("div");
+  group.className = "qti3-hottext-group";
+  group.role = "group";
+  group.setAttribute("aria-label", "Hottext options");
+
+  const selected = new Set(valueToStrings(currentValue));
+  const multiple =
+    interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
+  const passage = document.createElement("p");
+  passage.className = "qti3-hottext-passage";
+
+  const syncSelected = () => {
+    for (const button of passage.querySelectorAll<HTMLButtonElement>(".qti3-hottext-token")) {
+      const identifier = button.dataset.choiceIdentifier ?? "";
+      const isSelected = selected.has(identifier);
+      button.dataset.selected = isSelected ? "true" : "false";
+      button.setAttribute("aria-pressed", String(isSelected));
+    }
+  };
+
+  const segments =
+    interaction.hottextSegments && interaction.hottextSegments.length > 0
+      ? interaction.hottextSegments
+      : choicesOrFallback(interaction).map((choice) => ({
+          kind: "hottext" as const,
+          identifier: choice.identifier,
+          text: choice.text,
+          attributes: choice.attributes,
+          source: choice.source,
+        }));
+
+  for (const segment of segments) {
+    if (segment.kind === "text") {
+      passage.append(document.createTextNode(segment.text));
+      continue;
+    }
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "qti3-hottext-token";
+    button.dataset.choiceIdentifier = segment.identifier;
+    button.textContent = segment.text;
+    button.addEventListener("click", () => {
+      if (multiple) {
+        if (selected.has(segment.identifier)) selected.delete(segment.identifier);
+        else selected.add(segment.identifier);
+        update([...selected]);
+      } else {
+        selected.clear();
+        selected.add(segment.identifier);
+        update(segment.identifier);
+      }
+      syncSelected();
+    });
+    passage.append(document.createTextNode(" "));
+    passage.append(button);
+    passage.append(document.createTextNode(" "));
+  }
+
+  syncSelected();
+  group.append(passage);
+  return group;
+}
+
 function choicePresentationLabel(interaction: QtiInteraction, index: number): string {
   const classNames = new Set((interaction.attributes.class ?? "").split(/\s+/).filter(Boolean));
   if (classNames.has("qti-labels-none")) return "";
@@ -788,11 +862,7 @@ function choicePresentationLabel(interaction: QtiInteraction, index: number): st
 }
 
 function usesChoiceSet(interaction: QtiInteraction): boolean {
-  if (
-    interaction.type === "choice" ||
-    interaction.type === "hottext" ||
-    interaction.type === "hotspot"
-  ) {
+  if (interaction.type === "choice" || interaction.type === "hotspot") {
     return true;
   }
   return interaction.responseCardinality === "multiple";
@@ -2363,6 +2433,37 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-choice-option[data-selected="true"] {
       background: Highlight;
       color: HighlightText;
+    }
+
+    .qti3-hottext-group {
+      max-inline-size: 58rem;
+    }
+
+    .qti3-hottext-passage {
+      margin-block: 0;
+      font-size: 1.05rem;
+      line-height: 1.75;
+    }
+
+    .qti3-hottext-token {
+      display: inline;
+      margin-inline: 0.1rem;
+      padding: 0.12rem 0.28rem;
+      border: 1px solid CanvasText;
+      border-radius: 0.2rem;
+      background: Canvas;
+      color: LinkText;
+      font: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.16em;
+      cursor: pointer;
+    }
+
+    .qti3-hottext-token[data-selected="true"] {
+      background: Highlight;
+      color: HighlightText;
+      text-decoration-color: HighlightText;
     }
 
     .qti3-reorder-item {

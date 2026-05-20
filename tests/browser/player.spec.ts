@@ -247,6 +247,25 @@ test.describe("manual harness", () => {
     expect(firstLabel.x).toBeLessThan(firstText.x);
   });
 
+  test("renders hottext choices as selectable inline passage text", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "hottext");
+
+    const player = page.locator("qti-assessment-item-player");
+    const passage = player.locator(".qti3-hottext-passage");
+    await expect(passage).toContainText(
+      "A response declaration defines the variable used by an interaction.",
+    );
+    await expect(player.locator(".qti3-choice-option")).toHaveCount(0);
+
+    const token = player.locator('.qti3-hottext-token[data-choice-identifier="A"]');
+    await expect(player.getByRole("button", { name: "response declaration" })).toBeVisible();
+    await expect(token).toHaveText("response declaration");
+    await token.click();
+    await expect(token).toHaveAttribute("aria-pressed", "true");
+    await expectResponse(page, "A");
+  });
+
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">
@@ -1310,7 +1329,9 @@ test.describe("manual harness", () => {
     await page.goto("/");
 
     await loadFixture(page, "hottext");
-    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').focus();
+    await page
+      .locator('qti-assessment-item-player .qti3-hottext-token[data-choice-identifier="A"]')
+      .focus();
     await page.keyboard.press("Space");
     await expectResponse(page, "A");
 
@@ -2159,6 +2180,15 @@ async function provideResponse(
     await page
       .locator("qti-assessment-item-player .qti3-hotspot-surface")
       .getByRole("button", { name: String(response) })
+      .click();
+    return;
+  }
+
+  if (interactionType === "hottext") {
+    await page
+      .locator(
+        `qti-assessment-item-player .qti3-hottext-token[data-choice-identifier="${response}"]`,
+      )
       .click();
     return;
   }

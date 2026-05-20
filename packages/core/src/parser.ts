@@ -456,6 +456,7 @@ function parseInteraction(
       descendants(node, (child) => child.localName === "object" || child.localName === "img")[0],
     ),
     choices: parseChoices(node),
+    hottextSegments: interactionType === "hottext" ? parseHottextSegments(node) : undefined,
     childElements: childElements(node).map((child) => ({
       qtiName: child.localName,
       source: child.source,
@@ -464,6 +465,39 @@ function parseInteraction(
     text: textContent(node),
     source: node.source,
   };
+}
+
+function parseHottextSegments(node: XmlNode): QtiInteraction["hottextSegments"] {
+  const segments: NonNullable<QtiInteraction["hottextSegments"]> = [];
+
+  const visit = (entry: string | XmlNode): void => {
+    if (typeof entry === "string") {
+      const text = entry.replace(/\s+/g, " ");
+      if (text.trim().length > 0) segments.push({ kind: "text", text });
+      return;
+    }
+
+    if (entry.localName === "qti-prompt") return;
+
+    if (entry.localName === "qti-hottext") {
+      segments.push({
+        kind: "hottext",
+        identifier: entry.attributes.identifier ?? "",
+        text: textContent(entry),
+        attributes: entry.attributes,
+        source: entry.source,
+      });
+      return;
+    }
+
+    for (const child of entry.content) visit(child);
+    if (entry.localName === "p" || entry.localName === "div") {
+      segments.push({ kind: "text", text: " " });
+    }
+  };
+
+  for (const entry of node.content) visit(entry);
+  return segments;
 }
 
 function inlineInteractionContext(
