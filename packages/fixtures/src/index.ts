@@ -56,6 +56,11 @@ function assessmentItem(
     ? `
       <qti-response-declaration identifier="${response.identifier}" cardinality="${response.cardinality}" base-type="${response.baseType}">
         <qti-correct-response>${valuesXml(response.correct)}</qti-correct-response>
+        ${
+          response.baseType === "point"
+            ? '<qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="10,10,5" mapped-value="1"/></qti-area-mapping>'
+            : ""
+        }
       </qti-response-declaration>`
     : "";
 
@@ -69,7 +74,7 @@ function assessmentItem(
     <p>Reference item for ${identifier}.</p>
     ${interactionXml}
   </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/${response.baseType === "point" ? "map_response_point.xml" : "match_correct"}"/>
 </qti-assessment-item>`;
 }
 
@@ -108,10 +113,10 @@ function defaultResponse(interactionType: QtiInteractionType): {
   if (interactionType === "slider") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: "50" };
   }
-  if (interactionType === "selectPoint" || interactionType === "hotspot") {
+  if (interactionType === "hotspot") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "identifier", correct: "A" };
   }
-  if (interactionType === "positionObject") {
+  if (interactionType === "selectPoint" || interactionType === "positionObject") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "point", correct: "10 10" };
   }
   if (interactionType === "upload") {

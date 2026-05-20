@@ -97,4 +97,26 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE", "A");
     expect(session.score().outcomes.SCORE).toBe(2);
   });
+
+  it("scores map-response-point with circular area mapping", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="point">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point">
+          <qti-area-mapping default-value="0">
+            <qti-area-map-entry shape="circle" coords="93,111,16" mapped-value="1"/>
+          </qti-area-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-select-point-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", "93 111");
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
 });

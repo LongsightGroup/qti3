@@ -47,6 +47,18 @@ export interface QtiResponseDeclaration extends QtiVariableDeclaration {
   kind: "response";
   correctResponse: QtiValue;
   mapping?: Record<string, number> | undefined;
+  areaMapping?: QtiAreaMapping | undefined;
+}
+
+export interface QtiAreaMapping {
+  defaultValue: number;
+  entries: QtiAreaMapEntry[];
+}
+
+export interface QtiAreaMapEntry {
+  shape: "circle" | "rect" | "poly" | "default";
+  coords: number[];
+  mappedValue: number;
 }
 
 export interface QtiOutcomeDeclaration extends QtiVariableDeclaration {

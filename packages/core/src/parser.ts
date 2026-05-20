@@ -113,6 +113,7 @@ function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
       cardinality,
     ),
     mapping: parseMapping(childElements(node, "qti-mapping")[0]),
+    areaMapping: parseAreaMapping(childElements(node, "qti-area-mapping")[0]),
   };
 }
 
@@ -197,6 +198,30 @@ function parseMapping(node: XmlNode | undefined): Record<string, number> | undef
     if (key && value !== undefined) mapping[key] = Number(value);
   }
   return mapping;
+}
+
+function parseAreaMapping(
+  node: XmlNode | undefined,
+): QtiResponseDeclaration["areaMapping"] | undefined {
+  if (!node) return undefined;
+  return {
+    defaultValue: Number(node.attributes["default-value"] ?? 0),
+    entries: childElements(node, "qti-area-map-entry").map((entry) => ({
+      shape: parseShape(entry.attributes.shape),
+      coords: (entry.attributes.coords ?? "")
+        .split(",")
+        .map((value) => Number(value.trim()))
+        .filter((value) => Number.isFinite(value)),
+      mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
+    })),
+  };
+}
+
+function parseShape(
+  shape: string | undefined,
+): NonNullable<QtiResponseDeclaration["areaMapping"]>["entries"][number]["shape"] {
+  if (shape === "circle" || shape === "rect" || shape === "poly") return shape;
+  return "default";
 }
 
 function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessing | undefined {
