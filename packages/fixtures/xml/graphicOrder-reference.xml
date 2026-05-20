@@ -10,7 +10,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for graphicOrder-reference.</p>
-    <qti-graphic-order-interaction response-identifier="RESPONSE"><qti-simple-choice identifier="A">A</qti-simple-choice><qti-simple-choice identifier="B">B</qti-simple-choice></qti-graphic-order-interaction>
+    <qti-graphic-order-interaction response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/><qti-hotspot-choice identifier="B" shape="rect" coords="60,0,110,50"/></qti-graphic-order-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

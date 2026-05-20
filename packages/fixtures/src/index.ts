@@ -182,6 +182,12 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
   if (interactionType === "hotspot") {
     return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/></${qtiName}>`;
   }
+  if (interactionType === "graphicOrder") {
+    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/><qti-hotspot-choice identifier="B" shape="rect" coords="60,0,110,50"/></${qtiName}>`;
+  }
+  if (interactionType === "graphicAssociate") {
+    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,50" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="60,0,110,50" match-max="1"/></${qtiName}>`;
+  }
   if (interactionType === "selectPoint") {
     return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/></${qtiName}>`;
   }
@@ -198,17 +204,16 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
   ) {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter A.</qti-prompt></${qtiName}>`;
   }
-  if (
-    interactionType === "match" ||
-    interactionType === "associate" ||
-    interactionType === "graphicAssociate"
-  ) {
+  if (interactionType === "match" || interactionType === "associate") {
     if (interactionType === "match") {
       return `<${qtiName} response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set><qti-simple-match-set><qti-simple-associable-choice identifier="G1" match-max="1">Target 1</qti-simple-associable-choice><qti-simple-associable-choice identifier="G2" match-max="1">Target 2</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
     }
     return `<${qtiName} response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
   }
-  if (interactionType === "gapMatch" || interactionType === "graphicGapMatch") {
+  if (interactionType === "graphicGapMatch") {
+    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-gap-text identifier="A" match-max="1">A</qti-gap-text><p><qti-gap identifier="G1"/></p></${qtiName}>`;
+  }
+  if (interactionType === "gapMatch") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-gap-text identifier="A" match-max="1">A</qti-gap-text><p><qti-gap identifier="G1"/></p></${qtiName}>`;
   }
   return `<${qtiName} response-identifier="RESPONSE"><qti-simple-choice identifier="A">A</qti-simple-choice><qti-simple-choice identifier="B">B</qti-simple-choice></${qtiName}>`;

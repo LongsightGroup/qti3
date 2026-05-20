@@ -461,6 +461,7 @@ function renderOrderedResponse(
   const legend = document.createElement("legend");
   legend.textContent = `${readableType(interaction.type)} order`;
   group.append(legend);
+  appendGraphicContext(group, interaction);
 
   const choices = choicesOrFallback(interaction).filter((choice) => choice.role !== "gap");
   const selects: HTMLSelectElement[] = [];
@@ -488,6 +489,7 @@ function renderPairResponse(
   const legend = document.createElement("legend");
   legend.textContent = `${readableType(interaction.type)} pairs`;
   group.append(legend);
+  appendGraphicContext(group, interaction);
 
   const source = document.createElement("select");
   source.setAttribute("aria-label", `${readableType(interaction.type)} source`);
@@ -523,6 +525,14 @@ function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => 
   appendOptions(select, choicesOrFallback(interaction));
   select.addEventListener("change", () => update(select.value));
   return select;
+}
+
+function appendGraphicContext(group: HTMLElement, interaction: QtiInteraction): void {
+  if (!interaction.type.startsWith("graphic") || !interaction.object) return;
+  const context = document.createElement("div");
+  context.className = "qti3-graphic-context";
+  context.append(renderObjectAsset(interaction));
+  group.append(context);
 }
 
 function renderPointResponse(

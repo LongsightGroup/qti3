@@ -121,6 +121,17 @@ test.describe("manual harness", () => {
     await expect(audio).toHaveAttribute("src", /media\.mp3$/);
   });
 
+  test("renders graphic interactions with their object context", async ({ page }) => {
+    await page.goto("/");
+
+    for (const interactionType of ["graphicOrder", "graphicAssociate", "graphicGapMatch"]) {
+      await loadFixture(page, interactionType);
+      const context = page.locator("qti-assessment-item-player .qti3-graphic-context");
+      await expect(context, interactionType).toBeVisible();
+      await expect(context.locator("img"), interactionType).toHaveAttribute("src", /image\.png$/);
+    }
+  });
+
   test("honors load session controls and injected XML fetchers", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??
