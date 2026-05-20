@@ -110,9 +110,15 @@ function validateDeclarationValue(
   if (!isBaseType(declaration.baseType)) return;
 
   if (declaration.cardinality === "single" && Array.isArray(value)) {
+    const severity =
+      declaration.kind === "response" &&
+      role === "correctResponse" &&
+      declaration.baseType === "string"
+        ? "warning"
+        : "error";
     diagnostics.push({
       code: `declaration.${role}.cardinality`,
-      severity: "error",
+      severity,
       message: `${declaration.kind} declaration ${declaration.identifier} ${role} must contain one value for single cardinality.`,
       path: declaration.source?.path,
       source: declaration.source,
@@ -1854,7 +1860,7 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "order":
       return setOf(common, ["qti-simple-choice"]);
     case "associate":
-      return setOf(common, ["qti-simple-match-set"]);
+      return setOf(common, ["qti-simple-match-set", "qti-simple-associable-choice"]);
     case "match":
       return setOf(common, ["qti-simple-match-set"]);
     case "gapMatch":
@@ -1868,17 +1874,25 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "graphicAssociate":
       return setOf(common, ["object", "qti-associable-hotspot"]);
     case "graphicGapMatch":
-      return setOf(common, ["object", "qti-gap-text", "qti-gap-img", ...staticContentNames()]);
+      return setOf(common, [
+        "object",
+        "qti-gap-text",
+        "qti-gap-img",
+        "qti-associable-hotspot",
+        ...staticContentNames(),
+      ]);
     case "hotspot":
       return setOf(common, ["object", "qti-hotspot-choice"]);
     case "selectPoint":
     case "positionObject":
     case "media":
-      return setOf(common, ["object"]);
+      return setOf(common, ["object", "img"]);
     case "drawing":
+      return setOf(common, ["object", "img"]);
     case "extendedText":
-    case "portableCustom":
       return new Set(common);
+    case "portableCustom":
+      return setOf(common, ["qti-interaction-markup"]);
     case "slider":
     case "textEntry":
     case "upload":

@@ -215,7 +215,9 @@ function parseInteraction(
     responseBaseType: responseDeclaration?.baseType,
     prompt: prompt ? textContent(prompt) : undefined,
     contextText: inlineInteractionContext(node, interactionType),
-    object: parseObjectAsset(descendants(node, (child) => child.localName === "object")[0]),
+    object: parseObjectAsset(
+      descendants(node, (child) => child.localName === "object" || child.localName === "img")[0],
+    ),
     choices: parseChoices(node),
     childElements: childElements(node).map((child) => ({
       qtiName: child.localName,
@@ -247,15 +249,24 @@ function normalizeInlineContext(value: string): string | undefined {
 
 function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined {
   if (!node) return undefined;
+  const data = node.attributes.data ?? node.attributes.src;
   return {
-    data: node.attributes.data,
-    type: node.attributes.type,
+    data,
+    type: node.attributes.type ?? assetTypeFromData(data),
     width: node.attributes.width,
     height: node.attributes.height,
     text: textContent(node),
     attributes: node.attributes,
     source: node.source,
   };
+}
+
+function assetTypeFromData(data: string | undefined): string | undefined {
+  if (!data) return undefined;
+  if (data.startsWith("data:image/svg+xml")) return "image/svg+xml";
+  if (data.startsWith("data:image/")) return "image/*";
+  if (/\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(data)) return "image/*";
+  return undefined;
 }
 
 function parseChoices(node: XmlNode): QtiChoice[] {

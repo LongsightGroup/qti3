@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
@@ -297,6 +297,60 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
     await page.locator("#previous-file").click();
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
+  });
+
+  test("resolves assessment-test package item references from a folder upload", async ({
+    page,
+  }, testInfo) => {
+    const choice = interactionFixtures.find((item) => item.interactionType === "choice");
+    const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");
+    if (!choice || !textEntry) throw new Error("Missing package fixtures.");
+
+    const packageRoot = testInfo.outputPath("presidents-package");
+    await rm(packageRoot, { force: true, recursive: true });
+    await mkdir(`${packageRoot}/items`, { recursive: true });
+    await writeFile(
+      `${packageRoot}/imsmanifest.xml`,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="test-1" type="imsqti_test_xmlv3p0" href="assessment.xml">
+      <file href="assessment.xml"/>
+    </resource>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <file href="items/choice.xml"/>
+    </resource>
+    <resource identifier="text" type="imsqti_item_xmlv3p0" href="items/text-entry.xml">
+      <file href="items/text-entry.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+    );
+    await writeFile(
+      `${packageRoot}/assessment.xml`,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="US Presidents Sampler">
+  <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
+    <qti-assessment-section identifier="section-1" visible="true">
+      <qti-assessment-item-ref identifier="choice-ref" href="items/choice.xml"/>
+      <qti-assessment-item-ref identifier="text-ref" href="items/text-entry.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`,
+    );
+    await writeFile(`${packageRoot}/items/choice.xml`, choice.xml);
+    await writeFile(`${packageRoot}/items/text-entry.xml`, textEntry.xml);
+
+    await page.goto("/");
+    await page.locator("#folder").setInputFiles(packageRoot);
+
+    await expect(page.locator("#file-summary")).toContainText("1 of 2");
+    await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
+    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await page.locator("#next-file").click();
+    await expect(page.locator("#file-summary")).toContainText("2 of 2");
+    await expect(page.locator("#file-summary")).toContainText("items/text-entry.xml");
+    await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
   });
 
   test("captures and scores every reference interaction fixture", async ({ page }) => {

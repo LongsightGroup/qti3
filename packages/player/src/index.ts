@@ -9,6 +9,7 @@ import {
   type QtiDocument,
   type QtiInteraction,
   type QtiItemSession,
+  type QtiObjectAsset,
   type QtiValue,
 } from "@qti3/core";
 
@@ -1093,14 +1094,21 @@ function renderDrawingResponse(
   surface.setAttribute("role", "img");
   surface.setAttribute("aria-label", "Drawing response surface");
   surface.setAttribute("tabindex", "0");
-  surface.setAttribute("viewBox", "0 0 160 120");
+  const width = objectWidth(interaction);
+  const height = objectHeight(interaction);
+  surface.setAttribute("viewBox", `0 0 ${width} ${height}`);
   surface.style.display = "block";
-  surface.style.inlineSize = "160px";
-  surface.style.blockSize = "120px";
+  surface.style.inlineSize = `${width}px`;
+  surface.style.blockSize = `${height}px`;
   surface.style.maxInlineSize = "100%";
   surface.style.border = "1px solid CanvasText";
   surface.style.background = "Canvas";
   surface.style.touchAction = "none";
+  const background = drawingBackgroundImage(interaction, width, height);
+  const resetSurface = () => {
+    surface.replaceChildren(...(background ? [background] : []));
+  };
+  resetSurface();
 
   const summary = document.createElement("output");
   summary.className = "qti3-coordinate-output";
@@ -1175,7 +1183,7 @@ function renderDrawingResponse(
   clear.addEventListener("click", () => {
     strokes.splice(0, strokes.length);
     activeStroke = undefined;
-    surface.replaceChildren();
+    resetSurface();
     commit();
   });
 
@@ -1337,7 +1345,7 @@ function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
     return video;
   }
 
-  if (object?.data && type.startsWith("image/")) {
+  if (object?.data && objectIsImage(object)) {
     const image = document.createElement("img");
     image.src = object.data;
     image.alt = label;
@@ -1360,6 +1368,14 @@ function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
     group.textContent = label;
   }
   return group;
+}
+
+function objectIsImage(object: QtiObjectAsset): boolean {
+  return Boolean(
+    object.type?.startsWith("image/") ||
+    object.data?.startsWith("data:image/") ||
+    /\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(object.data ?? ""),
+  );
 }
 
 function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {
@@ -1508,12 +1524,30 @@ function percent(value: number, total: number): number {
 
 function svgPoint(surface: SVGSVGElement, event: PointerEvent): { x: number; y: number } {
   const rect = surface.getBoundingClientRect();
-  const x = Math.round(((event.clientX - rect.left) / rect.width) * 160);
-  const y = Math.round(((event.clientY - rect.top) / rect.height) * 120);
+  const viewBox = surface.viewBox.baseVal;
+  const width = viewBox.width || 160;
+  const height = viewBox.height || 120;
+  const x = Math.round(((event.clientX - rect.left) / rect.width) * width);
+  const y = Math.round(((event.clientY - rect.top) / rect.height) * height);
   return {
-    x: Math.max(0, Math.min(160, x)),
-    y: Math.max(0, Math.min(120, y)),
+    x: Math.max(0, Math.min(width, x)),
+    y: Math.max(0, Math.min(height, y)),
   };
+}
+
+function drawingBackgroundImage(
+  interaction: QtiInteraction,
+  width: number,
+  height: number,
+): SVGImageElement | undefined {
+  if (!interaction.object?.data || !objectIsImage(interaction.object)) return undefined;
+  const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+  image.setAttribute("href", interaction.object.data);
+  image.setAttribute("width", String(width));
+  image.setAttribute("height", String(height));
+  image.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  image.setAttribute("aria-hidden", "true");
+  return image;
 }
 
 function serializeSvgPoints(points: Array<{ x: number; y: number }>): string {

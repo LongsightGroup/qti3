@@ -30,6 +30,7 @@ export type {
   QtiInteraction,
   QtiInteractionType,
   QtiModalFeedback,
+  QtiObjectAsset,
   QtiParseResult,
   QtiProcessingElementSupport,
   QtiResponseBranch,

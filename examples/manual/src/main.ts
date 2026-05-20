@@ -7,6 +7,7 @@ const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
 const loadXml = document.querySelector<HTMLButtonElement>("#load-xml");
 const fileInput = document.querySelector<HTMLInputElement>("#file");
+const folderInput = document.querySelector<HTMLInputElement>("#folder");
 const localFiles = document.querySelector<HTMLSelectElement>("#local-files");
 const previousFile = document.querySelector<HTMLButtonElement>("#previous-file");
 const nextFile = document.querySelector<HTMLButtonElement>("#next-file");
@@ -26,6 +27,7 @@ if (
   !loadFixture ||
   !loadXml ||
   !fileInput ||
+  !folderInput ||
   !localFiles ||
   !previousFile ||
   !nextFile ||
@@ -46,6 +48,7 @@ if (
 interface LoadedFile {
   name: string;
   xml: string;
+  source: string;
 }
 
 let loadedFiles: LoadedFile[] = [];
@@ -71,24 +74,11 @@ loadXml.addEventListener("click", async () => {
 });
 
 fileInput.addEventListener("change", async () => {
-  const files = [...(fileInput.files ?? [])].filter((file) => file.name.endsWith(".xml"));
-  loadedFiles = await Promise.all(
-    files.map(async (file) => ({
-      name: file.webkitRelativePath || file.name,
-      xml: await file.text(),
-    })),
-  );
-  loadedFiles.sort((left, right) => left.name.localeCompare(right.name));
-  localFiles.replaceChildren(
-    ...loadedFiles.map((file, index) => {
-      const option = document.createElement("option");
-      option.value = String(index);
-      option.textContent = file.name;
-      return option;
-    }),
-  );
-  selectedFileIndex = loadedFiles.length > 0 ? 0 : -1;
-  await loadSelectedLocalFile();
+  await loadLocalFiles(fileInput.files);
+});
+
+folderInput.addEventListener("change", async () => {
+  await loadLocalFiles(folderInput.files);
 });
 
 localFiles.addEventListener("change", async () => {
@@ -229,7 +219,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function loadSelectedLocalFile(): Promise<void> {
   const file = loadedFiles[selectedFileIndex];
   if (!file) {
-    fileSummary.textContent = "No local XML files loaded.";
+    fileSummary.textContent =
+      "No QTI item files loaded. For QTI packages, select the package folder so referenced item files are included.";
     previousFile.disabled = true;
     nextFile.disabled = true;
     return;
@@ -241,4 +232,109 @@ async function loadSelectedLocalFile(): Promise<void> {
   previousFile.disabled = selectedFileIndex <= 0;
   nextFile.disabled = selectedFileIndex >= loadedFiles.length - 1;
   await player.loadXml(file.xml);
+}
+
+async function loadLocalFiles(fileList: FileList | null): Promise<void> {
+  const files = await readXmlFiles(fileList);
+  loadedFiles = resolveLoadableItems(files);
+  localFiles.replaceChildren(
+    ...loadedFiles.map((file, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = file.name;
+      return option;
+    }),
+  );
+  selectedFileIndex = loadedFiles.length > 0 ? 0 : -1;
+  await loadSelectedLocalFile();
+}
+
+async function readXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
+  const files = [...(fileList ?? [])].filter((file) => file.name.endsWith(".xml"));
+  const loaded = await Promise.all(
+    files.map(async (file) => {
+      const source = normalizePath(file.webkitRelativePath || file.name);
+      return {
+        name: source,
+        source,
+        xml: await file.text(),
+      };
+    }),
+  );
+  return loaded.sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function resolveLoadableItems(files: LoadedFile[]): LoadedFile[] {
+  const byPath = new Map(files.map((file) => [file.source, file]));
+  const itemPaths = new Set<string>();
+  const packageOrder: string[] = [];
+
+  for (const file of files) {
+    const root = xmlRootName(file.xml);
+    if (root === "qti-assessment-item") {
+      itemPaths.add(file.source);
+      continue;
+    }
+
+    const refs =
+      root === "qti-assessment-test"
+        ? assessmentItemRefs(file.xml, file.source)
+        : root === "manifest"
+          ? manifestItemResources(file.xml, file.source)
+          : [];
+    for (const ref of refs) {
+      if (byPath.has(ref) && !packageOrder.includes(ref)) packageOrder.push(ref);
+    }
+  }
+
+  const orderedPaths =
+    packageOrder.length > 0
+      ? [...packageOrder, ...[...itemPaths].filter((path) => !packageOrder.includes(path))]
+      : [...itemPaths].sort((left, right) => left.localeCompare(right));
+  return orderedPaths.map((path) => byPath.get(path)).filter((file) => file !== undefined);
+}
+
+function xmlRootName(xml: string): string {
+  const parsed = new DOMParser().parseFromString(xml, "application/xml");
+  if (parsed.querySelector("parsererror")) return "";
+  return parsed.documentElement?.localName ?? "";
+}
+
+function assessmentItemRefs(xml: string, source: string): string[] {
+  const parsed = new DOMParser().parseFromString(xml, "application/xml");
+  const refs = elementsByLocalName(parsed, "qti-assessment-item-ref");
+  return refs
+    .map((element) => element.getAttribute("href") ?? "")
+    .filter(Boolean)
+    .map((href) => resolveRelativePath(source, href));
+}
+
+function manifestItemResources(xml: string, source: string): string[] {
+  const parsed = new DOMParser().parseFromString(xml, "application/xml");
+  const refs = elementsByLocalName(parsed, "resource")
+    .filter((element) => element.getAttribute("type") === "imsqti_item_xmlv3p0")
+    .map((element) => element.getAttribute("href") ?? "")
+    .filter(Boolean);
+  return refs.map((href) => resolveRelativePath(source, href));
+}
+
+function elementsByLocalName(document: Document, localName: string): Element[] {
+  return [...document.getElementsByTagName("*")].filter(
+    (element) => element.localName === localName,
+  );
+}
+
+function resolveRelativePath(from: string, href: string): string {
+  const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
+  return normalizePath(`${base}${href}`);
+}
+
+function normalizePath(path: string): string {
+  const parts: string[] = [];
+  for (const part of path.split("/")) {
+    if (!part || part === ".") continue;
+    if (part === "..") parts.pop();
+    else parts.push(part);
+  }
+  return parts.join("/");
 }
