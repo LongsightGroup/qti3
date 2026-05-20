@@ -1987,6 +1987,113 @@ describe("@qti3/core", () => {
     expect(values.A).not.toBe(values.B);
   });
 
+  it("does not retain generated correct responses from rejected template constraint passes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-correct-reset">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-custom-operator definition="next-template-value"/>
+          </qti-set-template-value>
+          <qti-template-condition>
+            <qti-template-if>
+              <qti-equal>
+                <qti-variable identifier="A"/>
+                <qti-base-value base-type="integer">1</qti-base-value>
+              </qti-equal>
+              <qti-set-correct-response identifier="RESPONSE">
+                <qti-variable identifier="A"/>
+              </qti-set-correct-response>
+            </qti-template-if>
+          </qti-template-condition>
+          <qti-template-constraint>
+            <qti-equal>
+              <qti-variable identifier="A"/>
+              <qti-base-value base-type="integer">2</qti-base-value>
+            </qti-equal>
+          </qti-template-constraint>
+        </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    let nextValue = 0;
+    const session = createItemSession(result.document!, undefined, {
+      customOperators: {
+        "next-template-value": () => {
+          nextValue += 1;
+          return nextValue;
+        },
+      },
+    });
+
+    expect(session.serialize().templateValues).toEqual({ A: 2 });
+    expect(session.correctResponses()).toEqual({ RESPONSE: null });
+  });
+
+  it("does not retain generated defaults from rejected template constraint passes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-default-reset">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="TRACE" cardinality="single" base-type="identifier"/>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-custom-operator definition="next-template-value"/>
+          </qti-set-template-value>
+          <qti-template-condition>
+            <qti-template-if>
+              <qti-equal>
+                <qti-variable identifier="A"/>
+                <qti-base-value base-type="integer">1</qti-base-value>
+              </qti-equal>
+              <qti-set-default-value identifier="RESPONSE">
+                <qti-variable identifier="A"/>
+              </qti-set-default-value>
+              <qti-set-default-value identifier="TRACE">
+                <qti-base-value base-type="identifier">rejected</qti-base-value>
+              </qti-set-default-value>
+            </qti-template-if>
+          </qti-template-condition>
+          <qti-template-constraint>
+            <qti-equal>
+              <qti-variable identifier="A"/>
+              <qti-base-value base-type="integer">2</qti-base-value>
+            </qti-equal>
+          </qti-template-constraint>
+        </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    let nextValue = 0;
+    const session = createItemSession(result.document!, undefined, {
+      customOperators: {
+        "next-template-value": () => {
+          nextValue += 1;
+          return nextValue;
+        },
+      },
+    });
+
+    expect(session.serialize().templateValues).toEqual({ A: 2 });
+    expect(session.serialize().responses).toEqual({});
+    expect(session.serialize().outcomes).toMatchObject({
+      SCORE: null,
+      TRACE: null,
+      completionStatus: "not_attempted",
+    });
+  });
+
   it("validates random integer processing attributes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-random-integer">

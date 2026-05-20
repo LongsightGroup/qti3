@@ -96,6 +96,8 @@ export function createItemSession(
     outcomes[outcome.identifier] = cloneValue(outcome.defaultValue);
   }
   outcomes[COMPLETION_STATUS] = COMPLETION_NOT_ATTEMPTED;
+  const baseResponses = cloneValueRecord(responses);
+  const baseOutcomes = cloneValueRecord(outcomes);
 
   applyTemplateProcessing(
     document,
@@ -105,6 +107,9 @@ export function createItemSession(
     correctResponses,
     random,
     customOperators,
+    new Set(),
+    baseResponses,
+    baseOutcomes,
   );
   if (priorState) {
     Object.assign(templateValues, priorTemplateValues);
@@ -118,6 +123,8 @@ export function createItemSession(
       random,
       customOperators,
       new Set(Object.keys(priorTemplateValues)),
+      baseResponses,
+      baseOutcomes,
     );
   }
   const defaultOutcomes = cloneValueRecord(outcomes);
@@ -247,6 +254,8 @@ function applyTemplateProcessing(
   random: () => number,
   customOperators: QtiCustomOperatorRegistry,
   preservedTemplateIdentifiers = new Set<string>(),
+  baseResponses: Record<string, QtiValue> = cloneValueRecord(responses),
+  baseOutcomes: Record<string, QtiValue> = cloneValueRecord(outcomes),
 ): void {
   const rules = document.item.templateProcessing?.rules ?? [];
   let restarts = 0;
@@ -277,6 +286,9 @@ function applyTemplateProcessing(
       );
       if (!satisfied) {
         resetTemplateValues(document, templateValues);
+        resetRecord(responses, cloneValueRecord(baseResponses));
+        resetRecord(outcomes, cloneValueRecord(baseOutcomes));
+        resetCorrectResponses(document, correctResponses);
         restarts += 1;
         if (restarts <= 100) index = -1;
       }
@@ -389,7 +401,6 @@ function applyTemplateRule(
     const responseDeclaration = getResponseDeclaration(document, rule.identifier);
     if (responseDeclaration) {
       const normalized = normalizeValueForCardinality(value, responseDeclaration.cardinality);
-      responseDeclaration.defaultValue = normalized;
       responses[rule.identifier] = normalized;
       return false;
     }
@@ -397,7 +408,6 @@ function applyTemplateRule(
       (declaration) => declaration.identifier === rule.identifier,
     );
     if (outcomeDeclaration) {
-      outcomeDeclaration.defaultValue = value;
       outcomes[rule.identifier] = value;
     }
     return false;
