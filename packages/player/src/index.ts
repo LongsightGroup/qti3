@@ -578,12 +578,8 @@ function renderOrderedResponse(
       }),
     );
   };
-  const confirm = document.createElement("button");
-  confirm.type = "button";
-  confirm.textContent = "Use current order";
-  confirm.addEventListener("click", commit);
   renderList();
-  group.append(list, confirm);
+  group.append(list);
   return group;
 }
 

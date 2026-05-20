@@ -436,6 +436,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "order");
 
+    await expect(page.getByRole("button", { name: "Use current order" })).toHaveCount(0);
     await page
       .locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]')
       .focus();
@@ -1006,22 +1007,33 @@ async function provideResponse(
         (item) => (item as HTMLElement).dataset.choiceIdentifier,
       );
     });
+    let moved = false;
     for (const [targetIndex, value] of response.map(String).entries()) {
       let currentIndex = current.indexOf(value);
       while (currentIndex > targetIndex) {
         await page.getByRole("button", { name: `Move ${value} up` }).click();
+        moved = true;
         current.splice(currentIndex, 1);
         current.splice(currentIndex - 1, 0, value);
         currentIndex -= 1;
       }
       while (currentIndex < targetIndex) {
         await page.getByRole("button", { name: `Move ${value} down` }).click();
+        moved = true;
         current.splice(currentIndex, 1);
         current.splice(currentIndex + 1, 0, value);
         currentIndex += 1;
       }
     }
-    await page.getByRole("button", { name: "Use current order" }).click();
+    if (!moved && current.length > 1) {
+      const first = current[0];
+      if (!first) return;
+      const firstItem = page.locator(
+        `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${first}"]`,
+      );
+      await firstItem.locator('button[aria-label$=" down"]').click();
+      await firstItem.locator('button[aria-label$=" up"]').click();
+    }
     return;
   }
 
