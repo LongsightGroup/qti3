@@ -232,4 +232,39 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE", ["A", "B"]);
     expect(session.score().outcomes.SCORE).toBe(1);
   });
+
+  it("runs deterministic template processing before scoring", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-random-integer min="2" max="2"/>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="B">
+            <qti-sum>
+              <qti-variable identifier="A"/>
+              <qti-base-value base-type="integer">3</qti-base-value>
+            </qti-sum>
+          </qti-set-template-value>
+          <qti-set-correct-response identifier="RESPONSE">
+            <qti-variable identifier="B"/>
+          </qti-set-correct-response>
+        </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!, undefined, { randomSeed: "fixed" });
+    expect(session.serialize().templateValues).toEqual({ A: 2, B: 5 });
+    expect(session.correctResponses()).toEqual({ RESPONSE: 5 });
+    session.respond("RESPONSE", 5);
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
 });

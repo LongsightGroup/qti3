@@ -14,6 +14,9 @@ import type {
   QtiResponseDeclaration,
   QtiResponseProcessing,
   QtiSetOutcomeValue,
+  QtiTemplateDeclaration,
+  QtiTemplateProcessing,
+  QtiTemplateRule,
   QtiValue,
 } from "./types.js";
 import { validateAssessmentItem } from "./validation.js";
@@ -72,6 +75,12 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const outcomeDeclarations = childElements(node, "qti-outcome-declaration").map(
     parseOutcomeDeclaration,
   );
+  const templateDeclarations = childElements(node, "qti-template-declaration").map(
+    parseTemplateDeclaration,
+  );
+  const templateProcessing = parseTemplateProcessing(
+    childElements(node, "qti-template-processing")[0],
+  );
   const responseProcessing = parseResponseProcessing(
     childElements(node, "qti-response-processing")[0],
   );
@@ -84,6 +93,8 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     title: node.attributes.title,
     responseDeclarations,
     outcomeDeclarations,
+    templateDeclarations,
+    templateProcessing,
     responseProcessing,
     interactions,
     bodyText: textContent(node),
@@ -113,6 +124,16 @@ function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
     identifier: node.attributes.identifier ?? "SCORE",
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType: node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"],
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+  };
+}
+
+function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
+  return {
+    kind: "template",
+    identifier: node.attributes.identifier ?? "TEMPLATE",
+    cardinality: parseCardinality(node.attributes.cardinality),
+    baseType: node.attributes["base-type"] as QtiTemplateDeclaration["baseType"],
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
   };
 }
@@ -268,6 +289,35 @@ function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessi
   };
 }
 
+function parseTemplateProcessing(node: XmlNode | undefined): QtiTemplateProcessing | undefined {
+  if (!node) return undefined;
+  return {
+    rules: childElements(node)
+      .map(parseTemplateRule)
+      .filter((rule): rule is QtiTemplateRule => rule !== undefined),
+  };
+}
+
+function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
+  if (node.localName === "qti-set-template-value") {
+    return {
+      type: "setTemplateValue",
+      identifier: node.attributes.identifier ?? "TEMPLATE",
+      expression: parseFirstExpression(node) ?? { type: "baseValue", value: null },
+    };
+  }
+
+  if (node.localName === "qti-set-correct-response") {
+    return {
+      type: "setCorrectResponse",
+      identifier: node.attributes.identifier ?? "RESPONSE",
+      expression: parseFirstExpression(node) ?? { type: "baseValue", value: null },
+    };
+  }
+
+  return undefined;
+}
+
 function parseResponseCondition(node: XmlNode): QtiResponseCondition {
   const responseIf = childElements(node, "qti-response-if")[0];
   const responseElse = childElements(node, "qti-response-else")[0];
@@ -308,6 +358,55 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
 
   if (node.localName === "qti-map-response") {
     return { type: "mapResponse", identifier: node.attributes.identifier ?? "RESPONSE" };
+  }
+
+  if (node.localName === "qti-variable") {
+    return { type: "variable", identifier: node.attributes.identifier ?? "RESPONSE" };
+  }
+
+  if (node.localName === "qti-random-integer") {
+    return {
+      type: "randomInteger",
+      min: Number(node.attributes.min ?? 0),
+      max: Number(node.attributes.max ?? 0),
+      step: Number(node.attributes.step ?? 1),
+    };
+  }
+
+  if (node.localName === "qti-random") {
+    const multiple = childElements(node, "qti-multiple")[0];
+    return {
+      type: "random",
+      values: childElements(multiple ?? node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+    };
+  }
+
+  if (node.localName === "qti-sum") {
+    return {
+      type: "sum",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+    };
+  }
+
+  if (node.localName === "qti-product") {
+    return {
+      type: "product",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+    };
+  }
+
+  if (node.localName === "qti-subtract") {
+    const expressions = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    const [left, right] = expressions;
+    if (left && right) return { type: "subtract", left, right };
   }
 
   if (node.localName === "qti-match") {

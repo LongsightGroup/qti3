@@ -7,11 +7,17 @@ import type {
   QtiResponseDeclaration,
   QtiSetOutcomeValue,
   QtiScoreResult,
+  QtiTemplateRule,
   QtiValue,
 } from "./types.js";
 
+export interface QtiItemSessionOptions {
+  randomSeed?: string | number | undefined;
+}
+
 export interface QtiItemSession {
   readonly item: QtiAssessmentItem;
+  correctResponses(): Record<string, QtiValue>;
   respond(identifier: string, value: QtiValue): void;
   score(): QtiScoreResult;
   serialize(): QtiAttemptStateV1;
@@ -20,44 +26,132 @@ export interface QtiItemSession {
 export function createItemSession(
   document: QtiDocument,
   priorState?: QtiAttemptStateV1,
+  options: QtiItemSessionOptions = {},
 ): QtiItemSession {
   const responses: Record<string, QtiValue> = { ...priorState?.responses };
   const outcomes: Record<string, QtiValue> = {};
+  const templateValues: Record<string, QtiValue> = {};
+  const correctResponses: Record<string, QtiValue> = {};
+  const random = seededRandom(options.randomSeed ?? document.item.identifier);
 
+  for (const declaration of document.item.responseDeclarations) {
+    correctResponses[declaration.identifier] = declaration.correctResponse;
+  }
+  for (const declaration of document.item.templateDeclarations) {
+    templateValues[declaration.identifier] = declaration.defaultValue;
+  }
   for (const outcome of document.item.outcomeDeclarations) {
     outcomes[outcome.identifier] = outcome.defaultValue;
   }
+
+  applyTemplateProcessing(document, templateValues, responses, correctResponses, random);
+  Object.assign(templateValues, priorState?.templateValues ?? {});
   Object.assign(outcomes, priorState?.outcomes ?? {});
 
   return {
     item: document.item,
+    correctResponses() {
+      return { ...correctResponses };
+    },
     respond(identifier: string, value: QtiValue) {
       responses[identifier] = value;
     },
     score() {
       const diagnostics: QtiDiagnostic[] = [];
-      applyResponseProcessing(document, responses, outcomes);
-      const state = serialize(document.item.identifier, responses, outcomes, diagnostics);
+      applyResponseProcessing(
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      );
+      const state = serialize(
+        document.item.identifier,
+        responses,
+        outcomes,
+        templateValues,
+        diagnostics,
+      );
       return { outcomes: { ...outcomes }, diagnostics, state };
     },
     serialize() {
-      return serialize(document.item.identifier, responses, outcomes, []);
+      return serialize(document.item.identifier, responses, outcomes, templateValues, []);
     },
   };
+}
+
+function applyTemplateProcessing(
+  document: QtiDocument,
+  templateValues: Record<string, QtiValue>,
+  responses: Record<string, QtiValue>,
+  correctResponses: Record<string, QtiValue>,
+  random: () => number,
+): void {
+  for (const rule of document.item.templateProcessing?.rules ?? []) {
+    applyTemplateRule(rule, document, templateValues, responses, correctResponses, random);
+  }
+}
+
+function applyTemplateRule(
+  rule: QtiTemplateRule,
+  document: QtiDocument,
+  templateValues: Record<string, QtiValue>,
+  responses: Record<string, QtiValue>,
+  correctResponses: Record<string, QtiValue>,
+  random: () => number,
+): void {
+  const value = evaluateValue(
+    rule.expression,
+    document,
+    responses,
+    templateValues,
+    correctResponses,
+    random,
+  );
+  if (rule.type === "setTemplateValue") {
+    templateValues[rule.identifier] = value;
+    return;
+  }
+
+  const declaration = getResponseDeclaration(document, rule.identifier);
+  if (declaration)
+    correctResponses[rule.identifier] = normalizeValueForCardinality(
+      value,
+      declaration.cardinality,
+    );
 }
 
 function applyResponseProcessing(
   document: QtiDocument,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue>,
+  correctResponses: Record<string, QtiValue>,
+  random: () => number,
 ): void {
   const processing = document.item.responseProcessing;
   if (processing?.conditions.length) {
     for (const condition of processing.conditions) {
-      const branch = evaluateBoolean(condition.ifExpression, document, responses)
+      const branch = evaluateBoolean(
+        condition.ifExpression,
+        document,
+        responses,
+        templateValues,
+        correctResponses,
+        random,
+      )
         ? condition.thenRules
         : condition.elseRules;
-      applyOutcomeRules(branch, document, responses, outcomes);
+      applyOutcomeRules(
+        branch,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      );
     }
     return;
   }
@@ -65,19 +159,20 @@ function applyResponseProcessing(
   const template = processing?.template ?? "";
   if (template.includes("map_response")) {
     for (const declaration of document.item.responseDeclarations) {
-      outcomes.SCORE = mapOrMatchResponse(declaration, responses[declaration.identifier] ?? null);
+      outcomes.SCORE = mapOrMatchResponse(
+        declaration,
+        responses[declaration.identifier] ?? null,
+        correctResponses[declaration.identifier] ?? null,
+      );
     }
     return;
   }
 
   for (const declaration of document.item.responseDeclarations) {
     const response = responses[declaration.identifier] ?? null;
-    if (declaration.correctResponse !== null) {
-      outcomes.SCORE = valuesEqual(
-        response,
-        declaration.correctResponse,
-        declaration.cardinality === "ordered",
-      )
+    const correctResponse = correctResponses[declaration.identifier] ?? null;
+    if (correctResponse !== null) {
+      outcomes.SCORE = valuesEqual(response, correctResponse, declaration.cardinality === "ordered")
         ? 1
         : 0;
     }
@@ -89,9 +184,19 @@ function applyOutcomeRules(
   document: QtiDocument,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue>,
+  correctResponses: Record<string, QtiValue>,
+  random: () => number,
 ): void {
   for (const rule of rules) {
-    outcomes[rule.identifier] = evaluateValue(rule.expression, document, responses);
+    outcomes[rule.identifier] = evaluateValue(
+      rule.expression,
+      document,
+      responses,
+      templateValues,
+      correctResponses,
+      random,
+    );
   }
 }
 
@@ -99,9 +204,19 @@ function evaluateBoolean(
   expression: QtiProcessingExpression | undefined,
   document: QtiDocument,
   responses: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue> = {},
+  correctResponses: Record<string, QtiValue> = {},
+  random: () => number = Math.random,
 ): boolean {
   if (!expression) return false;
-  const value = evaluateValue(expression, document, responses);
+  const value = evaluateValue(
+    expression,
+    document,
+    responses,
+    templateValues,
+    correctResponses,
+    random,
+  );
   return value === true;
 }
 
@@ -109,6 +224,9 @@ function evaluateValue(
   expression: QtiProcessingExpression,
   document: QtiDocument,
   responses: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue> = {},
+  correctResponses: Record<string, QtiValue> = {},
+  random: () => number = Math.random,
 ): QtiValue {
   if (expression.type === "baseValue") return expression.value;
   if (expression.type === "isNull") return isNullResponse(responses[expression.identifier] ?? null);
@@ -117,7 +235,7 @@ function evaluateValue(
     return declaration
       ? valuesEqual(
           responses[expression.identifier] ?? null,
-          declaration.correctResponse,
+          correctResponses[expression.identifier] ?? null,
           declaration.cardinality === "ordered",
         )
       : false;
@@ -125,8 +243,76 @@ function evaluateValue(
   if (expression.type === "mapResponse") {
     const declaration = getResponseDeclaration(document, expression.identifier);
     return declaration
-      ? mapOrMatchResponse(declaration, responses[expression.identifier] ?? null)
+      ? mapOrMatchResponse(
+          declaration,
+          responses[expression.identifier] ?? null,
+          correctResponses[expression.identifier] ?? null,
+        )
       : 0;
+  }
+  if (expression.type === "variable") {
+    return responses[expression.identifier] ?? templateValues[expression.identifier] ?? null;
+  }
+  if (expression.type === "randomInteger") {
+    const step = expression.step > 0 ? expression.step : 1;
+    const count = Math.floor((expression.max - expression.min) / step) + 1;
+    return expression.min + Math.floor(random() * count) * step;
+  }
+  if (expression.type === "random") {
+    if (expression.values.length === 0) return null;
+    const index = Math.floor(random() * expression.values.length);
+    return evaluateValue(
+      expression.values[index]!,
+      document,
+      responses,
+      templateValues,
+      correctResponses,
+      random,
+    );
+  }
+  if (expression.type === "sum") {
+    return expression.expressions.reduce(
+      (sum, item) =>
+        sum +
+        numericValue(
+          evaluateValue(item, document, responses, templateValues, correctResponses, random),
+        ),
+      0,
+    );
+  }
+  if (expression.type === "product") {
+    return expression.expressions.reduce(
+      (product, item) =>
+        product *
+        numericValue(
+          evaluateValue(item, document, responses, templateValues, correctResponses, random),
+        ),
+      1,
+    );
+  }
+  if (expression.type === "subtract") {
+    return (
+      numericValue(
+        evaluateValue(
+          expression.left,
+          document,
+          responses,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ) -
+      numericValue(
+        evaluateValue(
+          expression.right,
+          document,
+          responses,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      )
+    );
   }
   return null;
 }
@@ -140,12 +326,14 @@ function getResponseDeclaration(
   );
 }
 
-function mapOrMatchResponse(declaration: QtiResponseDeclaration, response: QtiValue): number {
+function mapOrMatchResponse(
+  declaration: QtiResponseDeclaration,
+  response: QtiValue,
+  correctResponse: QtiValue,
+): number {
   if (declaration.areaMapping) return scoreAreaMapping(response, declaration.areaMapping);
   if (declaration.mapping) return scoreMapping(response, declaration.mapping);
-  return valuesEqual(response, declaration.correctResponse, declaration.cardinality === "ordered")
-    ? 1
-    : 0;
+  return valuesEqual(response, correctResponse, declaration.cardinality === "ordered") ? 1 : 0;
 }
 
 function scoreAreaMapping(
@@ -226,6 +414,7 @@ function serialize(
   itemIdentifier: string,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue>,
   validationMessages: QtiDiagnostic[],
 ): QtiAttemptStateV1 {
   return {
@@ -233,6 +422,7 @@ function serialize(
     itemIdentifier,
     responses: { ...responses },
     outcomes: { ...outcomes },
+    templateValues: { ...templateValues },
     validationMessages: [...validationMessages],
   };
 }
@@ -259,4 +449,42 @@ function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boo
       .every((value, index) => value === [...expectedValues].sort()[index]);
   }
   return actual === expected;
+}
+
+function normalizeValueForCardinality(
+  value: QtiValue,
+  cardinality: QtiResponseDeclaration["cardinality"],
+): QtiValue {
+  if (
+    (cardinality === "multiple" || cardinality === "ordered") &&
+    value !== null &&
+    !Array.isArray(value)
+  ) {
+    return [String(value)];
+  }
+  return value;
+}
+
+function numericValue(value: QtiValue): number {
+  if (typeof value === "number") return value;
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "string") return Number(value);
+  return 0;
+}
+
+function seededRandom(seed: string | number): () => number {
+  let state = typeof seed === "number" ? seed >>> 0 : hashSeed(seed);
+  return () => {
+    state = (1664525 * state + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function hashSeed(seed: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash ^= seed.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }

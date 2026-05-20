@@ -65,6 +65,10 @@ export interface QtiOutcomeDeclaration extends QtiVariableDeclaration {
   kind: "outcome";
 }
 
+export interface QtiTemplateDeclaration extends QtiVariableDeclaration {
+  kind: "template";
+}
+
 export interface QtiChoice {
   identifier: string;
   text: string;
@@ -124,6 +128,8 @@ export interface QtiAssessmentItem {
   title?: string | undefined;
   responseDeclarations: QtiResponseDeclaration[];
   outcomeDeclarations: QtiOutcomeDeclaration[];
+  templateDeclarations: QtiTemplateDeclaration[];
+  templateProcessing?: QtiTemplateProcessing | undefined;
   responseProcessing?: QtiResponseProcessing | undefined;
   interactions: QtiInteraction[];
   bodyText: string;
@@ -145,11 +151,25 @@ export interface QtiSetOutcomeValue {
   expression: QtiProcessingExpression;
 }
 
+export interface QtiTemplateProcessing {
+  rules: QtiTemplateRule[];
+}
+
+export type QtiTemplateRule =
+  | { type: "setTemplateValue"; identifier: string; expression: QtiProcessingExpression }
+  | { type: "setCorrectResponse"; identifier: string; expression: QtiProcessingExpression };
+
 export type QtiProcessingExpression =
   | { type: "baseValue"; value: QtiValue }
   | { type: "isNull"; identifier: string }
   | { type: "matchCorrect"; identifier: string }
-  | { type: "mapResponse"; identifier: string };
+  | { type: "mapResponse"; identifier: string }
+  | { type: "variable"; identifier: string }
+  | { type: "randomInteger"; min: number; max: number; step: number }
+  | { type: "random"; values: QtiProcessingExpression[] }
+  | { type: "sum"; expressions: QtiProcessingExpression[] }
+  | { type: "product"; expressions: QtiProcessingExpression[] }
+  | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression };
 
 export interface QtiDocument {
   item: QtiAssessmentItem;
@@ -172,6 +192,7 @@ export interface QtiAttemptStateV1 {
   itemIdentifier: string;
   responses: Record<string, QtiValue>;
   outcomes: Record<string, QtiValue>;
+  templateValues?: Record<string, QtiValue> | undefined;
   validationMessages: QtiDiagnostic[];
 }
 

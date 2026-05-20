@@ -41,7 +41,11 @@ function validateDeclarationIdentifiers(
   diagnostics: QtiDiagnostic[],
 ): void {
   const seen = new Set<string>();
-  for (const declaration of [...item.responseDeclarations, ...item.outcomeDeclarations]) {
+  for (const declaration of [
+    ...item.responseDeclarations,
+    ...item.outcomeDeclarations,
+    ...item.templateDeclarations,
+  ]) {
     requireIdentifier(`${declaration.kind} declaration`, declaration.identifier, diagnostics);
     if (seen.has(declaration.identifier)) {
       diagnostics.push({

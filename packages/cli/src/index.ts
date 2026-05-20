@@ -217,10 +217,12 @@ async function scoreCorrectFile(file: string): Promise<{
 
   const session = createItemSession(result.document);
   let scorable = false;
+  const correctResponses = session.correctResponses();
   for (const declaration of result.document.item.responseDeclarations) {
-    if (declaration.correctResponse !== null) {
+    const correctResponse = correctResponses[declaration.identifier] ?? null;
+    if (correctResponse !== null) {
       scorable = true;
-      session.respond(declaration.identifier, declaration.correctResponse);
+      session.respond(declaration.identifier, correctResponse);
     }
   }
   const scored = session.score();
