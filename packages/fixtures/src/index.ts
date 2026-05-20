@@ -93,21 +93,40 @@ function defaultResponse(interactionType: QtiInteractionType): {
   if (interactionType === "endAttempt" || interactionType === "media") {
     return { cardinality: "single", baseType: "identifier", correct: null };
   }
+  if (interactionType === "choice") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "single",
+      baseType: "identifier",
+      correct: "A",
+    };
+  }
+  if (interactionType === "order" || interactionType === "graphicOrder") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "ordered",
+      baseType: "identifier",
+      correct: ["A", "B"],
+    };
+  }
+  if (interactionType === "associate" || interactionType === "graphicAssociate") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "multiple",
+      baseType: "pair",
+      correct: ["A B"],
+    };
+  }
   if (
-    interactionType === "order" ||
-    interactionType === "graphicOrder" ||
-    interactionType === "associate" ||
-    interactionType === "graphicAssociate" ||
     interactionType === "gapMatch" ||
     interactionType === "graphicGapMatch" ||
-    interactionType === "match" ||
-    interactionType === "choice"
+    interactionType === "match"
   ) {
     return {
       identifier: "RESPONSE",
       cardinality: "multiple",
-      baseType: "identifier",
-      correct: ["A"],
+      baseType: "directedPair",
+      correct: ["A G1"],
     };
   }
   if (interactionType === "slider") {
@@ -176,6 +195,9 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     interactionType === "associate" ||
     interactionType === "graphicAssociate"
   ) {
+    if (interactionType === "match") {
+      return `<${qtiName} response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set><qti-simple-match-set><qti-simple-associable-choice identifier="G1" match-max="1">Target 1</qti-simple-associable-choice><qti-simple-associable-choice identifier="G2" match-max="1">Target 2</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
+    }
     return `<${qtiName} response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
   }
   if (interactionType === "gapMatch" || interactionType === "graphicGapMatch") {

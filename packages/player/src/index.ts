@@ -1,6 +1,7 @@
 import {
   createItemSession,
   parseQtiXml,
+  type QtiChoice,
   type QtiDocument,
   type QtiInteraction,
   type QtiItemSession,
@@ -98,6 +99,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         new CustomEvent("qti-statechange", { detail: { state: this.session.serialize() } }),
       );
     };
+
+    if (usesOrderedResponse(interaction)) {
+      field.append(renderOrderedResponse(interaction, update));
+      return field;
+    }
+
+    if (usesPairResponse(interaction)) {
+      field.append(renderPairResponse(interaction, update));
+      return field;
+    }
 
     if (usesChoiceSet(interaction)) {
       field.append(renderChoice(interaction, update));
@@ -228,41 +239,134 @@ function usesChoiceSet(interaction: QtiInteraction): boolean {
   ) {
     return true;
   }
+  return interaction.responseCardinality === "multiple";
+}
+
+function usesOrderedResponse(interaction: QtiInteraction): boolean {
   return (
-    interaction.responseCardinality === "multiple" ||
     interaction.responseCardinality === "ordered" ||
+    interaction.type === "order" ||
+    interaction.type === "graphicOrder"
+  );
+}
+
+function usesPairResponse(interaction: QtiInteraction): boolean {
+  return (
+    interaction.responseBaseType === "pair" ||
+    interaction.responseBaseType === "directedPair" ||
     interaction.type === "associate" ||
+    interaction.type === "graphicAssociate" ||
     interaction.type === "match" ||
     interaction.type === "gapMatch" ||
-    interaction.type === "graphicAssociate" ||
-    interaction.type === "graphicGapMatch" ||
-    interaction.type === "graphicOrder" ||
-    interaction.type === "order"
+    interaction.type === "graphicGapMatch"
   );
+}
+
+function renderOrderedResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = `${readableType(interaction.type)} order`;
+  group.append(legend);
+
+  const choices = choicesOrFallback(interaction).filter((choice) => choice.role !== "gap");
+  const selects: HTMLSelectElement[] = [];
+  for (const [index] of choices.entries()) {
+    const label = document.createElement("label");
+    label.textContent = `Position ${index + 1} `;
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", `Position ${index + 1}`);
+    appendOptions(select, choices);
+    select.addEventListener("change", () => {
+      update(selects.map((item) => item.value).filter((value) => value.length > 0));
+    });
+    selects.push(select);
+    label.append(select);
+    group.append(label);
+  }
+  return group;
+}
+
+function renderPairResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = `${readableType(interaction.type)} pairs`;
+  group.append(legend);
+
+  const source = document.createElement("select");
+  source.setAttribute("aria-label", `${readableType(interaction.type)} source`);
+  appendOptions(source, sourceChoices(interaction));
+
+  const target = document.createElement("select");
+  target.setAttribute("aria-label", `${readableType(interaction.type)} target`);
+  appendOptions(target, targetChoices(interaction));
+
+  const sync = () => {
+    if (!source.value || !target.value) {
+      update([]);
+      return;
+    }
+    update([`${source.value} ${target.value}`]);
+  };
+  source.addEventListener("change", sync);
+  target.addEventListener("change", sync);
+
+  const sourceLabel = document.createElement("label");
+  sourceLabel.textContent = "Source ";
+  sourceLabel.append(source);
+  const targetLabel = document.createElement("label");
+  targetLabel.textContent = "Target ";
+  targetLabel.append(target);
+  group.append(sourceLabel, targetLabel);
+  return group;
 }
 
 function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {
   const select = document.createElement("select");
   select.setAttribute("aria-label", readableType(interaction.type));
+  appendOptions(select, choicesOrFallback(interaction));
+  select.addEventListener("change", () => update(select.value));
+  return select;
+}
+
+function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {
   const empty = document.createElement("option");
   empty.value = "";
   empty.textContent = "Select";
   select.append(empty);
-  for (const choice of choicesOrFallback(interaction)) {
+  for (const choice of choices) {
     const option = document.createElement("option");
     option.value = choice.identifier;
     option.textContent = choice.text;
     select.append(option);
   }
-  select.addEventListener("change", () => update(select.value));
-  return select;
 }
 
-function choicesOrFallback(interaction: QtiInteraction) {
+function sourceChoices(interaction: QtiInteraction): QtiChoice[] {
+  const choices = choicesOrFallback(interaction);
+  const sourceRoles = new Set(["associableChoice", "matchSource", "gapChoice", "hotspot"]);
+  const sources = choices.filter((choice) => sourceRoles.has(choice.role));
+  return sources.length > 0 ? sources : choices;
+}
+
+function targetChoices(interaction: QtiInteraction): QtiChoice[] {
+  const choices = choicesOrFallback(interaction);
+  if (interaction.type === "associate" || interaction.type === "graphicAssociate") return choices;
+  const targetRoles = new Set(["matchTarget", "gap", "hotspot"]);
+  const targets = choices.filter((choice) => targetRoles.has(choice.role));
+  return targets.length > 0 ? targets : choices;
+}
+
+function choicesOrFallback(interaction: QtiInteraction): QtiChoice[] {
   if (interaction.choices.length > 0) return interaction.choices;
   return [
-    { identifier: "A", text: "A" },
-    { identifier: "B", text: "B" },
+    { identifier: "A", text: "A", role: "simpleChoice", qtiName: "qti-simple-choice" },
+    { identifier: "B", text: "B", role: "simpleChoice", qtiName: "qti-simple-choice" },
   ];
 }
 

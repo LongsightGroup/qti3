@@ -73,7 +73,13 @@ function applyResponseProcessing(
   for (const declaration of document.item.responseDeclarations) {
     const response = responses[declaration.identifier] ?? null;
     if (declaration.correctResponse !== null) {
-      outcomes.SCORE = valuesEqual(response, declaration.correctResponse) ? 1 : 0;
+      outcomes.SCORE = valuesEqual(
+        response,
+        declaration.correctResponse,
+        declaration.cardinality === "ordered",
+      )
+        ? 1
+        : 0;
     }
   }
 }
@@ -109,7 +115,11 @@ function evaluateValue(
   if (expression.type === "matchCorrect") {
     const declaration = getResponseDeclaration(document, expression.identifier);
     return declaration
-      ? valuesEqual(responses[expression.identifier] ?? null, declaration.correctResponse)
+      ? valuesEqual(
+          responses[expression.identifier] ?? null,
+          declaration.correctResponse,
+          declaration.cardinality === "ordered",
+        )
       : false;
   }
   if (expression.type === "mapResponse") {
@@ -133,7 +143,9 @@ function getResponseDeclaration(
 function mapOrMatchResponse(declaration: QtiResponseDeclaration, response: QtiValue): number {
   if (declaration.areaMapping) return scoreAreaMapping(response, declaration.areaMapping);
   if (declaration.mapping) return scoreMapping(response, declaration.mapping);
-  return valuesEqual(response, declaration.correctResponse) ? 1 : 0;
+  return valuesEqual(response, declaration.correctResponse, declaration.cardinality === "ordered")
+    ? 1
+    : 0;
 }
 
 function scoreAreaMapping(
@@ -232,7 +244,7 @@ function scoreMapping(response: QtiValue, mapping: Record<string, number>): numb
   return typeof response === "string" ? (mapping[response] ?? 0) : 0;
 }
 
-function valuesEqual(actual: QtiValue, expected: QtiValue): boolean {
+function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {
   if (Array.isArray(actual) || Array.isArray(expected)) {
     const actualValues = Array.isArray(actual) ? actual : actual === null ? [] : [String(actual)];
     const expectedValues = Array.isArray(expected)
@@ -241,6 +253,7 @@ function valuesEqual(actual: QtiValue, expected: QtiValue): boolean {
         ? []
         : [String(expected)];
     if (actualValues.length !== expectedValues.length) return false;
+    if (ordered) return actualValues.every((value, index) => value === expectedValues[index]);
     return [...actualValues]
       .sort()
       .every((value, index) => value === [...expectedValues].sort()[index]);

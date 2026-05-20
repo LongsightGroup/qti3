@@ -3,6 +3,7 @@ import type {
   QtiAssessmentItem,
   QtiCardinality,
   QtiChoice,
+  QtiChoiceRole,
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
@@ -179,10 +180,48 @@ function parseChoices(node: XmlNode): QtiChoice[] {
     "qti-gap",
   ]);
 
-  return descendants(node, (child) => choiceNames.has(child.localName)).map((choice, index) => ({
-    identifier: choice.attributes.identifier ?? `choice-${index + 1}`,
-    text: textContent(choice) || choice.attributes.identifier || `Choice ${index + 1}`,
-  }));
+  return descendants(node, (child) => choiceNames.has(child.localName)).map((choice, index) => {
+    const identifier = choice.attributes.identifier ?? `choice-${index + 1}`;
+    return {
+      identifier,
+      text: textContent(choice) || identifier || `Choice ${index + 1}`,
+      role: choiceRole(choice),
+      qtiName: choice.localName,
+    };
+  });
+}
+
+function choiceRole(node: XmlNode): QtiChoiceRole {
+  if (node.localName === "qti-simple-choice") return "simpleChoice";
+  if (node.localName === "qti-inline-choice") return "inlineChoice";
+  if (node.localName === "qti-gap-text" || node.localName === "qti-gap-img") return "gapChoice";
+  if (node.localName === "qti-gap") return "gap";
+  if (node.localName === "qti-hottext") return "hottext";
+  if (node.localName === "qti-hotspot-choice" || node.localName === "qti-associable-hotspot") {
+    return "hotspot";
+  }
+  if (node.localName === "qti-simple-associable-choice") {
+    const matchSet = node.parent?.localName === "qti-simple-match-set" ? node.parent : undefined;
+    const interaction = nearestInteraction(node);
+    if (matchSet && interaction?.localName === "qti-match-interaction") {
+      return matchSetIndex(matchSet) === 0 ? "matchSource" : "matchTarget";
+    }
+    return "associableChoice";
+  }
+  return "simpleChoice";
+}
+
+function nearestInteraction(node: XmlNode): XmlNode | undefined {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (interactionNameToType.has(parent.localName)) return parent;
+  }
+  return undefined;
+}
+
+function matchSetIndex(node: XmlNode): number {
+  const siblings =
+    node.parent?.children.filter((sibling) => sibling.localName === "qti-simple-match-set") ?? [];
+  return siblings.indexOf(node);
 }
 
 function parseVariableValue(node: XmlNode | undefined): QtiValue {

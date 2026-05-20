@@ -35,7 +35,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await page.locator("#xml").fill(fixture.xml);
     await page.locator("#load-xml").click();
-    await page.getByRole("checkbox", { name: "A" }).check();
+    await page.getByRole("radio", { name: "A" }).check();
     await page.getByRole("button", { name: "Score" }).click();
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
   });
@@ -96,6 +96,28 @@ async function provideResponse(
       mimeType: "text/plain",
       buffer: Buffer.from("qti3 upload fixture"),
     });
+    return;
+  }
+
+  if (Array.isArray(response) && response.some((value) => String(value).includes(" "))) {
+    const [source, target] = String(response[0]).split(" ");
+    await page
+      .locator('qti-assessment-item-player select[aria-label$="source"]')
+      .selectOption(source);
+    await page
+      .locator('qti-assessment-item-player select[aria-label$="target"]')
+      .selectOption(target);
+    return;
+  }
+
+  if (
+    Array.isArray(response) &&
+    (interactionType === "order" || interactionType === "graphicOrder")
+  ) {
+    const selects = page.locator("qti-assessment-item-player select");
+    for (const [index, value] of response.entries()) {
+      await selects.nth(index).selectOption(String(value));
+    }
     return;
   }
 

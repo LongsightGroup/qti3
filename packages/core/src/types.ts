@@ -68,7 +68,20 @@ export interface QtiOutcomeDeclaration extends QtiVariableDeclaration {
 export interface QtiChoice {
   identifier: string;
   text: string;
+  role: QtiChoiceRole;
+  qtiName: string;
 }
+
+export type QtiChoiceRole =
+  | "simpleChoice"
+  | "associableChoice"
+  | "matchSource"
+  | "matchTarget"
+  | "gapChoice"
+  | "gap"
+  | "hottext"
+  | "hotspot"
+  | "inlineChoice";
 
 export type QtiInteractionType =
   | "associate"

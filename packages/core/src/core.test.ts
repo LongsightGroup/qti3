@@ -146,4 +146,50 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE", "93 111");
     expect(session.score().outcomes.SCORE).toBe(1);
   });
+
+  it("classifies match choices into source and target roles", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-match-interaction response-identifier="RESPONSE">
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice>
+            </qti-simple-match-set>
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="G1" match-max="1">Target</qti-simple-associable-choice>
+            </qti-simple-match-set>
+          </qti-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.document?.item.interactions[0]?.choices).toMatchObject([
+      { identifier: "A", role: "matchSource" },
+      { identifier: "G1", role: "matchTarget" },
+    ]);
+  });
+
+  it("keeps ordered cardinality order-sensitive", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order">
+        <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-order-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-order-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", ["B", "A"]);
+    expect(session.score().outcomes.SCORE).toBe(0);
+    session.respond("RESPONSE", ["A", "B"]);
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
 });

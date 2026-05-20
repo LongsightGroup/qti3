@@ -9,6 +9,8 @@ export {
 export type {
   QtiAssessmentItem,
   QtiAttemptStateV1,
+  QtiChoice,
+  QtiChoiceRole,
   QtiDiagnostic,
   QtiDocument,
   QtiElementSupport,

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphicGapMatch-reference" title="graphicGapMatch-reference" time-dependent="false" xml:lang="en">
   
-      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
-        <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+        <qti-correct-response><qti-value>A G1</qti-value></qti-correct-response>
         
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
