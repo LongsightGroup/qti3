@@ -357,6 +357,13 @@ export type QtiProcessingExpression = (
   | { type: "delete"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
   | { type: "contains"; collection: QtiProcessingExpression; values: QtiProcessingExpression }
   | { type: "gcd"; expressions: QtiProcessingExpression[] }
+  | {
+      type: "inside";
+      expression: QtiProcessingExpression;
+      shape: "circle" | "rect" | "poly" | "default";
+      coords: number[];
+      attributes: Record<string, string>;
+    }
   | { type: "lcm"; expressions: QtiProcessingExpression[] }
   | { type: "mathConstant"; name: string }
   | { type: "mathOperator"; name: string; expressions: QtiProcessingExpression[] }

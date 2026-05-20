@@ -727,6 +727,10 @@ function validateExpressionReferences(
     validateRepeatExpression(expression, variables, diagnostics);
   }
 
+  if (expression.type === "inside") {
+    validateInsideExpression(expression, diagnostics);
+  }
+
   for (const child of expressionChildren(expression)) {
     validateExpressionReferences(child, responses, variables, diagnostics);
   }
@@ -811,6 +815,56 @@ function validateRepeatExpression(
       code: "processing.repeat.numberRepeats.reference",
       severity: "error",
       message: `qti-repeat references missing template or outcome variable ${expression.numberRepeats}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+}
+
+function validateInsideExpression(
+  expression: Extract<QtiProcessingExpression, { type: "inside" }>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const rawShape = expression.attributes.shape;
+  if (rawShape === undefined) {
+    diagnostics.push({
+      code: "processing.inside.shape.required",
+      severity: "error",
+      message: "qti-inside requires shape.",
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  } else if (
+    rawShape !== "circle" &&
+    rawShape !== "rect" &&
+    rawShape !== "poly" &&
+    rawShape !== "default"
+  ) {
+    diagnostics.push({
+      code: "processing.inside.shape",
+      severity: "error",
+      message: `qti-inside has unsupported shape ${rawShape}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+
+  const expectedCoordCount =
+    rawShape === "circle" ? 3 : rawShape === "rect" ? 4 : rawShape === "default" ? 0 : undefined;
+  if (expectedCoordCount !== undefined && expression.coords.length !== expectedCoordCount) {
+    diagnostics.push({
+      code: "processing.inside.coords",
+      severity: "error",
+      message: `qti-inside shape ${rawShape} requires ${expectedCoordCount} coordinates.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+  if (rawShape === "poly" && (expression.coords.length < 6 || expression.coords.length % 2 !== 0)) {
+    diagnostics.push({
+      code: "processing.inside.coords",
+      severity: "error",
+      message: "qti-inside poly requires an even number of at least 6 coordinates.",
       path: expression.source?.path,
       source: expression.source,
     });
@@ -1039,7 +1093,8 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "integerToFloat" ||
     expression.type === "index" ||
     expression.type === "containerSize" ||
-    expression.type === "patternMatch"
+    expression.type === "patternMatch" ||
+    expression.type === "inside"
   ) {
     return [expression.expression];
   }

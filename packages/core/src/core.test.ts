@@ -1931,4 +1931,50 @@ describe("@qti3/core", () => {
     expect(score.outcomes.REPEATED).toEqual(["A", "B", "C", "A", "B", "C"]);
     expect(score.outcomes.REPEATED_SIZE).toBe(6);
   });
+
+  it("evaluates inside point-shape processing expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inside-processing">
+        <qti-response-declaration identifier="POINTS" cardinality="multiple" base-type="point"/>
+        <qti-outcome-declaration identifier="ANY_INSIDE" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="NONE_INSIDE" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="IN_POLY" cardinality="single" base-type="boolean"/>
+        <qti-item-body>
+          <qti-select-point-interaction response-identifier="POINTS">
+            <object data="image.svg" type="image/svg+xml" width="100" height="100"/>
+          </qti-select-point-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="ANY_INSIDE">
+                <qti-inside shape="rect" coords="10,10,20,20">
+                  <qti-variable identifier="POINTS"/>
+                </qti-inside>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="NONE_INSIDE">
+                <qti-inside shape="circle" coords="50,50,5">
+                  <qti-variable identifier="POINTS"/>
+                </qti-inside>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="IN_POLY">
+                <qti-inside shape="poly" coords="0,0,40,0,40,40,0,40">
+                  <qti-base-value base-type="point">12 12</qti-base-value>
+                </qti-inside>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("POINTS", ["5 5", "15 15"]);
+    const score = session.score();
+    expect(score.outcomes.ANY_INSIDE).toBe(true);
+    expect(score.outcomes.NONE_INSIDE).toBe(false);
+    expect(score.outcomes.IN_POLY).toBe(true);
+  });
 });

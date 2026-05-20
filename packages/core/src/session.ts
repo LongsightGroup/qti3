@@ -1034,6 +1034,30 @@ function evaluateValue(
     const integers = values.map((value) => Math.trunc(numericValue(value)));
     return expression.type === "gcd" ? generalizedGcd(integers) : generalizedLcm(integers);
   }
+  if (expression.type === "inside") {
+    const value = evaluateValue(
+      expression.expression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    if (value === null) return null;
+    if (expression.shape === "default") return true;
+    return valueContainer(value).some((pointValue) => {
+      const point = parsePoint(String(pointValue));
+      return point
+        ? pointInsideArea(point, {
+            shape: expression.shape,
+            coords: expression.coords,
+            mappedValue: 0,
+            attributes: {},
+          })
+        : false;
+    });
+  }
   if (expression.type === "mathConstant") {
     if (expression.name === "pi") return Math.PI;
     if (expression.name === "e") return Math.E;

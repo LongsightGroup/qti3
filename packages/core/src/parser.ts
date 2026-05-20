@@ -328,10 +328,7 @@ function parseAreaMapping(
     source: node.source,
     entries: childElements(node, "qti-area-map-entry").map((entry) => ({
       shape: parseShape(entry.attributes.shape),
-      coords: (entry.attributes.coords ?? "")
-        .split(",")
-        .map((value) => Number(value.trim()))
-        .filter((value) => Number.isFinite(value)),
+      coords: parseCoords(entry.attributes.coords),
       mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
       attributes: entry.attributes,
       source: entry.source,
@@ -344,6 +341,13 @@ function parseShape(
 ): NonNullable<QtiResponseDeclaration["areaMapping"]>["entries"][number]["shape"] {
   if (shape === "circle" || shape === "rect" || shape === "poly") return shape;
   return "default";
+}
+
+function parseCoords(value: string | undefined): number[] {
+  return (value ?? "")
+    .split(",")
+    .map((part) => Number(part.trim()))
+    .filter((part) => Number.isFinite(part));
 }
 
 function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessing | undefined {
@@ -872,6 +876,20 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
         .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
       source: node.source,
     };
+  }
+
+  if (node.localName === "qti-inside") {
+    const expression = parseFirstExpression(node);
+    if (expression) {
+      return {
+        type: "inside",
+        expression,
+        shape: parseShape(node.attributes.shape),
+        coords: parseCoords(node.attributes.coords),
+        attributes: node.attributes,
+        source: node.source,
+      };
+    }
   }
 
   if (node.localName === "qti-math-constant") {

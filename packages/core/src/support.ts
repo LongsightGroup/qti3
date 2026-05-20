@@ -109,6 +109,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-member", "packages/core/src/core.test.ts"),
   processingEntry("qti-delete", "packages/core/src/core.test.ts"),
   processingEntry("qti-gcd", "packages/core/src/core.test.ts"),
+  processingEntry("qti-inside", "packages/core/src/core.test.ts"),
   processingEntry("qti-lcm", "packages/core/src/core.test.ts"),
   processingEntry("qti-math-constant", "packages/core/src/core.test.ts"),
   processingEntry("qti-math-operator", "packages/core/src/core.test.ts"),
