@@ -169,7 +169,19 @@ export type QtiProcessingExpression =
   | { type: "random"; values: QtiProcessingExpression[] }
   | { type: "sum"; expressions: QtiProcessingExpression[] }
   | { type: "product"; expressions: QtiProcessingExpression[] }
-  | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression };
+  | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | { type: "and"; expressions: QtiProcessingExpression[] }
+  | { type: "or"; expressions: QtiProcessingExpression[] }
+  | { type: "not"; expression: QtiProcessingExpression }
+  | { type: "equal"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | {
+      type: "stringMatch";
+      left: QtiProcessingExpression;
+      right: QtiProcessingExpression;
+      caseSensitive: boolean;
+      substring: boolean;
+    }
+  | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression };
 
 export interface QtiDocument {
   item: QtiAssessmentItem;

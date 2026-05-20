@@ -267,4 +267,54 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE", 5);
     expect(session.score().outcomes.SCORE).toBe(1);
   });
+
+  it("evaluates boolean response processing expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-response-declaration identifier="FLAGS" cardinality="multiple" base-type="identifier">
+          <qti-default-value><qti-value>A</qti-value><qti-value>B</qti-value></qti-default-value>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-extended-text-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-and>
+                <qti-string-match case-sensitive="false">
+                  <qti-variable identifier="RESPONSE"/>
+                  <qti-base-value base-type="string">washington</qti-base-value>
+                </qti-string-match>
+                <qti-member>
+                  <qti-base-value base-type="identifier">A</qti-base-value>
+                  <qti-variable identifier="FLAGS"/>
+                </qti-member>
+                <qti-not>
+                  <qti-equal>
+                    <qti-base-value base-type="integer">1</qti-base-value>
+                    <qti-base-value base-type="integer">2</qti-base-value>
+                  </qti-equal>
+                </qti-not>
+              </qti-and>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">3</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">0</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", "Washington");
+    expect(session.score().outcomes.SCORE).toBe(3);
+  });
 });

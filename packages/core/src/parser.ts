@@ -409,6 +409,58 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     if (left && right) return { type: "subtract", left, right };
   }
 
+  if (node.localName === "qti-and") {
+    return {
+      type: "and",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+    };
+  }
+
+  if (node.localName === "qti-or") {
+    return {
+      type: "or",
+      expressions: childElements(node)
+        .map(parseExpression)
+        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
+    };
+  }
+
+  if (node.localName === "qti-not") {
+    const expression = parseFirstExpression(node);
+    if (expression) return { type: "not", expression };
+  }
+
+  if (node.localName === "qti-equal") {
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (left && right) return { type: "equal", left, right };
+  }
+
+  if (node.localName === "qti-string-match") {
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (left && right) {
+      return {
+        type: "stringMatch",
+        left,
+        right,
+        caseSensitive: node.attributes["case-sensitive"] !== "false",
+        substring: node.attributes.substring === "true",
+      };
+    }
+  }
+
+  if (node.localName === "qti-member") {
+    const [value, collection] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (value && collection) return { type: "member", value, collection };
+  }
+
   if (node.localName === "qti-match") {
     const variable = childElements(node, "qti-variable")[0];
     const correct = childElements(node, "qti-correct")[0];

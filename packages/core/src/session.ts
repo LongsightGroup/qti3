@@ -36,6 +36,9 @@ export function createItemSession(
 
   for (const declaration of document.item.responseDeclarations) {
     correctResponses[declaration.identifier] = declaration.correctResponse;
+    if (declaration.defaultValue !== null && responses[declaration.identifier] === undefined) {
+      responses[declaration.identifier] = declaration.defaultValue;
+    }
   }
   for (const declaration of document.item.templateDeclarations) {
     templateValues[declaration.identifier] = declaration.defaultValue;
@@ -209,15 +212,9 @@ function evaluateBoolean(
   random: () => number = Math.random,
 ): boolean {
   if (!expression) return false;
-  const value = evaluateValue(
-    expression,
-    document,
-    responses,
-    templateValues,
-    correctResponses,
-    random,
+  return booleanValue(
+    evaluateValue(expression, document, responses, templateValues, correctResponses, random),
   );
-  return value === true;
 }
 
 function evaluateValue(
@@ -313,6 +310,84 @@ function evaluateValue(
         ),
       )
     );
+  }
+  if (expression.type === "and") {
+    return expression.expressions.every((item) =>
+      booleanValue(
+        evaluateValue(item, document, responses, templateValues, correctResponses, random),
+      ),
+    );
+  }
+  if (expression.type === "or") {
+    return expression.expressions.some((item) =>
+      booleanValue(
+        evaluateValue(item, document, responses, templateValues, correctResponses, random),
+      ),
+    );
+  }
+  if (expression.type === "not") {
+    return !booleanValue(
+      evaluateValue(
+        expression.expression,
+        document,
+        responses,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+  }
+  if (expression.type === "equal") {
+    return valuesEqual(
+      evaluateValue(expression.left, document, responses, templateValues, correctResponses, random),
+      evaluateValue(
+        expression.right,
+        document,
+        responses,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+  }
+  if (expression.type === "stringMatch") {
+    return stringMatch(
+      evaluateValue(expression.left, document, responses, templateValues, correctResponses, random),
+      evaluateValue(
+        expression.right,
+        document,
+        responses,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+      expression.caseSensitive,
+      expression.substring,
+    );
+  }
+  if (expression.type === "member") {
+    const value = evaluateValue(
+      expression.value,
+      document,
+      responses,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    const collection = evaluateValue(
+      expression.collection,
+      document,
+      responses,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    const values = Array.isArray(collection)
+      ? collection
+      : collection === null
+        ? []
+        : [String(collection)];
+    return values.includes(String(value ?? ""));
   }
   return null;
 }
@@ -470,6 +545,29 @@ function numericValue(value: QtiValue): number {
   if (typeof value === "boolean") return value ? 1 : 0;
   if (typeof value === "string") return Number(value);
   return 0;
+}
+
+function booleanValue(value: QtiValue): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") return value.length > 0 && value !== "false";
+  if (Array.isArray(value)) return value.length > 0;
+  return false;
+}
+
+function stringMatch(
+  left: QtiValue,
+  right: QtiValue,
+  caseSensitive: boolean,
+  substring: boolean,
+): boolean {
+  let actual = String(left ?? "");
+  let expected = String(right ?? "");
+  if (!caseSensitive) {
+    actual = actual.toLocaleLowerCase();
+    expected = expected.toLocaleLowerCase();
+  }
+  return substring ? actual.includes(expected) : actual === expected;
 }
 
 function seededRandom(seed: string | number): () => number {
