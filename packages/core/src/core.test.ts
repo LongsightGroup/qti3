@@ -323,6 +323,19 @@ describe("@qti3/core", () => {
     expect(() =>
       createItemSession(result.document!, {
         ...state,
+        validationMessages: [
+          {
+            code: "response.required",
+            severity: "error",
+            message: "Unknown response requires a response.",
+            path: "UNKNOWN_RESPONSE",
+          },
+        ],
+      }),
+    ).toThrow("Cannot restore validation message for unknown response UNKNOWN_RESPONSE.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
         outcomes: { completionStatus: "finished" },
       }),
     ).toThrow("Cannot restore unsupported completionStatus finished.");

@@ -237,6 +237,11 @@ function assertCompatiblePriorState(
   assertKnownStateIdentifiers("response", priorState.responses, responseIdentifiers);
   assertKnownStateIdentifiers("outcome", priorState.outcomes, outcomeIdentifiers);
   assertKnownStateIdentifiers("template", priorState.templateValues ?? {}, templateIdentifiers);
+  for (const message of priorState.validationMessages) {
+    if (message.path && !responseIdentifiers.has(message.path)) {
+      throw new Error(`Cannot restore validation message for unknown response ${message.path}.`);
+    }
+  }
   for (const declaration of document.item.responseDeclarations) {
     assertRestoredValueMatchesDeclaration("response", declaration, priorState.responses);
   }
