@@ -242,7 +242,7 @@ function parseChoices(node: XmlNode): QtiChoice[] {
   ]);
 
   return descendants(node, (child) => choiceNames.has(child.localName)).map((choice, index) => {
-    const identifier = choice.attributes.identifier ?? `choice-${index + 1}`;
+    const identifier = choice.attributes.identifier ?? "";
     return {
       identifier,
       text: textContent(choice) || identifier || `Choice ${index + 1}`,

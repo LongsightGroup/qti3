@@ -227,6 +227,8 @@ function validateInteractionChoices(
 ): void {
   const identifiers = new Set<string>();
   for (const choice of interaction.choices) {
+    requireIdentifier(choice.qtiName, choice.attributes.identifier, diagnostics, choice.source);
+    if (!choice.identifier) continue;
     if (identifiers.has(choice.identifier)) {
       diagnostics.push({
         code: "choice.identifier.duplicate",

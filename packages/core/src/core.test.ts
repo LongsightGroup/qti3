@@ -211,6 +211,32 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("does not mask missing choice identifiers with parser defaults", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-choice-id">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice>A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.interactions[0]?.choices[0]).toMatchObject({
+      identifier: "",
+      text: "A",
+    });
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "identifier.required",
+        message: "qti-simple-choice requires a non-empty identifier.",
+        path: "/qti-assessment-item/qti-item-body[1]/qti-choice-interaction[1]/qti-simple-choice[1]",
+      }),
+    );
+  });
+
   it("exposes validation independent of XML parsing", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">
