@@ -834,9 +834,10 @@ function renderHottextResponse(
           source: choice.source,
         }));
 
-  for (const segment of segments) {
+  const content: Array<Node | string> = [];
+  for (const [segmentIndex, segment] of segments.entries()) {
     if (segment.kind === "text") {
-      passage.append(document.createTextNode(segment.text));
+      content.push(document.createTextNode(normalizeInlineSegmentText(segment.text)));
       continue;
     }
 
@@ -857,11 +858,10 @@ function renderHottextResponse(
       }
       syncSelected();
     });
-    passage.append(document.createTextNode(" "));
-    passage.append(button);
-    passage.append(document.createTextNode(" "));
+    appendInlineControl(content, button, segments[segmentIndex + 1]);
   }
 
+  passage.append(...content);
   syncSelected();
   group.append(passage);
   return group;
@@ -1721,24 +1721,14 @@ function renderGapMatchResponse(
     const content: Array<Node | string> = [];
     for (const [segmentIndex, segment] of segments.entries()) {
       if (segment.kind === "text") {
-        content.push(document.createTextNode(segment.text.replace(/\s+([,.;:!?])/g, "$1")));
+        content.push(document.createTextNode(normalizeInlineSegmentText(segment.text)));
         continue;
       }
 
       const gapIndex = gaps.findIndex((gap) => gap.identifier === segment.identifier);
       const gap = gaps[gapIndex];
       if (gap) {
-        const previous = content.at(-1);
-        if (previous instanceof Text && !/\s$/.test(previous.data)) {
-          content.push(document.createTextNode(" "));
-        }
-        content.push(gapControl(gap, gapIndex));
-        const next = segments[segmentIndex + 1];
-        const nextText =
-          next?.kind === "text" ? next.text.replace(/\s+([,.;:!?])/g, "$1") : undefined;
-        if (nextText && !/^\s|^[,.;:!?]/.test(nextText)) {
-          content.push(document.createTextNode(" "));
-        }
+        appendInlineControl(content, gapControl(gap, gapIndex), segments[segmentIndex + 1]);
       }
     }
     gapRegion.replaceChildren(...content);
@@ -1776,6 +1766,28 @@ function renderSelect(
   if (selected) select.value = selected;
   select.addEventListener("change", () => update(select.value));
   return select;
+}
+
+function appendInlineControl(
+  content: Array<Node | string>,
+  control: HTMLElement,
+  nextSegment: { kind: string; text?: string } | undefined,
+): void {
+  const previous = content.at(-1);
+  if (previous instanceof Text && !/\s$/.test(previous.data)) {
+    content.push(document.createTextNode(" "));
+  }
+  content.push(control);
+
+  const nextText =
+    nextSegment?.kind === "text" ? normalizeInlineSegmentText(nextSegment.text) : undefined;
+  if (nextText && !/^\s|^[,.;:!?]/.test(nextText)) {
+    content.push(document.createTextNode(" "));
+  }
+}
+
+function normalizeInlineSegmentText(value: string | undefined): string {
+  return (value ?? "").replace(/\s+([,.;:!?])/g, "$1");
 }
 
 function interactionLabel(interaction: QtiInteraction): string {

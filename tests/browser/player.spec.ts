@@ -292,6 +292,27 @@ test.describe("manual harness", () => {
     await expectResponse(page, "A");
   });
 
+  test("keeps hottext punctuation attached to authored prose", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hottext-punctuation">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hottext-interaction response-identifier="RESPONSE">
+            <qti-prompt>Select the term before the comma.</qti-prompt>
+            <p>Select <qti-hottext identifier="A">response declaration</qti-hottext>, then continue.</p>
+          </qti-hottext-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const passage = page.locator("qti-assessment-item-player .qti3-hottext-passage");
+    await expect(passage).toContainText("Select response declaration, then continue.");
+  });
+
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">
