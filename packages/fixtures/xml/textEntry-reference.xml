@@ -8,7 +8,7 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for textEntry-reference: QTI 3.0 item-player conformance fixture.</p>
+    <p>Type a short QTI outcome name in the sentence.</p>
     <p>Response processing stores the final numeric result in the outcome named <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="10"/>.</p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>

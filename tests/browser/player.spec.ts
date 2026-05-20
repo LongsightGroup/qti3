@@ -218,7 +218,7 @@ test.describe("manual harness", () => {
       interactionFixtures[0];
     if (!fixture) throw new Error("Missing choice fixture.");
     const xml = fixture.xml.replace(
-      "<p>Reference item for choice-reference: QTI 3.0 item-player conformance fixture.</p>",
+      "<p>Select one answer from a standard single-choice interaction.</p>",
       "<qti-prompt>Which president resigned after Watergate?</qti-prompt>",
     );
 
@@ -532,7 +532,7 @@ test.describe("manual harness", () => {
     await expect(audio).toBeVisible();
     await expect(audio).toHaveAttribute("controls", "");
     await expect(audio).toHaveAttribute("preload", "none");
-    await expect(audio).toHaveAttribute("src", /media\.mp3$/);
+    await expect(audio).toHaveAttribute("src", /^data:audio\/wav;base64,/);
   });
 
   test("renders graphic interactions with their object context", async ({ page }) => {

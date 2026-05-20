@@ -32,6 +32,9 @@ export interface QtiFixture {
   attempts: QtiFixtureAttempt[];
 }
 
+const silentWavDataUri =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+
 export const interactionFixtures: QtiFixture[] = interactionSupport.map((support) =>
   createInteractionFixture(support.interactionType, support.qtiName),
 );
@@ -116,7 +119,7 @@ function createInlineChoiceFixture(qtiName: string): QtiFixture {
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for ${id}: QTI 3.0 item-player conformance fixture.</p>
+    <p>Choose QTI terms directly in the sentence.</p>
     <p>In QTI 3.0, an interaction writes a candidate answer to a <${qtiName} response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">response declaration</qti-inline-choice><qti-inline-choice identifier="B">template declaration</qti-inline-choice><qti-inline-choice identifier="C">rubric block</qti-inline-choice></${qtiName}>, and response processing writes derived values such as SCORE to an <${qtiName} response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">item body</qti-inline-choice><qti-inline-choice identifier="B">outcome declaration</qti-inline-choice><qti-inline-choice identifier="C">choice interaction</qti-inline-choice></${qtiName}>.</p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
@@ -534,7 +537,7 @@ function assessmentItem(
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for ${identifier}: QTI 3.0 item-player conformance fixture.</p>
+    <p>${itemIntro(identifier)}</p>
     ${interactionXml}
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/${response.baseType === "point" ? "map_response_point.xml" : "match_correct"}"/>
@@ -652,10 +655,10 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE" title="Show hint"/>`;
   }
   if (interactionType === "media") {
-    return `<${qtiName} autostart="false"><object data="media.mp3" type="audio/mpeg"/></${qtiName}>`;
+    return `<${qtiName} autostart="false"><object data="${silentWavDataUri}" type="audio/wav">Silent WAV fixture audio</object></${qtiName}>`;
   }
   if (interactionType === "slider") {
-    return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the approximate percentage of runtime behavior that QTI response processing should own in a portable item player.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the response-processing share to 50 percent.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "extendedText") {
     return `<${qtiName} response-identifier="RESPONSE" expected-lines="4"><qti-prompt>Explain why a QTI item player should keep response capture separate from scoring and analytics.</qti-prompt></${qtiName}>`;
@@ -685,13 +688,13 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<qti-position-object-stage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><${qtiName} response-identifier="RESPONSE"><qti-prompt>Drag the marker onto the response capture step.</qti-prompt><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"/></${qtiName}></qti-position-object-stage>`;
   }
   if (interactionType === "upload") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a short implementation note describing how your item player records response state.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a text file named upload.txt containing implementation notes.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "drawing") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch a simple flow showing how a candidate response moves from capture to scoring.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch an arrow showing a response moving from capture to scoring.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "portableCustom") {
-    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom contract to return the fixture response value A.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom interaction contract to return A.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "custom") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter the response value A.</qti-prompt></${qtiName}>`;
@@ -709,6 +712,32 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the sentence about QTI runtime state.</qti-prompt><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>An interaction records the candidate answer in a <qti-gap identifier="G1"/>, while scoring writes SCORE to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
   }
   return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Which QTI element declares the variable that stores a candidate response?</qti-prompt><qti-simple-choice identifier="A">qti-response-declaration</qti-simple-choice><qti-simple-choice identifier="B">qti-outcome-declaration</qti-simple-choice><qti-simple-choice identifier="C">qti-template-declaration</qti-simple-choice><qti-simple-choice identifier="D">qti-rubric-block</qti-simple-choice></${qtiName}>`;
+}
+
+function itemIntro(identifier: string): string {
+  const intros: Record<string, string> = {
+    "associate-reference": "Create one association from a shared pool of QTI concepts.",
+    "choice-reference": "Select one answer from a standard single-choice interaction.",
+    "drawing-reference": "Draw a freehand response on the canvas.",
+    "endAttempt-reference": "Use an end-attempt control to request an adaptive action.",
+    "extendedText-reference": "Write a short explanation in a multiline response.",
+    "gapMatch-reference": "Fill the sentence with QTI terms from the token bank.",
+    "graphicAssociate-reference": "Connect related regions in the delivery-flow diagram.",
+    "graphicGapMatch-reference": "Complete labels for the lifecycle diagram from the token bank.",
+    "graphicOrder-reference": "Order diagram regions by selecting them in sequence.",
+    "hotspot-reference": "Select one meaningful region on the delivery-flow diagram.",
+    "hottext-reference": "Select a phrase directly inside the reading passage.",
+    "match-reference": "Pair each source declaration with one target description.",
+    "media-reference": "Render media through a native browser playback control.",
+    "order-reference": "Arrange the runtime steps in their usual order.",
+    "positionObject-reference": "Move the marker object onto the target stage.",
+    "portableCustom-reference": "Exercise the portable custom interaction host contract.",
+    "selectPoint-reference": "Mark an exact point on the diagram.",
+    "slider-reference": "Set a numeric response with a range control.",
+    "textEntry-reference": "Type a short QTI outcome name in the sentence.",
+    "upload-reference": "Choose a file as the candidate response.",
+  };
+  return intros[identifier] ?? `${identifier} reference item.`;
 }
 
 function escapeXml(value: string): string {
