@@ -626,26 +626,32 @@ test.describe("manual harness", () => {
     await loadFixture(page, "drawing");
 
     const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
-    await surface.dispatchEvent("pointerdown", {
-      pointerId: 1,
-      clientX: 10,
-      clientY: 10,
-    });
-    await surface.dispatchEvent("pointerup", {
-      pointerId: 1,
-      clientX: 90,
-      clientY: 90,
-    });
+    const box = await surface.boundingBox();
+    if (!box) throw new Error("Missing drawing surface box.");
+
+    await page.mouse.move(box.x + 10, box.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 50, box.y + 30);
+    await page.mouse.move(box.x + 90, box.y + 90);
+    await page.mouse.up();
+
+    await page.mouse.move(box.x + 20, box.y + 100);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 120, box.y + 20);
+    await page.mouse.up();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
-    expect(state.responses.RESPONSE).toMatch(/\d+ \d+ \d+ \d+/);
-    await expect(surface.locator("line")).toHaveCount(1);
+    expect(state.responses.RESPONSE).toMatch(/\d+ \d+ \d+ \d+ \d+ \d+ \| \d+ \d+ \d+ \d+/);
+    await expect(surface.locator("polyline")).toHaveCount(2);
+    await expect(page.locator("qti-assessment-item-player output")).toContainText(
+      "2 drawing strokes.",
+    );
 
     await page.getByRole("button", { name: "Clear drawing" }).click();
     await expectResponse(page, "");
-    await expect(surface.locator("line")).toHaveCount(0);
+    await expect(surface.locator("polyline")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Replay last stroke" })).toHaveCount(0);
   });
 

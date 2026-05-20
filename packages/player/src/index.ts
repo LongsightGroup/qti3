@@ -1102,50 +1102,88 @@ function renderDrawingResponse(
   surface.style.background = "Canvas";
   surface.style.touchAction = "none";
 
-  let start: { x: number; y: number } | undefined;
-  const draw = (stroke: string) => {
-    const [x1, y1, x2, y2] = stroke.split(" ").map((value) => Number(value));
-    if (
-      x1 === undefined ||
-      y1 === undefined ||
-      x2 === undefined ||
-      y2 === undefined ||
-      [x1, y1, x2, y2].some((value) => !Number.isFinite(value))
-    ) {
-      return;
-    }
-    surface.replaceChildren(lineElement(x1, y1, x2, y2));
-    update(stroke);
+  const summary = document.createElement("output");
+  summary.className = "qti3-coordinate-output";
+  const strokes: { points: Array<{ x: number; y: number }>; element: SVGPolylineElement }[] = [];
+  let activeStroke:
+    | { points: Array<{ x: number; y: number }>; element: SVGPolylineElement }
+    | undefined;
+  const serializeStroke = (points: Array<{ x: number; y: number }>) => {
+    return points.map((point) => `${point.x} ${point.y}`).join(" ");
+  };
+  const commit = (emitResponse = true) => {
+    const value = strokes.map((stroke) => serializeStroke(stroke.points)).join(" | ");
+    if (emitResponse) update(value);
+    const count = strokes.length;
+    summary.value = value;
+    summary.textContent =
+      count === 0 ? "No drawing strokes." : `${count} drawing stroke${count === 1 ? "" : "s"}.`;
+    surface.setAttribute(
+      "aria-label",
+      count === 0
+        ? "Drawing response surface, no strokes"
+        : `Drawing response surface, ${count} stroke${count === 1 ? "" : "s"}`,
+    );
+  };
+  const addPoint = (event: PointerEvent) => {
+    if (!activeStroke) return;
+    const point = svgPoint(surface, event);
+    const previous = activeStroke.points.at(-1);
+    if (previous && previous.x === point.x && previous.y === point.y) return;
+    activeStroke.points.push(point);
+    activeStroke.element.setAttribute("points", serializeSvgPoints(activeStroke.points));
+  };
+  const finishStroke = (event: PointerEvent) => {
+    if (!activeStroke) return;
+    addPoint(event);
+    const firstPoint = activeStroke.points[0];
+    if (activeStroke.points.length === 1 && firstPoint) activeStroke.points.push(firstPoint);
+    activeStroke.element.setAttribute("points", serializeSvgPoints(activeStroke.points));
+    activeStroke = undefined;
+    commit();
   };
 
   surface.addEventListener("pointerdown", (event) => {
-    start = svgPoint(surface, event);
+    const point = svgPoint(surface, event);
+    const element = polylineElement([point]);
+    activeStroke = { points: [point], element };
+    strokes.push(activeStroke);
+    surface.append(element);
+    surface.setPointerCapture(event.pointerId);
   });
-  surface.addEventListener("pointerup", (event) => {
-    if (!start) return;
-    const end = svgPoint(surface, event);
-    const stroke = `${start.x} ${start.y} ${end.x} ${end.y}`;
-    start = undefined;
-    draw(stroke);
+  surface.addEventListener("pointermove", addPoint);
+  surface.addEventListener("pointerup", finishStroke);
+  surface.addEventListener("pointercancel", () => {
+    activeStroke = undefined;
   });
   surface.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
-    draw("10 10 90 90");
+    const points = [
+      { x: 10, y: 10 },
+      { x: 90, y: 90 },
+    ];
+    const element = polylineElement(points);
+    strokes.push({ points, element });
+    surface.append(element);
+    commit();
   });
 
   const clear = document.createElement("button");
   clear.type = "button";
   clear.textContent = "Clear drawing";
   clear.addEventListener("click", () => {
+    strokes.splice(0, strokes.length);
+    activeStroke = undefined;
     surface.replaceChildren();
-    update("");
+    commit();
   });
 
   const tools = document.createElement("div");
   tools.className = "qti3-drawing-tools";
   tools.append(clear);
-  group.append(surface, tools);
+  commit(false);
+  group.append(surface, summary, tools);
   return group;
 }
 
@@ -1478,15 +1516,18 @@ function svgPoint(surface: SVGSVGElement, event: PointerEvent): { x: number; y: 
   };
 }
 
-function lineElement(x1: number, y1: number, x2: number, y2: number): SVGLineElement {
-  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  line.setAttribute("x1", String(x1));
-  line.setAttribute("y1", String(y1));
-  line.setAttribute("x2", String(x2));
-  line.setAttribute("y2", String(y2));
+function serializeSvgPoints(points: Array<{ x: number; y: number }>): string {
+  return points.map((point) => `${point.x},${point.y}`).join(" ");
+}
+
+function polylineElement(points: Array<{ x: number; y: number }>): SVGPolylineElement {
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  line.setAttribute("points", serializeSvgPoints(points));
+  line.setAttribute("fill", "none");
   line.setAttribute("stroke", "CanvasText");
   line.setAttribute("stroke-width", "3");
   line.setAttribute("stroke-linecap", "round");
+  line.setAttribute("stroke-linejoin", "round");
   return line;
 }
 
