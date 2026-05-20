@@ -89,8 +89,8 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     childElements(node, "qti-response-processing")[0],
   );
   const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
-  const interactions = descendants(node, (child) => interactionNameToType.has(child.localName)).map(
-    (interactionNode) => parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
+  const interactions = descendants(node, isInteractionElement).map((interactionNode) =>
+    parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
   );
   const itemBody = childElements(node, "qti-item-body")[0];
   const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
@@ -109,6 +109,10 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     bodyText: textContent(node),
     source: node.source,
   };
+}
+
+function isInteractionElement(node: XmlNode): boolean {
+  return interactionNameToType.has(node.localName) || /^qti-.+-interaction$/.test(node.localName);
 }
 
 function parseModalFeedback(node: XmlNode): QtiModalFeedback {

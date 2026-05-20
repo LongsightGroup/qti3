@@ -60,6 +60,31 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("diagnoses unknown QTI interaction elements", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-interaction">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-unsupported-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]).toMatchObject({
+      type: "custom",
+      qtiName: "qti-unsupported-interaction",
+      responseIdentifier: "RESPONSE",
+    });
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "interaction.unsupported",
+        severity: "warning",
+        path: "/qti-assessment-item/qti-item-body[1]/qti-unsupported-interaction[1]",
+      }),
+    );
+  });
+
   it("parses and scores a choice item", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">
