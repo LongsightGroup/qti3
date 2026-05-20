@@ -1175,6 +1175,7 @@ function validateChoiceLimitAttributes(choice: QtiChoice, diagnostics: QtiDiagno
 
   validateChoiceNonNegativeIntegerAttribute(choice, "match-max", diagnostics);
   validateChoiceNonNegativeIntegerAttribute(choice, "match-min", diagnostics);
+  validateChoiceMinMaxPair(choice, "match-min", "match-max", diagnostics);
   validateHotspotGeometry(choice, diagnostics);
 }
 
@@ -1314,6 +1315,33 @@ function validateChoiceNonNegativeIntegerAttribute(
     code: "choice.integerAttribute",
     severity: "error",
     message: `${choice.qtiName} ${choice.identifier} requires non-negative integer ${attribute}, got ${value}.`,
+    path: choice.source?.path,
+    source: choice.source,
+  });
+}
+
+function validateChoiceMinMaxPair(
+  choice: QtiChoice,
+  minAttribute: string,
+  maxAttribute: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const min = choice.attributes[minAttribute];
+  const max = choice.attributes[maxAttribute];
+  if (
+    min === undefined ||
+    max === undefined ||
+    !isNonNegativeInteger(min) ||
+    !isNonNegativeInteger(max) ||
+    max === "0"
+  ) {
+    return;
+  }
+  if (Number(min) <= Number(max)) return;
+  diagnostics.push({
+    code: "choice.minMax",
+    severity: "error",
+    message: `${choice.qtiName} ${choice.identifier} requires ${minAttribute} to be less than or equal to ${maxAttribute}, unless ${maxAttribute} is 0 for unlimited.`,
     path: choice.source?.path,
     source: choice.source,
   });
