@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="advanced-processing-reference" title="advanced-processing-reference" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-outcome-declaration identifier="ROUNDED" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="GCD_VALUE" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="LCM_VALUE" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="MEAN_VALUE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="REPEATED" cardinality="ordered" base-type="identifier"/>
+  <qti-outcome-declaration identifier="REPEATED_SIZE" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="ANY_INSIDE" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="NONE_INSIDE" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="IN_POLY" cardinality="single" base-type="boolean"/>
+  <qti-item-body>
+    <p>Reference fixture for advanced QTI response-processing expressions.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">Run advanced response processing.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Do not run advanced response processing.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE"/>
+          <qti-base-value base-type="identifier">A</qti-base-value>
+        </qti-match>
+        <qti-set-outcome-value identifier="ROUNDED">
+          <qti-equal-rounded rounding-mode="decimalPlaces" figures="2">
+            <qti-base-value base-type="float">3.141</qti-base-value>
+            <qti-base-value base-type="float">3.142</qti-base-value>
+          </qti-equal-rounded>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="GCD_VALUE">
+          <qti-gcd>
+            <qti-base-value base-type="integer">24</qti-base-value>
+            <qti-multiple>
+              <qti-base-value base-type="integer">18</qti-base-value>
+              <qti-base-value base-type="integer">30</qti-base-value>
+            </qti-multiple>
+          </qti-gcd>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="LCM_VALUE">
+          <qti-lcm>
+            <qti-base-value base-type="integer">4</qti-base-value>
+            <qti-base-value base-type="integer">6</qti-base-value>
+          </qti-lcm>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="MEAN_VALUE">
+          <qti-stats-operator name="mean">
+            <qti-multiple>
+              <qti-base-value base-type="integer">2</qti-base-value>
+              <qti-base-value base-type="integer">4</qti-base-value>
+              <qti-base-value base-type="integer">6</qti-base-value>
+            </qti-multiple>
+          </qti-stats-operator>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="REPEATED">
+          <qti-repeat number-repeats="2">
+            <qti-base-value base-type="identifier">A</qti-base-value>
+            <qti-ordered>
+              <qti-base-value base-type="identifier">B</qti-base-value>
+              <qti-base-value base-type="identifier">C</qti-base-value>
+            </qti-ordered>
+          </qti-repeat>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="REPEATED_SIZE">
+          <qti-container-size>
+            <qti-variable identifier="REPEATED"/>
+          </qti-container-size>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="ANY_INSIDE">
+          <qti-inside shape="rect" coords="10,10,20,20">
+            <qti-multiple>
+              <qti-base-value base-type="point">5 5</qti-base-value>
+              <qti-base-value base-type="point">15 15</qti-base-value>
+            </qti-multiple>
+          </qti-inside>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="NONE_INSIDE">
+          <qti-inside shape="circle" coords="50,50,5">
+            <qti-base-value base-type="point">15 15</qti-base-value>
+          </qti-inside>
+        </qti-set-outcome-value>
+        <qti-set-outcome-value identifier="IN_POLY">
+          <qti-inside shape="poly" coords="0,0,40,0,40,40,0,40">
+            <qti-base-value base-type="point">12 12</qti-base-value>
+          </qti-inside>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>
