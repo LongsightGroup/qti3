@@ -152,7 +152,13 @@ export interface QtiResponseProcessing {
 export interface QtiResponseCondition {
   ifExpression?: QtiProcessingExpression | undefined;
   thenRules: QtiSetOutcomeValue[];
+  elseIfs: QtiResponseBranch[];
   elseRules: QtiSetOutcomeValue[];
+}
+
+export interface QtiResponseBranch {
+  expression?: QtiProcessingExpression | undefined;
+  rules: QtiSetOutcomeValue[];
 }
 
 export interface QtiSetOutcomeValue {

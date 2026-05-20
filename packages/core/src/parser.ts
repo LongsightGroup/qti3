@@ -341,6 +341,10 @@ function parseResponseCondition(node: XmlNode): QtiResponseCondition {
   return {
     ifExpression: responseIf ? parseFirstExpression(responseIf) : undefined,
     thenRules: responseIf ? parseSetOutcomeValues(responseIf) : [],
+    elseIfs: childElements(node, "qti-response-else-if").map((branch) => ({
+      expression: parseFirstExpression(branch),
+      rules: parseSetOutcomeValues(branch),
+    })),
     elseRules: responseElse ? parseSetOutcomeValues(responseElse) : [],
   };
 }

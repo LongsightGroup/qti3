@@ -228,6 +228,62 @@ describe("@qti3/core", () => {
     ]);
   });
 
+  it("evaluates response else-if branches before the final else", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="else-if">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+            <qti-simple-choice identifier="C">C</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-match>
+                <qti-variable identifier="RESPONSE"/>
+                <qti-correct identifier="RESPONSE"/>
+              </qti-match>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">1</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else-if>
+              <qti-equal>
+                <qti-variable identifier="RESPONSE"/>
+                <qti-base-value base-type="identifier">B</qti-base-value>
+              </qti-equal>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">0.5</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-else-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">0</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.responseProcessing?.conditions[0]?.elseIfs).toHaveLength(1);
+
+    const partial = createItemSession(result.document!);
+    partial.respond("RESPONSE", "B");
+    expect(partial.score().outcomes.SCORE).toBe(0.5);
+
+    const incorrect = createItemSession(result.document!);
+    incorrect.respond("RESPONSE", "C");
+    expect(incorrect.score().outcomes.SCORE).toBe(0);
+  });
+
   it("validates modal feedback outcome references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-invalid">

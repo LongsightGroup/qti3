@@ -24,6 +24,7 @@ export type {
   QtiInteractionType,
   QtiModalFeedback,
   QtiParseResult,
+  QtiResponseBranch,
   QtiScoreResult,
   QtiSupportStatus,
   QtiTemplateDeclaration,

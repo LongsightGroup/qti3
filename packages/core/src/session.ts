@@ -149,7 +149,7 @@ function applyResponseProcessing(
   const processing = document.item.responseProcessing;
   if (processing?.conditions.length) {
     for (const condition of processing.conditions) {
-      const branch = evaluateBoolean(
+      let branch = evaluateBoolean(
         condition.ifExpression,
         document,
         responses,
@@ -158,7 +158,25 @@ function applyResponseProcessing(
         random,
       )
         ? condition.thenRules
-        : condition.elseRules;
+        : undefined;
+      if (!branch) {
+        for (const elseIf of condition.elseIfs) {
+          if (
+            evaluateBoolean(
+              elseIf.expression,
+              document,
+              responses,
+              templateValues,
+              correctResponses,
+              random,
+            )
+          ) {
+            branch = elseIf.rules;
+            break;
+          }
+        }
+      }
+      branch ??= condition.elseRules;
       applyOutcomeRules(
         branch,
         document,
