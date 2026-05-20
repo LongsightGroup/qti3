@@ -835,6 +835,42 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(1);
   });
 
+  it("validates random integer processing attributes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-random-integer">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="C" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="D" cardinality="single" base-type="integer"/>
+        <qti-item-body/>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-random-integer/>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="B">
+            <qti-random-integer min="ten" max="20"/>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="C">
+            <qti-random-integer min="10" max="1"/>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="D">
+            <qti-random-integer min="1" max="10" step="0"/>
+          </qti-set-template-value>
+        </qti-template-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.randomInteger.attribute" }),
+        expect.objectContaining({ code: "processing.randomInteger.integer" }),
+        expect.objectContaining({ code: "processing.randomInteger.bounds" }),
+        expect.objectContaining({ code: "processing.randomInteger.step" }),
+      ]),
+    );
+  });
+
   it("evaluates boolean response processing expressions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean-processing">

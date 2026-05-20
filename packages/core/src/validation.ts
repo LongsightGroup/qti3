@@ -263,9 +263,78 @@ function validateExpressionReferences(
     }
   }
 
+  if (expression.type === "randomInteger") {
+    validateRandomIntegerExpression(expression, diagnostics);
+  }
+
   for (const child of expressionChildren(expression)) {
     validateExpressionReferences(child, responses, variables, diagnostics);
   }
+}
+
+function validateRandomIntegerExpression(
+  expression: Extract<QtiProcessingExpression, { type: "randomInteger" }>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateRandomIntegerAttribute(expression, "min", diagnostics);
+  validateRandomIntegerAttribute(expression, "max", diagnostics);
+
+  if (expression.attributes.step !== undefined) {
+    validateRandomIntegerAttribute(expression, "step", diagnostics);
+    if (isInteger(expression.attributes.step) && Number(expression.attributes.step) <= 0) {
+      diagnostics.push({
+        code: "processing.randomInteger.step",
+        severity: "error",
+        message: "qti-random-integer requires step to be greater than 0.",
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+  }
+
+  const min = expression.attributes.min;
+  const max = expression.attributes.max;
+  if (
+    min !== undefined &&
+    max !== undefined &&
+    isInteger(min) &&
+    isInteger(max) &&
+    Number(min) > Number(max)
+  ) {
+    diagnostics.push({
+      code: "processing.randomInteger.bounds",
+      severity: "error",
+      message: "qti-random-integer requires min to be less than or equal to max.",
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+}
+
+function validateRandomIntegerAttribute(
+  expression: Extract<QtiProcessingExpression, { type: "randomInteger" }>,
+  attribute: "min" | "max" | "step",
+  diagnostics: QtiDiagnostic[],
+): void {
+  const value = expression.attributes[attribute];
+  if (value === undefined) {
+    diagnostics.push({
+      code: "processing.randomInteger.attribute",
+      severity: "error",
+      message: `qti-random-integer requires ${attribute}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+    return;
+  }
+  if (isInteger(value)) return;
+  diagnostics.push({
+    code: "processing.randomInteger.integer",
+    severity: "error",
+    message: `qti-random-integer requires integer ${attribute}, got ${value}.`,
+    path: expression.source?.path,
+    source: expression.source,
+  });
 }
 
 function validateProcessingIdentifier(
@@ -818,6 +887,10 @@ function isBaseType(value: string): value is QtiBaseType {
 
 function isFiniteNumber(value: string): boolean {
   return Number.isFinite(Number(value));
+}
+
+function isInteger(value: string): boolean {
+  return /^-?\d+$/.test(value);
 }
 
 function isNonNegativeInteger(value: string): boolean {

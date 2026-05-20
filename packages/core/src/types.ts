@@ -225,7 +225,13 @@ export type QtiProcessingExpression = (
   | { type: "matchCorrect"; identifier: string }
   | { type: "mapResponse"; identifier: string }
   | { type: "variable"; identifier: string }
-  | { type: "randomInteger"; min: number; max: number; step: number }
+  | {
+      type: "randomInteger";
+      min: number;
+      max: number;
+      step: number;
+      attributes: Record<string, string>;
+    }
   | { type: "random"; values: QtiProcessingExpression[] }
   | { type: "sum"; expressions: QtiProcessingExpression[] }
   | { type: "product"; expressions: QtiProcessingExpression[] }

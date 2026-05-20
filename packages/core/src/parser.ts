@@ -451,6 +451,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       min: Number(node.attributes.min ?? 0),
       max: Number(node.attributes.max ?? 0),
       step: Number(node.attributes.step ?? 1),
+      attributes: node.attributes,
       source: node.source,
     };
   }
