@@ -1,6 +1,12 @@
 import { getInteractionSupport, interactionNameToType } from "./support.js";
 import type {
   QtiAssessmentItem,
+  QtiCatalogCard,
+  QtiCatalogCardEntry,
+  QtiCatalogFileHref,
+  QtiCatalogHtmlContent,
+  QtiCatalogInfo,
+  QtiCatalogReference,
   QtiCardinality,
   QtiChoice,
   QtiChoiceRole,
@@ -107,6 +113,8 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     );
   }
   const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
+  const catalogInfo = parseCatalogInfo(childElements(node, "qti-catalog-info")[0]);
+  const catalogReferences = itemBody ? parseCatalogReferences(itemBody) : [];
   const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
 
   return {
@@ -121,10 +129,23 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     responseProcessing,
     interactions,
     modalFeedback,
+    catalogInfo,
+    catalogReferences,
     body,
     bodyText: textContent(node),
     source: node.source,
   };
+}
+
+function parseCatalogReferences(node: XmlNode): QtiCatalogReference[] {
+  const references = [
+    ...(node.attributes["data-catalog-idref"] ? [node] : []),
+    ...descendants(node, (child) => Boolean(child.attributes["data-catalog-idref"])),
+  ];
+  return references.map((reference) => ({
+    idref: reference.attributes["data-catalog-idref"] ?? "",
+    source: reference.source,
+  }));
 }
 
 function isInteractionElement(node: XmlNode): boolean {
@@ -206,6 +227,78 @@ function parseContentNode(
     qtiName: node.localName,
     attributes: node.attributes,
     children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
+    source: node.source,
+  };
+}
+
+function parseCatalogInfo(node: XmlNode | undefined): QtiCatalogInfo | undefined {
+  if (!node) return undefined;
+  return {
+    catalogs: childElements(node, "qti-catalog").map((catalog) => ({
+      id: catalog.attributes.id ?? "",
+      attributes: catalog.attributes,
+      cards: childElements(catalog, "qti-card").map(parseCatalogCard),
+      source: catalog.source,
+    })),
+    source: node.source,
+  };
+}
+
+function parseCatalogCard(node: XmlNode): QtiCatalogCard {
+  return {
+    support: node.attributes.support ?? "",
+    htmlContent: parseCatalogHtmlContent(childElements(node, "qti-html-content")[0]),
+    fileHrefs: childElements(node, "qti-file-href").map(parseCatalogFileHref),
+    entries: childElements(node, "qti-card-entry").map(parseCatalogCardEntry),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function parseCatalogCardEntry(node: XmlNode): QtiCatalogCardEntry {
+  return {
+    language: node.attributes["xml:lang"] ?? node.attributes.lang,
+    default: node.attributes.default === "true",
+    htmlContent: parseCatalogHtmlContent(childElements(node, "qti-html-content")[0]),
+    fileHrefs: childElements(node, "qti-file-href").map(parseCatalogFileHref),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function parseCatalogHtmlContent(node: XmlNode | undefined): QtiCatalogHtmlContent | undefined {
+  if (!node) return undefined;
+  return {
+    text: textContent(node),
+    children: parseCatalogHtmlChildren(node),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function parseCatalogHtmlChildren(node: XmlNode): QtiContentNode[] {
+  const content: QtiContentNode[] = [];
+  for (const entry of node.content) {
+    if (typeof entry === "string") {
+      if (entry.length > 0) content.push({ kind: "text", text: entry, source: node.source });
+      continue;
+    }
+    content.push({
+      kind: "element",
+      qtiName: entry.localName,
+      attributes: entry.attributes,
+      children: parseCatalogHtmlChildren(entry),
+      source: entry.source,
+    });
+  }
+  return content;
+}
+
+function parseCatalogFileHref(node: XmlNode): QtiCatalogFileHref {
+  return {
+    href: textContent(node).trim(),
+    mimeType: node.attributes["mime-type"],
+    attributes: node.attributes,
     source: node.source,
   };
 }

@@ -67,6 +67,36 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-state")).toContainText('"status": "initialized"');
   });
 
+  test("shows dormant catalog metadata in the manual debugger", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-debug">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <p data-catalog-idref="term-help">Select the accurate statement.</p>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">QTI items may include dormant support-specific content.</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-catalog-info>
+          <qti-catalog id="term-help">
+            <qti-card support="linguistic-guidance">
+              <qti-html-content>Accurate means correct.</qti-html-content>
+            </qti-card>
+          </qti-catalog>
+        </qti-catalog-info>
+      </qti-assessment-item>
+    `);
+    await page.locator("#load-xml").click();
+
+    await expect(page.locator("#debug-catalogs")).toContainText('"id": "term-help"');
+    await expect(page.locator("#debug-catalogs")).toContainText('"support": "linguistic-guidance"');
+    await expect(page.locator("#debug-catalogs")).toContainText("Accurate means correct.");
+  });
+
   test("renders item-body prompts before interactions", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

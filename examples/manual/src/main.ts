@@ -25,6 +25,7 @@ const debugReset = document.querySelector<HTMLButtonElement>("#debug-reset");
 const debugResponses = document.querySelector<HTMLPreElement>("#debug-responses");
 const debugOutcomes = document.querySelector<HTMLPreElement>("#debug-outcomes");
 const debugTemplateValues = document.querySelector<HTMLPreElement>("#debug-template-values");
+const debugCatalogs = document.querySelector<HTMLPreElement>("#debug-catalogs");
 const debugValidation = document.querySelector<HTMLPreElement>("#debug-validation");
 const debugDiagnostics = document.querySelector<HTMLPreElement>("#debug-diagnostics");
 const debugState = document.querySelector<HTMLPreElement>("#debug-state");
@@ -55,6 +56,7 @@ if (
   !debugResponses ||
   !debugOutcomes ||
   !debugTemplateValues ||
+  !debugCatalogs ||
   !debugValidation ||
   !debugDiagnostics ||
   !debugState ||
@@ -81,6 +83,7 @@ let selectedFileIndex = -1;
 let assetUrls = new Map<string, string>();
 let latestDiagnostics: unknown[] = [];
 let latestValidationMessages: unknown[] = [];
+let latestCatalogs: unknown[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
 for (const fixture of interactionFixtures) {
@@ -147,6 +150,7 @@ for (const eventName of [
     if (eventName === "qti-ready") {
       latestDiagnostics = diagnosticsFromDetail(detail);
       latestValidationMessages = [];
+      latestCatalogs = catalogsFromDetail(detail);
       resetScorePanel();
     } else if (eventName === "qti-responsechange") {
       latestValidationMessages = [];
@@ -223,6 +227,7 @@ function renderDebugPanels(): void {
   debugResponses.textContent = stableJson(state?.responses ?? {});
   debugOutcomes.textContent = stableJson(state?.outcomes ?? {});
   debugTemplateValues.textContent = stableJson(state?.templateValues ?? {});
+  debugCatalogs.textContent = stableJson(latestCatalogs);
   debugValidation.textContent = stableJson(latestValidationMessages);
   debugDiagnostics.textContent = stableJson(latestDiagnostics);
   debugState.textContent = stableJson(state ?? {});
@@ -269,6 +274,12 @@ function validationMessagesFromDetail(detail: unknown): unknown[] {
   if (!isRecord(detail)) return [];
   const validationMessages = detail.validationMessages;
   return Array.isArray(validationMessages) ? validationMessages : [];
+}
+
+function catalogsFromDetail(detail: unknown): unknown[] {
+  if (!isRecord(detail) || !isRecord(detail.item) || !isRecord(detail.item.catalogInfo)) return [];
+  const catalogs = detail.item.catalogInfo.catalogs;
+  return Array.isArray(catalogs) ? catalogs : [];
 }
 
 function scoreResultFromDetail(detail: unknown): {

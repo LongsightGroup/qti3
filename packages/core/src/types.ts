@@ -252,6 +252,55 @@ export interface QtiFeedbackContent {
   source?: QtiSourceLocation | undefined;
 }
 
+export interface QtiCatalogInfo {
+  catalogs: QtiCatalog[];
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCatalog {
+  id: string;
+  cards: QtiCatalogCard[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCatalogCard {
+  support: string;
+  htmlContent?: QtiCatalogHtmlContent | undefined;
+  fileHrefs: QtiCatalogFileHref[];
+  entries: QtiCatalogCardEntry[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCatalogCardEntry {
+  language?: string | undefined;
+  default: boolean;
+  htmlContent?: QtiCatalogHtmlContent | undefined;
+  fileHrefs: QtiCatalogFileHref[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCatalogHtmlContent {
+  text: string;
+  children: QtiContentNode[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCatalogFileHref {
+  href: string;
+  mimeType?: string | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCatalogReference {
+  idref: string;
+  source?: QtiSourceLocation | undefined;
+}
+
 export interface QtiAssessmentItem {
   identifier: string;
   title?: string | undefined;
@@ -264,6 +313,8 @@ export interface QtiAssessmentItem {
   responseProcessing?: QtiResponseProcessing | undefined;
   interactions: QtiInteraction[];
   modalFeedback: QtiModalFeedback[];
+  catalogInfo?: QtiCatalogInfo | undefined;
+  catalogReferences: QtiCatalogReference[];
   body: QtiContentNode[];
   bodyText: string;
   source?: QtiSourceLocation | undefined;

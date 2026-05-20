@@ -1,8 +1,11 @@
 import type {
   QtiAssessmentItem,
   QtiBaseType,
+  QtiCatalogCard,
+  QtiCatalogCardEntry,
   QtiCardinality,
   QtiChoice,
+  QtiContentNode,
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
@@ -28,6 +31,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateOutcomeLookupTables(item, diagnostics);
   validateInteractions(item, diagnostics);
   validateModalFeedback(item, diagnostics);
+  validateCatalogInfo(item, diagnostics);
   validateProcessingReferences(item, diagnostics);
 
   return {
@@ -479,6 +483,134 @@ function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDi
           source: entry.source,
         });
       }
+    }
+  }
+}
+
+function validateCatalogInfo(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  const catalogInfo = item.catalogInfo;
+  if (!catalogInfo) {
+    for (const reference of item.catalogReferences) {
+      diagnostics.push({
+        code: "catalog.idref.reference",
+        severity: "error",
+        message: `data-catalog-idref references missing qti-catalog id ${reference.idref}.`,
+        path: reference.source?.path,
+        source: reference.source,
+      });
+    }
+    return;
+  }
+
+  const catalogIds = new Set<string>();
+  for (const catalog of catalogInfo.catalogs) {
+    requireIdentifier("qti-catalog", catalog.id, diagnostics, catalog.source);
+    if (catalog.id && catalogIds.has(catalog.id)) {
+      diagnostics.push({
+        code: "catalog.id.duplicate",
+        severity: "error",
+        message: `Duplicate qti-catalog id ${catalog.id}.`,
+        path: catalog.source?.path,
+        source: catalog.source,
+      });
+    }
+    catalogIds.add(catalog.id);
+
+    if (catalog.cards.length === 0) {
+      diagnostics.push({
+        code: "catalog.card.required",
+        severity: "error",
+        message: `qti-catalog ${catalog.id || "(missing id)"} requires at least one qti-card.`,
+        path: catalog.source?.path,
+        source: catalog.source,
+      });
+    }
+
+    const supports = new Set<string>();
+    for (const card of catalog.cards) {
+      validateCatalogCard(card, diagnostics);
+      if (card.support && supports.has(card.support)) {
+        diagnostics.push({
+          code: "catalog.card.support.duplicate",
+          severity: "error",
+          message: `qti-catalog ${catalog.id || "(missing id)"} contains duplicate card support ${card.support}.`,
+          path: card.source?.path,
+          source: card.source,
+        });
+      }
+      supports.add(card.support);
+    }
+  }
+
+  for (const reference of item.catalogReferences) {
+    if (catalogIds.has(reference.idref)) continue;
+    diagnostics.push({
+      code: "catalog.idref.reference",
+      severity: "error",
+      message: `data-catalog-idref references missing qti-catalog id ${reference.idref}.`,
+      path: reference.source?.path,
+      source: reference.source,
+    });
+  }
+}
+
+function validateCatalogCard(
+  card: QtiCatalogCard | QtiCatalogCardEntry,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if ("support" in card && !card.support) {
+    diagnostics.push({
+      code: "catalog.card.support.required",
+      severity: "error",
+      message: "qti-card requires a non-empty support attribute.",
+      path: card.source?.path,
+      source: card.source,
+    });
+  }
+
+  const entries = "entries" in card ? card.entries : [];
+  const hasContent = Boolean(card.htmlContent) || card.fileHrefs.length > 0 || entries.length > 0;
+  if (!hasContent) {
+    diagnostics.push({
+      code: "catalog.card.content.required",
+      severity: "error",
+      message: "qti-card or qti-card-entry requires qti-html-content or qti-file-href content.",
+      path: card.source?.path,
+      source: card.source,
+    });
+  }
+
+  if (card.htmlContent) {
+    validateCatalogHtmlContent(card.htmlContent.children, diagnostics);
+  }
+  for (const fileHref of card.fileHrefs) {
+    if (fileHref.href.length > 0) continue;
+    diagnostics.push({
+      code: "catalog.fileHref.required",
+      severity: "error",
+      message: "qti-file-href requires a non-empty file reference.",
+      path: fileHref.source?.path,
+      source: fileHref.source,
+    });
+  }
+  for (const entry of entries) {
+    validateCatalogCard(entry, diagnostics);
+  }
+}
+
+function validateCatalogHtmlContent(nodes: QtiContentNode[], diagnostics: QtiDiagnostic[]): void {
+  for (const node of nodes) {
+    if (node.kind === "element") {
+      if (node.qtiName.startsWith("qti-")) {
+        diagnostics.push({
+          code: "catalog.htmlContent.qtiElement",
+          severity: "error",
+          message: "qti-html-content must not contain QTI-specific elements.",
+          path: node.source?.path,
+          source: node.source,
+        });
+      }
+      validateCatalogHtmlContent(node.children, diagnostics);
     }
   }
 }

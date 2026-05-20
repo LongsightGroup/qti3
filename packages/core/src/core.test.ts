@@ -251,6 +251,88 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("preserves and validates item catalog metadata", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-item">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-prompt>Choose the <span data-catalog-idref="accurate-help">accurate</span> statement.</qti-prompt>
+            <qti-simple-choice identifier="A">QTI stands for Question and Test Interoperability.</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-catalog-info>
+          <qti-catalog id="accurate-help">
+            <qti-card support="linguistic-guidance">
+              <qti-html-content>Accurate means correct.</qti-html-content>
+            </qti-card>
+            <qti-card support="spoken">
+              <qti-card-entry data-reading-type="computer-read-aloud" default="true">
+                <qti-file-href mime-type="audio/mpeg">audio/accurate.mp3</qti-file-href>
+              </qti-card-entry>
+            </qti-card>
+          </qti-catalog>
+        </qti-catalog-info>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.catalogInfo?.catalogs).toMatchObject([
+      {
+        id: "accurate-help",
+        cards: [
+          {
+            support: "linguistic-guidance",
+            htmlContent: { text: "Accurate means correct." },
+          },
+          {
+            support: "spoken",
+            entries: [
+              {
+                default: true,
+                attributes: { "data-reading-type": "computer-read-aloud" },
+                fileHrefs: [{ href: "audio/accurate.mp3", mimeType: "audio/mpeg" }],
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("diagnoses invalid catalog references and card content", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-catalog-item">
+        <qti-item-body>
+          <p data-catalog-idref="missing">Term</p>
+        </qti-item-body>
+        <qti-catalog-info>
+          <qti-catalog id="known">
+            <qti-card support="spoken"/>
+            <qti-card support="spoken"><qti-file-href/></qti-card>
+          </qti-catalog>
+        </qti-catalog-info>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "catalog.idref.reference", severity: "error" }),
+    );
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "catalog.card.content.required", severity: "error" }),
+    );
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "catalog.card.support.duplicate", severity: "error" }),
+    );
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "catalog.fileHref.required", severity: "error" }),
+    );
+  });
+
   it("validates response declaration references and response shape", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid">
