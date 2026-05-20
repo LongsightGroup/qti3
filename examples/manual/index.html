@@ -136,26 +136,36 @@
 
       .load-options {
         display: grid;
-        gap: 0.65rem;
+        gap: 0.75rem;
         margin-block: 1rem;
       }
 
       .load-option {
-        border: 1px solid #d8d8d8;
+        border: 1px solid #c9c9c9;
+        background: #f6f6f3;
+      }
+
+      .load-option[open] {
         background: #fff;
       }
 
       .load-option summary {
         cursor: pointer;
-        padding: 0.55rem 0.7rem;
+        padding: 0.7rem 0.85rem;
         font-weight: 700;
+      }
+
+      .load-option summary:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 2px;
       }
 
       .load-option-body {
         display: grid;
-        gap: 0.6rem;
-        padding: 0 0.7rem 0.75rem;
-        border-top: 1px solid #d8d8d8;
+        gap: 0.65rem;
+        padding: 0.75rem 0.85rem 0.85rem;
+        border-top: 1px solid #c9c9c9;
+        background: #fff;
       }
 
       .debug-actions {
