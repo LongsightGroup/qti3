@@ -492,6 +492,76 @@ test.describe("manual harness", () => {
     await expect(radio).not.toHaveAttribute("aria-invalid", "true");
   });
 
+  test("honors authored minimum response counts during validation", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="minimum-choice" title="minimum-choice">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+      <qti-value>B</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" min-choices="2" max-choices="3">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+      <qti-simple-choice identifier="C">C</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`);
+    await page.locator("#load-xml").click();
+
+    await page.getByRole("checkbox", { name: "A" }).check();
+    await page.getByRole("button", { name: "Score" }).click();
+    await expect(page.locator("#events")).toContainText("requires at least 2 responses");
+    await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
+
+    await page.getByRole("checkbox", { name: "B" }).check();
+    await expect(page.getByRole("checkbox", { name: "A" })).not.toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await page.getByRole("button", { name: "Score" }).click();
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.outcomes.SCORE).toBe(1);
+    expect(state.validationMessages).toEqual([]);
+  });
+
+  test("allows optional responses when authored minimum is zero", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="optional-choice" title="optional-choice">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" min-choices="0" max-choices="1">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`);
+    await page.locator("#load-xml").click();
+    await page.getByRole("button", { name: "Score" }).click();
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.outcomes.SCORE).toBe(0);
+    expect(state.validationMessages).toEqual([]);
+    await expect(page.locator("#events")).not.toContainText("response.required");
+  });
+
   test("renders under forced colors and reduced motion preferences", async ({ page }) => {
     await page.emulateMedia({
       colorScheme: "dark",

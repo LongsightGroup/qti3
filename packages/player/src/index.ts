@@ -322,15 +322,29 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private validateResponses(): QtiDiagnostic[] {
     const state = this.session?.serialize();
     if (!state || !this.documentModel) return [];
-    return this.documentModel.item.responseDeclarations
-      .filter((declaration) => declaration.correctResponse !== null)
-      .filter((declaration) => responseIsEmpty(state.responses[declaration.identifier] ?? null))
-      .map((declaration) => ({
+    const interactionsByResponse = new Map(
+      this.documentModel.item.interactions
+        .filter((interaction) => interaction.responseIdentifier)
+        .map((interaction) => [interaction.responseIdentifier!, interaction]),
+    );
+    const diagnostics: QtiDiagnostic[] = [];
+    for (const declaration of this.documentModel.item.responseDeclarations) {
+      if (declaration.correctResponse === null) continue;
+      const interaction = interactionsByResponse.get(declaration.identifier);
+      const minimum = minimumRequiredResponses(interaction);
+      const count = responseCount(state.responses[declaration.identifier] ?? null);
+      if (count >= minimum) continue;
+      diagnostics.push({
         code: "response.required",
-        severity: "error" as const,
-        message: `${declaration.identifier} requires a response.`,
+        severity: "error",
+        message:
+          minimum === 1
+            ? `${declaration.identifier} requires a response.`
+            : `${declaration.identifier} requires at least ${minimum} responses.`,
         path: declaration.identifier,
-      }));
+      });
+    }
+    return diagnostics;
   }
 
   private renderValidationMessages(): void {
@@ -1060,6 +1074,19 @@ function validationMessageId(responseIdentifier: string): string {
 
 function responseIsEmpty(value: QtiValue): boolean {
   return value === null || value === "" || (Array.isArray(value) && value.length === 0);
+}
+
+function responseCount(value: QtiValue): number {
+  return responseIsEmpty(value) ? 0 : Array.isArray(value) ? value.length : 1;
+}
+
+function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
+  if (!interaction) return 1;
+  const explicit =
+    interaction.attributes["min-choices"] ?? interaction.attributes["min-associations"];
+  if (explicit === undefined) return 1;
+  const parsed = Number(explicit);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
 }
 
 async function defaultFetchXml(url: string): Promise<string> {
