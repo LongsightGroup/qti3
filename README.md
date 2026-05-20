@@ -62,6 +62,8 @@ player.addEventListener("qti-statechange", (event) => {
 
 Framework adapters may be added later, but they should wrap the web component or core API. They must not own the QTI implementation.
 
+The initial player should use native custom elements directly. Lit is not part of the initial stack and should be reconsidered only if plain custom element code creates a clear maintenance problem that outweighs the dependency and abstraction cost.
+
 ## Platform
 
 - ESM-only packages.
