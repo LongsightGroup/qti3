@@ -118,6 +118,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     title.textContent = documentModel.item.title ?? documentModel.item.identifier;
     root.append(title);
 
+    if (documentModel.item.prompt) {
+      const prompt = document.createElement("p");
+      prompt.className = "qti3-item-prompt";
+      prompt.textContent = documentModel.item.prompt;
+      root.append(prompt);
+    }
+
     for (const interaction of documentModel.item.interactions) {
       root.append(this.renderInteraction(interaction));
     }

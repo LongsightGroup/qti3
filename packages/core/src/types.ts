@@ -126,6 +126,7 @@ export interface QtiInteraction {
 export interface QtiAssessmentItem {
   identifier: string;
   title?: string | undefined;
+  prompt?: string | undefined;
   responseDeclarations: QtiResponseDeclaration[];
   outcomeDeclarations: QtiOutcomeDeclaration[];
   templateDeclarations: QtiTemplateDeclaration[];

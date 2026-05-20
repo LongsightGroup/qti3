@@ -69,6 +69,7 @@ describe("@qti3/core", () => {
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
         </qti-outcome-declaration>
         <qti-item-body>
+          <qti-prompt>Who was the first president?</qti-prompt>
           <qti-choice-interaction response-identifier="RESPONSE">
             <qti-simple-choice identifier="A">Washington</qti-simple-choice>
             <qti-simple-choice identifier="B">Adams</qti-simple-choice>
@@ -78,7 +79,9 @@ describe("@qti3/core", () => {
     `);
 
     expect(result.ok).toBe(true);
+    expect(result.document?.item.prompt).toBe("Who was the first president?");
     expect(result.document?.item.interactions[0]?.type).toBe("choice");
+    expect(result.document?.item.interactions[0]?.prompt).toBeUndefined();
 
     const session = createItemSession(result.document!);
     session.respond("RESPONSE", "A");

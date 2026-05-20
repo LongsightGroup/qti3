@@ -40,6 +40,27 @@ test.describe("manual harness", () => {
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
   });
 
+  test("renders item-body prompts before interactions", async ({ page }) => {
+    const fixture =
+      interactionFixtures.find((item) => item.interactionType === "choice") ??
+      interactionFixtures[0];
+    if (!fixture) throw new Error("Missing choice fixture.");
+    const xml = fixture.xml.replace(
+      "<p>Reference item for choice-reference.</p>",
+      "<qti-prompt>Which president resigned after Watergate?</qti-prompt>",
+    );
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-item-prompt")).toHaveText(
+      "Which president resigned after Watergate?",
+    );
+    await expect(player.getByRole("radio", { name: "A" })).toBeVisible();
+  });
+
   test("captures and scores every reference interaction fixture", async ({ page }) => {
     await page.goto("/");
 

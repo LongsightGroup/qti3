@@ -87,10 +87,13 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const interactions = descendants(node, (child) => interactionNameToType.has(child.localName)).map(
     (interactionNode) => parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
   );
+  const itemBody = childElements(node, "qti-item-body")[0];
+  const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
 
   return {
     identifier,
     title: node.attributes.title,
+    prompt: prompt ? textContent(prompt) : undefined,
     responseDeclarations,
     outcomeDeclarations,
     templateDeclarations,
@@ -148,6 +151,7 @@ function parseInteraction(
   const responseDeclaration = responseIdentifier
     ? responseDeclarationMap.get(responseIdentifier)
     : undefined;
+  const prompt = childElements(node, "qti-prompt")[0];
   if (!interactionType) {
     diagnostics.push({
       code: "interaction.unsupported",
@@ -170,7 +174,7 @@ function parseInteraction(
     responseIdentifier,
     responseCardinality: responseDeclaration?.cardinality,
     responseBaseType: responseDeclaration?.baseType,
-    prompt: textContent(childElements(node, "qti-prompt")[0] ?? node),
+    prompt: prompt ? textContent(prompt) : undefined,
     choices: parseChoices(node),
     attributes: node.attributes,
     text: textContent(node),
