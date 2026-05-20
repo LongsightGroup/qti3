@@ -980,6 +980,38 @@ test.describe("manual harness", () => {
     ).toHaveAttribute("data-selected", "true");
   });
 
+  test("honors hotspot shared CSS vocabulary while preserving keyboard access", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-shared-css">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction
+            class="qti-selections-dark qti-unselected-hidden"
+            response-identifier="RESPONSE">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='white'/%3E%3C/svg%3E" alt="Blank target" width="200" height="100"/>
+            <qti-hotspot-choice identifier="A" shape="rect" coords="10,10,90,70">A</qti-hotspot-choice>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+    await page.locator("#load-xml").click();
+
+    const interaction = page.locator(".qti3-hotspot");
+    await expect(interaction).toHaveClass(/qti-selections-dark/);
+    await expect(interaction).toHaveClass(/qti-unselected-hidden/);
+
+    const button = page.locator("qti-assessment-item-player").getByRole("button", { name: "A" });
+    await expect(button).toHaveCSS("opacity", "0");
+    await button.focus();
+    await expect(button).not.toHaveCSS("opacity", "0");
+    await page.keyboard.press("Enter");
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expectResponse(page, "A");
+  });
+
   test("associates validation messages with unanswered controls", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

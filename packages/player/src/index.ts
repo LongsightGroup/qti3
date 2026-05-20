@@ -201,6 +201,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private renderInteraction(interaction: QtiInteraction): HTMLElement {
     const field = document.createElement("section");
     field.className = `qti3-interaction qti3-${interaction.type}`;
+    field.classList.add(...qtiSharedClassNames(interaction.attributes.class));
     field.dataset.interactionType = interaction.type;
     if (interaction.responseIdentifier)
       field.dataset.responseIdentifier = interaction.responseIdentifier;
@@ -1050,6 +1051,10 @@ function renderSelect(
 
 function interactionLabel(interaction: QtiInteraction): string {
   return interaction.prompt ?? interaction.contextText ?? readableType(interaction.type);
+}
+
+function qtiSharedClassNames(value: string | undefined): string[] {
+  return (value ?? "").split(/\s+/).filter((className) => className.startsWith("qti-"));
 }
 
 function renderTextResponse(
@@ -2312,8 +2317,34 @@ function playerStyleElement(): HTMLStyleElement {
       cursor: pointer;
     }
 
+    .qti3-hotspot.qti-selections-light .qti3-hotspot-button {
+      border-color: white;
+      color: white;
+      background: rgb(0 0 0 / 0.45);
+    }
+
+    .qti3-hotspot.qti-selections-dark .qti3-hotspot-button {
+      border-color: black;
+      color: black;
+      background: rgb(255 255 255 / 0.65);
+    }
+
+    .qti3-hotspot.qti-unselected-hidden
+      .qti3-hotspot-button:not([data-selected="true"]):not(:focus):not(:focus-visible) {
+      opacity: 0;
+    }
+
     @supports not (background: color-mix(in srgb, Canvas 65%, transparent)) {
       .qti3-hotspot-button {
+        background: Canvas;
+      }
+    }
+
+    @media (forced-colors: active) {
+      .qti3-hotspot.qti-selections-light .qti3-hotspot-button,
+      .qti3-hotspot.qti-selections-dark .qti3-hotspot-button {
+        border-color: CanvasText;
+        color: CanvasText;
         background: Canvas;
       }
     }
