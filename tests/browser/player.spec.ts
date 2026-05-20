@@ -425,6 +425,42 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
   });
 
+  test("resolves relative item assets from a zip upload", async ({ page }) => {
+    const graphicOrder = interactionFixtures.find(
+      (item) => item.interactionType === "graphicOrder",
+    );
+    if (!graphicOrder) throw new Error("Missing graphic order fixture.");
+
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="graphic-order" type="imsqti_item_xmlv3p0" href="items/graphic-order.xml">
+      <file href="items/graphic-order.xml"/>
+      <file href="items/image.png"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/graphic-order.xml": graphicOrder.xml,
+      "items/image.png": Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lc5Y8wAAAABJRU5ErkJggg==",
+        "base64",
+      ),
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "graphic-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("items/graphic-order.xml");
+    const image = page.locator("qti-assessment-item-player .qti3-graphic-context img");
+    await expect(image).toHaveAttribute("src", /^blob:/);
+    await expectImageLoaded(image);
+  });
+
   test("captures and scores every reference interaction fixture", async ({ page }) => {
     await page.goto("/");
 
@@ -1297,14 +1333,14 @@ async function provideResponse(
   }
 }
 
-function createStoredZip(files: Record<string, string>): Buffer {
+function createStoredZip(files: Record<string, string | Buffer>): Buffer {
   const localParts: Buffer[] = [];
   const centralParts: Buffer[] = [];
   let offset = 0;
 
-  for (const [name, text] of Object.entries(files)) {
+  for (const [name, content] of Object.entries(files)) {
     const nameBytes = Buffer.from(name);
-    const data = Buffer.from(text);
+    const data = Buffer.isBuffer(content) ? content : Buffer.from(content);
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0);
     local.writeUInt16LE(20, 4);

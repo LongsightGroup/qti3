@@ -20,12 +20,14 @@ export interface QtiPlayerSessionControl {
 }
 
 export type QtiPlayerFetchXml = (url: string) => Promise<string>;
+export type QtiPlayerResolveAsset = (url: string) => string;
 
 export interface QtiPlayerLoadOptions {
   state?: QtiAttemptStateV1 | undefined;
   status?: QtiAttemptStatus | undefined;
   sessionControl?: QtiPlayerSessionControl | undefined;
   fetchXml?: QtiPlayerFetchXml | undefined;
+  resolveAsset?: QtiPlayerResolveAsset | undefined;
 }
 
 const HTMLElementBase: typeof HTMLElement =
@@ -40,6 +42,7 @@ const HTMLElementBase: typeof HTMLElement =
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
+  private resolveAsset: QtiPlayerResolveAsset | undefined;
   private validationMessages: QtiDiagnostic[] = [];
   private sessionControl: Required<QtiPlayerSessionControl> = {
     validateResponses: true,
@@ -51,6 +54,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       validateResponses: options.sessionControl?.validateResponses ?? true,
       showFeedback: options.sessionControl?.showFeedback ?? true,
     };
+    this.resolveAsset = options.resolveAsset;
     const result = parseQtiXml(xml);
     this.dispatchEvent(
       new CustomEvent("qti-diagnostics", { detail: { diagnostics: result.diagnostics } }),
@@ -190,6 +194,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     feedback.hidden = true;
     root.append(feedback);
 
+    this.resolveRenderedAssets(root);
     this.replaceChildren(root);
   }
 
@@ -448,6 +453,17 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.style.color = "CanvasText";
     this.style.backgroundColor = "Canvas";
     this.style.colorScheme = "light dark";
+  }
+
+  private resolveRenderedAssets(root: HTMLElement): void {
+    if (!this.resolveAsset) return;
+    for (const element of root.querySelectorAll("[src], [href], [data]")) {
+      for (const attribute of ["src", "href", "data"]) {
+        const value = element.getAttribute(attribute);
+        if (!value || !isResolvableAssetUrl(value)) continue;
+        element.setAttribute(attribute, this.resolveAsset(value));
+      }
+    }
   }
 
   private validateResponses(): QtiDiagnostic[] {
@@ -1977,6 +1993,16 @@ function isSafeUrl(value: string): boolean {
     value.startsWith("data:image/") ||
     value.startsWith("data:audio/") ||
     value.startsWith("data:video/")
+  );
+}
+
+function isResolvableAssetUrl(value: string): boolean {
+  return (
+    !value.startsWith("#") &&
+    !value.startsWith("data:") &&
+    !value.startsWith("blob:") &&
+    !value.startsWith("http://") &&
+    !value.startsWith("https://")
   );
 }
 

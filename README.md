@@ -70,10 +70,16 @@ await player.loadUrl("/items/item-1.xml", {
   },
 });
 
+await player.loadXml(packageItemXml, {
+  resolveAsset: (url) => packageAssetUrlFor(url),
+});
+
 player.addEventListener("qti-statechange", (event) => {
   saveState(event.detail.state);
 });
 ```
+
+`resolveAsset` is a host hook for package or virtual-file environments. The player calls it for relative `src`, `href`, and `data` asset URLs after rendering the item; normal web-served items can omit it.
 
 Framework adapters may be added later, but they should wrap the web component or core API. They must not own the QTI implementation.
 

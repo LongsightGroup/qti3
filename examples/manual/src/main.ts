@@ -71,8 +71,14 @@ interface LoadedFile {
   source: string;
 }
 
+interface ZipEntry {
+  name: string;
+  bytes: Uint8Array;
+}
+
 let loadedFiles: LoadedFile[] = [];
 let selectedFileIndex = -1;
+let assetUrls = new Map<string, string>();
 let latestDiagnostics: unknown[] = [];
 let latestValidationMessages: unknown[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
@@ -321,10 +327,13 @@ async function loadSelectedLocalFile(): Promise<void> {
   fileSummary.textContent = `${selectedFileIndex + 1} of ${loadedFiles.length}: ${file.name}`;
   previousFile.disabled = selectedFileIndex <= 0;
   nextFile.disabled = selectedFileIndex >= loadedFiles.length - 1;
-  await player.loadXml(file.xml);
+  await player.loadXml(file.xml, {
+    resolveAsset: (url) => resolveLoadedAsset(file.source, url),
+  });
 }
 
 async function loadLocalFiles(fileList: FileList | null): Promise<void> {
+  clearAssetUrls();
   const files = await readXmlFiles(fileList);
   loadedFiles = resolveLoadableItems(files);
   localFiles.replaceChildren(
@@ -357,16 +366,23 @@ async function readXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
 
 async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
   const entries = await readZipEntries(await file.arrayBuffer());
+  for (const entry of entries) {
+    if (entry.name.endsWith(".xml")) continue;
+    assetUrls.set(
+      entry.name,
+      URL.createObjectURL(new Blob([entry.bytes], { type: mimeTypeForPath(entry.name) })),
+    );
+  }
   return entries
     .filter((entry) => entry.name.endsWith(".xml"))
     .map((entry) => ({
       name: entry.name,
       source: entry.name,
-      xml: entry.text,
+      xml: new TextDecoder().decode(entry.bytes),
     }));
 }
 
-async function readZipEntries(buffer: ArrayBuffer): Promise<Array<{ name: string; text: string }>> {
+async function readZipEntries(buffer: ArrayBuffer): Promise<ZipEntry[]> {
   const bytes = new Uint8Array(buffer);
   const view = new DataView(buffer);
   const eocdOffset = findEndOfCentralDirectory(view);
@@ -374,7 +390,7 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<Array<{ name: string
 
   const entryCount = view.getUint16(eocdOffset + 10, true);
   let offset = view.getUint32(eocdOffset + 16, true);
-  const entries: Array<{ name: string; text: string }> = [];
+  const entries: ZipEntry[] = [];
   const decoder = new TextDecoder();
 
   for (let index = 0; index < entryCount; index += 1) {
@@ -391,10 +407,45 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<Array<{ name: string
     if (!name || name.endsWith("/")) continue;
 
     const content = await zipEntryBytes(bytes, view, localHeaderOffset, compressedSize, method);
-    if (content) entries.push({ name, text: decoder.decode(content) });
+    if (content) entries.push({ name, bytes: content });
   }
 
   return entries;
+}
+
+function clearAssetUrls(): void {
+  for (const url of assetUrls.values()) URL.revokeObjectURL(url);
+  assetUrls = new Map();
+}
+
+function resolveLoadedAsset(source: string, url: string): string {
+  if (!isRelativeAssetUrl(url)) return url;
+  const path = resolveRelativePath(source, url);
+  return assetUrls.get(path) ?? assetUrls.get(normalizePath(url)) ?? url;
+}
+
+function isRelativeAssetUrl(url: string): boolean {
+  return (
+    !url.startsWith("#") &&
+    !url.startsWith("/") &&
+    !url.startsWith("data:") &&
+    !url.startsWith("blob:") &&
+    !url.startsWith("http://") &&
+    !url.startsWith("https://")
+  );
+}
+
+function mimeTypeForPath(path: string): string {
+  if (/\.svg$/i.test(path)) return "image/svg+xml";
+  if (/\.png$/i.test(path)) return "image/png";
+  if (/\.jpe?g$/i.test(path)) return "image/jpeg";
+  if (/\.gif$/i.test(path)) return "image/gif";
+  if (/\.webp$/i.test(path)) return "image/webp";
+  if (/\.mp3$/i.test(path)) return "audio/mpeg";
+  if (/\.wav$/i.test(path)) return "audio/wav";
+  if (/\.mp4$/i.test(path)) return "video/mp4";
+  if (/\.webm$/i.test(path)) return "video/webm";
+  return "application/octet-stream";
 }
 
 function findEndOfCentralDirectory(view: DataView): number {
