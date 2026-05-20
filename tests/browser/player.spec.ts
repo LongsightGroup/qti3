@@ -345,6 +345,9 @@ test.describe("manual harness", () => {
     await page.getByRole("radio", { name: "A" }).focus();
     await page.keyboard.press("Space");
     await expectResponse(page, "A");
+    await expect(
+      page.locator('qti-assessment-item-player .qti3-choice-option[data-choice-identifier="A"]'),
+    ).toHaveAttribute("data-selected", "true");
 
     await loadFixture(page, "textEntry");
     await page

@@ -420,6 +420,7 @@ declare global {
 
 function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {
   const group = document.createElement("fieldset");
+  group.className = "qti3-choice-group";
   const legend = document.createElement("legend");
   legend.textContent = readableType(interaction.type);
   group.append(legend);
@@ -427,8 +428,20 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
   const selected = new Set<string>();
+  const list = document.createElement("div");
+  list.className = "qti3-choice-list";
+  list.role = "group";
+  list.setAttribute("aria-label", `${readableType(interaction.type)} options`);
+  const syncSelected = () => {
+    for (const label of list.querySelectorAll<HTMLElement>(".qti3-choice-option")) {
+      const identifier = label.dataset.choiceIdentifier ?? "";
+      label.dataset.selected = selected.has(identifier) ? "true" : "false";
+    }
+  };
   for (const choice of choicesOrFallback(interaction)) {
     const label = document.createElement("label");
+    label.className = "qti3-choice-option";
+    label.dataset.choiceIdentifier = choice.identifier;
     const input = document.createElement("input");
     input.type = multiple ? "checkbox" : "radio";
     input.name = interaction.responseIdentifier ?? interaction.type;
@@ -439,12 +452,19 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
         else selected.delete(choice.identifier);
         update([...selected]);
       } else {
+        selected.clear();
+        selected.add(choice.identifier);
+        syncSelected();
         update(input.value);
       }
+      syncSelected();
     });
-    label.append(input, ` ${choice.text}`);
-    group.append(label);
+    const text = document.createElement("span");
+    text.textContent = choice.text;
+    label.append(input, text);
+    list.append(label);
   }
+  group.append(list);
   return group;
 }
 
@@ -1361,6 +1381,29 @@ function playerStyleElement(): HTMLStyleElement {
       display: grid;
       gap: 0.5rem;
       padding-inline-start: 1.5rem;
+    }
+
+    .qti3-choice-list {
+      display: grid;
+      gap: 0.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    }
+
+    .qti3-choice-option {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      min-block-size: 2.75rem;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid CanvasText;
+      background: Canvas;
+      color: CanvasText;
+      cursor: pointer;
+    }
+
+    .qti3-choice-option[data-selected="true"] {
+      background: Highlight;
+      color: HighlightText;
     }
 
     .qti3-reorder-item {
