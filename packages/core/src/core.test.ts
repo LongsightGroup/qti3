@@ -758,7 +758,11 @@ describe("@qti3/core", () => {
     `);
 
     expect(result.ok).toBe(false);
-    expect(result.document?.item.templateProcessing?.rules[0]?.identifier).toBe("");
+    const templateRule = result.document?.item.templateProcessing?.rules[0];
+    expect(templateRule?.type).toBe("setTemplateValue");
+    expect(templateRule?.type === "setTemplateValue" ? templateRule.identifier : undefined).toBe(
+      "",
+    );
     expect(result.document?.item.responseProcessing?.conditions[0]?.thenRules[0]?.identifier).toBe(
       "",
     );
@@ -1313,6 +1317,58 @@ describe("@qti3/core", () => {
     expect(session.correctResponses()).toEqual({ RESPONSE: 5 });
     session.respond("RESPONSE", 5);
     expect(session.score().outcomes.SCORE).toBe(1);
+  });
+
+  it("evaluates template conditions and templated default values", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-condition">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-processing>
+          <qti-template-condition>
+            <qti-template-if>
+              <qti-base-value base-type="boolean">false</qti-base-value>
+              <qti-set-template-value identifier="A">
+                <qti-base-value base-type="integer">1</qti-base-value>
+              </qti-set-template-value>
+            </qti-template-if>
+            <qti-template-else-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-template-value identifier="A">
+                <qti-base-value base-type="integer">7</qti-base-value>
+              </qti-set-template-value>
+            </qti-template-else-if>
+            <qti-template-else>
+              <qti-set-template-value identifier="A">
+                <qti-base-value base-type="integer">9</qti-base-value>
+              </qti-set-template-value>
+            </qti-template-else>
+          </qti-template-condition>
+          <qti-set-default-value identifier="RESPONSE">
+            <qti-variable identifier="A"/>
+          </qti-set-default-value>
+          <qti-set-default-value identifier="SCORE">
+            <qti-base-value base-type="float">2.5</qti-base-value>
+          </qti-set-default-value>
+          <qti-set-correct-response identifier="RESPONSE">
+            <qti-variable identifier="A"/>
+          </qti-set-correct-response>
+        </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    expect(session.serialize().templateValues).toEqual({ A: 7 });
+    expect(session.serialize().responses.RESPONSE).toBe(7);
+    expect(session.serialize().outcomes.SCORE).toBe(2.5);
+    expect(session.score().outcomes.SCORE).toBe(1);
+    session.respond("RESPONSE", 0);
+    expect(session.score().outcomes.SCORE).toBe(0);
   });
 
   it("validates random integer processing attributes", () => {

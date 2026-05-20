@@ -232,11 +232,30 @@ export type QtiTemplateRule =
       source?: QtiSourceLocation | undefined;
     }
   | {
+      type: "setDefaultValue";
+      identifier: string;
+      expression: QtiProcessingExpression;
+      source?: QtiSourceLocation | undefined;
+    }
+  | {
       type: "setCorrectResponse";
       identifier: string;
       expression: QtiProcessingExpression;
       source?: QtiSourceLocation | undefined;
+    }
+  | {
+      type: "templateCondition";
+      ifExpression?: QtiProcessingExpression | undefined;
+      thenRules: QtiTemplateRule[];
+      elseIfs: QtiTemplateBranch[];
+      elseRules: QtiTemplateRule[];
+      source?: QtiSourceLocation | undefined;
     };
+
+export interface QtiTemplateBranch {
+  expression?: QtiProcessingExpression | undefined;
+  rules: QtiTemplateRule[];
+}
 
 export type QtiProcessingExpression = (
   | {

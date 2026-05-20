@@ -411,7 +411,7 @@ function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiD
   const variables = new Set([...responses, ...outcomes, ...templates]);
 
   for (const rule of item.templateProcessing?.rules ?? []) {
-    validateTemplateRule(rule, responses, templates, variables, diagnostics);
+    validateTemplateRule(rule, responses, outcomes, templates, variables, diagnostics);
   }
 
   for (const condition of item.responseProcessing?.conditions ?? []) {
@@ -434,10 +434,28 @@ function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiD
 function validateTemplateRule(
   rule: QtiTemplateRule,
   responses: Set<string>,
+  outcomes: Set<string>,
   templates: Set<string>,
   variables: Set<string>,
   diagnostics: QtiDiagnostic[],
 ): void {
+  if (rule.type === "templateCondition") {
+    validateExpressionReferences(rule.ifExpression, responses, variables, diagnostics);
+    for (const branchRule of rule.thenRules) {
+      validateTemplateRule(branchRule, responses, outcomes, templates, variables, diagnostics);
+    }
+    for (const branch of rule.elseIfs) {
+      validateExpressionReferences(branch.expression, responses, variables, diagnostics);
+      for (const branchRule of branch.rules) {
+        validateTemplateRule(branchRule, responses, outcomes, templates, variables, diagnostics);
+      }
+    }
+    for (const branchRule of rule.elseRules) {
+      validateTemplateRule(branchRule, responses, outcomes, templates, variables, diagnostics);
+    }
+    return;
+  }
+
   if (rule.type === "setTemplateValue") {
     validateProcessingIdentifier(
       rule.identifier,
@@ -450,6 +468,24 @@ function validateTemplateRule(
         code: "processing.templateTarget.reference",
         severity: "error",
         message: `qti-set-template-value references missing template declaration ${rule.identifier}.`,
+        path: rule.source?.path,
+        source: rule.source,
+      });
+    }
+  }
+
+  if (rule.type === "setDefaultValue") {
+    validateProcessingIdentifier(
+      rule.identifier,
+      "processing.defaultTarget",
+      rule.source,
+      diagnostics,
+    );
+    if (rule.identifier && !responses.has(rule.identifier) && !outcomes.has(rule.identifier)) {
+      diagnostics.push({
+        code: "processing.defaultTarget.reference",
+        severity: "error",
+        message: `qti-set-default-value references missing response or outcome declaration ${rule.identifier}.`,
         path: rule.source?.path,
         source: rule.source,
       });

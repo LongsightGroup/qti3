@@ -63,9 +63,9 @@ export function createItemSession(
   for (const outcome of document.item.outcomeDeclarations) {
     outcomes[outcome.identifier] = outcome.defaultValue;
   }
-  const defaultOutcomes = { ...outcomes };
 
-  applyTemplateProcessing(document, templateValues, responses, correctResponses, random);
+  applyTemplateProcessing(document, templateValues, responses, outcomes, correctResponses, random);
+  const defaultOutcomes = { ...outcomes };
   Object.assign(templateValues, priorState?.templateValues ?? {});
   Object.assign(outcomes, priorState?.outcomes ?? {});
 
@@ -119,11 +119,20 @@ function applyTemplateProcessing(
   document: QtiDocument,
   templateValues: Record<string, QtiValue>,
   responses: Record<string, QtiValue>,
+  outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
 ): void {
   for (const rule of document.item.templateProcessing?.rules ?? []) {
-    applyTemplateRule(rule, document, templateValues, responses, correctResponses, random);
+    applyTemplateRule(
+      rule,
+      document,
+      templateValues,
+      responses,
+      outcomes,
+      correctResponses,
+      random,
+    );
   }
 }
 
@@ -132,20 +141,84 @@ function applyTemplateRule(
   document: QtiDocument,
   templateValues: Record<string, QtiValue>,
   responses: Record<string, QtiValue>,
+  outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
 ): void {
+  if (rule.type === "templateCondition") {
+    let branch = evaluateBoolean(
+      rule.ifExpression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    )
+      ? rule.thenRules
+      : undefined;
+    if (!branch) {
+      for (const elseIf of rule.elseIfs) {
+        if (
+          evaluateBoolean(
+            elseIf.expression,
+            document,
+            responses,
+            outcomes,
+            templateValues,
+            correctResponses,
+            random,
+          )
+        ) {
+          branch = elseIf.rules;
+          break;
+        }
+      }
+    }
+    branch ??= rule.elseRules;
+    for (const branchRule of branch) {
+      applyTemplateRule(
+        branchRule,
+        document,
+        templateValues,
+        responses,
+        outcomes,
+        correctResponses,
+        random,
+      );
+    }
+    return;
+  }
+
   const value = evaluateValue(
     rule.expression,
     document,
     responses,
-    {},
+    outcomes,
     templateValues,
     correctResponses,
     random,
   );
   if (rule.type === "setTemplateValue") {
     templateValues[rule.identifier] = value;
+    return;
+  }
+
+  if (rule.type === "setDefaultValue") {
+    const responseDeclaration = getResponseDeclaration(document, rule.identifier);
+    if (responseDeclaration) {
+      const normalized = normalizeValueForCardinality(value, responseDeclaration.cardinality);
+      responseDeclaration.defaultValue = normalized;
+      responses[rule.identifier] = normalized;
+      return;
+    }
+    const outcomeDeclaration = document.item.outcomeDeclarations.find(
+      (declaration) => declaration.identifier === rule.identifier,
+    );
+    if (outcomeDeclaration) {
+      outcomeDeclaration.defaultValue = value;
+      outcomes[rule.identifier] = value;
+    }
     return;
   }
 

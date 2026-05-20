@@ -356,16 +356,33 @@ function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessi
 function parseTemplateProcessing(node: XmlNode | undefined): QtiTemplateProcessing | undefined {
   if (!node) return undefined;
   return {
-    rules: childElements(node)
-      .map(parseTemplateRule)
-      .filter((rule): rule is QtiTemplateRule => rule !== undefined),
+    rules: parseTemplateRules(node),
   };
+}
+
+function parseTemplateRules(node: XmlNode): QtiTemplateRule[] {
+  return childElements(node)
+    .map(parseTemplateRule)
+    .filter((rule): rule is QtiTemplateRule => rule !== undefined);
 }
 
 function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
   if (node.localName === "qti-set-template-value") {
     return {
       type: "setTemplateValue",
+      identifier: node.attributes.identifier ?? "",
+      expression: parseFirstExpression(node) ?? {
+        type: "baseValue",
+        value: null,
+        source: node.source,
+      },
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-set-default-value") {
+    return {
+      type: "setDefaultValue",
       identifier: node.attributes.identifier ?? "",
       expression: parseFirstExpression(node) ?? {
         type: "baseValue",
@@ -385,6 +402,22 @@ function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
         value: null,
         source: node.source,
       },
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-template-condition") {
+    const templateIf = childElements(node, "qti-template-if")[0];
+    const templateElse = childElements(node, "qti-template-else")[0];
+    return {
+      type: "templateCondition",
+      ifExpression: templateIf ? parseFirstExpression(templateIf) : undefined,
+      thenRules: templateIf ? parseTemplateRules(templateIf) : [],
+      elseIfs: childElements(node, "qti-template-else-if").map((branch) => ({
+        expression: parseFirstExpression(branch),
+        rules: parseTemplateRules(branch),
+      })),
+      elseRules: templateElse ? parseTemplateRules(templateElse) : [],
       source: node.source,
     };
   }

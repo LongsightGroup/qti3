@@ -33,6 +33,7 @@ export type {
   QtiScoreResult,
   QtiSupportStatus,
   QtiTemplateDeclaration,
+  QtiTemplateBranch,
   QtiTemplateProcessing,
   QtiTemplateRule,
   QtiValidationResult,
