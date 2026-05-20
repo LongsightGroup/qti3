@@ -16,6 +16,7 @@ describe("@qti3/fixtures", () => {
   it("includes canonical processing and adaptive reference fixtures", () => {
     expect(processingFixtures.map((fixture) => fixture.id)).toEqual([
       "mapping-processing-reference",
+      "generic-match-processing-reference",
       "template-processing-reference",
     ]);
     expect(adaptiveFixtures.map((fixture) => fixture.id)).toEqual(["adaptive-feedback-reference"]);

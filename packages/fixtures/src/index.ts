@@ -38,6 +38,7 @@ export const interactionFixtures: QtiFixture[] = interactionSupport.map((support
 
 export const processingFixtures: QtiFixture[] = [
   createMappingProcessingFixture(),
+  createGenericMatchProcessingFixture(),
   createTemplateProcessingFixture(),
 ];
 
@@ -171,6 +172,62 @@ function createMappingProcessingFixture(): QtiFixture {
         responses: { RESPONSE: "A" },
         expectedOutcomes: { SCORE: 2 },
         expectedResponses: { RESPONSE: "A" },
+      },
+    ],
+  };
+}
+
+function createGenericMatchProcessingFixture(): QtiFixture {
+  const id = "generic-match-processing-reference";
+  return {
+    id,
+    category: "processing",
+    title: "Generic qti-match response-processing reference fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Choose the expression that compares two arbitrary processing values.</p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">qti-match</qti-simple-choice>
+      <qti-simple-choice identifier="B">qti-map-response</qti-simple-choice>
+      <qti-simple-choice identifier="C">qti-random</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE"/>
+          <qti-base-value base-type="identifier">A</qti-base-value>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">matched</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">not-matched</qti-base-value></qti-set-outcome-value>
+      </qti-response-else>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "matched",
+        responses: { RESPONSE: "A" },
+        expectedOutcomes: { SCORE: 1, FEEDBACK: "matched" },
+        expectedResponses: { RESPONSE: "A" },
+      },
+      {
+        name: "not-matched",
+        responses: { RESPONSE: "B" },
+        expectedOutcomes: { SCORE: "0", FEEDBACK: "not-matched" },
+        expectedResponses: { RESPONSE: "B" },
       },
     ],
   };
