@@ -90,12 +90,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   suspend(): void {
+    this.session?.setStatus("suspended");
     this.dispatchEvent(new CustomEvent("qti-suspend", { detail: { state: this.serialize() } }));
+    this.emitStateChange();
   }
 
   endAttempt(): void {
     this.scoreAttempt();
+    this.session?.setStatus("completed");
     this.dispatchEvent(new CustomEvent("qti-endattempt", { detail: { state: this.serialize() } }));
+    this.emitStateChange();
   }
 
   serialize() {

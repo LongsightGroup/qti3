@@ -182,14 +182,16 @@ test.describe("manual harness", () => {
       return element.serialize();
     });
     expect(answeredState.responses.RESPONSE).toBe("A");
+    expect(answeredState.status).toBe("interacting");
 
     const resetState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       element.reset();
       return element.serialize();
     });
     expect(resetState.responses.RESPONSE).toBeUndefined();
+    expect(resetState.status).toBe("initialized");
 
-    const lifecycleEvents = await page
+    const lifecycle = await page
       .locator("qti-assessment-item-player")
       .evaluate((element, state) => {
         const events: string[] = [];
@@ -197,12 +199,18 @@ test.describe("manual harness", () => {
           element.addEventListener(eventName, () => events.push(eventName));
         }
         element.restore(state);
+        const restored = element.serialize();
         element.suspend();
+        const suspended = element.serialize();
         element.endAttempt();
-        return events;
+        const completed = element.serialize();
+        return { events, restored, suspended, completed };
       }, answeredState);
 
-    expect(lifecycleEvents).toEqual(["qti-restore", "qti-suspend", "qti-endattempt"]);
+    expect(lifecycle.events).toEqual(["qti-restore", "qti-suspend", "qti-endattempt"]);
+    expect(lifecycle.restored.status).toBe("interacting");
+    expect(lifecycle.suspended.status).toBe("suspended");
+    expect(lifecycle.completed.status).toBe("completed");
     const restoredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });

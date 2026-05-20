@@ -85,9 +85,16 @@ describe("@qti3/core", () => {
     expect(result.document?.item.interactions[0]?.prompt).toBeUndefined();
 
     const session = createItemSession(result.document!);
+    expect(session.serialize().status).toBe("initialized");
     session.respond("RESPONSE", "A");
+    expect(session.serialize().status).toBe("interacting");
     expect(session.score().outcomes.SCORE).toBe(1);
     expect(session.serialize().schema).toBe("qti3.attempt-state.v1");
+    session.setStatus("suspended");
+    expect(session.serialize().status).toBe("suspended");
+
+    const restored = createItemSession(result.document!, session.serialize());
+    expect(restored.serialize().status).toBe("suspended");
   });
 
   it("validates response declaration references and response shape", () => {

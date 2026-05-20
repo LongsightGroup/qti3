@@ -36,6 +36,8 @@ export type QtiCardinality = "single" | "multiple" | "ordered" | "record";
 
 export type QtiValue = string | number | boolean | string[] | null;
 
+export type QtiAttemptStatus = "initialized" | "interacting" | "suspended" | "completed";
+
 export interface QtiVariableDeclaration {
   identifier: string;
   baseType?: QtiBaseType | undefined;
@@ -217,6 +219,7 @@ export interface QtiValidationResult {
 export interface QtiAttemptStateV1 {
   schema: "qti3.attempt-state.v1";
   itemIdentifier: string;
+  status: QtiAttemptStatus;
   responses: Record<string, QtiValue>;
   outcomes: Record<string, QtiValue>;
   templateValues?: Record<string, QtiValue> | undefined;

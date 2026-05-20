@@ -1,5 +1,6 @@
 import type {
   QtiAssessmentItem,
+  QtiAttemptStatus,
   QtiAttemptStateV1,
   QtiDiagnostic,
   QtiDocument,
@@ -20,6 +21,7 @@ export interface QtiItemSession {
   readonly item: QtiAssessmentItem;
   correctResponses(): Record<string, QtiValue>;
   respond(identifier: string, value: QtiValue): void;
+  setStatus(status: QtiAttemptStatus): void;
   score(): QtiScoreResult;
   serialize(): QtiAttemptStateV1;
 }
@@ -45,6 +47,7 @@ export function createItemSession(
   const outcomes: Record<string, QtiValue> = {};
   const templateValues: Record<string, QtiValue> = {};
   const correctResponses: Record<string, QtiValue> = {};
+  let status: QtiAttemptStatus = priorState?.status ?? "initialized";
   const random = seededRandom(options.randomSeed ?? document.item.identifier);
 
   for (const declaration of document.item.responseDeclarations) {
@@ -71,6 +74,10 @@ export function createItemSession(
     },
     respond(identifier: string, value: QtiValue) {
       responses[identifier] = value;
+      if (status === "initialized" || status === "suspended") status = "interacting";
+    },
+    setStatus(nextStatus: QtiAttemptStatus) {
+      status = nextStatus;
     },
     score() {
       const diagnostics: QtiDiagnostic[] = [];
@@ -84,6 +91,7 @@ export function createItemSession(
       );
       const state = serialize(
         document.item.identifier,
+        status,
         responses,
         outcomes,
         templateValues,
@@ -92,7 +100,7 @@ export function createItemSession(
       return { outcomes: { ...outcomes }, diagnostics, state };
     },
     serialize() {
-      return serialize(document.item.identifier, responses, outcomes, templateValues, []);
+      return serialize(document.item.identifier, status, responses, outcomes, templateValues, []);
     },
   };
 }
@@ -593,6 +601,7 @@ function isNullResponse(response: QtiValue): boolean {
 
 function serialize(
   itemIdentifier: string,
+  status: QtiAttemptStatus,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
   templateValues: Record<string, QtiValue>,
@@ -601,6 +610,7 @@ function serialize(
   return {
     schema: "qti3.attempt-state.v1",
     itemIdentifier,
+    status,
     responses: { ...responses },
     outcomes: { ...outcomes },
     templateValues: { ...templateValues },

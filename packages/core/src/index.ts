@@ -14,6 +14,7 @@ export {
 export { validateAssessmentItem } from "./validation.js";
 export type {
   QtiAssessmentItem,
+  QtiAttemptStatus,
   QtiAttemptStateV1,
   QtiChoice,
   QtiChoiceRole,
