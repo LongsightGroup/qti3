@@ -500,6 +500,7 @@ function evaluateValue(
   customOperators: QtiCustomOperatorRegistry = {},
 ): QtiValue {
   if (expression.type === "baseValue") return expression.value;
+  if (expression.type === "null") return null;
   if (expression.type === "isNull") return isNullResponse(responses[expression.identifier] ?? null);
   if (expression.type === "matchCorrect") {
     const declaration = getResponseDeclaration(document, expression.correctIdentifier);

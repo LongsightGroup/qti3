@@ -1853,6 +1853,43 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("evaluates qti-null as an explicit null expression", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="null-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-response-declaration identifier="MISSING" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="NULL_VALUE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="MISSING_IS_NULL" cardinality="single" base-type="boolean"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="NULL_VALUE">
+                <qti-null/>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="MISSING_IS_NULL">
+                <qti-is-null>
+                  <qti-variable identifier="MISSING"/>
+                </qti-is-null>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const score = session.score();
+    expect(score.outcomes.NULL_VALUE).toBeNull();
+    expect(score.outcomes.MISSING_IS_NULL).toBe(true);
+  });
+
   it("evaluates boolean response processing expressions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean-processing">

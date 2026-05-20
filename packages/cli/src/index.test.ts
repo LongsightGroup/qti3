@@ -69,6 +69,14 @@ describe("@qti3/cli", () => {
           process: true,
         }),
         expect.objectContaining({
+          qtiName: "qti-null",
+          category: "processing",
+          parse: true,
+          validate: true,
+          render: false,
+          process: true,
+        }),
+        expect.objectContaining({
           qtiName: "qti-duration-lt",
           category: "processing",
           parse: true,

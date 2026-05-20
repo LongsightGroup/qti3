@@ -827,6 +827,10 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  if (node.localName === "qti-null") {
+    return { type: "null", source: node.source };
+  }
+
   if (node.localName === "qti-is-null") {
     const variable = childElements(node, "qti-variable")[0];
     return {

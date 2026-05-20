@@ -67,6 +67,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-exit-template", "packages/core/src/core.test.ts"),
   processingEntry("qti-response-processing-fragment", "packages/core/src/core.test.ts"),
   processingEntry("qti-base-value", "packages/core/src/core.test.ts"),
+  processingEntry("qti-null", "packages/core/src/core.test.ts"),
   processingEntry("qti-match-table", "packages/core/src/core.test.ts"),
   processingEntry("qti-match-table-entry", "packages/core/src/core.test.ts"),
   processingEntry("qti-interpolation-table", "packages/core/src/core.test.ts"),
