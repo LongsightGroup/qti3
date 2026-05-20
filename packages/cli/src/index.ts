@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { readdir, readFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseQtiXml } from "@qti3/core";
+import { interactionFixtures } from "@qti3/fixtures";
 
 export async function main(args = process.argv.slice(2)): Promise<number> {
   const [command, file] = args;
@@ -33,7 +34,22 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     return failed === 0 ? 0 : 1;
   }
 
-  console.log("Usage: qti3 parse <item.xml> | qti3 parse-dir <directory>");
+  if (command === "write-fixtures" && file) {
+    await mkdir(file, { recursive: true });
+    const written: string[] = [];
+    for (const fixture of interactionFixtures) {
+      const filename = `${fixture.id}.xml`;
+      const path = join(file, filename);
+      await writeFile(path, `${fixture.xml}\n`, "utf8");
+      written.push(path);
+    }
+    console.log(JSON.stringify({ written: written.length, files: written }, null, 2));
+    return 0;
+  }
+
+  console.log(
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 write-fixtures <directory>",
+  );
   return 1;
 }
 

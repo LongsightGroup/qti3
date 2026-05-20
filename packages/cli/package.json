@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@qti3/conformance": "workspace:*",
-    "@qti3/core": "workspace:*"
+    "@qti3/core": "workspace:*",
+    "@qti3/fixtures": "workspace:*"
   }
 }

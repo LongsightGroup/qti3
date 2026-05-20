@@ -60,6 +60,9 @@ importers:
       '@qti3/core':
         specifier: workspace:*
         version: link:../core
+      '@qti3/fixtures':
+        specifier: workspace:*
+        version: link:../fixtures
 
   packages/conformance:
     dependencies:

@@ -29,12 +29,12 @@ The goal is not to build another framework-specific item player. The goal is to 
 
 ```text
 packages/
-  qti3-core/          # parser, typed model, validation, processing, scoring, state
-  qti3-player/        # native custom element browser player
-  qti3-conformance/   # fixture runner and support matrix tooling
-  qti3-a11y/          # accessibility contracts and automated checks
-  qti3-fixtures/      # QTI item fixtures and expected outcomes
-  qti3-cli/           # validation, scoring, fixture, and support-matrix CLI
+  core/          # parser, typed model, validation, processing, scoring, state
+  player/        # native custom element browser player
+  conformance/   # fixture runner and support matrix tooling
+  a11y/          # accessibility contracts and automated checks
+  fixtures/      # QTI item fixtures and expected outcomes
+  cli/           # validation, scoring, fixture, and support-matrix CLI
 ```
 
 The default embedding surface should be a native web component:
@@ -99,6 +99,24 @@ pnpm test:browser
 pnpm build
 ```
 
+The browser harness is available with:
+
+```sh
+pnpm dev
+```
+
+The CLI can parse local QTI directories, including external reference sets:
+
+```sh
+pnpm --filter @qti3/cli exec qti3 parse-dir /path/to/items
+```
+
+It can also write standalone reference items for every currently targeted interaction:
+
+```sh
+pnpm --filter @qti3/cli exec qti3 write-fixtures packages/fixtures/xml
+```
+
 The intended enforcement model is strict:
 
 - `oxfmt` is the only formatter.
@@ -111,4 +129,4 @@ The intended enforcement model is strict:
 
 ## Status
 
-This directory currently contains planning documents only. Implementation should begin with `qti3-core`, fixtures, and conformance tests before browser UI work.
+This repository is an early reference implementation. It has a strict TypeScript core, a native web component player, fixture-based scoring, a manual browser harness, automated accessibility checks, Playwright coverage, and standalone XML reference items under `packages/fixtures/xml`.

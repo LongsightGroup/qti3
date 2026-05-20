@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="textEntry-reference" title="textEntry-reference" time-dependent="false" xml:lang="en">
+  
+      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+        <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        
+      </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>Reference item for textEntry-reference.</p>
+    <p>Type <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="10"/>.</p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

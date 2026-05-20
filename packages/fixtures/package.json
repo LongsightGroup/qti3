@@ -6,7 +6,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./xml/*": "./xml/*"
   },
   "dependencies": {
     "@qti3/core": "workspace:*"
