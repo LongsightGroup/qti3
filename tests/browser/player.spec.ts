@@ -158,6 +158,27 @@ test.describe("manual harness", () => {
     await radio.check();
     await expect(radio).not.toHaveAttribute("aria-invalid", "true");
   });
+
+  test("renders under forced colors and reduced motion preferences", async ({ page }) => {
+    await page.emulateMedia({
+      colorScheme: "dark",
+      forcedColors: "active",
+      reducedMotion: "reduce",
+    });
+    await page.goto("/");
+    await loadFixture(page, "choice");
+
+    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await page.getByRole("radio", { name: "A" }).check();
+    await expectResponse(page, "A");
+
+    const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
+    await page.addScriptTag({ content: axeSource });
+    const result = await page.evaluate(async () => {
+      return await window.axe.run(document.querySelector("qti-assessment-item-player"));
+    });
+    expect(result.violations).toEqual([]);
+  });
 });
 
 declare global {

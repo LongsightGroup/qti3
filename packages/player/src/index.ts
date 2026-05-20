@@ -108,6 +108,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     const documentModel = this.documentModel;
     if (!documentModel) return;
 
+    this.applyDefaultStyles();
     const root = document.createElement("article");
     root.className = "qti3-player";
     root.setAttribute("aria-labelledby", "qti3-item-title");
@@ -248,6 +249,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     field.append(renderSelect(interaction, update));
     return field;
+  }
+
+  private applyDefaultStyles(): void {
+    this.style.color = "CanvasText";
+    this.style.backgroundColor = "Canvas";
+    this.style.colorScheme = "light dark";
   }
 
   private validateResponses(): QtiDiagnostic[] {
