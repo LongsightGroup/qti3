@@ -128,7 +128,9 @@ pnpm dev
 ```
 
 The same harness is published from `main` through GitHub Pages at
-`https://longsightgroup.github.io/qti3/`. Build the static artifact locally with:
+`https://www.longsight.com/qti3/`. The `longsightgroup.github.io` project URL
+redirects there because the organization Pages site uses a custom domain. Build
+the static artifact locally with:
 
 ```sh
 pnpm pages:build
