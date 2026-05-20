@@ -115,6 +115,8 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-pattern-match", "packages/core/src/core.test.ts"),
   processingEntry("qti-member", "packages/core/src/core.test.ts"),
   processingEntry("qti-delete", "packages/core/src/core.test.ts"),
+  processingEntry("qti-duration-gte", "packages/core/src/core.test.ts"),
+  processingEntry("qti-duration-lt", "packages/core/src/core.test.ts"),
   processingEntry("qti-gcd", "packages/core/src/core.test.ts"),
   processingEntry("qti-inside", "packages/core/src/core.test.ts"),
   processingEntry("qti-lcm", "packages/core/src/core.test.ts"),

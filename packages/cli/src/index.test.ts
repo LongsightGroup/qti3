@@ -68,6 +68,14 @@ describe("@qti3/cli", () => {
           render: false,
           process: true,
         }),
+        expect.objectContaining({
+          qtiName: "qti-duration-lt",
+          category: "processing",
+          parse: true,
+          validate: true,
+          render: false,
+          process: true,
+        }),
       ]),
     );
   });

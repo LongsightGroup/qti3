@@ -484,6 +484,12 @@ export type QtiProcessingExpression = (
       right: QtiProcessingExpression;
     }
   | {
+      type: "durationCompare";
+      operator: "lt" | "gte";
+      left: QtiProcessingExpression;
+      right: QtiProcessingExpression;
+    }
+  | {
       type: "stringMatch";
       left: QtiProcessingExpression;
       right: QtiProcessingExpression;

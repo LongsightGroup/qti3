@@ -1102,6 +1102,22 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     }
   }
 
+  const durationCompareOperator = durationCompareOperatorFor(node.localName);
+  if (durationCompareOperator) {
+    const [left, right] = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    if (left && right) {
+      return {
+        type: "durationCompare",
+        operator: durationCompareOperator,
+        left,
+        right,
+        source: node.source,
+      };
+    }
+  }
+
   if (node.localName === "qti-string-match") {
     const [left, right] = childElements(node)
       .map(parseExpression)
@@ -1272,6 +1288,12 @@ function numericCompareOperatorFor(localName: string): "lt" | "lte" | "gt" | "gt
   if (localName === "qti-lte") return "lte";
   if (localName === "qti-gt") return "gt";
   if (localName === "qti-gte") return "gte";
+  return undefined;
+}
+
+function durationCompareOperatorFor(localName: string): "lt" | "gte" | undefined {
+  if (localName === "qti-duration-lt") return "lt";
+  if (localName === "qti-duration-gte") return "gte";
   return undefined;
 }
 

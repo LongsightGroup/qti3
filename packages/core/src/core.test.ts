@@ -1989,6 +1989,57 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(0);
   });
 
+  it("evaluates duration comparisons and preserves null comparison results", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duration-processing">
+        <qti-response-declaration identifier="MISSING" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="FAST" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="LONG_ENOUGH" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="NULL_COMPARE" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="DIV_ZERO" cardinality="single" base-type="float"/>
+        <qti-item-body/>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="FAST">
+                <qti-duration-lt>
+                  <qti-base-value base-type="duration">PT9.5S</qti-base-value>
+                  <qti-base-value base-type="duration">PT10S</qti-base-value>
+                </qti-duration-lt>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="LONG_ENOUGH">
+                <qti-duration-gte>
+                  <qti-base-value base-type="duration">PT2M</qti-base-value>
+                  <qti-base-value base-type="duration">PT90S</qti-base-value>
+                </qti-duration-gte>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="NULL_COMPARE">
+                <qti-gte>
+                  <qti-variable identifier="MISSING"/>
+                  <qti-base-value base-type="float">1</qti-base-value>
+                </qti-gte>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="DIV_ZERO">
+                <qti-divide>
+                  <qti-base-value base-type="float">10</qti-base-value>
+                  <qti-base-value base-type="float">0</qti-base-value>
+                </qti-divide>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const score = createItemSession(result.document!).score();
+    expect(score.outcomes.FAST).toBe(true);
+    expect(score.outcomes.LONG_ENOUGH).toBe(true);
+    expect(score.outcomes.NULL_COMPARE).toBeNull();
+    expect(score.outcomes.DIV_ZERO).toBeNull();
+  });
+
   it("evaluates integer and rounding processing expressions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rounding-processing">

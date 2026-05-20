@@ -1335,7 +1335,8 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "integerModulus" ||
     expression.type === "equal" ||
     expression.type === "equalRounded" ||
-    expression.type === "numericCompare"
+    expression.type === "numericCompare" ||
+    expression.type === "durationCompare"
   ) {
     return [expression.left, expression.right];
   }

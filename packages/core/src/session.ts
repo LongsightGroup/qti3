@@ -697,33 +697,31 @@ function evaluateValue(
     );
   }
   if (expression.type === "divide") {
-    const divisor = numericValue(
-      evaluateValue(
-        expression.right,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const dividendValue = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
-    if (divisor === 0) return 0;
-    return (
-      numericValue(
-        evaluateValue(
-          expression.left,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      ) / divisor
+    const divisorValue = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    if (dividendValue === null || divisorValue === null) return null;
+    const divisor = numericValue(divisorValue);
+    if (divisor === 0) return null;
+    const quotient = numericValue(dividendValue) / divisor;
+    return Number.isFinite(quotient) ? quotient : null;
   }
   if (expression.type === "power") {
     const value = Math.pow(
@@ -995,34 +993,59 @@ function evaluateValue(
     return roundedLeft === null || roundedRight === null ? null : roundedLeft === roundedRight;
   }
   if (expression.type === "numericCompare") {
-    const left = numericValue(
-      evaluateValue(
-        expression.left,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const leftValue = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
-    const right = numericValue(
-      evaluateValue(
-        expression.right,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const rightValue = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    if (leftValue === null || rightValue === null) return null;
+    const left = numericValue(leftValue);
+    const right = numericValue(rightValue);
     if (expression.operator === "lt") return left < right;
     if (expression.operator === "lte") return left <= right;
     if (expression.operator === "gt") return left > right;
     return left >= right;
+  }
+  if (expression.type === "durationCompare") {
+    const leftValue = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
+    const rightValue = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
+    const left = durationSeconds(leftValue);
+    const right = durationSeconds(rightValue);
+    if (left === null || right === null) return null;
+    return expression.operator === "lt" ? left < right : left >= right;
   }
   if (expression.type === "stringMatch") {
     return stringMatch(
@@ -1578,6 +1601,28 @@ function numericValue(value: QtiValue): number {
   if (typeof value === "boolean") return value ? 1 : 0;
   if (typeof value === "string") return Number(value);
   return 0;
+}
+
+function durationSeconds(value: QtiValue): number | null {
+  if (value === null || Array.isArray(value) || isRecordValue(value)) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const raw = String(value).trim();
+  if (raw.length === 0) return null;
+  const numeric = Number(raw);
+  if (Number.isFinite(numeric)) return numeric;
+  const match =
+    /^P(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i.exec(
+      raw,
+    );
+  if (!match) return null;
+  const [, days, hours, minutes, seconds] = match;
+  if (!days && !hours && !minutes && !seconds) return null;
+  const total =
+    Number(days ?? 0) * 86_400 +
+    Number(hours ?? 0) * 3_600 +
+    Number(minutes ?? 0) * 60 +
+    Number(seconds ?? 0);
+  return Number.isFinite(total) ? total : null;
 }
 
 function booleanValue(value: QtiValue): boolean {
