@@ -276,6 +276,18 @@ function validateAreaMapEntry(
       path: entry.source?.path,
       source: entry.source,
     });
+  } else if (
+    shape &&
+    isAreaShape(shape) &&
+    !hasValidShapeCoordinateCount(shape, numericCsv(coords))
+  ) {
+    diagnostics.push({
+      code: "areaMapEntry.coords.shape",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry shape ${shape} has invalid coords arity.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
   }
 
   if (mappedValue === undefined) {
@@ -1168,6 +1180,17 @@ function validateHotspotGeometry(choice: QtiChoice, diagnostics: QtiDiagnostic[]
       path: choice.source?.path,
       source: choice.source,
     });
+    return;
+  }
+
+  if (shape && isHotspotShape(shape) && !hasValidShapeCoordinateCount(shape, values.map(Number))) {
+    diagnostics.push({
+      code: "choice.coords.shape",
+      severity: "error",
+      message: `${choice.qtiName} ${choice.identifier} shape ${shape} has invalid coords arity.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
   }
 }
 
@@ -1190,6 +1213,26 @@ function isNumericCsv(value: string): boolean {
     .split(",")
     .map((part) => part.trim())
     .every((part) => part.length > 0 && isFiniteNumber(part));
+}
+
+function numericCsv(value: string): number[] {
+  return value.split(",").map((part) => Number(part.trim()));
+}
+
+function hasValidShapeCoordinateCount(shape: string, coords: number[]): boolean {
+  switch (shape) {
+    case "circle":
+      return coords.length === 3;
+    case "ellipse":
+    case "rect":
+      return coords.length === 4;
+    case "poly":
+      return coords.length >= 6 && coords.length % 2 === 0;
+    case "default":
+      return true;
+    default:
+      return false;
+  }
 }
 
 function validateNonNegativeIntegerAttribute(

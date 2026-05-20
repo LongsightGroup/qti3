@@ -865,6 +865,7 @@ describe("@qti3/core", () => {
           <qti-area-mapping default-value="none">
             <qti-area-map-entry coords="93,not-a-number,16"/>
             <qti-area-map-entry shape="ellipse" mapped-value="one"/>
+            <qti-area-map-entry shape="rect" coords="1,2,3" mapped-value="1"/>
           </qti-area-mapping>
         </qti-response-declaration>
         <qti-item-body>
@@ -883,6 +884,7 @@ describe("@qti3/core", () => {
         expect.objectContaining({ code: "areaMapEntry.shape" }),
         expect.objectContaining({ code: "areaMapEntry.coords.required" }),
         expect.objectContaining({ code: "areaMapEntry.coords" }),
+        expect.objectContaining({ code: "areaMapEntry.coords.shape" }),
         expect.objectContaining({ code: "areaMapEntry.mappedValue.required" }),
         expect.objectContaining({ code: "areaMapEntry.mappedValue" }),
       ]),
@@ -965,6 +967,7 @@ describe("@qti3/core", () => {
             <object data="image.png" type="image/png"/>
             <qti-hotspot-choice identifier="A" coords="0,0,nope,50"/>
             <qti-hotspot-choice identifier="B" shape="triangle"/>
+            <qti-hotspot-choice identifier="D" shape="circle" coords="0,0"/>
             <qti-associable-hotspot identifier="C" shape="rect" coords="0,0,50,50"/>
           </qti-hotspot-interaction>
         </qti-item-body>
@@ -978,6 +981,7 @@ describe("@qti3/core", () => {
         expect.objectContaining({ code: "choice.shape" }),
         expect.objectContaining({ code: "choice.coords.required" }),
         expect.objectContaining({ code: "choice.coords" }),
+        expect.objectContaining({ code: "choice.coords.shape" }),
         expect.objectContaining({ code: "choice.matchMax.required" }),
       ]),
     );
