@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { deflateRawSync } from "node:zlib";
 import { expect, test } from "@playwright/test";
 import {
   adaptiveFixtures,
@@ -569,6 +570,46 @@ test.describe("manual harness", () => {
     await expect(page.locator("#file-summary")).toContainText("2 of 2");
     await expect(page.locator("#file-summary")).toContainText("items/text-entry.xml");
     await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
+  });
+
+  test("loads ordinary deflated package zips", async ({ page }) => {
+    const choice = interactionFixtures.find((item) => item.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    const zip = createDeflatedZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <file href="items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/choice.xml": choice.xml,
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "deflated-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("1 of 1");
+    await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
+    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+  });
+
+  test("reports unreadable package zips", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "broken.zip",
+      mimeType: "application/zip",
+      buffer: Buffer.from("not a zip"),
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
+    await expect(page.locator("#file-summary")).toContainText("No ZIP central directory");
   });
 
   test("discovers manifest item resources from nested file hrefs", async ({ page }) => {
@@ -1768,6 +1809,14 @@ async function provideResponse(
 }
 
 function createStoredZip(files: Record<string, string | Buffer>): Buffer {
+  return createZip(files, 0);
+}
+
+function createDeflatedZip(files: Record<string, string | Buffer>): Buffer {
+  return createZip(files, 8);
+}
+
+function createZip(files: Record<string, string | Buffer>, method: 0 | 8): Buffer {
   const localParts: Buffer[] = [];
   const centralParts: Buffer[] = [];
   let offset = 0;
@@ -1775,28 +1824,29 @@ function createStoredZip(files: Record<string, string | Buffer>): Buffer {
   for (const [name, content] of Object.entries(files)) {
     const nameBytes = Buffer.from(name);
     const data = Buffer.isBuffer(content) ? content : Buffer.from(content);
+    const compressed = method === 8 ? deflateRawSync(data) : data;
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0);
     local.writeUInt16LE(20, 4);
     local.writeUInt16LE(0, 6);
-    local.writeUInt16LE(0, 8);
+    local.writeUInt16LE(method, 8);
     local.writeUInt32LE(0, 10);
     local.writeUInt32LE(0, 14);
-    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(compressed.length, 18);
     local.writeUInt32LE(data.length, 22);
     local.writeUInt16LE(nameBytes.length, 26);
     local.writeUInt16LE(0, 28);
-    localParts.push(local, nameBytes, data);
+    localParts.push(local, nameBytes, compressed);
 
     const central = Buffer.alloc(46);
     central.writeUInt32LE(0x02014b50, 0);
     central.writeUInt16LE(20, 4);
     central.writeUInt16LE(20, 6);
     central.writeUInt16LE(0, 8);
-    central.writeUInt16LE(0, 10);
+    central.writeUInt16LE(method, 10);
     central.writeUInt32LE(0, 12);
     central.writeUInt32LE(0, 16);
-    central.writeUInt32LE(data.length, 20);
+    central.writeUInt32LE(compressed.length, 20);
     central.writeUInt32LE(data.length, 24);
     central.writeUInt16LE(nameBytes.length, 28);
     central.writeUInt16LE(0, 30);
@@ -1807,7 +1857,7 @@ function createStoredZip(files: Record<string, string | Buffer>): Buffer {
     central.writeUInt32LE(offset, 42);
     centralParts.push(central, nameBytes);
 
-    offset += local.length + nameBytes.length + data.length;
+    offset += local.length + nameBytes.length + compressed.length;
   }
 
   const centralDirectory = Buffer.concat(centralParts);

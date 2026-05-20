@@ -462,9 +462,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function loadSelectedLocalFile(): Promise<void> {
   const file = loadedFiles[selectedFileIndex];
   if (!file) {
-    fileSummary.textContent = "No QTI package loaded. Upload a ZIP package.";
-    previousFile.disabled = true;
-    nextFile.disabled = true;
+    showPackageStatus("No QTI package loaded. Upload a ZIP package.");
     return;
   }
 
@@ -480,7 +478,16 @@ async function loadSelectedLocalFile(): Promise<void> {
 
 async function loadLocalFiles(fileList: FileList | null): Promise<void> {
   clearAssetUrls();
-  const files = await readPackageXmlFiles(fileList);
+  let files: LoadedFile[];
+  try {
+    files = await readPackageXmlFiles(fileList);
+  } catch (error) {
+    loadedFiles = [];
+    localFiles.replaceChildren();
+    selectedFileIndex = -1;
+    showPackageStatus(`Unable to read QTI package: ${errorMessage(error)}`);
+    return;
+  }
   loadedFiles = resolveLoadableItems(files);
   localFiles.replaceChildren(
     ...loadedFiles.map((file, index) => {
@@ -492,6 +499,12 @@ async function loadLocalFiles(fileList: FileList | null): Promise<void> {
   );
   selectedFileIndex = loadedFiles.length > 0 ? 0 : -1;
   await loadSelectedLocalFile();
+}
+
+function showPackageStatus(message: string): void {
+  fileSummary.textContent = message;
+  previousFile.disabled = true;
+  nextFile.disabled = true;
 }
 
 async function readPackageXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
@@ -522,7 +535,7 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<ZipEntry[]> {
   const bytes = new Uint8Array(buffer);
   const view = new DataView(buffer);
   const eocdOffset = findEndOfCentralDirectory(view);
-  if (eocdOffset < 0) return [];
+  if (eocdOffset < 0) throw new Error("No ZIP central directory was found.");
 
   const entryCount = view.getUint16(eocdOffset + 10, true);
   let offset = view.getUint32(eocdOffset + 16, true);
@@ -542,7 +555,14 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<ZipEntry[]> {
     offset += 46 + nameLength + extraLength + commentLength;
     if (!name || name.endsWith("/")) continue;
 
-    const content = await zipEntryBytes(bytes, view, localHeaderOffset, compressedSize, method);
+    const content = await zipEntryBytes(
+      bytes,
+      view,
+      localHeaderOffset,
+      compressedSize,
+      method,
+      name,
+    );
     if (content) entries.push({ name, bytes: content });
   }
 
@@ -598,19 +618,29 @@ async function zipEntryBytes(
   localHeaderOffset: number,
   compressedSize: number,
   method: number,
+  name: string,
 ): Promise<Uint8Array | undefined> {
-  if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) return undefined;
+  if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) {
+    throw new Error(`Invalid local header for ${name}.`);
+  }
   const nameLength = view.getUint16(localHeaderOffset + 26, true);
   const extraLength = view.getUint16(localHeaderOffset + 28, true);
   const dataOffset = localHeaderOffset + 30 + nameLength + extraLength;
   const compressed = bytes.slice(dataOffset, dataOffset + compressedSize);
   if (method === 0) return compressed;
-  if (method !== 8 || typeof DecompressionStream === "undefined") return undefined;
+  if (method !== 8) throw new Error(`Unsupported ZIP compression method ${method} for ${name}.`);
+  if (typeof DecompressionStream === "undefined") {
+    throw new Error("This browser cannot read deflated ZIP packages.");
+  }
 
   const stream = new Blob([compressed])
     .stream()
     .pipeThrough(new DecompressionStream("deflate-raw"));
   return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function resolveLoadableItems(files: LoadedFile[]): LoadedFile[] {

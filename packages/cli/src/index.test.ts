@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { deflateRawSync } from "node:zlib";
 import { elementSupport, interactionSupport, parseQtiXml, processingSupport } from "@qti3/core";
 import { canonicalFixtures, interactionFixtures } from "@qti3/fixtures";
 import { describe, expect, it, vi } from "vitest";
@@ -240,9 +241,55 @@ describe("@qti3/cli", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("inspects deflated package zips", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-deflated-"));
+    const file = join(directory, "package.zip");
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    try {
+      await writeFile(
+        file,
+        createDeflatedZip({
+          "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <file href="items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+          "items/choice.xml": choice.xml,
+        }),
+      );
+
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await expect(main(["inspect-package", file])).resolves.toBe(0);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      log.mockRestore();
+
+      expect(report).toMatchObject({
+        checked: 1,
+        failed: 0,
+        discoveredReferences: ["items/choice.xml"],
+      });
+    } finally {
+      vi.restoreAllMocks();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 function createStoredZip(entries: Record<string, string | Uint8Array>): Buffer {
+  return createZip(entries, 0);
+}
+
+function createDeflatedZip(entries: Record<string, string | Uint8Array>): Buffer {
+  return createZip(entries, 8);
+}
+
+function createZip(entries: Record<string, string | Uint8Array>, method: 0 | 8): Buffer {
   const localParts: Buffer[] = [];
   const centralParts: Buffer[] = [];
   let offset = 0;
@@ -251,32 +298,33 @@ function createStoredZip(entries: Record<string, string | Uint8Array>): Buffer {
   for (const [name, content] of Object.entries(entries)) {
     const nameBuffer = Buffer.from(name);
     const data = typeof content === "string" ? Buffer.from(content) : Buffer.from(content);
+    const compressed = method === 8 ? deflateRawSync(data) : data;
     const crc = crc32(data);
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0);
     local.writeUInt16LE(20, 4);
     local.writeUInt16LE(0, 6);
-    local.writeUInt16LE(0, 8);
+    local.writeUInt16LE(method, 8);
     local.writeUInt32LE(crc, 14);
-    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(compressed.length, 18);
     local.writeUInt32LE(data.length, 22);
     local.writeUInt16LE(nameBuffer.length, 26);
-    localParts.push(local, nameBuffer, data);
+    localParts.push(local, nameBuffer, compressed);
 
     const central = Buffer.alloc(46);
     central.writeUInt32LE(0x02014b50, 0);
     central.writeUInt16LE(20, 4);
     central.writeUInt16LE(20, 6);
     central.writeUInt16LE(0, 8);
-    central.writeUInt16LE(0, 10);
+    central.writeUInt16LE(method, 10);
     central.writeUInt32LE(crc, 16);
-    central.writeUInt32LE(data.length, 20);
+    central.writeUInt32LE(compressed.length, 20);
     central.writeUInt32LE(data.length, 24);
     central.writeUInt16LE(nameBuffer.length, 28);
     central.writeUInt32LE(offset, 42);
     centralParts.push(central, nameBuffer);
 
-    offset += local.length + nameBuffer.length + data.length;
+    offset += local.length + nameBuffer.length + compressed.length;
     index += 1;
   }
 
