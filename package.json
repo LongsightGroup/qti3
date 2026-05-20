@@ -13,9 +13,10 @@
     "test:external": "vitest run packages/conformance/src/external-qti.test.ts",
     "test:a11y": "vitest run packages/a11y",
     "test:browser": "playwright test",
+    "check:deps": "node scripts/check-dependencies.mjs",
     "build": "tsc -b",
     "dev": "vite --host 127.0.0.1 examples/manual",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm build"
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

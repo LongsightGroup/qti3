@@ -25,5 +25,6 @@ jobs:
       - run: pnpm test
       - run: pnpm test:conformance
       - run: pnpm test:a11y
+      - run: pnpm check:deps
       - run: pnpm test:browser
       - run: pnpm build

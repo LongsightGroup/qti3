@@ -95,6 +95,7 @@ pnpm typecheck
 pnpm test
 pnpm test:conformance
 pnpm test:a11y
+pnpm check:deps
 pnpm test:browser
 pnpm build
 ```
