@@ -448,8 +448,60 @@ function validateExpressionReferences(
     validateRandomIntegerExpression(expression, diagnostics);
   }
 
+  if (expression.type === "baseValue") {
+    validateBaseValueExpression(expression, diagnostics);
+  }
+
   for (const child of expressionChildren(expression)) {
     validateExpressionReferences(child, responses, variables, diagnostics);
+  }
+}
+
+function validateBaseValueExpression(
+  expression: Extract<QtiProcessingExpression, { type: "baseValue" }>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!expression.baseType) {
+    diagnostics.push({
+      code: "processing.baseValue.baseType.required",
+      severity: "error",
+      message: "qti-base-value requires base-type.",
+      path: expression.source?.path,
+      source: expression.source,
+    });
+    return;
+  }
+  if (!isBaseType(expression.baseType)) {
+    diagnostics.push({
+      code: "processing.baseValue.baseType",
+      severity: "error",
+      message: `qti-base-value has unsupported base-type ${expression.baseType}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+    return;
+  }
+  const value = expression.rawValue ?? "";
+  if (
+    (expression.baseType === "integer" && !isInteger(value)) ||
+    (expression.baseType === "float" && !isFiniteNumber(value))
+  ) {
+    diagnostics.push({
+      code: "processing.baseValue.numeric",
+      severity: "error",
+      message: `qti-base-value requires ${expression.baseType} content, got ${value}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+  if (expression.baseType === "boolean" && value !== "true" && value !== "false") {
+    diagnostics.push({
+      code: "processing.baseValue.boolean",
+      severity: "error",
+      message: `qti-base-value requires boolean content, got ${value}.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
   }
 }
 

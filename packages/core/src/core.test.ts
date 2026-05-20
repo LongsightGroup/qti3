@@ -1088,6 +1088,41 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("validates base value processing content", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-base-values">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="C" cardinality="single" base-type="boolean"/>
+        <qti-template-declaration identifier="D" cardinality="single" base-type="string"/>
+        <qti-item-body/>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-base-value base-type="integer">ten</qti-base-value>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="B">
+            <qti-base-value base-type="float">many</qti-base-value>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="C">
+            <qti-base-value base-type="boolean">yes</qti-base-value>
+          </qti-set-template-value>
+          <qti-set-template-value identifier="D">
+            <qti-base-value>missing</qti-base-value>
+          </qti-set-template-value>
+        </qti-template-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.baseValue.numeric" }),
+        expect.objectContaining({ code: "processing.baseValue.boolean" }),
+        expect.objectContaining({ code: "processing.baseValue.baseType.required" }),
+      ]),
+    );
+  });
+
   it("evaluates boolean response processing expressions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean-processing">

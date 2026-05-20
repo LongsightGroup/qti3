@@ -234,7 +234,12 @@ export type QtiTemplateRule =
     };
 
 export type QtiProcessingExpression = (
-  | { type: "baseValue"; value: QtiValue }
+  | {
+      type: "baseValue";
+      value: QtiValue;
+      rawValue?: string | undefined;
+      baseType?: string | undefined;
+    }
   | { type: "isNull"; identifier: string }
   | { type: "matchCorrect"; identifier: string; correctIdentifier: string }
   | { type: "mapResponse"; identifier: string }

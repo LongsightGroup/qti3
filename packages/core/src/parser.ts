@@ -420,9 +420,12 @@ function parseFirstExpression(node: XmlNode): QtiProcessingExpression | undefine
 
 function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   if (node.localName === "qti-base-value") {
+    const rawValue = textContent(node);
     return {
       type: "baseValue",
-      value: coerceValue(textContent(node), node.attributes["base-type"]),
+      value: coerceValue(rawValue, node.attributes["base-type"]),
+      rawValue,
+      baseType: node.attributes["base-type"],
       source: node.source,
     };
   }
