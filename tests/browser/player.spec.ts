@@ -110,6 +110,15 @@ test.describe("manual harness", () => {
     if (!first || !second) throw new Error("Missing choice option boxes.");
 
     expect(second.y).toBeGreaterThan(first.y + first.height - 1);
+    await expect(options.nth(0).locator(".qti3-choice-label")).toHaveText("A.");
+    await expect(options.nth(1).locator(".qti3-choice-label")).toHaveText("B.");
+
+    const firstControl = await options.nth(0).locator("input").boundingBox();
+    const firstLabel = await options.nth(0).locator(".qti3-choice-label").boundingBox();
+    const firstText = await options.nth(0).locator(".qti3-choice-text").boundingBox();
+    if (!firstControl || !firstLabel || !firstText) throw new Error("Missing choice layout boxes.");
+    expect(firstControl.x).toBeLessThan(firstLabel.x);
+    expect(firstLabel.x).toBeLessThan(firstText.x);
   });
 
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {

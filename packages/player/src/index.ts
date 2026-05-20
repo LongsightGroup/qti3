@@ -423,7 +423,7 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
       label.dataset.selected = selected.has(identifier) ? "true" : "false";
     }
   };
-  for (const choice of choicesOrFallback(interaction)) {
+  for (const [index, choice] of choicesOrFallback(interaction).entries()) {
     const label = document.createElement("label");
     label.className = "qti3-choice-option";
     label.dataset.choiceIdentifier = choice.identifier;
@@ -444,13 +444,40 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
       }
       syncSelected();
     });
+    const visibleLabel = choicePresentationLabel(interaction, index);
+    const optionParts: HTMLElement[] = [input];
+    if (visibleLabel) {
+      const labelText = document.createElement("span");
+      labelText.className = "qti3-choice-label";
+      labelText.textContent = visibleLabel;
+      optionParts.push(labelText);
+    }
     const text = document.createElement("span");
+    text.className = "qti3-choice-text";
     text.textContent = choice.text;
-    label.append(input, text);
+    optionParts.push(text);
+    label.append(...optionParts);
     list.append(label);
   }
   group.append(list);
   return group;
+}
+
+function choicePresentationLabel(interaction: QtiInteraction, index: number): string {
+  const classNames = new Set((interaction.attributes.class ?? "").split(/\s+/).filter(Boolean));
+  if (classNames.has("qti-labels-none")) return "";
+
+  const labels = classNames.has("qti-labels-decimal")
+    ? Array.from({ length: 26 }, (_, item) => `${item + 1}`)
+    : classNames.has("qti-labels-lower-alpha")
+      ? "abcdefghijklmnopqrstuvwxyz".split("")
+      : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const suffix = classNames.has("qti-labels-suffix-none")
+    ? ""
+    : classNames.has("qti-labels-suffix-parenthesis")
+      ? ")"
+      : ".";
+  return `${labels[index] ?? `${index + 1}`}${suffix}`;
 }
 
 function usesChoiceSet(interaction: QtiInteraction): boolean {
@@ -1571,15 +1598,35 @@ function playerStyleElement(): HTMLStyleElement {
     }
 
     .qti3-choice-option {
-      display: flex;
-      gap: 0.5rem;
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr);
+      gap: 0.65rem;
       align-items: center;
+      justify-content: start;
+      inline-size: 100%;
+      box-sizing: border-box;
       min-block-size: 2.75rem;
-      padding: 0.55rem 0.65rem;
+      padding: 0.65rem 0.8rem;
       border: 1px solid CanvasText;
       background: Canvas;
       color: CanvasText;
       cursor: pointer;
+    }
+
+    .qti3-choice-option input {
+      margin: 0;
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    .qti3-choice-label {
+      min-inline-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .qti3-choice-text {
+      min-inline-size: 0;
+      overflow-wrap: anywhere;
     }
 
     .qti3-choice-option[data-selected="true"] {
