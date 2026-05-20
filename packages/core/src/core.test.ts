@@ -453,6 +453,75 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(-1);
   });
 
+  it("sums built-in map-response template scores across response declarations", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-template-sum">
+        <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="A" mapped-value="1"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="RESPONSE2" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="B" mapped-value="2"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE1">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="Z">Z</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-choice-interaction response-identifier="RESPONSE2">
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+            <qti-simple-choice identifier="Z">Z</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE1", "A");
+    session.respond("RESPONSE2", "B");
+    expect(session.score().outcomes.SCORE).toBe(3);
+    expect(session.score().outcomes.SCORE).toBe(3);
+  });
+
+  it("sums built-in match-correct template scores across response declarations", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-template-sum">
+        <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="RESPONSE2" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>B</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE1">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="Z">Z</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-choice-interaction response-identifier="RESPONSE2">
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+            <qti-simple-choice identifier="Z">Z</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE1", "A");
+    session.respond("RESPONSE2", "B");
+    expect(session.score().outcomes.SCORE).toBe(2);
+    session.respond("RESPONSE2", "Z");
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
+
   it("applies mapping lower and upper bounds to mapped scores", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-bounds">

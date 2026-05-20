@@ -203,25 +203,31 @@ function applyResponseProcessing(
 
   const template = processing?.template ?? "";
   if (template.includes("map_response")) {
+    let score = 0;
     for (const declaration of document.item.responseDeclarations) {
-      outcomes.SCORE = mapOrMatchResponse(
+      score += mapOrMatchResponse(
         declaration,
         responses[declaration.identifier] ?? null,
         correctResponses[declaration.identifier] ?? null,
       );
     }
+    outcomes.SCORE = score;
     return;
   }
 
+  let score = 0;
+  let scored = false;
   for (const declaration of document.item.responseDeclarations) {
     const response = responses[declaration.identifier] ?? null;
     const correctResponse = correctResponses[declaration.identifier] ?? null;
     if (correctResponse !== null) {
-      outcomes.SCORE = valuesEqual(response, correctResponse, declaration.cardinality === "ordered")
+      score += valuesEqual(response, correctResponse, declaration.cardinality === "ordered")
         ? 1
         : 0;
+      scored = true;
     }
   }
+  if (scored) outcomes.SCORE = score;
 }
 
 function applyOutcomeRules(
