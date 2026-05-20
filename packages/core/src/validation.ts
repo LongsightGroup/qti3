@@ -422,6 +422,7 @@ function validateChoiceLimitAttributes(choice: QtiChoice, diagnostics: QtiDiagno
 
   validateChoiceNonNegativeIntegerAttribute(choice, "match-max", diagnostics);
   validateChoiceNonNegativeIntegerAttribute(choice, "match-min", diagnostics);
+  validateHotspotGeometry(choice, diagnostics);
 }
 
 function requiresMatchMax(choice: QtiChoice): boolean {
@@ -430,6 +431,64 @@ function requiresMatchMax(choice: QtiChoice): boolean {
     choice.qtiName === "qti-associable-hotspot" ||
     choice.qtiName === "qti-gap-text" ||
     choice.qtiName === "qti-gap-img"
+  );
+}
+
+function validateHotspotGeometry(choice: QtiChoice, diagnostics: QtiDiagnostic[]): void {
+  if (choice.qtiName !== "qti-hotspot-choice" && choice.qtiName !== "qti-associable-hotspot") {
+    return;
+  }
+
+  const shape = choice.attributes.shape;
+  const coords = choice.attributes.coords;
+  if (!shape) {
+    diagnostics.push({
+      code: "choice.shape.required",
+      severity: "error",
+      message: `${choice.qtiName} ${choice.identifier} requires shape.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
+  } else if (!isHotspotShape(shape)) {
+    diagnostics.push({
+      code: "choice.shape",
+      severity: "error",
+      message: `${choice.qtiName} ${choice.identifier} has unsupported shape ${shape}.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
+  }
+
+  if (!coords) {
+    diagnostics.push({
+      code: "choice.coords.required",
+      severity: "error",
+      message: `${choice.qtiName} ${choice.identifier} requires coords.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
+    return;
+  }
+
+  const values = coords.split(",").map((value) => value.trim());
+  if (values.length === 0 || values.some((value) => value.length === 0 || !isFiniteNumber(value))) {
+    diagnostics.push({
+      code: "choice.coords",
+      severity: "error",
+      message: `${choice.qtiName} ${choice.identifier} requires comma-separated numeric coords.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
+  }
+}
+
+function isHotspotShape(value: string): boolean {
+  return (
+    value === "circle" ||
+    value === "default" ||
+    value === "ellipse" ||
+    value === "poly" ||
+    value === "rect"
   );
 }
 

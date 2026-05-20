@@ -574,6 +574,33 @@ describe("@qti3/core", () => {
     });
   });
 
+  it("validates hotspot geometry attributes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-hotspot-geometry">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <object data="image.png" type="image/png"/>
+            <qti-hotspot-choice identifier="A" coords="0,0,nope,50"/>
+            <qti-hotspot-choice identifier="B" shape="triangle"/>
+            <qti-associable-hotspot identifier="C" shape="rect" coords="0,0,50,50"/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "choice.shape.required" }),
+        expect.objectContaining({ code: "choice.shape" }),
+        expect.objectContaining({ code: "choice.coords.required" }),
+        expect.objectContaining({ code: "choice.coords" }),
+        expect.objectContaining({ code: "choice.matchMax.required" }),
+      ]),
+    );
+  });
+
   it("preserves portable custom interaction launch metadata", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci">
