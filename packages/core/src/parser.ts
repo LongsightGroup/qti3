@@ -455,6 +455,30 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     };
   }
 
+  if (node.localName === "qti-map-response-point") {
+    return {
+      type: "mapResponsePoint",
+      identifier: node.attributes.identifier ?? "",
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-correct") {
+    return {
+      type: "correct",
+      identifier: node.attributes.identifier ?? "",
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-default") {
+    return {
+      type: "default",
+      identifier: node.attributes.identifier ?? "",
+      source: node.source,
+    };
+  }
+
   if (node.localName === "qti-variable") {
     return { type: "variable", identifier: node.attributes.identifier ?? "", source: node.source };
   }

@@ -990,6 +990,58 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(1);
   });
 
+  it("evaluates explicit correct, default, and map-response-point expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="explicit-declaration-expressions">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+          <qti-default-value><qti-value>B</qti-value></qti-default-value>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="POINT" cardinality="single" base-type="point">
+          <qti-area-mapping default-value="0">
+            <qti-area-map-entry shape="circle" coords="93,111,16" mapped-value="2"/>
+          </qti-area-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="CORRECT_VALUE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="DEFAULT_VALUE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="POINT_SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-select-point-interaction response-identifier="POINT">
+            <object data="image.png" type="image/png" width="160" height="120"/>
+          </qti-select-point-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="CORRECT_VALUE">
+                <qti-correct identifier="RESPONSE"/>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="DEFAULT_VALUE">
+                <qti-default identifier="RESPONSE"/>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="POINT_SCORE">
+                <qti-map-response-point identifier="POINT"/>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("POINT", "93 111");
+    const score = session.score();
+    expect(score.outcomes.CORRECT_VALUE).toBe("A");
+    expect(score.outcomes.DEFAULT_VALUE).toBe("B");
+    expect(score.outcomes.POINT_SCORE).toBe(2);
+  });
+
   it("validates area mapping entry attributes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-area-mapping">

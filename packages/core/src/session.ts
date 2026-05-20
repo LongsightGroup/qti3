@@ -315,6 +315,18 @@ function evaluateValue(
         )
       : 0;
   }
+  if (expression.type === "mapResponsePoint") {
+    const declaration = getResponseDeclaration(document, expression.identifier);
+    return declaration?.areaMapping
+      ? scoreAreaMapping(responses[expression.identifier] ?? null, declaration.areaMapping)
+      : 0;
+  }
+  if (expression.type === "correct") {
+    return correctResponses[expression.identifier] ?? null;
+  }
+  if (expression.type === "default") {
+    return defaultValueForIdentifier(document, expression.identifier);
+  }
   if (expression.type === "variable") {
     return (
       responses[expression.identifier] ??
@@ -677,6 +689,18 @@ function getResponseDeclaration(
 ): QtiResponseDeclaration | undefined {
   return document.item.responseDeclarations.find(
     (declaration) => declaration.identifier === identifier,
+  );
+}
+
+function defaultValueForIdentifier(document: QtiDocument, identifier: string): QtiValue {
+  return (
+    document.item.responseDeclarations.find((declaration) => declaration.identifier === identifier)
+      ?.defaultValue ??
+    document.item.outcomeDeclarations.find((declaration) => declaration.identifier === identifier)
+      ?.defaultValue ??
+    document.item.templateDeclarations.find((declaration) => declaration.identifier === identifier)
+      ?.defaultValue ??
+    null
   );
 }
 

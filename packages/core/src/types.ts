@@ -246,7 +246,10 @@ export type QtiProcessingExpression = (
     }
   | { type: "isNull"; identifier: string }
   | { type: "matchCorrect"; identifier: string; correctIdentifier: string }
+  | { type: "correct"; identifier: string }
+  | { type: "default"; identifier: string }
   | { type: "mapResponse"; identifier: string }
+  | { type: "mapResponsePoint"; identifier: string }
   | { type: "variable"; identifier: string }
   | {
       type: "randomInteger";

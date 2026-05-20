@@ -561,7 +561,7 @@ function validateExpressionReferences(
     }
   }
 
-  if (expression.type === "mapResponse") {
+  if (expression.type === "mapResponse" || expression.type === "mapResponsePoint") {
     validateProcessingIdentifier(
       expression.identifier,
       "processing.response",
@@ -573,6 +573,42 @@ function validateExpressionReferences(
         code: "processing.response.reference",
         severity: "error",
         message: `Processing expression references missing response declaration ${expression.identifier}.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+  }
+
+  if (expression.type === "correct") {
+    validateProcessingIdentifier(
+      expression.identifier,
+      "processing.correct",
+      expression.source,
+      diagnostics,
+    );
+    if (expression.identifier && !responses.has(expression.identifier)) {
+      diagnostics.push({
+        code: "processing.correct.reference",
+        severity: "error",
+        message: `Processing expression references missing correct response declaration ${expression.identifier}.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+  }
+
+  if (expression.type === "default") {
+    validateProcessingIdentifier(
+      expression.identifier,
+      "processing.variable",
+      expression.source,
+      diagnostics,
+    );
+    if (expression.identifier && !variables.has(expression.identifier)) {
+      diagnostics.push({
+        code: "processing.variable.reference",
+        severity: "error",
+        message: `Processing expression references missing variable ${expression.identifier}.`,
         path: expression.source?.path,
         source: expression.source,
       });
