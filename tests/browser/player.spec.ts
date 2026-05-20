@@ -500,7 +500,10 @@ test.describe("manual harness", () => {
       await loadFixture(page, interactionType);
       const context = page.locator("qti-assessment-item-player .qti3-graphic-context");
       await expect(context, interactionType).toBeVisible();
-      await expect(context.locator("img"), interactionType).toHaveAttribute("src", /image\.png$/);
+      await expect(context.locator("img"), interactionType).toHaveAttribute(
+        "src",
+        /hotspot-flow\.svg$/,
+      );
       await expectImageLoaded(context.locator("img"));
     }
   });
@@ -843,6 +846,7 @@ test.describe("manual harness", () => {
       (item) => item.interactionType === "graphicOrder",
     );
     if (!graphicOrder) throw new Error("Missing graphic order fixture.");
+    const diagram = await readFile("examples/manual/public/hotspot-flow.svg");
 
     const zip = createStoredZip({
       "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
@@ -850,15 +854,12 @@ test.describe("manual harness", () => {
   <resources>
     <resource identifier="graphic-order" type="imsqti_item_xmlv3p0" href="items/graphic-order.xml">
       <file href="items/graphic-order.xml"/>
-      <file href="items/image.png"/>
+      <file href="items/hotspot-flow.svg"/>
     </resource>
   </resources>
 </manifest>`,
       "items/graphic-order.xml": graphicOrder.xml,
-      "items/image.png": Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lc5Y8wAAAABJRU5ErkJggg==",
-        "base64",
-      ),
+      "items/hotspot-flow.svg": diagram,
     });
 
     await page.goto("/");
@@ -1307,11 +1308,11 @@ test.describe("manual harness", () => {
     await loadFixture(page, "positionObject");
     await page.locator("qti-assessment-item-player .qti3-point-surface").focus();
     await page.keyboard.press("Enter");
-    await expectResponse(page, "10 10");
+    await expectResponse(page, "240 150");
     await page.getByRole("button", { name: "Move point right" }).click();
-    await expectResponse(page, "11 10");
+    await expectResponse(page, "241 150");
     await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
-      "Selected point 11, 10",
+      "Selected point 241, 150",
     );
 
     await loadFixture(page, "drawing");
@@ -1530,7 +1531,7 @@ test.describe("manual harness", () => {
     );
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
-    ).toHaveAttribute("src", /image\.png$/);
+    ).toHaveAttribute("src", /hotspot-flow\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
 
     const items = page.locator("qti-assessment-item-player .qti3-reorder-item");
@@ -1612,7 +1613,7 @@ test.describe("manual harness", () => {
     await loadFixture(page, "graphicAssociate");
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
-    ).toHaveAttribute("src", /image\.png$/);
+    ).toHaveAttribute("src", /hotspot-flow\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
     await addPair(page, "Graphic associate", "A", "B");
     await expectResponse(page, ["A B"]);
@@ -1624,7 +1625,7 @@ test.describe("manual harness", () => {
 
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
-    ).toHaveAttribute("src", /image\.png$/);
+    ).toHaveAttribute("src", /hotspot-flow\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
 
     const source = page.locator('qti-assessment-item-player [data-choice-identifier="A"]').first();
@@ -1649,8 +1650,8 @@ test.describe("manual harness", () => {
 
     await page
       .locator("qti-assessment-item-player .qti3-point-surface")
-      .click({ position: { x: 10, y: 10 } });
-    await expectResponse(page, "10 10");
+      .click({ position: { x: 239, y: 87 } });
+    await expectResponse(page, "240 88");
 
     await page.getByRole("button", { name: "Score", exact: true }).click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -1666,16 +1667,19 @@ test.describe("manual harness", () => {
       await loadFixture(page, fixture);
 
       const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
-      await expect(surface.locator("img")).toHaveAttribute("src", "image.png");
+      await expect(surface.locator("img")).toHaveAttribute("src", "hotspot-flow.svg");
       await expect(surface.locator("img")).toHaveAttribute("alt", "");
       await expectImageLoaded(surface.locator("img"));
 
       const box = await surface.boundingBox();
-      expect(box?.width).toBe(160);
-      expect(box?.height).toBe(120);
+      expect(box?.width).toBe(480);
+      expect(box?.height).toBe(300);
 
-      await surface.click({ position: { x: 10, y: 10 } });
-      await expectResponse(page, "10 10");
+      await expect(
+        page.locator("qti-assessment-item-player .qti3-coordinate-output"),
+      ).toContainText("No point selected");
+      await surface.click({ position: { x: 239, y: 87 } });
+      await expectResponse(page, "240 88");
     }
   });
 

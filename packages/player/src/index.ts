@@ -1396,9 +1396,9 @@ function renderPointResponse(
   surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
   surface.style.display = "block";
   surface.style.position = "relative";
-  surface.style.inlineSize = `${objectWidth(interaction)}px`;
-  surface.style.blockSize = `${objectHeight(interaction)}px`;
-  surface.style.maxInlineSize = "100%";
+  surface.style.inlineSize = `min(100%, ${objectWidth(interaction)}px)`;
+  surface.style.aspectRatio = `${objectWidth(interaction)} / ${objectHeight(interaction)}`;
+  surface.style.boxSizing = "border-box";
   surface.style.border = "1px solid CanvasText";
   surface.style.background = "Canvas";
   surface.style.color = "CanvasText";
@@ -1431,15 +1431,30 @@ function renderPointResponse(
   marker.style.pointerEvents = "none";
   surface.append(marker);
 
-  const point = parsePointValue(currentValue) ?? { x: 10, y: 10 };
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
+  let point = parsePointValue(currentValue);
   const coordinate = document.createElement("output");
   coordinate.className = "qti3-coordinate-output";
-  const commit = () => update(`${point.x} ${point.y}`);
+  const initialPoint = () => ({
+    x: Math.round(width / 2),
+    y: Math.round(height / 2),
+  });
+  const commit = () => {
+    if (!point) return;
+    update(`${point.x} ${point.y}`);
+  };
   const syncMarker = () => {
-    marker.style.insetInlineStart = `${point.x}px`;
-    marker.style.insetBlockStart = `${point.y}px`;
+    if (!point) {
+      marker.hidden = true;
+      coordinate.value = "";
+      coordinate.textContent = "No point selected";
+      surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
+      return;
+    }
+    marker.hidden = false;
+    marker.style.insetInlineStart = `${(point.x / width) * 100}%`;
+    marker.style.insetBlockStart = `${(point.y / height) * 100}%`;
     coordinate.value = `${point.x} ${point.y}`;
     coordinate.textContent = `Selected point ${point.x}, ${point.y}`;
     surface.setAttribute(
@@ -1448,19 +1463,24 @@ function renderPointResponse(
     );
   };
   const clampPoint = () => {
+    if (!point) return;
     point.x = Math.max(0, Math.min(width, point.x));
     point.y = Math.max(0, Math.min(height, point.y));
   };
 
   surface.addEventListener("click", (event) => {
     if (event.detail === 0) return;
-    point.x = Math.round(event.offsetX);
-    point.y = Math.round(event.offsetY);
+    const rect = surface.getBoundingClientRect();
+    point = {
+      x: Math.round(((event.clientX - rect.left) / rect.width) * width),
+      y: Math.round(((event.clientY - rect.top) / rect.height) * height),
+    };
     clampPoint();
     syncMarker();
     commit();
   });
   surface.addEventListener("keydown", (event) => {
+    point ??= initialPoint();
     const step = event.shiftKey ? 10 : 1;
     if (event.key === "ArrowLeft") point.x -= step;
     else if (event.key === "ArrowRight") point.x += step;
@@ -1491,6 +1511,7 @@ function renderPointResponse(
     button.textContent = label;
     button.setAttribute("aria-label", `Move point ${label.toLowerCase()}`);
     button.addEventListener("click", () => {
+      point ??= initialPoint();
       point.x += dx;
       point.y += dy;
       clampPoint();

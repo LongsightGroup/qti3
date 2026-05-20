@@ -518,7 +518,7 @@ function assessmentItem(
   const areaMappingXml =
     response.baseType === "point"
       ? `
-        <qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="10,10,5" mapped-value="1"/></qti-area-mapping>`
+        <qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="240,88,18" mapped-value="1"/></qti-area-mapping>`
       : "";
   const responseDeclaration = response.identifier
     ? `
@@ -618,7 +618,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "identifier", correct: "A" };
   }
   if (interactionType === "selectPoint" || interactionType === "positionObject") {
-    return { identifier: "RESPONSE", cardinality: "single", baseType: "point", correct: "10 10" };
+    return { identifier: "RESPONSE", cardinality: "single", baseType: "point", correct: "240 88" };
   }
   if (interactionType === "upload") {
     return {
@@ -673,16 +673,16 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the region representing response capture in the delivery flow.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-hotspot-choice identifier="A" shape="rect" coords="184,52,296,124"/><qti-hotspot-choice identifier="B" shape="rect" coords="24,52,136,124"/><qti-hotspot-choice identifier="C" shape="rect" coords="344,52,456,124"/></${qtiName}>`;
   }
   if (interactionType === "graphicOrder") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,40"/><qti-hotspot-choice identifier="B" shape="rect" coords="55,0,105,40"/><qti-hotspot-choice identifier="C" shape="rect" coords="110,0,158,40"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-hotspot-choice identifier="A" shape="rect" coords="24,52,136,124"/><qti-hotspot-choice identifier="B" shape="rect" coords="184,52,296,124"/><qti-hotspot-choice identifier="C" shape="rect" coords="184,178,296,250"/></${qtiName}>`;
   }
   if (interactionType === "graphicAssociate") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,40" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="55,0,105,40" match-max="1"/><qti-associable-hotspot identifier="C" shape="rect" coords="0,60,50,110" match-max="1"/><qti-associable-hotspot identifier="D" shape="rect" coords="55,60,105,110" match-max="1"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-associable-hotspot identifier="A" shape="rect" coords="24,52,136,124" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="184,52,296,124" match-max="1"/><qti-associable-hotspot identifier="C" shape="rect" coords="344,52,456,124" match-max="1"/><qti-associable-hotspot identifier="D" shape="rect" coords="184,178,296,250" match-max="1"/></${qtiName}>`;
   }
   if (interactionType === "selectPoint") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></${qtiName}>`;
   }
   if (interactionType === "positionObject") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Position the marker on the response-processing boundary.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Position the marker on the response-processing boundary.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></${qtiName}>`;
   }
   if (interactionType === "upload") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a short implementation note describing how your item player records response state.</qti-prompt></${qtiName}>`;
@@ -703,7 +703,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the two QTI concepts that belong together.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Interaction</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Outcome declaration</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
   }
   if (interactionType === "graphicGapMatch") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the diagram labels for a QTI item lifecycle.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>The interaction writes to a <qti-gap identifier="G1"/> and scoring writes to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the diagram labels for a QTI item lifecycle.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>The interaction writes to a <qti-gap identifier="G1"/> and scoring writes to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
   }
   if (interactionType === "gapMatch") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the sentence about QTI runtime state.</qti-prompt><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>An interaction records the candidate answer in a <qti-gap identifier="G1"/>, while scoring writes SCORE to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;

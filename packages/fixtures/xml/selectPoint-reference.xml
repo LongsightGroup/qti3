@@ -2,15 +2,15 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="selectPoint-reference" title="selectPoint-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point">
-        <qti-correct-response><qti-value>10 10</qti-value></qti-correct-response>
-        <qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="10,10,5" mapped-value="1"/></qti-area-mapping>
+        <qti-correct-response><qti-value>240 88</qti-value></qti-correct-response>
+        <qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="240,88,18" mapped-value="1"/></qti-area-mapping>
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Reference item for selectPoint-reference: QTI 3.0 item-player conformance fixture.</p>
-    <qti-select-point-interaction response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/></qti-select-point-interaction>
+    <qti-select-point-interaction response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-select-point-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml"/>
 </qti-assessment-item>
