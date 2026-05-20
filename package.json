@@ -2,6 +2,10 @@
   "name": "qti3",
   "version": "0.0.0",
   "private": true,
+  "author": {
+    "name": "Sam Ottenhoff",
+    "url": "https://github.com/ottenhoff"
+  },
   "type": "module",
   "scripts": {
     "format": "oxfmt --write .",

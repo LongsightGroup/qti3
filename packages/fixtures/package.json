@@ -2,6 +2,10 @@
   "name": "@longsightgroup/qti3-fixtures",
   "version": "0.0.0",
   "license": "MIT",
+  "author": {
+    "name": "Sam Ottenhoff",
+    "url": "https://github.com/ottenhoff"
+  },
   "files": [
     "dist",
     "!dist/*.test.*",
