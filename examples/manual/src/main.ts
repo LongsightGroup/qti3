@@ -16,6 +16,8 @@ const previousFile = document.querySelector<HTMLButtonElement>("#previous-file")
 const nextFile = document.querySelector<HTMLButtonElement>("#next-file");
 const fileSummary = document.querySelector<HTMLParagraphElement>("#file-summary");
 const xmlInput = document.querySelector<HTMLTextAreaElement>("#xml");
+const packageLoader = document.querySelector<HTMLDetailsElement>("#package-loader");
+const xmlLoader = document.querySelector<HTMLDetailsElement>("#xml-loader");
 const scorePanel = document.querySelector<HTMLElement>("#score-panel");
 const scoreStatus = document.querySelector<HTMLParagraphElement>("#score-status");
 const scoreValue = document.querySelector<HTMLElement>("#score-value");
@@ -51,6 +53,8 @@ if (
   !nextFile ||
   !fileSummary ||
   !xmlInput ||
+  !packageLoader ||
+  !xmlLoader ||
   !scorePanel ||
   !scoreStatus ||
   !scoreValue ||
@@ -139,6 +143,7 @@ loadFixture.addEventListener("click", async () => {
 });
 
 loadXml.addEventListener("click", async () => {
+  xmlLoader.open = true;
   await player.loadXml(xmlInput.value);
 });
 
@@ -148,21 +153,25 @@ debugEnd.addEventListener("click", () => player.endAttempt());
 debugReset.addEventListener("click", () => player.reset());
 
 fileInput.addEventListener("change", async () => {
+  packageLoader.open = true;
   await loadLocalFiles(fileInput.files);
 });
 
 localFiles.addEventListener("change", async () => {
+  packageLoader.open = true;
   selectedFileIndex = Number(localFiles.value);
   await loadSelectedLocalFile();
 });
 
 previousFile.addEventListener("click", async () => {
+  packageLoader.open = true;
   if (loadedFiles.length === 0) return;
   selectedFileIndex = Math.max(0, selectedFileIndex - 1);
   await loadSelectedLocalFile();
 });
 
 nextFile.addEventListener("click", async () => {
+  packageLoader.open = true;
   if (loadedFiles.length === 0) return;
   selectedFileIndex = Math.min(loadedFiles.length - 1, selectedFileIndex + 1);
   await loadSelectedLocalFile();

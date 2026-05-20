@@ -134,6 +134,30 @@
         margin-block: 0.35rem;
       }
 
+      .load-options {
+        display: grid;
+        gap: 0.65rem;
+        margin-block: 1rem;
+      }
+
+      .load-option {
+        border: 1px solid #d8d8d8;
+        background: #fff;
+      }
+
+      .load-option summary {
+        cursor: pointer;
+        padding: 0.55rem 0.7rem;
+        font-weight: 700;
+      }
+
+      .load-option-body {
+        display: grid;
+        gap: 0.6rem;
+        padding: 0 0.7rem 0.75rem;
+        border-top: 1px solid #d8d8d8;
+      }
+
       .debug-actions {
         display: grid;
         gap: 0.5rem;
@@ -214,26 +238,47 @@
     <main>
       <aside>
         <h1>qti3 manual harness</h1>
-        <label>
-          Reference fixture
-          <select id="fixture"></select>
-        </label>
-        <button id="load-fixture" type="button">Load fixture</button>
-        <h2>Open QTI package zip</h2>
-        <label>
-          QTI package zip
-          <input id="file" type="file" accept=".zip,application/zip,application/x-zip-compressed" />
-        </label>
-        <label>
-          Loaded file
-          <select id="local-files"></select>
-        </label>
-        <button id="previous-file" type="button">Previous</button>
-        <button id="next-file" type="button">Next</button>
-        <p id="file-summary" aria-live="polite"></p>
-        <h2>Paste QTI XML</h2>
-        <textarea id="xml" spellcheck="false"></textarea>
-        <button id="load-xml" type="button">Load XML</button>
+        <div class="load-options">
+          <details class="load-option" name="load-options" open>
+            <summary>Reference fixture</summary>
+            <div class="load-option-body">
+              <label>
+                Reference fixture
+                <select id="fixture"></select>
+              </label>
+              <button id="load-fixture" type="button">Load fixture</button>
+            </div>
+          </details>
+          <details class="load-option" name="load-options" id="package-loader">
+            <summary>Open QTI package zip</summary>
+            <div class="load-option-body">
+              <label>
+                QTI package zip
+                <input
+                  id="file"
+                  type="file"
+                  accept=".zip,application/zip,application/x-zip-compressed"
+                />
+              </label>
+              <label>
+                Loaded file
+                <select id="local-files"></select>
+              </label>
+              <div>
+                <button id="previous-file" type="button">Previous</button>
+                <button id="next-file" type="button">Next</button>
+              </div>
+              <p id="file-summary" aria-live="polite"></p>
+            </div>
+          </details>
+          <details class="load-option" name="load-options" id="xml-loader">
+            <summary>Paste QTI XML</summary>
+            <div class="load-option-body">
+              <textarea id="xml" spellcheck="false"></textarea>
+              <button id="load-xml" type="button">Load XML</button>
+            </div>
+          </details>
+        </div>
         <div id="score-panel" class="score-panel" data-status="idle" aria-live="polite">
           <h2>Score result</h2>
           <p id="score-status">Not scored yet.</p>

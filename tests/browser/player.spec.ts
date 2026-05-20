@@ -38,8 +38,7 @@ test.describe("manual harness", () => {
     if (!fixture) throw new Error("Missing choice fixture.");
 
     await page.goto("/");
-    await page.locator("#xml").fill(fixture.xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, fixture.xml);
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await page.getByRole("button", { name: "Score", exact: true }).click();
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
@@ -74,7 +73,9 @@ test.describe("manual harness", () => {
 
   test("shows dormant catalog metadata in the manual debugger", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`
+    await pasteXml(
+      page,
+      `
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-debug">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
@@ -94,8 +95,8 @@ test.describe("manual harness", () => {
           </qti-catalog>
         </qti-catalog-info>
       </qti-assessment-item>
-    `);
-    await page.locator("#load-xml").click();
+    `,
+    );
 
     await expect(page.locator("#debug-catalogs")).toContainText('"id": "term-help"');
     await expect(page.locator("#debug-catalogs")).toContainText('"support": "linguistic-guidance"');
@@ -104,13 +105,15 @@ test.describe("manual harness", () => {
 
   test("shows item stylesheet references in the manual debugger", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`
+    await pasteXml(
+      page,
+      `
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-debug">
         <qti-stylesheet href="style/item.css" type="text/css" media="screen"/>
         <qti-item-body><p>Styled item body.</p></qti-item-body>
       </qti-assessment-item>
-    `);
-    await page.locator("#load-xml").click();
+    `,
+    );
 
     await expect(page.locator("#debug-stylesheets")).toContainText('"href": "style/item.css"');
     await expect(page.locator("#debug-stylesheets")).toContainText('"type": "text/css"');
@@ -164,6 +167,30 @@ test.describe("manual harness", () => {
     );
   });
 
+  test("keeps manual harness load options in a native exclusive disclosure group", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const reference = page.locator("details.load-option").filter({ hasText: "Reference fixture" });
+    const packageLoader = page.locator("#package-loader");
+    const xmlLoader = page.locator("#xml-loader");
+    await expect(reference).toHaveAttribute("open", "");
+    await expect(packageLoader).not.toHaveAttribute("open", "");
+    await expect(xmlLoader).not.toHaveAttribute("open", "");
+
+    await packageLoader.locator("summary").click();
+    await expect(packageLoader).toHaveAttribute("open", "");
+    await expect(reference).not.toHaveAttribute("open", "");
+
+    await xmlLoader.locator("summary").click();
+    await expect(xmlLoader).toHaveAttribute("open", "");
+    await expect(packageLoader).not.toHaveAttribute("open", "");
+
+    await pasteXml(page, "<qti-assessment-item/>");
+    await expect(xmlLoader).toHaveAttribute("open", "");
+  });
+
   test("scores advanced processing fixtures through the manual debugger", async ({ page }) => {
     await page.goto("/");
 
@@ -196,8 +223,7 @@ test.describe("manual harness", () => {
     );
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
 
     const player = page.locator("qti-assessment-item-player");
     await expect(player.locator(".qti3-item-prompt")).toHaveText(
@@ -303,8 +329,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
     await page.getByRole("radio", { name: "A" }).check();
     await page.getByRole("button", { name: "Score", exact: true }).click();
 
@@ -348,8 +373,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
     await expect(
       page.locator('qti-assessment-item-player .qti3-printed-variable[data-identifier="SCORE"]'),
     ).toHaveText("0.00");
@@ -393,8 +417,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
 
     const player = page.locator("qti-assessment-item-player");
     await expect(player.locator(".qti3-template-block.reference-path")).toContainText(
@@ -428,8 +451,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
 
     const math = page.locator("qti-assessment-item-player math");
     await expect(math.locator("mi").nth(0)).toHaveText("7");
@@ -459,8 +481,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
 
     const math = page.locator("qti-assessment-item-player math");
     await expect(math).toHaveAttribute("display", "block");
@@ -539,8 +560,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
 
     await assignGap(page, "Gap match", "A", "G1");
     await assignGap(page, "Gap match", "B", "G2");
@@ -927,8 +947,7 @@ test.describe("manual harness", () => {
     if (!fixture) throw new Error("Missing choice fixture.");
 
     await page.goto("/");
-    await page.locator("#xml").fill(fixture.xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, fixture.xml);
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
 
     const answeredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -1017,8 +1036,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
     await page.getByRole("button", { name: "Show Hint" }).click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -1060,8 +1078,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
     await page.getByRole("button", { name: "Finish" }).click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -1117,8 +1134,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
     await page.getByRole("button", { name: "Score", exact: true }).click();
 
     const blockedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -1172,8 +1188,7 @@ test.describe("manual harness", () => {
 </qti-assessment-item>`;
 
     await page.goto("/");
-    await page.locator("#xml").fill(xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, xml);
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await page.getByRole("button", { name: "Finish" }).click();
 
@@ -1855,7 +1870,9 @@ test.describe("manual harness", () => {
     page,
   }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`
+    await pasteXml(
+      page,
+      `
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-shared-css">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
@@ -1867,8 +1884,8 @@ test.describe("manual harness", () => {
           </qti-hotspot-interaction>
         </qti-item-body>
       </qti-assessment-item>
-    `);
-    await page.locator("#load-xml").click();
+    `,
+    );
 
     const interaction = page.locator(".qti3-hotspot");
     await expect(interaction).toHaveClass(/qti-selections-dark/);
@@ -1890,8 +1907,7 @@ test.describe("manual harness", () => {
     if (!fixture) throw new Error("Missing choice fixture.");
 
     await page.goto("/");
-    await page.locator("#xml").fill(fixture.xml);
-    await page.locator("#load-xml").click();
+    await pasteXml(page, fixture.xml);
     await page.getByRole("button", { name: "Score", exact: true }).click();
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
     await expect(page.locator("#score-status")).toContainText("Score blocked");
@@ -1910,7 +1926,9 @@ test.describe("manual harness", () => {
 
   test("honors authored minimum response counts during validation", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="minimum-choice" title="minimum-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
     <qti-correct-response>
@@ -1927,8 +1945,8 @@ test.describe("manual harness", () => {
     </qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
-</qti-assessment-item>`);
-    await page.locator("#load-xml").click();
+</qti-assessment-item>`,
+    );
 
     await page.getByRole("checkbox", { name: "A" }).check();
     await page.getByRole("button", { name: "Score", exact: true }).click();
@@ -1951,7 +1969,9 @@ test.describe("manual harness", () => {
 
   test("honors authored maximum response counts during validation", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-choice" title="maximum-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
     <qti-correct-response>
@@ -1966,8 +1986,8 @@ test.describe("manual harness", () => {
     </qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
-</qti-assessment-item>`);
-    await page.locator("#load-xml").click();
+</qti-assessment-item>`,
+    );
 
     await page.getByRole("checkbox", { name: "A" }).check();
     await page.getByRole("checkbox", { name: "B" }).check();
@@ -1981,7 +2001,9 @@ test.describe("manual harness", () => {
 
   test("honors authored match-max counts during validation", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-max-associate" title="match-max-associate">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
     <qti-correct-response>
@@ -1998,8 +2020,8 @@ test.describe("manual harness", () => {
       </qti-simple-match-set>
     </qti-associate-interaction>
   </qti-item-body>
-</qti-assessment-item>`);
-    await page.locator("#load-xml").click();
+</qti-assessment-item>`,
+    );
 
     await page
       .locator(
@@ -2030,7 +2052,9 @@ test.describe("manual harness", () => {
 
   test("allows optional responses when authored minimum is zero", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#xml").fill(`<?xml version="1.0" encoding="UTF-8"?>
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="optional-choice" title="optional-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
     <qti-correct-response>
@@ -2045,8 +2069,8 @@ test.describe("manual harness", () => {
     </qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
-</qti-assessment-item>`);
-    await page.locator("#load-xml").click();
+</qti-assessment-item>`,
+    );
     await page.getByRole("button", { name: "Score", exact: true }).click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
@@ -2115,6 +2139,15 @@ async function loadFixture(page: import("@playwright/test").Page, interactionTyp
   if (!fixture) throw new Error(`Missing ${interactionType} fixture.`);
   await page.locator("#fixture").selectOption(fixture.id);
   await page.locator("#load-fixture").click();
+}
+
+async function pasteXml(page: import("@playwright/test").Page, xml: string): Promise<void> {
+  const loader = page.locator("#xml-loader");
+  if (!(await loader.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await loader.locator("summary").click();
+  }
+  await page.locator("#xml").fill(xml);
+  await page.locator("#load-xml").click();
 }
 
 async function expectResponse(
