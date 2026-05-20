@@ -477,6 +477,34 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
   });
 
+  test("discovers manifest item resources from nested file hrefs", async ({ page }) => {
+    const choice = interactionFixtures.find((item) => item.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0p1">
+      <file href="items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/choice.xml": choice.xml,
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "manifest-file-href.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("1 of 1");
+    await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
+    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+  });
+
   test("resolves relative item assets from a zip upload", async ({ page }) => {
     const graphicOrder = interactionFixtures.find(
       (item) => item.interactionType === "graphicOrder",

@@ -536,16 +536,27 @@ function assessmentItemRefs(xml: string, source: string): string[] {
 function manifestItemResources(xml: string, source: string): string[] {
   const parsed = new DOMParser().parseFromString(xml, "application/xml");
   const refs = elementsByLocalName(parsed, "resource")
-    .filter((element) => element.getAttribute("type") === "imsqti_item_xmlv3p0")
-    .map((element) => element.getAttribute("href") ?? "")
+    .filter((element) => isQtiItemResource(element.getAttribute("type") ?? ""))
+    .map((element) => resourceHref(element))
     .filter(Boolean);
   return refs.map((href) => resolveRelativePath(source, href));
 }
 
-function elementsByLocalName(document: Document, localName: string): Element[] {
-  return [...document.getElementsByTagName("*")].filter(
-    (element) => element.localName === localName,
-  );
+function isQtiItemResource(type: string): boolean {
+  return type.toLowerCase().startsWith("imsqti_item_xmlv3p0");
+}
+
+function resourceHref(resource: Element): string {
+  const href = resource.getAttribute("href");
+  if (href) return href;
+  const file = elementsByLocalName(resource, "file").find((element) => {
+    return (element.getAttribute("href") ?? "").toLowerCase().endsWith(".xml");
+  });
+  return file?.getAttribute("href") ?? "";
+}
+
+function elementsByLocalName(root: Document | Element, localName: string): Element[] {
+  return [...root.getElementsByTagName("*")].filter((element) => element.localName === localName);
 }
 
 function resolveRelativePath(from: string, href: string): string {
