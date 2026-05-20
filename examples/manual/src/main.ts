@@ -26,6 +26,7 @@ const debugResponses = document.querySelector<HTMLPreElement>("#debug-responses"
 const debugOutcomes = document.querySelector<HTMLPreElement>("#debug-outcomes");
 const debugTemplateValues = document.querySelector<HTMLPreElement>("#debug-template-values");
 const debugCatalogs = document.querySelector<HTMLPreElement>("#debug-catalogs");
+const debugStylesheets = document.querySelector<HTMLPreElement>("#debug-stylesheets");
 const debugValidation = document.querySelector<HTMLPreElement>("#debug-validation");
 const debugDiagnostics = document.querySelector<HTMLPreElement>("#debug-diagnostics");
 const debugState = document.querySelector<HTMLPreElement>("#debug-state");
@@ -57,6 +58,7 @@ if (
   !debugOutcomes ||
   !debugTemplateValues ||
   !debugCatalogs ||
+  !debugStylesheets ||
   !debugValidation ||
   !debugDiagnostics ||
   !debugState ||
@@ -84,6 +86,7 @@ let assetUrls = new Map<string, string>();
 let latestDiagnostics: unknown[] = [];
 let latestValidationMessages: unknown[] = [];
 let latestCatalogs: unknown[] = [];
+let latestStylesheets: unknown[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
 for (const fixture of interactionFixtures) {
@@ -151,6 +154,7 @@ for (const eventName of [
       latestDiagnostics = diagnosticsFromDetail(detail);
       latestValidationMessages = [];
       latestCatalogs = catalogsFromDetail(detail);
+      latestStylesheets = stylesheetsFromDetail(detail);
       resetScorePanel();
     } else if (eventName === "qti-responsechange") {
       latestValidationMessages = [];
@@ -228,6 +232,7 @@ function renderDebugPanels(): void {
   debugOutcomes.textContent = stableJson(state?.outcomes ?? {});
   debugTemplateValues.textContent = stableJson(state?.templateValues ?? {});
   debugCatalogs.textContent = stableJson(latestCatalogs);
+  debugStylesheets.textContent = stableJson(latestStylesheets);
   debugValidation.textContent = stableJson(latestValidationMessages);
   debugDiagnostics.textContent = stableJson(latestDiagnostics);
   debugState.textContent = stableJson(state ?? {});
@@ -280,6 +285,12 @@ function catalogsFromDetail(detail: unknown): unknown[] {
   if (!isRecord(detail) || !isRecord(detail.item) || !isRecord(detail.item.catalogInfo)) return [];
   const catalogs = detail.item.catalogInfo.catalogs;
   return Array.isArray(catalogs) ? catalogs : [];
+}
+
+function stylesheetsFromDetail(detail: unknown): unknown[] {
+  if (!isRecord(detail) || !isRecord(detail.item)) return [];
+  const stylesheets = detail.item.stylesheets;
+  return Array.isArray(stylesheets) ? stylesheets : [];
 }
 
 function scoreResultFromDetail(detail: unknown): {

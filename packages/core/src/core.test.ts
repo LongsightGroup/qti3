@@ -333,6 +333,36 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("preserves and validates item stylesheet references", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-item">
+        <qti-stylesheet href="style/item.css" type="text/css" media="screen" title="Item styles"/>
+        <qti-item-body><p>Styled item.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.stylesheets).toMatchObject([
+      {
+        href: "style/item.css",
+        type: "text/css",
+        media: "screen",
+        title: "Item styles",
+      },
+    ]);
+
+    const invalid = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-stylesheet-item">
+        <qti-stylesheet type="text/css"/>
+        <qti-item-body/>
+      </qti-assessment-item>
+    `);
+    expect(invalid.ok).toBe(false);
+    expect(invalid.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "stylesheet.href.required", severity: "error" }),
+    );
+  });
+
   it("validates response declaration references and response shape", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid">

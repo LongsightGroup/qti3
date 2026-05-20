@@ -32,6 +32,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateInteractions(item, diagnostics);
   validateModalFeedback(item, diagnostics);
   validateCatalogInfo(item, diagnostics);
+  validateStylesheets(item, diagnostics);
   validateProcessingReferences(item, diagnostics);
 
   return {
@@ -484,6 +485,19 @@ function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDi
         });
       }
     }
+  }
+}
+
+function validateStylesheets(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  for (const stylesheet of item.stylesheets) {
+    if (stylesheet.href.trim().length > 0) continue;
+    diagnostics.push({
+      code: "stylesheet.href.required",
+      severity: "error",
+      message: "qti-stylesheet requires a non-empty href attribute.",
+      path: stylesheet.source?.path,
+      source: stylesheet.source,
+    });
   }
 }
 

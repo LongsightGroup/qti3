@@ -28,6 +28,7 @@ import type {
   QtiResponseProcessing,
   QtiResponseRule,
   QtiSetOutcomeValue,
+  QtiStylesheet,
   QtiTemplateDeclaration,
   QtiTemplateProcessing,
   QtiTemplateRule,
@@ -115,6 +116,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
   const catalogInfo = parseCatalogInfo(childElements(node, "qti-catalog-info")[0]);
   const catalogReferences = itemBody ? parseCatalogReferences(itemBody) : [];
+  const stylesheets = childElements(node, "qti-stylesheet").map(parseStylesheet);
   const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
 
   return {
@@ -131,8 +133,20 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     modalFeedback,
     catalogInfo,
     catalogReferences,
+    stylesheets,
     body,
     bodyText: textContent(node),
+    source: node.source,
+  };
+}
+
+function parseStylesheet(node: XmlNode): QtiStylesheet {
+  return {
+    href: node.attributes.href ?? "",
+    type: node.attributes.type,
+    media: node.attributes.media,
+    title: node.attributes.title,
+    attributes: node.attributes,
     source: node.source,
   };
 }

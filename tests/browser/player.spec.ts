@@ -97,6 +97,21 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-catalogs")).toContainText("Accurate means correct.");
   });
 
+  test("shows item stylesheet references in the manual debugger", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#xml").fill(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-debug">
+        <qti-stylesheet href="style/item.css" type="text/css" media="screen"/>
+        <qti-item-body><p>Styled item body.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+    await page.locator("#load-xml").click();
+
+    await expect(page.locator("#debug-stylesheets")).toContainText('"href": "style/item.css"');
+    await expect(page.locator("#debug-stylesheets")).toContainText('"type": "text/css"');
+    await expect(page.locator("#debug-stylesheets")).toContainText('"media": "screen"');
+  });
+
   test("renders item-body prompts before interactions", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

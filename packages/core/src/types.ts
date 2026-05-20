@@ -301,6 +301,15 @@ export interface QtiCatalogReference {
   source?: QtiSourceLocation | undefined;
 }
 
+export interface QtiStylesheet {
+  href: string;
+  type?: string | undefined;
+  media?: string | undefined;
+  title?: string | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
 export interface QtiAssessmentItem {
   identifier: string;
   title?: string | undefined;
@@ -315,6 +324,7 @@ export interface QtiAssessmentItem {
   modalFeedback: QtiModalFeedback[];
   catalogInfo?: QtiCatalogInfo | undefined;
   catalogReferences: QtiCatalogReference[];
+  stylesheets: QtiStylesheet[];
   body: QtiContentNode[];
   bodyText: string;
   source?: QtiSourceLocation | undefined;
