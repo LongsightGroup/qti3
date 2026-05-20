@@ -235,6 +235,14 @@ function defaultResponse(interactionType: QtiInteractionType): {
       correct: "10 10 90 90",
     };
   }
+  if (interactionType === "textEntry") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "single",
+      baseType: "string",
+      correct: "SCORE",
+    };
+  }
   return { identifier: "RESPONSE", cardinality: "single", baseType: "string", correct: "A" };
 }
 
@@ -252,7 +260,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE" expected-lines="4"><qti-prompt>Explain why a QTI item player should keep response capture separate from scoring and analytics.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "textEntry") {
-    return `<p>Type the one-letter code used in these fixtures for the correct response: <${qtiName} response-identifier="RESPONSE" expected-length="10"/>.</p>`;
+    return `<p>Response processing stores the final numeric result in the outcome named <${qtiName} response-identifier="RESPONSE" expected-length="10"/>.</p>`;
   }
   if (interactionType === "order") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Put these QTI runtime steps in the usual player order.</qti-prompt><qti-simple-choice identifier="A">Load and parse the assessment item</qti-simple-choice><qti-simple-choice identifier="B">Capture the candidate response</qti-simple-choice><qti-simple-choice identifier="C">Apply response processing to produce outcomes</qti-simple-choice></${qtiName}>`;
