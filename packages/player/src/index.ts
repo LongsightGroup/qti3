@@ -270,6 +270,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
+    if (interaction.type === "match") {
+      field.append(renderMatchResponse(interaction, update, currentValue));
+      return field;
+    }
+
     if (usesPairResponse(interaction)) {
       field.append(renderPairResponse(interaction, update, currentValue));
       return field;
@@ -1167,6 +1172,122 @@ function renderPairResponse(
   selector.append(sourceRegion, targetRegion);
   renderPairs();
   group.append(selector, pairList);
+  return group;
+}
+
+function renderMatchResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = "Match rows";
+  group.append(legend);
+
+  const sources = sourceChoices(interaction);
+  const targets = targetChoices(interaction);
+  const selectedPairs: string[] = valueToStrings(currentValue);
+  const grid = document.createElement("div");
+  grid.className = "qti3-match-grid";
+  grid.role = "group";
+  grid.setAttribute("aria-label", "Match rows");
+  const pairList = document.createElement("ul");
+  pairList.className = "qti3-pair-list";
+  pairList.setAttribute("aria-label", "Match selected pairs");
+
+  const commit = () => {
+    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
+    else update([...selectedPairs]);
+  };
+  const syncPressed = () => {
+    for (const button of grid.querySelectorAll<HTMLButtonElement>(".qti3-match-target")) {
+      const pair = `${button.dataset.sourceIdentifier} ${button.dataset.choiceIdentifier}`;
+      button.setAttribute("aria-pressed", selectedPairs.includes(pair) ? "true" : "false");
+    }
+  };
+  const removePair = (pair: string) => {
+    const index = selectedPairs.indexOf(pair);
+    if (index >= 0) selectedPairs.splice(index, 1);
+  };
+  const renderPairs = () => {
+    pairList.replaceChildren(
+      ...selectedPairs.map((pair) => {
+        const [source, target] = pair.split(" ");
+        const label = `${choiceText(sources, source)} to ${choiceText(targets, target)}`;
+        const item = document.createElement("li");
+        item.className = "qti3-pair-chip";
+        const text = document.createElement("span");
+        text.textContent = label;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", `Remove ${label}`);
+        remove.addEventListener("click", () => {
+          removePair(pair);
+          syncPressed();
+          renderPairs();
+          commit();
+        });
+        item.append(text, remove);
+        return item;
+      }),
+    );
+  };
+  const togglePair = (source: QtiChoice, target: QtiChoice) => {
+    const pair = `${source.identifier} ${target.identifier}`;
+    if (selectedPairs.includes(pair)) {
+      removePair(pair);
+    } else {
+      if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
+        const existingSourcePairs = selectedPairs.filter((existing) =>
+          existing.startsWith(`${source.identifier} `),
+        );
+        for (const existing of existingSourcePairs) removePair(existing);
+      }
+      if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
+        const existingTargetPairs = selectedPairs.filter((existing) =>
+          existing.endsWith(` ${target.identifier}`),
+        );
+        for (const existing of existingTargetPairs) removePair(existing);
+      }
+      selectedPairs.push(pair);
+    }
+    syncPressed();
+    renderPairs();
+    commit();
+  };
+
+  for (const source of sources) {
+    const row = document.createElement("div");
+    row.className = "qti3-match-row";
+    row.dataset.sourceIdentifier = source.identifier;
+
+    const sourceLabel = document.createElement("span");
+    sourceLabel.className = "qti3-match-source";
+    sourceLabel.textContent = source.text;
+
+    const targetRegion = document.createElement("div");
+    targetRegion.className = "qti3-match-targets";
+    targetRegion.role = "group";
+    targetRegion.setAttribute("aria-label", `Targets for ${source.text}`);
+
+    for (const target of targets) {
+      const button = tokenButton(target);
+      button.classList.add("qti3-match-target");
+      button.dataset.sourceIdentifier = source.identifier;
+      button.setAttribute("aria-label", `${source.text}: ${target.text}`);
+      button.addEventListener("click", () => togglePair(source, target));
+      targetRegion.append(button);
+    }
+
+    row.append(sourceLabel, targetRegion);
+    grid.append(row);
+  }
+
+  syncPressed();
+  renderPairs();
+  group.append(grid, pairList);
   return group;
 }
 
@@ -3246,6 +3367,55 @@ function playerStyleElement(): HTMLStyleElement {
       gap: 0.75rem;
       grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
       align-items: start;
+    }
+
+    .qti3-match-grid {
+      display: grid;
+      gap: 0.5rem;
+      inline-size: 100%;
+      max-inline-size: 72rem;
+      box-sizing: border-box;
+    }
+
+    .qti3-match-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.75rem;
+      align-items: start;
+      inline-size: 100%;
+      min-inline-size: 0;
+      box-sizing: border-box;
+      padding-block: 0.5rem;
+      border-block-end: 1px solid CanvasText;
+    }
+
+    .qti3-match-source {
+      font-weight: 700;
+    }
+
+    .qti3-match-targets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      inline-size: 100%;
+      min-inline-size: 0;
+      box-sizing: border-box;
+    }
+
+    .qti3-match-target {
+      flex: 1 1 12rem;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      box-sizing: border-box;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      text-align: start;
+    }
+
+    @media (min-width: 768px) {
+      .qti3-match-row {
+        grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+      }
     }
 
     .qti3-region-label {

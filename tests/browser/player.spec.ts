@@ -1674,7 +1674,12 @@ test.describe("manual harness", () => {
     await page.goto("/");
 
     await loadFixture(page, "match");
-    await addPair(page, "Match", "A", "G1");
+    await expect(page.locator("qti-assessment-item-player .qti3-match-grid")).toBeVisible();
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-selector")).toHaveCount(0);
+    await expect(
+      page.locator('qti-assessment-item-player .qti3-match-row[data-source-identifier="A"]'),
+    ).toContainText("Response declaration");
+    await assignMatch(page, "A", "G1");
     await expectResponse(page, ["A G1"]);
   });
 
@@ -2265,22 +2270,6 @@ async function expectImageLoaded(locator: import("@playwright/test").Locator): P
     .toBe(true);
 }
 
-async function addPair(
-  page: import("@playwright/test").Page,
-  interactionLabel: string,
-  source: string,
-  target: string,
-): Promise<void> {
-  const sourceRegion = page.locator(
-    `qti-assessment-item-player [aria-label="${interactionLabel} sources"]`,
-  );
-  const targetRegion = page.locator(
-    `qti-assessment-item-player [aria-label="${interactionLabel} targets"]`,
-  );
-  await clickTokenInRegion(sourceRegion, source);
-  await clickTokenInRegion(targetRegion, target);
-}
-
 async function assignGap(
   page: import("@playwright/test").Page,
   interactionLabel: string,
@@ -2300,6 +2289,19 @@ async function assignGap(
     .locator(`qti-assessment-item-player [data-gap-identifier="${gapIdentifier}"]`)
     .getByRole("button")
     .first()
+    .click();
+}
+
+async function assignMatch(
+  page: import("@playwright/test").Page,
+  sourceIdentifier: string,
+  targetIdentifier: string,
+): Promise<void> {
+  await page
+    .locator(
+      `qti-assessment-item-player .qti3-match-row[data-source-identifier="${sourceIdentifier}"]`,
+    )
+    .locator(`[data-choice-identifier="${targetIdentifier}"]`)
     .click();
 }
 
@@ -2435,6 +2437,14 @@ async function provideResponse(
         source,
         target,
       );
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "match") {
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await assignMatch(page, source, target);
     }
     return;
   }
