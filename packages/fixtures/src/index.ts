@@ -113,6 +113,14 @@ function defaultResponse(interactionType: QtiInteractionType): {
   if (interactionType === "positionObject") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "point", correct: "10 10" };
   }
+  if (interactionType === "upload") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "single",
+      baseType: "file",
+      correct: "upload.txt",
+    };
+  }
   return { identifier: "RESPONSE", cardinality: "single", baseType: "string", correct: "A" };
 }
 

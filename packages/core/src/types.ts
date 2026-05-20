@@ -86,6 +86,8 @@ export interface QtiInteraction {
   type: QtiInteractionType;
   qtiName: string;
   responseIdentifier?: string | undefined;
+  responseCardinality?: QtiCardinality | undefined;
+  responseBaseType?: QtiBaseType | undefined;
   prompt?: string | undefined;
   choices: QtiChoice[];
   attributes: Record<string, string>;

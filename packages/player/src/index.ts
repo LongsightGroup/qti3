@@ -19,8 +19,6 @@ const HTMLElementBase: typeof HTMLElement =
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
-  private readonly responseControls = new Map<string, HTMLElement[]>();
-
   async loadXml(xml: string): Promise<void> {
     const result = parseQtiXml(xml);
     this.dispatchEvent(
@@ -53,7 +51,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     const documentModel = this.documentModel;
     if (!documentModel) return;
 
-    this.responseControls.clear();
     const root = document.createElement("article");
     root.className = "qti3-player";
     root.setAttribute("aria-labelledby", "qti3-item-title");
@@ -102,7 +99,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       );
     };
 
-    if (interaction.type === "choice" || interaction.type === "hottext") {
+    if (usesChoiceSet(interaction)) {
       field.append(renderChoice(interaction, update));
       return field;
     }
@@ -129,8 +126,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       interaction.type === "selectPoint"
     ) {
       const input = document.createElement("input");
+      input.value = interaction.responseBaseType === "point" ? "10 10" : "";
       input.setAttribute("aria-label", heading.textContent ?? "Response");
       input.addEventListener("input", () => update(input.value));
+      input.addEventListener("change", () => update(input.value));
       field.append(input);
       return field;
     }
@@ -141,6 +140,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       input.min = interaction.attributes["lower-bound"] ?? "0";
       input.max = interaction.attributes["upper-bound"] ?? "100";
       input.step = interaction.attributes.step ?? "1";
+      input.value = interaction.attributes["lower-bound"] ?? "0";
       input.setAttribute("aria-label", heading.textContent ?? "Slider response");
       input.addEventListener("input", () => update(input.value));
       field.append(input);
@@ -197,7 +197,8 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
   legend.textContent = readableType(interaction.type);
   group.append(legend);
 
-  const multiple = interaction.attributes["max-choices"] !== "1";
+  const multiple =
+    interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
   const selected = new Set<string>();
   for (const choice of choicesOrFallback(interaction)) {
     const label = document.createElement("label");
@@ -218,6 +219,27 @@ function renderChoice(interaction: QtiInteraction, update: (value: QtiValue) => 
     group.append(label);
   }
   return group;
+}
+
+function usesChoiceSet(interaction: QtiInteraction): boolean {
+  if (
+    interaction.type === "choice" ||
+    interaction.type === "hottext" ||
+    interaction.type === "hotspot"
+  ) {
+    return true;
+  }
+  return (
+    interaction.responseCardinality === "multiple" ||
+    interaction.responseCardinality === "ordered" ||
+    interaction.type === "associate" ||
+    interaction.type === "match" ||
+    interaction.type === "gapMatch" ||
+    interaction.type === "graphicAssociate" ||
+    interaction.type === "graphicGapMatch" ||
+    interaction.type === "graphicOrder" ||
+    interaction.type === "order"
+  );
 }
 
 function renderSelect(interaction: QtiInteraction, update: (value: QtiValue) => void): HTMLElement {

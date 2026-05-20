@@ -58,11 +58,14 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const responseDeclarations = childElements(node, "qti-response-declaration").map(
     parseResponseDeclaration,
   );
+  const responseDeclarationMap = new Map(
+    responseDeclarations.map((declaration) => [declaration.identifier, declaration]),
+  );
   const outcomeDeclarations = childElements(node, "qti-outcome-declaration").map(
     parseOutcomeDeclaration,
   );
   const interactions = descendants(node, (child) => interactionNameToType.has(child.localName)).map(
-    (interactionNode) => parseInteraction(interactionNode, diagnostics),
+    (interactionNode) => parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
   );
 
   for (const interaction of interactions) {
@@ -115,8 +118,16 @@ function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
   };
 }
 
-function parseInteraction(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiInteraction {
+function parseInteraction(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+  responseDeclarationMap: Map<string, QtiResponseDeclaration>,
+): QtiInteraction {
   const interactionType = interactionNameToType.get(node.localName);
+  const responseIdentifier = node.attributes["response-identifier"];
+  const responseDeclaration = responseIdentifier
+    ? responseDeclarationMap.get(responseIdentifier)
+    : undefined;
   if (!interactionType) {
     diagnostics.push({
       code: "interaction.unsupported",
@@ -128,7 +139,9 @@ function parseInteraction(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiInter
   return {
     type: interactionType ?? "custom",
     qtiName: node.localName,
-    responseIdentifier: node.attributes["response-identifier"],
+    responseIdentifier,
+    responseCardinality: responseDeclaration?.cardinality,
+    responseBaseType: responseDeclaration?.baseType,
     prompt: textContent(childElements(node, "qti-prompt")[0] ?? node),
     choices: parseChoices(node),
     attributes: node.attributes,

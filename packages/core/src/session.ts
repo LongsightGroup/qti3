@@ -76,9 +76,16 @@ function scoreMapping(response: QtiValue, mapping: Record<string, number>): numb
 
 function valuesEqual(actual: QtiValue, expected: QtiValue): boolean {
   if (Array.isArray(actual) || Array.isArray(expected)) {
-    if (!Array.isArray(actual) || !Array.isArray(expected)) return false;
-    if (actual.length !== expected.length) return false;
-    return [...actual].sort().every((value, index) => value === [...expected].sort()[index]);
+    const actualValues = Array.isArray(actual) ? actual : actual === null ? [] : [String(actual)];
+    const expectedValues = Array.isArray(expected)
+      ? expected
+      : expected === null
+        ? []
+        : [String(expected)];
+    if (actualValues.length !== expectedValues.length) return false;
+    return [...actualValues]
+      .sort()
+      .every((value, index) => value === [...expectedValues].sort()[index]);
   }
   return actual === expected;
 }

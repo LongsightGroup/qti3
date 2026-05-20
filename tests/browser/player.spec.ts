@@ -39,6 +39,33 @@ test.describe("manual harness", () => {
     await page.getByRole("button", { name: "Score" }).click();
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
   });
+
+  test("captures and scores every reference interaction fixture", async ({ page }) => {
+    await page.goto("/");
+
+    for (const fixture of interactionFixtures) {
+      await page.locator("#fixture").selectOption(fixture.id);
+      await page.locator("#load-fixture").click();
+
+      const attempt = fixture.attempts[0];
+      if (!attempt) throw new Error(`Missing attempt for ${fixture.id}.`);
+
+      const response = attempt.responses.RESPONSE;
+      if (response !== undefined) {
+        await provideResponse(page, fixture.interactionType, response);
+      }
+
+      await page.getByRole("button", { name: "Score" }).click();
+      const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+        return element.serialize();
+      });
+
+      expect(state.schema, fixture.id).toBe("qti3.attempt-state.v1");
+      for (const [identifier, expected] of Object.entries(attempt.expectedOutcomes)) {
+        expect(state.outcomes[identifier], `${fixture.id} ${identifier}`).toEqual(expected);
+      }
+    }
+  });
 });
 
 declare global {
@@ -46,5 +73,62 @@ declare global {
     axe: {
       run: (context: Element | null) => Promise<{ violations: unknown[] }>;
     };
+  }
+}
+
+async function provideResponse(
+  page: import("@playwright/test").Page,
+  interactionType: string,
+  response: unknown,
+): Promise<void> {
+  if (interactionType === "slider") {
+    await page.locator('input[type="range"]').evaluate((element, value) => {
+      const input = element as HTMLInputElement;
+      input.value = String(value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }, response);
+    return;
+  }
+
+  if (interactionType === "upload") {
+    await page.locator('qti-assessment-item-player input[type="file"]').setInputFiles({
+      name: String(response),
+      mimeType: "text/plain",
+      buffer: Buffer.from("qti3 upload fixture"),
+    });
+    return;
+  }
+
+  const value = Array.isArray(response) ? String(response[0]) : String(response);
+  const checkbox = page.getByRole("checkbox", { name: value }).first();
+  if (await checkbox.isVisible().catch(() => false)) {
+    await checkbox.check();
+    return;
+  }
+
+  const radio = page.getByRole("radio", { name: value }).first();
+  if (await radio.isVisible().catch(() => false)) {
+    await radio.check();
+    return;
+  }
+
+  const select = page.locator("qti-assessment-item-player select").first();
+  if (await select.isVisible().catch(() => false)) {
+    await select.selectOption(value);
+    return;
+  }
+
+  const textarea = page.locator("qti-assessment-item-player textarea").first();
+  if (await textarea.isVisible().catch(() => false)) {
+    await textarea.fill(value);
+    return;
+  }
+
+  const input = page
+    .locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])')
+    .first();
+  if (await input.isVisible().catch(() => false)) {
+    await input.fill(value);
+    await input.dispatchEvent("change");
   }
 }
