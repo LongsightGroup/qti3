@@ -2,6 +2,7 @@ import type {
   QtiAssessmentItem,
   QtiBaseType,
   QtiCardinality,
+  QtiChoice,
   QtiDiagnostic,
   QtiDocument,
   QtiInteraction,
@@ -156,6 +157,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionChoices(interaction, diagnostics);
     validateInteractionChildren(interaction, diagnostics);
     validateInteractionRequiredAttributes(interaction, diagnostics);
+    validateInteractionLimitAttributes(interaction, diagnostics);
   }
 }
 
@@ -248,6 +250,10 @@ function validateInteractionChoices(
       path: interaction.source?.path,
       source: interaction.source,
     });
+  }
+
+  for (const choice of interaction.choices) {
+    validateChoiceLimitAttributes(choice, diagnostics);
   }
 }
 
@@ -386,6 +392,104 @@ function invalidNumber(
   });
 }
 
+function validateInteractionLimitAttributes(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateNonNegativeIntegerAttribute(interaction, "max-choices", diagnostics);
+  validateNonNegativeIntegerAttribute(interaction, "min-choices", diagnostics);
+  validateNonNegativeIntegerAttribute(interaction, "max-associations", diagnostics);
+  validateNonNegativeIntegerAttribute(interaction, "min-associations", diagnostics);
+  validateNonNegativeIntegerAttribute(interaction, "expected-length", diagnostics);
+  validateNonNegativeIntegerAttribute(interaction, "expected-lines", diagnostics);
+
+  validateMinMaxPair(interaction, "min-choices", "max-choices", diagnostics);
+  validateMinMaxPair(interaction, "min-associations", "max-associations", diagnostics);
+}
+
+function validateChoiceLimitAttributes(choice: QtiChoice, diagnostics: QtiDiagnostic[]): void {
+  if (requiresMatchMax(choice) && !choice.attributes["match-max"]) {
+    diagnostics.push({
+      code: "choice.matchMax.required",
+      severity: "error",
+      message: `${choice.qtiName} ${choice.identifier} requires match-max.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
+  }
+
+  validateChoiceNonNegativeIntegerAttribute(choice, "match-max", diagnostics);
+  validateChoiceNonNegativeIntegerAttribute(choice, "match-min", diagnostics);
+}
+
+function requiresMatchMax(choice: QtiChoice): boolean {
+  return (
+    choice.qtiName === "qti-simple-associable-choice" ||
+    choice.qtiName === "qti-associable-hotspot" ||
+    choice.qtiName === "qti-gap-text" ||
+    choice.qtiName === "qti-gap-img"
+  );
+}
+
+function validateNonNegativeIntegerAttribute(
+  interaction: QtiInteraction,
+  attribute: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const value = interaction.attributes[attribute];
+  if (value === undefined || isNonNegativeInteger(value)) return;
+  diagnostics.push({
+    code: "interaction.integerAttribute",
+    severity: "error",
+    message: `${interaction.qtiName} requires non-negative integer ${attribute}, got ${value}.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
+function validateChoiceNonNegativeIntegerAttribute(
+  choice: QtiChoice,
+  attribute: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const value = choice.attributes[attribute];
+  if (value === undefined || isNonNegativeInteger(value)) return;
+  diagnostics.push({
+    code: "choice.integerAttribute",
+    severity: "error",
+    message: `${choice.qtiName} ${choice.identifier} requires non-negative integer ${attribute}, got ${value}.`,
+    path: choice.source?.path,
+    source: choice.source,
+  });
+}
+
+function validateMinMaxPair(
+  interaction: QtiInteraction,
+  minAttribute: string,
+  maxAttribute: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const min = interaction.attributes[minAttribute];
+  const max = interaction.attributes[maxAttribute];
+  if (
+    min === undefined ||
+    max === undefined ||
+    !isNonNegativeInteger(min) ||
+    !isNonNegativeInteger(max) ||
+    max === "0"
+  ) {
+    return;
+  }
+  if (Number(min) <= Number(max)) return;
+  diagnostics.push({
+    code: "interaction.minMax",
+    severity: "error",
+    message: `${interaction.qtiName} requires ${minAttribute} to be less than or equal to ${maxAttribute}, unless ${maxAttribute} is 0 for unlimited.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
 function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | undefined {
   const common = ["qti-prompt"];
   switch (interaction.type) {
@@ -459,6 +563,10 @@ function isBaseType(value: string): value is QtiBaseType {
 
 function isFiniteNumber(value: string): boolean {
   return Number.isFinite(Number(value));
+}
+
+function isNonNegativeInteger(value: string): boolean {
+  return /^\d+$/.test(value);
 }
 
 function expectedResponseShape(

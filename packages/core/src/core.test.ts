@@ -595,6 +595,41 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("validates interaction and choice limit attributes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-limits">
+        <qti-response-declaration identifier="CHOICE" cardinality="multiple" base-type="identifier"/>
+        <qti-response-declaration identifier="ASSOCIATE" cardinality="multiple" base-type="pair"/>
+        <qti-response-declaration identifier="GAP" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="CHOICE" min-choices="3" max-choices="2">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-associate-interaction response-identifier="ASSOCIATE" min-associations="-1" max-associations="many">
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="C">C</qti-simple-associable-choice>
+            </qti-simple-match-set>
+          </qti-associate-interaction>
+          <qti-gap-match-interaction response-identifier="GAP">
+            <qti-gap-text identifier="D" match-max="none">D</qti-gap-text>
+            <p><qti-gap identifier="G1"/></p>
+          </qti-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.minMax" }),
+        expect.objectContaining({ code: "interaction.integerAttribute" }),
+        expect.objectContaining({ code: "choice.matchMax.required" }),
+        expect.objectContaining({ code: "choice.integerAttribute" }),
+      ]),
+    );
+  });
+
   it("keeps ordered cardinality order-sensitive", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order">
