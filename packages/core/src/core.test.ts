@@ -21,6 +21,7 @@ describe("@qti3/core", () => {
         "qti-match-interaction",
         "qti-media-interaction",
         "qti-order-interaction",
+        "qti-position-object-interaction",
         "qti-portable-custom-interaction",
         "qti-select-point-interaction",
         "qti-slider-interaction",

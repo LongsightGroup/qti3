@@ -110,6 +110,9 @@ function defaultResponse(interactionType: QtiInteractionType): {
   if (interactionType === "selectPoint" || interactionType === "hotspot") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "identifier", correct: "A" };
   }
+  if (interactionType === "positionObject") {
+    return { identifier: "RESPONSE", cardinality: "single", baseType: "point", correct: "10 10" };
+  }
   return { identifier: "RESPONSE", cardinality: "single", baseType: "string", correct: "A" };
 }
 
@@ -139,6 +142,9 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/></${qtiName}>`;
   }
   if (interactionType === "selectPoint") {
+    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/></${qtiName}>`;
+  }
+  if (interactionType === "positionObject") {
     return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/></${qtiName}>`;
   }
   if (interactionType === "upload") {

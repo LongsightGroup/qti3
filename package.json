@@ -10,6 +10,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:conformance": "vitest run packages/conformance",
+    "test:external": "vitest run packages/conformance/src/external-qti.test.ts",
     "test:a11y": "vitest run packages/a11y",
     "test:browser": "playwright test",
     "build": "tsc -b",

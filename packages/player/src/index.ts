@@ -124,7 +124,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       interaction.type === "textEntry" ||
       interaction.type === "custom" ||
       interaction.type === "portableCustom" ||
-      interaction.type === "drawing"
+      interaction.type === "drawing" ||
+      interaction.type === "positionObject" ||
+      interaction.type === "selectPoint"
     ) {
       const input = document.createElement("input");
       input.setAttribute("aria-label", heading.textContent ?? "Response");

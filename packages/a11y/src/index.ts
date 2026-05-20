@@ -24,6 +24,7 @@ export const a11yContracts: InteractionA11yContract[] = [
   "match",
   "media",
   "order",
+  "positionObject",
   "portableCustom",
   "selectPoint",
   "slider",

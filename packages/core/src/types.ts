@@ -75,6 +75,7 @@ export type QtiInteractionType =
   | "match"
   | "media"
   | "order"
+  | "positionObject"
   | "portableCustom"
   | "selectPoint"
   | "slider"

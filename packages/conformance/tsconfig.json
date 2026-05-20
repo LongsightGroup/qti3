@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "lib": ["ES2022"]
+    "lib": ["ES2022"],
+    "types": ["node"]
   },
   "references": [{ "path": "../core" }, { "path": "../fixtures" }],
   "include": ["src/**/*.ts"]

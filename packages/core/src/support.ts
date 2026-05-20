@@ -17,6 +17,7 @@ export const interactionSupport: QtiElementSupport[] = [
   entry("qti-match-interaction", "match"),
   entry("qti-media-interaction", "media"),
   entry("qti-order-interaction", "order"),
+  entry("qti-position-object-interaction", "positionObject"),
   entry("qti-portable-custom-interaction", "portableCustom"),
   entry("qti-select-point-interaction", "selectPoint"),
   entry("qti-slider-interaction", "slider"),

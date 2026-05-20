@@ -6,11 +6,12 @@ defineQtiAssessmentItemPlayer();
 const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
 const loadXml = document.querySelector<HTMLButtonElement>("#load-xml");
+const fileInput = document.querySelector<HTMLInputElement>("#file");
 const xmlInput = document.querySelector<HTMLTextAreaElement>("#xml");
 const events = document.querySelector<HTMLPreElement>("#events");
 const player = document.querySelector("qti-assessment-item-player");
 
-if (!fixtureSelect || !loadFixture || !loadXml || !xmlInput || !events || !player) {
+if (!fixtureSelect || !loadFixture || !loadXml || !fileInput || !xmlInput || !events || !player) {
   throw new Error("Manual harness failed to initialize.");
 }
 
@@ -31,6 +32,14 @@ loadFixture.addEventListener("click", async () => {
 
 loadXml.addEventListener("click", async () => {
   await player.loadXml(xmlInput.value);
+});
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files?.[0];
+  if (!file) return;
+  const xml = await file.text();
+  xmlInput.value = xml;
+  await player.loadXml(xml);
 });
 
 for (const eventName of [
