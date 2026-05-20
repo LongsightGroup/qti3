@@ -650,6 +650,36 @@ test.describe("manual harness", () => {
     await expectResponse(page, "A");
   });
 
+  test("exposes accessible names for every operable fixture control", async ({ page }) => {
+    await page.goto("/");
+
+    for (const fixture of interactionFixtures) {
+      await page.locator("#fixture").selectOption(fixture.id);
+      await page.locator("#load-fixture").click();
+
+      const controls = page
+        .locator("qti-assessment-item-player")
+        .locator(
+          [
+            "button",
+            "input",
+            "select",
+            "textarea",
+            '[role="button"]',
+            '[role="slider"]',
+            '[tabindex]:not([tabindex="-1"])',
+          ].join(", "),
+        );
+      const count = await controls.count();
+      expect(count, fixture.id).toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        const control = controls.nth(index);
+        if (!(await control.isVisible())) continue;
+        await expect(control, `${fixture.id} control ${index}`).toHaveAccessibleName(/.+/);
+      }
+    }
+  });
+
   test("shows extended text word and character feedback", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "extendedText");
