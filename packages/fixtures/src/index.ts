@@ -190,7 +190,15 @@ function defaultResponse(interactionType: QtiInteractionType): {
       correct: ["A", "B", "C"],
     };
   }
-  if (interactionType === "associate" || interactionType === "graphicAssociate") {
+  if (interactionType === "associate") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "multiple",
+      baseType: "pair",
+      correct: ["A B"],
+    };
+  }
+  if (interactionType === "graphicAssociate") {
     return {
       identifier: "RESPONSE",
       cardinality: "multiple",
@@ -299,7 +307,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     if (interactionType === "match") {
       return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Match each QTI declaration with the thing it stores.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Outcome declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Template declaration</qti-simple-associable-choice></qti-simple-match-set><qti-simple-match-set><qti-simple-associable-choice identifier="G1" match-max="1">Candidate response value</qti-simple-associable-choice><qti-simple-associable-choice identifier="G2" match-max="1">Derived outcome or feedback state</qti-simple-associable-choice><qti-simple-associable-choice identifier="G3" match-max="1">Pre-delivery variable value</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
     }
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Associate the QTI concepts that are often implemented together.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Interaction</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Response processing</qti-simple-associable-choice><qti-simple-associable-choice identifier="D" match-max="1">Outcome declaration</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the two QTI concepts that belong together.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Interaction</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Outcome declaration</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
   }
   if (interactionType === "graphicGapMatch") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the diagram labels for a QTI item lifecycle.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>The interaction writes to a <qti-gap identifier="G1"/> and scoring writes to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
