@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# Package manager state
+.pnpm-store/
+
+# Build outputs
+dist/
+dist-*/
+build/
+out/
+lib/
+coverage/
+.nyc_output/
+
+# Vite / Vitest
+.vite/
+.vitest/
+vitest.workspace.tmp.*
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime / cache
+.cache/
+.parcel-cache/
+.rollup.cache/
+.eslintcache
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Local config
+*.local
+*.local.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Release artifacts
+*.tgz
+*.tar.gz
+
