@@ -212,12 +212,21 @@ describe("@qti3/core", () => {
           <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value></qti-correct-response>
         </qti-response-declaration>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="LIST" cardinality="ordered" base-type="identifier"/>
         <qti-item-body>
           <qti-order-interaction response-identifier="ORDER">
             <qti-simple-choice identifier="A">A</qti-simple-choice>
             <qti-simple-choice identifier="B">B</qti-simple-choice>
           </qti-order-interaction>
         </qti-item-body>
+        <qti-response-processing>
+          <qti-set-outcome-value identifier="LIST">
+            <qti-ordered>
+              <qti-base-value base-type="identifier">A</qti-base-value>
+              <qti-base-value base-type="identifier">B</qti-base-value>
+            </qti-ordered>
+          </qti-set-outcome-value>
+        </qti-response-processing>
       </qti-assessment-item>
     `);
 
@@ -236,6 +245,10 @@ describe("@qti3/core", () => {
     const restored = createItemSession(result.document!, priorState);
     (priorState.responses.ORDER as string[])[1] = "A";
     expect(restored.serialize().responses.ORDER).toEqual(["A", "B"]);
+
+    const scored = session.score();
+    (scored.outcomes.LIST as string[])[0] = "B";
+    expect(session.serialize().outcomes.LIST).toEqual(["A", "B"]);
   });
 
   it("preserves restored validation messages until the attempt changes", () => {

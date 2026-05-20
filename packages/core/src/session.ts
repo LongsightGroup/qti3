@@ -175,7 +175,7 @@ export function createItemSession(
         templateValues,
         diagnostics,
       );
-      return { outcomes: { ...outcomes }, diagnostics, state };
+      return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
     },
     serialize() {
       return serialize(
