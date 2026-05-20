@@ -2,15 +2,15 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gapMatch-reference" title="gapMatch-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
-        <qti-correct-response><qti-value>A G1</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value></qti-correct-response>
         
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for gapMatch-reference.</p>
-    <qti-gap-match-interaction response-identifier="RESPONSE"><qti-gap-text identifier="A" match-max="1">A</qti-gap-text><p><qti-gap identifier="G1"/></p></qti-gap-match-interaction>
+    <p>Reference item for gapMatch-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-gap-match-interaction response-identifier="RESPONSE"><qti-prompt>Complete the sentence about QTI runtime state.</qti-prompt><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>An interaction records the candidate answer in a <qti-gap identifier="G1"/>, while scoring writes SCORE to an <qti-gap identifier="G2"/>.</p></qti-gap-match-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

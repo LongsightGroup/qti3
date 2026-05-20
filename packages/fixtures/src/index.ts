@@ -95,7 +95,7 @@ function assessmentItem(
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for ${identifier}.</p>
+    <p>Reference item for ${identifier}: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
     ${interactionXml}
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/${response.baseType === "point" ? "map_response_point.xml" : "match_correct"}"/>
@@ -138,7 +138,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
       identifier: "RESPONSE",
       cardinality: "ordered",
       baseType: "identifier",
-      correct: ["A", "B"],
+      correct: ["A", "B", "C"],
     };
   }
   if (interactionType === "associate" || interactionType === "graphicAssociate") {
@@ -146,7 +146,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
       identifier: "RESPONSE",
       cardinality: "multiple",
       baseType: "pair",
-      correct: ["A B"],
+      correct: ["A B", "C D"],
     };
   }
   if (
@@ -158,7 +158,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
       identifier: "RESPONSE",
       cardinality: "multiple",
       baseType: "directedPair",
-      correct: ["A G1"],
+      correct: ["A G1", "B G2"],
     };
   }
   if (interactionType === "slider") {
@@ -197,60 +197,63 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} autostart="false"><object data="media.mp3" type="audio/mpeg"/></${qtiName}>`;
   }
   if (interactionType === "slider") {
-    return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"/>`;
+    return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the approximate percentage of runtime behavior that QTI response processing should own in a portable item player.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "extendedText") {
-    return `<${qtiName} response-identifier="RESPONSE" expected-lines="4"><qti-prompt>Write A.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" expected-lines="4"><qti-prompt>Explain why a QTI item player should keep response capture separate from scoring and analytics.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "textEntry") {
-    return `<p>Type <${qtiName} response-identifier="RESPONSE" expected-length="10"/>.</p>`;
+    return `<p>Type the one-letter code used in these fixtures for the correct response: <${qtiName} response-identifier="RESPONSE" expected-length="10"/>.</p>`;
   }
   if (interactionType === "inlineChoice") {
-    return `<p>Choose <${qtiName} response-identifier="RESPONSE"><qti-inline-choice identifier="A">A</qti-inline-choice><qti-inline-choice identifier="B">B</qti-inline-choice></${qtiName}>.</p>`;
+    return `<p>In QTI 3.0, candidate responses are declared with <${qtiName} response-identifier="RESPONSE"><qti-inline-choice identifier="A">qti-response-declaration</qti-inline-choice><qti-inline-choice identifier="B">qti-outcome-declaration</qti-inline-choice><qti-inline-choice identifier="C">qti-template-declaration</qti-inline-choice></${qtiName}>.</p>`;
+  }
+  if (interactionType === "order") {
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Put these QTI runtime steps in the usual player order.</qti-prompt><qti-simple-choice identifier="A">Load and parse the assessment item</qti-simple-choice><qti-simple-choice identifier="B">Capture the candidate response</qti-simple-choice><qti-simple-choice identifier="C">Apply response processing to produce outcomes</qti-simple-choice></${qtiName}>`;
   }
   if (interactionType === "hottext") {
-    return `<${qtiName} response-identifier="RESPONSE"><p><qti-hottext identifier="A">A</qti-hottext> <qti-hottext identifier="B">B</qti-hottext></p></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the phrase that names the QTI construct for storing a candidate answer.</qti-prompt><p>A <qti-hottext identifier="A">response declaration</qti-hottext> defines the variable used by an interaction. An <qti-hottext identifier="B">outcome declaration</qti-hottext> stores derived results such as SCORE. A <qti-hottext identifier="C">template declaration</qti-hottext> supports item variability before delivery.</p></${qtiName}>`;
   }
   if (interactionType === "hotspot") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the region representing response capture in the delivery flow.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,40"/><qti-hotspot-choice identifier="B" shape="rect" coords="55,0,105,40"/><qti-hotspot-choice identifier="C" shape="rect" coords="110,0,158,40"/></${qtiName}>`;
   }
   if (interactionType === "graphicOrder") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/><qti-hotspot-choice identifier="B" shape="rect" coords="60,0,110,50"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,40"/><qti-hotspot-choice identifier="B" shape="rect" coords="55,0,105,40"/><qti-hotspot-choice identifier="C" shape="rect" coords="110,0,158,40"/></${qtiName}>`;
   }
   if (interactionType === "graphicAssociate") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,50" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="60,0,110,50" match-max="1"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,40" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="55,0,105,40" match-max="1"/><qti-associable-hotspot identifier="C" shape="rect" coords="0,60,50,110" match-max="1"/><qti-associable-hotspot identifier="D" shape="rect" coords="55,60,105,110" match-max="1"/></${qtiName}>`;
   }
   if (interactionType === "selectPoint") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
   }
   if (interactionType === "positionObject") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Position the marker on the response-processing boundary.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/></${qtiName}>`;
   }
   if (interactionType === "upload") {
-    return `<${qtiName} response-identifier="RESPONSE"/>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a short implementation note describing how your item player records response state.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "drawing") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Draw a diagonal line.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Draw a simple line connecting response capture to scoring.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "portableCustom") {
-    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Enter A.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom contract to return the fixture response value A.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "custom") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter A.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter the response value A.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "match" || interactionType === "associate") {
     if (interactionType === "match") {
-      return `<${qtiName} response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set><qti-simple-match-set><qti-simple-associable-choice identifier="G1" match-max="1">Target 1</qti-simple-associable-choice><qti-simple-associable-choice identifier="G2" match-max="1">Target 2</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
+      return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Match each QTI declaration with the thing it stores.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Outcome declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Template declaration</qti-simple-associable-choice></qti-simple-match-set><qti-simple-match-set><qti-simple-associable-choice identifier="G1" match-max="1">Candidate response value</qti-simple-associable-choice><qti-simple-associable-choice identifier="G2" match-max="1">Derived outcome or feedback state</qti-simple-associable-choice><qti-simple-associable-choice identifier="G3" match-max="1">Pre-delivery variable value</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
     }
-    return `<${qtiName} response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Associate the QTI concepts that are often implemented together.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Interaction</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Response processing</qti-simple-associable-choice><qti-simple-associable-choice identifier="D" match-max="1">Outcome declaration</qti-simple-associable-choice></qti-simple-match-set></${qtiName}>`;
   }
   if (interactionType === "graphicGapMatch") {
-    return `<${qtiName} response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-gap-text identifier="A" match-max="1">A</qti-gap-text><p><qti-gap identifier="G1"/></p></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the diagram labels for a QTI item lifecycle.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>The interaction writes to a <qti-gap identifier="G1"/> and scoring writes to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
   }
   if (interactionType === "gapMatch") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-gap-text identifier="A" match-max="1">A</qti-gap-text><p><qti-gap identifier="G1"/></p></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the sentence about QTI runtime state.</qti-prompt><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>An interaction records the candidate answer in a <qti-gap identifier="G1"/>, while scoring writes SCORE to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
   }
-  return `<${qtiName} response-identifier="RESPONSE"><qti-simple-choice identifier="A">A</qti-simple-choice><qti-simple-choice identifier="B">B</qti-simple-choice></${qtiName}>`;
+  return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Which QTI element declares the variable that stores a candidate response?</qti-prompt><qti-simple-choice identifier="A">qti-response-declaration</qti-simple-choice><qti-simple-choice identifier="B">qti-outcome-declaration</qti-simple-choice><qti-simple-choice identifier="C">qti-template-declaration</qti-simple-choice><qti-simple-choice identifier="D">qti-rubric-block</qti-simple-choice></${qtiName}>`;
 }
 
 function escapeXml(value: string): string {

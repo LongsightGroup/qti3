@@ -2,15 +2,15 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphicAssociate-reference" title="graphicAssociate-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
-        <qti-correct-response><qti-value>A B</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>A B</qti-value><qti-value>C D</qti-value></qti-correct-response>
         
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for graphicAssociate-reference.</p>
-    <qti-graphic-associate-interaction response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,50" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="60,0,110,50" match-max="1"/></qti-graphic-associate-interaction>
+    <p>Reference item for graphicAssociate-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-graphic-associate-interaction response-identifier="RESPONSE"><qti-prompt>Associate each highlighted delivery-region role with its paired region.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-associable-hotspot identifier="A" shape="rect" coords="0,0,50,40" match-max="1"/><qti-associable-hotspot identifier="B" shape="rect" coords="55,0,105,40" match-max="1"/><qti-associable-hotspot identifier="C" shape="rect" coords="0,60,50,110" match-max="1"/><qti-associable-hotspot identifier="D" shape="rect" coords="55,60,105,110" match-max="1"/></qti-graphic-associate-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

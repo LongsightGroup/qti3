@@ -2,15 +2,15 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="associate-reference" title="associate-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
-        <qti-correct-response><qti-value>A B</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>A B</qti-value><qti-value>C D</qti-value></qti-correct-response>
         
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for associate-reference.</p>
-    <qti-associate-interaction response-identifier="RESPONSE"><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set></qti-associate-interaction>
+    <p>Reference item for associate-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-associate-interaction response-identifier="RESPONSE"><qti-prompt>Associate the QTI concepts that are often implemented together.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Interaction</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Response declaration</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Response processing</qti-simple-associable-choice><qti-simple-associable-choice identifier="D" match-max="1">Outcome declaration</qti-simple-associable-choice></qti-simple-match-set></qti-associate-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

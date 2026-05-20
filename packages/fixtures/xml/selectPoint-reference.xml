@@ -9,8 +9,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for selectPoint-reference.</p>
-    <qti-select-point-interaction response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/></qti-select-point-interaction>
+    <p>Reference item for selectPoint-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-select-point-interaction response-identifier="RESPONSE"><qti-prompt>Select the point where the candidate response enters the player pipeline.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/></qti-select-point-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml"/>
 </qti-assessment-item>

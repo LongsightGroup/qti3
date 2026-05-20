@@ -9,8 +9,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for hottext-reference.</p>
-    <qti-hottext-interaction response-identifier="RESPONSE"><p><qti-hottext identifier="A">A</qti-hottext> <qti-hottext identifier="B">B</qti-hottext></p></qti-hottext-interaction>
+    <p>Reference item for hottext-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-hottext-interaction response-identifier="RESPONSE"><qti-prompt>Select the phrase that names the QTI construct for storing a candidate answer.</qti-prompt><p>A <qti-hottext identifier="A">response declaration</qti-hottext> defines the variable used by an interaction. An <qti-hottext identifier="B">outcome declaration</qti-hottext> stores derived results such as SCORE. A <qti-hottext identifier="C">template declaration</qti-hottext> supports item variability before delivery.</p></qti-hottext-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

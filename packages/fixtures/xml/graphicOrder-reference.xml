@@ -2,15 +2,15 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphicOrder-reference" title="graphicOrder-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
-        <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response>
         
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for graphicOrder-reference.</p>
-    <qti-graphic-order-interaction response-identifier="RESPONSE"><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,50"/><qti-hotspot-choice identifier="B" shape="rect" coords="60,0,110,50"/></qti-graphic-order-interaction>
+    <p>Reference item for graphicOrder-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-graphic-order-interaction response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="image.png" type="image/png" width="160" height="120"/><qti-hotspot-choice identifier="A" shape="rect" coords="0,0,50,40"/><qti-hotspot-choice identifier="B" shape="rect" coords="55,0,105,40"/><qti-hotspot-choice identifier="C" shape="rect" coords="110,0,158,40"/></qti-graphic-order-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

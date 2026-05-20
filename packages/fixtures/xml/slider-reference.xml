@@ -9,8 +9,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for slider-reference.</p>
-    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"/>
+    <p>Reference item for slider-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the approximate percentage of runtime behavior that QTI response processing should own in a portable item player.</qti-prompt></qti-slider-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

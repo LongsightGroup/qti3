@@ -9,8 +9,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Reference item for drawing-reference.</p>
-    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Draw a diagonal line.</qti-prompt></qti-drawing-interaction>
+    <p>Reference item for drawing-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Draw a simple line connecting response capture to scoring.</qti-prompt></qti-drawing-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

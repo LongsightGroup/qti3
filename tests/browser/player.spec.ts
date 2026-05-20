@@ -35,8 +35,8 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await page.locator("#xml").fill(fixture.xml);
     await page.locator("#load-xml").click();
-    await page.getByRole("radio", { name: "A" }).check();
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
   });
 
@@ -46,7 +46,7 @@ test.describe("manual harness", () => {
       interactionFixtures[0];
     if (!fixture) throw new Error("Missing choice fixture.");
     const xml = fixture.xml.replace(
-      "<p>Reference item for choice-reference.</p>",
+      "<p>Reference item for choice-reference: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>",
       "<qti-prompt>Which president resigned after Watergate?</qti-prompt>",
     );
 
@@ -58,7 +58,7 @@ test.describe("manual harness", () => {
     await expect(player.locator(".qti3-item-prompt")).toHaveText(
       "Which president resigned after Watergate?",
     );
-    await expect(player.getByRole("radio", { name: "A" })).toBeVisible();
+    await expect(player.locator('[data-choice-identifier="A"] input[type="radio"]')).toBeVisible();
   });
 
   test("renders inline choice parent prose as the interaction label", async ({ page }) => {
@@ -66,8 +66,12 @@ test.describe("manual harness", () => {
     await loadFixture(page, "inlineChoice");
 
     const player = page.locator("qti-assessment-item-player");
-    await expect(player.locator(".qti3-inlineChoice h3")).toHaveText("Choose.");
-    await expect(player.getByLabel("Choose.")).toBeVisible();
+    await expect(player.locator(".qti3-inlineChoice h3")).toHaveText(
+      "In QTI 3.0, candidate responses are declared with.",
+    );
+    await expect(
+      player.getByLabel("In QTI 3.0, candidate responses are declared with."),
+    ).toBeVisible();
   });
 
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
@@ -110,7 +114,7 @@ test.describe("manual harness", () => {
     await page.locator("#xml").fill(xml);
     await page.locator("#load-xml").click();
     await page.getByRole("radio", { name: "A" }).check();
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
 
     const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
     await expect(feedback).toBeVisible();
@@ -173,7 +177,7 @@ test.describe("manual harness", () => {
     });
     expect(state.responses.RESPONSE).toEqual(["A G1", "B G2"]);
 
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     const scored = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -199,7 +203,7 @@ test.describe("manual harness", () => {
     });
     await expectResponse(page, "A");
 
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -229,7 +233,7 @@ test.describe("manual harness", () => {
     });
     expect(loadedState.status).toBe("interacting");
 
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     const scoredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -280,7 +284,7 @@ test.describe("manual harness", () => {
         await provideResponse(page, fixture.interactionType, response);
       }
 
-      await page.getByRole("button", { name: "Score" }).click();
+      await page.getByRole("button", { name: "Score", exact: true }).click();
       const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
         return element.serialize();
       });
@@ -303,7 +307,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await page.locator("#xml").fill(fixture.xml);
     await page.locator("#load-xml").click();
-    await page.getByRole("radio", { name: "A" }).check();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
 
     const answeredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -351,7 +355,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
 
     await loadFixture(page, "choice");
-    await page.getByRole("radio", { name: "A" }).focus();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').focus();
     await page.keyboard.press("Space");
     await expectResponse(page, "A");
     await expect(
@@ -412,12 +416,18 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "order");
 
-    await page.getByRole("button", { name: /B, position 2 of 2/ }).focus();
+    await page
+      .locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]')
+      .focus();
     await page.keyboard.press("ArrowUp");
-    await expectResponse(page, ["B", "A"]);
+    await expectResponse(page, ["B", "A", "C"]);
 
-    await page.getByRole("button", { name: "Move B down" }).click();
-    await expectResponse(page, ["A", "B"]);
+    await page
+      .locator(
+        'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] button[aria-label$=" down"]',
+      )
+      .click();
+    await expectResponse(page, ["A", "B", "C"]);
   });
 
   test("reorders graphic order interactions with pointer drag", async ({ page }) => {
@@ -437,7 +447,7 @@ test.describe("manual harness", () => {
     await page.mouse.down();
     await page.mouse.move(second.x + second.width / 2, second.y + second.height / 2);
     await page.mouse.up();
-    await expectResponse(page, ["B", "A"]);
+    await expectResponse(page, ["B", "A", "C"]);
   });
 
   test("creates and removes associate pairs with keyboard-accessible tokens", async ({ page }) => {
@@ -446,17 +456,17 @@ test.describe("manual harness", () => {
 
     await page
       .locator('qti-assessment-item-player [aria-label="Associate sources"]')
-      .getByRole("button", { name: "A" })
+      .locator('[data-choice-identifier="A"]')
       .focus();
     await page.keyboard.press("Enter");
     await page
       .locator('qti-assessment-item-player [aria-label="Associate targets"]')
-      .getByRole("button", { name: "B" })
+      .locator('[data-choice-identifier="B"]')
       .focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, ["A B"]);
 
-    await page.getByRole("button", { name: "Remove A to B" }).click();
+    await page.locator("qti-assessment-item-player .qti3-pair-list button").click();
     await expectResponse(page, []);
   });
 
@@ -464,7 +474,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
 
     await loadFixture(page, "match");
-    await addPair(page, "Match", "A", "Target 1");
+    await addPair(page, "Match", "A", "G1");
     await expectResponse(page, ["A G1"]);
 
     await loadFixture(page, "graphicAssociate");
@@ -508,7 +518,7 @@ test.describe("manual harness", () => {
       .click({ position: { x: 10, y: 10 } });
     await expectResponse(page, "10 10");
 
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -580,7 +590,7 @@ test.describe("manual harness", () => {
       "Selected A",
     );
 
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -613,9 +623,9 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await page.locator("#xml").fill(fixture.xml);
     await page.locator("#load-xml").click();
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
 
-    const radio = page.getByRole("radio", { name: "A" });
+    const radio = page.locator('qti-assessment-item-player [data-choice-identifier="A"] input');
     await expect(radio).toHaveAttribute("aria-invalid", "true");
     const describedBy = await radio.getAttribute("aria-describedby");
     expect(describedBy).toBeTruthy();
@@ -649,7 +659,7 @@ test.describe("manual harness", () => {
     await page.locator("#load-xml").click();
 
     await page.getByRole("checkbox", { name: "A" }).check();
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
     await expect(page.locator("#events")).toContainText("requires at least 2 responses");
     await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
 
@@ -658,7 +668,7 @@ test.describe("manual harness", () => {
       "aria-invalid",
       "true",
     );
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -686,7 +696,7 @@ test.describe("manual harness", () => {
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`);
     await page.locator("#load-xml").click();
-    await page.getByRole("button", { name: "Score" }).click();
+    await page.getByRole("button", { name: "Score", exact: true }).click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -706,7 +716,7 @@ test.describe("manual harness", () => {
     await loadFixture(page, "choice");
 
     await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
-    await page.getByRole("radio", { name: "A" }).check();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await expectResponse(page, "A");
 
     const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
@@ -772,14 +782,14 @@ async function addPair(
   source: string,
   target: string,
 ): Promise<void> {
-  await page
-    .locator(`qti-assessment-item-player [aria-label="${interactionLabel} sources"]`)
-    .getByRole("button", { name: source })
-    .click();
-  await page
-    .locator(`qti-assessment-item-player [aria-label="${interactionLabel} targets"]`)
-    .getByRole("button", { name: target })
-    .click();
+  const sourceRegion = page.locator(
+    `qti-assessment-item-player [aria-label="${interactionLabel} sources"]`,
+  );
+  const targetRegion = page.locator(
+    `qti-assessment-item-player [aria-label="${interactionLabel} targets"]`,
+  );
+  await clickTokenInRegion(sourceRegion, source);
+  await clickTokenInRegion(targetRegion, target);
 }
 
 async function assignGap(
@@ -811,6 +821,13 @@ async function clickToken(
 ): Promise<void> {
   if (!identifierOrName) return;
   const region = page.locator(`qti-assessment-item-player [aria-label$="${regionSuffix}"]`);
+  await clickTokenInRegion(region, identifierOrName);
+}
+
+async function clickTokenInRegion(
+  region: import("@playwright/test").Locator,
+  identifierOrName: string,
+): Promise<void> {
   const byIdentifier = region.locator(`[data-choice-identifier="${identifierOrName}"]`).first();
   if (await byIdentifier.isVisible().catch(() => false)) {
     await byIdentifier.click();
@@ -934,6 +951,14 @@ async function provideResponse(
   }
 
   const value = Array.isArray(response) ? String(response[0]) : String(response);
+  const choiceInput = page
+    .locator(`qti-assessment-item-player [data-choice-identifier="${value}"] input`)
+    .first();
+  if (await choiceInput.isVisible().catch(() => false)) {
+    await choiceInput.check();
+    return;
+  }
+
   const checkbox = page.getByRole("checkbox", { name: value }).first();
   if (await checkbox.isVisible().catch(() => false)) {
     await checkbox.check();
