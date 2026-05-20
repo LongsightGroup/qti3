@@ -87,6 +87,29 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("preserves authored gap match sentence segments", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-segments">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-gap-match-interaction response-identifier="RESPONSE">
+            <qti-prompt>Complete the sentence.</qti-prompt>
+            <qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text>
+            <p>An interaction writes to a <qti-gap identifier="G1"/>.</p>
+          </qti-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.gapMatchSegments).toEqual([
+      { kind: "text", text: "An interaction writes to a" },
+      expect.objectContaining({ kind: "gap", identifier: "G1" }),
+      { kind: "text", text: "." },
+      { kind: "text", text: " " },
+    ]);
+  });
+
   it("accepts qflowlearn package authoring variants used by presidents exports", () => {
     const image =
       "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnLz4=";

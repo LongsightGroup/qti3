@@ -190,6 +190,7 @@ export interface QtiInteraction {
   positionObjectStage?: QtiObjectAsset | undefined;
   choices: QtiChoice[];
   hottextSegments?: QtiHottextSegment[] | undefined;
+  gapMatchSegments?: QtiGapMatchSegment[] | undefined;
   childElements: QtiElementChild[];
   attributes: Record<string, string>;
   text: string;
@@ -207,6 +208,20 @@ export interface QtiHottextChoiceSegment {
   kind: "hottext";
   identifier: string;
   text: string;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export type QtiGapMatchSegment = QtiGapMatchTextSegment | QtiGapMatchGapSegment;
+
+export interface QtiGapMatchTextSegment {
+  kind: "text";
+  text: string;
+}
+
+export interface QtiGapMatchGapSegment {
+  kind: "gap";
+  identifier: string;
   attributes: Record<string, string>;
   source?: QtiSourceLocation | undefined;
 }

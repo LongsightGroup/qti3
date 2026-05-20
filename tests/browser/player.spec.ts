@@ -1392,6 +1392,20 @@ test.describe("manual harness", () => {
     await expectResponse(page, true);
   });
 
+  test("renders gap match gaps in the authored sentence", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "gapMatch");
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player).toContainText("An interaction records the candidate answer in a");
+    await expect(player).toContainText("while scoring writes SCORE to an");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("G1");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("G2");
+
+    await assignGap(page, "Gap match", "A", "G1");
+    await expectResponse(page, ["A G1"]);
+  });
+
   test("exposes accessible names for every operable fixture control", async ({ page }) => {
     await page.goto("/");
 
