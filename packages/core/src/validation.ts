@@ -135,6 +135,7 @@ function validateDeclarationValue(
 function declarationValueEntries(value: QtiValue): string[] {
   if (value === null) return [];
   if (Array.isArray(value)) return value.map(String);
+  if (typeof value === "object") return Object.values(value).flatMap(declarationValueEntries);
   return [String(value)];
 }
 
@@ -823,6 +824,15 @@ function validateExpressionReferences(
     validateInsideExpression(expression, diagnostics);
   }
 
+  if (expression.type === "fieldValue") {
+    validateProcessingIdentifier(
+      expression.fieldIdentifier,
+      "processing.fieldValue.fieldIdentifier",
+      expression.source,
+      diagnostics,
+    );
+  }
+
   for (const child of expressionChildren(expression)) {
     validateExpressionReferences(child, responses, variables, diagnostics);
   }
@@ -1186,6 +1196,7 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
     expression.type === "index" ||
     expression.type === "containerSize" ||
     expression.type === "patternMatch" ||
+    expression.type === "fieldValue" ||
     expression.type === "inside"
   ) {
     return [expression.expression];

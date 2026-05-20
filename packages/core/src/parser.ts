@@ -14,6 +14,7 @@ import type {
   QtiOutcomeDeclaration,
   QtiParseResult,
   QtiProcessingExpression,
+  QtiRecordValue,
   QtiResponseCondition,
   QtiResponseDeclaration,
   QtiResponseProcessing,
@@ -298,7 +299,19 @@ function matchSetIndex(node: XmlNode): number {
 
 function parseVariableValue(node: XmlNode | undefined): QtiValue {
   if (!node) return null;
-  const values = childElements(node, "qti-value").map((valueNode) => textContent(valueNode));
+  const valueNodes = childElements(node, "qti-value");
+  const recordEntries = valueNodes
+    .map((valueNode) => ({
+      fieldIdentifier: valueNode.attributes["field-identifier"],
+      value: coerceValue(textContent(valueNode), valueNode.attributes["base-type"]),
+    }))
+    .filter((entry): entry is { fieldIdentifier: string; value: QtiValue } =>
+      Boolean(entry.fieldIdentifier),
+    );
+  if (recordEntries.length > 0) {
+    return Object.fromEntries(recordEntries.map((entry) => [entry.fieldIdentifier, entry.value]));
+  }
+  const values = valueNodes.map((valueNode) => textContent(valueNode));
   if (values.length === 0) {
     const text = textContent(node);
     return text.length > 0 ? text : null;
@@ -929,6 +942,18 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     }
   }
 
+  if (node.localName === "qti-field-value") {
+    const expression = parseFirstExpression(node);
+    if (expression) {
+      return {
+        type: "fieldValue",
+        fieldIdentifier: node.attributes["field-identifier"] ?? "",
+        expression,
+        source: node.source,
+      };
+    }
+  }
+
   if (node.localName === "qti-member") {
     const [value, collection] = childElements(node)
       .map(parseExpression)
@@ -1050,9 +1075,14 @@ function normalizeValueForCardinality(value: QtiValue, cardinality: QtiCardinali
   if (
     (cardinality === "multiple" || cardinality === "ordered") &&
     value !== null &&
-    !Array.isArray(value)
+    !Array.isArray(value) &&
+    !isRecordValue(value)
   ) {
     return [value];
   }
   return value;
+}
+
+function isRecordValue(value: QtiValue): value is QtiRecordValue {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

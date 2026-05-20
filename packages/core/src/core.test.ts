@@ -2063,4 +2063,50 @@ describe("@qti3/core", () => {
     expect(score.outcomes.NONE_INSIDE).toBe(false);
     expect(score.outcomes.IN_POLY).toBe(true);
   });
+
+  it("evaluates field values from record variables", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="record-field-processing">
+        <qti-outcome-declaration identifier="RECORD" cardinality="record">
+          <qti-default-value>
+            <qti-value field-identifier="raw" base-type="integer">7</qti-value>
+            <qti-value field-identifier="label" base-type="string">Washington</qti-value>
+          </qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="RAW" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="LABEL" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="MISSING" cardinality="single" base-type="string"/>
+        <qti-item-body/>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="RAW">
+                <qti-field-value field-identifier="raw">
+                  <qti-variable identifier="RECORD"/>
+                </qti-field-value>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="LABEL">
+                <qti-field-value field-identifier="label">
+                  <qti-variable identifier="RECORD"/>
+                </qti-field-value>
+              </qti-set-outcome-value>
+              <qti-set-outcome-value identifier="MISSING">
+                <qti-field-value field-identifier="unknown">
+                  <qti-variable identifier="RECORD"/>
+                </qti-field-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const score = session.score();
+    expect(score.outcomes.RAW).toBe(7);
+    expect(score.outcomes.LABEL).toBe("Washington");
+    expect(score.outcomes.MISSING).toBeNull();
+  });
 });

@@ -6,6 +6,7 @@ import type {
   QtiDocument,
   QtiModalFeedback,
   QtiProcessingExpression,
+  QtiRecordValue,
   QtiResponseDeclaration,
   QtiResponseRule,
   QtiScalarValue,
@@ -992,6 +993,18 @@ function evaluateValue(
       return null;
     }
   }
+  if (expression.type === "fieldValue") {
+    const value = evaluateValue(
+      expression.expression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    return isRecordValue(value) ? (value[expression.fieldIdentifier] ?? null) : null;
+  }
   if (expression.type === "member") {
     const value = evaluateValue(
       expression.value,
@@ -1339,6 +1352,15 @@ function numericBound(value: string | undefined): number | undefined {
 }
 
 function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {
+  if (isRecordValue(actual) || isRecordValue(expected)) {
+    if (!isRecordValue(actual) || !isRecordValue(expected)) return false;
+    const actualKeys = Object.keys(actual).sort();
+    const expectedKeys = Object.keys(expected).sort();
+    return (
+      valuesEqual(actualKeys, expectedKeys, true) &&
+      actualKeys.every((key) => valuesEqual(actual[key] ?? null, expected[key] ?? null, ordered))
+    );
+  }
   if (Array.isArray(actual) || Array.isArray(expected)) {
     const actualValues = valueContainer(actual);
     const expectedValues = Array.isArray(expected) ? expected : expected === null ? [] : [expected];
@@ -1358,7 +1380,8 @@ function normalizeValueForCardinality(
   if (
     (cardinality === "multiple" || cardinality === "ordered") &&
     value !== null &&
-    !Array.isArray(value)
+    !Array.isArray(value) &&
+    !isRecordValue(value)
   ) {
     return [value];
   }
@@ -1367,7 +1390,12 @@ function normalizeValueForCardinality(
 
 function valueContainer(value: QtiValue): QtiScalarValue[] {
   if (value === null) return [];
+  if (isRecordValue(value)) return [];
   return Array.isArray(value) ? value.filter((item) => item !== null) : [value];
+}
+
+function isRecordValue(value: QtiValue): value is QtiRecordValue {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function indexValue(

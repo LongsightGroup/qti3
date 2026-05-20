@@ -105,6 +105,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-not", "packages/core/src/core.test.ts"),
   processingEntry("qti-equal", "packages/core/src/core.test.ts"),
   processingEntry("qti-equal-rounded", "packages/core/src/core.test.ts"),
+  processingEntry("qti-field-value", "packages/core/src/core.test.ts"),
   processingEntry("qti-lt", "packages/core/src/core.test.ts"),
   processingEntry("qti-lte", "packages/core/src/core.test.ts"),
   processingEntry("qti-gt", "packages/core/src/core.test.ts"),

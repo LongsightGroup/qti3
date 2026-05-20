@@ -43,7 +43,10 @@ export type QtiBaseType =
 export type QtiCardinality = "single" | "multiple" | "ordered" | "record";
 
 export type QtiScalarValue = string | number | boolean;
-export type QtiValue = QtiScalarValue | QtiScalarValue[] | null;
+export interface QtiRecordValue {
+  [fieldIdentifier: string]: QtiValue;
+}
+export type QtiValue = QtiScalarValue | QtiScalarValue[] | QtiRecordValue | null;
 
 export type QtiAttemptStatus = "initialized" | "interacting" | "suspended" | "completed";
 
@@ -392,6 +395,7 @@ export type QtiProcessingExpression = (
       caseSensitive: boolean;
     }
   | { type: "patternMatch"; expression: QtiProcessingExpression; pattern: string }
+  | { type: "fieldValue"; fieldIdentifier: string; expression: QtiProcessingExpression }
   | { type: "member"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
   | { type: "delete"; value: QtiProcessingExpression; collection: QtiProcessingExpression }
   | { type: "contains"; collection: QtiProcessingExpression; values: QtiProcessingExpression }
