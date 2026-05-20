@@ -348,6 +348,29 @@ test.describe("manual harness", () => {
     });
     expect(result.violations).toEqual([]);
   });
+
+  test("reflows every reference interaction in a narrow viewport", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.goto("/");
+    const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
+
+    for (const fixture of interactionFixtures) {
+      await page.locator("#fixture").selectOption(fixture.id);
+      await page.locator("#load-fixture").click();
+      await expect(page.locator("qti-assessment-item-player")).toContainText(fixture.id);
+
+      const overflow = await page.evaluate(() => {
+        return document.documentElement.scrollWidth - window.innerWidth;
+      });
+      expect(overflow, fixture.id).toBeLessThanOrEqual(1);
+
+      await page.addScriptTag({ content: axeSource });
+      const result = await page.evaluate(async () => {
+        return await window.axe.run(document.querySelector("qti-assessment-item-player"));
+      });
+      expect(result.violations, fixture.id).toEqual([]);
+    }
+  });
 });
 
 declare global {

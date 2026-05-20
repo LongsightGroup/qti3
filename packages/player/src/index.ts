@@ -610,6 +610,8 @@ function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
     audio.preload = "none";
     audio.src = object.data;
     audio.setAttribute("aria-label", label);
+    audio.style.maxInlineSize = "100%";
+    audio.style.inlineSize = "100%";
     return audio;
   }
 
@@ -619,6 +621,7 @@ function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
     video.preload = "none";
     video.src = object.data;
     video.setAttribute("aria-label", label);
+    video.style.maxInlineSize = "100%";
     if (object.width) video.width = Number(object.width);
     if (object.height) video.height = Number(object.height);
     return video;
@@ -628,6 +631,8 @@ function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
     const image = document.createElement("img");
     image.src = object.data;
     image.alt = label;
+    image.style.maxInlineSize = "100%";
+    image.style.blockSize = "auto";
     if (object.width) image.width = Number(object.width);
     if (object.height) image.height = Number(object.height);
     return image;
