@@ -592,31 +592,90 @@ function renderPairResponse(
   group.append(legend);
   appendGraphicContext(group, interaction);
 
-  const source = document.createElement("select");
-  source.setAttribute("aria-label", `${readableType(interaction.type)} source`);
-  appendOptions(source, sourceChoices(interaction));
+  const sources = sourceChoices(interaction);
+  const targets = targetChoices(interaction);
+  const selectedPairs: string[] = [];
+  let selectedSource: QtiChoice | undefined;
+  let selectedTarget: QtiChoice | undefined;
 
-  const target = document.createElement("select");
-  target.setAttribute("aria-label", `${readableType(interaction.type)} target`);
-  appendOptions(target, targetChoices(interaction));
+  const sourceRegion = tokenRegion(`${readableType(interaction.type)} sources`);
+  const targetRegion = tokenRegion(`${readableType(interaction.type)} targets`);
+  const pairList = document.createElement("ul");
+  pairList.className = "qti3-pair-list";
+  pairList.setAttribute("aria-label", `${readableType(interaction.type)} selected pairs`);
 
-  const sync = () => {
-    if (!source.value || !target.value) {
-      update([]);
-      return;
-    }
-    update([`${source.value} ${target.value}`]);
+  const commit = () => {
+    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
+    else update([...selectedPairs]);
   };
-  source.addEventListener("change", sync);
-  target.addEventListener("change", sync);
+  const syncPressed = () => {
+    for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
+      button.setAttribute(
+        "aria-pressed",
+        button.dataset.choiceIdentifier === selectedSource?.identifier ? "true" : "false",
+      );
+    }
+    for (const button of targetRegion.querySelectorAll<HTMLButtonElement>("button")) {
+      button.setAttribute(
+        "aria-pressed",
+        button.dataset.choiceIdentifier === selectedTarget?.identifier ? "true" : "false",
+      );
+    }
+  };
+  const addSelectedPair = () => {
+    if (!selectedSource || !selectedTarget) return;
+    const pair = `${selectedSource.identifier} ${selectedTarget.identifier}`;
+    if (!selectedPairs.includes(pair)) selectedPairs.push(pair);
+    selectedSource = undefined;
+    selectedTarget = undefined;
+    syncPressed();
+    renderPairs();
+    commit();
+  };
+  const renderPairs = () => {
+    pairList.replaceChildren(
+      ...selectedPairs.map((pair) => {
+        const [source, target] = pair.split(" ");
+        const item = document.createElement("li");
+        item.className = "qti3-pair-chip";
+        const text = document.createElement("span");
+        text.textContent = `${choiceText(sources, source)} to ${choiceText(targets, target)}`;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", `Remove ${text.textContent}`);
+        remove.addEventListener("click", () => {
+          const index = selectedPairs.indexOf(pair);
+          if (index >= 0) selectedPairs.splice(index, 1);
+          renderPairs();
+          commit();
+        });
+        item.append(text, remove);
+        return item;
+      }),
+    );
+  };
 
-  const sourceLabel = document.createElement("label");
-  sourceLabel.textContent = "Source ";
-  sourceLabel.append(source);
-  const targetLabel = document.createElement("label");
-  targetLabel.textContent = "Target ";
-  targetLabel.append(target);
-  group.append(sourceLabel, targetLabel);
+  for (const choice of sources) {
+    const button = tokenButton(choice);
+    button.addEventListener("click", () => {
+      selectedSource = choice;
+      syncPressed();
+      addSelectedPair();
+    });
+    sourceRegion.append(button);
+  }
+  for (const choice of targets) {
+    const button = tokenButton(choice);
+    button.addEventListener("click", () => {
+      selectedTarget = choice;
+      syncPressed();
+      addSelectedPair();
+    });
+    targetRegion.append(button);
+  }
+
+  group.append(sourceRegion, targetRegion, pairList);
   return group;
 }
 
@@ -1011,6 +1070,29 @@ function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {
   }
 }
 
+function tokenRegion(label: string): HTMLElement {
+  const region = document.createElement("div");
+  region.className = "qti3-token-region";
+  region.role = "group";
+  region.setAttribute("aria-label", label);
+  return region;
+}
+
+function tokenButton(choice: QtiChoice): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "qti3-token";
+  button.dataset.choiceIdentifier = choice.identifier;
+  button.setAttribute("aria-pressed", "false");
+  button.textContent = choice.text;
+  return button;
+}
+
+function choiceText(choices: QtiChoice[], identifier: string | undefined): string {
+  if (!identifier) return "";
+  return choices.find((choice) => choice.identifier === identifier)?.text ?? identifier;
+}
+
 function sourceChoices(interaction: QtiInteraction): QtiChoice[] {
   const choices = choicesOrFallback(interaction);
   const sourceRoles = new Set(["associableChoice", "matchSource", "gapChoice", "hotspot"]);
@@ -1164,7 +1246,9 @@ function playerStyleElement(): HTMLStyleElement {
     }
 
     .qti3-actions,
-    .qti3-reorder-item {
+    .qti3-reorder-item,
+    .qti3-token-region,
+    .qti3-pair-chip {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
@@ -1205,6 +1289,23 @@ function playerStyleElement(): HTMLStyleElement {
       background: Canvas;
       color: CanvasText;
       cursor: grab;
+    }
+
+    .qti3-token[aria-pressed="true"],
+    .qti3-pair-chip {
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    .qti3-pair-list {
+      display: grid;
+      gap: 0.5rem;
+      padding-inline-start: 1.5rem;
+    }
+
+    .qti3-pair-chip {
+      width: fit-content;
+      padding: 0.35rem 0.5rem;
     }
 
     .qti3-token:focus-visible,

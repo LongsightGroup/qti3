@@ -408,6 +408,41 @@ test.describe("manual harness", () => {
     await expectResponse(page, ["B", "A"]);
   });
 
+  test("creates and removes associate pairs with keyboard-accessible tokens", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "associate");
+
+    await page
+      .locator('qti-assessment-item-player [aria-label="Associate sources"]')
+      .getByRole("button", { name: "A" })
+      .focus();
+    await page.keyboard.press("Enter");
+    await page
+      .locator('qti-assessment-item-player [aria-label="Associate targets"]')
+      .getByRole("button", { name: "B" })
+      .focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["A B"]);
+
+    await page.getByRole("button", { name: "Remove A to B" }).click();
+    await expectResponse(page, []);
+  });
+
+  test("creates match pairs and preserves graphic association context", async ({ page }) => {
+    await page.goto("/");
+
+    await loadFixture(page, "match");
+    await addPair(page, "Match", "A", "Target 1");
+    await expectResponse(page, ["A G1"]);
+
+    await loadFixture(page, "graphicAssociate");
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-graphic-context img"),
+    ).toHaveAttribute("src", /image\.png$/);
+    await addPair(page, "Graphic associate", "A", "B");
+    await expectResponse(page, ["A B"]);
+  });
+
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "selectPoint");
@@ -664,6 +699,37 @@ async function expectResponse(
   expect(state.responses.RESPONSE).toEqual(expected);
 }
 
+async function addPair(
+  page: import("@playwright/test").Page,
+  interactionLabel: string,
+  source: string,
+  target: string,
+): Promise<void> {
+  await page
+    .locator(`qti-assessment-item-player [aria-label="${interactionLabel} sources"]`)
+    .getByRole("button", { name: source })
+    .click();
+  await page
+    .locator(`qti-assessment-item-player [aria-label="${interactionLabel} targets"]`)
+    .getByRole("button", { name: target })
+    .click();
+}
+
+async function clickToken(
+  page: import("@playwright/test").Page,
+  regionSuffix: "sources" | "targets",
+  identifierOrName: string | undefined,
+): Promise<void> {
+  if (!identifierOrName) return;
+  const region = page.locator(`qti-assessment-item-player [aria-label$="${regionSuffix}"]`);
+  const byIdentifier = region.locator(`[data-choice-identifier="${identifierOrName}"]`).first();
+  if (await byIdentifier.isVisible().catch(() => false)) {
+    await byIdentifier.click();
+    return;
+  }
+  await region.getByRole("button", { name: identifierOrName }).click();
+}
+
 async function provideResponse(
   page: import("@playwright/test").Page,
   interactionType: string,
@@ -739,13 +805,11 @@ async function provideResponse(
   }
 
   if (Array.isArray(response) && response.some((value) => String(value).includes(" "))) {
-    const [source, target] = String(response[0]).split(" ");
-    await page
-      .locator('qti-assessment-item-player select[aria-label$="source"]')
-      .selectOption(source);
-    await page
-      .locator('qti-assessment-item-player select[aria-label$="target"]')
-      .selectOption(target);
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await clickToken(page, "sources", source);
+      await clickToken(page, "targets", target);
+    }
     return;
   }
 
