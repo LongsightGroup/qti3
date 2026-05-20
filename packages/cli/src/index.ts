@@ -75,7 +75,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   if (command === "inspect-package" && file) {
-    const report = await inspectPackage(file);
+    const report = await inspectPackageSafely(file);
     console.log(JSON.stringify(report, null, 2));
     return report.failed === 0 ? 0 : 1;
   }
@@ -306,6 +306,7 @@ async function inspectPackage(file: string): Promise<{
   file: string;
   checked: number;
   failed: number;
+  packageErrors: string[];
   xmlFiles: string[];
   assetFiles: string[];
   discoveredReferences: string[];
@@ -361,6 +362,7 @@ async function inspectPackage(file: string): Promise<{
     file,
     checked: results.length,
     failed: results.filter((result) => !result.ok).length,
+    packageErrors: [],
     xmlFiles: xmlFiles.map((entry) => entry.path),
     assetFiles: entries
       .filter((entry) => !entry.name.toLowerCase().endsWith(".xml"))
@@ -368,6 +370,25 @@ async function inspectPackage(file: string): Promise<{
     discoveredReferences,
     results,
   };
+}
+
+async function inspectPackageSafely(
+  file: string,
+): Promise<Awaited<ReturnType<typeof inspectPackage>>> {
+  try {
+    return await inspectPackage(file);
+  } catch (error) {
+    return {
+      file,
+      checked: 0,
+      failed: 1,
+      packageErrors: [error instanceof Error ? error.message : String(error)],
+      xmlFiles: [],
+      assetFiles: [],
+      discoveredReferences: [],
+      results: [],
+    };
+  }
 }
 
 function readZipEntries(buffer: Uint8Array): ZipEntry[] {
@@ -389,7 +410,7 @@ function readZipEntries(buffer: Uint8Array): ZipEntry[] {
     const commentLength = view.getUint16(offset + 32, true);
     const localHeaderOffset = view.getUint32(offset + 42, true);
     const rawName = buffer.slice(offset + 46, offset + 46 + nameLength);
-    const name = normalizePath(decoder.decode(rawName));
+    const name = normalizePackagePath(decoder.decode(rawName), "ZIP entry");
     offset += 46 + nameLength + extraLength + commentLength;
     if (!name || name.endsWith("/")) continue;
 
@@ -471,7 +492,7 @@ function assessmentItemRefs(xmlFile: PackageXmlFile): string[] {
   return descendants(xmlFile.root, "qti-assessment-item-ref")
     .map((node) => node.attributes.href ?? "")
     .filter(Boolean)
-    .map((href) => resolveRelativePath(xmlFile.path, href));
+    .map((href) => resolvePackageHref(xmlFile.path, href));
 }
 
 function manifestItemResources(xmlFile: PackageXmlFile): string[] {
@@ -479,7 +500,7 @@ function manifestItemResources(xmlFile: PackageXmlFile): string[] {
     .filter((node) => isQtiItemResource(node.attributes.type ?? ""))
     .map((node) => resourceHref(node))
     .filter(Boolean)
-    .map((href) => resolveRelativePath(xmlFile.path, href));
+    .map((href) => resolvePackageHref(xmlFile.path, href));
 }
 
 function isQtiItemResource(type: string): boolean {
@@ -495,6 +516,11 @@ function resourceHref(resource: PackageXmlNode): string {
   return file?.attributes.href ?? "";
 }
 
+function resolvePackageHref(from: string, href: string): string {
+  const path = href.split(/[?#]/, 1)[0] ?? "";
+  return resolveRelativePath(from, path);
+}
+
 function descendants(node: PackageXmlNode | undefined, localName: string): PackageXmlNode[] {
   if (!node) return [];
   const found: PackageXmlNode[] = [];
@@ -507,15 +533,24 @@ function descendants(node: PackageXmlNode | undefined, localName: string): Packa
 
 function resolveRelativePath(from: string, href: string): string {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  return normalizePath(`${base}${href}`);
+  return normalizePackagePath(`${base}${href}`, "package reference");
 }
 
-function normalizePath(path: string): string {
+function normalizePackagePath(path: string, context: string): string {
+  if (path.startsWith("/") || /^[A-Za-z]:[\\/]/.test(path) || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
+    throw new Error(`${context} ${path} must be a package-relative path.`);
+  }
   const parts: string[] = [];
   for (const part of path.split("/")) {
     if (!part || part === ".") continue;
-    if (part === "..") parts.pop();
-    else parts.push(part);
+    if (part === "..") {
+      if (parts.length === 0) {
+        throw new Error(`${context} ${path} escapes the package root.`);
+      }
+      parts.pop();
+    } else {
+      parts.push(part);
+    }
   }
   return parts.join("/");
 }

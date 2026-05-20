@@ -479,8 +479,10 @@ async function loadSelectedLocalFile(): Promise<void> {
 async function loadLocalFiles(fileList: FileList | null): Promise<void> {
   clearAssetUrls();
   let files: LoadedFile[];
+  let loadableItems: LoadedFile[];
   try {
     files = await readPackageXmlFiles(fileList);
+    loadableItems = resolveLoadableItems(files);
   } catch (error) {
     loadedFiles = [];
     localFiles.replaceChildren();
@@ -488,7 +490,7 @@ async function loadLocalFiles(fileList: FileList | null): Promise<void> {
     showPackageStatus(`Unable to read QTI package: ${errorMessage(error)}`);
     return;
   }
-  loadedFiles = resolveLoadableItems(files);
+  loadedFiles = loadableItems;
   localFiles.replaceChildren(
     ...loadedFiles.map((file, index) => {
       const option = document.createElement("option");
@@ -551,7 +553,7 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<ZipEntry[]> {
     const commentLength = view.getUint16(offset + 32, true);
     const localHeaderOffset = view.getUint32(offset + 42, true);
     const rawName = bytes.slice(offset + 46, offset + 46 + nameLength);
-    const name = normalizePath(decoder.decode(rawName));
+    const name = normalizePackagePath(decoder.decode(rawName), "ZIP entry");
     offset += 46 + nameLength + extraLength + commentLength;
     if (!name || name.endsWith("/")) continue;
 
@@ -576,8 +578,13 @@ function clearAssetUrls(): void {
 
 function resolveLoadedAsset(source: string, url: string): string {
   if (!isRelativeAssetUrl(url)) return url;
-  const path = resolveRelativePath(source, url);
-  return assetUrls.get(path) ?? assetUrls.get(normalizePath(url)) ?? url;
+  try {
+    const path = resolveRelativePath(source, url);
+    const direct = normalizePackagePath(url, "asset reference");
+    return assetUrls.get(path) ?? assetUrls.get(direct) ?? url;
+  } catch {
+    return url;
+  }
 }
 
 function isRelativeAssetUrl(url: string): boolean {
@@ -685,7 +692,7 @@ function assessmentItemRefs(xml: string, source: string): string[] {
   return refs
     .map((element) => element.getAttribute("href") ?? "")
     .filter(Boolean)
-    .map((href) => resolveRelativePath(source, href));
+    .map((href) => resolvePackageHref(source, href));
 }
 
 function manifestItemResources(xml: string, source: string): string[] {
@@ -694,7 +701,7 @@ function manifestItemResources(xml: string, source: string): string[] {
     .filter((element) => isQtiItemResource(element.getAttribute("type") ?? ""))
     .map((element) => resourceHref(element))
     .filter(Boolean);
-  return refs.map((href) => resolveRelativePath(source, href));
+  return refs.map((href) => resolvePackageHref(source, href));
 }
 
 function isQtiItemResource(type: string): boolean {
@@ -710,21 +717,35 @@ function resourceHref(resource: Element): string {
   return file?.getAttribute("href") ?? "";
 }
 
+function resolvePackageHref(from: string, href: string): string {
+  const path = href.split(/[?#]/, 1)[0] ?? "";
+  return resolveRelativePath(from, path);
+}
+
 function elementsByLocalName(root: Document | Element, localName: string): Element[] {
   return [...root.getElementsByTagName("*")].filter((element) => element.localName === localName);
 }
 
 function resolveRelativePath(from: string, href: string): string {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  return normalizePath(`${base}${href}`);
+  return normalizePackagePath(`${base}${href}`, "package reference");
 }
 
-function normalizePath(path: string): string {
+function normalizePackagePath(path: string, context: string): string {
+  if (path.startsWith("/") || /^[A-Za-z]:[\\/]/.test(path) || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
+    throw new Error(`${context} ${path} must be a package-relative path.`);
+  }
   const parts: string[] = [];
   for (const part of path.split("/")) {
     if (!part || part === ".") continue;
-    if (part === "..") parts.pop();
-    else parts.push(part);
+    if (part === "..") {
+      if (parts.length === 0) {
+        throw new Error(`${context} ${path} escapes the package root.`);
+      }
+      parts.pop();
+    } else {
+      parts.push(part);
+    }
   }
   return parts.join("/");
 }

@@ -279,6 +279,74 @@ describe("@qti3/cli", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("rejects package zip entries that escape the package root", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-paths-"));
+    const file = join(directory, "package.zip");
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    try {
+      await writeFile(
+        file,
+        createStoredZip({
+          "../items/choice.xml": choice.xml,
+        }),
+      );
+
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await expect(main(["inspect-package", file])).resolves.toBe(1);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      log.mockRestore();
+
+      expect(report).toMatchObject({
+        checked: 0,
+        failed: 1,
+        packageErrors: ["ZIP entry ../items/choice.xml escapes the package root."],
+      });
+    } finally {
+      vi.restoreAllMocks();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects package item references that escape the package root", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-refs-"));
+    const file = join(directory, "package.zip");
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    try {
+      await writeFile(
+        file,
+        createStoredZip({
+          "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="../items/choice.xml">
+      <file href="../items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+          "items/choice.xml": choice.xml,
+        }),
+      );
+
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      await expect(main(["inspect-package", file])).resolves.toBe(1);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      log.mockRestore();
+
+      expect(report).toMatchObject({
+        checked: 0,
+        failed: 1,
+        packageErrors: ["package reference ../items/choice.xml escapes the package root."],
+      });
+    } finally {
+      vi.restoreAllMocks();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });
 
 function createStoredZip(entries: Record<string, string | Uint8Array>): Buffer {

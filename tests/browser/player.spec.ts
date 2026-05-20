@@ -685,6 +685,56 @@ test.describe("manual harness", () => {
     await expect(page.locator("#file-summary")).toContainText("No ZIP central directory");
   });
 
+  test("rejects package zip entries that escape the package root", async ({ page }) => {
+    const choice = interactionFixtures.find((item) => item.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    const zip = createStoredZip({
+      "../items/choice.xml": choice.xml,
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "escaping-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
+    await expect(page.locator("#file-summary")).toContainText(
+      "ZIP entry ../items/choice.xml escapes the package root",
+    );
+  });
+
+  test("reports package item references that escape the package root", async ({ page }) => {
+    const choice = interactionFixtures.find((item) => item.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="../items/choice.xml">
+      <file href="../items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/choice.xml": choice.xml,
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "escaping-reference.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
+    await expect(page.locator("#file-summary")).toContainText(
+      "package reference ../items/choice.xml escapes the package root",
+    );
+  });
+
   test("discovers manifest item resources from nested file hrefs", async ({ page }) => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     if (!choice) throw new Error("Missing package fixture.");
