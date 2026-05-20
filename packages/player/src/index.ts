@@ -250,6 +250,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     };
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
+    if (interaction.type === "graphicOrder") {
+      field.append(renderGraphicOrderResponse(interaction, update, currentValue));
+      return field;
+    }
+
     if (usesOrderedResponse(interaction)) {
       field.append(renderOrderedResponse(interaction, update, currentValue));
       return field;
@@ -1169,6 +1174,240 @@ function pairRegionLabels(interaction: QtiInteraction): { source: string; target
   if (interaction.type === "associate") return { source: "First concept", target: "Pair with" };
   if (interaction.type === "match") return { source: "Prompt", target: "Match" };
   return { source: "Source", target: "Target" };
+}
+
+function renderGraphicOrderResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  currentValue: QtiValue,
+): HTMLElement {
+  const group = document.createElement("fieldset");
+  const legend = document.createElement("legend");
+  legend.textContent = readableType(interaction.type);
+  group.append(legend);
+
+  const width = objectWidth(interaction);
+  const height = objectHeight(interaction);
+  const choices = choicesOrFallback(interaction).filter((choice) => choice.role === "hotspot");
+  const orderedIdentifiers = valueToStrings(currentValue).filter((identifier) =>
+    choices.some((choice) => choice.identifier === identifier),
+  );
+
+  const surface = document.createElement("div");
+  surface.className = "qti3-graphic-order-surface";
+  surface.role = "group";
+  surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
+  surface.style.position = "relative";
+  surface.style.inlineSize = `${width}px`;
+  surface.style.aspectRatio = `${width} / ${height}`;
+  surface.style.maxInlineSize = "100%";
+  surface.style.border = "1px solid CanvasText";
+  surface.style.background = "Canvas";
+  surface.style.overflow = "hidden";
+
+  const object = interaction.object;
+  if (object?.data && objectIsImage(object)) {
+    const image = document.createElement("img");
+    image.src = object.data;
+    image.alt = object.text || `${readableType(interaction.type)} image`;
+    image.style.inlineSize = "100%";
+    image.style.blockSize = "100%";
+    image.style.objectFit = "contain";
+    surface.append(image);
+  }
+
+  const sequenceLines = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  sequenceLines.classList.add("qti3-graphic-sequence-lines");
+  sequenceLines.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  sequenceLines.setAttribute("aria-hidden", "true");
+  const markerId = `qti3-arrow-${Math.random().toString(36).slice(2)}`;
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+  marker.setAttribute("id", markerId);
+  marker.setAttribute("viewBox", "0 0 10 10");
+  marker.setAttribute("refX", "8");
+  marker.setAttribute("refY", "5");
+  marker.setAttribute("markerWidth", "5");
+  marker.setAttribute("markerHeight", "5");
+  marker.setAttribute("orient", "auto-start-reverse");
+  const arrow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  arrow.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+  marker.append(arrow);
+  defs.append(marker);
+  sequenceLines.append(defs);
+  surface.append(sequenceLines);
+
+  const summary = document.createElement("p");
+  summary.className = "qti3-selection-summary";
+  summary.setAttribute("aria-live", "polite");
+  const list = document.createElement("ol");
+  list.className = "qti3-graphic-order-list";
+  list.setAttribute("aria-label", `${readableType(interaction.type)} selected order`);
+
+  const orderedChoices = () =>
+    orderedIdentifiers
+      .map((identifier) => choices.find((choice) => choice.identifier === identifier))
+      .filter((choice): choice is QtiChoice => Boolean(choice));
+  const commit = () => update([...orderedIdentifiers]);
+  const focusHotspot = (identifier: string) => {
+    surface.querySelector<HTMLButtonElement>(`[data-choice-identifier="${identifier}"]`)?.focus();
+  };
+  const focusRelativeHotspot = (choice: QtiChoice, delta: number) => {
+    const index = choices.findIndex((entry) => entry.identifier === choice.identifier);
+    const next = choices[(index + delta + choices.length) % choices.length];
+    if (next) focusHotspot(next.identifier);
+  };
+  const chooseHotspot = (choice: QtiChoice) => {
+    const existingIndex = orderedIdentifiers.indexOf(choice.identifier);
+    if (existingIndex >= 0) orderedIdentifiers.splice(existingIndex, 1);
+    orderedIdentifiers.push(choice.identifier);
+    renderState();
+    commit();
+    focusHotspot(choice.identifier);
+  };
+  const removeHotspot = (identifier: string) => {
+    const index = orderedIdentifiers.indexOf(identifier);
+    if (index < 0) return;
+    orderedIdentifiers.splice(index, 1);
+    renderState();
+    commit();
+    focusHotspot(identifier);
+  };
+  const moveHotspot = (identifier: string, delta: number) => {
+    const index = orderedIdentifiers.indexOf(identifier);
+    const targetIndex = index + delta;
+    if (index < 0 || targetIndex < 0 || targetIndex >= orderedIdentifiers.length) return;
+    const [entry] = orderedIdentifiers.splice(index, 1);
+    if (!entry) return;
+    orderedIdentifiers.splice(targetIndex, 0, entry);
+    renderState();
+    commit();
+    list.querySelector<HTMLButtonElement>(`[data-choice-identifier="${identifier}"]`)?.focus();
+  };
+  const renderState = () => {
+    for (const line of sequenceLines.querySelectorAll("line")) line.remove();
+    const currentChoices = orderedChoices();
+    for (let index = 0; index < currentChoices.length - 1; index += 1) {
+      const current = currentChoices[index];
+      const next = currentChoices[index + 1];
+      if (!current || !next) continue;
+      const start = hotspotCenter(current, width, height);
+      const end = hotspotCenter(next, width, height);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", String(start.x));
+      line.setAttribute("y1", String(start.y));
+      line.setAttribute("x2", String(end.x));
+      line.setAttribute("y2", String(end.y));
+      line.setAttribute("marker-end", `url(#${markerId})`);
+      sequenceLines.append(line);
+    }
+
+    for (const button of surface.querySelectorAll<HTMLButtonElement>(".qti3-hotspot-button")) {
+      const identifier = button.dataset.choiceIdentifier ?? "";
+      const index = orderedIdentifiers.indexOf(identifier);
+      const isSelected = index >= 0;
+      button.dataset.selected = isSelected ? "true" : "false";
+      button.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      button.dataset.order = isSelected ? String(index + 1) : "";
+      const badge = button.querySelector<HTMLElement>(".qti3-graphic-order-number");
+      if (badge) badge.textContent = isSelected ? String(index + 1) : "";
+    }
+
+    summary.textContent =
+      orderedIdentifiers.length > 0
+        ? `${orderedIdentifiers.length} ${orderedIdentifiers.length === 1 ? "region" : "regions"} ordered.`
+        : "No regions ordered";
+
+    list.replaceChildren(
+      ...currentChoices.map((choice, index) => {
+        const item = document.createElement("li");
+        item.className = "qti3-graphic-order-item";
+
+        const label = document.createElement("button");
+        label.type = "button";
+        label.className = "qti3-token";
+        label.dataset.choiceIdentifier = choice.identifier;
+        label.textContent = `${index + 1}. ${hotspotDisplayLabel(choice, choices)}`;
+        label.setAttribute(
+          "aria-label",
+          `${hotspotDisplayLabel(choice, choices)}, position ${index + 1} of ${currentChoices.length}`,
+        );
+        label.addEventListener("click", () => focusHotspot(choice.identifier));
+        label.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+            event.preventDefault();
+            moveHotspot(choice.identifier, -1);
+          } else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+            event.preventDefault();
+            moveHotspot(choice.identifier, 1);
+          } else if (event.key === "Delete" || event.key === "Backspace") {
+            event.preventDefault();
+            removeHotspot(choice.identifier);
+          }
+        });
+
+        const up = document.createElement("button");
+        up.type = "button";
+        up.textContent = "Up";
+        up.disabled = index === 0;
+        up.setAttribute("aria-label", `Move ${hotspotDisplayLabel(choice, choices)} up`);
+        up.addEventListener("click", () => moveHotspot(choice.identifier, -1));
+
+        const down = document.createElement("button");
+        down.type = "button";
+        down.textContent = "Down";
+        down.disabled = index === currentChoices.length - 1;
+        down.setAttribute("aria-label", `Move ${hotspotDisplayLabel(choice, choices)} down`);
+        down.addEventListener("click", () => moveHotspot(choice.identifier, 1));
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", `Remove ${hotspotDisplayLabel(choice, choices)}`);
+        remove.addEventListener("click", () => removeHotspot(choice.identifier));
+
+        item.append(label, up, down, remove);
+        return item;
+      }),
+    );
+  };
+
+  for (const [index, choice] of choices.entries()) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "qti3-hotspot-button qti3-graphic-order-hotspot";
+    button.dataset.choiceIdentifier = choice.identifier;
+    button.title = hotspotAccessibleLabel(choice, index);
+    button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
+    button.setAttribute("aria-pressed", "false");
+    button.style.position = "absolute";
+    placeHotspotButton(button, choice, width, height);
+    const text = document.createElement("span");
+    text.className = "qti3-hotspot-label";
+    text.textContent = hotspotDisplayLabel(choice, choices);
+    const order = document.createElement("span");
+    order.className = "qti3-graphic-order-number";
+    order.setAttribute("aria-hidden", "true");
+    button.append(text, order);
+    button.addEventListener("click", () => chooseHotspot(choice));
+    button.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        event.preventDefault();
+        focusRelativeHotspot(choice, 1);
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        event.preventDefault();
+        focusRelativeHotspot(choice, -1);
+      } else if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        removeHotspot(choice.identifier);
+      }
+    });
+    surface.append(button);
+  }
+
+  renderState();
+  group.append(surface, summary, list);
+  return group;
 }
 
 function renderGraphicAssociateResponse(
@@ -2849,7 +3088,7 @@ function readableType(type: string): string {
 }
 
 function orderedResponseLegend(type: QtiInteraction["type"]): string {
-  if (type === "order" || type === "graphicOrder") return readableType(type);
+  if (type === "order") return readableType(type);
   return `${readableType(type)} order`;
 }
 
@@ -3209,11 +3448,13 @@ function playerStyleElement(): HTMLStyleElement {
       }
     }
 
-    .qti3-graphic-associate-surface {
+    .qti3-graphic-associate-surface,
+    .qti3-graphic-order-surface {
       touch-action: manipulation;
     }
 
-    .qti3-graphic-associate-lines {
+    .qti3-graphic-associate-lines,
+    .qti3-graphic-sequence-lines {
       position: absolute;
       inset: 0;
       inline-size: 100%;
@@ -3222,15 +3463,57 @@ function playerStyleElement(): HTMLStyleElement {
       z-index: 1;
     }
 
-    .qti3-graphic-associate-lines line {
+    .qti3-graphic-associate-lines line,
+    .qti3-graphic-sequence-lines line {
       stroke: Highlight;
       stroke-width: 4;
       stroke-linecap: round;
       vector-effect: non-scaling-stroke;
     }
 
-    .qti3-graphic-associate-hotspot {
+    .qti3-graphic-sequence-lines marker path {
+      fill: Highlight;
+    }
+
+    .qti3-graphic-associate-hotspot,
+    .qti3-graphic-order-hotspot {
       z-index: 2;
+    }
+
+    .qti3-graphic-order-hotspot {
+      display: grid;
+      place-items: center;
+      gap: 0.15rem;
+      text-align: center;
+    }
+
+    .qti3-graphic-order-number {
+      display: grid;
+      place-items: center;
+      min-inline-size: 1.45rem;
+      min-block-size: 1.45rem;
+      border-radius: 999px;
+      background: Highlight;
+      color: HighlightText;
+      font-weight: 700;
+    }
+
+    .qti3-graphic-order-number:empty {
+      display: none;
+    }
+
+    .qti3-graphic-order-list {
+      display: grid;
+      gap: 0.5rem;
+      padding-inline-start: 1.5rem;
+      margin-block: 0.5rem 0;
+    }
+
+    .qti3-graphic-order-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
     }
 
     .qti3-selection-summary {

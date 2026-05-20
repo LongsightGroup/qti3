@@ -519,6 +519,16 @@ test.describe("manual harness", () => {
 
     for (const interactionType of ["graphicOrder", "graphicAssociate", "graphicGapMatch"]) {
       await loadFixture(page, interactionType);
+      if (interactionType === "graphicOrder") {
+        const surface = page.locator("qti-assessment-item-player .qti3-graphic-order-surface");
+        await expect(surface, interactionType).toBeVisible();
+        await expect(surface.locator("img"), interactionType).toHaveAttribute(
+          "src",
+          /hotspot-flow\.svg$/,
+        );
+        await expectImageLoaded(surface.locator("img"));
+        continue;
+      }
       if (interactionType === "graphicAssociate") {
         const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
         await expect(surface, interactionType).toBeVisible();
@@ -900,7 +910,7 @@ test.describe("manual harness", () => {
     });
 
     await expect(page.locator("#file-summary")).toContainText("items/graphic-order.xml");
-    const image = page.locator("qti-assessment-item-player .qti3-graphic-context img");
+    const image = page.locator("qti-assessment-item-player .qti3-graphic-order-surface img");
     await expect(image).toHaveAttribute("src", /^blob:/);
     await expectImageLoaded(image);
   });
@@ -1538,6 +1548,34 @@ test.describe("manual harness", () => {
       )
       .click();
     await expectResponse(page, ["A", "B", "C"]);
+  });
+
+  test("orders graphic order hotspots with pointer and keyboard controls", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "graphicOrder");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-order-surface");
+    await expect(surface.getByRole("button", { name: "Item XML" })).toBeVisible();
+    await expect(surface.getByRole("button", { name: "Response capture" })).toBeVisible();
+
+    await surface.getByRole("button", { name: "Response capture" }).click();
+    await expectResponse(page, ["B"]);
+    await expect(surface.getByRole("button", { name: "Response capture" })).toHaveAttribute(
+      "data-order",
+      "1",
+    );
+
+    await surface.getByRole("button", { name: "Item XML" }).click();
+    await surface.getByRole("button", { name: "Outcomes" }).click();
+    await expectResponse(page, ["B", "A", "C"]);
+    await expect(surface.locator("svg.qti3-graphic-sequence-lines line")).toHaveCount(2);
+
+    await page.getByRole("button", { name: "Move Response capture down" }).click();
+    await expectResponse(page, ["A", "B", "C"]);
+
+    await surface.getByRole("button", { name: "Outcomes" }).focus();
+    await page.keyboard.press("Delete");
+    await expectResponse(page, ["A", "B"]);
   });
 
   test("creates and removes associate pairs with keyboard-accessible tokens", async ({ page }) => {
@@ -2385,10 +2423,15 @@ async function provideResponse(
     return;
   }
 
-  if (
-    Array.isArray(response) &&
-    (interactionType === "order" || interactionType === "graphicOrder")
-  ) {
+  if (Array.isArray(response) && interactionType === "graphicOrder") {
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-order-surface");
+    for (const identifier of response.map(String)) {
+      await surface.locator(`[data-choice-identifier="${identifier}"]`).click();
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "order") {
     const current = await page.locator("qti-assessment-item-player").evaluate(() => {
       return [...document.querySelectorAll(".qti3-reorder-item")].map(
         (item) => (item as HTMLElement).dataset.choiceIdentifier,
