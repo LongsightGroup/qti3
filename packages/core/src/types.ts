@@ -322,10 +322,10 @@ export interface QtiScoreResult {
   state: QtiAttemptStateV1;
 }
 
-export interface QtiElementSupport {
+export type QtiElementSupport = QtiInteractionElementSupport | QtiProcessingElementSupport;
+
+interface QtiElementSupportBase {
   qtiName: string;
-  category: "interaction";
-  interactionType: QtiInteractionType;
   support: QtiSupportStatus;
   specReference: string;
   parse: boolean;
@@ -335,4 +335,13 @@ export interface QtiElementSupport {
   fixtures: string[];
   tests: string[];
   notes?: string | undefined;
+}
+
+export interface QtiInteractionElementSupport extends QtiElementSupportBase {
+  category: "interaction";
+  interactionType: QtiInteractionType;
+}
+
+export interface QtiProcessingElementSupport extends QtiElementSupportBase {
+  category: "processing";
 }

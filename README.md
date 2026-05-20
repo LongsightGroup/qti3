@@ -138,7 +138,8 @@ It can also write standalone reference items for every currently targeted intera
 pnpm --filter @qti3/cli exec qti3 write-fixtures packages/fixtures/xml
 ```
 
-The support matrix is intentionally machine-readable:
+The support matrix is intentionally machine-readable and includes interaction, deprecated
+interaction, and processing element evidence:
 
 ```sh
 pnpm --filter @qti3/cli exec qti3 support-matrix

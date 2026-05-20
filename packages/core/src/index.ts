@@ -7,9 +7,11 @@ export {
 } from "./session.js";
 export {
   deprecatedInteractionSupport,
+  elementSupport,
   getInteractionSupport,
   interactionNameToType,
   interactionSupport,
+  processingSupport,
 } from "./support.js";
 export { validateAssessmentItem } from "./validation.js";
 export type {
@@ -21,10 +23,12 @@ export type {
   QtiDiagnostic,
   QtiDocument,
   QtiElementSupport,
+  QtiInteractionElementSupport,
   QtiInteraction,
   QtiInteractionType,
   QtiModalFeedback,
   QtiParseResult,
+  QtiProcessingElementSupport,
   QtiResponseBranch,
   QtiScoreResult,
   QtiSupportStatus,

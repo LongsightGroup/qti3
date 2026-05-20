@@ -5,8 +5,10 @@ import { runFixture } from "@qti3/conformance";
 import {
   createItemSession,
   deprecatedInteractionSupport,
+  elementSupport,
   interactionSupport,
   parseQtiXml,
+  processingSupport,
   validateAssessmentItem,
   type QtiValue,
 } from "@qti3/core";
@@ -68,8 +70,10 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     console.log(
       JSON.stringify(
         {
-          target: "QTI 3.0.1 ASI interactions",
+          target: "QTI 3.0.1 ASI item profile",
+          elements: elementSupport,
           interactions: [...interactionSupport, ...deprecatedInteractionSupport],
+          processing: processingSupport,
         },
         null,
         2,

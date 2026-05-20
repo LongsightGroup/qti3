@@ -1,6 +1,11 @@
-import type { QtiElementSupport, QtiInteractionType } from "./types.js";
+import type {
+  QtiElementSupport,
+  QtiInteractionElementSupport,
+  QtiInteractionType,
+  QtiProcessingElementSupport,
+} from "./types.js";
 
-export const interactionSupport: QtiElementSupport[] = [
+export const interactionSupport: QtiInteractionElementSupport[] = [
   entry("qti-associate-interaction", "associate"),
   entry("qti-choice-interaction", "choice"),
   entry("qti-drawing-interaction", "drawing"),
@@ -24,7 +29,7 @@ export const interactionSupport: QtiElementSupport[] = [
   entry("qti-upload-interaction", "upload"),
 ];
 
-export const deprecatedInteractionSupport: QtiElementSupport[] = [
+export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
   {
     qtiName: "qti-custom-interaction",
     interactionType: "custom",
@@ -41,6 +46,50 @@ export const deprecatedInteractionSupport: QtiElementSupport[] = [
   },
 ];
 
+export const processingSupport: QtiProcessingElementSupport[] = [
+  processingEntry("qti-template-processing", "packages/core/src/core.test.ts"),
+  processingEntry("qti-response-processing", "packages/core/src/core.test.ts"),
+  processingEntry("qti-set-template-value", "packages/core/src/core.test.ts"),
+  processingEntry("qti-set-correct-response", "packages/core/src/core.test.ts"),
+  processingEntry("qti-response-condition", "packages/core/src/core.test.ts"),
+  processingEntry("qti-response-if", "packages/core/src/core.test.ts"),
+  processingEntry("qti-response-else-if", "packages/core/src/core.test.ts"),
+  processingEntry("qti-response-else", "packages/core/src/core.test.ts"),
+  processingEntry("qti-set-outcome-value", "packages/core/src/core.test.ts"),
+  processingEntry("qti-base-value", "packages/core/src/core.test.ts"),
+  processingEntry("qti-is-null", "packages/core/src/core.test.ts"),
+  processingEntry("qti-match", "packages/core/src/core.test.ts"),
+  processingEntry("qti-map-response", "packages/core/src/core.test.ts"),
+  processingEntry("qti-variable", "packages/core/src/core.test.ts"),
+  processingEntry("qti-random-integer", "packages/core/src/core.test.ts"),
+  processingEntry("qti-random", "packages/core/src/core.test.ts"),
+  processingEntry("qti-sum", "packages/core/src/core.test.ts"),
+  processingEntry("qti-product", "packages/core/src/core.test.ts"),
+  processingEntry("qti-subtract", "packages/core/src/core.test.ts"),
+  processingEntry("qti-divide", "packages/core/src/core.test.ts"),
+  processingEntry("qti-integer-divide", "packages/core/src/core.test.ts"),
+  processingEntry("qti-integer-modulus", "packages/core/src/core.test.ts"),
+  processingEntry("qti-round", "packages/core/src/core.test.ts"),
+  processingEntry("qti-round-to", "packages/core/src/core.test.ts"),
+  processingEntry("qti-truncate", "packages/core/src/core.test.ts"),
+  processingEntry("qti-and", "packages/core/src/core.test.ts"),
+  processingEntry("qti-or", "packages/core/src/core.test.ts"),
+  processingEntry("qti-not", "packages/core/src/core.test.ts"),
+  processingEntry("qti-equal", "packages/core/src/core.test.ts"),
+  processingEntry("qti-lt", "packages/core/src/core.test.ts"),
+  processingEntry("qti-lte", "packages/core/src/core.test.ts"),
+  processingEntry("qti-gt", "packages/core/src/core.test.ts"),
+  processingEntry("qti-gte", "packages/core/src/core.test.ts"),
+  processingEntry("qti-string-match", "packages/core/src/core.test.ts"),
+  processingEntry("qti-member", "packages/core/src/core.test.ts"),
+];
+
+export const elementSupport: QtiElementSupport[] = [
+  ...interactionSupport,
+  ...deprecatedInteractionSupport,
+  ...processingSupport,
+];
+
 const allInteractionSupport = [...interactionSupport, ...deprecatedInteractionSupport];
 
 export const interactionNameToType = new Map<string, QtiInteractionType>(
@@ -51,7 +100,7 @@ export function getInteractionSupport(qtiName: string): QtiElementSupport | unde
   return allInteractionSupport.find((item) => item.qtiName === qtiName);
 }
 
-function entry(qtiName: string, interactionType: QtiInteractionType): QtiElementSupport {
+function entry(qtiName: string, interactionType: QtiInteractionType): QtiInteractionElementSupport {
   return {
     qtiName,
     interactionType,
@@ -69,5 +118,20 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiElement
       "packages/a11y/src/a11y.test.ts",
       "tests/browser/player.spec.ts",
     ],
+  };
+}
+
+function processingEntry(qtiName: string, test: string): QtiProcessingElementSupport {
+  return {
+    qtiName,
+    category: "processing",
+    support: "supported",
+    specReference: "QTI 3.0.1 ASI processing",
+    parse: true,
+    validate: true,
+    render: false,
+    process: true,
+    fixtures: [],
+    tests: [test],
   };
 }

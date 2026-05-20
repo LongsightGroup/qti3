@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { interactionSupport, parseQtiXml } from "@qti3/core";
+import { elementSupport, interactionSupport, parseQtiXml, processingSupport } from "@qti3/core";
 import { interactionFixtures } from "@qti3/fixtures";
 import { describe, expect, it } from "vitest";
 import { main } from "./index.js";
@@ -44,6 +44,32 @@ describe("@qti3/cli", () => {
       fixtures: ["packages/fixtures/xml/choice-reference.xml"],
     });
     expect(choice?.tests).toContain("tests/browser/player.spec.ts");
+  });
+
+  it("exposes processing elements in the public support matrix metadata", () => {
+    expect(elementSupport).toEqual(expect.arrayContaining(interactionSupport));
+    expect(elementSupport).toEqual(expect.arrayContaining(processingSupport));
+
+    expect(processingSupport).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          qtiName: "qti-response-processing",
+          category: "processing",
+          parse: true,
+          validate: true,
+          render: false,
+          process: true,
+        }),
+        expect.objectContaining({
+          qtiName: "qti-round-to",
+          category: "processing",
+          parse: true,
+          validate: true,
+          render: false,
+          process: true,
+        }),
+      ]),
+    );
   });
 
   it("keeps supported interactions tied to concrete reference fixtures", () => {
