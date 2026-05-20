@@ -641,6 +641,37 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(1);
   });
 
+  it("validates area mapping entry attributes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-area-mapping">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point">
+          <qti-area-mapping default-value="none">
+            <qti-area-map-entry coords="93,not-a-number,16"/>
+            <qti-area-map-entry shape="ellipse" mapped-value="one"/>
+          </qti-area-mapping>
+        </qti-response-declaration>
+        <qti-item-body>
+          <qti-select-point-interaction response-identifier="RESPONSE">
+            <object data="image.png" type="image/png" width="160" height="120"/>
+          </qti-select-point-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "areaMapping.defaultValue" }),
+        expect.objectContaining({ code: "areaMapEntry.shape.required" }),
+        expect.objectContaining({ code: "areaMapEntry.shape" }),
+        expect.objectContaining({ code: "areaMapEntry.coords.required" }),
+        expect.objectContaining({ code: "areaMapEntry.coords" }),
+        expect.objectContaining({ code: "areaMapEntry.mappedValue.required" }),
+        expect.objectContaining({ code: "areaMapEntry.mappedValue" }),
+      ]),
+    );
+  });
+
   it("classifies match choices into source and target roles", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match">

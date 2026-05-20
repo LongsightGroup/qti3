@@ -71,6 +71,8 @@ export interface QtiAreaMapEntry {
   shape: "circle" | "rect" | "poly" | "default";
   coords: number[];
   mappedValue: number;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiOutcomeDeclaration extends QtiVariableDeclaration {

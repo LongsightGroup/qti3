@@ -65,6 +65,7 @@ function validateDeclarationIdentifiers(
       declaration.source,
     );
     validateDeclarationRequiredAttributes(declaration, diagnostics);
+    validateDeclarationValueMetadata(declaration, diagnostics);
     if (seen.has(declaration.identifier)) {
       diagnostics.push({
         code: "identifier.duplicate",
@@ -75,6 +76,99 @@ function validateDeclarationIdentifiers(
       });
     }
     seen.add(declaration.identifier);
+  }
+}
+
+function validateDeclarationValueMetadata(
+  declaration: QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (declaration.kind !== "response") return;
+  validateAreaMapping(declaration, diagnostics);
+}
+
+function validateAreaMapping(
+  declaration: QtiResponseDeclaration,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const areaMapping = declaration.areaMapping;
+  if (!areaMapping) return;
+  if (!Number.isFinite(areaMapping.defaultValue)) {
+    diagnostics.push({
+      code: "areaMapping.defaultValue",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area mapping requires numeric default-value.`,
+      path: declaration.source?.path,
+      source: declaration.source,
+    });
+  }
+
+  for (const entry of areaMapping.entries) {
+    validateAreaMapEntry(declaration, entry, diagnostics);
+  }
+}
+
+function validateAreaMapEntry(
+  declaration: QtiResponseDeclaration,
+  entry: NonNullable<QtiResponseDeclaration["areaMapping"]>["entries"][number],
+  diagnostics: QtiDiagnostic[],
+): void {
+  const shape = entry.attributes.shape;
+  const coords = entry.attributes.coords;
+  const mappedValue = entry.attributes["mapped-value"];
+
+  if (!shape) {
+    diagnostics.push({
+      code: "areaMapEntry.shape.required",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry requires shape.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  } else if (!isAreaShape(shape)) {
+    diagnostics.push({
+      code: "areaMapEntry.shape",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry has unsupported shape ${shape}.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  }
+
+  if (!coords) {
+    diagnostics.push({
+      code: "areaMapEntry.coords.required",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry requires coords.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  } else if (!isNumericCsv(coords)) {
+    diagnostics.push({
+      code: "areaMapEntry.coords",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry requires comma-separated numeric coords.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  }
+
+  if (mappedValue === undefined) {
+    diagnostics.push({
+      code: "areaMapEntry.mappedValue.required",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry requires mapped-value.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  } else if (!isFiniteNumber(mappedValue)) {
+    diagnostics.push({
+      code: "areaMapEntry.mappedValue",
+      severity: "error",
+      message: `Response declaration ${declaration.identifier} area map entry requires numeric mapped-value.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
   }
 }
 
@@ -816,6 +910,17 @@ function isHotspotShape(value: string): boolean {
     value === "poly" ||
     value === "rect"
   );
+}
+
+function isAreaShape(value: string): boolean {
+  return value === "circle" || value === "default" || value === "poly" || value === "rect";
+}
+
+function isNumericCsv(value: string): boolean {
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .every((part) => part.length > 0 && isFiniteNumber(part));
 }
 
 function validateNonNegativeIntegerAttribute(

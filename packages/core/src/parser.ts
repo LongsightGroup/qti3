@@ -323,6 +323,8 @@ function parseAreaMapping(
         .map((value) => Number(value.trim()))
         .filter((value) => Number.isFinite(value)),
       mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
+      attributes: entry.attributes,
+      source: entry.source,
     })),
   };
 }
