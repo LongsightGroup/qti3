@@ -7,7 +7,6 @@ const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
 const loadXml = document.querySelector<HTMLButtonElement>("#load-xml");
 const fileInput = document.querySelector<HTMLInputElement>("#file");
-const folderInput = document.querySelector<HTMLInputElement>("#folder");
 const localFiles = document.querySelector<HTMLSelectElement>("#local-files");
 const previousFile = document.querySelector<HTMLButtonElement>("#previous-file");
 const nextFile = document.querySelector<HTMLButtonElement>("#next-file");
@@ -27,7 +26,6 @@ if (
   !loadFixture ||
   !loadXml ||
   !fileInput ||
-  !folderInput ||
   !localFiles ||
   !previousFile ||
   !nextFile ||
@@ -75,10 +73,6 @@ loadXml.addEventListener("click", async () => {
 
 fileInput.addEventListener("change", async () => {
   await loadLocalFiles(fileInput.files);
-});
-
-folderInput.addEventListener("change", async () => {
-  await loadLocalFiles(folderInput.files);
 });
 
 localFiles.addEventListener("change", async () => {
@@ -220,7 +214,7 @@ async function loadSelectedLocalFile(): Promise<void> {
   const file = loadedFiles[selectedFileIndex];
   if (!file) {
     fileSummary.textContent =
-      "No QTI item files loaded. For QTI packages, select the package folder so referenced item files are included.";
+      "No QTI item files loaded. Upload item XML files or a QTI package zip.";
     previousFile.disabled = true;
     nextFile.disabled = true;
     return;
@@ -250,18 +244,90 @@ async function loadLocalFiles(fileList: FileList | null): Promise<void> {
 }
 
 async function readXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
-  const files = [...(fileList ?? [])].filter((file) => file.name.endsWith(".xml"));
-  const loaded = await Promise.all(
-    files.map(async (file) => {
-      const source = normalizePath(file.webkitRelativePath || file.name);
+  const loadedGroups = await Promise.all(
+    [...(fileList ?? [])].map(async (file) => {
+      if (file.name.endsWith(".zip")) return readZipXmlFiles(file);
+      if (!file.name.endsWith(".xml")) return [];
+      const source = normalizePath(file.name);
       return {
         name: source,
         source,
         xml: await file.text(),
-      };
+      } satisfies LoadedFile;
     }),
   );
-  return loaded.sort((left, right) => left.name.localeCompare(right.name));
+  return loadedGroups.flat().sort((left, right) => left.name.localeCompare(right.name));
+}
+
+async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
+  const entries = await readZipEntries(await file.arrayBuffer());
+  return entries
+    .filter((entry) => entry.name.endsWith(".xml"))
+    .map((entry) => ({
+      name: entry.name,
+      source: entry.name,
+      xml: entry.text,
+    }));
+}
+
+async function readZipEntries(buffer: ArrayBuffer): Promise<Array<{ name: string; text: string }>> {
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  const eocdOffset = findEndOfCentralDirectory(view);
+  if (eocdOffset < 0) return [];
+
+  const entryCount = view.getUint16(eocdOffset + 10, true);
+  let offset = view.getUint32(eocdOffset + 16, true);
+  const entries: Array<{ name: string; text: string }> = [];
+  const decoder = new TextDecoder();
+
+  for (let index = 0; index < entryCount; index += 1) {
+    if (view.getUint32(offset, true) !== 0x02014b50) break;
+    const method = view.getUint16(offset + 10, true);
+    const compressedSize = view.getUint32(offset + 20, true);
+    const nameLength = view.getUint16(offset + 28, true);
+    const extraLength = view.getUint16(offset + 30, true);
+    const commentLength = view.getUint16(offset + 32, true);
+    const localHeaderOffset = view.getUint32(offset + 42, true);
+    const rawName = bytes.slice(offset + 46, offset + 46 + nameLength);
+    const name = normalizePath(decoder.decode(rawName));
+    offset += 46 + nameLength + extraLength + commentLength;
+    if (!name || name.endsWith("/")) continue;
+
+    const content = await zipEntryBytes(bytes, view, localHeaderOffset, compressedSize, method);
+    if (content) entries.push({ name, text: decoder.decode(content) });
+  }
+
+  return entries;
+}
+
+function findEndOfCentralDirectory(view: DataView): number {
+  const minimumOffset = Math.max(0, view.byteLength - 65557);
+  for (let offset = view.byteLength - 22; offset >= minimumOffset; offset -= 1) {
+    if (view.getUint32(offset, true) === 0x06054b50) return offset;
+  }
+  return -1;
+}
+
+async function zipEntryBytes(
+  bytes: Uint8Array,
+  view: DataView,
+  localHeaderOffset: number,
+  compressedSize: number,
+  method: number,
+): Promise<Uint8Array | undefined> {
+  if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) return undefined;
+  const nameLength = view.getUint16(localHeaderOffset + 26, true);
+  const extraLength = view.getUint16(localHeaderOffset + 28, true);
+  const dataOffset = localHeaderOffset + 30 + nameLength + extraLength;
+  const compressed = bytes.slice(dataOffset, dataOffset + compressedSize);
+  if (method === 0) return compressed;
+  if (method !== 8 || typeof DecompressionStream === "undefined") return undefined;
+
+  const stream = new Blob([compressed])
+    .stream()
+    .pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
 function resolveLoadableItems(files: LoadedFile[]): LoadedFile[] {

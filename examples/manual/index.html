@@ -155,12 +155,13 @@
           <select id="fixture"></select>
         </label>
         <button id="load-fixture" type="button">Load fixture</button>
-        <h2>Open local QTI files</h2>
-        <input id="file" type="file" accept=".xml,text/xml,application/xml" multiple />
-        <label>
-          Open package folder
-          <input id="folder" type="file" webkitdirectory multiple />
-        </label>
+        <h2>Open QTI XML or package zip</h2>
+        <input
+          id="file"
+          type="file"
+          accept=".xml,.zip,text/xml,application/xml,application/zip"
+          multiple
+        />
         <label>
           Loaded file
           <select id="local-files"></select>

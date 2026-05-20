@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
@@ -299,19 +299,13 @@ test.describe("manual harness", () => {
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
   });
 
-  test("resolves assessment-test package item references from a folder upload", async ({
-    page,
-  }, testInfo) => {
+  test("resolves assessment-test package item references from a zip upload", async ({ page }) => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");
     if (!choice || !textEntry) throw new Error("Missing package fixtures.");
 
-    const packageRoot = testInfo.outputPath("presidents-package");
-    await rm(packageRoot, { force: true, recursive: true });
-    await mkdir(`${packageRoot}/items`, { recursive: true });
-    await writeFile(
-      `${packageRoot}/imsmanifest.xml`,
-      `<?xml version="1.0" encoding="UTF-8"?>
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
   <resources>
     <resource identifier="test-1" type="imsqti_test_xmlv3p0" href="assessment.xml">
@@ -325,10 +319,7 @@ test.describe("manual harness", () => {
     </resource>
   </resources>
 </manifest>`,
-    );
-    await writeFile(
-      `${packageRoot}/assessment.xml`,
-      `<?xml version="1.0" encoding="UTF-8"?>
+      "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="US Presidents Sampler">
   <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
     <qti-assessment-section identifier="section-1" visible="true">
@@ -337,12 +328,16 @@ test.describe("manual harness", () => {
     </qti-assessment-section>
   </qti-test-part>
 </qti-assessment-test>`,
-    );
-    await writeFile(`${packageRoot}/items/choice.xml`, choice.xml);
-    await writeFile(`${packageRoot}/items/text-entry.xml`, textEntry.xml);
+      "items/choice.xml": choice.xml,
+      "items/text-entry.xml": textEntry.xml,
+    });
 
     await page.goto("/");
-    await page.locator("#folder").setInputFiles(packageRoot);
+    await page.locator("#file").setInputFiles({
+      name: "presidents-qti.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
 
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
@@ -1165,4 +1160,61 @@ async function provideResponse(
     await input.fill(value);
     await input.dispatchEvent("change");
   }
+}
+
+function createStoredZip(files: Record<string, string>): Buffer {
+  const localParts: Buffer[] = [];
+  const centralParts: Buffer[] = [];
+  let offset = 0;
+
+  for (const [name, text] of Object.entries(files)) {
+    const nameBytes = Buffer.from(name);
+    const data = Buffer.from(text);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0, 6);
+    local.writeUInt16LE(0, 8);
+    local.writeUInt32LE(0, 10);
+    local.writeUInt32LE(0, 14);
+    local.writeUInt32LE(data.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBytes.length, 26);
+    local.writeUInt16LE(0, 28);
+    localParts.push(local, nameBytes, data);
+
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8);
+    central.writeUInt16LE(0, 10);
+    central.writeUInt32LE(0, 12);
+    central.writeUInt32LE(0, 16);
+    central.writeUInt32LE(data.length, 20);
+    central.writeUInt32LE(data.length, 24);
+    central.writeUInt16LE(nameBytes.length, 28);
+    central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32);
+    central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36);
+    central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    centralParts.push(central, nameBytes);
+
+    offset += local.length + nameBytes.length + data.length;
+  }
+
+  const centralDirectory = Buffer.concat(centralParts);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(Object.keys(files).length, 8);
+  end.writeUInt16LE(Object.keys(files).length, 10);
+  end.writeUInt32LE(centralDirectory.length, 12);
+  end.writeUInt32LE(offset, 16);
+  end.writeUInt16LE(0, 20);
+
+  return Buffer.concat([...localParts, centralDirectory, end]);
 }
