@@ -6,6 +6,7 @@ import {
   deprecatedInteractionSupport,
   interactionSupport,
   parseQtiXml,
+  validateAssessmentItem,
   type QtiValue,
 } from "@qti3/core";
 import { interactionFixtures } from "@qti3/fixtures";
@@ -21,6 +22,18 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
 
   if (command === "parse-dir" && file) {
     const report = await parseDirectory(file);
+    console.log(JSON.stringify(report, null, 2));
+    return report.failed === 0 ? 0 : 1;
+  }
+
+  if (command === "validate" && file) {
+    const result = await validateFile(file);
+    console.log(JSON.stringify(result, null, 2));
+    return result.ok ? 0 : 1;
+  }
+
+  if (command === "validate-dir" && file) {
+    const report = await validateDirectory(file);
     console.log(JSON.stringify(report, null, 2));
     return report.failed === 0 ? 0 : 1;
   }
@@ -65,7 +78,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix",
   );
   return 1;
 }
@@ -112,6 +125,55 @@ async function parseDirectory(root: string): Promise<{
     });
   }
   return { checked: results.length, failed, results };
+}
+
+async function validateDirectory(root: string): Promise<{
+  checked: number;
+  failed: number;
+  results: Awaited<ReturnType<typeof validateFile>>[];
+}> {
+  const files = await findXmlFiles(root);
+  const results = [];
+  let failed = 0;
+  for (const xmlFile of files) {
+    const xml = await readFile(xmlFile, "utf8");
+    if (!xml.includes("qti-assessment-item")) continue;
+    const result = await validateFile(xmlFile);
+    if (!result.ok) failed += 1;
+    results.push(result);
+  }
+  return { checked: results.length, failed, results };
+}
+
+async function validateFile(file: string): Promise<{
+  file: string;
+  ok: boolean;
+  diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
+}> {
+  const xml = await readFile(file, "utf8");
+  const result = parseQtiXml(xml);
+  if (!result.document) {
+    return { file, ok: false, diagnostics: result.diagnostics };
+  }
+  const validation = validateAssessmentItem(result.document);
+  const diagnostics = uniqueDiagnostics([...result.diagnostics, ...validation.diagnostics]);
+  return {
+    file,
+    ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
+    diagnostics,
+  };
+}
+
+function uniqueDiagnostics(
+  diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"],
+): ReturnType<typeof parseQtiXml>["diagnostics"] {
+  const seen = new Set<string>();
+  return diagnostics.filter((diagnostic) => {
+    const key = `${diagnostic.code}\n${diagnostic.severity}\n${diagnostic.message}\n${diagnostic.path ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function scoreCorrectDirectory(root: string): Promise<{

@@ -101,6 +101,14 @@ function defaultResponse(interactionType: QtiInteractionType): {
       correct: "A",
     };
   }
+  if (interactionType === "inlineChoice" || interactionType === "hottext") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "single",
+      baseType: "identifier",
+      correct: "A",
+    };
+  }
   if (interactionType === "order" || interactionType === "graphicOrder") {
     return {
       identifier: "RESPONSE",
@@ -154,7 +162,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} title="End attempt"/>`;
   }
   if (interactionType === "media") {
-    return `<${qtiName} response-identifier="RESPONSE" autostart="false"><object data="media.mp3" type="audio/mpeg"/></${qtiName}>`;
+    return `<${qtiName} autostart="false"><object data="media.mp3" type="audio/mpeg"/></${qtiName}>`;
   }
   if (interactionType === "slider") {
     return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"/>`;

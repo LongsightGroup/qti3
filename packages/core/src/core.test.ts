@@ -4,6 +4,7 @@ import {
   deprecatedInteractionSupport,
   interactionSupport,
   parseQtiXml,
+  validateAssessmentItem,
 } from "./index.js";
 
 describe("@qti3/core", () => {
@@ -83,6 +84,45 @@ describe("@qti3/core", () => {
     session.respond("RESPONSE", "A");
     expect(session.score().outcomes.SCORE).toBe(1);
     expect(session.serialize().schema).toBe("qti3.attempt-state.v1");
+  });
+
+  it("validates response declaration references and response shape", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-order-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-order-interaction>
+          <qti-choice-interaction response-identifier="MISSING">
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.responseIdentifier.reference" }),
+        expect.objectContaining({ code: "interaction.cardinality" }),
+      ]),
+    );
+  });
+
+  it("exposes validation independent of XML parsing", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(validateAssessmentItem(result.document!).ok).toBe(true);
   });
 
   it("scores an inline response condition with map-response", () => {

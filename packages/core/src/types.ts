@@ -162,6 +162,11 @@ export interface QtiParseResult {
   diagnostics: QtiDiagnostic[];
 }
 
+export interface QtiValidationResult {
+  ok: boolean;
+  diagnostics: QtiDiagnostic[];
+}
+
 export interface QtiAttemptStateV1 {
   schema: "qti3.attempt-state.v1";
   itemIdentifier: string;

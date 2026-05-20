@@ -16,6 +16,7 @@ import type {
   QtiSetOutcomeValue,
   QtiValue,
 } from "./types.js";
+import { validateAssessmentItem } from "./validation.js";
 import { childElements, descendants, parseXmlTree, textContent, type XmlNode } from "./xml.js";
 
 export function parseQtiXml(xml: string): QtiParseResult {
@@ -51,6 +52,8 @@ export function parseQtiXml(xml: string): QtiParseResult {
 
   const item = parseAssessmentItem(itemNode, diagnostics);
   const document: QtiDocument = { item, diagnostics };
+  const validation = validateAssessmentItem(document);
+  diagnostics.push(...validation.diagnostics);
   return {
     ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
     document,
@@ -75,20 +78,6 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const interactions = descendants(node, (child) => interactionNameToType.has(child.localName)).map(
     (interactionNode) => parseInteraction(interactionNode, diagnostics, responseDeclarationMap),
   );
-
-  for (const interaction of interactions) {
-    if (
-      !interaction.responseIdentifier &&
-      interaction.type !== "endAttempt" &&
-      interaction.type !== "media"
-    ) {
-      diagnostics.push({
-        code: "interaction.responseIdentifier",
-        severity: "error",
-        message: `${interaction.qtiName} is missing response-identifier.`,
-      });
-    }
-  }
 
   return {
     identifier,

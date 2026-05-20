@@ -6,6 +6,7 @@ export {
   interactionNameToType,
   interactionSupport,
 } from "./support.js";
+export { validateAssessmentItem } from "./validation.js";
 export type {
   QtiAssessmentItem,
   QtiAttemptStateV1,
@@ -19,5 +20,6 @@ export type {
   QtiParseResult,
   QtiScoreResult,
   QtiSupportStatus,
+  QtiValidationResult,
   QtiValue,
 } from "./types.js";
