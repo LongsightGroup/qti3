@@ -30,6 +30,10 @@ describe("@qti3/cli", () => {
     await expect(main(["support-matrix"])).resolves.toBe(0);
   });
 
+  it("runs the canonical conformance fixture suite", async () => {
+    await expect(main(["run-fixtures"])).resolves.toBe(0);
+  });
+
   it("exposes evidence metadata in support entries", async () => {
     const choice = interactionSupport.find((support) => support.interactionType === "choice");
     expect(choice).toMatchObject({

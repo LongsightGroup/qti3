@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { runFixture } from "@qti3/conformance";
 import {
   createItemSession,
   deprecatedInteractionSupport,
@@ -77,8 +78,14 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     return 0;
   }
 
+  if (command === "run-fixtures") {
+    const report = runCanonicalFixtures();
+    console.log(JSON.stringify(report, null, 2));
+    return report.failed === 0 ? 0 : 1;
+  }
+
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 run-fixtures",
   );
   return 1;
 }
@@ -96,6 +103,19 @@ async function findXmlFiles(root: string): Promise<string[]> {
     else if (entry.isFile() && entry.name.endsWith(".xml")) files.push(path);
   }
   return files;
+}
+
+function runCanonicalFixtures(): {
+  checked: number;
+  failed: number;
+  results: ReturnType<typeof runFixture>[];
+} {
+  const results = interactionFixtures.map(runFixture);
+  return {
+    checked: results.length,
+    failed: results.filter((result) => !result.ok).length,
+    results,
+  };
 }
 
 async function parseDirectory(root: string): Promise<{
