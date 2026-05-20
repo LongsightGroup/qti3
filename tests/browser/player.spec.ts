@@ -61,6 +61,34 @@ test.describe("manual harness", () => {
     await expect(player.getByRole("radio", { name: "A" })).toBeVisible();
   });
 
+  test("loads and navigates multiple local XML files", async ({ page }) => {
+    const choice = interactionFixtures.find((item) => item.interactionType === "choice");
+    const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");
+    if (!choice || !textEntry) throw new Error("Missing local-file fixtures.");
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles([
+      {
+        name: "choice-reference.xml",
+        mimeType: "application/xml",
+        buffer: Buffer.from(choice.xml),
+      },
+      {
+        name: "textEntry-reference.xml",
+        mimeType: "application/xml",
+        buffer: Buffer.from(textEntry.xml),
+      },
+    ]);
+
+    await expect(page.locator("#file-summary")).toContainText("1 of 2");
+    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await page.locator("#next-file").click();
+    await expect(page.locator("#file-summary")).toContainText("2 of 2");
+    await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
+    await page.locator("#previous-file").click();
+    await expect(page.locator("#file-summary")).toContainText("1 of 2");
+  });
+
   test("captures and scores every reference interaction fixture", async ({ page }) => {
     await page.goto("/");
 
