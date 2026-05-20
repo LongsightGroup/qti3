@@ -7,8 +7,8 @@ import type {
   QtiModalFeedback,
   QtiProcessingExpression,
   QtiResponseDeclaration,
+  QtiResponseRule,
   QtiScalarValue,
-  QtiSetOutcomeValue,
   QtiScoreResult,
   QtiTemplateRule,
   QtiValue,
@@ -124,7 +124,7 @@ function applyTemplateProcessing(
   random: () => number,
 ): void {
   for (const rule of document.item.templateProcessing?.rules ?? []) {
-    applyTemplateRule(
+    const shouldExit = applyTemplateRule(
       rule,
       document,
       templateValues,
@@ -133,6 +133,7 @@ function applyTemplateProcessing(
       correctResponses,
       random,
     );
+    if (shouldExit) return;
   }
 }
 
@@ -144,7 +145,9 @@ function applyTemplateRule(
   outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
-): void {
+): boolean {
+  if (rule.type === "exitTemplate") return true;
+
   if (rule.type === "templateCondition") {
     let branch = evaluateBoolean(
       rule.ifExpression,
@@ -177,7 +180,7 @@ function applyTemplateRule(
     }
     branch ??= rule.elseRules;
     for (const branchRule of branch) {
-      applyTemplateRule(
+      const shouldExit = applyTemplateRule(
         branchRule,
         document,
         templateValues,
@@ -186,8 +189,9 @@ function applyTemplateRule(
         correctResponses,
         random,
       );
+      if (shouldExit) return true;
     }
-    return;
+    return false;
   }
 
   const value = evaluateValue(
@@ -201,7 +205,7 @@ function applyTemplateRule(
   );
   if (rule.type === "setTemplateValue") {
     templateValues[rule.identifier] = value;
-    return;
+    return false;
   }
 
   if (rule.type === "setDefaultValue") {
@@ -210,7 +214,7 @@ function applyTemplateRule(
       const normalized = normalizeValueForCardinality(value, responseDeclaration.cardinality);
       responseDeclaration.defaultValue = normalized;
       responses[rule.identifier] = normalized;
-      return;
+      return false;
     }
     const outcomeDeclaration = document.item.outcomeDeclarations.find(
       (declaration) => declaration.identifier === rule.identifier,
@@ -219,7 +223,7 @@ function applyTemplateRule(
       outcomeDeclaration.defaultValue = value;
       outcomes[rule.identifier] = value;
     }
-    return;
+    return false;
   }
 
   const declaration = getResponseDeclaration(document, rule.identifier);
@@ -228,6 +232,7 @@ function applyTemplateRule(
       value,
       declaration.cardinality,
     );
+  return false;
 }
 
 function applyResponseProcessing(
@@ -271,7 +276,7 @@ function applyResponseProcessing(
         }
       }
       branch ??= condition.elseRules;
-      applyOutcomeRules(
+      const shouldExit = applyResponseRules(
         branch,
         document,
         responses,
@@ -280,6 +285,7 @@ function applyResponseProcessing(
         correctResponses,
         random,
       );
+      if (shouldExit) return;
     }
     return;
   }
@@ -313,16 +319,30 @@ function applyResponseProcessing(
   if (scored) outcomes.SCORE = score;
 }
 
-function applyOutcomeRules(
-  rules: QtiSetOutcomeValue[],
+function applyResponseRules(
+  rules: QtiResponseRule[],
   document: QtiDocument,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
   templateValues: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
-): void {
+): boolean {
   for (const rule of rules) {
+    if (rule.type === "exitResponse") return true;
+    if (rule.type === "responseProcessingFragment") {
+      const shouldExit = applyResponseRules(
+        rule.rules,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      );
+      if (shouldExit) return true;
+      continue;
+    }
     outcomes[rule.identifier] = evaluateValue(
       rule.expression,
       document,
@@ -333,6 +353,7 @@ function applyOutcomeRules(
       random,
     );
   }
+  return false;
 }
 
 function evaluateBoolean(

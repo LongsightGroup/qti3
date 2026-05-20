@@ -204,17 +204,27 @@ export interface QtiResponseProcessing {
 
 export interface QtiResponseCondition {
   ifExpression?: QtiProcessingExpression | undefined;
-  thenRules: QtiSetOutcomeValue[];
+  thenRules: QtiResponseRule[];
   elseIfs: QtiResponseBranch[];
-  elseRules: QtiSetOutcomeValue[];
+  elseRules: QtiResponseRule[];
 }
 
 export interface QtiResponseBranch {
   expression?: QtiProcessingExpression | undefined;
-  rules: QtiSetOutcomeValue[];
+  rules: QtiResponseRule[];
 }
 
+export type QtiResponseRule =
+  | QtiSetOutcomeValue
+  | { type: "exitResponse"; source?: QtiSourceLocation | undefined }
+  | {
+      type: "responseProcessingFragment";
+      rules: QtiResponseRule[];
+      source?: QtiSourceLocation | undefined;
+    };
+
 export interface QtiSetOutcomeValue {
+  type: "setOutcomeValue";
   identifier: string;
   expression: QtiProcessingExpression;
   source?: QtiSourceLocation | undefined;
@@ -249,6 +259,10 @@ export type QtiTemplateRule =
       thenRules: QtiTemplateRule[];
       elseIfs: QtiTemplateBranch[];
       elseRules: QtiTemplateRule[];
+      source?: QtiSourceLocation | undefined;
+    }
+  | {
+      type: "exitTemplate";
       source?: QtiSourceLocation | undefined;
     };
 

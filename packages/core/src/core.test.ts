@@ -763,9 +763,9 @@ describe("@qti3/core", () => {
     expect(templateRule?.type === "setTemplateValue" ? templateRule.identifier : undefined).toBe(
       "",
     );
-    expect(result.document?.item.responseProcessing?.conditions[0]?.thenRules[0]?.identifier).toBe(
-      "",
-    );
+    const responseRule = result.document?.item.responseProcessing?.conditions[0]?.thenRules[0];
+    expect(responseRule?.type).toBe("setOutcomeValue");
+    expect(responseRule?.type === "setOutcomeValue" ? responseRule.identifier : undefined).toBe("");
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "processing.templateTarget" }),
@@ -1371,6 +1371,33 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(0);
   });
 
+  it("honors exit-template rules during template processing", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-template">
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-template-declaration>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+        <qti-template-processing>
+          <qti-set-template-value identifier="A">
+            <qti-base-value base-type="integer">1</qti-base-value>
+          </qti-set-template-value>
+          <qti-exit-template/>
+          <qti-set-template-value identifier="A">
+            <qti-base-value base-type="integer">2</qti-base-value>
+          </qti-set-template-value>
+        </qti-template-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    expect(session.serialize().templateValues).toEqual({ A: 1 });
+  });
+
   it("validates random integer processing attributes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-random-integer">
@@ -1490,6 +1517,55 @@ describe("@qti3/core", () => {
     const session = createItemSession(result.document!);
     session.respond("RESPONSE", "Washington");
     expect(session.score().outcomes.SCORE).toBe(3);
+  });
+
+  it("honors response-processing fragments and exit-response rules", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-response">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="TRACE" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body>
+          <qti-text-entry-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-processing-fragment>
+            <qti-response-condition>
+              <qti-response-if>
+                <qti-base-value base-type="boolean">true</qti-base-value>
+                <qti-response-processing-fragment>
+                  <qti-set-outcome-value identifier="SCORE">
+                    <qti-base-value base-type="float">1</qti-base-value>
+                  </qti-set-outcome-value>
+                  <qti-exit-response/>
+                  <qti-set-outcome-value identifier="TRACE">
+                    <qti-base-value base-type="integer">99</qti-base-value>
+                  </qti-set-outcome-value>
+                </qti-response-processing-fragment>
+              </qti-response-if>
+            </qti-response-condition>
+          </qti-response-processing-fragment>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="float">2</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const score = session.score();
+    expect(score.outcomes.SCORE).toBe(1);
+    expect(score.outcomes.TRACE).toBe("0");
   });
 
   it("evaluates numeric division and comparison processing expressions", () => {

@@ -15,6 +15,7 @@ import type {
   QtiResponseCondition,
   QtiResponseDeclaration,
   QtiResponseProcessing,
+  QtiResponseRule,
   QtiSetOutcomeValue,
   QtiTemplateDeclaration,
   QtiTemplateProcessing,
@@ -349,7 +350,7 @@ function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessi
   if (!node) return undefined;
   return {
     template: node.attributes.template,
-    conditions: childElements(node, "qti-response-condition").map(parseResponseCondition),
+    conditions: responseConditionsFromChildren(node),
   };
 }
 
@@ -422,7 +423,24 @@ function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
     };
   }
 
+  if (node.localName === "qti-exit-template") {
+    return {
+      type: "exitTemplate",
+      source: node.source,
+    };
+  }
+
   return undefined;
+}
+
+function responseConditionsFromChildren(node: XmlNode): QtiResponseCondition[] {
+  return childElements(node).flatMap((child) => {
+    if (child.localName === "qti-response-condition") return [parseResponseCondition(child)];
+    if (child.localName === "qti-response-processing-fragment") {
+      return responseConditionsFromChildren(child);
+    }
+    return [];
+  });
 }
 
 function parseResponseCondition(node: XmlNode): QtiResponseCondition {
@@ -430,17 +448,39 @@ function parseResponseCondition(node: XmlNode): QtiResponseCondition {
   const responseElse = childElements(node, "qti-response-else")[0];
   return {
     ifExpression: responseIf ? parseFirstExpression(responseIf) : undefined,
-    thenRules: responseIf ? parseSetOutcomeValues(responseIf) : [],
+    thenRules: responseIf ? parseResponseRules(responseIf) : [],
     elseIfs: childElements(node, "qti-response-else-if").map((branch) => ({
       expression: parseFirstExpression(branch),
-      rules: parseSetOutcomeValues(branch),
+      rules: parseResponseRules(branch),
     })),
-    elseRules: responseElse ? parseSetOutcomeValues(responseElse) : [],
+    elseRules: responseElse ? parseResponseRules(responseElse) : [],
   };
 }
 
-function parseSetOutcomeValues(node: XmlNode): QtiSetOutcomeValue[] {
-  return childElements(node, "qti-set-outcome-value").map((setNode) => ({
+function parseResponseRules(node: XmlNode): QtiResponseRule[] {
+  return childElements(node)
+    .map(parseResponseRule)
+    .filter((rule): rule is QtiResponseRule => rule !== undefined);
+}
+
+function parseResponseRule(node: XmlNode): QtiResponseRule | undefined {
+  if (node.localName === "qti-set-outcome-value") return parseSetOutcomeValue(node);
+  if (node.localName === "qti-exit-response") {
+    return { type: "exitResponse", source: node.source };
+  }
+  if (node.localName === "qti-response-processing-fragment") {
+    return {
+      type: "responseProcessingFragment",
+      rules: parseResponseRules(node),
+      source: node.source,
+    };
+  }
+  return undefined;
+}
+
+function parseSetOutcomeValue(setNode: XmlNode): QtiSetOutcomeValue {
+  return {
+    type: "setOutcomeValue",
     identifier: setNode.attributes.identifier ?? "",
     expression: parseFirstExpression(setNode) ?? {
       type: "baseValue",
@@ -448,7 +488,7 @@ function parseSetOutcomeValues(node: XmlNode): QtiSetOutcomeValue[] {
       source: setNode.source,
     },
     source: setNode.source,
-  }));
+  };
 }
 
 function parseFirstExpression(node: XmlNode): QtiProcessingExpression | undefined {

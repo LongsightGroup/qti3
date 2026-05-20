@@ -9,6 +9,7 @@ import type {
   QtiOutcomeDeclaration,
   QtiProcessingExpression,
   QtiResponseDeclaration,
+  QtiResponseRule,
   QtiSetOutcomeValue,
   QtiTemplateDeclaration,
   QtiTemplateRule,
@@ -417,16 +418,16 @@ function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiD
   for (const condition of item.responseProcessing?.conditions ?? []) {
     validateExpressionReferences(condition.ifExpression, responses, variables, diagnostics);
     for (const rule of condition.thenRules) {
-      validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+      validateResponseRule(rule, outcomes, responses, variables, diagnostics);
     }
     for (const branch of condition.elseIfs) {
       validateExpressionReferences(branch.expression, responses, variables, diagnostics);
       for (const rule of branch.rules) {
-        validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+        validateResponseRule(rule, outcomes, responses, variables, diagnostics);
       }
     }
     for (const rule of condition.elseRules) {
-      validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
+      validateResponseRule(rule, outcomes, responses, variables, diagnostics);
     }
   }
 }
@@ -439,6 +440,8 @@ function validateTemplateRule(
   variables: Set<string>,
   diagnostics: QtiDiagnostic[],
 ): void {
+  if (rule.type === "exitTemplate") return;
+
   if (rule.type === "templateCondition") {
     validateExpressionReferences(rule.ifExpression, responses, variables, diagnostics);
     for (const branchRule of rule.thenRules) {
@@ -511,6 +514,23 @@ function validateTemplateRule(
   }
 
   validateExpressionReferences(rule.expression, responses, variables, diagnostics);
+}
+
+function validateResponseRule(
+  rule: QtiResponseRule,
+  outcomes: Set<string>,
+  responses: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (rule.type === "exitResponse") return;
+  if (rule.type === "responseProcessingFragment") {
+    for (const childRule of rule.rules) {
+      validateResponseRule(childRule, outcomes, responses, variables, diagnostics);
+    }
+    return;
+  }
+  validateSetOutcomeRule(rule, outcomes, responses, variables, diagnostics);
 }
 
 function validateSetOutcomeRule(
