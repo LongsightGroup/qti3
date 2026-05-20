@@ -203,6 +203,62 @@ describe("@qti3/core", () => {
     });
   });
 
+  it("keeps serialized attempt state detached from live session internals", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-contract">
+        <qti-response-declaration identifier="ORDER" cardinality="ordered" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-order-interaction response-identifier="ORDER">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-order-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    const response = ["A", "B"];
+    session.respond("ORDER", response);
+    response[0] = "B";
+    expect(session.serialize().responses.ORDER).toEqual(["A", "B"]);
+
+    const serialized = session.serialize();
+    (serialized.responses.ORDER as string[])[0] = "B";
+    expect(session.serialize().responses.ORDER).toEqual(["A", "B"]);
+
+    const priorState = session.serialize();
+    const restored = createItemSession(result.document!, priorState);
+    (priorState.responses.ORDER as string[])[1] = "A";
+    expect(restored.serialize().responses.ORDER).toEqual(["A", "B"]);
+  });
+
+  it("rejects incompatible restored attempt state", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-target">
+        <qti-item-body><p>State target.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const state = createItemSession(result.document!).serialize();
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        schema: "qti3.attempt-state.v0" as "qti3.attempt-state.v1",
+      }),
+    ).toThrow("Unsupported QTI attempt state schema qti3.attempt-state.v0.");
+    expect(() =>
+      createItemSession(result.document!, {
+        ...state,
+        itemIdentifier: "other-item",
+      }),
+    ).toThrow("Cannot restore state for other-item into state-target.");
+  });
+
   it("preserves item body mixed-content order with embedded interactions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mixed-body">

@@ -63,7 +63,9 @@ export function createItemSession(
   priorState?: QtiAttemptStateV1,
   options: QtiItemSessionOptions = {},
 ): QtiItemSession {
-  const responses: Record<string, QtiValue> = { ...priorState?.responses };
+  assertCompatiblePriorState(document, priorState);
+
+  const responses: Record<string, QtiValue> = cloneValueRecord(priorState?.responses ?? {});
   const outcomes: Record<string, QtiValue> = {};
   const templateValues: Record<string, QtiValue> = {};
   const correctResponses: Record<string, QtiValue> = {};
@@ -72,16 +74,16 @@ export function createItemSession(
   const customOperators = options.customOperators ?? {};
 
   for (const declaration of document.item.responseDeclarations) {
-    correctResponses[declaration.identifier] = declaration.correctResponse;
+    correctResponses[declaration.identifier] = cloneValue(declaration.correctResponse);
     if (declaration.defaultValue !== null && responses[declaration.identifier] === undefined) {
-      responses[declaration.identifier] = declaration.defaultValue;
+      responses[declaration.identifier] = cloneValue(declaration.defaultValue);
     }
   }
   for (const declaration of document.item.templateDeclarations) {
-    templateValues[declaration.identifier] = declaration.defaultValue;
+    templateValues[declaration.identifier] = cloneValue(declaration.defaultValue);
   }
   for (const outcome of document.item.outcomeDeclarations) {
-    outcomes[outcome.identifier] = outcome.defaultValue;
+    outcomes[outcome.identifier] = cloneValue(outcome.defaultValue);
   }
   outcomes[COMPLETION_STATUS] = COMPLETION_NOT_ATTEMPTED;
 
@@ -94,17 +96,17 @@ export function createItemSession(
     random,
     customOperators,
   );
-  const defaultOutcomes = { ...outcomes };
-  Object.assign(templateValues, priorState?.templateValues ?? {});
-  Object.assign(outcomes, priorState?.outcomes ?? {});
+  const defaultOutcomes = cloneValueRecord(outcomes);
+  Object.assign(templateValues, cloneValueRecord(priorState?.templateValues ?? {}));
+  Object.assign(outcomes, cloneValueRecord(priorState?.outcomes ?? {}));
 
   return {
     item: document.item,
     correctResponses() {
-      return { ...correctResponses };
+      return cloneValueRecord(correctResponses);
     },
     respond(identifier: string, value: QtiValue) {
-      responses[identifier] = value;
+      responses[identifier] = cloneValue(value);
       startAttempt();
     },
     setStatus(nextStatus: QtiAttemptStatus) {
@@ -117,7 +119,7 @@ export function createItemSession(
       }
       const completionStatus = outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
       if (!document.item.adaptive) {
-        resetRecord(outcomes, defaultOutcomes);
+        resetRecord(outcomes, cloneValueRecord(defaultOutcomes));
         outcomes[COMPLETION_STATUS] = completionStatus;
       }
       applyResponseProcessing(
@@ -158,6 +160,21 @@ function resetRecord<T>(target: Record<string, T>, source: Record<string, T>): v
     delete target[key];
   }
   Object.assign(target, source);
+}
+
+function assertCompatiblePriorState(
+  document: QtiDocument,
+  priorState: QtiAttemptStateV1 | undefined,
+): void {
+  if (!priorState) return;
+  if (priorState.schema !== "qti3.attempt-state.v1") {
+    throw new Error(`Unsupported QTI attempt state schema ${String(priorState.schema)}.`);
+  }
+  if (priorState.itemIdentifier !== document.item.identifier) {
+    throw new Error(
+      `Cannot restore state for ${priorState.itemIdentifier} into ${document.item.identifier}.`,
+    );
+  }
 }
 
 function applyTemplateProcessing(
@@ -1516,11 +1533,21 @@ function serialize(
     schema: "qti3.attempt-state.v1",
     itemIdentifier,
     status,
-    responses: { ...responses },
-    outcomes: { ...outcomes },
-    templateValues: { ...templateValues },
+    responses: cloneValueRecord(responses),
+    outcomes: cloneValueRecord(outcomes),
+    templateValues: cloneValueRecord(templateValues),
     validationMessages: [...validationMessages],
   };
+}
+
+function cloneValueRecord(record: Record<string, QtiValue>): Record<string, QtiValue> {
+  return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, cloneValue(value)]));
+}
+
+function cloneValue(value: QtiValue): QtiValue {
+  if (Array.isArray(value)) return [...value];
+  if (isRecordValue(value)) return cloneValueRecord(value);
+  return value;
 }
 
 function scoreMapping(
