@@ -121,6 +121,46 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("attaches source locations and paths to parsed model nodes and validation diagnostics", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="located">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="MISSING">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="A">Duplicate</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.source).toMatchObject({
+      line: 2,
+      column: 7,
+      path: "/qti-assessment-item",
+    });
+    expect(result.document?.item.interactions[0]?.source).toMatchObject({
+      line: 5,
+      column: 11,
+      path: "/qti-assessment-item/qti-item-body[1]/qti-choice-interaction[1]",
+    });
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.responseIdentifier.reference",
+          path: "/qti-assessment-item/qti-item-body[1]/qti-choice-interaction[1]",
+          source: expect.objectContaining({ line: 5, column: 11 }),
+        }),
+        expect.objectContaining({
+          code: "choice.identifier.duplicate",
+          path: "/qti-assessment-item/qti-item-body[1]/qti-choice-interaction[1]/qti-simple-choice[2]",
+          source: expect.objectContaining({ line: 7, column: 13 }),
+        }),
+      ]),
+    );
+  });
+
   it("exposes validation independent of XML parsing", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">

@@ -51,6 +51,8 @@ export function parseQtiXml(xml: string): QtiParseResult {
       code: "qti.root",
       severity: "error",
       message: `Expected qti-assessment-item root, found ${tree.root.localName}.`,
+      path: tree.root.source.path,
+      source: tree.root.source,
     });
     return { ok: false, diagnostics };
   }
@@ -105,6 +107,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     interactions,
     modalFeedback,
     bodyText: textContent(node),
+    source: node.source,
   };
 }
 
@@ -115,6 +118,7 @@ function parseModalFeedback(node: XmlNode): QtiModalFeedback {
     outcomeIdentifier: node.attributes["outcome-identifier"] ?? "FEEDBACK",
     showHide,
     text: textContent(node),
+    source: node.source,
   };
 }
 
@@ -132,6 +136,7 @@ function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
     ),
     mapping: parseMapping(childElements(node, "qti-mapping")[0]),
     areaMapping: parseAreaMapping(childElements(node, "qti-area-mapping")[0]),
+    source: node.source,
   };
 }
 
@@ -142,6 +147,7 @@ function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType: node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"],
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    source: node.source,
   };
 }
 
@@ -152,6 +158,7 @@ function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType: node.attributes["base-type"] as QtiTemplateDeclaration["baseType"],
     defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    source: node.source,
   };
 }
 
@@ -171,6 +178,8 @@ function parseInteraction(
       code: "interaction.unsupported",
       severity: "warning",
       message: `${node.localName} is not currently in the support registry.`,
+      path: node.source.path,
+      source: node.source,
     });
   }
   const support = getInteractionSupport(node.localName);
@@ -179,6 +188,8 @@ function parseInteraction(
       code: "interaction.deprecated",
       severity: "warning",
       message: `${node.localName} is deprecated. ${support.notes ?? ""}`.trim(),
+      path: node.source.path,
+      source: node.source,
     });
   }
 
@@ -193,6 +204,7 @@ function parseInteraction(
     choices: parseChoices(node),
     attributes: node.attributes,
     text: textContent(node),
+    source: node.source,
   };
 }
 
@@ -205,6 +217,7 @@ function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined
     height: node.attributes.height,
     text: textContent(node),
     attributes: node.attributes,
+    source: node.source,
   };
 }
 
@@ -229,6 +242,7 @@ function parseChoices(node: XmlNode): QtiChoice[] {
       role: choiceRole(choice),
       qtiName: choice.localName,
       attributes: choice.attributes,
+      source: choice.source,
     };
   });
 }

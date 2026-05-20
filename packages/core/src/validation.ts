@@ -12,7 +12,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   const diagnostics: QtiDiagnostic[] = [];
   const item = document.item;
 
-  requireIdentifier("qti-assessment-item", item.identifier, diagnostics);
+  requireIdentifier("qti-assessment-item", item.identifier, diagnostics, item.source);
   validateDeclarationIdentifiers(item, diagnostics);
   validateInteractions(item, diagnostics);
   validateModalFeedback(item, diagnostics);
@@ -27,12 +27,15 @@ function requireIdentifier(
   elementName: string,
   identifier: string | undefined,
   diagnostics: QtiDiagnostic[],
+  source?: QtiDiagnostic["source"],
 ): void {
   if (!identifier || identifier.trim().length === 0) {
     diagnostics.push({
       code: "identifier.required",
       severity: "error",
       message: `${elementName} requires a non-empty identifier.`,
+      path: source?.path,
+      source,
     });
   }
 }
@@ -47,12 +50,19 @@ function validateDeclarationIdentifiers(
     ...item.outcomeDeclarations,
     ...item.templateDeclarations,
   ]) {
-    requireIdentifier(`${declaration.kind} declaration`, declaration.identifier, diagnostics);
+    requireIdentifier(
+      `${declaration.kind} declaration`,
+      declaration.identifier,
+      diagnostics,
+      declaration.source,
+    );
     if (seen.has(declaration.identifier)) {
       diagnostics.push({
         code: "identifier.duplicate",
         severity: "error",
         message: `Duplicate declaration identifier ${declaration.identifier}.`,
+        path: declaration.source?.path,
+        source: declaration.source,
       });
     }
     seen.add(declaration.identifier);
@@ -65,13 +75,15 @@ function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnost
   );
   const seen = new Set<string>();
   for (const feedback of item.modalFeedback) {
-    requireIdentifier("qti-modal-feedback", feedback.identifier, diagnostics);
+    requireIdentifier("qti-modal-feedback", feedback.identifier, diagnostics, feedback.source);
     const key = `${feedback.outcomeIdentifier}\n${feedback.identifier}`;
     if (seen.has(key)) {
       diagnostics.push({
         code: "feedback.identifier.duplicate",
         severity: "error",
         message: `Duplicate modal feedback ${feedback.identifier} for outcome ${feedback.outcomeIdentifier}.`,
+        path: feedback.source?.path,
+        source: feedback.source,
       });
     }
     seen.add(key);
@@ -80,6 +92,8 @@ function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnost
         code: "feedback.outcomeIdentifier.reference",
         severity: "error",
         message: `qti-modal-feedback ${feedback.identifier} references missing outcome declaration ${feedback.outcomeIdentifier}.`,
+        path: feedback.source?.path,
+        source: feedback.source,
       });
     }
   }
@@ -107,6 +121,8 @@ function validateInteractionResponseReference(
         code: "interaction.responseIdentifier",
         severity: "error",
         message: `${interaction.qtiName} is missing response-identifier.`,
+        path: interaction.source?.path,
+        source: interaction.source,
       });
     }
     return;
@@ -117,6 +133,8 @@ function validateInteractionResponseReference(
       code: "interaction.responseIdentifier.reference",
       severity: "error",
       message: `${interaction.qtiName} references missing response declaration ${interaction.responseIdentifier}.`,
+      path: interaction.source?.path,
+      source: interaction.source,
     });
   }
 }
@@ -136,6 +154,8 @@ function validateInteractionResponseShape(
       code: "interaction.cardinality",
       severity: "error",
       message: `${interaction.qtiName} expects ${expected.cardinalities.join(" or ")} cardinality, got ${interaction.responseCardinality}.`,
+      path: interaction.source?.path,
+      source: interaction.source,
     });
   }
 
@@ -144,6 +164,8 @@ function validateInteractionResponseShape(
       code: "interaction.baseType",
       severity: "error",
       message: `${interaction.qtiName} expects ${expected.baseTypes.join(" or ")} base type, got ${interaction.responseBaseType}.`,
+      path: interaction.source?.path,
+      source: interaction.source,
     });
   }
 }
@@ -159,6 +181,8 @@ function validateInteractionChoices(
         code: "choice.identifier.duplicate",
         severity: "error",
         message: `${interaction.qtiName} has duplicate choice identifier ${choice.identifier}.`,
+        path: choice.source?.path ?? interaction.source?.path,
+        source: choice.source ?? interaction.source,
       });
     }
     identifiers.add(choice.identifier);
@@ -172,6 +196,8 @@ function validateInteractionChoices(
       code: "interaction.choices.required",
       severity: "error",
       message: `${interaction.qtiName} requires at least one choice.`,
+      path: interaction.source?.path,
+      source: interaction.source,
     });
   }
 }

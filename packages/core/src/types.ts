@@ -16,7 +16,15 @@ export interface QtiDiagnostic {
   code: string;
   severity: QtiDiagnosticSeverity;
   message: string;
-  path?: string;
+  path?: string | undefined;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiSourceLocation {
+  line: number;
+  column: number;
+  offset: number;
+  path: string;
 }
 
 export type QtiBaseType =
@@ -43,6 +51,7 @@ export interface QtiVariableDeclaration {
   baseType?: QtiBaseType | undefined;
   cardinality: QtiCardinality;
   defaultValue: QtiValue;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiResponseDeclaration extends QtiVariableDeclaration {
@@ -77,6 +86,7 @@ export interface QtiChoice {
   role: QtiChoiceRole;
   qtiName: string;
   attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export type QtiChoiceRole =
@@ -125,6 +135,7 @@ export interface QtiInteraction {
   choices: QtiChoice[];
   attributes: Record<string, string>;
   text: string;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiObjectAsset {
@@ -134,6 +145,7 @@ export interface QtiObjectAsset {
   height?: string | undefined;
   text: string;
   attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiAssessmentItem {
@@ -148,6 +160,7 @@ export interface QtiAssessmentItem {
   interactions: QtiInteraction[];
   modalFeedback: QtiModalFeedback[];
   bodyText: string;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiModalFeedback {
@@ -155,6 +168,7 @@ export interface QtiModalFeedback {
   outcomeIdentifier: string;
   showHide: "show" | "hide";
   text: string;
+  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiResponseProcessing {
