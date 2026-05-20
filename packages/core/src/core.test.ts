@@ -1866,19 +1866,14 @@ describe("@qti3/core", () => {
           </qti-choice-interaction>
         </qti-item-body>
         <qti-response-processing>
-          <qti-response-condition>
-            <qti-response-if>
-              <qti-base-value base-type="boolean">true</qti-base-value>
-              <qti-set-outcome-value identifier="NULL_VALUE">
-                <qti-null/>
-              </qti-set-outcome-value>
-              <qti-set-outcome-value identifier="MISSING_IS_NULL">
-                <qti-is-null>
-                  <qti-variable identifier="MISSING"/>
-                </qti-is-null>
-              </qti-set-outcome-value>
-            </qti-response-if>
-          </qti-response-condition>
+          <qti-set-outcome-value identifier="NULL_VALUE">
+            <qti-null/>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="MISSING_IS_NULL">
+            <qti-is-null>
+              <qti-variable identifier="MISSING"/>
+            </qti-is-null>
+          </qti-set-outcome-value>
         </qti-response-processing>
       </qti-assessment-item>
     `);

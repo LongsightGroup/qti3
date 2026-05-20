@@ -340,6 +340,7 @@ export interface QtiModalFeedback {
 
 export interface QtiResponseProcessing {
   template?: string | undefined;
+  rules: QtiResponseRule[];
   conditions: QtiResponseCondition[];
 }
 
@@ -359,6 +360,7 @@ export type QtiResponseRule =
   | QtiSetOutcomeValue
   | QtiLookupOutcomeValue
   | { type: "exitResponse"; source?: QtiSourceLocation | undefined }
+  | { type: "responseCondition"; condition: QtiResponseCondition; source?: QtiSourceLocation }
   | {
       type: "responseProcessingFragment";
       rules: QtiResponseRule[];

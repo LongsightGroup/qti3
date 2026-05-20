@@ -11,6 +11,7 @@ import type {
   QtiInteraction,
   QtiOutcomeDeclaration,
   QtiProcessingExpression,
+  QtiResponseCondition,
   QtiResponseDeclaration,
   QtiResponseRule,
   QtiSetOutcomeValue,
@@ -640,20 +641,30 @@ function validateProcessingReferences(item: QtiAssessmentItem, diagnostics: QtiD
     validateTemplateRule(rule, responses, outcomes, templates, variables, diagnostics);
   }
 
-  for (const condition of item.responseProcessing?.conditions ?? []) {
-    validateExpressionReferences(condition.ifExpression, responses, variables, diagnostics);
-    for (const rule of condition.thenRules) {
+  for (const rule of item.responseProcessing?.rules ?? []) {
+    validateResponseRule(rule, outcomes, responses, variables, diagnostics);
+  }
+}
+
+function validateResponseCondition(
+  condition: QtiResponseCondition,
+  outcomes: Set<string>,
+  responses: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateExpressionReferences(condition.ifExpression, responses, variables, diagnostics);
+  for (const rule of condition.thenRules) {
+    validateResponseRule(rule, outcomes, responses, variables, diagnostics);
+  }
+  for (const branch of condition.elseIfs) {
+    validateExpressionReferences(branch.expression, responses, variables, diagnostics);
+    for (const rule of branch.rules) {
       validateResponseRule(rule, outcomes, responses, variables, diagnostics);
     }
-    for (const branch of condition.elseIfs) {
-      validateExpressionReferences(branch.expression, responses, variables, diagnostics);
-      for (const rule of branch.rules) {
-        validateResponseRule(rule, outcomes, responses, variables, diagnostics);
-      }
-    }
-    for (const rule of condition.elseRules) {
-      validateResponseRule(rule, outcomes, responses, variables, diagnostics);
-    }
+  }
+  for (const rule of condition.elseRules) {
+    validateResponseRule(rule, outcomes, responses, variables, diagnostics);
   }
 }
 
@@ -753,6 +764,10 @@ function validateResponseRule(
   diagnostics: QtiDiagnostic[],
 ): void {
   if (rule.type === "exitResponse") return;
+  if (rule.type === "responseCondition") {
+    validateResponseCondition(rule.condition, outcomes, responses, variables, diagnostics);
+    return;
+  }
   if (rule.type === "responseProcessingFragment") {
     for (const childRule of rule.rules) {
       validateResponseRule(childRule, outcomes, responses, variables, diagnostics);

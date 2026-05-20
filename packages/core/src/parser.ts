@@ -640,6 +640,7 @@ function parseResponseProcessing(node: XmlNode | undefined): QtiResponseProcessi
   if (!node) return undefined;
   return {
     template: node.attributes.template,
+    rules: parseResponseRules(node),
     conditions: responseConditionsFromChildren(node),
   };
 }
@@ -766,6 +767,13 @@ function parseResponseRules(node: XmlNode): QtiResponseRule[] {
 }
 
 function parseResponseRule(node: XmlNode): QtiResponseRule | undefined {
+  if (node.localName === "qti-response-condition") {
+    return {
+      type: "responseCondition",
+      condition: parseResponseCondition(node),
+      source: node.source,
+    };
+  }
   if (node.localName === "qti-set-outcome-value") return parseSetOutcomeValue(node);
   if (node.localName === "qti-lookup-outcome-value") return parseLookupOutcomeValue(node);
   if (node.localName === "qti-exit-response") {

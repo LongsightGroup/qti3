@@ -7,6 +7,7 @@ import type {
   QtiModalFeedback,
   QtiProcessingExpression,
   QtiRecordValue,
+  QtiResponseCondition,
   QtiResponseDeclaration,
   QtiResponseRule,
   QtiScalarValue,
@@ -329,52 +330,17 @@ function applyResponseProcessing(
   customOperators: QtiCustomOperatorRegistry,
 ): void {
   const processing = document.item.responseProcessing;
-  if (processing?.conditions.length) {
-    for (const condition of processing.conditions) {
-      let branch = evaluateBoolean(
-        condition.ifExpression,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      )
-        ? condition.thenRules
-        : undefined;
-      if (!branch) {
-        for (const elseIf of condition.elseIfs) {
-          if (
-            evaluateBoolean(
-              elseIf.expression,
-              document,
-              responses,
-              outcomes,
-              templateValues,
-              correctResponses,
-              random,
-              customOperators,
-            )
-          ) {
-            branch = elseIf.rules;
-            break;
-          }
-        }
-      }
-      branch ??= condition.elseRules;
-      const shouldExit = applyResponseRules(
-        branch,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      );
-      if (shouldExit) return;
-    }
+  if (processing?.rules.length) {
+    applyResponseRules(
+      processing.rules,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
     return;
   }
 
@@ -419,6 +385,20 @@ function applyResponseRules(
 ): boolean {
   for (const rule of rules) {
     if (rule.type === "exitResponse") return true;
+    if (rule.type === "responseCondition") {
+      const shouldExit = applyResponseCondition(
+        rule.condition,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
+      );
+      if (shouldExit) return true;
+      continue;
+    }
     if (rule.type === "responseProcessingFragment") {
       const shouldExit = applyResponseRules(
         rule.rules,
@@ -462,6 +442,60 @@ function applyResponseRules(
     );
   }
   return false;
+}
+
+function applyResponseCondition(
+  condition: QtiResponseCondition,
+  document: QtiDocument,
+  responses: Record<string, QtiValue>,
+  outcomes: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue>,
+  correctResponses: Record<string, QtiValue>,
+  random: () => number,
+  customOperators: QtiCustomOperatorRegistry,
+): boolean {
+  let branch = evaluateBoolean(
+    condition.ifExpression,
+    document,
+    responses,
+    outcomes,
+    templateValues,
+    correctResponses,
+    random,
+    customOperators,
+  )
+    ? condition.thenRules
+    : undefined;
+  if (!branch) {
+    for (const elseIf of condition.elseIfs) {
+      if (
+        evaluateBoolean(
+          elseIf.expression,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+          customOperators,
+        )
+      ) {
+        branch = elseIf.rules;
+        break;
+      }
+    }
+  }
+  branch ??= condition.elseRules;
+  return applyResponseRules(
+    branch,
+    document,
+    responses,
+    outcomes,
+    templateValues,
+    correctResponses,
+    random,
+    customOperators,
+  );
 }
 
 function evaluateBoolean(
