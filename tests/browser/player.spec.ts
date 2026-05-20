@@ -293,6 +293,49 @@ test.describe("manual harness", () => {
     );
   });
 
+  test("preserves safe HTML and MathML body content", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="math-body" title="math-body" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-item-body>
+    <p>Evaluate <math display="block"><mrow><mi mathvariant="normal">x</mi><mo stretchy="false">+</mo><mn>1</mn></mrow></math> when x is zero.</p>
+    <table>
+      <thead><tr><th scope="col">Value</th><th scope="col">Result</th></tr></thead>
+      <tbody><tr><td>0</td><td>1</td></tr></tbody>
+    </table>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-simple-choice identifier="A">1</qti-simple-choice>
+      <qti-simple-choice identifier="B">2</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await page.locator("#xml").fill(xml);
+    await page.locator("#load-xml").click();
+
+    const math = page.locator("qti-assessment-item-player math");
+    await expect(math).toHaveAttribute("display", "block");
+    await expect(page.locator("qti-assessment-item-player mi")).toHaveAttribute(
+      "mathvariant",
+      "normal",
+    );
+    await expect(page.locator("qti-assessment-item-player mo")).toHaveAttribute(
+      "stretchy",
+      "false",
+    );
+    await expect(page.locator("qti-assessment-item-player th").first()).toHaveAttribute(
+      "scope",
+      "col",
+    );
+    await expect(page.locator("qti-assessment-item-player table")).toContainText("Result");
+    expect(await math.evaluate((element) => element.namespaceURI)).toBe(
+      "http://www.w3.org/1998/Math/MathML",
+    );
+  });
+
   test("renders object-backed media interactions with native controls", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "media");

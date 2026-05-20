@@ -2013,9 +2013,30 @@ function isSafeContentAttribute(name: string, value: string): boolean {
     name === "title" ||
     name === "type" ||
     name === "width" ||
+    mathMlAttributeNames.has(name) ||
     name.startsWith("data-")
   );
 }
+
+const mathMlAttributeNames = new Set([
+  "accent",
+  "accentunder",
+  "align",
+  "columnalign",
+  "display",
+  "fence",
+  "largeop",
+  "lspace",
+  "mathbackground",
+  "mathcolor",
+  "mathsize",
+  "mathvariant",
+  "movablelimits",
+  "rowalign",
+  "rspace",
+  "separator",
+  "stretchy",
+]);
 
 function isSafeUrl(value: string): boolean {
   return (
