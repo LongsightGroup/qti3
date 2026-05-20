@@ -371,6 +371,11 @@ test.describe("manual harness", () => {
     await page.locator("qti-assessment-item-player .qti3-point-surface").focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, "10 10");
+    await page.getByRole("button", { name: "Move point right" }).click();
+    await expectResponse(page, "11 10");
+    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
+      "Selected point 11, 10",
+    );
 
     await loadFixture(page, "drawing");
     await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
@@ -544,6 +549,9 @@ test.describe("manual harness", () => {
 
     await page.getByRole("button", { name: "Clear drawing" }).click();
     await expectResponse(page, "");
+    await expect(surface.locator("line")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Replay last stroke" }).click();
     await expect(surface.locator("line")).toHaveCount(0);
   });
 

@@ -931,10 +931,14 @@ function renderPointResponse(
   const point = { x: 10, y: 10 };
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
+  const coordinate = document.createElement("output");
+  coordinate.className = "qti3-coordinate-output";
   const commit = () => update(`${point.x} ${point.y}`);
   const syncMarker = () => {
     marker.style.insetInlineStart = `${point.x}px`;
     marker.style.insetBlockStart = `${point.y}px`;
+    coordinate.value = `${point.x} ${point.y}`;
+    coordinate.textContent = `Selected point ${point.x}, ${point.y}`;
     surface.setAttribute(
       "aria-label",
       `${readableType(interaction.type)} coordinate area, selected ${point.x} ${point.y}`,
@@ -971,7 +975,28 @@ function renderPointResponse(
   });
 
   syncMarker();
-  group.append(surface);
+  const controls = document.createElement("div");
+  controls.className = "qti3-point-controls";
+  for (const [label, dx, dy] of [
+    ["Up", 0, -1],
+    ["Left", -1, 0],
+    ["Right", 1, 0],
+    ["Down", 0, 1],
+  ] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.setAttribute("aria-label", `Move point ${label.toLowerCase()}`);
+    button.addEventListener("click", () => {
+      point.x += dx;
+      point.y += dy;
+      clampPoint();
+      syncMarker();
+      commit();
+    });
+    controls.append(button);
+  }
+  group.append(surface, coordinate, controls);
   return group;
 }
 
@@ -998,6 +1023,7 @@ function renderDrawingResponse(
   surface.style.touchAction = "none";
 
   let start: { x: number; y: number } | undefined;
+  let lastStroke = "";
   const draw = (stroke: string) => {
     const [x1, y1, x2, y2] = stroke.split(" ").map((value) => Number(value));
     if (
@@ -1009,6 +1035,7 @@ function renderDrawingResponse(
     ) {
       return;
     }
+    lastStroke = stroke;
     surface.replaceChildren(lineElement(x1, y1, x2, y2));
     update(stroke);
   };
@@ -1033,11 +1060,21 @@ function renderDrawingResponse(
   clear.type = "button";
   clear.textContent = "Clear drawing";
   clear.addEventListener("click", () => {
+    lastStroke = "";
     surface.replaceChildren();
     update("");
   });
+  const replay = document.createElement("button");
+  replay.type = "button";
+  replay.textContent = "Replay last stroke";
+  replay.addEventListener("click", () => {
+    if (lastStroke) draw(lastStroke);
+  });
 
-  group.append(surface, clear);
+  const tools = document.createElement("div");
+  tools.className = "qti3-drawing-tools";
+  tools.append(clear, replay);
+  group.append(surface, tools);
   return group;
 }
 
@@ -1550,6 +1587,20 @@ function playerStyleElement(): HTMLStyleElement {
     .qti3-slider-response {
       grid-template-columns: minmax(8rem, 1fr) auto;
       align-items: center;
+    }
+
+    .qti3-point-controls,
+    .qti3-drawing-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-block-start: 0.5rem;
+    }
+
+    .qti3-coordinate-output {
+      display: block;
+      margin-block-start: 0.4rem;
+      font-size: 0.9rem;
     }
 
     .qti3-hotspot-button[data-selected="true"] {
