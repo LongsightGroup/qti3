@@ -38,6 +38,10 @@ test.describe("manual harness", () => {
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await page.getByRole("button", { name: "Score", exact: true }).click();
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "scored");
+    await expect(page.locator("#score-status")).toHaveText("Scored successfully.");
+    await expect(page.locator("#score-value")).toHaveText("1");
+    await expect(page.locator("#score-details")).toContainText('"SCORE": 1');
   });
 
   test("renders item-body prompts before interactions", async ({ page }) => {
@@ -651,6 +655,9 @@ test.describe("manual harness", () => {
     await page.locator("#xml").fill(fixture.xml);
     await page.locator("#load-xml").click();
     await page.getByRole("button", { name: "Score", exact: true }).click();
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
+    await expect(page.locator("#score-status")).toContainText("Score blocked");
+    await expect(page.locator("#validation-count")).toHaveText("1");
 
     const radio = page.locator('qti-assessment-item-player [data-choice-identifier="A"] input');
     await expect(radio).toHaveAttribute("aria-invalid", "true");

@@ -12,6 +12,12 @@ const previousFile = document.querySelector<HTMLButtonElement>("#previous-file")
 const nextFile = document.querySelector<HTMLButtonElement>("#next-file");
 const fileSummary = document.querySelector<HTMLParagraphElement>("#file-summary");
 const xmlInput = document.querySelector<HTMLTextAreaElement>("#xml");
+const scorePanel = document.querySelector<HTMLElement>("#score-panel");
+const scoreStatus = document.querySelector<HTMLParagraphElement>("#score-status");
+const scoreValue = document.querySelector<HTMLElement>("#score-value");
+const responseCount = document.querySelector<HTMLElement>("#response-count");
+const validationCount = document.querySelector<HTMLElement>("#validation-count");
+const scoreDetails = document.querySelector<HTMLPreElement>("#score-details");
 const events = document.querySelector<HTMLPreElement>("#events");
 const player = document.querySelector("qti-assessment-item-player");
 
@@ -25,6 +31,12 @@ if (
   !nextFile ||
   !fileSummary ||
   !xmlInput ||
+  !scorePanel ||
+  !scoreStatus ||
+  !scoreValue ||
+  !responseCount ||
+  !validationCount ||
+  !scoreDetails ||
   !events ||
   !player
 ) {
@@ -109,11 +121,110 @@ for (const eventName of [
   "qti-endattempt",
 ]) {
   player.addEventListener(eventName, (event) => {
-    events.textContent = `${eventName}\n${JSON.stringify((event as CustomEvent).detail, null, 2)}`;
+    const detail = (event as CustomEvent<unknown>).detail;
+    events.textContent = `${eventName}\n${JSON.stringify(detail, null, 2)}`;
+    if (eventName === "qti-ready") resetScorePanel();
+    else if (eventName === "qti-responsechange") markScoreStale();
+    else if (eventName === "qti-validation") renderValidationResult(detail);
+    else if (eventName === "qti-score") renderScoreResult(detail);
   });
 }
 
 loadFixture.click();
+
+function resetScorePanel(): void {
+  scorePanel.dataset.status = "idle";
+  scoreStatus.textContent = "Not scored yet.";
+  scoreValue.textContent = "-";
+  responseCount.textContent = "0";
+  validationCount.textContent = "0";
+  scoreDetails.textContent = "{}";
+}
+
+function markScoreStale(): void {
+  if (scorePanel.dataset.status === "idle") return;
+  scorePanel.dataset.status = "idle";
+  scoreStatus.textContent = "Responses changed. Score again to update results.";
+}
+
+function renderValidationResult(detail: unknown): void {
+  const validationMessages = validationMessagesFromDetail(detail);
+  scorePanel.dataset.status = "blocked";
+  scoreStatus.textContent =
+    validationMessages.length === 1
+      ? "Score blocked by 1 validation message."
+      : `Score blocked by ${validationMessages.length} validation messages.`;
+  scoreValue.textContent = "-";
+  responseCount.textContent = String(Object.keys(player.serialize()?.responses ?? {}).length);
+  validationCount.textContent = String(validationMessages.length);
+  scoreDetails.textContent = JSON.stringify(
+    {
+      responses: player.serialize()?.responses ?? {},
+      validationMessages,
+    },
+    null,
+    2,
+  );
+}
+
+function renderScoreResult(detail: unknown): void {
+  const result = scoreResultFromDetail(detail);
+  const state = result?.state ?? player.serialize();
+  const outcomes = result?.outcomes ?? state?.outcomes ?? {};
+  const responses = state?.responses ?? {};
+  const diagnostics = result?.diagnostics ?? [];
+  const score = valueFromRecord(outcomes, "SCORE");
+
+  scorePanel.dataset.status = "scored";
+  scoreStatus.textContent = "Scored successfully.";
+  scoreValue.textContent = formatValue(score);
+  responseCount.textContent = String(Object.keys(responses).length);
+  validationCount.textContent = String(diagnostics.length);
+  scoreDetails.textContent = JSON.stringify({ responses, outcomes, diagnostics }, null, 2);
+}
+
+function validationMessagesFromDetail(detail: unknown): unknown[] {
+  if (!isRecord(detail)) return [];
+  const validationMessages = detail.validationMessages;
+  return Array.isArray(validationMessages) ? validationMessages : [];
+}
+
+function scoreResultFromDetail(detail: unknown): {
+  outcomes?: Record<string, unknown>;
+  diagnostics?: unknown[];
+  state?: { responses?: Record<string, unknown>; outcomes?: Record<string, unknown> };
+} | null {
+  if (!isRecord(detail)) return null;
+  return {
+    outcomes: recordFromValue(detail.outcomes),
+    diagnostics: Array.isArray(detail.diagnostics) ? detail.diagnostics : [],
+    state: isRecord(detail.state)
+      ? {
+          responses: recordFromValue(detail.state.responses),
+          outcomes: recordFromValue(detail.state.outcomes),
+        }
+      : undefined,
+  };
+}
+
+function recordFromValue(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
+function valueFromRecord(record: Record<string, unknown>, key: string): unknown {
+  return Object.hasOwn(record, key) ? record[key] : undefined;
+}
+
+function formatValue(value: unknown): string {
+  if (value === undefined || value === null) return "-";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 async function loadSelectedLocalFile(): Promise<void> {
   const file = loadedFiles[selectedFileIndex];

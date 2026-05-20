@@ -80,6 +80,55 @@
         margin-block: 1rem;
       }
 
+      .score-panel {
+        display: grid;
+        gap: 0.65rem;
+        margin-block: 1rem;
+        padding: 0.85rem;
+        border: 1px solid #c9c9c9;
+        background: #f6f6f3;
+      }
+
+      .score-panel h2 {
+        margin: 0;
+      }
+
+      .score-panel[data-status="scored"] {
+        border-color: #2f6f3e;
+        background: #edf7ef;
+      }
+
+      .score-panel[data-status="blocked"] {
+        border-color: #9d5c00;
+        background: #fff6e8;
+      }
+
+      .score-kpis {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+        margin: 0;
+      }
+
+      .score-kpis div {
+        display: grid;
+        gap: 0.15rem;
+        padding: 0.5rem;
+        border: 1px solid #d8d8d8;
+        background: #fff;
+      }
+
+      .score-kpis dt {
+        color: #555;
+        font-size: 0.85rem;
+      }
+
+      .score-kpis dd {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
+
       label {
         display: block;
         margin-block: 0.35rem;
@@ -118,6 +167,28 @@
         <h2>Paste QTI XML</h2>
         <textarea id="xml" spellcheck="false"></textarea>
         <button id="load-xml" type="button">Load XML</button>
+        <div id="score-panel" class="score-panel" data-status="idle" aria-live="polite">
+          <h2>Score result</h2>
+          <p id="score-status">Not scored yet.</p>
+          <dl class="score-kpis">
+            <div>
+              <dt>SCORE</dt>
+              <dd id="score-value">-</dd>
+            </div>
+            <div>
+              <dt>Responses</dt>
+              <dd id="response-count">0</dd>
+            </div>
+            <div>
+              <dt>Validation</dt>
+              <dd id="validation-count">0</dd>
+            </div>
+          </dl>
+          <details>
+            <summary>Responses and outcomes</summary>
+            <pre id="score-details">{}</pre>
+          </details>
+        </div>
         <pre id="events" aria-live="polite"></pre>
       </aside>
       <section>
