@@ -158,6 +158,7 @@ test.describe("manual harness", () => {
       const context = page.locator("qti-assessment-item-player .qti3-graphic-context");
       await expect(context, interactionType).toBeVisible();
       await expect(context.locator("img"), interactionType).toHaveAttribute("src", /image\.png$/);
+      await expectImageLoaded(context.locator("img"));
     }
   });
 
@@ -452,6 +453,7 @@ test.describe("manual harness", () => {
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /image\.png$/);
+    await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
 
     const items = page.locator("qti-assessment-item-player .qti3-reorder-item");
     const first = await items.nth(0).boundingBox();
@@ -502,6 +504,7 @@ test.describe("manual harness", () => {
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /image\.png$/);
+    await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
     await addPair(page, "Graphic associate", "A", "B");
     await expectResponse(page, ["A B"]);
   });
@@ -513,6 +516,7 @@ test.describe("manual harness", () => {
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /image\.png$/);
+    await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
 
     const source = page.locator('qti-assessment-item-player [data-choice-identifier="A"]').first();
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="G1"]').first();
@@ -555,6 +559,7 @@ test.describe("manual harness", () => {
       const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
       await expect(surface.locator("img")).toHaveAttribute("src", "image.png");
       await expect(surface.locator("img")).toHaveAttribute("alt", "");
+      await expectImageLoaded(surface.locator("img"));
 
       const box = await surface.boundingBox();
       expect(box?.width).toBe(160);
@@ -601,6 +606,7 @@ test.describe("manual harness", () => {
 
     const surface = page.locator("qti-assessment-item-player .qti3-hotspot-surface");
     await expect(surface).toBeVisible();
+    await expectImageLoaded(surface.locator("img"));
     const hotspot = surface.getByRole("button", { name: "A" });
     await expect(hotspot).toHaveCSS("position", "absolute");
     await hotspot.click();
@@ -795,6 +801,17 @@ async function expectResponse(
     return element.serialize();
   });
   expect(state.responses.RESPONSE).toEqual(expected);
+}
+
+async function expectImageLoaded(locator: import("@playwright/test").Locator): Promise<void> {
+  await expect
+    .poll(async () => {
+      return locator.evaluate((image) => {
+        const element = image as HTMLImageElement;
+        return element.complete && element.naturalWidth > 0 && element.naturalHeight > 0;
+      });
+    })
+    .toBe(true);
 }
 
 async function addPair(
