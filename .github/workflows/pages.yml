@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.repository == 'longsightgroup/qti3'
+    if: github.repository == 'LongsightGroup/qti3'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

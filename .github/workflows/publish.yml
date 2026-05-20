@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   publish:
-    if: github.repository == 'longsightgroup/qti3'
+    if: github.repository == 'LongsightGroup/qti3'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
