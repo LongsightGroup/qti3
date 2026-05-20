@@ -15,7 +15,7 @@ test.describe("manual harness", () => {
       await page.locator("#load-fixture").click();
       await expect(page.locator("qti-assessment-item-player")).toContainText(fixture.id);
       await expect(
-        page.locator(`[data-interaction-type="${fixture.interactionType}"]`),
+        page.locator(`[data-interaction-type="${fixture.interactionType}"]`).first(),
       ).toBeVisible();
 
       await page.addScriptTag({ content: axeSource });
@@ -66,11 +66,15 @@ test.describe("manual harness", () => {
     await loadFixture(page, "inlineChoice");
 
     const player = page.locator("qti-assessment-item-player");
-    await expect(player.locator(".qti3-inlineChoice h3")).toHaveText(
-      "In QTI 3.0, candidate responses are declared with.",
+    await expect(player.locator(".qti3-inlineChoice")).toHaveCount(2);
+    await expect(player.locator(".qti3-inlineChoice").first()).toContainText(
+      "interaction writes a candidate answer",
     );
     await expect(
-      player.getByLabel("In QTI 3.0, candidate responses are declared with."),
+      player.locator('[data-response-identifier="RESPONSE_DECLARATION"] select'),
+    ).toBeVisible();
+    await expect(
+      player.locator('[data-response-identifier="RESPONSE_OUTCOME"] select'),
     ).toBeVisible();
   });
 
@@ -291,9 +295,8 @@ test.describe("manual harness", () => {
       const attempt = fixture.attempts[0];
       if (!attempt) throw new Error(`Missing attempt for ${fixture.id}.`);
 
-      const response = attempt.responses.RESPONSE;
-      if (response !== undefined) {
-        await provideResponse(page, fixture.interactionType, response);
+      for (const [responseIdentifier, response] of Object.entries(attempt.responses)) {
+        await provideResponse(page, fixture.interactionType, response, responseIdentifier);
       }
 
       await page.getByRole("button", { name: "Score", exact: true }).click();
@@ -858,7 +861,17 @@ async function provideResponse(
   page: import("@playwright/test").Page,
   interactionType: string,
   response: unknown,
+  responseIdentifier = "RESPONSE",
 ): Promise<void> {
+  if (interactionType === "inlineChoice") {
+    await page
+      .locator(
+        `qti-assessment-item-player [data-response-identifier="${responseIdentifier}"] select`,
+      )
+      .selectOption(String(response));
+    return;
+  }
+
   if (interactionType === "slider") {
     await page.locator('input[type="range"]').evaluate((element, value) => {
       const input = element as HTMLInputElement;

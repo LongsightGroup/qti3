@@ -43,6 +43,8 @@ function createInteractionFixture(
   interactionType: QtiInteractionType,
   qtiName: string,
 ): QtiFixture {
+  if (interactionType === "inlineChoice") return createInlineChoiceFixture(qtiName);
+
   const id = `${interactionType}-reference`;
   const response = defaultResponse(interactionType);
   const body = renderInteractionXml(qtiName, interactionType);
@@ -65,6 +67,53 @@ function createInteractionFixture(
           schema: "qti3.attempt-state.v1",
           itemIdentifier: id,
           status: response.identifier ? "interacting" : "initialized",
+        },
+      },
+    ],
+  };
+}
+
+function createInlineChoiceFixture(qtiName: string): QtiFixture {
+  const id = "inlineChoice-reference";
+  const responses = {
+    RESPONSE_DECLARATION: "A",
+    RESPONSE_OUTCOME: "B",
+  };
+
+  return {
+    id,
+    interactionType: "inlineChoice",
+    qtiName,
+    title: "inlineChoice reference fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE_DECLARATION" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="RESPONSE_OUTCOME" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>B</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>Reference item for ${id}: a QTI 3.0 item-player conformance example using realistic assessment wording.</p>
+    <p>In QTI 3.0, an interaction writes a candidate answer to a <${qtiName} response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">response declaration</qti-inline-choice><qti-inline-choice identifier="B">template declaration</qti-inline-choice><qti-inline-choice identifier="C">rubric block</qti-inline-choice></${qtiName}>, and response processing writes derived values such as SCORE to an <${qtiName} response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">item body</qti-inline-choice><qti-inline-choice identifier="B">outcome declaration</qti-inline-choice><qti-inline-choice identifier="C">choice interaction</qti-inline-choice></${qtiName}>.</p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "correct",
+        responses,
+        expectedOutcomes: { SCORE: 2 },
+        expectedResponses: responses,
+        expectedState: {
+          schema: "qti3.attempt-state.v1",
+          itemIdentifier: id,
+          status: "interacting",
         },
       },
     ],
@@ -204,9 +253,6 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
   }
   if (interactionType === "textEntry") {
     return `<p>Type the one-letter code used in these fixtures for the correct response: <${qtiName} response-identifier="RESPONSE" expected-length="10"/>.</p>`;
-  }
-  if (interactionType === "inlineChoice") {
-    return `<p>In QTI 3.0, candidate responses are declared with <${qtiName} response-identifier="RESPONSE"><qti-inline-choice identifier="A">qti-response-declaration</qti-inline-choice><qti-inline-choice identifier="B">qti-outcome-declaration</qti-inline-choice><qti-inline-choice identifier="C">qti-template-declaration</qti-inline-choice></${qtiName}>.</p>`;
   }
   if (interactionType === "order") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Put these QTI runtime steps in the usual player order.</qti-prompt><qti-simple-choice identifier="A">Load and parse the assessment item</qti-simple-choice><qti-simple-choice identifier="B">Capture the candidate response</qti-simple-choice><qti-simple-choice identifier="C">Apply response processing to produce outcomes</qti-simple-choice></${qtiName}>`;
