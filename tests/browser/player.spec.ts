@@ -136,6 +136,28 @@ test.describe("manual harness", () => {
     }
     await expectResponse(page, "50");
   });
+
+  test("associates validation messages with unanswered controls", async ({ page }) => {
+    const fixture =
+      interactionFixtures.find((item) => item.interactionType === "choice") ??
+      interactionFixtures[0];
+    if (!fixture) throw new Error("Missing choice fixture.");
+
+    await page.goto("/");
+    await page.locator("#xml").fill(fixture.xml);
+    await page.locator("#load-xml").click();
+    await page.getByRole("button", { name: "Score" }).click();
+
+    const radio = page.getByRole("radio", { name: "A" });
+    await expect(radio).toHaveAttribute("aria-invalid", "true");
+    const describedBy = await radio.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    await expect(page.locator(`#${describedBy}`)).toContainText("RESPONSE requires a response.");
+    await expect(page.locator("#events")).toContainText("response.required");
+
+    await radio.check();
+    await expect(radio).not.toHaveAttribute("aria-invalid", "true");
+  });
 });
 
 declare global {

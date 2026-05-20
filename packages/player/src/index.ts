@@ -3,6 +3,7 @@ import {
   parseQtiXml,
   type QtiAttemptStateV1,
   type QtiChoice,
+  type QtiDiagnostic,
   type QtiDocument,
   type QtiInteraction,
   type QtiItemSession,
@@ -25,6 +26,7 @@ const HTMLElementBase: typeof HTMLElement =
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
+  private validationMessages: QtiDiagnostic[] = [];
   async loadXml(xml: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
     const result = parseQtiXml(xml);
     this.dispatchEvent(
@@ -45,6 +47,18 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   scoreAttempt(): void {
     const session = this.session;
     if (!session) return;
+    const validationMessages = this.validateResponses();
+    if (validationMessages.length > 0) {
+      this.validationMessages = validationMessages;
+      this.renderValidationMessages();
+      const state = session.serialize();
+      state.validationMessages = validationMessages;
+      this.dispatchEvent(new CustomEvent("qti-validation", { detail: { validationMessages } }));
+      this.emitStateChange(state);
+      return;
+    }
+    this.validationMessages = [];
+    this.renderValidationMessages();
     const result = session.score();
     this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
     this.emitStateChange(result.state);
@@ -123,15 +137,21 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     const field = document.createElement("section");
     field.className = `qti3-interaction qti3-${interaction.type}`;
     field.dataset.interactionType = interaction.type;
+    if (interaction.responseIdentifier)
+      field.dataset.responseIdentifier = interaction.responseIdentifier;
 
     const heading = document.createElement("h3");
     heading.textContent = interaction.prompt || readableType(interaction.type);
     field.append(heading);
+    if (interaction.responseIdentifier) {
+      field.append(validationMessageElement(interaction.responseIdentifier));
+    }
 
     const responseIdentifier = interaction.responseIdentifier;
     const update = (value: QtiValue) => {
       if (!responseIdentifier || !this.session) return;
       this.session.respond(responseIdentifier, value);
+      this.clearValidationMessage(responseIdentifier);
       this.dispatchEvent(
         new CustomEvent("qti-responsechange", {
           detail: { responseIdentifier, value },
@@ -228,6 +248,60 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     field.append(renderSelect(interaction, update));
     return field;
+  }
+
+  private validateResponses(): QtiDiagnostic[] {
+    const state = this.session?.serialize();
+    if (!state || !this.documentModel) return [];
+    return this.documentModel.item.responseDeclarations
+      .filter((declaration) => declaration.correctResponse !== null)
+      .filter((declaration) => responseIsEmpty(state.responses[declaration.identifier] ?? null))
+      .map((declaration) => ({
+        code: "response.required",
+        severity: "error" as const,
+        message: `${declaration.identifier} requires a response.`,
+        path: declaration.identifier,
+      }));
+  }
+
+  private renderValidationMessages(): void {
+    const messagesByIdentifier = new Map(
+      this.validationMessages
+        .filter((message) => message.path)
+        .map((message) => [message.path!, message]),
+    );
+    for (const section of this.querySelectorAll<HTMLElement>("[data-response-identifier]")) {
+      const responseIdentifier = section.dataset.responseIdentifier;
+      if (!responseIdentifier) continue;
+      const message = messagesByIdentifier.get(responseIdentifier);
+      const messageElement = section.querySelector<HTMLElement>(
+        `[data-validation-for="${responseIdentifier}"]`,
+      );
+      const controls = section.querySelectorAll<HTMLElement>("input, select, textarea, button");
+      if (message && messageElement) {
+        messageElement.textContent = message.message;
+        messageElement.hidden = false;
+        for (const control of controls) {
+          control.setAttribute("aria-invalid", "true");
+          control.setAttribute("aria-describedby", messageElement.id);
+        }
+      } else if (messageElement) {
+        messageElement.textContent = "";
+        messageElement.hidden = true;
+        for (const control of controls) {
+          control.removeAttribute("aria-invalid");
+          control.removeAttribute("aria-describedby");
+        }
+      }
+    }
+  }
+
+  private clearValidationMessage(responseIdentifier: string): void {
+    const before = this.validationMessages.length;
+    this.validationMessages = this.validationMessages.filter(
+      (message) => message.path !== responseIdentifier,
+    );
+    if (this.validationMessages.length !== before) this.renderValidationMessages();
   }
 }
 
@@ -423,4 +497,21 @@ function errorView(message: string): HTMLElement {
   element.role = "alert";
   element.textContent = message;
   return element;
+}
+
+function validationMessageElement(responseIdentifier: string): HTMLElement {
+  const element = document.createElement("p");
+  element.id = validationMessageId(responseIdentifier);
+  element.dataset.validationFor = responseIdentifier;
+  element.hidden = true;
+  element.role = "alert";
+  return element;
+}
+
+function validationMessageId(responseIdentifier: string): string {
+  return `qti3-validation-${responseIdentifier}`;
+}
+
+function responseIsEmpty(value: QtiValue): boolean {
+  return value === null || value === "" || (Array.isArray(value) && value.length === 0);
 }
