@@ -518,6 +518,50 @@ describe("@qti3/core", () => {
     expect(validateAssessmentItem(result.document!).ok).toBe(true);
   });
 
+  it("diagnoses unsupported and response-processing-forbidden processing elements", () => {
+    const unsupported = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-processing">
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><p>Unsupported processing expression.</p></qti-item-body>
+        <qti-response-processing>
+          <qti-set-outcome-value identifier="SCORE">
+            <qti-number-selected/>
+          </qti-set-outcome-value>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(unsupported.ok).toBe(false);
+    expect(unsupported.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "processing.unsupported",
+        message: "qti-number-selected is not currently supported as a QTI processing element.",
+        path: "/qti-assessment-item/qti-response-processing[1]/qti-set-outcome-value[1]/qti-number-selected[1]",
+      }),
+    );
+
+    const forbidden = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="forbidden-response-processing">
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><p>Forbidden processing expression.</p></qti-item-body>
+        <qti-response-processing>
+          <qti-set-outcome-value identifier="SCORE">
+            <qti-outcome-minimum/>
+          </qti-set-outcome-value>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(forbidden.ok).toBe(false);
+    expect(forbidden.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "processing.response.forbidden",
+        message: "qti-outcome-minimum must not be used in qti-response-processing.",
+        path: "/qti-assessment-item/qti-response-processing[1]/qti-set-outcome-value[1]/qti-outcome-minimum[1]",
+      }),
+    );
+  });
+
   it("requires bound end-attempt interactions to use a single boolean response", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="end-attempt-shape">

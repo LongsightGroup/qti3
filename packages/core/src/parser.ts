@@ -1,4 +1,4 @@
-import { getInteractionSupport, interactionNameToType } from "./support.js";
+import { getInteractionSupport, interactionNameToType, processingSupport } from "./support.js";
 import type {
   QtiAssessmentItem,
   QtiCatalogCard,
@@ -36,6 +36,14 @@ import type {
 } from "./types.js";
 import { validateAssessmentItem } from "./validation.js";
 import { childElements, descendants, parseXmlTree, textContent, type XmlNode } from "./xml.js";
+
+const supportedProcessingNames = new Set(processingSupport.map((entry) => entry.qtiName));
+const processingContainerNames = new Set(["qti-template-processing", "qti-response-processing"]);
+const responseProcessingForbiddenNames = new Set([
+  "qti-outcome-minimum",
+  "qti-outcome-maximum",
+  "qti-test-variables",
+]);
 
 export function parseQtiXml(xml: string): QtiParseResult {
   const diagnostics: QtiDiagnostic[] = [];
@@ -101,6 +109,8 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   const responseProcessing = parseResponseProcessing(
     childElements(node, "qti-response-processing")[0],
   );
+  diagnoseProcessingElements(childElements(node, "qti-template-processing")[0], diagnostics);
+  diagnoseProcessingElements(childElements(node, "qti-response-processing")[0], diagnostics);
   const itemBody = childElements(node, "qti-item-body")[0];
   const interactions: QtiInteraction[] = [];
   const body = itemBody
@@ -138,6 +148,42 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     bodyText: textContent(node),
     source: node.source,
   };
+}
+
+function diagnoseProcessingElements(
+  processingNode: XmlNode | undefined,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!processingNode) return;
+  for (const node of [processingNode, ...descendants(processingNode, () => true)]) {
+    if (!node.localName.startsWith("qti-")) continue;
+    if (
+      processingContainerNames.has(node.localName) ||
+      supportedProcessingNames.has(node.localName)
+    ) {
+      continue;
+    }
+    if (
+      processingNode.localName === "qti-response-processing" &&
+      responseProcessingForbiddenNames.has(node.localName)
+    ) {
+      diagnostics.push({
+        code: "processing.response.forbidden",
+        severity: "error",
+        message: `${node.localName} must not be used in qti-response-processing.`,
+        path: node.source.path,
+        source: node.source,
+      });
+      continue;
+    }
+    diagnostics.push({
+      code: "processing.unsupported",
+      severity: "error",
+      message: `${node.localName} is not currently supported as a QTI processing element.`,
+      path: node.source.path,
+      source: node.source,
+    });
+  }
 }
 
 function parseStylesheet(node: XmlNode): QtiStylesheet {
