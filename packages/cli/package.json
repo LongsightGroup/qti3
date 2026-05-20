@@ -28,6 +28,6 @@
     "@longsightgroup/qti3-conformance": "workspace:*",
     "@longsightgroup/qti3-core": "workspace:*",
     "@longsightgroup/qti3-fixtures": "workspace:*",
-    "stax-xml": "^0.7.0"
+    "stax-xml": "0.7.0"
   }
 }

@@ -183,6 +183,7 @@ The intended enforcement model is strict:
 - Vitest covers pure core behavior and fixture-based scoring.
 - Playwright covers browser interactions, keyboard flows, focus, and rendering.
 - axe-core is required but not sufficient; accessibility tests must also assert keyboard behavior, accessible names, ARIA states, validation messaging, forced colors, and reflow.
+- Direct dependency specs are exact. `pnpm check:deps` also compares every workspace dependency block and every `pnpm-lock.yaml` package entry against `scripts/dependency-policy.json`.
 - CI blocks release when formatting, linting, typing, tests, conformance, accessibility, browser checks, package builds, or dependency policy checks fail.
 
 ## Status

@@ -3,6 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname;
+const policy = await readJson(join(root, "scripts/dependency-policy.json"));
 const prohibitedLicensePattern = /\b(A?GPL|GPL|AGPL)\b/i;
 const coreProhibitedDependencies = new Set([
   "@angular/core",
@@ -22,12 +23,114 @@ const coreProhibitedDependencies = new Set([
 
 const failures = [];
 
+await checkPackageManager();
+await checkDirectDependencies();
+await checkLockfilePackages();
 await checkWorkspaceRuntimeDependencies();
 await checkInstalledPackageLicenses();
 
 if (failures.length > 0) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
   process.exitCode = 1;
+}
+
+async function checkPackageManager() {
+  const rootPackage = await readJson(join(root, "package.json"));
+  if (rootPackage.packageManager !== policy.packageManager) {
+    failures.push(
+      `Root packageManager must be ${policy.packageManager}; got ${rootPackage.packageManager ?? "(missing)"}.`,
+    );
+  }
+}
+
+async function checkDirectDependencies() {
+  const expectedByImporter = policy.directDependencies ?? {};
+  const actualImporters = new Set([
+    ".",
+    ...(await workspaceImporters("packages")),
+    ...(await workspaceImporters("examples")),
+  ]);
+  for (const importer of [...actualImporters].sort()) {
+    if (!expectedByImporter[importer]) {
+      failures.push(
+        `${importer} is not listed in scripts/dependency-policy.json directDependencies.`,
+      );
+    }
+  }
+  for (const [importer, expected] of Object.entries(expectedByImporter)) {
+    const manifest = await readJson(join(root, importer, "package.json"));
+    if (!actualImporters.has(importer)) {
+      failures.push(`${importer} is listed in dependency policy but has no package.json.`);
+      continue;
+    }
+    assertDependencyBlock(
+      importer,
+      "dependencies",
+      manifest.dependencies ?? {},
+      expected.dependencies ?? {},
+    );
+    assertDependencyBlock(
+      importer,
+      "devDependencies",
+      manifest.devDependencies ?? {},
+      expected.devDependencies ?? {},
+    );
+    assertDependencyBlock(
+      importer,
+      "peerDependencies",
+      manifest.peerDependencies ?? {},
+      expected.peerDependencies ?? {},
+    );
+    assertDependencyBlock(
+      importer,
+      "optionalDependencies",
+      manifest.optionalDependencies ?? {},
+      expected.optionalDependencies ?? {},
+    );
+  }
+}
+
+async function workspaceImporters(directoryName) {
+  const directory = join(root, directoryName);
+  const importers = [];
+  for (const entry of await safeReadDir(directory)) {
+    if (!entry.isDirectory()) continue;
+    const importer = `${directoryName}/${entry.name}`;
+    const manifest = await readJson(join(root, importer, "package.json"));
+    if (manifest.name || manifest.dependencies || manifest.devDependencies)
+      importers.push(importer);
+  }
+  return importers;
+}
+
+function assertDependencyBlock(importer, blockName, actual, expected) {
+  const actualEntries = sortedEntries(actual);
+  const expectedEntries = sortedEntries(expected);
+  if (JSON.stringify(actualEntries) === JSON.stringify(expectedEntries)) return;
+
+  failures.push(
+    `${importer} ${blockName} changed. Update scripts/dependency-policy.json only after dependency review. Expected ${formatEntries(expectedEntries)}; got ${formatEntries(actualEntries)}.`,
+  );
+}
+
+async function checkLockfilePackages() {
+  const expected = new Set(policy.lockfilePackages ?? []);
+  const actual = new Set(lockfilePackageKeys(await readFile(join(root, "pnpm-lock.yaml"), "utf8")));
+
+  for (const key of [...actual].sort()) {
+    if (!expected.has(key)) {
+      failures.push(
+        `pnpm-lock.yaml contains unreviewed package ${key}. Update scripts/dependency-policy.json only after dependency review.`,
+      );
+    }
+  }
+  for (const key of [...expected].sort()) {
+    if (!actual.has(key)) {
+      failures.push(
+        `Dependency policy allows ${key}, but it is no longer present in pnpm-lock.yaml.`,
+      );
+    }
+  }
 }
 
 async function checkWorkspaceRuntimeDependencies() {
@@ -40,6 +143,22 @@ async function checkWorkspaceRuntimeDependencies() {
       );
     }
   }
+}
+
+function lockfilePackageKeys(lockfile) {
+  const keys = [];
+  let inPackages = false;
+  for (const line of lockfile.split("\n")) {
+    if (line === "packages:") {
+      inPackages = true;
+      continue;
+    }
+    if (!inPackages) continue;
+    if (/^[A-Za-z]/.test(line)) break;
+    const match = line.match(/^  ('[^']+'|[^\s].*):$/);
+    if (match) keys.push(match[1].replace(/^'|'$/g, ""));
+  }
+  return keys.sort();
 }
 
 async function checkInstalledPackageLicenses() {
@@ -119,4 +238,13 @@ function licenseString(license) {
     return license.type;
   }
   return "UNLICENSED";
+}
+
+function sortedEntries(record) {
+  return Object.entries(record).sort(([left], [right]) => left.localeCompare(right));
+}
+
+function formatEntries(entries) {
+  if (entries.length === 0) return "{}";
+  return `{ ${entries.map(([name, version]) => `${name}: ${version}`).join(", ")} }`;
 }

@@ -21,6 +21,6 @@
     "prepublishOnly": "pnpm --dir ../.. release:check"
   },
   "dependencies": {
-    "stax-xml": "^0.7.0"
+    "stax-xml": "0.7.0"
   }
 }

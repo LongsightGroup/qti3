@@ -21,14 +21,14 @@
     "release:check": "pnpm verify && pnpm test:browser && node packages/cli/dist/index.js assert-support && node packages/cli/dist/index.js run-fixtures"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "@types/node": "^22.15.0",
-    "axe-core": "^4.11.4",
+    "@playwright/test": "1.60.0",
+    "@types/node": "22.19.19",
+    "axe-core": "4.11.4",
     "oxfmt": "0.49.0",
     "oxlint": "1.64.0",
-    "typescript": "^6.0.3",
+    "typescript": "6.0.3",
     "vite": "8.0.12",
-    "vitest": "^4.1.6"
+    "vitest": "4.1.6"
   },
   "engines": {
     "node": ">=22"

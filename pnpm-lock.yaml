@@ -9,13 +9,13 @@ importers:
   .:
     devDependencies:
       '@playwright/test':
-        specifier: ^1.60.0
+        specifier: 1.60.0
         version: 1.60.0
       '@types/node':
-        specifier: ^22.15.0
+        specifier: 22.19.19
         version: 22.19.19
       axe-core:
-        specifier: ^4.11.4
+        specifier: 4.11.4
         version: 4.11.4
       oxfmt:
         specifier: 0.49.0
@@ -24,13 +24,13 @@ importers:
         specifier: 1.64.0
         version: 1.64.0
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       vite:
         specifier: 8.0.12
         version: 8.0.12(@types/node@22.19.19)(esbuild@0.27.7)
       vitest:
-        specifier: ^4.1.6
+        specifier: 4.1.6
         version: 4.1.6(@types/node@22.19.19)(vite@8.0.12(@types/node@22.19.19)(esbuild@0.27.7))
 
   examples/manual:
@@ -70,7 +70,7 @@ importers:
         specifier: workspace:*
         version: link:../fixtures
       stax-xml:
-        specifier: ^0.7.0
+        specifier: 0.7.0
         version: 0.7.0
 
   packages/conformance:
@@ -85,7 +85,7 @@ importers:
   packages/core:
     dependencies:
       stax-xml:
-        specifier: ^0.7.0
+        specifier: 0.7.0
         version: 0.7.0
 
   packages/fixtures:
