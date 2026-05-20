@@ -161,6 +161,29 @@ describe("@qti3/core", () => {
     );
   });
 
+  it("validates direct child contracts for supported interactions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-child">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10">
+            <qti-simple-choice identifier="A">Not allowed here</qti-simple-choice>
+          </qti-slider-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "interaction.child.unsupported",
+        message: "qti-slider-interaction does not allow qti-simple-choice as a direct child.",
+        path: "/qti-assessment-item/qti-item-body[1]/qti-slider-interaction[1]/qti-simple-choice[1]",
+        source: expect.objectContaining({ line: 6, column: 13 }),
+      }),
+    );
+  });
+
   it("exposes validation independent of XML parsing", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">

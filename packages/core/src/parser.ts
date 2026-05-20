@@ -202,6 +202,10 @@ function parseInteraction(
     prompt: prompt ? textContent(prompt) : undefined,
     object: parseObjectAsset(descendants(node, (child) => child.localName === "object")[0]),
     choices: parseChoices(node),
+    childElements: childElements(node).map((child) => ({
+      qtiName: child.localName,
+      source: child.source,
+    })),
     attributes: node.attributes,
     text: textContent(node),
     source: node.source,

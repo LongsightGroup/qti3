@@ -89,6 +89,11 @@ export interface QtiChoice {
   source?: QtiSourceLocation | undefined;
 }
 
+export interface QtiElementChild {
+  qtiName: string;
+  source?: QtiSourceLocation | undefined;
+}
+
 export type QtiChoiceRole =
   | "simpleChoice"
   | "associableChoice"
@@ -133,6 +138,7 @@ export interface QtiInteraction {
   prompt?: string | undefined;
   object?: QtiObjectAsset | undefined;
   choices: QtiChoice[];
+  childElements: QtiElementChild[];
   attributes: Record<string, string>;
   text: string;
   source?: QtiSourceLocation | undefined;

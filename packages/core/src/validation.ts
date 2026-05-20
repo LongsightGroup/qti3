@@ -107,6 +107,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionResponseReference(interaction, responseIdentifiers, diagnostics);
     validateInteractionResponseShape(interaction, diagnostics);
     validateInteractionChoices(interaction, diagnostics);
+    validateInteractionChildren(interaction, diagnostics);
   }
 }
 
@@ -200,6 +201,76 @@ function validateInteractionChoices(
       source: interaction.source,
     });
   }
+}
+
+function validateInteractionChildren(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const allowed = allowedInteractionChildren(interaction);
+  if (!allowed) return;
+
+  for (const child of interaction.childElements) {
+    if (allowed.has(child.qtiName)) continue;
+    diagnostics.push({
+      code: "interaction.child.unsupported",
+      severity: "error",
+      message: `${interaction.qtiName} does not allow ${child.qtiName} as a direct child.`,
+      path: child.source?.path ?? interaction.source?.path,
+      source: child.source ?? interaction.source,
+    });
+  }
+}
+
+function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | undefined {
+  const common = ["qti-prompt"];
+  switch (interaction.type) {
+    case "choice":
+      return setOf(common, ["qti-simple-choice"]);
+    case "order":
+      return setOf(common, ["qti-simple-choice"]);
+    case "associate":
+      return setOf(common, ["qti-simple-match-set"]);
+    case "match":
+      return setOf(common, ["qti-simple-match-set"]);
+    case "gapMatch":
+      return setOf(common, ["qti-gap-text", "qti-gap-img", ...staticContentNames()]);
+    case "inlineChoice":
+      return setOf(common, ["qti-inline-choice"]);
+    case "hottext":
+      return setOf(common, staticContentNames());
+    case "graphicOrder":
+      return setOf(common, ["object", "qti-hotspot-choice"]);
+    case "graphicAssociate":
+      return setOf(common, ["object", "qti-associable-hotspot"]);
+    case "graphicGapMatch":
+      return setOf(common, ["object", "qti-gap-text", "qti-gap-img", ...staticContentNames()]);
+    case "hotspot":
+      return setOf(common, ["object", "qti-hotspot-choice"]);
+    case "selectPoint":
+    case "positionObject":
+    case "media":
+      return setOf(common, ["object"]);
+    case "drawing":
+    case "extendedText":
+    case "portableCustom":
+      return new Set(common);
+    case "slider":
+    case "textEntry":
+    case "upload":
+    case "endAttempt":
+      return new Set(common);
+    case "custom":
+      return undefined;
+  }
+}
+
+function staticContentNames(): string[] {
+  return ["p", "div", "span", "ul", "ol", "li", "table", "tbody", "thead", "tr", "td", "th"];
+}
+
+function setOf(...items: string[][]): Set<string> {
+  return new Set(items.flat());
 }
 
 function expectedResponseShape(
