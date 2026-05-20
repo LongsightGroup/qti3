@@ -208,7 +208,10 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
   if (interactionType === "drawing") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Draw a diagonal line.</qti-prompt></${qtiName}>`;
   }
-  if (interactionType === "custom" || interactionType === "portableCustom") {
+  if (interactionType === "portableCustom") {
+    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Enter A.</qti-prompt></${qtiName}>`;
+  }
+  if (interactionType === "custom") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter A.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "match" || interactionType === "associate") {

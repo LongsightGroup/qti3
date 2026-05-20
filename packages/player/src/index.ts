@@ -254,7 +254,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return field;
     }
 
-    if (interaction.type === "textEntry" || interaction.type === "portableCustom") {
+    if (interaction.type === "portableCustom") {
+      field.append(renderPortableCustomResponse(interaction, update));
+      return field;
+    }
+
+    if (interaction.type === "textEntry") {
       const input = document.createElement("input");
       input.setAttribute("aria-label", heading.textContent ?? "Response");
       input.addEventListener("input", () => update(input.value));
@@ -681,6 +686,50 @@ function renderDrawingResponse(
   return group;
 }
 
+function renderPortableCustomResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+): HTMLElement {
+  const group = document.createElement("div");
+  group.role = "group";
+  group.setAttribute("aria-label", interaction.prompt ?? "Portable custom interaction");
+
+  const host = document.createElement("div");
+  host.className = "qti3-portable-custom-host";
+  host.tabIndex = 0;
+  host.dataset.responseIdentifier = interaction.responseIdentifier ?? "";
+  host.dataset.typeIdentifier = interaction.attributes["custom-interaction-type-identifier"] ?? "";
+  host.dataset.module = interaction.attributes.module ?? "";
+  host.dataset.qtiName = interaction.qtiName;
+  host.setAttribute("role", "application");
+  host.setAttribute("aria-label", interaction.prompt ?? "Portable custom interaction host");
+  host.textContent = "Portable custom interaction host";
+  host.style.border = "1px solid CanvasText";
+  host.style.padding = "0.5rem";
+  host.style.marginBlockEnd = "0.5rem";
+
+  const fallback = document.createElement("input");
+  fallback.setAttribute("aria-label", `${interaction.prompt ?? "Portable custom"} response`);
+  fallback.addEventListener("input", () => update(fallback.value));
+  fallback.addEventListener("change", () => update(fallback.value));
+
+  host.addEventListener("qti3-portable-custom-response", (event) => {
+    const value = portableCustomEventValue(event);
+    if (value === undefined) return;
+    fallback.value = String(value ?? "");
+    update(value);
+  });
+  host.addEventListener("qti3-pci-response", (event) => {
+    const value = portableCustomEventValue(event);
+    if (value === undefined) return;
+    fallback.value = String(value ?? "");
+    update(value);
+  });
+
+  group.append(host, fallback);
+  return group;
+}
+
 function renderHotspotResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -910,6 +959,17 @@ function lineElement(x1: number, y1: number, x2: number, y2: number): SVGLineEle
   line.setAttribute("stroke-width", "3");
   line.setAttribute("stroke-linecap", "round");
   return line;
+}
+
+function portableCustomEventValue(event: Event): QtiValue | undefined {
+  if (!("detail" in event)) return undefined;
+  const detail = event.detail as { value?: QtiValue; response?: QtiValue } | QtiValue | undefined;
+  if (detail === undefined) return undefined;
+  if (typeof detail === "object" && detail !== null && !Array.isArray(detail)) {
+    if ("value" in detail) return detail.value ?? null;
+    if ("response" in detail) return detail.response ?? null;
+  }
+  return detail as QtiValue;
 }
 
 function readableType(type: string): string {

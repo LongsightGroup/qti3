@@ -132,6 +132,32 @@ test.describe("manual harness", () => {
     }
   });
 
+  test("exposes a portable custom host contract and accepts response events", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "portableCustom");
+
+    const host = page.locator("qti-assessment-item-player .qti3-portable-custom-host");
+    await expect(host).toBeVisible();
+    await expect(host).toHaveAttribute("data-type-identifier", "urn:qti3:fixture:portable-custom");
+    await expect(host).toHaveAttribute("data-module", "fixture-portable-custom");
+
+    await host.evaluate((element) => {
+      element.dispatchEvent(
+        new CustomEvent("qti3-portable-custom-response", {
+          detail: { value: "A" },
+          bubbles: true,
+        }),
+      );
+    });
+    await expectResponse(page, "A");
+
+    await page.getByRole("button", { name: "Score" }).click();
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.outcomes.SCORE).toBe(1);
+  });
+
   test("honors load session controls and injected XML fetchers", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??
@@ -304,6 +330,11 @@ test.describe("manual harness", () => {
     await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, "10 10 90 90");
+
+    await loadFixture(page, "portableCustom");
+    await page.locator("qti-assessment-item-player .qti3-portable-custom-host + input").focus();
+    await page.keyboard.type("A");
+    await expectResponse(page, "A");
   });
 
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {
@@ -509,6 +540,20 @@ async function provideResponse(
   if (interactionType === "drawing") {
     await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
     await page.keyboard.press("Enter");
+    return;
+  }
+
+  if (interactionType === "portableCustom") {
+    await page
+      .locator("qti-assessment-item-player .qti3-portable-custom-host")
+      .evaluate((element, value) => {
+        element.dispatchEvent(
+          new CustomEvent("qti3-portable-custom-response", {
+            detail: { value },
+            bubbles: true,
+          }),
+        );
+      }, response);
     return;
   }
 

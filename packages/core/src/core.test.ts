@@ -456,6 +456,27 @@ describe("@qti3/core", () => {
     });
   });
 
+  it("preserves portable custom interaction launch metadata", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-portable-custom-interaction
+            response-identifier="RESPONSE"
+            custom-interaction-type-identifier="urn:qti3:fixture:portable-custom"
+            module="fixture-portable-custom"
+          />
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.attributes).toMatchObject({
+      "custom-interaction-type-identifier": "urn:qti3:fixture:portable-custom",
+      module: "fixture-portable-custom",
+    });
+  });
+
   it("keeps ordered cardinality order-sensitive", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order">
