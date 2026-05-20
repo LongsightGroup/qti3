@@ -1134,6 +1134,25 @@ test.describe("manual harness", () => {
     });
     expect(completedState.responses.RESPONSE).toBe("A");
 
+    const restoredCompletedState = await page
+      .locator("qti-assessment-item-player")
+      .evaluate((element, state) => {
+        element.reset();
+        element.restore(state);
+        const choice = element.querySelector<HTMLInputElement>(
+          '[data-choice-identifier="B"] input',
+        );
+        choice?.click();
+        return element.serialize();
+      }, completedState);
+    expect(restoredCompletedState.responses.RESPONSE).toBe("A");
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="A"] input'),
+    ).toBeDisabled();
+    await expect(
+      page.locator('qti-assessment-item-player [data-choice-identifier="B"] input'),
+    ).toBeDisabled();
+
     await page.locator("#debug-reset").click();
     await expect(page.locator("qti-assessment-item-player")).toHaveAttribute(
       "data-status",
