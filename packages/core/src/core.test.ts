@@ -284,6 +284,66 @@ describe("@qti3/core", () => {
     expect(incorrect.score().outcomes.SCORE).toBe(0);
   });
 
+  it("resolves outcome variables during cumulative response processing", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="cumulative">
+        <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="A" mapped-value="1"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="RESPONSE2" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="B" mapped-value="2"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE1">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="Z">Z</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-choice-interaction response-identifier="RESPONSE2">
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+            <qti-simple-choice identifier="Z">Z</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-not><qti-is-null><qti-variable identifier="RESPONSE1"/></qti-is-null></qti-not>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-sum>
+                  <qti-variable identifier="SCORE"/>
+                  <qti-map-response identifier="RESPONSE1"/>
+                </qti-sum>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-not><qti-is-null><qti-variable identifier="RESPONSE2"/></qti-is-null></qti-not>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-sum>
+                  <qti-variable identifier="SCORE"/>
+                  <qti-map-response identifier="RESPONSE2"/>
+                </qti-sum>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE1", "A");
+    session.respond("RESPONSE2", "B");
+    expect(session.score().outcomes.SCORE).toBe(3);
+  });
+
   it("validates modal feedback outcome references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-invalid">

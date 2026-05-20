@@ -121,6 +121,7 @@ function applyTemplateRule(
     rule.expression,
     document,
     responses,
+    {},
     templateValues,
     correctResponses,
     random,
@@ -153,6 +154,7 @@ function applyResponseProcessing(
         condition.ifExpression,
         document,
         responses,
+        outcomes,
         templateValues,
         correctResponses,
         random,
@@ -166,6 +168,7 @@ function applyResponseProcessing(
               elseIf.expression,
               document,
               responses,
+              outcomes,
               templateValues,
               correctResponses,
               random,
@@ -227,6 +230,7 @@ function applyOutcomeRules(
       rule.expression,
       document,
       responses,
+      outcomes,
       templateValues,
       correctResponses,
       random,
@@ -238,13 +242,22 @@ function evaluateBoolean(
   expression: QtiProcessingExpression | undefined,
   document: QtiDocument,
   responses: Record<string, QtiValue>,
+  outcomes: Record<string, QtiValue> = {},
   templateValues: Record<string, QtiValue> = {},
   correctResponses: Record<string, QtiValue> = {},
   random: () => number = Math.random,
 ): boolean {
   if (!expression) return false;
   return booleanValue(
-    evaluateValue(expression, document, responses, templateValues, correctResponses, random),
+    evaluateValue(
+      expression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    ),
   );
 }
 
@@ -252,6 +265,7 @@ function evaluateValue(
   expression: QtiProcessingExpression,
   document: QtiDocument,
   responses: Record<string, QtiValue>,
+  outcomes: Record<string, QtiValue> = {},
   templateValues: Record<string, QtiValue> = {},
   correctResponses: Record<string, QtiValue> = {},
   random: () => number = Math.random,
@@ -279,7 +293,12 @@ function evaluateValue(
       : 0;
   }
   if (expression.type === "variable") {
-    return responses[expression.identifier] ?? templateValues[expression.identifier] ?? null;
+    return (
+      responses[expression.identifier] ??
+      outcomes[expression.identifier] ??
+      templateValues[expression.identifier] ??
+      null
+    );
   }
   if (expression.type === "randomInteger") {
     const step = expression.step > 0 ? expression.step : 1;
@@ -293,6 +312,7 @@ function evaluateValue(
       expression.values[index]!,
       document,
       responses,
+      outcomes,
       templateValues,
       correctResponses,
       random,
@@ -303,7 +323,15 @@ function evaluateValue(
       (sum, item) =>
         sum +
         numericValue(
-          evaluateValue(item, document, responses, templateValues, correctResponses, random),
+          evaluateValue(
+            item,
+            document,
+            responses,
+            outcomes,
+            templateValues,
+            correctResponses,
+            random,
+          ),
         ),
       0,
     );
@@ -313,7 +341,15 @@ function evaluateValue(
       (product, item) =>
         product *
         numericValue(
-          evaluateValue(item, document, responses, templateValues, correctResponses, random),
+          evaluateValue(
+            item,
+            document,
+            responses,
+            outcomes,
+            templateValues,
+            correctResponses,
+            random,
+          ),
         ),
       1,
     );
@@ -325,6 +361,7 @@ function evaluateValue(
           expression.left,
           document,
           responses,
+          outcomes,
           templateValues,
           correctResponses,
           random,
@@ -335,6 +372,7 @@ function evaluateValue(
           expression.right,
           document,
           responses,
+          outcomes,
           templateValues,
           correctResponses,
           random,
@@ -345,14 +383,30 @@ function evaluateValue(
   if (expression.type === "and") {
     return expression.expressions.every((item) =>
       booleanValue(
-        evaluateValue(item, document, responses, templateValues, correctResponses, random),
+        evaluateValue(
+          item,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
       ),
     );
   }
   if (expression.type === "or") {
     return expression.expressions.some((item) =>
       booleanValue(
-        evaluateValue(item, document, responses, templateValues, correctResponses, random),
+        evaluateValue(
+          item,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
       ),
     );
   }
@@ -362,6 +416,7 @@ function evaluateValue(
         expression.expression,
         document,
         responses,
+        outcomes,
         templateValues,
         correctResponses,
         random,
@@ -370,11 +425,20 @@ function evaluateValue(
   }
   if (expression.type === "equal") {
     return valuesEqual(
-      evaluateValue(expression.left, document, responses, templateValues, correctResponses, random),
+      evaluateValue(
+        expression.left,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
       evaluateValue(
         expression.right,
         document,
         responses,
+        outcomes,
         templateValues,
         correctResponses,
         random,
@@ -383,11 +447,20 @@ function evaluateValue(
   }
   if (expression.type === "stringMatch") {
     return stringMatch(
-      evaluateValue(expression.left, document, responses, templateValues, correctResponses, random),
+      evaluateValue(
+        expression.left,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
       evaluateValue(
         expression.right,
         document,
         responses,
+        outcomes,
         templateValues,
         correctResponses,
         random,
@@ -401,6 +474,7 @@ function evaluateValue(
       expression.value,
       document,
       responses,
+      outcomes,
       templateValues,
       correctResponses,
       random,
@@ -409,6 +483,7 @@ function evaluateValue(
       expression.collection,
       document,
       responses,
+      outcomes,
       templateValues,
       correctResponses,
       random,
