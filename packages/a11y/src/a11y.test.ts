@@ -1,6 +1,6 @@
 import { interactionSupport } from "@qti3/core";
 import { describe, expect, it } from "vitest";
-import { a11yContracts } from "./index.js";
+import { a11yContracts, manualAssistiveTechnologyScripts } from "./index.js";
 
 describe("@qti3/a11y", () => {
   it("defines an accessibility contract for every target interaction", () => {
@@ -15,6 +15,21 @@ describe("@qti3/a11y", () => {
       expect(contract.focusStrategy, contract.interactionType).not.toHaveLength(0);
       expect(contract.keyboardModel.length, contract.interactionType).toBeGreaterThan(0);
       expect(contract.requiredStates.length, contract.interactionType).toBeGreaterThan(0);
+    }
+  });
+
+  it("defines manual assistive technology scripts covering every target interaction", () => {
+    expect(
+      manualAssistiveTechnologyScripts.map((script) => script.assistiveTechnology).sort(),
+    ).toEqual(["JAWS", "NVDA", "VoiceOver"]);
+
+    for (const script of manualAssistiveTechnologyScripts) {
+      expect(script.setup.length, script.assistiveTechnology).toBeGreaterThan(0);
+      expect(script.procedure.length, script.assistiveTechnology).toBeGreaterThan(0);
+      expect(script.expectedResults.length, script.assistiveTechnology).toBeGreaterThan(0);
+      expect(script.appliesTo.sort(), script.assistiveTechnology).toEqual(
+        interactionSupport.map((support) => support.interactionType).sort(),
+      );
     }
   });
 });

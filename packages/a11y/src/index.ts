@@ -11,9 +11,91 @@ export interface InteractionA11yContract {
   requiredStates: string[];
 }
 
+export interface ManualAssistiveTechnologyScript {
+  assistiveTechnology: "VoiceOver" | "NVDA" | "JAWS";
+  platform: string;
+  browser: string;
+  appliesTo: QtiInteractionType[];
+  setup: string[];
+  procedure: string[];
+  expectedResults: string[];
+}
+
 export const a11yContracts: InteractionA11yContract[] = interactionSupport.map((support) =>
   contractForInteraction(support.interactionType as QtiInteractionType),
 );
+
+export const manualAssistiveTechnologyScripts: ManualAssistiveTechnologyScript[] = [
+  {
+    assistiveTechnology: "VoiceOver",
+    platform: "macOS",
+    browser: "Safari or Chromium",
+    appliesTo: targetInteractions(),
+    setup: [
+      "Start the manual harness with pnpm dev.",
+      "Open the harness in the browser and enable VoiceOver.",
+      "Load each reference fixture from the fixture selector.",
+    ],
+    procedure: [
+      "Navigate from the item heading into the interaction with standard VoiceOver navigation.",
+      "Confirm the prompt, role, current value or selection state, and validation message are announced.",
+      "Complete the response using keyboard-only commands.",
+      "Score the item and navigate to any feedback or updated state.",
+    ],
+    expectedResults: [
+      "Every interaction has a meaningful accessible name and role.",
+      "Keyboard operation reaches and completes the interaction without pointer input.",
+      "Validation messages are announced through the control description when present.",
+      "Focus order follows the visual and DOM order of the item.",
+    ],
+  },
+  {
+    assistiveTechnology: "NVDA",
+    platform: "Windows",
+    browser: "Firefox or Chromium",
+    appliesTo: targetInteractions(),
+    setup: [
+      "Start the manual harness with pnpm dev on the test machine or open it from a reachable host.",
+      "Open the harness in the browser and enable NVDA browse mode.",
+      "Load each reference fixture from the fixture selector.",
+    ],
+    procedure: [
+      "Use heading, form-field, and Tab navigation to enter the interaction.",
+      "Confirm NVDA announces the role, name, value, selected state, and invalid state where applicable.",
+      "Switch modes only when NVDA or the browser requires it for native controls.",
+      "Complete the response, score the item, and verify feedback or validation announcements.",
+    ],
+    expectedResults: [
+      "Native controls expose expected roles through the accessibility tree.",
+      "Composite interactions expose each operable part in deterministic order.",
+      "Selected, pressed, invalid, and described states are announced when applicable.",
+      "No fixture requires pointer-only operation.",
+    ],
+  },
+  {
+    assistiveTechnology: "JAWS",
+    platform: "Windows",
+    browser: "Chromium",
+    appliesTo: targetInteractions(),
+    setup: [
+      "Start the manual harness with pnpm dev on the test machine or open it from a reachable host.",
+      "Open the harness in Chromium and enable JAWS.",
+      "Load each reference fixture from the fixture selector.",
+    ],
+    procedure: [
+      "Use virtual cursor and Tab navigation to reach the interaction.",
+      "Read the prompt, control role, current value, validation message, and feedback region.",
+      "Complete the response with keyboard-only commands.",
+      "Score the item and verify the attempt state can be reviewed without losing focus context.",
+    ],
+    expectedResults: [
+      "JAWS announces a stable role and name for every operable control.",
+      "Validation and feedback are reachable after scoring.",
+      "Graphic, point, drawing, and custom-host fixtures expose a keyboard-operable fallback or control.",
+      "The item can be completed without hidden instructions or product-specific UI.",
+    ],
+  },
+];
 
 function contractForInteraction(interactionType: QtiInteractionType): InteractionA11yContract {
   const base = {
@@ -210,4 +292,8 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     keyboardModel: ["No runtime keyboard contract is provided for deprecated custom interaction."],
     requiredStates: ["deprecated diagnostic"],
   };
+}
+
+function targetInteractions(): QtiInteractionType[] {
+  return interactionSupport.map((support) => support.interactionType as QtiInteractionType);
 }
