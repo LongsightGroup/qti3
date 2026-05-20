@@ -6,7 +6,7 @@ The goal is not to build another framework-specific item player. The goal is to 
 
 ## Goals
 
-- Implement QTI 3 item behavior faithfully and explicitly.
+- Implement the latest public QTI 3 item behavior faithfully and explicitly, tracking QTI 3.0.1 ASI documents where applicable.
 - Support all QTI 3 interaction types in the target item profile.
 - Make scoring and response processing runnable in Node without a browser.
 - Provide an accessible browser player that can be embedded in any product.
@@ -22,18 +22,19 @@ The goal is not to build another framework-specific item player. The goal is to 
 - No hidden fallback behavior for required production configuration.
 - No compiling QTI XML as framework templates.
 - No global singleton state store.
+- No implementation support for deprecated QTI elements, beyond diagnostics and support-matrix awareness.
+- No runtime XSD or schema validation.
 
 ## Planned Packages
 
 ```text
 packages/
   qti3-core/          # parser, typed model, validation, processing, scoring, state
-  qti3-dom/           # DOM rendering primitives and interaction controllers
   qti3-player/        # native custom element browser player
   qti3-conformance/   # fixture runner and support matrix tooling
   qti3-a11y/          # accessibility contracts and automated checks
   qti3-fixtures/      # QTI item fixtures and expected outcomes
-  qti3-examples/      # plain HTML and product integration examples
+  qti3-cli/           # validation, scoring, fixture, and support-matrix CLI
 ```
 
 The default embedding surface should be a native web component:
@@ -60,6 +61,15 @@ player.addEventListener("qti-statechange", (event) => {
 ```
 
 Framework adapters may be added later, but they should wrap the web component or core API. They must not own the QTI implementation.
+
+## Platform
+
+- ESM-only packages.
+- Node.js 22+.
+- Modern browsers.
+- Deno 2+.
+- GitHub Actions for CI.
+- Light DOM for the default player.
 
 ## Tooling Preferences
 
