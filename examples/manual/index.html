@@ -134,6 +134,38 @@
         margin-block: 0.35rem;
       }
 
+      .debug-actions {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+        margin-block: 1rem;
+      }
+
+      .debug-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-block: 1rem;
+      }
+
+      .debug-panel {
+        border: 1px solid #d8d8d8;
+        background: #fff;
+      }
+
+      .debug-panel summary {
+        cursor: pointer;
+        padding: 0.5rem 0.65rem;
+        font-weight: 700;
+      }
+
+      .debug-panel pre {
+        margin: 0;
+        padding: 0.65rem;
+        border-top: 1px solid #d8d8d8;
+        background: #f7f7f7;
+        font-size: 0.9rem;
+      }
+
       @media (max-width: 48rem) {
         main {
           grid-template-columns: 1fr;
@@ -194,6 +226,45 @@
             <pre id="score-details">{}</pre>
           </details>
         </div>
+        <h2>Debug actions</h2>
+        <div class="debug-actions">
+          <button id="debug-score" type="button">Score attempt</button>
+          <button id="debug-suspend" type="button">Suspend</button>
+          <button id="debug-end" type="button">End attempt</button>
+          <button id="debug-reset" type="button">Reset</button>
+        </div>
+        <h2>Debug panels</h2>
+        <div class="debug-grid">
+          <details class="debug-panel" open>
+            <summary>Responses</summary>
+            <pre id="debug-responses">{}</pre>
+          </details>
+          <details class="debug-panel" open>
+            <summary>Outcomes</summary>
+            <pre id="debug-outcomes">{}</pre>
+          </details>
+          <details class="debug-panel">
+            <summary>Template values</summary>
+            <pre id="debug-template-values">{}</pre>
+          </details>
+          <details class="debug-panel">
+            <summary>Validation messages</summary>
+            <pre id="debug-validation">[]</pre>
+          </details>
+          <details class="debug-panel">
+            <summary>Diagnostics</summary>
+            <pre id="debug-diagnostics">[]</pre>
+          </details>
+          <details class="debug-panel">
+            <summary>Serialized state</summary>
+            <pre id="debug-state">{}</pre>
+          </details>
+          <details class="debug-panel" open>
+            <summary>Action log</summary>
+            <pre id="debug-action-log" aria-live="polite">[]</pre>
+          </details>
+        </div>
+        <h2>Latest event</h2>
         <pre id="events" aria-live="polite"></pre>
       </aside>
       <section>

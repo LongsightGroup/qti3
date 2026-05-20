@@ -18,6 +18,17 @@ const scoreValue = document.querySelector<HTMLElement>("#score-value");
 const responseCount = document.querySelector<HTMLElement>("#response-count");
 const validationCount = document.querySelector<HTMLElement>("#validation-count");
 const scoreDetails = document.querySelector<HTMLPreElement>("#score-details");
+const debugScore = document.querySelector<HTMLButtonElement>("#debug-score");
+const debugSuspend = document.querySelector<HTMLButtonElement>("#debug-suspend");
+const debugEnd = document.querySelector<HTMLButtonElement>("#debug-end");
+const debugReset = document.querySelector<HTMLButtonElement>("#debug-reset");
+const debugResponses = document.querySelector<HTMLPreElement>("#debug-responses");
+const debugOutcomes = document.querySelector<HTMLPreElement>("#debug-outcomes");
+const debugTemplateValues = document.querySelector<HTMLPreElement>("#debug-template-values");
+const debugValidation = document.querySelector<HTMLPreElement>("#debug-validation");
+const debugDiagnostics = document.querySelector<HTMLPreElement>("#debug-diagnostics");
+const debugState = document.querySelector<HTMLPreElement>("#debug-state");
+const debugActionLog = document.querySelector<HTMLPreElement>("#debug-action-log");
 const events = document.querySelector<HTMLPreElement>("#events");
 const player = document.querySelector("qti-assessment-item-player");
 
@@ -37,6 +48,17 @@ if (
   !responseCount ||
   !validationCount ||
   !scoreDetails ||
+  !debugScore ||
+  !debugSuspend ||
+  !debugEnd ||
+  !debugReset ||
+  !debugResponses ||
+  !debugOutcomes ||
+  !debugTemplateValues ||
+  !debugValidation ||
+  !debugDiagnostics ||
+  !debugState ||
+  !debugActionLog ||
   !events ||
   !player
 ) {
@@ -51,6 +73,9 @@ interface LoadedFile {
 
 let loadedFiles: LoadedFile[] = [];
 let selectedFileIndex = -1;
+let latestDiagnostics: unknown[] = [];
+let latestValidationMessages: unknown[] = [];
+const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
 for (const fixture of interactionFixtures) {
   const option = document.createElement("option");
@@ -70,6 +95,11 @@ loadFixture.addEventListener("click", async () => {
 loadXml.addEventListener("click", async () => {
   await player.loadXml(xmlInput.value);
 });
+
+debugScore.addEventListener("click", () => player.scoreAttempt());
+debugSuspend.addEventListener("click", () => player.suspend());
+debugEnd.addEventListener("click", () => player.endAttempt());
+debugReset.addEventListener("click", () => player.reset());
 
 fileInput.addEventListener("change", async () => {
   await loadLocalFiles(fileInput.files);
@@ -107,10 +137,25 @@ for (const eventName of [
   player.addEventListener(eventName, (event) => {
     const detail = (event as CustomEvent<unknown>).detail;
     events.textContent = `${eventName}\n${JSON.stringify(detail, null, 2)}`;
-    if (eventName === "qti-ready") resetScorePanel();
-    else if (eventName === "qti-responsechange") markScoreStale();
-    else if (eventName === "qti-validation") renderValidationResult(detail);
-    else if (eventName === "qti-score") renderScoreResult(detail);
+    appendActionLog(eventName, detail);
+    if (eventName === "qti-ready") {
+      latestDiagnostics = diagnosticsFromDetail(detail);
+      latestValidationMessages = [];
+      resetScorePanel();
+    } else if (eventName === "qti-responsechange") {
+      latestValidationMessages = [];
+      markScoreStale();
+    } else if (eventName === "qti-diagnostics") {
+      latestDiagnostics = diagnosticsFromDetail(detail);
+    } else if (eventName === "qti-validation") {
+      latestValidationMessages = validationMessagesFromDetail(detail);
+      renderValidationResult(detail);
+    } else if (eventName === "qti-score") {
+      latestDiagnostics = scoreResultFromDetail(detail)?.diagnostics ?? [];
+      latestValidationMessages = [];
+      renderScoreResult(detail);
+    }
+    renderDebugPanels();
   });
 }
 
@@ -167,6 +212,53 @@ function renderScoreResult(detail: unknown): void {
   scoreDetails.textContent = JSON.stringify({ responses, outcomes, diagnostics }, null, 2);
 }
 
+function renderDebugPanels(): void {
+  const state = player.serialize();
+  debugResponses.textContent = stableJson(state?.responses ?? {});
+  debugOutcomes.textContent = stableJson(state?.outcomes ?? {});
+  debugTemplateValues.textContent = stableJson(state?.templateValues ?? {});
+  debugValidation.textContent = stableJson(latestValidationMessages);
+  debugDiagnostics.textContent = stableJson(latestDiagnostics);
+  debugState.textContent = stableJson(state ?? {});
+  debugActionLog.textContent = stableJson(actionLog);
+}
+
+function appendActionLog(action: string, detail: unknown): void {
+  const state = player.serialize();
+  actionLog.unshift({
+    time: new Date().toISOString(),
+    action,
+    status: state?.status,
+    detail: actionLogDetail(detail),
+  });
+  actionLog.splice(25);
+}
+
+function actionLogDetail(detail: unknown): unknown {
+  if (!isRecord(detail)) return detail;
+  if (isRecord(detail.state)) {
+    return {
+      itemIdentifier: detail.state.itemIdentifier,
+      status: detail.state.status,
+      responses: detail.state.responses,
+      outcomes: detail.state.outcomes,
+      validationMessages: detail.state.validationMessages,
+    };
+  }
+  if (Array.isArray(detail.validationMessages)) {
+    return { validationMessages: detail.validationMessages };
+  }
+  if (Array.isArray(detail.diagnostics)) {
+    return { diagnostics: detail.diagnostics };
+  }
+  return detail;
+}
+
+function diagnosticsFromDetail(detail: unknown): unknown[] {
+  if (!isRecord(detail)) return [];
+  return Array.isArray(detail.diagnostics) ? detail.diagnostics : [];
+}
+
 function validationMessagesFromDetail(detail: unknown): unknown[] {
   if (!isRecord(detail)) return [];
   const validationMessages = detail.validationMessages;
@@ -204,6 +296,10 @@ function formatValue(value: unknown): string {
   if (Array.isArray(value)) return value.join(", ");
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+function stableJson(value: unknown): string {
+  return JSON.stringify(value, null, 2);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
