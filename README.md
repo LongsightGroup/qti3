@@ -55,6 +55,14 @@ await player.loadXml(xml, {
   },
 });
 
+await player.loadUrl("/items/item-1.xml", {
+  fetchXml: async (url) => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Unable to load ${url}`);
+    return response.text();
+  },
+});
+
 player.addEventListener("qti-statechange", (event) => {
   saveState(event.detail.state);
 });

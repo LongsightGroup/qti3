@@ -110,6 +110,37 @@ test.describe("manual harness", () => {
     await expect(feedback).toHaveAttribute("aria-live", "polite");
   });
 
+  test("honors load session controls and injected XML fetchers", async ({ page }) => {
+    const fixture =
+      interactionFixtures.find((item) => item.interactionType === "choice") ??
+      interactionFixtures[0];
+    if (!fixture) throw new Error("Missing choice fixture.");
+
+    await page.goto("/");
+    await page.locator("qti-assessment-item-player").evaluate(async (element, xml) => {
+      await element.loadUrl("/items/choice.xml", {
+        status: "interacting",
+        sessionControl: { validateResponses: false, showFeedback: false },
+        fetchXml: async (url: string) => {
+          if (url !== "/items/choice.xml") throw new Error(`Unexpected URL ${url}`);
+          return xml;
+        },
+      });
+    }, fixture.xml);
+
+    const loadedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(loadedState.status).toBe("interacting");
+
+    await page.getByRole("button", { name: "Score" }).click();
+    const scoredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(scoredState.validationMessages).toEqual([]);
+    await expect(page.locator("#events")).not.toContainText("response.required");
+  });
+
   test("loads and navigates multiple local XML files", async ({ page }) => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");

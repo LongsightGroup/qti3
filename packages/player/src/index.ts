@@ -2,6 +2,7 @@ import {
   createItemSession,
   parseQtiXml,
   visibleModalFeedback,
+  type QtiAttemptStatus,
   type QtiAttemptStateV1,
   type QtiChoice,
   type QtiDiagnostic,
@@ -11,8 +12,18 @@ import {
   type QtiValue,
 } from "@qti3/core";
 
+export interface QtiPlayerSessionControl {
+  validateResponses?: boolean | undefined;
+  showFeedback?: boolean | undefined;
+}
+
+export type QtiPlayerFetchXml = (url: string) => Promise<string>;
+
 export interface QtiPlayerLoadOptions {
   state?: QtiAttemptStateV1 | undefined;
+  status?: QtiAttemptStatus | undefined;
+  sessionControl?: QtiPlayerSessionControl | undefined;
+  fetchXml?: QtiPlayerFetchXml | undefined;
 }
 
 const HTMLElementBase: typeof HTMLElement =
@@ -28,7 +39,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
   private validationMessages: QtiDiagnostic[] = [];
+  private sessionControl: Required<QtiPlayerSessionControl> = {
+    validateResponses: true,
+    showFeedback: true,
+  };
+
   async loadXml(xml: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
+    this.sessionControl = {
+      validateResponses: options.sessionControl?.validateResponses ?? true,
+      showFeedback: options.sessionControl?.showFeedback ?? true,
+    };
     const result = parseQtiXml(xml);
     this.dispatchEvent(
       new CustomEvent("qti-diagnostics", { detail: { diagnostics: result.diagnostics } }),
@@ -40,15 +60,23 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     this.documentModel = result.document;
     this.session = createItemSession(result.document, options.state);
+    if (options.status) this.session.setStatus(options.status);
     this.render();
     this.dispatchEvent(new CustomEvent("qti-ready", { detail: { item: result.document.item } }));
     this.emitStateChange();
   }
 
+  async loadUrl(url: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
+    const fetchXml = options.fetchXml ?? defaultFetchXml;
+    await this.loadXml(await fetchXml(url), options);
+  }
+
   scoreAttempt(): void {
     const session = this.session;
     if (!session) return;
-    const validationMessages = this.validateResponses();
+    const validationMessages = this.sessionControl.validateResponses
+      ? this.validateResponses()
+      : [];
     if (validationMessages.length > 0) {
       this.validationMessages = validationMessages;
       this.renderValidationMessages();
@@ -62,7 +90,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.renderValidationMessages();
     const result = session.score();
     this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
-    this.renderFeedback(result.outcomes);
+    if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
   }
 
@@ -639,4 +667,13 @@ function validationMessageId(responseIdentifier: string): string {
 
 function responseIsEmpty(value: QtiValue): boolean {
   return value === null || value === "" || (Array.isArray(value) && value.length === 0);
+}
+
+async function defaultFetchXml(url: string): Promise<string> {
+  if (!globalThis.fetch) {
+    throw new Error("No fetch implementation is available. Provide loadUrl(url, { fetchXml }).");
+  }
+  const response = await globalThis.fetch(url);
+  if (!response.ok) throw new Error(`Failed to load QTI XML from ${url}: ${response.status}.`);
+  return response.text();
 }
