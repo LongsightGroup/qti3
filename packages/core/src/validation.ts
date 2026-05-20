@@ -155,6 +155,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionResponseShape(interaction, diagnostics);
     validateInteractionChoices(interaction, diagnostics);
     validateInteractionChildren(interaction, diagnostics);
+    validateInteractionRequiredAttributes(interaction, diagnostics);
   }
 }
 
@@ -269,6 +270,122 @@ function validateInteractionChildren(
   }
 }
 
+function validateInteractionRequiredAttributes(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (requiresObject(interaction) && !interaction.object?.data) {
+    diagnostics.push({
+      code: "interaction.object.required",
+      severity: "error",
+      message: `${interaction.qtiName} requires an object child with a data attribute.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+
+  if (interaction.type === "portableCustom") {
+    requireInteractionAttribute(
+      interaction,
+      "custom-interaction-type-identifier",
+      "interaction.portableCustom.typeIdentifier",
+      diagnostics,
+    );
+    requireInteractionAttribute(
+      interaction,
+      "module",
+      "interaction.portableCustom.module",
+      diagnostics,
+    );
+  }
+
+  if (interaction.type === "slider") {
+    const lower = interaction.attributes["lower-bound"];
+    const upper = interaction.attributes["upper-bound"];
+    requireInteractionAttribute(
+      interaction,
+      "lower-bound",
+      "interaction.slider.lowerBound",
+      diagnostics,
+    );
+    requireInteractionAttribute(
+      interaction,
+      "upper-bound",
+      "interaction.slider.upperBound",
+      diagnostics,
+    );
+    if (lower !== undefined && !isFiniteNumber(lower)) {
+      invalidNumber(interaction, "lower-bound", lower, diagnostics);
+    }
+    if (upper !== undefined && !isFiniteNumber(upper)) {
+      invalidNumber(interaction, "upper-bound", upper, diagnostics);
+    }
+    if (
+      lower !== undefined &&
+      upper !== undefined &&
+      isFiniteNumber(lower) &&
+      isFiniteNumber(upper)
+    ) {
+      if (Number(lower) >= Number(upper)) {
+        diagnostics.push({
+          code: "interaction.slider.bounds",
+          severity: "error",
+          message: `${interaction.qtiName} requires lower-bound to be less than upper-bound.`,
+          path: interaction.source?.path,
+          source: interaction.source,
+        });
+      }
+    }
+    const step = interaction.attributes.step;
+    if (step !== undefined && (!isFiniteNumber(step) || Number(step) <= 0)) {
+      invalidNumber(interaction, "step", step, diagnostics);
+    }
+  }
+}
+
+function requiresObject(interaction: QtiInteraction): boolean {
+  return (
+    interaction.type === "graphicOrder" ||
+    interaction.type === "graphicAssociate" ||
+    interaction.type === "graphicGapMatch" ||
+    interaction.type === "hotspot" ||
+    interaction.type === "selectPoint" ||
+    interaction.type === "positionObject" ||
+    interaction.type === "media"
+  );
+}
+
+function requireInteractionAttribute(
+  interaction: QtiInteraction,
+  attribute: string,
+  code: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.attributes[attribute]) return;
+  diagnostics.push({
+    code,
+    severity: "error",
+    message: `${interaction.qtiName} requires ${attribute}.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
+function invalidNumber(
+  interaction: QtiInteraction,
+  attribute: string,
+  value: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  diagnostics.push({
+    code: "interaction.numericAttribute",
+    severity: "error",
+    message: `${interaction.qtiName} requires numeric ${attribute}, got ${value}.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
 function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | undefined {
   const common = ["qti-prompt"];
   switch (interaction.type) {
@@ -338,6 +455,10 @@ function isBaseType(value: string): value is QtiBaseType {
     value === "file" ||
     value === "uri"
   );
+}
+
+function isFiniteNumber(value: string): boolean {
+  return Number.isFinite(Number(value));
 }
 
 function expectedResponseShape(

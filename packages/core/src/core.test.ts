@@ -467,7 +467,9 @@ describe("@qti3/core", () => {
         </qti-response-declaration>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body>
-          <qti-select-point-interaction response-identifier="RESPONSE"/>
+          <qti-select-point-interaction response-identifier="RESPONSE">
+            <object data="image.png" type="image/png" width="160" height="120"/>
+          </qti-select-point-interaction>
         </qti-item-body>
         <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml"/>
       </qti-assessment-item>
@@ -565,6 +567,32 @@ describe("@qti3/core", () => {
       "custom-interaction-type-identifier": "urn:qti3:fixture:portable-custom",
       module: "fixture-portable-custom",
     });
+  });
+
+  it("validates required interaction attributes and object assets", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="required-interaction-attrs">
+        <qti-response-declaration identifier="POINT" cardinality="single" base-type="point"/>
+        <qti-response-declaration identifier="SLIDER" cardinality="single" base-type="float"/>
+        <qti-response-declaration identifier="PCI" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-select-point-interaction response-identifier="POINT"/>
+          <qti-slider-interaction response-identifier="SLIDER" lower-bound="10" upper-bound="5" step="0"/>
+          <qti-portable-custom-interaction response-identifier="PCI"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.object.required" }),
+        expect.objectContaining({ code: "interaction.slider.bounds" }),
+        expect.objectContaining({ code: "interaction.numericAttribute" }),
+        expect.objectContaining({ code: "interaction.portableCustom.typeIdentifier" }),
+        expect.objectContaining({ code: "interaction.portableCustom.module" }),
+      ]),
+    );
   });
 
   it("keeps ordered cardinality order-sensitive", () => {

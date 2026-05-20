@@ -76,6 +76,14 @@ describe("@qti3/conformance", () => {
           severity: "error",
           path: "/qti-assessment-item/qti-item-body[1]/qti-slider-interaction[1]/qti-simple-choice[1]",
         },
+        {
+          code: "interaction.slider.lowerBound",
+          severity: "error",
+        },
+        {
+          code: "interaction.slider.upperBound",
+          severity: "error",
+        },
       ],
       attempts: [],
     });
