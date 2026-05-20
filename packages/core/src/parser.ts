@@ -517,6 +517,46 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     if (left && right) return { type: "divide", left, right, source: node.source };
   }
 
+  if (node.localName === "qti-integer-divide") {
+    const expressions = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    const [left, right] = expressions;
+    if (left && right) return { type: "integerDivide", left, right, source: node.source };
+  }
+
+  if (node.localName === "qti-integer-modulus") {
+    const expressions = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    const [left, right] = expressions;
+    if (left && right) return { type: "integerModulus", left, right, source: node.source };
+  }
+
+  if (node.localName === "qti-round") {
+    const expression = parseFirstExpression(node);
+    if (expression) return { type: "round", expression, source: node.source };
+  }
+
+  if (node.localName === "qti-round-to") {
+    const expression = parseFirstExpression(node);
+    const roundingMode = node.attributes["rounding-mode"];
+    const figures = Number(node.attributes.figures ?? 0);
+    if (
+      expression &&
+      (roundingMode === "decimalPlaces" || roundingMode === "significantFigures") &&
+      Number.isInteger(figures) &&
+      (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0)
+    ) {
+      return { type: "roundTo", expression, roundingMode, figures, source: node.source };
+    }
+  }
+
+  if (node.localName === "qti-truncate") {
+    const expression = parseFirstExpression(node);
+    if (expression) return { type: "truncate", expression, source: node.source };
+  }
+
   if (node.localName === "qti-and") {
     return {
       type: "and",

@@ -260,6 +260,16 @@ export type QtiProcessingExpression = (
   | { type: "product"; expressions: QtiProcessingExpression[] }
   | { type: "subtract"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "divide"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | { type: "integerDivide"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | { type: "integerModulus"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | { type: "round"; expression: QtiProcessingExpression }
+  | {
+      type: "roundTo";
+      expression: QtiProcessingExpression;
+      roundingMode: "decimalPlaces" | "significantFigures";
+      figures: number;
+    }
+  | { type: "truncate"; expression: QtiProcessingExpression }
   | { type: "and"; expressions: QtiProcessingExpression[] }
   | { type: "or"; expressions: QtiProcessingExpression[] }
   | { type: "not"; expression: QtiProcessingExpression }

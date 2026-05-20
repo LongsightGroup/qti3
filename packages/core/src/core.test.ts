@@ -47,7 +47,7 @@ describe("@qti3/core", () => {
 
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="deprecated-custom">
-        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <qti-custom-interaction response-identifier="RESPONSE"/>
         </qti-item-body>
@@ -1428,5 +1428,55 @@ describe("@qti3/core", () => {
     expect(session.score().outcomes.SCORE).toBe(4);
     session.respond("RESPONSE", 10);
     expect(session.score().outcomes.SCORE).toBe(0);
+  });
+
+  it("evaluates integer and rounding processing expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rounding-processing">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-text-entry-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-sum>
+                  <qti-integer-divide>
+                    <qti-base-value base-type="integer">17</qti-base-value>
+                    <qti-base-value base-type="integer">5</qti-base-value>
+                  </qti-integer-divide>
+                  <qti-integer-modulus>
+                    <qti-base-value base-type="integer">17</qti-base-value>
+                    <qti-base-value base-type="integer">5</qti-base-value>
+                  </qti-integer-modulus>
+                  <qti-round>
+                    <qti-base-value base-type="float">6.5</qti-base-value>
+                  </qti-round>
+                  <qti-round>
+                    <qti-base-value base-type="float">-6.5</qti-base-value>
+                  </qti-round>
+                  <qti-truncate>
+                    <qti-base-value base-type="float">-6.8</qti-base-value>
+                  </qti-truncate>
+                  <qti-round-to rounding-mode="decimalPlaces" figures="2">
+                    <qti-base-value base-type="float">3.14159</qti-base-value>
+                  </qti-round-to>
+                  <qti-round-to rounding-mode="significantFigures" figures="2">
+                    <qti-base-value base-type="float">1234</qti-base-value>
+                  </qti-round-to>
+                </qti-sum>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    expect(session.score().outcomes.SCORE).toBe(1203.14);
   });
 });

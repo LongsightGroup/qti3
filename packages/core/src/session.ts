@@ -430,6 +430,101 @@ function evaluateValue(
       ) / divisor
     );
   }
+  if (expression.type === "integerDivide") {
+    const dividendValue = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    const divisorValue = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    if (dividendValue === null || divisorValue === null) return null;
+    const divisor = numericValue(divisorValue);
+    if (divisor === 0) return null;
+    return Math.floor(numericValue(dividendValue) / divisor);
+  }
+  if (expression.type === "integerModulus") {
+    const dividendValue = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    const divisorValue = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+    );
+    if (dividendValue === null || divisorValue === null) return null;
+    const divisor = numericValue(divisorValue);
+    if (divisor === 0) return null;
+    const dividend = numericValue(dividendValue);
+    return dividend - Math.floor(dividend / divisor) * divisor;
+  }
+  if (expression.type === "round") {
+    return Math.round(
+      numericValue(
+        evaluateValue(
+          expression.expression,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ),
+    );
+  }
+  if (expression.type === "roundTo") {
+    const value = numericValue(
+      evaluateValue(
+        expression.expression,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+      ),
+    );
+    return expression.roundingMode === "decimalPlaces"
+      ? roundToDecimalPlaces(value, expression.figures)
+      : roundToSignificantFigures(value, expression.figures);
+  }
+  if (expression.type === "truncate") {
+    return Math.trunc(
+      numericValue(
+        evaluateValue(
+          expression.expression,
+          document,
+          responses,
+          outcomes,
+          templateValues,
+          correctResponses,
+          random,
+        ),
+      ),
+    );
+  }
   if (expression.type === "and") {
     return expression.expressions.every((item) =>
       booleanValue(
@@ -764,6 +859,17 @@ function booleanValue(value: QtiValue): boolean {
   if (typeof value === "string") return value.length > 0 && value !== "false";
   if (Array.isArray(value)) return value.length > 0;
   return false;
+}
+
+function roundToDecimalPlaces(value: number, figures: number): number {
+  const factor = 10 ** figures;
+  return Math.round(value * factor) / factor;
+}
+
+function roundToSignificantFigures(value: number, figures: number): number {
+  if (value === 0 || figures <= 0) return 0;
+  const factor = 10 ** (figures - 1 - Math.floor(Math.log10(Math.abs(value))));
+  return Math.round(value * factor) / factor;
 }
 
 function stringMatch(

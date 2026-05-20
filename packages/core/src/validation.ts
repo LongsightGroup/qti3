@@ -736,12 +736,19 @@ function expressionChildren(expression: QtiProcessingExpression): QtiProcessingE
   if (
     expression.type === "subtract" ||
     expression.type === "divide" ||
+    expression.type === "integerDivide" ||
+    expression.type === "integerModulus" ||
     expression.type === "equal" ||
     expression.type === "numericCompare"
   ) {
     return [expression.left, expression.right];
   }
-  if (expression.type === "not") {
+  if (
+    expression.type === "not" ||
+    expression.type === "round" ||
+    expression.type === "roundTo" ||
+    expression.type === "truncate"
+  ) {
     return [expression.expression];
   }
   if (expression.type === "stringMatch") {
