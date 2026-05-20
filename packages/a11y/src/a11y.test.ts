@@ -47,6 +47,7 @@ describe("@qti3/a11y", () => {
         expect.arrayContaining([
           "accessibility contract unit coverage in @qti3/a11y",
           "manual harness reference fixture renders without axe-core violations",
+          "operable fixture controls use standard tab order in Playwright",
           "response serialization and fixture scoring coverage",
           "forced-colors, reduced-motion, and narrow viewport browser checks",
         ]),

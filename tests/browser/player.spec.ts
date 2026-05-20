@@ -1079,6 +1079,75 @@ test.describe("manual harness", () => {
     }
   });
 
+  test("keeps operable fixture controls in standard tab order", async ({ page }) => {
+    await page.goto("/");
+
+    for (const fixture of interactionFixtures) {
+      await page.locator("#fixture").selectOption(fixture.id);
+      await page.locator("#load-fixture").click();
+
+      const result = await page.locator("qti-assessment-item-player").evaluate((player) => {
+        const selector = [
+          "button",
+          "input",
+          "select",
+          "textarea",
+          '[role="button"]',
+          '[role="slider"]',
+          '[tabindex]:not([tabindex="-1"])',
+        ].join(", ");
+        const isVisible = (element: HTMLElement): boolean => {
+          const style = window.getComputedStyle(element);
+          return (
+            style.display !== "none" &&
+            style.visibility !== "hidden" &&
+            element.getClientRects().length > 0
+          );
+        };
+        const describe = (element: HTMLElement): string => {
+          const label =
+            element.getAttribute("aria-label") ??
+            element.getAttribute("title") ??
+            element.textContent?.trim() ??
+            element.getAttribute("value") ??
+            element.tagName.toLowerCase();
+          return `${element.tagName.toLowerCase()} ${label.replace(/\s+/g, " ").slice(0, 80)}`;
+        };
+        const controls = Array.from(player.querySelectorAll<HTMLElement>(selector)).filter(
+          (element) => {
+            if (!isVisible(element)) return false;
+            if (element.getAttribute("aria-hidden") === "true") return false;
+            if (element instanceof HTMLInputElement && element.type === "hidden") return false;
+            if ("disabled" in element && Boolean((element as HTMLButtonElement).disabled)) {
+              return false;
+            }
+            return true;
+          },
+        );
+        return {
+          controlCount: controls.length,
+          positiveTabIndex: controls
+            .filter((element) => element.tabIndex > 0)
+            .map((element) => describe(element)),
+          unfocusable: controls
+            .filter((element) => element.tabIndex < 0)
+            .map((element) => describe(element)),
+          focusFailures: controls
+            .filter((element) => {
+              element.focus();
+              return document.activeElement !== element;
+            })
+            .map((element) => describe(element)),
+        };
+      });
+
+      expect(result.controlCount, fixture.id).toBeGreaterThan(0);
+      expect(result.positiveTabIndex, `${fixture.id} positive tabindex controls`).toEqual([]);
+      expect(result.unfocusable, `${fixture.id} unfocusable operable controls`).toEqual([]);
+      expect(result.focusFailures, `${fixture.id} controls that reject focus`).toEqual([]);
+    }
+  });
+
   test("shows extended text word and character feedback", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "extendedText");

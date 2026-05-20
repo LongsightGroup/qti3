@@ -343,6 +343,7 @@ function automatedProofFor(contract: InteractionA11yContract): string[] {
     "accessibility contract unit coverage in @qti3/a11y",
     "manual harness reference fixture renders without axe-core violations",
     "operable fixture controls expose accessible names in Playwright",
+    "operable fixture controls use standard tab order in Playwright",
     "response serialization and fixture scoring coverage",
   ];
   if (contract.requiresValidationMessageAssociation) {
