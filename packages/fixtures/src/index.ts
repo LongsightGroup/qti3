@@ -286,15 +286,15 @@ function assessmentItem(
   response: { identifier?: string; cardinality: string; baseType: string; correct: QtiValue },
   interactionXml: string,
 ): string {
+  const areaMappingXml =
+    response.baseType === "point"
+      ? `
+        <qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="10,10,5" mapped-value="1"/></qti-area-mapping>`
+      : "";
   const responseDeclaration = response.identifier
     ? `
       <qti-response-declaration identifier="${response.identifier}" cardinality="${response.cardinality}" base-type="${response.baseType}">
-        <qti-correct-response>${valuesXml(response.correct)}</qti-correct-response>
-        ${
-          response.baseType === "point"
-            ? '<qti-area-mapping default-value="0"><qti-area-map-entry shape="circle" coords="10,10,5" mapped-value="1"/></qti-area-mapping>'
-            : ""
-        }
+        <qti-correct-response>${valuesXml(response.correct)}</qti-correct-response>${areaMappingXml}
       </qti-response-declaration>`
     : "";
 

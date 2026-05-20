@@ -1,8 +1,8 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { elementSupport, interactionSupport, parseQtiXml, processingSupport } from "@qti3/core";
-import { interactionFixtures } from "@qti3/fixtures";
+import { canonicalFixtures, interactionFixtures } from "@qti3/fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { main } from "./index.js";
 
@@ -58,6 +58,20 @@ describe("@qti3/cli", () => {
 
   it("runs the canonical conformance fixture suite", async () => {
     await expect(main(["run-fixtures"])).resolves.toBe(0);
+  });
+
+  it("keeps checked-in XML fixture artifacts aligned with canonical fixtures", async () => {
+    const fixtureDirectory = join(process.cwd(), "packages/fixtures/xml");
+    const expectedFiles = canonicalFixtures.map((fixture) => `${fixture.id}.xml`).sort();
+    const actualFiles = (await readdir(fixtureDirectory))
+      .filter((file) => file.endsWith(".xml"))
+      .sort();
+
+    expect(actualFiles).toEqual(expectedFiles);
+    for (const fixture of canonicalFixtures) {
+      const xml = await readFile(join(fixtureDirectory, `${fixture.id}.xml`), "utf8");
+      expect(xml).toBe(`${fixture.xml}\n`);
+    }
   });
 
   it("exposes evidence metadata in support entries", async () => {

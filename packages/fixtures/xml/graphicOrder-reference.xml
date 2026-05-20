@@ -3,7 +3,6 @@
   
       <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
         <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response>
-        
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
