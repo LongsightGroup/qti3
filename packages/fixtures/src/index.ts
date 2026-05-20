@@ -1,9 +1,23 @@
-import { interactionSupport, type QtiInteractionType, type QtiValue } from "@qti3/core";
+import {
+  interactionSupport,
+  type QtiAttemptStateV1,
+  type QtiDiagnostic,
+  type QtiInteractionType,
+  type QtiValue,
+} from "@qti3/core";
+
+export interface QtiExpectedDiagnostic {
+  code: string;
+  severity?: QtiDiagnostic["severity"] | undefined;
+  path?: string | undefined;
+}
 
 export interface QtiFixtureAttempt {
   name: string;
   responses: Record<string, QtiValue>;
   expectedOutcomes: Record<string, QtiValue>;
+  expectedResponses?: Record<string, QtiValue> | undefined;
+  expectedState?: Partial<QtiAttemptStateV1> | undefined;
 }
 
 export interface QtiFixture {
@@ -12,6 +26,8 @@ export interface QtiFixture {
   qtiName: string;
   title: string;
   xml: string;
+  expectedParseDiagnostics: QtiExpectedDiagnostic[];
+  expectedValidationDiagnostics: QtiExpectedDiagnostic[];
   attempts: QtiFixtureAttempt[];
 }
 
@@ -37,11 +53,19 @@ function createInteractionFixture(
     qtiName,
     title: `${interactionType} reference fixture`,
     xml: assessmentItem(id, response, body),
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
     attempts: [
       {
         name: "correct",
         responses: response.identifier ? { [response.identifier]: response.correct } : {},
         expectedOutcomes: response.identifier ? { SCORE: 1 } : { SCORE: "0" },
+        expectedResponses: response.identifier ? { [response.identifier]: response.correct } : {},
+        expectedState: {
+          schema: "qti3.attempt-state.v1",
+          itemIdentifier: id,
+          status: response.identifier ? "interacting" : "initialized",
+        },
       },
     ],
   };
