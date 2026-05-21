@@ -13,14 +13,13 @@ owned by host products.
 
 ## First Release Goals
 
-For 0.1.0, the priorities are practical:
+For 0.1.0, we are focusing on:
 
 - A strict TypeScript core for parsing, validation, response processing, scoring, and saved attempt state.
 - A native web component player that host products can embed without adopting a framework.
 - Public, synthetic fixtures for every supported current QTI 3 item interaction.
-- Machine-readable support metadata instead of marketing-only compatibility claims.
+- Machine-readable support metadata.
 - Explicit diagnostics for unsupported, deprecated, invalid, or ambiguous item behavior.
-- Small, justified dependencies with release checks that block formatting, linting, type, test, accessibility, conformance, browser, package, and dependency-policy failures.
 
 ## Question-Type Support
 
@@ -75,19 +74,18 @@ node packages/cli/dist/index.js support-matrix
 - Provide an accessible, style-neutral web component player that can be embedded in any product.
 - Publish a reusable conformance test suite.
 - Load QTI package zips and assessment-test item references where useful for item-focused testing.
-- Keep dependencies as small and justified as possible.
+- Keep dependencies as small as possible.
 - Make unsupported or invalid behavior visible through structured diagnostics.
 
 ## Non-Goals
 
 - No dependency on a heavy UI framework such as React or Vue.
 - No Lit dependency for the browser player (native custom elements keep the surface small).
-- No reusable LMS runner/controller.
-- No product-owned attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
+- No reusable LMS runner/controller; that is the responsibility of the LMS or harness.
+- No attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
 - No hidden fallback behavior for required production configuration.
 - No compiling QTI XML as framework templates.
 - No global singleton state store (multiple players should not share a brain).
-- No implementation support for deprecated QTI elements, beyond diagnostics and support-matrix awareness.
 - No runtime XSD or schema validation (semantic diagnostics stay fast and embeddable).
 
 ## Packages
@@ -336,3 +334,7 @@ Packages publish under the `longsightgroup` npm organization:
 Releases are published from the `longsightgroup/qti3` repository after the full release
 check passes. Package tarballs are generated from the same checked build output that CI
 verifies.
+
+## Certification
+
+The project is not currently certified. We plan to pursue relevant QTI certification once the implementation, fixtures, conformance tests, and public API are stable enough for review.
