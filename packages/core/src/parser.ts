@@ -24,6 +24,10 @@ import type {
   QtiOutcomeDeclaration,
   QtiParseResult,
   QtiProcessingExpression,
+  QtiPortableCustomDefinition,
+  QtiPortableCustomInteractionModule,
+  QtiPortableCustomInteractionModules,
+  QtiPortableCustomVariableBinding,
   QtiRecordValue,
   QtiResponseCondition,
   QtiResponseDeclaration,
@@ -474,6 +478,10 @@ function parseInteraction(
       interactionType === "positionObject"
         ? parseObjectAsset(positionObjectStageObject(node))
         : undefined,
+    portableCustom:
+      interactionType === "portableCustom"
+        ? parsePortableCustomDefinition(node, diagnostics)
+        : undefined,
     choices: parseChoices(node),
     hottextSegments: interactionType === "hottext" ? parseHottextSegments(node) : undefined,
     gapMatchSegments:
@@ -488,6 +496,172 @@ function parseInteraction(
     text: textContent(node),
     source: node.source,
   };
+}
+
+function parsePortableCustomDefinition(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiPortableCustomDefinition {
+  const markup = firstChildElement(node, "qti-interaction-markup", diagnostics);
+  const modules = firstChildElement(node, "qti-interaction-modules", diagnostics);
+  return {
+    responseIdentifier: node.attributes["response-identifier"],
+    customInteractionTypeIdentifier: node.attributes["custom-interaction-type-identifier"],
+    module: node.attributes.module,
+    interactionModules: modules ? parsePortableCustomInteractionModules(modules) : undefined,
+    interactionMarkup: markup ? parsePortableCustomMarkupChildren(markup, diagnostics) : [],
+    interactionMarkupRaw: markup ? serializeXmlContent(markup) : undefined,
+    templateVariables: childElements(node, "qti-template-variable").map((variable) =>
+      parsePortableCustomVariableBinding(variable, "template"),
+    ),
+    contextVariables: childElements(node, "qti-context-variable").map((variable) =>
+      parsePortableCustomVariableBinding(variable, "context"),
+    ),
+    stylesheets: childElements(node, "qti-stylesheet").map(parseStylesheet),
+    catalogInfo: parseCatalogInfo(childElements(node, "qti-catalog-info")[0]),
+    dataAttributes: Object.fromEntries(
+      Object.entries(node.attributes).filter(([name]) => name.startsWith("data-")),
+    ),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function firstChildElement(
+  node: XmlNode,
+  name: string,
+  diagnostics: QtiDiagnostic[],
+): XmlNode | undefined {
+  const matches = childElements(node, name);
+  if (matches.length > 1) {
+    diagnostics.push({
+      code: "interaction.portableCustom.child.duplicate",
+      severity: "error",
+      message: `${node.localName} allows at most one ${name} child.`,
+      path: matches[1]?.source?.path ?? node.source?.path,
+      source: matches[1]?.source ?? node.source,
+    });
+  }
+  return matches[0];
+}
+
+function parsePortableCustomMarkupChildren(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiContentNode[] {
+  const content: QtiContentNode[] = [];
+  for (const entry of node.content) {
+    if (typeof entry === "string") {
+      if (entry.length > 0) content.push({ kind: "text", text: entry, source: node.source });
+      continue;
+    }
+    content.push(parsePortableCustomMarkupNode(entry, diagnostics));
+  }
+  return content;
+}
+
+function parsePortableCustomMarkupNode(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiContentNode {
+  if (isInteractionElement(node)) {
+    diagnostics.push({
+      code: "interaction.portableCustom.markupInteraction",
+      severity: "error",
+      message: `qti-interaction-markup must not contain nested QTI interaction ${node.localName}.`,
+      path: node.source?.path,
+      source: node.source,
+    });
+  }
+
+  if (node.localName === "qti-printed-variable") {
+    return {
+      kind: "printedVariable",
+      identifier: node.attributes.identifier ?? "",
+      format: node.attributes.format,
+      attributes: node.attributes,
+      source: node.source,
+    };
+  }
+
+  if (node.localName === "qti-feedback-block" || node.localName === "qti-feedback-inline") {
+    return {
+      kind: "feedback",
+      feedbackType: node.localName === "qti-feedback-block" ? "block" : "inline",
+      identifier: node.attributes.identifier ?? "",
+      outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
+      showHide: node.attributes["show-hide"] === "hide" ? "hide" : "show",
+      attributes: node.attributes,
+      children: parsePortableCustomMarkupChildren(node, diagnostics),
+      source: node.source,
+    };
+  }
+
+  return {
+    kind: "element",
+    qtiName: node.localName,
+    attributes: node.attributes,
+    children: parsePortableCustomMarkupChildren(node, diagnostics),
+    source: node.source,
+  };
+}
+
+function parsePortableCustomInteractionModules(node: XmlNode): QtiPortableCustomInteractionModules {
+  return {
+    primaryConfiguration: node.attributes["primary-configuration"],
+    secondaryConfiguration:
+      node.attributes["secondary-configuration"] ?? node.attributes["fallback-configuration"],
+    modules: childElements(node, "qti-interaction-module").map(
+      parsePortableCustomInteractionModule,
+    ),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function parsePortableCustomInteractionModule(node: XmlNode): QtiPortableCustomInteractionModule {
+  return {
+    id: node.attributes.id,
+    primaryPath: node.attributes["primary-path"],
+    fallbackPath: node.attributes["fallback-path"],
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function parsePortableCustomVariableBinding(
+  node: XmlNode,
+  kind: QtiPortableCustomVariableBinding["kind"],
+): QtiPortableCustomVariableBinding {
+  return {
+    kind,
+    identifier: node.attributes.identifier ?? node.attributes["template-identifier"],
+    variableIdentifier: node.attributes["variable-identifier"],
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function serializeXmlContent(node: XmlNode): string {
+  return node.content
+    .map((entry) => (typeof entry === "string" ? escapeXmlText(entry) : serializeXmlNode(entry)))
+    .join("");
+}
+
+function serializeXmlNode(node: XmlNode): string {
+  const attributes = Object.entries(node.attributes)
+    .map(([name, value]) => ` ${name}="${escapeXmlAttribute(value)}"`)
+    .join("");
+  if (node.content.length === 0) return `<${node.name}${attributes}/>`;
+  return `<${node.name}${attributes}>${serializeXmlContent(node)}</${node.name}>`;
+}
+
+function escapeXmlText(value: string): string {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function escapeXmlAttribute(value: string): string {
+  return escapeXmlText(value).replaceAll('"', "&quot;");
 }
 
 function positionObjectInteractionObject(node: XmlNode): XmlNode | undefined {

@@ -38,6 +38,7 @@ if (parsed.document) {
 - Validate item-level QTI behavior and emit structured diagnostics.
 - Score supported response-processing patterns without a DOM.
 - Serialize and restore attempt state through `qti3.attempt-state.v1`.
+- Preserve QTI 3 Portable Custom Interaction metadata and opaque PCI interaction state.
 - Publish support metadata for current and deprecated item interactions.
 
 See the main repository README for the support matrix and release notes:

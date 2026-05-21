@@ -5,6 +5,7 @@ import type {
   QtiDiagnostic,
   QtiDocument,
   QtiModalFeedback,
+  QtiPortableCustomStateValue,
   QtiProcessingExpression,
   QtiRecordValue,
   QtiResponseCondition,
@@ -49,6 +50,8 @@ export interface QtiItemSession {
   readonly item: QtiAssessmentItem;
   correctResponses(): Record<string, QtiValue>;
   respond(identifier: string, value: QtiValue): void;
+  setInteractionState(identifier: string, state: QtiPortableCustomStateValue): void;
+  interactionState(identifier: string): QtiPortableCustomStateValue | undefined;
   setStatus(status: QtiAttemptStatus): void;
   score(): QtiScoreResult;
   serialize(): QtiAttemptStateV1;
@@ -76,14 +79,24 @@ export function createItemSession(
   const priorResponses = cloneValueRecord(priorState?.responses ?? {});
   const priorOutcomes = cloneValueRecord(priorState?.outcomes ?? {});
   const priorTemplateValues = cloneValueRecord(priorState?.templateValues ?? {});
+  const priorInteractionStates = clonePortableCustomStateRecord(
+    priorState?.interactionStates ?? {},
+  );
   let validationMessages = cloneDiagnostics(priorState?.validationMessages ?? []);
   const responses: Record<string, QtiValue> = {};
   const outcomes: Record<string, QtiValue> = {};
   const templateValues: Record<string, QtiValue> = {};
+  const interactionStates: Record<string, QtiPortableCustomStateValue> = {};
   const correctResponses: Record<string, QtiValue> = {};
   let status: QtiAttemptStatus = priorState?.status ?? "initialized";
   const random = seededRandom(options.randomSeed ?? document.item.identifier);
   const customOperators = options.customOperators ?? {};
+  const portableCustomResponseIdentifiers = new Set(
+    document.item.interactions
+      .filter((interaction) => interaction.type === "portableCustom")
+      .map((interaction) => interaction.responseIdentifier)
+      .filter((identifier): identifier is string => Boolean(identifier)),
+  );
 
   for (const declaration of document.item.responseDeclarations) {
     correctResponses[declaration.identifier] = cloneValue(declaration.correctResponse);
@@ -132,6 +145,7 @@ export function createItemSession(
   const defaultOutcomes = cloneValueRecord(outcomes);
   Object.assign(responses, priorResponses);
   Object.assign(outcomes, priorOutcomes);
+  Object.assign(interactionStates, priorInteractionStates);
 
   return {
     item: document.item,
@@ -142,6 +156,18 @@ export function createItemSession(
       responses[identifier] = cloneValue(value);
       validationMessages = [];
       startAttempt();
+    },
+    setInteractionState(identifier: string, state: QtiPortableCustomStateValue) {
+      if (!portableCustomResponseIdentifiers.has(identifier)) {
+        throw new Error(`Cannot set interaction state for non-PCI response ${identifier}.`);
+      }
+      interactionStates[identifier] = clonePortableCustomState(state);
+      validationMessages = [];
+      startAttempt();
+    },
+    interactionState(identifier: string) {
+      const state = interactionStates[identifier];
+      return state === undefined ? undefined : clonePortableCustomState(state);
     },
     setStatus(nextStatus: QtiAttemptStatus) {
       status = nextStatus;
@@ -173,6 +199,7 @@ export function createItemSession(
         responses,
         outcomes,
         templateValues,
+        interactionStates,
         diagnostics,
       );
       return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
@@ -184,6 +211,7 @@ export function createItemSession(
         responses,
         outcomes,
         templateValues,
+        interactionStates,
         validationMessages,
       );
     },
@@ -234,9 +262,19 @@ function assertCompatiblePriorState(
   const templateIdentifiers = new Set(
     document.item.templateDeclarations.map((declaration) => declaration.identifier),
   );
+  const interactionStateIdentifiers = new Set(
+    document.item.interactions
+      .filter((interaction) => interaction.type === "portableCustom")
+      .map((interaction) => interaction.responseIdentifier)
+      .filter((identifier): identifier is string => Boolean(identifier)),
+  );
   assertKnownStateIdentifiers("response", priorState.responses, responseIdentifiers);
   assertKnownStateIdentifiers("outcome", priorState.outcomes, outcomeIdentifiers);
   assertKnownStateIdentifiers("template", priorState.templateValues ?? {}, templateIdentifiers);
+  assertKnownPortableCustomStateIdentifiers(
+    priorState.interactionStates ?? {},
+    interactionStateIdentifiers,
+  );
   for (const message of priorState.validationMessages) {
     if (message.path && !responseIdentifiers.has(message.path)) {
       throw new Error(`Cannot restore validation message for unknown response ${message.path}.`);
@@ -270,6 +308,14 @@ function assertKnownStateIdentifiers(
 ): void {
   const unknown = Object.keys(record).find((identifier) => !allowed.has(identifier));
   if (unknown) throw new Error(`Cannot restore unknown ${kind} identifier ${unknown}.`);
+}
+
+function assertKnownPortableCustomStateIdentifiers(
+  record: Record<string, QtiPortableCustomStateValue>,
+  allowed: Set<string>,
+): void {
+  const unknown = Object.keys(record).find((identifier) => !allowed.has(identifier));
+  if (unknown) throw new Error(`Cannot restore unknown interaction state identifier ${unknown}.`);
 }
 
 function assertRestoredValueMatchesDeclaration(
@@ -368,6 +414,12 @@ function attemptStateErrors(value: unknown): string[] {
   }
   if (value.templateValues !== undefined && !isQtiValueRecord(value.templateValues)) {
     errors.push("QTI attempt state templateValues must be a record of QTI values.");
+  }
+  if (
+    value.interactionStates !== undefined &&
+    !isPortableCustomStateRecord(value.interactionStates)
+  ) {
+    errors.push("QTI attempt state interactionStates must be a record of JSON values.");
   }
   if (!isDiagnosticArray(value.validationMessages)) {
     errors.push("QTI attempt state validationMessages must be an array of diagnostics.");
@@ -1793,6 +1845,7 @@ function serialize(
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
   templateValues: Record<string, QtiValue>,
+  interactionStates: Record<string, QtiPortableCustomStateValue>,
   validationMessages: QtiDiagnostic[],
 ): QtiAttemptStateV1 {
   return {
@@ -1802,6 +1855,7 @@ function serialize(
     responses: cloneValueRecord(responses),
     outcomes: cloneValueRecord(outcomes),
     templateValues: cloneValueRecord(templateValues),
+    interactionStates: clonePortableCustomStateRecord(interactionStates),
     validationMessages: cloneDiagnostics(validationMessages),
   };
 }
@@ -1810,9 +1864,23 @@ function cloneValueRecord(record: Record<string, QtiValue>): Record<string, QtiV
   return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, cloneValue(value)]));
 }
 
+function clonePortableCustomStateRecord(
+  record: Record<string, QtiPortableCustomStateValue>,
+): Record<string, QtiPortableCustomStateValue> {
+  return Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [key, clonePortableCustomState(value)]),
+  );
+}
+
 function cloneValue(value: QtiValue): QtiValue {
   if (Array.isArray(value)) return [...value];
   if (isRecordValue(value)) return cloneValueRecord(value);
+  return value;
+}
+
+function clonePortableCustomState(value: QtiPortableCustomStateValue): QtiPortableCustomStateValue {
+  if (Array.isArray(value)) return value.map(clonePortableCustomState);
+  if (isPortableCustomStateObject(value)) return clonePortableCustomStateRecord(value);
   return value;
 }
 
@@ -1935,6 +2003,28 @@ function isQtiScalarValue(value: unknown): value is QtiScalarValue {
 function isQtiValueRecord(value: unknown): value is Record<string, QtiValue> {
   if (!isRecord(value)) return false;
   return Object.values(value).every(isQtiValue);
+}
+
+function isPortableCustomState(value: unknown): value is QtiPortableCustomStateValue {
+  if (value === null) return true;
+  if (typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isPortableCustomState);
+  if (isRecord(value)) return Object.values(value).every(isPortableCustomState);
+  return false;
+}
+
+function isPortableCustomStateObject(
+  value: QtiPortableCustomStateValue,
+): value is { [key: string]: QtiPortableCustomStateValue } {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isPortableCustomStateRecord(
+  value: unknown,
+): value is Record<string, QtiPortableCustomStateValue> {
+  if (!isRecord(value)) return false;
+  return Object.values(value).every(isPortableCustomState);
 }
 
 function isDiagnosticArray(value: unknown): value is QtiDiagnostic[] {

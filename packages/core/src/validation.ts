@@ -1443,6 +1443,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionChoices(interaction, diagnostics);
     validateInteractionChildren(interaction, diagnostics);
     validateInteractionRequiredAttributes(interaction, diagnostics);
+    validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
     validateCorrectResponseReferences(
       interaction,
@@ -1709,12 +1710,6 @@ function validateInteractionRequiredAttributes(
       "interaction.portableCustom.typeIdentifier",
       diagnostics,
     );
-    requireInteractionAttribute(
-      interaction,
-      "module",
-      "interaction.portableCustom.module",
-      diagnostics,
-    );
   }
 
   if (interaction.type === "slider") {
@@ -1797,6 +1792,116 @@ function requireInteractionAttribute(
     message: `${interaction.qtiName} requires ${attribute}.`,
     path: interaction.source?.path,
     source: interaction.source,
+  });
+}
+
+function validatePortableCustomInteraction(
+  interaction: QtiInteraction,
+  item: QtiAssessmentItem,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.type !== "portableCustom") return;
+  const definition = interaction.portableCustom;
+  if (!definition) return;
+
+  const configuredModules = definition.interactionModules?.modules ?? [];
+  const hasModuleAttribute = Boolean(definition.module?.trim());
+  const hasConfiguredModule = configuredModules.some((module) => Boolean(module.id?.trim()));
+  if (!hasModuleAttribute && !hasConfiguredModule) {
+    diagnostics.push({
+      code: "interaction.portableCustom.module",
+      severity: "error",
+      message: `${interaction.qtiName} requires a module attribute or at least one qti-interaction-module id.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+
+  for (const module of configuredModules) {
+    if (!module.id?.trim()) {
+      diagnostics.push({
+        code: "interaction.portableCustom.moduleId",
+        severity: "error",
+        message: "qti-interaction-module requires a non-empty id.",
+        path: module.source?.path,
+        source: module.source,
+      });
+    }
+    warnExternalPortableCustomUrl(module.primaryPath, module.source, diagnostics);
+    warnExternalPortableCustomUrl(module.fallbackPath, module.source, diagnostics);
+  }
+
+  warnExternalPortableCustomUrl(
+    definition.interactionModules?.primaryConfiguration,
+    definition.interactionModules?.source,
+    diagnostics,
+  );
+  warnExternalPortableCustomUrl(
+    definition.interactionModules?.secondaryConfiguration,
+    definition.interactionModules?.source,
+    diagnostics,
+  );
+
+  const templateIdentifiers = new Set(
+    item.templateDeclarations.map((declaration) => declaration.identifier),
+  );
+  for (const variable of definition.templateVariables) {
+    if (!variable.identifier?.trim()) {
+      diagnostics.push({
+        code: "interaction.portableCustom.templateVariable",
+        severity: "error",
+        message: "qti-template-variable requires template-identifier or identifier.",
+        path: variable.source?.path,
+        source: variable.source,
+      });
+      continue;
+    }
+    if (!templateIdentifiers.has(variable.identifier)) {
+      diagnostics.push({
+        code: "interaction.portableCustom.templateVariable.reference",
+        severity: "error",
+        message: `qti-template-variable references missing template declaration ${variable.identifier}.`,
+        path: variable.source?.path,
+        source: variable.source,
+      });
+    }
+  }
+
+  for (const variable of definition.contextVariables) {
+    if (variable.identifier?.trim()) continue;
+    diagnostics.push({
+      code: "interaction.portableCustom.contextVariable",
+      severity: "error",
+      message: "qti-context-variable requires identifier.",
+      path: variable.source?.path,
+      source: variable.source,
+    });
+  }
+
+  for (const stylesheet of definition.stylesheets) {
+    if (stylesheet.href.trim().length > 0) continue;
+    diagnostics.push({
+      code: "stylesheet.href.required",
+      severity: "error",
+      message: "qti-stylesheet requires a non-empty href attribute.",
+      path: stylesheet.source?.path,
+      source: stylesheet.source,
+    });
+  }
+}
+
+function warnExternalPortableCustomUrl(
+  url: string | undefined,
+  source: QtiDiagnostic["source"],
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!url || !/^https?:\/\//i.test(url)) return;
+  diagnostics.push({
+    code: "interaction.portableCustom.externalModuleUrl",
+    severity: "warning",
+    message: `Portable custom interaction module URL ${url} requires host delivery policy approval.`,
+    path: source?.path,
+    source,
   });
 }
 
@@ -2106,7 +2211,14 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "extendedText":
       return new Set(common);
     case "portableCustom":
-      return setOf(common, ["qti-interaction-markup"]);
+      return setOf(common, [
+        "qti-interaction-markup",
+        "qti-interaction-modules",
+        "qti-template-variable",
+        "qti-context-variable",
+        "qti-stylesheet",
+        "qti-catalog-info",
+      ]);
     case "slider":
     case "textEntry":
     case "upload":
@@ -2206,7 +2318,22 @@ function expectedResponseShape(
   }
   if (interaction.type === "drawing") return { cardinalities: ["single"], baseTypes: ["file"] };
   if (interaction.type === "portableCustom") {
-    return { cardinalities: ["single"], baseTypes: ["string", "file", "uri"] };
+    return {
+      cardinalities: ["single", "multiple", "ordered", "record"],
+      baseTypes: [
+        "identifier",
+        "boolean",
+        "integer",
+        "float",
+        "string",
+        "point",
+        "pair",
+        "directedPair",
+        "duration",
+        "file",
+        "uri",
+      ],
+    };
   }
   return { cardinalities: ["single", "multiple"], baseTypes: ["identifier"] };
 }

@@ -39,6 +39,16 @@ player?.addEventListener("qti-statechange", (event) => {
 });
 ```
 
+## Portable Custom Interactions
+
+For `qti-portable-custom-interaction`, the player renders a
+`qti3-portable-custom-host` element, passes small module/configuration metadata through
+`dataset` attributes, and emits `qti-portable-custom-mount` with the full parsed
+definition. Host code can attach a PCI runtime and send response/state updates back with
+`qti3-portable-custom-response`.
+Production sandboxing, CSP, origin policy, and audit logging belong to the host delivery
+system.
+
 ## Styling
 
 The player uses light DOM and is style-neutral by design. Host applications can style

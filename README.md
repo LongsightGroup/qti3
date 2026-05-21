@@ -157,6 +157,12 @@ Two response-bearing interactions have format-specific contracts worth calling o
 - `qti-media-interaction` records play experiences as a `single` / `integer` response.
 - `qti-drawing-interaction` requires a `single` / `file` response and serializes candidate
   drawings as image file data URLs.
+- `qti-portable-custom-interaction` parses PCI module metadata, interaction markup,
+  template/context bindings, stylesheets, and catalog info. The player exposes a
+  `qti3-portable-custom-host` element with small launch metadata and emits
+  `qti-portable-custom-mount` with the full parsed definition so a host or optional
+  runtime can attach the PCI module. Production sandboxing, CSP, tenant allowlists, and
+  audit policy remain host responsibilities.
 
 ## Styling
 
@@ -324,7 +330,8 @@ reference items under `packages/fixtures/xml`.
 
 Serialized attempt state uses `qti3.attempt-state.v1`. It captures responses, outcomes,
 generated template values, validation messages, lifecycle status, and QTI's built-in
-`completionStatus` outcome.
+`completionStatus` outcome. PCI suspend/resume data is stored as opaque JSON under
+`interactionStates` keyed by response identifier.
 
 - Hosts can save, restore, and review attempts through this state contract.
 - Hosts can check restored JSON with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
