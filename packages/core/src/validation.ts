@@ -1467,7 +1467,7 @@ function validateInteractionResponseReference(
   diagnostics: QtiDiagnostic[],
 ): void {
   if (!interaction.responseIdentifier) {
-    if (interaction.type !== "endAttempt" && interaction.type !== "media") {
+    if (interaction.type !== "endAttempt") {
       diagnostics.push({
         code: "interaction.responseIdentifier",
         severity: "error",
@@ -1689,11 +1689,11 @@ function validateInteractionRequiredAttributes(
   interaction: QtiInteraction,
   diagnostics: QtiDiagnostic[],
 ): void {
-  if (requiresObject(interaction) && !interaction.object?.data) {
+  if (requiresObject(interaction) && !hasRequiredObjectAsset(interaction)) {
     diagnostics.push({
       code: "interaction.object.required",
       severity: "error",
-      message: `${interaction.qtiName} requires an object child with a data attribute.`,
+      message: `${interaction.qtiName} requires an object child with a data attribute or media sources.`,
       path: interaction.source?.path,
       source: interaction.source,
     });
@@ -1770,6 +1770,15 @@ function requiresObject(interaction: QtiInteraction): boolean {
   );
 }
 
+function hasRequiredObjectAsset(interaction: QtiInteraction): boolean {
+  if (interaction.type === "media") {
+    return Boolean(
+      interaction.object?.data || interaction.object?.sources.some((source) => Boolean(source.src)),
+    );
+  }
+  return Boolean(interaction.object?.data);
+}
+
 function requireInteractionAttribute(
   interaction: QtiInteraction,
   attribute: string,
@@ -1814,6 +1823,13 @@ function validateInteractionLimitAttributes(
 
   validateMinMaxPair(interaction, "min-choices", "max-choices", diagnostics);
   validateMinMaxPair(interaction, "min-associations", "max-associations", diagnostics);
+  if (interaction.type === "media") {
+    validateNonNegativeIntegerAttribute(interaction, "max-plays", diagnostics);
+    validateNonNegativeIntegerAttribute(interaction, "min-plays", diagnostics);
+    validateBooleanAttribute(interaction, "autostart", diagnostics);
+    validateBooleanAttribute(interaction, "loop", diagnostics);
+    validateMinMaxPair(interaction, "min-plays", "max-plays", diagnostics);
+  }
 }
 
 function validateChoiceLimitAttributes(choice: QtiChoice, diagnostics: QtiDiagnostic[]): void {
@@ -1958,6 +1974,22 @@ function validateNonNegativeIntegerAttribute(
   });
 }
 
+function validateBooleanAttribute(
+  interaction: QtiInteraction,
+  attribute: string,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const value = interaction.attributes[attribute];
+  if (value === undefined || isBooleanAttribute(value)) return;
+  diagnostics.push({
+    code: "interaction.booleanAttribute",
+    severity: "error",
+    message: `${interaction.qtiName} requires boolean ${attribute}, got ${value}.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
 function validateChoiceNonNegativeIntegerAttribute(
   choice: QtiChoice,
   attribute: string,
@@ -2063,7 +2095,7 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
       return setOf(common, ["object", "img", "qti-position-object-stage"]);
     case "selectPoint":
     case "media":
-      return setOf(common, ["object", "img"]);
+      return setOf(common, ["audio", "video", "object", "img"]);
     case "drawing":
       return setOf(common, ["object", "img"]);
     case "extendedText":
@@ -2120,6 +2152,10 @@ function isNonNegativeInteger(value: string): boolean {
   return /^\d+$/.test(value);
 }
 
+function isBooleanAttribute(value: string): boolean {
+  return value === "true" || value === "false" || value === "1" || value === "0";
+}
+
 function isPoint(value: string): boolean {
   const parts = value.trim().split(/\s+/);
   return parts.length === 2 && parts.every(isFiniteNumber);
@@ -2136,7 +2172,7 @@ function expectedResponseShape(
   if (interaction.type === "endAttempt") {
     return { cardinalities: ["single"], baseTypes: ["boolean"] };
   }
-  if (interaction.type === "media") return undefined;
+  if (interaction.type === "media") return { cardinalities: ["single"], baseTypes: ["integer"] };
   if (interaction.type === "custom") return undefined;
   if (interaction.type === "order" || interaction.type === "graphicOrder") {
     return { cardinalities: ["ordered"], baseTypes: ["identifier"] };

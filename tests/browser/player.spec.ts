@@ -630,6 +630,190 @@ test.describe("manual harness", () => {
     await expect(audio).toHaveAttribute("controls", "");
     await expect(audio).toHaveAttribute("preload", "none");
     await expect(audio).toHaveAttribute("src", /^data:audio\/wav;base64,/);
+    await expect(audio).toHaveAccessibleName("Silent WAV fixture audio");
+    await expect(audio).toHaveAttribute("data-play-count", "0");
+  });
+
+  test("renders authored media sources and tracks with native controls", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="video-media">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" autostart="false" loop="true">
+            <qti-prompt>Watch the delivery clip.</qti-prompt>
+            <video width="320" height="180" data-qti-media-player-controls="default">
+              <source src="clips/delivery.mp4" type="video/mp4"/>
+              <source src="clips/delivery.webm"/>
+              <track kind="captions" src="captions/delivery.vtt" srclang="en" label="English" default="default"/>
+            </video>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const video = page.locator("qti-assessment-item-player video");
+    await expect(video).toBeVisible();
+    await expect(video).toHaveAttribute("controls", "");
+    await expect(video).toHaveAttribute("loop", "");
+    await expect(video).toHaveAttribute("width", "320");
+    await expect(video).toHaveAttribute("height", "180");
+    await expect(video).toHaveAccessibleName("Watch the delivery clip.");
+    await expect(video.locator("source").first()).toHaveAttribute("src", "clips/delivery.mp4");
+    await expect(video.locator("source").first()).toHaveAttribute("type", "video/mp4");
+    await expect(video.locator("source").nth(1)).toHaveAttribute("src", "clips/delivery.webm");
+    await expect(video.locator("track")).toHaveAttribute("src", "captions/delivery.vtt");
+    await expect(video.locator("track")).toHaveAttribute("kind", "captions");
+    await expect(video.locator("track")).toHaveAttribute("srclang", "en");
+    await expect(video.locator("track")).toHaveAttribute("label", "English");
+    await expect(video.locator("track")).toHaveAttribute("default", "");
+  });
+
+  test("honors authored media control suppression without custom chrome", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-none">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" autostart="true">
+            <object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav" data-qti-media-player-controls="none">Silent audio</object>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    await expect(audio).not.toHaveAttribute("controls", "");
+    await expect(audio).toHaveAttribute("autoplay", "");
+    await expect(audio).toHaveAttribute("data-qti-media-player-controls", "none");
+    await expect(page.locator("qti-assessment-item-player .qti3-actions")).toHaveCount(0);
+  });
+
+  test("resolves packaged media sources and tracks from a zip upload", async ({ page }) => {
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="media" type="imsqti_item_xmlv3p0" href="items/media.xml">
+      <file href="items/media.xml"/>
+      <file href="items/media/clip.mp4"/>
+      <file href="items/captions/clip.vtt"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/media.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-media">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-item-body>
+    <qti-media-interaction response-identifier="RESPONSE" autostart="false">
+      <qti-prompt>Play the packaged clip.</qti-prompt>
+      <video width="320" height="180">
+        <source src="media/clip.mp4" type="video/mp4"/>
+        <track kind="captions" src="captions/clip.vtt" srclang="en" label="English"/>
+      </video>
+    </qti-media-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+      "items/media/clip.mp4": Buffer.from("not-real-mp4"),
+      "items/captions/clip.vtt": Buffer.from("WEBVTT\n\n00:00.000 --> 00:01.000\nCaption\n"),
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "media-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("items/media.xml");
+    const video = page.locator("qti-assessment-item-player video");
+    await expect(video.locator("source")).toHaveAttribute("src", /^blob:/);
+    await expect(video.locator("track")).toHaveAttribute("src", /^blob:/);
+  });
+
+  test("counts media play experiences without counting pause resume", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-count">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
+          <qti-correct-response><qti-value>2</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" autostart="false" max-plays="2">
+            <object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent audio</object>
+          </qti-media-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      </qti-assessment-item>
+    `,
+    );
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    await audio.evaluate((element) => element.dispatchEvent(new Event("play")));
+    await expectResponse(page, 1);
+
+    await audio.evaluate((element) => {
+      element.dispatchEvent(new Event("pause"));
+      element.dispatchEvent(new Event("play"));
+    });
+    await expectResponse(page, 1);
+
+    await audio.evaluate((element) => {
+      element.dispatchEvent(new Event("ended"));
+      element.dispatchEvent(new Event("play"));
+    });
+    await expectResponse(page, 2);
+
+    await audio.evaluate((element) => {
+      element.dispatchEvent(new Event("ended"));
+      element.dispatchEvent(new Event("play"));
+    });
+    await expectResponse(page, 2);
+    await expect(audio).toHaveAttribute("data-max-plays-reached", "true");
+  });
+
+  test("blocks scoring until media minimum plays are met", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-min">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
+          <qti-correct-response><qti-value>2</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" autostart="false" min-plays="2">
+            <object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent audio</object>
+          </qti-media-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      </qti-assessment-item>
+    `,
+    );
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    await audio.evaluate((element) => element.dispatchEvent(new Event("play")));
+    await page.locator("#debug-score").click();
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
+    await expect(page.locator("#events")).toContainText("requires at least 2 plays");
+
+    await audio.evaluate((element) => {
+      element.dispatchEvent(new Event("ended"));
+      element.dispatchEvent(new Event("play"));
+    });
+    await page.locator("#debug-score").click();
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "scored");
+    await expectResponse(page, 2);
   });
 
   test("renders graphic interactions with their object context", async ({ page }) => {
@@ -2730,6 +2914,15 @@ async function provideResponse(
           }),
         );
       }, response);
+    return;
+  }
+
+  if (interactionType === "media") {
+    await page
+      .locator("qti-assessment-item-player audio, qti-assessment-item-player video")
+      .evaluate((element) => {
+        element.dispatchEvent(new Event("play"));
+      });
     return;
   }
 

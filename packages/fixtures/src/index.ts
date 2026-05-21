@@ -557,7 +557,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
   correct: QtiValue;
 } {
   if (interactionType === "media") {
-    return { cardinality: "single", baseType: "identifier", correct: null };
+    return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: 1 };
   }
   if (interactionType === "endAttempt") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "boolean", correct: true };
@@ -655,7 +655,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE" title="Show hint"/>`;
   }
   if (interactionType === "media") {
-    return `<${qtiName} autostart="false"><object data="${silentWavDataUri}" type="audio/wav">Silent WAV fixture audio</object></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" autostart="false" min-plays="1"><object data="${silentWavDataUri}" type="audio/wav">Silent WAV fixture audio</object></${qtiName}>`;
   }
   if (interactionType === "slider") {
     return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the response-processing share to 50 percent.</qti-prompt></${qtiName}>`;
