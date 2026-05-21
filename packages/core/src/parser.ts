@@ -807,7 +807,7 @@ function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined
       node.attributes.height ?? pictureImage?.attributes.height ?? inferredSvgDimensions?.height,
     sources,
     tracks,
-    text: textContent(node) || pictureImage?.attributes.alt || "",
+    text: textContent(node) || node.attributes.alt || pictureImage?.attributes.alt || "",
     attributes: node.attributes,
     source: node.source,
   };
