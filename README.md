@@ -13,12 +13,12 @@ candidate attempt policy, analytics, proctoring, rostering, and gradebook integr
 
 ## Release goals
 
-For the early `0.1.x` releases, we are focusing on:
+For the `0.2.x` release line, we are hardening:
 
-- A strict TypeScript core for parsing, validation, response processing, scoring, and saved attempt state.
+- A strict TypeScript core for parsing, validation, response processing, scoring, saved attempt state, and host-readable metadata.
 - A native web component player that host products can embed without adopting a framework.
 - Public, synthetic fixtures for every supported current QTI 3 item interaction.
-- Machine-readable support metadata.
+- Machine-readable support, accessibility, catalog, read-aloud, and media metadata.
 - Explicit diagnostics for unsupported, deprecated, invalid, or ambiguous item behavior.
 
 ## Question-type support
