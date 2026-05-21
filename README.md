@@ -11,9 +11,9 @@ item and question-type conformance. Runners, controllers, LMS shells, candidate 
 policy, analytics, proctoring, rostering, and gradebook integrations are expected to be
 owned by host products.
 
-## First Release Intent
+## First Release Goals
 
-The first release is intended to establish a trustworthy foundation for external users:
+For 0.1.0, the priorities are practical:
 
 - A strict TypeScript core for parsing, validation, response processing, scoring, and saved attempt state.
 - A native web component player that host products can embed without adopting a framework.
@@ -61,18 +61,10 @@ rendering tests.
 | Custom            | `qti-custom-interaction`            | Deprecated diagnostic | Parsed for explicit warning; not a supported runtime target                       |
 | End Attempt       | `qti-end-attempt-interaction`       | Supported             | `endAttempt-reference.xml`; core, fixture, conformance, a11y, browser tests       |
 
-The source of truth for support status is `packages/core/src/support.ts`. The CLI emits the
-same data as JSON:
+For automated review, the same support matrix is available as JSON:
 
 ```sh
 node packages/cli/dist/index.js support-matrix
-```
-
-Release checks also assert that supported interactions have fixture, conformance,
-accessibility, and browser evidence:
-
-```sh
-node packages/cli/dist/index.js assert-support
 ```
 
 ## Goals
@@ -80,7 +72,7 @@ node packages/cli/dist/index.js assert-support
 - Implement the latest public QTI 3 item behavior faithfully and explicitly, tracking QTI 3.0.1 ASI documents where applicable.
 - Support all QTI 3 interaction/question types in the target item profile.
 - Make scoring and response processing runnable in Node without a browser.
-- Provide an accessible browser player that can be embedded in any product.
+- Provide an accessible, style-neutral web component player that can be embedded in any product.
 - Publish a reusable conformance test suite.
 - Load QTI package zips and assessment-test item references where useful for item-focused testing.
 - Keep dependencies as small and justified as possible.
@@ -88,16 +80,15 @@ node packages/cli/dist/index.js assert-support
 
 ## Non-Goals
 
-- No Vue-centered rewrite.
-- No React-centered rewrite.
 - No dependency on a heavy UI framework such as React or Vue.
+- No Lit dependency for the browser player (native custom elements keep the surface small).
 - No reusable LMS runner/controller.
 - No product-owned attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
 - No hidden fallback behavior for required production configuration.
 - No compiling QTI XML as framework templates.
-- No global singleton state store.
+- No global singleton state store (multiple players should not share a brain).
 - No implementation support for deprecated QTI elements, beyond diagnostics and support-matrix awareness.
-- No runtime XSD or schema validation.
+- No runtime XSD or schema validation (semantic diagnostics stay fast and embeddable).
 
 ## Planned Packages
 
@@ -113,7 +104,7 @@ packages/
 
 Assessment-test/package support belongs in tooling and examples only when it helps discover, load, and verify item references. The player package renders one item at a time and exposes state/events for host-owned runners.
 
-The default embedding surface should be a native web component:
+The browser player surface is a native web component:
 
 ```html
 <script type="module" src="/qti3-player.js"></script>
@@ -150,6 +141,43 @@ player.addEventListener("qti-statechange", (event) => {
 
 `resolveAsset` is a host hook for package or virtual-file environments. The player calls it for relative `src`, `href`, and `data` asset URLs after rendering the item; normal web-served items can omit it.
 
+## Styling
+
+The browser player is style-neutral by design. It ships only the structural styles needed
+for layout, focus visibility, forced-colors support, and accessible interaction behavior.
+Product typography, spacing, borders, colors, and surrounding chrome belong to the host
+application.
+
+The player renders in light DOM, so host CSS can style it directly:
+
+```css
+qti-assessment-item-player {
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+  color: #1f2937;
+}
+
+qti-assessment-item-player .qti3-interaction {
+  margin-block: 1rem;
+}
+
+qti-assessment-item-player .qti3-choice-option[data-selected="true"] {
+  border-color: currentColor;
+}
+```
+
+Rendered elements use `qti3-*` class names for player structure, such as
+`qti3-player`, `qti3-item-body`, `qti3-interaction`, and interaction-specific classes
+like `qti3-choice`, `qti3-textEntry`, and `qti3-hotspot`. Authored QTI shared-vocabulary
+classes that start with `qti-` are preserved on rendered interactions where applicable.
+
+QTI shared vocabulary classes are authoring hints defined by the specification, not
+product theme classes. For example, classes such as `qti-labels-none`,
+`qti-labels-decimal`, `qti-selections-light`, and `qti-unselected-hidden` describe
+portable item-level presentation preferences. `qti3` preserves those classes so host
+products can reflect the item author's choices while still applying their own visual system.
+
 Framework adapters may be added later, but they should wrap the web component or core API. They must not own the QTI implementation.
 
 The initial player should use native custom elements directly. Lit is not part of the initial stack and should be reconsidered only if plain custom element code creates a clear maintenance problem that outweighs the dependency and abstraction cost.
@@ -163,7 +191,7 @@ The initial player should use native custom elements directly. Lit is not part o
 - GitHub Actions for CI.
 - Light DOM for the default player.
 
-## Tooling Preferences
+## Tooling Choices
 
 - TypeScript 6+
 - pnpm
@@ -195,13 +223,6 @@ The browser harness is available with:
 
 ```sh
 pnpm dev
-```
-
-The same harness is published from `main` through the GitHub Pages workflow for
-`longsightgroup/qti3`. Build the static artifact locally with:
-
-```sh
-pnpm pages:build
 ```
 
 From a source checkout, run `pnpm build` before using the built CLI entry point.
@@ -241,7 +262,7 @@ processing patterns, and adaptive behavior:
 node packages/cli/dist/index.js write-fixtures packages/fixtures/xml
 ```
 
-The support matrix is intentionally machine-readable and includes interaction, deprecated
+The support matrix is machine-readable and includes interaction, deprecated
 interaction, and processing element evidence:
 
 ```sh
@@ -260,22 +281,26 @@ Quality expectations are part of the public contract:
 - Supported interactions need parser, validation, scoring, rendering, keyboard, and accessibility evidence.
 - Accessibility checks cover real operation, not just automated scans.
 - Dependencies are kept small, exact, and reviewed.
-- Published packages use explicit npm `files` allowlists so package contents stay small and intentional.
+- Published packages use explicit npm `files` allowlists so package contents stay small and deliberate.
 - Release checks must pass before publishing.
 
 ## Status
 
 This repository is a reference implementation for QTI 3 item behavior. It has a strict TypeScript core, a native web component player, fixture-based scoring, a manual browser harness, automated accessibility checks, Playwright coverage, and standalone canonical XML reference items under `packages/fixtures/xml`.
 
-Serialized attempt state uses `qti3.attempt-state.v1` and includes responses, outcomes, generated template values, validation messages, lifecycle status, and QTI's built-in `completionStatus` outcome. Adaptive items retain outcome values across response-processing runs; non-adaptive items reset authored outcomes before each scoring run.
-For non-adaptive items, `endAttempt()` completes the item after a valid score run.
-For adaptive items, `endAttempt()` runs response processing but leaves the item
-interacting unless response processing sets `completionStatus` to `"completed"`.
-Hosts that persist state can validate restored JSON with `isQtiAttemptStateV1()` or
-`assertQtiAttemptStateV1()` before passing it back to `createItemSession()` or the
-player restore API.
-For templated items, saved template values are restored before generated correct
-responses are derived again, so resume does not require the original random seed.
+### Attempt State
+
+Serialized attempt state uses `qti3.attempt-state.v1`. It captures responses, outcomes,
+generated template values, validation messages, lifecycle status, and QTI's built-in
+`completionStatus` outcome.
+
+- Hosts can save, restore, and review attempts through this state contract.
+- Restored JSON can be checked with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
+- Non-adaptive items reset authored outcomes before each scoring run.
+- Adaptive items retain outcome values across response-processing runs.
+- For non-adaptive items, `endAttempt()` completes the item after a valid score run.
+- For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
+- Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.
 
 ## Reference Coverage
 
@@ -284,7 +309,7 @@ responses are derived again, so resume does not require the original random seed
 - Serialized attempt state is the public save/resume/review contract. Core and player APIs clone returned state and score values so hosts do not depend on or mutate private runtime state.
 - The manual harness debugger exposes responses, outcomes, template values, diagnostics, validation messages, serialized state, package item navigation, action history, and accessibility proof scripts.
 - Public fixtures are synthetic and MIT-licensed. Private, generated, or customer packages stay outside this repository unless explicitly scrubbed and licensed for publication.
-- Package and assessment-test support is intentionally limited to item discovery, item-reference traversal, asset resolution, validation, and item loading. A full runner/controller remains a host-product concern.
+- Package and assessment-test support is limited to item discovery, item-reference traversal, asset resolution, validation, and item loading. A full runner/controller remains a host-product concern.
 
 ## Publishing
 
