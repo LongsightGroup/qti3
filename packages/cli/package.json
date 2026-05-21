@@ -32,7 +32,9 @@
     "dist/*.d.ts.map",
     "dist/*.js",
     "dist/*.js.map",
-    "!dist/*.test.*"
+    "!dist/*.test.*",
+    "src/**/*.ts",
+    "!src/**/*.test.ts"
   ],
   "type": "module",
   "exports": {
