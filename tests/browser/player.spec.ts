@@ -1782,9 +1782,11 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "selectPoint");
 
-    await page
-      .locator("qti-assessment-item-player .qti3-point-surface")
-      .click({ position: { x: 239, y: 87 } });
+    await clickAuthoredCoordinate(
+      page.locator("qti-assessment-item-player .qti3-point-surface"),
+      240,
+      88,
+    );
     await expectResponse(page, "240 88");
 
     await page.getByRole("button", { name: "Score", exact: true }).click();
@@ -1811,9 +1813,9 @@ test.describe("manual harness", () => {
     );
 
     const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
-    await surface.click({ position: { x: 23, y: 51 } });
+    await clickAuthoredCoordinate(surface, 24, 52);
     await expectResponse(page, ["24 52"]);
-    await surface.click({ position: { x: 183, y: 51 } });
+    await clickAuthoredCoordinate(surface, 184, 52);
     await expectResponse(page, ["24 52", "184 52"]);
     await expect(page.locator("qti-assessment-item-player .qti3-point-marker")).toHaveCount(2);
   });
@@ -1836,7 +1838,7 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
       "No point selected",
     );
-    await surface.click({ position: { x: 239, y: 87 } });
+    await clickAuthoredCoordinate(surface, 240, 88);
     await expectResponse(page, "240 88");
   });
 
@@ -2259,6 +2261,32 @@ async function expectResponse(
   expect(state.responses.RESPONSE).toEqual(expected);
 }
 
+async function clickAuthoredCoordinate(
+  locator: import("@playwright/test").Locator,
+  x: number,
+  y: number,
+): Promise<void> {
+  await locator.evaluate(
+    (element, point) => {
+      const rect = element.getBoundingClientRect();
+      const image = element.querySelector("img");
+      const authoredWidth = image?.naturalWidth || rect.width;
+      const authoredHeight = image?.naturalHeight || rect.height;
+      element.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          clientX: rect.left + (point.x / authoredWidth) * rect.width,
+          clientY: rect.top + (point.y / authoredHeight) * rect.height,
+          detail: 1,
+          view: window,
+        }),
+      );
+    },
+    { x, y },
+  );
+}
+
 async function expectImageLoaded(locator: import("@playwright/test").Locator): Promise<void> {
   await expect
     .poll(async () => {
@@ -2364,9 +2392,11 @@ async function provideResponse(
     const [x, y] = String(response)
       .split(" ")
       .map((coordinate) => Number(coordinate));
-    await page
-      .locator("qti-assessment-item-player .qti3-point-surface")
-      .click({ position: { x, y } });
+    await clickAuthoredCoordinate(
+      page.locator("qti-assessment-item-player .qti3-point-surface"),
+      x,
+      y,
+    );
     return;
   }
 
