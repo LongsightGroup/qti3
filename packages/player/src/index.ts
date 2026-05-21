@@ -4155,6 +4155,57 @@ function copySafeAttributes(element: Element, attributes: Record<string, string>
       element.setAttribute("lang", value);
     }
   }
+  applySharedAccessibilityVocabulary(element, attributes);
+}
+
+function applySharedAccessibilityVocabulary(
+  element: Element,
+  attributes: Record<string, string>,
+): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    const ariaName = qtiAriaAttributeName(name);
+    if (!ariaName || hasAttributeName(attributes, ariaName)) continue;
+    element.setAttribute(ariaName, value);
+  }
+
+  const suppressTts = attributeValue(attributes, "data-qti-suppress-tts");
+  if (
+    suppressesScreenReaderSpeech(suppressTts) &&
+    !hasAttributeName(attributes, "aria-hidden") &&
+    !hasAttributeName(attributes, "data-qti-aria-hidden")
+  ) {
+    element.setAttribute("aria-hidden", "true");
+  }
+}
+
+function qtiAriaAttributeName(name: string): string | undefined {
+  const normalizedName = name.toLowerCase();
+  const prefix = "data-qti-aria-";
+  if (!normalizedName.startsWith(prefix)) return undefined;
+  const suffix = normalizedName.slice(prefix.length);
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(suffix)) return undefined;
+  return `aria-${suffix}`;
+}
+
+function attributeValue(attributes: Record<string, string>, name: string): string | undefined {
+  const normalizedName = name.toLowerCase();
+  const entry = Object.entries(attributes).find(
+    ([attributeName]) => attributeName.toLowerCase() === normalizedName,
+  );
+  return entry?.[1];
+}
+
+function hasAttributeName(attributes: Record<string, string>, name: string): boolean {
+  return attributeValue(attributes, name) !== undefined;
+}
+
+function suppressesScreenReaderSpeech(value: string | undefined): boolean {
+  if (!value) return false;
+  const tokens = value
+    .toLowerCase()
+    .split(/[\s,]+/)
+    .filter(Boolean);
+  return tokens.includes("all") || tokens.includes("screen-reader");
 }
 
 function isSafeContentAttribute(name: string, value: string): boolean {
@@ -4326,6 +4377,23 @@ function playerStyleElement(): HTMLStyleElement {
 
     .qti3-item-body > * {
       margin-block: 0;
+    }
+
+    .qti3-player .qti-hidden {
+      display: none !important;
+    }
+
+    .qti3-player .qti-visually-hidden {
+      position: absolute !important;
+      overflow: hidden !important;
+      clip: rect(1px, 1px, 1px, 1px) !important;
+      clip-path: inset(50%) !important;
+      inline-size: 1px !important;
+      block-size: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      white-space: nowrap !important;
     }
 
     .qti3-embedded-interaction {
