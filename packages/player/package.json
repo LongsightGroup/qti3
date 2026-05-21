@@ -1,10 +1,28 @@
 {
   "name": "@longsightgroup/qti3-player",
   "version": "0.1.0",
+  "description": "Style-neutral web component player for rendering and scoring QTI 3 assessment items.",
+  "keywords": [
+    "assessment",
+    "player",
+    "qti",
+    "qti3",
+    "typescript",
+    "web-components"
+  ],
+  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/player#readme",
+  "bugs": {
+    "url": "https://github.com/LongsightGroup/qti3/issues"
+  },
   "license": "MIT",
   "author": {
     "name": "Sam Ottenhoff",
     "url": "https://github.com/ottenhoff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LongsightGroup/qti3.git",
+    "directory": "packages/player"
   },
   "files": [
     "dist/*.d.ts",

@@ -2,9 +2,27 @@
   "name": "qti3",
   "version": "0.1.0",
   "private": true,
+  "description": "Framework-neutral TypeScript packages for QTI 3 assessment items.",
+  "keywords": [
+    "1edtech",
+    "assessment",
+    "assessment-items",
+    "qti",
+    "qti3",
+    "typescript"
+  ],
+  "homepage": "https://github.com/LongsightGroup/qti3#readme",
+  "bugs": {
+    "url": "https://github.com/LongsightGroup/qti3/issues"
+  },
+  "license": "MIT",
   "author": {
     "name": "Sam Ottenhoff",
     "url": "https://github.com/ottenhoff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LongsightGroup/qti3.git"
   },
   "type": "module",
   "scripts": {

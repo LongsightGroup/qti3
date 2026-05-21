@@ -1,10 +1,28 @@
 {
   "name": "@longsightgroup/qti3-fixtures",
   "version": "0.1.0",
+  "description": "Public synthetic QTI 3 item fixtures and expected scoring outcomes for qti3.",
+  "keywords": [
+    "assessment",
+    "conformance",
+    "fixtures",
+    "qti",
+    "qti3",
+    "typescript"
+  ],
+  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/fixtures#readme",
+  "bugs": {
+    "url": "https://github.com/LongsightGroup/qti3/issues"
+  },
   "license": "MIT",
   "author": {
     "name": "Sam Ottenhoff",
     "url": "https://github.com/ottenhoff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LongsightGroup/qti3.git",
+    "directory": "packages/fixtures"
   },
   "files": [
     "dist/*.d.ts",
