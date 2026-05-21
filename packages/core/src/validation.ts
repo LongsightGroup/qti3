@@ -1445,6 +1445,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionRequiredAttributes(interaction, diagnostics);
     validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
+    validateGraphicHotspotObjectDimensions(interaction, diagnostics);
     validateCorrectResponseReferences(
       interaction,
       interaction.responseIdentifier
@@ -2025,6 +2026,97 @@ function validateHotspotGeometry(choice: QtiChoice, diagnostics: QtiDiagnostic[]
       source: choice.source,
     });
   }
+}
+
+function validateGraphicHotspotObjectDimensions(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!usesGraphicHotspots(interaction)) return;
+  const hotspotChoices = interaction.choices.filter(isHotspotChoice);
+  if (hotspotChoices.length === 0) return;
+
+  const width = positiveDimension(interaction.object?.width);
+  const height = positiveDimension(interaction.object?.height);
+  if (width === undefined || height === undefined) {
+    diagnostics.push({
+      code: "interaction.graphicObjectDimensions",
+      severity: "warning",
+      message: `${interaction.qtiName} should declare object width and height so hotspot coords map to the rendered image.`,
+      path: interaction.object?.source?.path ?? interaction.source?.path,
+      source: interaction.object?.source ?? interaction.source,
+    });
+    return;
+  }
+
+  for (const choice of hotspotChoices) {
+    const bounds = hotspotBounds(choice);
+    if (!bounds) continue;
+    if (bounds.left >= 0 && bounds.top >= 0 && bounds.right <= width && bounds.bottom <= height) {
+      continue;
+    }
+    diagnostics.push({
+      code: "choice.coords.bounds",
+      severity: "warning",
+      message: `${choice.qtiName} ${choice.identifier} coords extend outside the ${width} by ${height} object image.`,
+      path: choice.source?.path,
+      source: choice.source,
+    });
+  }
+}
+
+function usesGraphicHotspots(interaction: QtiInteraction): boolean {
+  return (
+    interaction.type === "graphicOrder" ||
+    interaction.type === "graphicAssociate" ||
+    interaction.type === "graphicGapMatch" ||
+    interaction.type === "hotspot"
+  );
+}
+
+function isHotspotChoice(choice: QtiChoice): boolean {
+  return choice.qtiName === "qti-hotspot-choice" || choice.qtiName === "qti-associable-hotspot";
+}
+
+function positiveDimension(value: string | undefined): number | undefined {
+  if (!value || value.trim().endsWith("%")) return undefined;
+  const match = value.trim().match(/^(\d+(?:\.\d+)?|\.\d+)(?:px)?$/i);
+  if (!match?.[1]) return undefined;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function hotspotBounds(
+  choice: QtiChoice,
+): { left: number; top: number; right: number; bottom: number } | undefined {
+  const shape = choice.attributes.shape;
+  const coords = choice.attributes.coords;
+  if (!shape || !coords || !isHotspotShape(shape) || !isNumericCsv(coords)) return undefined;
+  const values = numericCsv(coords);
+  if (!hasValidShapeCoordinateCount(shape, values)) return undefined;
+
+  if (shape === "default") return undefined;
+  if (shape === "circle") {
+    const [x, y, radius] = values as [number, number, number];
+    return { left: x - radius, top: y - radius, right: x + radius, bottom: y + radius };
+  }
+  if (shape === "ellipse") {
+    const [x, y, radiusX, radiusY] = values as [number, number, number, number];
+    return { left: x - radiusX, top: y - radiusY, right: x + radiusX, bottom: y + radiusY };
+  }
+  if (shape === "rect") {
+    const [left, top, right, bottom] = values as [number, number, number, number];
+    return { left, top, right, bottom };
+  }
+
+  const xs = values.filter((_, index) => index % 2 === 0);
+  const ys = values.filter((_, index) => index % 2 === 1);
+  return {
+    left: Math.min(...xs),
+    top: Math.min(...ys),
+    right: Math.max(...xs),
+    bottom: Math.max(...ys),
+  };
 }
 
 function isHotspotShape(value: string): boolean {

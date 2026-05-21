@@ -1823,6 +1823,12 @@ function renderGraphicAssociateResponse(
   const maximumAssociations =
     interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
   let selectedHotspot: QtiChoice | undefined;
+  let draggedHotspot: QtiChoice | undefined;
+  let dragPointerId: number | undefined;
+  let dragStart: { x: number; y: number } | undefined;
+  let dragStarted = false;
+  let suppressNextClick = false;
+  let previewLine: SVGLineElement | undefined;
 
   const surface = document.createElement("div");
   surface.className = "qti3-graphic-associate-surface";
@@ -1916,6 +1922,52 @@ function renderGraphicAssociateResponse(
     renderState();
     commit();
   };
+  const authoredPointFromPointer = (event: PointerEvent) => {
+    const rect = surface.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(width, ((event.clientX - rect.left) / rect.width) * width)),
+      y: Math.max(0, Math.min(height, ((event.clientY - rect.top) / rect.height) * height)),
+    };
+  };
+  const removePreviewLine = () => {
+    previewLine?.remove();
+    previewLine = undefined;
+  };
+  const suppressFollowingClick = () => {
+    suppressNextClick = true;
+    setTimeout(() => {
+      suppressNextClick = false;
+    }, 0);
+  };
+  const updatePreviewLine = (source: QtiChoice, event: PointerEvent) => {
+    const start = hotspotCenter(source, width, height);
+    const end = authoredPointFromPointer(event);
+    if (!previewLine) {
+      previewLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      previewLine.dataset.preview = "true";
+      connections.append(previewLine);
+    }
+    previewLine.setAttribute("x1", String(start.x));
+    previewLine.setAttribute("y1", String(start.y));
+    previewLine.setAttribute("x2", String(end.x));
+    previewLine.setAttribute("y2", String(end.y));
+  };
+  const hotspotFromPointer = (event: PointerEvent) => {
+    const element = document.elementFromPoint(event.clientX, event.clientY);
+    const button = element?.closest<HTMLButtonElement>(".qti3-graphic-associate-hotspot");
+    const identifier = button?.dataset.choiceIdentifier;
+    return choices.find((choice) => choice.identifier === identifier);
+  };
+  const finishDrag = (event: PointerEvent, source: QtiChoice) => {
+    const target = hotspotFromPointer(event);
+    removePreviewLine();
+    if (target) {
+      addPair(source, target);
+      return;
+    }
+    selectedHotspot = undefined;
+    renderState();
+  };
   const chooseHotspot = (choice: QtiChoice) => {
     if (!selectedHotspot) {
       selectedHotspot = choice;
@@ -1992,8 +2044,60 @@ function renderGraphicAssociateResponse(
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
     button.style.position = "absolute";
+    button.style.touchAction = "none";
     placeHotspotButton(button, choice, width, height);
-    button.addEventListener("click", () => chooseHotspot(choice));
+    button.addEventListener("click", (event) => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        event.preventDefault();
+        return;
+      }
+      chooseHotspot(choice);
+    });
+    button.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      draggedHotspot = choice;
+      dragPointerId = event.pointerId;
+      dragStart = { x: event.clientX, y: event.clientY };
+      dragStarted = false;
+      button.setPointerCapture(event.pointerId);
+    });
+    button.addEventListener("pointermove", (event) => {
+      if (dragPointerId !== event.pointerId || !draggedHotspot || !dragStart) return;
+      const moved = Math.hypot(event.clientX - dragStart.x, event.clientY - dragStart.y);
+      if (!dragStarted && moved < 4) return;
+      if (!dragStarted) {
+        dragStarted = true;
+        suppressFollowingClick();
+        selectedHotspot = draggedHotspot;
+        renderState();
+      }
+      updatePreviewLine(draggedHotspot, event);
+      event.preventDefault();
+    });
+    button.addEventListener("pointerup", (event) => {
+      if (dragPointerId !== event.pointerId || !draggedHotspot) return;
+      const source = draggedHotspot;
+      draggedHotspot = undefined;
+      dragPointerId = undefined;
+      dragStart = undefined;
+      button.releasePointerCapture(event.pointerId);
+      if (!dragStarted) return;
+      dragStarted = false;
+      suppressFollowingClick();
+      finishDrag(event, source);
+      event.preventDefault();
+    });
+    button.addEventListener("pointercancel", (event) => {
+      if (dragPointerId !== event.pointerId) return;
+      draggedHotspot = undefined;
+      dragPointerId = undefined;
+      dragStart = undefined;
+      dragStarted = false;
+      removePreviewLine();
+      selectedHotspot = undefined;
+      renderState();
+    });
     button.addEventListener("keydown", (event) => {
       if (event.key === "ArrowRight" || event.key === "ArrowDown") {
         event.preventDefault();

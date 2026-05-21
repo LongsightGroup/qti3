@@ -2021,6 +2021,75 @@ describe("@longsightgroup/qti3-core", () => {
     });
   });
 
+  it("infers inline SVG dimensions for graphical interaction objects", () => {
+    const image =
+      "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0ODAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNDgwIDI2MCI+PC9zdmc+";
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-svg-dimensions">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
+        <qti-item-body>
+          <qti-graphic-associate-interaction response-identifier="RESPONSE">
+            <object data="${image}" type="image/png">Timeline</object>
+            <qti-associable-hotspot identifier="A" shape="circle" coords="120,90,18" match-max="1"/>
+            <qti-associable-hotspot identifier="B" shape="circle" coords="120,170,18" match-max="1"/>
+          </qti-graphic-associate-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.object).toMatchObject({
+      width: "480",
+      height: "260",
+    });
+    expect(result.diagnostics).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.graphicObjectDimensions" }),
+      ]),
+    );
+  });
+
+  it("warns when graphical hotspot coords cannot map cleanly to object dimensions", () => {
+    const missingDimensions = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-hotspot-dimensions">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <object data="image.png" type="image/png"/>
+            <qti-hotspot-choice identifier="A" shape="rect" coords="10,20,60,80"/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+    const outOfBounds = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="out-of-bounds-hotspot">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <object data="image.png" type="image/png" width="160" height="120"/>
+            <qti-hotspot-choice identifier="A" shape="circle" coords="360,90,18"/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(missingDimensions.ok).toBe(true);
+    expect(missingDimensions.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.graphicObjectDimensions",
+          severity: "warning",
+        }),
+      ]),
+    );
+    expect(outOfBounds.ok).toBe(true);
+    expect(outOfBounds.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "choice.coords.bounds", severity: "warning" }),
+      ]),
+    );
+  });
+
   it("validates hotspot geometry attributes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-hotspot-geometry">
