@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.1 - 2026-05-21
+
+### Added
+
+- Add `language-of-interface` / `languageOfInterface` player chrome localization support with browser and document language resolution.
+- Add host message overrides and built-in player chrome catalogs for Spanish, Swedish, German, Portuguese, and French remove controls.
+- Add a manual harness language-of-interface selector for browser testing localized player chrome.
+
+### Changed
+
+- Render remove and movement controls as dependency-free inline SVG icon buttons while preserving accessible labels.
+
+### Fixed
+
+- Position graphic gap match hotspots over the authored image so candidates can drop labels on the visible target circles.
+- Match copied Tabler SVG root attributes for player chrome icons so the rendered trash icon matches the supplied source more closely.
+
 ## 0.2.0 - 2026-05-21
 
 ### Added
