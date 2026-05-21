@@ -2608,11 +2608,15 @@ test.describe("manual harness", () => {
 
     const source = sourceRegion.getByRole("button", { name: "Abraham Lincoln" });
     const target = surface.locator('[data-gap-identifier="T2"]');
+    await expect(target).toHaveCSS("position", "absolute");
     await expect(target).toHaveAccessibleName("Target 2, empty");
     await expect(target).toHaveText("");
     const sourceBox = await source.boundingBox();
     const targetBox = await target.boundingBox();
+    if (!box) throw new Error("Missing hotspot graphic gap surface box.");
     if (!sourceBox || !targetBox) throw new Error("Missing hotspot graphic gap drag boxes.");
+    expect(Math.round(targetBox.x - box.x)).toBe(218);
+    expect(Math.round(targetBox.y - box.y)).toBe(108);
 
     await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
     await page.mouse.down();
