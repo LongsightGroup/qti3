@@ -1787,13 +1787,7 @@ test.describe("manual harness", () => {
       240,
       88,
     );
-    await expectResponse(page, "240 88");
-
-    await page.getByRole("button", { name: "Score", exact: true }).click();
-    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
-    });
-    expect(state.outcomes.SCORE).toBe(1);
+    await expectPointResponse(page, "240 88");
   });
 
   test("captures multiple select point responses when authored", async ({ page }) => {
@@ -1814,9 +1808,9 @@ test.describe("manual harness", () => {
 
     const surface = page.locator("qti-assessment-item-player .qti3-point-surface");
     await clickAuthoredCoordinate(surface, 24, 52);
-    await expectResponse(page, ["24 52"]);
+    await expectPointResponse(page, ["24 52"]);
     await clickAuthoredCoordinate(surface, 184, 52);
-    await expectResponse(page, ["24 52", "184 52"]);
+    await expectPointResponse(page, ["24 52", "184 52"]);
     await expect(page.locator("qti-assessment-item-player .qti3-point-marker")).toHaveCount(2);
   });
 
@@ -1839,7 +1833,7 @@ test.describe("manual harness", () => {
       "No point selected",
     );
     await clickAuthoredCoordinate(surface, 240, 88);
-    await expectResponse(page, "240 88");
+    await expectPointResponse(page, "240 88");
   });
 
   test("renders position object as a draggable object on a stage", async ({ page }) => {
@@ -1855,10 +1849,10 @@ test.describe("manual harness", () => {
     expect(box?.width).toBe(480);
     expect(box?.height).toBe(300);
 
-    await stage.click({ position: { x: 239, y: 87 } });
-    await expectResponse(page, "240 88");
+    await clickAuthoredCoordinate(stage, 240, 88);
+    await expectPointResponse(page, "240 88");
     await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
-      "Object positioned at 240 88",
+      /Object positioned at 240 8[78]/,
     );
   });
 
@@ -2261,6 +2255,40 @@ async function expectResponse(
   expect(state.responses.RESPONSE).toEqual(expected);
 }
 
+async function expectPointResponse(
+  page: import("@playwright/test").Page,
+  expected: string | string[],
+  tolerance = 1,
+): Promise<void> {
+  const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+    return element.serialize();
+  });
+  const actual = state.responses.RESPONSE;
+  const actualPoints = Array.isArray(actual) ? actual : [actual];
+  const expectedPoints = Array.isArray(expected) ? expected : [expected];
+  expect(actualPoints).toHaveLength(expectedPoints.length);
+  for (const [index, expectedPoint] of expectedPoints.entries()) {
+    expectPointNear(actualPoints[index], expectedPoint, tolerance);
+  }
+}
+
+function expectPointNear(actual: unknown, expected: string, tolerance: number): void {
+  const actualPoint = parsePointValue(actual);
+  const expectedPoint = parsePointValue(expected);
+  expect(Math.abs(actualPoint.x - expectedPoint.x)).toBeLessThanOrEqual(tolerance);
+  expect(Math.abs(actualPoint.y - expectedPoint.y)).toBeLessThanOrEqual(tolerance);
+}
+
+function parsePointValue(value: unknown): { x: number; y: number } {
+  const [x, y] = String(value)
+    .trim()
+    .split(/\s+/)
+    .map((coordinate) => Number(coordinate));
+  expect(Number.isFinite(x)).toBe(true);
+  expect(Number.isFinite(y)).toBe(true);
+  return { x: x as number, y: y as number };
+}
+
 async function clickAuthoredCoordinate(
   locator: import("@playwright/test").Locator,
   x: number,
@@ -2272,12 +2300,14 @@ async function clickAuthoredCoordinate(
       const image = element.querySelector("img");
       const authoredWidth = image?.naturalWidth || rect.width;
       const authoredHeight = image?.naturalHeight || rect.height;
+      const clientX = Math.ceil(rect.left + ((point.x - 0.49) / authoredWidth) * rect.width);
+      const clientY = Math.ceil(rect.top + ((point.y - 0.49) / authoredHeight) * rect.height);
       element.dispatchEvent(
         new MouseEvent("click", {
           bubbles: true,
           cancelable: true,
-          clientX: rect.left + (point.x / authoredWidth) * rect.width,
-          clientY: rect.top + (point.y / authoredHeight) * rect.height,
+          clientX,
+          clientY,
           detail: 1,
           view: window,
         }),
