@@ -177,6 +177,9 @@ product theme classes. For example, classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-selections-light`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
+See the 1EdTech
+[QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
+document for the normative shared vocabulary and example CSS.
 
 Framework adapters may be added later, but they should wrap the web component or core API. They must not own the QTI implementation.
 
