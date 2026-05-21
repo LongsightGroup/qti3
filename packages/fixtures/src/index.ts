@@ -82,7 +82,7 @@ function createInteractionFixture(
       {
         name: "correct",
         responses: response.identifier ? { [response.identifier]: response.correct } : {},
-        expectedOutcomes: response.identifier ? { SCORE: 1 } : { SCORE: "0" },
+        expectedOutcomes: response.identifier ? { SCORE: 1 } : { SCORE: 0 },
         expectedResponses: response.identifier ? { [response.identifier]: response.correct } : {},
         expectedState: {
           schema: "qti3.attempt-state.v1",
@@ -231,7 +231,7 @@ function createGenericMatchProcessingFixture(): QtiFixture {
       {
         name: "not-matched",
         responses: { RESPONSE: "B" },
-        expectedOutcomes: { SCORE: "0", FEEDBACK: "not-matched" },
+        expectedOutcomes: { SCORE: 0, FEEDBACK: "not-matched" },
         expectedResponses: { RESPONSE: "B" },
       },
     ],
@@ -498,7 +498,7 @@ function createAdaptiveFeedbackFixture(): QtiFixture {
       {
         name: "hint",
         responses: { HINT: true },
-        expectedOutcomes: { SCORE: "0", FEEDBACK: "HINT_FEEDBACK", completionStatus: "unknown" },
+        expectedOutcomes: { SCORE: 0, FEEDBACK: "HINT_FEEDBACK", completionStatus: "unknown" },
         expectedResponses: { HINT: true },
         expectedState: { status: "interacting" },
       },
@@ -615,7 +615,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
     };
   }
   if (interactionType === "slider") {
-    return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: "50" };
+    return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: 50 };
   }
   if (interactionType === "hotspot") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "identifier", correct: "A" };

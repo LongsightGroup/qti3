@@ -3,6 +3,7 @@ import {
   createItemSession,
   parseQtiXml,
   visibleModalFeedback,
+  type QtiAssessmentItem,
   type QtiAttemptStatus,
   type QtiAttemptStateV1,
   type QtiChoice,
@@ -21,6 +22,10 @@ export interface QtiPlayerSessionControl {
   showFeedback?: boolean | undefined;
 }
 
+export interface QtiScoreAttemptOptions {
+  validateResponses?: boolean | undefined;
+}
+
 export type QtiPlayerFetchXml = (url: string) => Promise<string>;
 export type QtiPlayerResolveAsset = (url: string) => string;
 
@@ -31,6 +36,48 @@ export interface QtiPlayerLoadOptions {
   fetchXml?: QtiPlayerFetchXml | undefined;
   resolveAsset?: QtiPlayerResolveAsset | undefined;
 }
+
+export interface QtiReadyEventDetail {
+  item: QtiAssessmentItem;
+}
+
+export interface QtiStateChangeEventDetail {
+  state: QtiAttemptStateV1;
+}
+
+export type QtiScoreEventDetail = QtiScoreResult;
+
+export interface QtiValidationEventDetail {
+  validationMessages: QtiDiagnostic[];
+  state: QtiAttemptStateV1;
+}
+
+export interface QtiSuspendEventDetail {
+  state: QtiAttemptStateV1;
+}
+
+export interface QtiEndAttemptEventDetail {
+  state: QtiAttemptStateV1;
+}
+
+export interface QtiAssessmentItemPlayerEventDetailMap {
+  "qti-ready": QtiReadyEventDetail;
+  "qti-statechange": QtiStateChangeEventDetail;
+  "qti-score": QtiScoreEventDetail;
+  "qti-validation": QtiValidationEventDetail;
+  "qti-suspend": QtiSuspendEventDetail;
+  "qti-endattempt": QtiEndAttemptEventDetail;
+}
+
+export type QtiAssessmentItemPlayerEventName = keyof QtiAssessmentItemPlayerEventDetailMap;
+
+export type QtiAssessmentItemPlayerEvent<
+  T extends QtiAssessmentItemPlayerEventName = QtiAssessmentItemPlayerEventName,
+> = CustomEvent<QtiAssessmentItemPlayerEventDetailMap[T]>;
+
+export type QtiAssessmentItemPlayerCustomEventMap = {
+  [T in QtiAssessmentItemPlayerEventName]: CustomEvent<QtiAssessmentItemPlayerEventDetailMap[T]>;
+};
 
 const HTMLElementBase: typeof HTMLElement =
   globalThis.HTMLElement ??
@@ -73,7 +120,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.render();
     this.renderValidationMessages();
     this.updateAttemptAvailability();
-    this.dispatchEvent(new CustomEvent("qti-ready", { detail: { item: result.document.item } }));
+    this.dispatchPlayerEvent("qti-ready", { item: result.document.item });
     this.emitStateChange();
   }
 
@@ -82,25 +129,28 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     await this.loadXml(await fetchXml(url), options);
   }
 
-  scoreAttempt(): QtiScoreResult | undefined {
+  scoreAttempt(options: QtiScoreAttemptOptions = {}): QtiScoreResult | undefined {
     const session = this.session;
     if (!session) return undefined;
-    const validationMessages = this.sessionControl.validateResponses
-      ? this.validateResponses()
-      : [];
+    const shouldValidateResponses =
+      options.validateResponses ?? this.sessionControl.validateResponses;
+    const validationMessages = shouldValidateResponses ? this.validateResponses() : [];
     if (validationMessages.length > 0) {
-      this.validationMessages = validationMessages;
+      this.validationMessages = cloneDiagnostics(validationMessages);
       this.renderValidationMessages();
-      const state = session.serialize();
-      state.validationMessages = validationMessages;
-      this.dispatchEvent(new CustomEvent("qti-validation", { detail: { validationMessages } }));
+      const state = this.serialize();
+      if (!state) return undefined;
+      this.dispatchPlayerEvent("qti-validation", {
+        validationMessages: cloneDiagnostics(this.validationMessages),
+        state,
+      });
       this.emitStateChange(state);
       return undefined;
     }
     this.validationMessages = [];
     this.renderValidationMessages();
     const result = session.score();
-    this.dispatchEvent(new CustomEvent("qti-score", { detail: result }));
+    this.dispatchPlayerEvent("qti-score", result);
     this.updateDynamicBodyState();
     this.updateAttemptAvailability();
     if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
@@ -138,13 +188,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   suspend(): void {
-    this.session?.setStatus("suspended");
-    this.dispatchEvent(new CustomEvent("qti-suspend", { detail: { state: this.serialize() } }));
-    this.emitStateChange();
+    if (!this.session) return;
+    this.session.setStatus("suspended");
+    const state = this.serialize();
+    if (!state) return;
+    this.dispatchPlayerEvent("qti-suspend", { state });
+    this.emitStateChange(state);
   }
 
-  endAttempt(): void {
-    const result = this.scoreAttempt();
+  endAttempt(options: QtiScoreAttemptOptions = {}): void {
+    const result = this.scoreAttempt(options);
     if (!result) return;
     if (
       !this.documentModel?.item.adaptive ||
@@ -153,18 +206,28 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       this.session?.setStatus("completed");
     }
     this.updateAttemptAvailability();
-    this.dispatchEvent(new CustomEvent("qti-endattempt", { detail: { state: this.serialize() } }));
-    this.emitStateChange();
+    const state = this.serialize();
+    if (!state) return;
+    this.dispatchPlayerEvent("qti-endattempt", { state });
+    this.emitStateChange(state);
   }
 
-  serialize() {
+  serialize(): QtiAttemptStateV1 | undefined {
     const state = this.session?.serialize();
     if (state) state.validationMessages = cloneDiagnostics(this.validationMessages);
     return state;
   }
 
   private emitStateChange(state = this.serialize()): void {
-    this.dispatchEvent(new CustomEvent("qti-statechange", { detail: { state } }));
+    if (!state) return;
+    this.dispatchPlayerEvent("qti-statechange", { state });
+  }
+
+  private dispatchPlayerEvent<T extends QtiAssessmentItemPlayerEventName>(
+    type: T,
+    detail: QtiAssessmentItemPlayerEventDetailMap[T],
+  ): void {
+    this.dispatchEvent(new CustomEvent<QtiAssessmentItemPlayerEventDetailMap[T]>(type, { detail }));
   }
 
   private render(): void {
@@ -174,13 +237,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.applyDefaultStyles();
     const root = document.createElement("article");
     root.className = "qti3-player";
-    root.setAttribute("aria-labelledby", "qti3-item-title");
     root.append(playerStyleElement());
-
-    const title = document.createElement("h2");
-    title.id = "qti3-item-title";
-    title.textContent = documentModel.item.title ?? documentModel.item.identifier;
-    root.append(title);
 
     if (documentModel.item.prompt && documentModel.item.body.length === 0) {
       const prompt = document.createElement("p");
@@ -742,11 +799,7 @@ function renderChoice(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  group.className = "qti3-choice-group";
-  const legend = document.createElement("legend");
-  legend.textContent = readableType(interaction.type);
-  group.append(legend);
+  const group = responseGroup("qti3-choice-group");
 
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
@@ -801,6 +854,40 @@ function renderChoice(
   syncSelected();
   group.append(list);
   return group;
+}
+
+function responseGroup(className?: string): HTMLElement {
+  const group = document.createElement("div");
+  group.className = ["qti3-response-group", className].filter(Boolean).join(" ");
+  return group;
+}
+
+type MovementDirection = "up" | "down" | "left" | "right";
+
+const movementGlyphs: Record<MovementDirection, string> = {
+  up: "\u2191",
+  down: "\u2193",
+  left: "\u2190",
+  right: "\u2192",
+};
+
+function movementButton(
+  direction: MovementDirection,
+  accessibleName: string,
+  onClick: () => void,
+): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "qti3-icon-button";
+  button.dataset.moveDirection = direction;
+  button.textContent = movementGlyphs[direction];
+  button.setAttribute("aria-label", accessibleName);
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function movementLabel(target: string, direction: MovementDirection): string {
+  return `Move ${target} ${direction}`;
 }
 
 function renderHottextResponse(
@@ -923,10 +1010,7 @@ function renderOrderedResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = orderedResponseLegend(interaction.type);
-  group.append(legend);
+  const group = responseGroup();
   appendGraphicContext(group, interaction);
 
   const choices = choicesOrFallback(interaction).filter((choice) => choice.role !== "gap");
@@ -1017,21 +1101,15 @@ function renderOrderedResponse(
           }
         });
 
-        const up = document.createElement("button");
-        up.type = "button";
-        up.className = "qti3-icon-button";
-        up.textContent = "Up";
+        const up = movementButton("up", movementLabel(choice.text, "up"), () =>
+          moveChoice(index, index - 1),
+        );
         up.disabled = index === 0;
-        up.setAttribute("aria-label", `Move ${choice.text} up`);
-        up.addEventListener("click", () => moveChoice(index, index - 1));
 
-        const down = document.createElement("button");
-        down.type = "button";
-        down.className = "qti3-icon-button";
-        down.textContent = "Down";
+        const down = movementButton("down", movementLabel(choice.text, "down"), () =>
+          moveChoice(index, index + 1),
+        );
         down.disabled = index === ordered.length - 1;
-        down.setAttribute("aria-label", `Move ${choice.text} down`);
-        down.addEventListener("click", () => moveChoice(index, index + 1));
 
         item.append(handle, up, down);
         return item;
@@ -1048,10 +1126,7 @@ function renderPairResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = `${readableType(interaction.type)} pairs`;
-  group.append(legend);
+  const group = responseGroup();
   appendGraphicContext(group, interaction);
 
   const sources = sourceChoices(interaction);
@@ -1180,18 +1255,21 @@ function renderMatchResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = "Match rows";
-  group.append(legend);
+  const group = responseGroup();
 
   const sources = sourceChoices(interaction);
   const targets = targetChoices(interaction);
   const selectedPairs: string[] = valueToStrings(currentValue);
-  const grid = document.createElement("div");
-  grid.className = "qti3-match-grid";
-  grid.role = "group";
-  grid.setAttribute("aria-label", "Match rows");
+  let selectedSource: QtiChoice | undefined;
+  let selectedTarget: QtiChoice | undefined;
+  let draggedSource: string | undefined;
+
+  const selector = document.createElement("div");
+  selector.className = "qti3-match-selector";
+  const sourceRegion = tokenRegion("Match sources");
+  sourceRegion.classList.add("qti3-match-source-bank");
+  const targetRegion = tokenRegion("Match targets");
+  targetRegion.classList.add("qti3-match-target-bank");
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
   pairList.setAttribute("aria-label", "Match selected pairs");
@@ -1200,15 +1278,31 @@ function renderMatchResponse(
     if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
     else update([...selectedPairs]);
   };
-  const syncPressed = () => {
-    for (const button of grid.querySelectorAll<HTMLButtonElement>(".qti3-match-target")) {
-      const pair = `${button.dataset.sourceIdentifier} ${button.dataset.choiceIdentifier}`;
-      button.setAttribute("aria-pressed", selectedPairs.includes(pair) ? "true" : "false");
-    }
-  };
   const removePair = (pair: string) => {
     const index = selectedPairs.indexOf(pair);
     if (index >= 0) selectedPairs.splice(index, 1);
+  };
+  const syncPressed = () => {
+    for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
+      const identifier = button.dataset.choiceIdentifier ?? "";
+      button.setAttribute(
+        "aria-pressed",
+        identifier === selectedSource?.identifier ||
+          selectedPairs.some((pair) => pair.startsWith(`${identifier} `))
+          ? "true"
+          : "false",
+      );
+    }
+    for (const button of targetRegion.querySelectorAll<HTMLButtonElement>("button")) {
+      const identifier = button.dataset.choiceIdentifier ?? "";
+      button.setAttribute(
+        "aria-pressed",
+        identifier === selectedTarget?.identifier ||
+          selectedPairs.some((pair) => pair.endsWith(` ${identifier}`))
+          ? "true"
+          : "false",
+      );
+    }
   };
   const renderPairs = () => {
     pairList.replaceChildren(
@@ -1234,60 +1328,116 @@ function renderMatchResponse(
       }),
     );
   };
+  const clearSelection = () => {
+    selectedSource = undefined;
+    selectedTarget = undefined;
+  };
+  const removePairsForSource = (source: QtiChoice) => {
+    for (const existing of selectedPairs.filter((pair) =>
+      pair.startsWith(`${source.identifier} `),
+    )) {
+      removePair(existing);
+    }
+  };
+  const removePairsForTarget = (target: QtiChoice) => {
+    for (const existing of selectedPairs.filter((pair) => pair.endsWith(` ${target.identifier}`))) {
+      removePair(existing);
+    }
+  };
   const togglePair = (source: QtiChoice, target: QtiChoice) => {
     const pair = `${source.identifier} ${target.identifier}`;
     if (selectedPairs.includes(pair)) {
       removePair(pair);
     } else {
+      if (interaction.responseCardinality === "single") selectedPairs.splice(0);
       if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
-        const existingSourcePairs = selectedPairs.filter((existing) =>
-          existing.startsWith(`${source.identifier} `),
-        );
-        for (const existing of existingSourcePairs) removePair(existing);
+        removePairsForSource(source);
       }
       if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
-        const existingTargetPairs = selectedPairs.filter((existing) =>
-          existing.endsWith(` ${target.identifier}`),
-        );
-        for (const existing of existingTargetPairs) removePair(existing);
+        removePairsForTarget(target);
       }
       selectedPairs.push(pair);
     }
+    clearSelection();
     syncPressed();
     renderPairs();
     commit();
   };
+  const addSelectedPair = () => {
+    if (!selectedSource || !selectedTarget) return;
+    togglePair(selectedSource, selectedTarget);
+  };
+  const addPair = (sourceIdentifier: string | undefined, targetIdentifier: string): void => {
+    const source = sources.find((choice) => choice.identifier === sourceIdentifier);
+    const target = targets.find((choice) => choice.identifier === targetIdentifier);
+    if (!source || !target) return;
+    togglePair(source, target);
+  };
 
   for (const source of sources) {
-    const row = document.createElement("div");
-    row.className = "qti3-match-row";
-    row.dataset.sourceIdentifier = source.identifier;
-
-    const sourceLabel = document.createElement("span");
-    sourceLabel.className = "qti3-match-source";
-    sourceLabel.textContent = source.text;
-
-    const targetRegion = document.createElement("div");
-    targetRegion.className = "qti3-match-targets";
-    targetRegion.role = "group";
-    targetRegion.setAttribute("aria-label", `Targets for ${source.text}`);
-
-    for (const target of targets) {
-      const button = tokenButton(target);
-      button.classList.add("qti3-match-target");
-      button.dataset.sourceIdentifier = source.identifier;
-      button.setAttribute("aria-label", `${source.text}: ${target.text}`);
-      button.addEventListener("click", () => togglePair(source, target));
-      targetRegion.append(button);
-    }
-
-    row.append(sourceLabel, targetRegion);
-    grid.append(row);
+    const button = tokenButton(source);
+    button.classList.add("qti3-match-source");
+    button.draggable = true;
+    button.addEventListener("dragstart", (event) => {
+      draggedSource = source.identifier;
+      event.dataTransfer?.setData("text/plain", source.identifier);
+      event.dataTransfer?.setDragImage(button, 8, 8);
+    });
+    button.addEventListener("dragend", () => {
+      draggedSource = undefined;
+      syncPressed();
+    });
+    button.addEventListener("click", () => {
+      selectedSource = source;
+      syncPressed();
+      addSelectedPair();
+    });
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      event.preventDefault();
+      removePairsForSource(source);
+      clearSelection();
+      syncPressed();
+      renderPairs();
+      commit();
+    });
+    sourceRegion.append(button);
   }
 
+  for (const target of targets) {
+    const button = tokenButton(target);
+    button.classList.add("qti3-match-target");
+    button.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      button.classList.add("qti3-drop-target");
+    });
+    button.addEventListener("dragleave", () => button.classList.remove("qti3-drop-target"));
+    button.addEventListener("drop", (event) => {
+      event.preventDefault();
+      button.classList.remove("qti3-drop-target");
+      addPair(event.dataTransfer?.getData("text/plain") || draggedSource, target.identifier);
+    });
+    button.addEventListener("click", () => {
+      selectedTarget = target;
+      syncPressed();
+      addSelectedPair();
+    });
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      event.preventDefault();
+      removePairsForTarget(target);
+      clearSelection();
+      syncPressed();
+      renderPairs();
+      commit();
+    });
+    targetRegion.append(button);
+  }
+
+  selector.append(sourceRegion, targetRegion);
   syncPressed();
   renderPairs();
-  group.append(grid, pairList);
+  group.append(selector, pairList);
   return group;
 }
 
@@ -1302,10 +1452,7 @@ function renderGraphicOrderResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = readableType(interaction.type);
-  group.append(legend);
+  const group = responseGroup();
 
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
@@ -1443,15 +1590,17 @@ function renderGraphicOrderResponse(
       ...currentChoices.map((choice, index) => {
         const item = document.createElement("li");
         item.className = "qti3-graphic-order-item";
+        item.dataset.choiceIdentifier = choice.identifier;
+        const choiceLabel = hotspotDisplayLabel(choice, choices);
 
         const label = document.createElement("button");
         label.type = "button";
         label.className = "qti3-token";
         label.dataset.choiceIdentifier = choice.identifier;
-        label.textContent = `${index + 1}. ${hotspotDisplayLabel(choice, choices)}`;
+        label.textContent = `${index + 1}. ${choiceLabel}`;
         label.setAttribute(
           "aria-label",
-          `${hotspotDisplayLabel(choice, choices)}, position ${index + 1} of ${currentChoices.length}`,
+          `${choiceLabel}, position ${index + 1} of ${currentChoices.length}`,
         );
         label.addEventListener("click", () => focusHotspot(choice.identifier));
         label.addEventListener("keydown", (event) => {
@@ -1467,24 +1616,20 @@ function renderGraphicOrderResponse(
           }
         });
 
-        const up = document.createElement("button");
-        up.type = "button";
-        up.textContent = "Up";
+        const up = movementButton("up", movementLabel(choiceLabel, "up"), () =>
+          moveHotspot(choice.identifier, -1),
+        );
         up.disabled = index === 0;
-        up.setAttribute("aria-label", `Move ${hotspotDisplayLabel(choice, choices)} up`);
-        up.addEventListener("click", () => moveHotspot(choice.identifier, -1));
 
-        const down = document.createElement("button");
-        down.type = "button";
-        down.textContent = "Down";
+        const down = movementButton("down", movementLabel(choiceLabel, "down"), () =>
+          moveHotspot(choice.identifier, 1),
+        );
         down.disabled = index === currentChoices.length - 1;
-        down.setAttribute("aria-label", `Move ${hotspotDisplayLabel(choice, choices)} down`);
-        down.addEventListener("click", () => moveHotspot(choice.identifier, 1));
 
         const remove = document.createElement("button");
         remove.type = "button";
         remove.textContent = "Remove";
-        remove.setAttribute("aria-label", `Remove ${hotspotDisplayLabel(choice, choices)}`);
+        remove.setAttribute("aria-label", `Remove ${choiceLabel}`);
         remove.addEventListener("click", () => removeHotspot(choice.identifier));
 
         item.append(label, up, down, remove);
@@ -1536,10 +1681,7 @@ function renderGraphicAssociateResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = readableType(interaction.type);
-  group.append(legend);
+  const group = responseGroup();
 
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
@@ -1744,10 +1886,7 @@ function renderGapMatchResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = readableType(interaction.type);
-  group.append(legend);
+  const group = responseGroup();
   appendGraphicContext(group, interaction);
 
   const sources = sourceChoices(interaction);
@@ -1811,24 +1950,21 @@ function renderGapMatchResponse(
     const button = document.createElement("button");
     button.type = "button";
     button.className = "qti3-gap-button";
-    button.textContent = assigned ? assigned.text : "Empty";
+    button.textContent = assigned ? assigned.text : "";
     button.setAttribute(
       "aria-label",
       assigned ? `${gapLabel}, assigned ${assigned.text}` : `${gapLabel}, empty`,
     );
     button.addEventListener("click", () => assign(gap, selectedSource?.identifier));
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "Remove";
-    remove.disabled = !assigned;
-    remove.setAttribute("aria-label", `Remove ${gapLabel.toLowerCase()} assignment`);
-    remove.addEventListener("click", () => {
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Delete" && event.key !== "Backspace") return;
+      if (!assignments.has(gap.identifier)) return;
+      event.preventDefault();
       assignments.delete(gap.identifier);
       renderGaps();
       commit();
     });
-    target.append(button, remove);
+    target.append(button);
     return target;
   };
   const renderGaps = () => {
@@ -1885,7 +2021,7 @@ function renderSelect(
   appendOptions(select, choicesOrFallback(interaction));
   const [selected] = valueToStrings(currentValue);
   if (selected) select.value = selected;
-  select.addEventListener("change", () => update(select.value));
+  select.addEventListener("change", () => update(select.value === "" ? null : select.value));
   return select;
 }
 
@@ -2020,7 +2156,7 @@ function renderSliderResponse(
   const sync = () => {
     output.value = input.value;
     output.textContent = input.value;
-    update(input.value);
+    update(coerceResponseInputValue(input.value, interaction.responseBaseType));
   };
   input.addEventListener("input", sync);
   group.append(input, output);
@@ -2190,25 +2326,22 @@ function renderSelectPointResponse(
   syncMarker();
   const controls = document.createElement("div");
   controls.className = "qti3-point-controls";
-  for (const [label, dx, dy] of [
-    ["Up", 0, -1],
-    ["Left", -1, 0],
-    ["Right", 1, 0],
-    ["Down", 0, 1],
+  for (const [direction, dx, dy] of [
+    ["up", 0, -1],
+    ["left", -1, 0],
+    ["right", 1, 0],
+    ["down", 0, 1],
   ] as const) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-label", `Move point ${label.toLowerCase()}`);
-    button.addEventListener("click", () => {
-      const point = mutableActivePoint();
-      point.x += dx;
-      point.y += dy;
-      clampPoint(point);
-      syncMarker();
-      commit();
-    });
-    controls.append(button);
+    controls.append(
+      movementButton(direction, movementLabel("point", direction), () => {
+        const point = mutableActivePoint();
+        point.x += dx;
+        point.y += dy;
+        clampPoint(point);
+        syncMarker();
+        commit();
+      }),
+    );
   }
   if (isMultiple) {
     const clear = document.createElement("button");
@@ -2387,18 +2520,15 @@ function renderPositionObjectResponse(
 
   const controls = document.createElement("div");
   controls.className = "qti3-point-controls";
-  for (const [label, dx, dy] of [
-    ["Up", 0, -1],
-    ["Left", -1, 0],
-    ["Right", 1, 0],
-    ["Down", 0, 1],
+  for (const [direction, dx, dy] of [
+    ["up", 0, -1],
+    ["left", -1, 0],
+    ["right", 1, 0],
+    ["down", 0, 1],
   ] as const) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = label;
-    button.setAttribute("aria-label", `Move object ${label.toLowerCase()}`);
-    button.addEventListener("click", () => moveBy(dx, dy));
-    controls.append(button);
+    controls.append(
+      movementButton(direction, movementLabel("object", direction), () => moveBy(dx, dy)),
+    );
   }
 
   syncMarker();
@@ -2577,10 +2707,7 @@ function renderHotspotResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("fieldset");
-  const legend = document.createElement("legend");
-  legend.textContent = `${readableType(interaction.type)} regions`;
-  group.append(legend);
+  const group = responseGroup();
 
   const surface = document.createElement("div");
   surface.className = "qti3-hotspot-surface";
@@ -2715,7 +2842,7 @@ function objectIsImage(object: QtiObjectAsset): boolean {
 function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {
   const empty = document.createElement("option");
   empty.value = "";
-  empty.textContent = "Select";
+  empty.textContent = "";
   select.append(empty);
   for (const choice of choices) {
     const option = document.createElement("option");
@@ -2798,6 +2925,19 @@ function valueToStrings(value: QtiValue): string[] {
 function scalarString(value: QtiValue): string {
   if (value === null || Array.isArray(value) || typeof value === "object") return "";
   return String(value);
+}
+
+function coerceResponseInputValue(
+  value: string,
+  baseType: QtiInteraction["responseBaseType"],
+): QtiValue {
+  if (baseType === "integer") return Number.parseInt(value, 10);
+  if (baseType === "float") return Number.parseFloat(value);
+  if (baseType === "boolean") {
+    if (value === "true") return true;
+    if (value === "false") return false;
+  }
+  return value;
 }
 
 function orderChoicesFromValue(choices: QtiChoice[], value: QtiValue): QtiChoice[] {
@@ -3249,11 +3389,6 @@ function readableType(type: string): string {
     .replace(/^./, (letter) => letter.toUpperCase());
 }
 
-function orderedResponseLegend(type: QtiInteraction["type"]): string {
-  if (type === "order") return readableType(type);
-  return `${readableType(type)} order`;
-}
-
 function errorView(message: string): HTMLElement {
   const element = document.createElement("p");
   element.role = "alert";
@@ -3294,10 +3429,22 @@ function playerStyleElement(): HTMLStyleElement {
   const style = document.createElement("style");
   style.textContent = `
     .qti3-player {
+      --qti3-match-accent: #2f6fca;
+      --qti3-match-target-bg: #f5f6f7;
+      --qti3-match-target-border: #6f7782;
+
       display: grid;
       gap: 1rem;
       max-inline-size: 72rem;
       font: 16px/1.45 system-ui, sans-serif;
+    }
+
+    @supports (color: light-dark(#000, #fff)) {
+      .qti3-player {
+        --qti3-match-accent: light-dark(#2f6fca, #8ab4f8);
+        --qti3-match-target-bg: light-dark(#f5f6f7, #202124);
+        --qti3-match-target-border: light-dark(#6f7782, #9aa0a6);
+      }
     }
 
     .qti3-interaction {
@@ -3340,8 +3487,12 @@ function playerStyleElement(): HTMLStyleElement {
       color: CanvasText;
     }
 
-    .qti3-player fieldset {
+    .qti3-response-group {
       min-inline-size: 0;
+    }
+
+    .qti3-response-group > * + * {
+      margin-block-start: 0.75rem;
     }
 
     .qti3-actions,
@@ -3369,52 +3520,50 @@ function playerStyleElement(): HTMLStyleElement {
       align-items: start;
     }
 
-    .qti3-match-grid {
+    .qti3-match-selector {
       display: grid;
-      gap: 0.5rem;
+      gap: 1.5rem;
       inline-size: 100%;
       max-inline-size: 72rem;
       box-sizing: border-box;
     }
 
-    .qti3-match-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.75rem;
-      align-items: start;
-      inline-size: 100%;
-      min-inline-size: 0;
-      box-sizing: border-box;
-      padding-block: 0.5rem;
-      border-block-end: 1px solid CanvasText;
+    .qti3-match-source-bank,
+    .qti3-match-target-bank {
+      align-items: stretch;
     }
 
-    .qti3-match-source {
-      font-weight: 700;
+    .qti3-token.qti3-match-source {
+      border-color: var(--qti3-match-accent);
+      background: Canvas;
+      color: var(--qti3-match-accent);
     }
 
-    .qti3-match-targets {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      inline-size: 100%;
-      min-inline-size: 0;
-      box-sizing: border-box;
-    }
-
-    .qti3-match-target {
-      flex: 1 1 12rem;
+    .qti3-token.qti3-match-target {
+      flex: 1 1 9rem;
       min-inline-size: 0;
       max-inline-size: 100%;
+      min-block-size: 5rem;
       box-sizing: border-box;
+      border-color: var(--qti3-match-target-border);
+      background: var(--qti3-match-target-bg);
+      color: CanvasText;
+      font-weight: 700;
       white-space: normal;
       overflow-wrap: anywhere;
-      text-align: start;
+      text-align: center;
     }
 
-    @media (min-width: 768px) {
-      .qti3-match-row {
-        grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+    @media (forced-colors: active) {
+      .qti3-token.qti3-match-source {
+        border-color: LinkText;
+        color: LinkText;
+      }
+
+      .qti3-token.qti3-match-target {
+        border-color: GrayText;
+        background: ButtonFace;
+        color: ButtonText;
       }
     }
 
@@ -3528,6 +3677,15 @@ function playerStyleElement(): HTMLStyleElement {
       cursor: grab;
     }
 
+    .qti3-icon-button {
+      display: inline-grid;
+      place-items: center;
+      inline-size: 2.25rem;
+      block-size: 2.25rem;
+      padding: 0;
+      line-height: 1;
+    }
+
     .qti3-token[aria-pressed="true"],
     .qti3-pair-chip {
       background: Highlight;
@@ -3563,6 +3721,8 @@ function playerStyleElement(): HTMLStyleElement {
 
     .qti3-gap-passage .qti3-gap-target {
       display: inline-flex;
+      padding: 0;
+      border: 0;
       margin-inline: 0.15rem;
       margin-block: 0.2rem;
       vertical-align: middle;
@@ -3570,6 +3730,7 @@ function playerStyleElement(): HTMLStyleElement {
 
     .qti3-gap-button {
       min-inline-size: 8rem;
+      min-block-size: 2.25rem;
       text-align: start;
     }
 
