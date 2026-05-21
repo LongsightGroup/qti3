@@ -2451,7 +2451,13 @@ test.describe("manual harness", () => {
     await expectResponse(page, ["A B"]);
 
     const remove = page.getByRole("button", { name: "Remove Item XML to Response capture" });
-    await expect(remove.locator("svg.qti3-trash-icon")).toHaveCount(1);
+    const trashIcon = remove.locator("svg.qti3-trash-icon");
+    await expect(trashIcon).toHaveCount(1);
+    await expect(trashIcon).toHaveAttribute("xmlns", "http://www.w3.org/2000/svg");
+    await expect(trashIcon).toHaveAttribute("width", "24");
+    await expect(trashIcon).toHaveAttribute("height", "24");
+    await expect(trashIcon).toHaveAttribute("fill", "none");
+    await expect(trashIcon).toHaveAttribute("stroke", "currentColor");
     const hiddenPathStroke = await remove
       .locator("svg.qti3-trash-icon path")
       .first()
