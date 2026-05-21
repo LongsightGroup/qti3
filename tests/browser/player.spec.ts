@@ -1711,13 +1711,19 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player output")).toHaveText("50");
 
     await loadFixture(page, "positionObject");
-    await page.locator("qti-assessment-item-player .qti3-position-object-stage").focus();
-    await page.keyboard.press("Enter");
-    await expectResponse(page, "240 150");
-    await page.getByRole("button", { name: "Move object right" }).click();
-    await expectResponse(page, "241 150");
+    await expectResponse(page, undefined);
     await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
-      "Object positioned at 241 150",
+      "Object not placed",
+    );
+    await page.locator("qti-assessment-item-player .qti3-position-object-stage").focus();
+    await page.keyboard.press("ArrowRight");
+    await expectResponse(page, undefined);
+    await page.keyboard.press("Enter");
+    await expectResponse(page, "1 0");
+    await page.getByRole("button", { name: "Move object right" }).click();
+    await expectResponse(page, "2 0");
+    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
+      "Object positioned at 2 0",
     );
 
     await loadFixture(page, "drawing");
@@ -2264,14 +2270,24 @@ test.describe("manual harness", () => {
     const stage = page.locator("qti-assessment-item-player .qti3-position-object-stage");
     await expect(stage.locator("img").first()).toHaveAttribute("src", "hotspot-flow.svg");
     await expectImageLoaded(stage.locator("img").first());
-    await expect(stage.getByRole("button", { name: "Movable object" })).toBeVisible();
+    const marker = stage.getByRole("button", { name: "Movable object" });
+    await expect(marker).toBeVisible();
+    await expect(marker).toHaveAttribute("data-placed", "false");
+    await expectResponse(page, undefined);
+    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
+      "Object not placed",
+    );
 
     const box = await stage.boundingBox();
     expect(box?.width).toBe(480);
     expect(box?.height).toBe(300);
+    const markerBox = await marker.boundingBox();
+    if (!box || !markerBox) throw new Error("Missing position object boxes.");
+    expect(markerBox.y).toBeGreaterThanOrEqual(box.y + box.height);
 
     await clickAuthoredCoordinate(stage, 240, 88);
     await expectPointResponse(page, "240 88");
+    await expect(marker).toHaveAttribute("data-placed", "true");
     await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
       /Object positioned at 240 8[78]/,
     );

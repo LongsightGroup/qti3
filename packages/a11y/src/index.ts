@@ -238,7 +238,7 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     };
   }
 
-  if (interactionType === "selectPoint" || interactionType === "positionObject") {
+  if (interactionType === "selectPoint") {
     return {
       ...base,
       primaryRole: "button",
@@ -250,6 +250,25 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       ],
       requiredStates: [
         "selected coordinate in accessible name",
+        "aria-invalid",
+        "aria-describedby",
+      ],
+    };
+  }
+
+  if (interactionType === "positionObject") {
+    return {
+      ...base,
+      primaryRole: "button",
+      focusStrategy: "Focus lands on the placement stage and movable object controls.",
+      keyboardModel: [
+        "Unanswered objects start unplaced outside the stage.",
+        "Arrow keys place or move the selected object by one unit.",
+        "Shift plus arrow keys move by ten units.",
+        "Enter or Space commits the selected coordinate.",
+      ],
+      requiredStates: [
+        "unplaced state or selected coordinate in accessible name",
         "aria-invalid",
         "aria-describedby",
       ],

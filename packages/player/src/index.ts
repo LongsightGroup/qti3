@@ -2507,10 +2507,9 @@ function renderPositionObjectResponse(
   const height = objectAssetHeight(stageObject, 300);
   const movableWidth = objectAssetWidth(movableObject, Math.max(32, Math.round(width * 0.12)));
   const movableHeight = objectAssetHeight(movableObject, Math.max(32, Math.round(height * 0.12)));
-  let point = parsePointValue(currentValue) ?? {
-    x: Math.round(width / 2),
-    y: Math.round(height / 2),
-  };
+  const parsedPoint = parsePointValue(currentValue);
+  let point = parsedPoint ?? { x: 0, y: 0 };
+  let isPlaced = Boolean(parsedPoint);
 
   const stage = document.createElement("div");
   stage.className = "qti3-position-object-stage";
@@ -2524,8 +2523,9 @@ function renderPositionObjectResponse(
   stage.style.border = "1px solid CanvasText";
   stage.style.background = "Canvas";
   stage.style.color = "CanvasText";
-  stage.style.overflow = "hidden";
+  stage.style.overflow = "visible";
   stage.style.touchAction = "none";
+  stage.style.marginBlockEnd = `${Math.ceil(movableHeight + 12)}px`;
 
   if (stageObject?.data && objectIsImage(stageObject)) {
     const image = document.createElement("img");
@@ -2577,10 +2577,24 @@ function renderPositionObjectResponse(
     point.y = Math.max(0, Math.min(height, point.y));
   };
   const commit = () => {
+    if (!isPlaced) return;
     update(pointToString(point));
   };
   const syncMarker = () => {
+    if (!isPlaced) {
+      marker.dataset.placed = "false";
+      marker.style.insetInlineStart = `${Math.round(movableWidth / 2)}px`;
+      marker.style.insetBlockStart = `calc(100% + ${Math.round(movableHeight / 2 + 8)}px)`;
+      coordinate.value = "";
+      coordinate.textContent = "Object not placed";
+      stage.setAttribute(
+        "aria-label",
+        `${readableType(interaction.type)} placement stage, object not placed`,
+      );
+      return;
+    }
     clamp();
+    marker.dataset.placed = "true";
     marker.style.insetInlineStart = `${percent(point.x, width)}%`;
     marker.style.insetBlockStart = `${percent(point.y, height)}%`;
     coordinate.value = pointToString(point);
@@ -2596,9 +2610,16 @@ function renderPositionObjectResponse(
       x: Math.round(((event.clientX - rect.left) / rect.width) * width),
       y: Math.round(((event.clientY - rect.top) / rect.height) * height),
     };
+    isPlaced = true;
     clamp();
   };
+  const ensureKeyboardPoint = () => {
+    if (isPlaced) return;
+    point = { x: 0, y: 0 };
+    isPlaced = true;
+  };
   const moveBy = (dx: number, dy: number, emit = true) => {
+    ensureKeyboardPoint();
     point.x += dx;
     point.y += dy;
     syncMarker();
@@ -2610,22 +2631,30 @@ function renderPositionObjectResponse(
     else if (event.key === "ArrowRight") moveBy(step, 0, false);
     else if (event.key === "ArrowUp") moveBy(0, -step, false);
     else if (event.key === "ArrowDown") moveBy(0, step, false);
-    else if (event.key === "Enter" || event.key === " ") commit();
-    else return;
+    else if (event.key === "Enter" || event.key === " ") {
+      ensureKeyboardPoint();
+      syncMarker();
+      commit();
+    } else return;
     event.preventDefault();
   };
 
   let dragging = false;
+  let dragMoved = false;
   marker.addEventListener("pointerdown", (event) => {
     dragging = true;
+    dragMoved = false;
     marker.setPointerCapture(event.pointerId);
     marker.style.cursor = "grabbing";
-    pointFromPointer(event);
-    syncMarker();
+    if (isPlaced) {
+      pointFromPointer(event);
+      syncMarker();
+    }
     event.preventDefault();
   });
   marker.addEventListener("pointermove", (event) => {
     if (!dragging) return;
+    dragMoved = true;
     pointFromPointer(event);
     syncMarker();
   });
@@ -2634,9 +2663,11 @@ function renderPositionObjectResponse(
     dragging = false;
     marker.releasePointerCapture(event.pointerId);
     marker.style.cursor = "grab";
-    pointFromPointer(event);
-    syncMarker();
-    commit();
+    if (dragMoved || isPlaced) {
+      pointFromPointer(event);
+      syncMarker();
+      commit();
+    }
   });
   marker.addEventListener("pointercancel", () => {
     dragging = false;
