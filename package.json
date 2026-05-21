@@ -1,6 +1,6 @@
 {
   "name": "qti3",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Framework-neutral TypeScript packages for QTI 3 assessment items.",
   "keywords": [
