@@ -2286,6 +2286,10 @@ function renderGraphicGapMatchResponse(
   surface.style.border = "1px solid CanvasText";
   surface.style.background = "Canvas";
   surface.style.overflow = "visible";
+  surface.style.setProperty(
+    "--qti3-graphic-gap-label-block-size",
+    `${graphicGapLabelBlockSize(sources)}rem`,
+  );
 
   if (interaction.object?.data && objectIsImage(interaction.object)) {
     const image = document.createElement("img");
@@ -3619,6 +3623,15 @@ function positivePixelValue(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
+function graphicGapLabelBlockSize(sources: QtiChoice[]): number {
+  const maxLength = Math.max(
+    0,
+    ...sources.map((source) => (source.text || source.identifier).trim().length),
+  );
+  const estimatedLines = Math.max(1, Math.ceil(maxLength / 22));
+  return Number((estimatedLines * 0.95 + 0.9).toFixed(2));
+}
+
 function placeHotspotButton(
   button: HTMLButtonElement,
   choice: QtiChoice,
@@ -4693,7 +4706,7 @@ function playerStyleElement(): HTMLStyleElement {
     }
 
     .qti3-graphic-gap-match-surface {
-      margin-block-end: 1rem;
+      margin-block-end: calc(var(--qti3-graphic-gap-label-block-size, 2rem) + 0.75rem);
     }
 
     .qti3-graphic-gap-hotspot {
@@ -4716,8 +4729,10 @@ function playerStyleElement(): HTMLStyleElement {
       inset-block-start: calc(100% + 0.2rem);
       inset-inline-start: 50%;
       transform: translateX(-50%);
-      max-inline-size: 12rem;
-      min-inline-size: max-content;
+      box-sizing: border-box;
+      inline-size: max-content;
+      max-inline-size: min(12rem, calc(100vw - 2rem));
+      min-inline-size: 0;
       padding: 0.25rem 0.4rem;
       border: 1px solid CanvasText;
       border-radius: 0.25rem;
@@ -4726,8 +4741,11 @@ function playerStyleElement(): HTMLStyleElement {
       font-size: 0.75rem;
       font-weight: 700;
       line-height: 1.15;
+      overflow-wrap: anywhere;
       pointer-events: none;
       box-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
+      text-align: center;
+      white-space: normal;
     }
 
     @supports not (background: color-mix(in srgb, Highlight 18%, Canvas)) {

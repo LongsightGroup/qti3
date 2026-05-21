@@ -1530,6 +1530,25 @@ describe("@longsightgroup/qti3-core", () => {
     });
   });
 
+  it("uses object alt text as graphical object text", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="object-alt">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <object data="timeline.png" alt="Timeline graphic with three eras." type="image/png" width="480" height="260"/>
+            <qti-hotspot-choice identifier="A" shape="circle" coords="120,130,22"/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.object).toMatchObject({
+      text: "Timeline graphic with three eras.",
+    });
+  });
+
   it("requires drawing interactions to bind a single file response and canvas object", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-contract">
