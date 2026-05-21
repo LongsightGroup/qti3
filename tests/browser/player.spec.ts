@@ -2252,6 +2252,61 @@ test.describe("manual harness", () => {
     await expectResponse(page, []);
   });
 
+  test("renders hotspot-backed graphic gap match targets on the image", async ({ page }) => {
+    await page.goto("/");
+    const timelineSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="260" viewBox="0 0 480 260"><rect width="480" height="260" fill="#f4f2ea"/><line x1="80" y1="130" x2="400" y2="130" stroke="#b08d57" stroke-width="6"/><circle cx="120" cy="130" r="18" fill="#2f4858"/><circle cx="240" cy="130" r="18" fill="#2f4858"/><circle cx="360" cy="130" r="18" fill="#2f4858"/></svg>`;
+    const image = `data:image/svg+xml;base64,${Buffer.from(timelineSvg).toString("base64")}`;
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-backed-graphic-gap-match">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>A T1</qti-value><qti-value>B T2</qti-value><qti-value>C T3</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" data-choices-container-width="360" min-associations="3" max-associations="3">
+      <qti-prompt>Drag each name to the correct circle.</qti-prompt>
+      <object data="${image}" alt="Timeline graphic with three presidential eras marked." type="image/png"/>
+      <qti-gap-text identifier="A" match-max="1">George Washington</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Abraham Lincoln</qti-gap-text>
+      <qti-gap-text identifier="C" match-max="1">Franklin D. Roosevelt</qti-gap-text>
+      <qti-associable-hotspot identifier="T1" shape="circle" coords="120,130,22" match-max="1"/>
+      <qti-associable-hotspot identifier="T2" shape="circle" coords="240,130,22" match-max="1"/>
+      <qti-associable-hotspot identifier="T3" shape="circle" coords="360,130,22" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-gap-match-surface");
+    const sourceRegion = page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region");
+    await expect(surface.locator("img")).toHaveAttribute("src", /^data:image\/svg\+xml;base64,/);
+    const box = await surface.boundingBox();
+    expect(box?.width).toBe(480);
+    expect(box?.height).toBe(260);
+    await expect(sourceRegion).toContainText("George Washington");
+    await expect(sourceRegion).not.toContainText("T1");
+    await expect(sourceRegion).not.toContainText("T2");
+    await expect(sourceRegion).not.toContainText("T3");
+
+    const source = sourceRegion.getByRole("button", { name: "Abraham Lincoln" });
+    const target = surface.locator('[data-gap-identifier="T2"]');
+    await expect(target).toHaveAccessibleName("Target 2, empty");
+    await expect(target).toHaveText("");
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) throw new Error("Missing hotspot graphic gap drag boxes.");
+
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+    await page.mouse.up();
+
+    await expectResponse(page, ["B T2"]);
+    await expect(target).toHaveAccessibleName("Target 2, assigned Abraham Lincoln");
+    await expect(target).toContainText("Abraham Lincoln");
+  });
+
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "selectPoint");
