@@ -90,7 +90,7 @@ node packages/cli/dist/index.js support-matrix
 - No implementation support for deprecated QTI elements, beyond diagnostics and support-matrix awareness.
 - No runtime XSD or schema validation (semantic diagnostics stay fast and embeddable).
 
-## Planned Packages
+## Packages
 
 ```text
 packages/
