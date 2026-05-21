@@ -204,7 +204,7 @@ The initial player should use native custom elements directly. Lit is not part o
 - oxfmt
 - oxlint
 
-## Quality Gates
+## Checks
 
 Every change should pass the same checks locally and in CI:
 
