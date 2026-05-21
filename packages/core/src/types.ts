@@ -47,6 +47,13 @@ export interface QtiRecordValue {
   [fieldIdentifier: string]: QtiValue;
 }
 export type QtiValue = QtiScalarValue | QtiScalarValue[] | QtiRecordValue | null;
+export type QtiPortableCustomStateValue =
+  | string
+  | number
+  | boolean
+  | null
+  | QtiPortableCustomStateValue[]
+  | { [key: string]: QtiPortableCustomStateValue };
 
 export type QtiAttemptStatus = "initialized" | "interacting" | "suspended" | "completed";
 
@@ -188,6 +195,7 @@ export interface QtiInteraction {
   contextText?: string | undefined;
   object?: QtiObjectAsset | undefined;
   positionObjectStage?: QtiObjectAsset | undefined;
+  portableCustom?: QtiPortableCustomDefinition | undefined;
   choices: QtiChoice[];
   hottextSegments?: QtiHottextSegment[] | undefined;
   gapMatchSegments?: QtiGapMatchSegment[] | undefined;
@@ -251,6 +259,46 @@ export interface QtiMediaTrack {
   srclang?: string | undefined;
   label?: string | undefined;
   default?: boolean | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiPortableCustomDefinition {
+  responseIdentifier?: string | undefined;
+  customInteractionTypeIdentifier?: string | undefined;
+  module?: string | undefined;
+  interactionModules?: QtiPortableCustomInteractionModules | undefined;
+  interactionMarkup: QtiContentNode[];
+  interactionMarkupRaw?: string | undefined;
+  templateVariables: QtiPortableCustomVariableBinding[];
+  contextVariables: QtiPortableCustomVariableBinding[];
+  stylesheets: QtiStylesheet[];
+  catalogInfo?: QtiCatalogInfo | undefined;
+  dataAttributes: Record<string, string>;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiPortableCustomInteractionModules {
+  primaryConfiguration?: string | undefined;
+  secondaryConfiguration?: string | undefined;
+  modules: QtiPortableCustomInteractionModule[];
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiPortableCustomInteractionModule {
+  id?: string | undefined;
+  primaryPath?: string | undefined;
+  fallbackPath?: string | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiPortableCustomVariableBinding {
+  identifier?: string | undefined;
+  variableIdentifier?: string | undefined;
+  kind: "template" | "context";
   attributes: Record<string, string>;
   source?: QtiSourceLocation | undefined;
 }
@@ -617,6 +665,7 @@ export interface QtiAttemptStateV1 {
   responses: Record<string, QtiValue>;
   outcomes: Record<string, QtiValue>;
   templateValues?: Record<string, QtiValue> | undefined;
+  interactionStates?: Record<string, QtiPortableCustomStateValue> | undefined;
   validationMessages: QtiDiagnostic[];
 }
 

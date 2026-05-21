@@ -22,7 +22,7 @@ export const interactionSupport: QtiInteractionElementSupport[] = [
   entry("qti-media-interaction", "media"),
   entry("qti-order-interaction", "order"),
   entry("qti-position-object-interaction", "positionObject"),
-  entry("qti-portable-custom-interaction", "portableCustom"),
+  pciEntry(),
   entry("qti-select-point-interaction", "selectPoint"),
   entry("qti-slider-interaction", "slider"),
   entry("qti-text-entry-interaction", "textEntry"),
@@ -222,6 +222,14 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
       "packages/a11y/src/a11y.test.ts",
       "tests/browser/player.spec.ts",
     ],
+  };
+}
+
+function pciEntry(): QtiInteractionElementSupport {
+  return {
+    ...entry("qti-portable-custom-interaction", "portableCustom"),
+    notes:
+      "Parses and validates PCI metadata, exposes a browser host contract, scores captured responses, and preserves opaque interaction state. Production module execution policy belongs to the host delivery runtime.",
   };
 }
 

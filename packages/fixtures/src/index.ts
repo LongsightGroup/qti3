@@ -697,7 +697,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch an arrow showing a response moving from capture to scoring.</qti-prompt><object data="${drawingCanvasDataUri}" type="image/svg+xml" width="640" height="360"/></${qtiName}>`;
   }
   if (interactionType === "portableCustom") {
-    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom interaction contract to return A.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom interaction contract to return A.</qti-prompt><qti-interaction-modules primary-configuration="modules/module_resolution.js"><qti-interaction-module id="fixture-portable-custom" primary-path="modules/fixture-portable-custom"/></qti-interaction-modules><qti-interaction-markup><div class="qti3-fixture-pci-markup">Portable custom fixture markup</div></qti-interaction-markup></${qtiName}>`;
   }
   if (interactionType === "custom") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Enter the response value A.</qti-prompt></${qtiName}>`;

@@ -2053,21 +2053,144 @@ describe("@longsightgroup/qti3-core", () => {
   it("preserves portable custom interaction launch metadata", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci">
+        <qti-template-declaration identifier="START" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>2</qti-value></qti-default-value>
+        </qti-template-declaration>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-item-body>
           <qti-portable-custom-interaction
             response-identifier="RESPONSE"
             custom-interaction-type-identifier="urn:qti3:fixture:portable-custom"
             module="fixture-portable-custom"
-          />
+            data-mode="preview">
+            <qti-interaction-modules primary-configuration="modules/module_resolution.js">
+              <qti-interaction-module id="helper" primary-path="modules/helper"/>
+            </qti-interaction-modules>
+            <qti-template-variable template-identifier="START"/>
+            <qti-context-variable identifier="RESPONSE"/>
+            <qti-stylesheet href="pci.css"/>
+            <qti-interaction-markup><div class="widget"><qti-printed-variable identifier="START"/></div></qti-interaction-markup>
+          </qti-portable-custom-interaction>
         </qti-item-body>
       </qti-assessment-item>
     `);
 
     expect(result.ok).toBe(true);
-    expect(result.document?.item.interactions[0]?.attributes).toMatchObject({
+    const interaction = result.document?.item.interactions[0];
+    expect(interaction?.attributes).toMatchObject({
       "custom-interaction-type-identifier": "urn:qti3:fixture:portable-custom",
       module: "fixture-portable-custom",
+    });
+    expect(interaction?.portableCustom).toMatchObject({
+      customInteractionTypeIdentifier: "urn:qti3:fixture:portable-custom",
+      module: "fixture-portable-custom",
+      dataAttributes: { "data-mode": "preview" },
+      interactionModules: {
+        primaryConfiguration: "modules/module_resolution.js",
+        modules: [{ id: "helper", primaryPath: "modules/helper" }],
+      },
+      templateVariables: [{ kind: "template", identifier: "START" }],
+      contextVariables: [{ kind: "context", identifier: "RESPONSE" }],
+      stylesheets: [{ href: "pci.css" }],
+    });
+    expect(interaction?.portableCustom?.interactionMarkupRaw).toContain('<div class="widget">');
+    expect(interaction?.portableCustom?.interactionMarkup).toEqual([
+      expect.objectContaining({ kind: "element", qtiName: "div" }),
+    ]);
+  });
+
+  it("keeps portable custom interaction markup inert", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-markup-inert">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-response-declaration identifier="NESTED" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-portable-custom-interaction
+            response-identifier="RESPONSE"
+            custom-interaction-type-identifier="urn:qti3:fixture:portable-custom"
+            module="fixture-portable-custom">
+            <qti-interaction-markup>
+              <qti-choice-interaction response-identifier="NESTED">
+                <qti-simple-choice identifier="A">A</qti-simple-choice>
+              </qti-choice-interaction>
+            </qti-interaction-markup>
+          </qti-portable-custom-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.portableCustom.markupInteraction" }),
+      ]),
+    );
+    expect(result.document?.item.interactions).toHaveLength(1);
+    expect(result.document?.item.interactions[0]?.portableCustom?.interactionMarkup).toEqual([
+      expect.objectContaining({ kind: "element", qtiName: "qti-choice-interaction" }),
+    ]);
+  });
+
+  it("rejects duplicate portable custom interaction singleton children", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-duplicates">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-portable-custom-interaction
+            response-identifier="RESPONSE"
+            custom-interaction-type-identifier="urn:qti3:fixture:portable-custom">
+            <qti-interaction-modules>
+              <qti-interaction-module id="fixture-portable-custom" primary-path="modules/fixture-portable-custom"/>
+            </qti-interaction-modules>
+            <qti-interaction-modules>
+              <qti-interaction-module id="extra" primary-path="modules/extra"/>
+            </qti-interaction-modules>
+            <qti-interaction-markup><div>First</div></qti-interaction-markup>
+            <qti-interaction-markup><div>Second</div></qti-interaction-markup>
+          </qti-portable-custom-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    const duplicateDiagnostics = result.diagnostics.filter(
+      (diagnostic) => diagnostic.code === "interaction.portableCustom.child.duplicate",
+    );
+    expect(result.ok).toBe(false);
+    expect(duplicateDiagnostics).toHaveLength(2);
+    expect(duplicateDiagnostics.map((diagnostic) => diagnostic.message)).toEqual(
+      expect.arrayContaining([
+        "qti-portable-custom-interaction allows at most one qti-interaction-modules child.",
+        "qti-portable-custom-interaction allows at most one qti-interaction-markup child.",
+      ]),
+    );
+  });
+
+  it("restores opaque portable custom interaction state", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-state">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-portable-custom-interaction
+            response-identifier="RESPONSE"
+            custom-interaction-type-identifier="urn:qti3:fixture:portable-custom"
+            module="fixture-portable-custom"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", "A");
+    session.setInteractionState("RESPONSE", { selected: ["A"], cursor: 2 });
+    const state = session.serialize();
+    expect(state.interactionStates?.RESPONSE).toEqual({ selected: ["A"], cursor: 2 });
+
+    (state.interactionStates!.RESPONSE as { selected: string[] }).selected[0] = "mutated";
+    expect(session.interactionState("RESPONSE")).toEqual({ selected: ["A"], cursor: 2 });
+
+    const restored = createItemSession(result.document!, session.serialize());
+    expect(restored.serialize().interactionStates?.RESPONSE).toEqual({
+      selected: ["A"],
+      cursor: 2,
     });
   });
 
