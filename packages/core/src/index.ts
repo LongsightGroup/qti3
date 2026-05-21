@@ -1,5 +1,21 @@
 export { parseQtiXml } from "./parser.js";
 export {
+  createTextToSpeechTraversal,
+  parseQtiDataSsml,
+  validateQtiDataSsmlMetadata,
+  type QtiDataSsml,
+  type QtiDataSsmlBreak,
+  type QtiDataSsmlBreakStrength,
+  type QtiDataSsmlParseResult,
+  type QtiDataSsmlPhoneme,
+  type QtiDataSsmlProsody,
+  type QtiDataSsmlSayAs,
+  type QtiDataSsmlSub,
+  type QtiTextToSpeechSegment,
+  type QtiTextToSpeechSegmentKind,
+  type QtiTextToSpeechTraversal,
+} from "./tts.js";
+export {
   assertQtiAttemptStateV1,
   createItemSession,
   isQtiAttemptStateV1,

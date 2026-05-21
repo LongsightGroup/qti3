@@ -473,6 +473,8 @@ function parseInteraction(
     responseCardinality: responseDeclaration?.cardinality,
     responseBaseType: responseDeclaration?.baseType,
     prompt: prompt ? textContent(prompt) : undefined,
+    promptAttributes: prompt?.attributes,
+    promptSource: prompt?.source,
     contextText: inlineInteractionContext(node, interactionType),
     object: parseObjectAsset(objectNode),
     positionObjectStage:

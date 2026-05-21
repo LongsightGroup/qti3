@@ -20,6 +20,7 @@ import type {
   QtiValue,
   QtiValidationResult,
 } from "./types.js";
+import { validateQtiDataSsmlMetadata } from "./tts.js";
 
 const BUILT_IN_COMPLETION_STATUS = "completionStatus";
 
@@ -34,6 +35,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateModalFeedback(item, diagnostics);
   validateCatalogInfo(item, diagnostics);
   validateStylesheets(item, diagnostics);
+  diagnostics.push(...validateQtiDataSsmlMetadata(item));
   validateProcessingReferences(item, diagnostics);
 
   return {
