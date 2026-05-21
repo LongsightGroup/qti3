@@ -454,10 +454,12 @@ function parseInteraction(
       ? positionObjectInteractionObject(node)
       : interactionType === "media"
         ? mediaInteractionObject(node)
-        : descendants(
-            node,
-            (child) => child.localName === "object" || child.localName === "img",
-          )[0];
+        : interactionType === "drawing"
+          ? drawingInteractionObject(node)
+          : descendants(
+              node,
+              (child) => child.localName === "object" || child.localName === "img",
+            )[0];
 
   return {
     type: interactionType ?? "custom",
@@ -501,6 +503,13 @@ function mediaInteractionObject(node: XmlNode): XmlNode | undefined {
       child.localName === "video" ||
       child.localName === "object" ||
       child.localName === "img",
+  );
+}
+
+function drawingInteractionObject(node: XmlNode): XmlNode | undefined {
+  return childElements(node).find(
+    (child) =>
+      child.localName === "object" || child.localName === "img" || child.localName === "picture",
   );
 }
 
@@ -607,29 +616,37 @@ function normalizeInlineContext(value: string): string | undefined {
 
 function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined {
   if (!node) return undefined;
-  const data = node.attributes.data ?? node.attributes.src;
+  const pictureImage = node.localName === "picture" ? childElements(node, "img")[0] : undefined;
+  const data = node.attributes.data ?? node.attributes.src ?? pictureImage?.attributes.src;
   const sources = parseMediaSources(node);
   const tracks = parseMediaTracks(node);
   return {
     data,
-    type: node.attributes.type ?? assetTypeFromData(data) ?? firstSourceType(sources),
-    width: node.attributes.width,
-    height: node.attributes.height,
+    type:
+      node.attributes.type ??
+      pictureImage?.attributes.type ??
+      assetTypeFromData(data) ??
+      firstSourceType(sources),
+    width: node.attributes.width ?? pictureImage?.attributes.width,
+    height: node.attributes.height ?? pictureImage?.attributes.height,
     sources,
     tracks,
-    text: textContent(node),
+    text: textContent(node) || pictureImage?.attributes.alt || "",
     attributes: node.attributes,
     source: node.source,
   };
 }
 
 function parseMediaSources(node: XmlNode): QtiMediaSource[] {
-  return childElements(node, "source").map((source) => ({
-    src: source.attributes.src,
-    type: source.attributes.type ?? assetTypeFromData(source.attributes.src),
-    attributes: source.attributes,
-    source: source.source,
-  }));
+  return childElements(node, "source").map((source) => {
+    const src = source.attributes.src ?? firstSrcsetCandidate(source.attributes.srcset);
+    return {
+      src,
+      type: source.attributes.type ?? assetTypeFromData(src),
+      attributes: source.attributes,
+      source: source.source,
+    };
+  });
 }
 
 function parseMediaTracks(node: XmlNode): QtiObjectAsset["tracks"] {
@@ -650,6 +667,13 @@ function firstSourceType(sources: QtiMediaSource[]): string | undefined {
   return sources.find((source) => source.src)?.src
     ? assetTypeFromData(sources.find((source) => source.src)?.src)
     : undefined;
+}
+
+function firstSrcsetCandidate(srcset: string | undefined): string | undefined {
+  return srcset
+    ?.split(",")
+    .map((candidate) => candidate.trim().split(/\s+/)[0])
+    .find((candidate) => candidate && candidate.length > 0);
 }
 
 function assetTypeFromData(data: string | undefined): string | undefined {

@@ -1663,7 +1663,7 @@ test.describe("manual harness", () => {
     await loadFixture(page, "drawing");
     await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
     await page.keyboard.press("Enter");
-    await expectResponse(page, "10 10 90 90");
+    await expectStringResponse(page, /^data:image\/svg\+xml;charset=utf-8,/);
 
     await loadFixture(page, "portableCustom");
     await page.locator("qti-assessment-item-player .qti3-portable-custom-host + input").focus();
@@ -2222,7 +2222,7 @@ test.describe("manual harness", () => {
     );
   });
 
-  test("captures drawing responses as deterministic stroke data", async ({ page }) => {
+  test("captures drawing responses as file data URLs", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "drawing");
 
@@ -2244,17 +2244,27 @@ test.describe("manual harness", () => {
     await page.mouse.move(box.x + 120, box.y + 20);
     await page.mouse.up();
 
-    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
-    });
-    expect(state.responses.RESPONSE).toMatch(/\d+ \d+ \d+ \d+ \d+ \d+ \| \d+ \d+ \d+ \d+/);
+    const response = await expectStringResponse(page, /^data:image\/svg\+xml;charset=utf-8,/);
+    const svg = decodeDataUrlText(response);
+    expect(svg).toContain("<polyline");
+    expect(svg).toContain("data-qti3-strokes");
+    expect(svg).not.toMatch(/timestamp/i);
     await expect(surface.locator("polyline")).toHaveCount(2);
     await expect(page.locator("qti-assessment-item-player output")).toContainText(
       "2 drawing strokes.",
     );
 
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    await page.locator("qti-assessment-item-player").evaluate((element, attemptState) => {
+      element.reset();
+      element.restore(attemptState);
+    }, state);
+    await expect(surface.locator("polyline")).toHaveCount(2);
+
     await page.getByRole("button", { name: "Clear drawing" }).click();
-    await expectResponse(page, "");
+    await expectResponse(page, null);
     await expect(surface.locator("polyline")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Replay last stroke" })).toHaveCount(0);
   });
@@ -2265,7 +2275,7 @@ test.describe("manual harness", () => {
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-sized" title="drawing-sized">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
   <qti-item-body>
     <qti-drawing-interaction response-identifier="RESPONSE">
       <qti-prompt>Annotate the diagram.</qti-prompt>
@@ -2280,6 +2290,83 @@ test.describe("manual harness", () => {
     const box = await surface.boundingBox();
     expect(box?.width).toBe(480);
     expect(box?.height).toBe(300);
+  });
+
+  test("exports raster-backed drawing responses as the original image MIME", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-raster" title="drawing-raster">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
+  <qti-item-body>
+    <qti-drawing-interaction response-identifier="RESPONSE">
+      <qti-prompt>Annotate the image.</qti-prompt>
+      <object data="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAwUBAWoFfSAAAAAASUVORK5CYII=" type="image/png" width="100" height="60"/>
+    </qti-drawing-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    await surface.focus();
+    await page.keyboard.press("Enter");
+
+    const response = await expectStringResponse(page, /^data:image\/png;base64,/);
+    expect(response).not.toMatch(/timestamp/i);
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    await page.locator("qti-assessment-item-player").evaluate((element, attemptState) => {
+      element.reset();
+      element.restore(attemptState);
+    }, state);
+    await expect(surface.locator("image")).toHaveAttribute("href", /^data:image\/png;base64,/);
+    await expect(surface.locator("polyline")).toHaveCount(0);
+  });
+
+  test("embeds packaged drawing backgrounds in serialized SVG responses", async ({ page }) => {
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="drawing" type="imsqti_item_xmlv3p0" href="items/drawing.xml">
+      <file href="items/drawing.xml"/>
+      <file href="items/assets/canvas.svg"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/drawing.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-drawing">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
+  <qti-item-body>
+    <qti-drawing-interaction response-identifier="RESPONSE">
+      <qti-prompt>Annotate the packaged image.</qti-prompt>
+      <object data="assets/canvas.svg" type="image/svg+xml" width="120" height="80"/>
+    </qti-drawing-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+      "items/assets/canvas.svg": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><rect width="120" height="80" fill="white"/></svg>`,
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "drawing-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("items/drawing.xml");
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    await surface.focus();
+    await page.keyboard.press("Enter");
+
+    const response = await expectStringResponse(page, /^data:image\/svg\+xml;charset=utf-8,/);
+    const svg = decodeDataUrlText(response);
+    expect(svg).toContain("data:image/svg+xml");
+    expect(svg).not.toContain("blob:");
+    expect(svg).not.toContain("assets/canvas.svg");
   });
 
   test("renders object-backed hotspot choices as positioned buttons", async ({ page }) => {
@@ -2704,10 +2791,39 @@ async function expectResponse(
   page: import("@playwright/test").Page,
   expected: unknown,
 ): Promise<void> {
+  expect(await currentResponse(page)).toEqual(expected);
+}
+
+async function expectStringResponse(
+  page: import("@playwright/test").Page,
+  pattern: RegExp,
+): Promise<string> {
+  await expect
+    .poll(async () => {
+      const value = await currentResponse(page);
+      return typeof value === "string" ? value : "";
+    })
+    .toMatch(pattern);
+  const value = await currentResponse(page);
+  if (typeof value !== "string") throw new Error("Expected string response.");
+  return value;
+}
+
+async function currentResponse(page: import("@playwright/test").Page): Promise<unknown> {
   const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
     return element.serialize();
   });
-  expect(state.responses.RESPONSE).toEqual(expected);
+  return state.responses.RESPONSE;
+}
+
+function decodeDataUrlText(dataUrl: string): string {
+  const comma = dataUrl.indexOf(",");
+  if (comma === -1) return "";
+  const metadata = dataUrl.slice(0, comma);
+  const payload = dataUrl.slice(comma + 1);
+  return metadata.includes(";base64")
+    ? Buffer.from(payload, "base64").toString("utf8")
+    : decodeURIComponent(payload);
 }
 
 async function expectPointResponse(
