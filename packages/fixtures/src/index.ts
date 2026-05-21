@@ -34,6 +34,8 @@ export interface QtiFixture {
 
 const silentWavDataUri =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+const drawingCanvasDataUri =
+  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='white'/%3E%3C/svg%3E";
 
 export const interactionFixtures: QtiFixture[] = interactionSupport.map((support) =>
   createInteractionFixture(support.interactionType, support.qtiName),
@@ -68,6 +70,7 @@ function createInteractionFixture(
   const id = `${interactionType}-reference`;
   const response = defaultResponse(interactionType);
   const body = renderInteractionXml(qtiName, interactionType);
+  const hasAttemptResponse = Boolean(response.identifier && response.correct !== null);
 
   return {
     id,
@@ -81,13 +84,13 @@ function createInteractionFixture(
     attempts: [
       {
         name: "correct",
-        responses: response.identifier ? { [response.identifier]: response.correct } : {},
-        expectedOutcomes: response.identifier ? { SCORE: 1 } : { SCORE: 0 },
-        expectedResponses: response.identifier ? { [response.identifier]: response.correct } : {},
+        responses: hasAttemptResponse ? { [response.identifier!]: response.correct } : {},
+        expectedOutcomes: hasAttemptResponse ? { SCORE: 1 } : { SCORE: 0 },
+        expectedResponses: hasAttemptResponse ? { [response.identifier!]: response.correct } : {},
         expectedState: {
           schema: "qti3.attempt-state.v1",
           itemIdentifier: id,
-          status: response.identifier ? "interacting" : "initialized",
+          status: hasAttemptResponse ? "interacting" : "initialized",
         },
       },
     ],
@@ -526,7 +529,7 @@ function assessmentItem(
   const responseDeclaration = response.identifier
     ? `
       <qti-response-declaration identifier="${response.identifier}" cardinality="${response.cardinality}" base-type="${response.baseType}">
-        <qti-correct-response>${valuesXml(response.correct)}</qti-correct-response>${areaMappingXml}
+        ${response.correct === null ? "" : `<qti-correct-response>${valuesXml(response.correct)}</qti-correct-response>`}${areaMappingXml}
       </qti-response-declaration>`
     : "";
 
@@ -635,8 +638,8 @@ function defaultResponse(interactionType: QtiInteractionType): {
     return {
       identifier: "RESPONSE",
       cardinality: "single",
-      baseType: "string",
-      correct: "10 10 90 90",
+      baseType: "file",
+      correct: null,
     };
   }
   if (interactionType === "textEntry") {
@@ -691,7 +694,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a text file named upload.txt containing implementation notes.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "drawing") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch an arrow showing a response moving from capture to scoring.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch an arrow showing a response moving from capture to scoring.</qti-prompt><object data="${drawingCanvasDataUri}" type="image/svg+xml" width="640" height="360"/></${qtiName}>`;
   }
   if (interactionType === "portableCustom") {
     return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom interaction contract to return A.</qti-prompt></${qtiName}>`;

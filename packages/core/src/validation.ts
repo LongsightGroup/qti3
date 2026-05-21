@@ -1693,7 +1693,10 @@ function validateInteractionRequiredAttributes(
     diagnostics.push({
       code: "interaction.object.required",
       severity: "error",
-      message: `${interaction.qtiName} requires an object child with a data attribute or media sources.`,
+      message:
+        interaction.type === "drawing"
+          ? `${interaction.qtiName} requires an object, img, or picture canvas with a data/src attribute.`
+          : `${interaction.qtiName} requires an object, img, audio, or video child with a data/src attribute or media sources.`,
       path: interaction.source?.path,
       source: interaction.source,
     });
@@ -1766,7 +1769,8 @@ function requiresObject(interaction: QtiInteraction): boolean {
     interaction.type === "hotspot" ||
     interaction.type === "selectPoint" ||
     interaction.type === "positionObject" ||
-    interaction.type === "media"
+    interaction.type === "media" ||
+    interaction.type === "drawing"
   );
 }
 
@@ -1776,6 +1780,7 @@ function hasRequiredObjectAsset(interaction: QtiInteraction): boolean {
       interaction.object?.data || interaction.object?.sources.some((source) => Boolean(source.src)),
     );
   }
+  if (interaction.type === "drawing") return Boolean(interaction.object?.data);
   return Boolean(interaction.object?.data);
 }
 
@@ -2097,7 +2102,7 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "media":
       return setOf(common, ["audio", "video", "object", "img"]);
     case "drawing":
-      return setOf(common, ["object", "img"]);
+      return setOf(common, ["object", "img", "picture"]);
     case "extendedText":
       return new Set(common);
     case "portableCustom":
@@ -2199,7 +2204,8 @@ function expectedResponseShape(
   if (interaction.type === "textEntry" || interaction.type === "extendedText") {
     return { cardinalities: ["single"], baseTypes: ["string"] };
   }
-  if (interaction.type === "drawing" || interaction.type === "portableCustom") {
+  if (interaction.type === "drawing") return { cardinalities: ["single"], baseTypes: ["file"] };
+  if (interaction.type === "portableCustom") {
     return { cardinalities: ["single"], baseTypes: ["string", "file", "uri"] };
   }
   return { cardinalities: ["single", "multiple"], baseTypes: ["identifier"] };

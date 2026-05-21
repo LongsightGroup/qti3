@@ -1,18 +1,19 @@
 # qti3
 
-`qti3` is a dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.
+`qti3` is a dependency-light, framework-neutral TypeScript reference implementation for
+QTI 3 assessment items.
 
-The project is being prepared for its first public release. The 0.1.0 target is a clean,
-auditable item engine for parsing, validating, rendering, scoring, serializing, restoring,
-and testing QTI 3 items across products. The core stays independent of any UI framework.
+The project is in early public releases. The current target is a clean, auditable item
+engine for parsing, validating, rendering, scoring, serializing, restoring, and testing QTI
+3 items across products. The core stays independent of any UI framework.
 
 This is not another framework-specific item player. The public project focuses on QTI
 item and question-type conformance. Host products own runners, controllers, LMS shells,
 candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations.
 
-## First release goals
+## Release goals
 
-For 0.1.0, we are focusing on:
+For the early `0.1.x` releases, we are focusing on:
 
 - A strict TypeScript core for parsing, validation, response processing, scoring, and saved attempt state.
 - A native web component player that host products can embed without adopting a framework.
@@ -135,11 +136,27 @@ await player.loadXml(packageItemXml, {
 player.addEventListener("qti-statechange", (event) => {
   saveState(event.detail.state);
 });
+
+player.addEventListener("qti-responsechange", (event) => {
+  console.log(event.detail.responseIdentifier, event.detail.value);
+});
+
+player.addEventListener("qti-validation", (event) => {
+  console.log(event.detail.validationMessages, event.detail.state);
+});
 ```
 
 `resolveAsset` is a host hook for package or virtual-file environments. The player calls it
 for relative `src`, `href`, and `data` asset URLs after rendering the item. Normal
-web-served items can omit it.
+web-served items can omit it. Package-backed media, graphic, and drawing assets should use
+this hook so rendered controls and serialized response exports can resolve authored asset
+references.
+
+Two response-bearing interactions have format-specific contracts worth calling out:
+
+- `qti-media-interaction` records play experiences as a `single` / `integer` response.
+- `qti-drawing-interaction` requires a `single` / `file` response and serializes candidate
+  drawings as image file data URLs.
 
 ## Styling
 
@@ -220,8 +237,15 @@ pnpm test:conformance
 pnpm test:a11y
 pnpm check:deps
 pnpm build
+pnpm check:maps
 pnpm check:exports
 pnpm test:browser
+```
+
+The publish gate is the combined release check:
+
+```sh
+pnpm release:check
 ```
 
 The browser harness is available with:

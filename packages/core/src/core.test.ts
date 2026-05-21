@@ -1503,6 +1503,74 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("parses picture-backed drawing canvases", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-picture">
+        <qti-response-declaration identifier="DRAWING" cardinality="single" base-type="file"/>
+        <qti-item-body>
+          <qti-drawing-interaction response-identifier="DRAWING">
+            <qti-prompt>Annotate the canvas.</qti-prompt>
+            <picture>
+              <source srcset="canvas.webp 1x" type="image/webp"/>
+              <img src="canvas.png" alt="Drawing canvas" width="320" height="180"/>
+            </picture>
+          </qti-drawing-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.object).toMatchObject({
+      data: "canvas.png",
+      type: "image/*",
+      width: "320",
+      height: "180",
+      text: "Drawing canvas",
+      sources: [expect.objectContaining({ src: "canvas.webp", type: "image/webp" })],
+    });
+  });
+
+  it("requires drawing interactions to bind a single file response and canvas object", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-contract">
+        <qti-response-declaration identifier="DRAWING" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <qti-drawing-interaction response-identifier="DRAWING">
+            <qti-prompt>Draw a response.</qti-prompt>
+          </qti-drawing-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.baseType" }),
+        expect.objectContaining({ code: "interaction.object.required" }),
+      ]),
+    );
+  });
+
+  it("rejects source-only drawing canvases because no canvas image is renderable", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-source-only">
+        <qti-response-declaration identifier="DRAWING" cardinality="single" base-type="file"/>
+        <qti-item-body>
+          <qti-drawing-interaction response-identifier="DRAWING">
+            <object>
+              <source src="canvas.svg" type="image/svg+xml"/>
+            </object>
+          </qti-drawing-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "interaction.object.required" }),
+    );
+  });
+
   it("parses, validates, and resolves modal feedback", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback">
