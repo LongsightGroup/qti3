@@ -59,6 +59,9 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 
 - Treat `pnpm verify` as the minimum local pre-merge check once implementation exists.
 - Do not mark an interaction or element supported without fixture tests and support-matrix metadata.
+- Every supported current, non-deprecated QTI 3 item interaction needs response-shape assertions, scoring coverage, browser rendering coverage, keyboard coverage, and accessibility proof metadata.
+- Processing coverage should include response processing, template processing, feedback, printed variables, MathML/template variables, catalogs, shared CSS vocabulary, advanced numeric/container/point expressions, and adaptive `completionStatus` behavior.
+- Public fixtures must be synthetic and MIT-licensed.
 - Do not accept lint warnings, type errors, skipped tests, or broad `any` usage in public APIs.
 - Keep core tests DOM-free.
 - Add Playwright and axe-core coverage for browser-facing behavior.

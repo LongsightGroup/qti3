@@ -304,14 +304,23 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
 - Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.
 
-## Reference Coverage
+## Coverage
 
-- Every current, non-deprecated QTI 3 item interaction has a public fixture, response-shape assertions, scoring coverage, browser rendering coverage, keyboard coverage, and accessibility proof metadata.
-- Processing coverage includes response processing, template processing, feedback, printed variables, MathML/template variables, catalogs, shared CSS vocabulary, advanced numeric/container/point expressions, and adaptive `completionStatus` behavior.
-- Serialized attempt state is the public save/resume/review contract. Core and player APIs clone returned state and score values so hosts do not depend on or mutate private runtime state.
-- The manual harness debugger exposes responses, outcomes, template values, diagnostics, validation messages, serialized state, package item navigation, action history, and accessibility proof scripts.
-- Public fixtures are synthetic and MIT-licensed.
-- Package and assessment-test support is limited to item discovery, item-reference traversal, asset resolution, validation, and item loading. A full runner/controller remains a host-product concern.
+`qti3` includes public synthetic fixtures for every current, non-deprecated QTI 3 item
+interaction. Those fixtures cover response shape, scoring, browser rendering, keyboard
+operation, and accessibility evidence.
+
+Processing coverage includes response processing, template processing, feedback, printed
+variables, MathML/template variables, catalogs, shared CSS vocabulary, advanced
+numeric/container/point expressions, and adaptive `completionStatus` behavior.
+
+The manual harness exposes debugger panels for responses, outcomes, template values,
+diagnostics, validation messages, serialized state, package item navigation, action
+history, and accessibility proof scripts.
+
+Package and assessment-test support is item-focused: discovery, item-reference traversal,
+asset resolution, validation, and item loading. A full runner/controller remains a host
+product concern.
 
 ## Publishing
 
