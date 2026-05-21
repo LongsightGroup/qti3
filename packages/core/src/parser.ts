@@ -144,6 +144,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
   return {
     identifier,
     title: node.attributes.title,
+    language: node.attributes["xml:lang"] ?? node.attributes.lang,
     adaptive: node.attributes.adaptive === "true",
     prompt: prompt ? textContent(prompt) : undefined,
     responseDeclarations,

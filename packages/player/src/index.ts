@@ -255,6 +255,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.applyDefaultStyles();
     const root = document.createElement("article");
     root.className = "qti3-player";
+    if (documentModel.item.language) {
+      root.lang = documentModel.item.language;
+      root.setAttribute("xml:lang", documentModel.item.language);
+    }
     root.append(playerStyleElement());
 
     if (documentModel.item.prompt && documentModel.item.body.length === 0) {
@@ -585,11 +589,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
     if (node.qtiName === "qti-prompt") {
       const prompt = document.createElement("p");
-      prompt.className = "qti3-item-prompt";
+      copySafeAttributes(prompt, node.attributes);
+      prompt.classList.add("qti3-item-prompt");
       prompt.append(...this.renderContentNodes(node.children));
       return [prompt];
     }
 
+    if (unsafeContentElements.has(node.qtiName)) return [];
     const elementName = contentElementName(node.qtiName);
     if (!elementName) return this.renderContentNodes(node.children);
     const element = createContentElement(elementName);
@@ -4026,6 +4032,8 @@ const htmlContentElements = new Set([
   "a",
   "abbr",
   "b",
+  "bdi",
+  "bdo",
   "blockquote",
   "br",
   "caption",
@@ -4039,6 +4047,12 @@ const htmlContentElements = new Set([
   "em",
   "figcaption",
   "figure",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
   "hr",
   "i",
   "img",
@@ -4048,6 +4062,12 @@ const htmlContentElements = new Set([
   "p",
   "pre",
   "q",
+  "rb",
+  "rbc",
+  "rp",
+  "rt",
+  "rtc",
+  "ruby",
   "samp",
   "small",
   "span",
@@ -4064,6 +4084,8 @@ const htmlContentElements = new Set([
   "ul",
   "var",
 ]);
+
+const unsafeContentElements = new Set(["script", "style"]);
 
 const mathMlElements = new Set([
   "math",
@@ -4129,32 +4151,38 @@ function copySafeAttributes(element: Element, attributes: Record<string, string>
   for (const [name, value] of Object.entries(attributes)) {
     if (!isSafeContentAttribute(name, value)) continue;
     element.setAttribute(name, value);
+    if (name === "xml:lang" && !Object.hasOwn(attributes, "lang")) {
+      element.setAttribute("lang", value);
+    }
   }
 }
 
 function isSafeContentAttribute(name: string, value: string): boolean {
-  if (name.startsWith("on")) return false;
-  if (name === "style") return false;
-  if (name === "href" || name === "src" || name === "data") {
+  const normalizedName = name.toLowerCase();
+  if (normalizedName.startsWith("on")) return false;
+  if (normalizedName === "style") return false;
+  if (normalizedName === "href" || normalizedName === "src" || normalizedName === "data") {
     return isSafeUrl(value);
   }
   return (
-    name === "alt" ||
-    name === "aria-label" ||
-    name === "aria-describedby" ||
-    name === "class" ||
-    name === "colspan" ||
-    name === "height" ||
-    name === "id" ||
-    name === "lang" ||
-    name === "role" ||
-    name === "rowspan" ||
-    name === "scope" ||
-    name === "title" ||
-    name === "type" ||
-    name === "width" ||
-    mathMlAttributeNames.has(name) ||
-    name.startsWith("data-")
+    normalizedName === "alt" ||
+    normalizedName === "class" ||
+    normalizedName === "colspan" ||
+    normalizedName === "dir" ||
+    normalizedName === "headers" ||
+    normalizedName === "height" ||
+    normalizedName === "id" ||
+    normalizedName === "lang" ||
+    normalizedName === "role" ||
+    normalizedName === "rowspan" ||
+    normalizedName === "scope" ||
+    normalizedName === "title" ||
+    normalizedName === "type" ||
+    normalizedName === "width" ||
+    normalizedName === "xml:lang" ||
+    mathMlAttributeNames.has(normalizedName) ||
+    normalizedName.startsWith("aria-") ||
+    normalizedName.startsWith("data-")
   );
 }
 

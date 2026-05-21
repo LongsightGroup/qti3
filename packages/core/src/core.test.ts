@@ -592,6 +592,19 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("preserves assessment item language metadata", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="language" xml:lang="ja">
+        <qti-item-body>
+          <p>言語メタデータを保持します。</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.language).toBe("ja");
+  });
+
   it("preserves and validates item catalog metadata", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-item">
