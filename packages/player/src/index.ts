@@ -257,15 +257,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       }
     }
 
-    const actions = document.createElement("div");
-    actions.className = "qti3-actions";
-    const score = document.createElement("button");
-    score.type = "button";
-    score.textContent = "Score";
-    score.addEventListener("click", () => this.scoreAttempt());
-    actions.append(score);
-    root.append(actions);
-
     const feedback = document.createElement("section");
     feedback.className = "qti3-feedback";
     feedback.role = "status";
@@ -578,7 +569,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     for (const control of this.querySelectorAll<
       HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >(
-      ".qti3-interaction button, .qti3-interaction input, .qti3-interaction select, .qti3-interaction textarea, .qti3-actions button",
+      ".qti3-interaction button, .qti3-interaction input, .qti3-interaction select, .qti3-interaction textarea",
     )) {
       control.disabled = completed;
     }
@@ -3495,7 +3486,6 @@ function playerStyleElement(): HTMLStyleElement {
       margin-block-start: 0.75rem;
     }
 
-    .qti3-actions,
     .qti3-reorder-item,
     .qti3-token-region,
     .qti3-pair-chip,

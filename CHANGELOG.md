@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 - 2026-05-21
 
 ### Fixed
 
+- Remove the built-in candidate-facing `Score` button from `qti3-player`; scoring remains available through host APIs and harness controls.
 - Include packaged TypeScript source files referenced by published source maps.
 - Add a release check that verifies package tarballs include every non-URL source referenced by shipped source maps.
 

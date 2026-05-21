@@ -10,6 +10,19 @@ import {
 
 const require = createRequire(import.meta.url);
 
+const operableControlSelector = [
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "audio[controls]",
+  "video[controls]",
+  "a[href]",
+  '[role="button"]',
+  '[role="slider"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
 test.describe("manual harness", () => {
   test("loads every reference interaction fixture without axe violations", async ({ page }) => {
     await page.goto("/");
@@ -45,6 +58,16 @@ test.describe("manual harness", () => {
     }
   });
 
+  test("does not render host scoring controls inside the item player", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "choice");
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-actions")).toHaveCount(0);
+    await expect(player.getByRole("button", { name: "Score", exact: true })).toHaveCount(0);
+    await expect(page.locator("#debug-score")).toHaveText("Score attempt");
+  });
+
   test("accepts pasted QTI XML and emits score state", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??
@@ -54,7 +77,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await pasteXml(page, fixture.xml);
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     await expect(page.locator("#events")).toContainText("qti3.attempt-state.v1");
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "scored");
     await expect(page.locator("#score-status")).toHaveText("Scored successfully.");
@@ -426,7 +449,7 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await pasteXml(page, xml);
     await page.getByRole("radio", { name: "A" }).check();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
     await expect(feedback).toBeVisible();
@@ -475,7 +498,7 @@ test.describe("manual harness", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toBeHidden();
 
     await page.getByRole("radio", { name: "A. Correct" }).check();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     await expect(
       page.locator('qti-assessment-item-player .qti3-printed-variable[data-identifier="SCORE"]'),
@@ -675,7 +698,7 @@ test.describe("manual harness", () => {
     });
     expect(state.responses.RESPONSE).toEqual(["A G1", "B G2"]);
 
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     const scored = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -701,7 +724,7 @@ test.describe("manual harness", () => {
     });
     await expectResponse(page, "A");
 
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -731,7 +754,7 @@ test.describe("manual harness", () => {
     });
     expect(loadedState.status).toBe("interacting");
 
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     const scoredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -1042,7 +1065,7 @@ test.describe("manual harness", () => {
           return element.serialize();
         });
       if (stateBeforeScore.status !== "completed") {
-        await page.getByRole("button", { name: "Score", exact: true }).click();
+        await page.locator("#debug-score").click();
       }
       const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
         return element.serialize();
@@ -1167,7 +1190,7 @@ test.describe("manual harness", () => {
     );
 
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     const completedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -1252,7 +1275,7 @@ test.describe("manual harness", () => {
 
     await page.goto("/");
     await pasteXml(page, xml);
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     const blockedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -1322,7 +1345,7 @@ test.describe("manual harness", () => {
     await expect(
       page.locator('qti-assessment-item-player [data-interaction-type="endAttempt"] button'),
     ).toBeDisabled();
-    await expect(page.locator("qti-assessment-item-player .qti3-actions button")).toBeDisabled();
+    await expect(page.locator("qti-assessment-item-player .qti3-actions")).toHaveCount(0);
 
     const completedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -1558,19 +1581,7 @@ test.describe("manual harness", () => {
       await page.locator("#fixture").selectOption(fixture.id);
       await page.locator("#load-fixture").click();
 
-      const controls = page
-        .locator("qti-assessment-item-player")
-        .locator(
-          [
-            "button",
-            "input",
-            "select",
-            "textarea",
-            '[role="button"]',
-            '[role="slider"]',
-            '[tabindex]:not([tabindex="-1"])',
-          ].join(", "),
-        );
+      const controls = page.locator("qti-assessment-item-player").locator(operableControlSelector);
       const count = await controls.count();
       expect(count, fixture.id).toBeGreaterThan(0);
       for (let index = 0; index < count; index += 1) {
@@ -1588,60 +1599,53 @@ test.describe("manual harness", () => {
       await page.locator("#fixture").selectOption(fixture.id);
       await page.locator("#load-fixture").click();
 
-      const result = await page.locator("qti-assessment-item-player").evaluate((player) => {
-        const selector = [
-          "button",
-          "input",
-          "select",
-          "textarea",
-          '[role="button"]',
-          '[role="slider"]',
-          '[tabindex]:not([tabindex="-1"])',
-        ].join(", ");
-        const isVisible = (element: HTMLElement): boolean => {
-          const style = window.getComputedStyle(element);
-          return (
-            style.display !== "none" &&
-            style.visibility !== "hidden" &&
-            element.getClientRects().length > 0
+      const result = await page
+        .locator("qti-assessment-item-player")
+        .evaluate((player, selector) => {
+          const isVisible = (element: HTMLElement): boolean => {
+            const style = window.getComputedStyle(element);
+            return (
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              element.getClientRects().length > 0
+            );
+          };
+          const describe = (element: HTMLElement): string => {
+            const label =
+              element.getAttribute("aria-label") ??
+              element.getAttribute("title") ??
+              element.textContent?.trim() ??
+              element.getAttribute("value") ??
+              element.tagName.toLowerCase();
+            return `${element.tagName.toLowerCase()} ${label.replace(/\s+/g, " ").slice(0, 80)}`;
+          };
+          const controls = Array.from(player.querySelectorAll<HTMLElement>(selector)).filter(
+            (element) => {
+              if (!isVisible(element)) return false;
+              if (element.getAttribute("aria-hidden") === "true") return false;
+              if (element instanceof HTMLInputElement && element.type === "hidden") return false;
+              if ("disabled" in element && Boolean((element as HTMLButtonElement).disabled)) {
+                return false;
+              }
+              return true;
+            },
           );
-        };
-        const describe = (element: HTMLElement): string => {
-          const label =
-            element.getAttribute("aria-label") ??
-            element.getAttribute("title") ??
-            element.textContent?.trim() ??
-            element.getAttribute("value") ??
-            element.tagName.toLowerCase();
-          return `${element.tagName.toLowerCase()} ${label.replace(/\s+/g, " ").slice(0, 80)}`;
-        };
-        const controls = Array.from(player.querySelectorAll<HTMLElement>(selector)).filter(
-          (element) => {
-            if (!isVisible(element)) return false;
-            if (element.getAttribute("aria-hidden") === "true") return false;
-            if (element instanceof HTMLInputElement && element.type === "hidden") return false;
-            if ("disabled" in element && Boolean((element as HTMLButtonElement).disabled)) {
-              return false;
-            }
-            return true;
-          },
-        );
-        return {
-          controlCount: controls.length,
-          positiveTabIndex: controls
-            .filter((element) => element.tabIndex > 0)
-            .map((element) => describe(element)),
-          unfocusable: controls
-            .filter((element) => element.tabIndex < 0)
-            .map((element) => describe(element)),
-          focusFailures: controls
-            .filter((element) => {
-              element.focus();
-              return document.activeElement !== element;
-            })
-            .map((element) => describe(element)),
-        };
-      });
+          return {
+            controlCount: controls.length,
+            positiveTabIndex: controls
+              .filter((element) => element.tabIndex > 0)
+              .map((element) => describe(element)),
+            unfocusable: controls
+              .filter((element) => element.tabIndex < 0)
+              .map((element) => describe(element)),
+            focusFailures: controls
+              .filter((element) => {
+                element.focus();
+                return document.activeElement !== element;
+              })
+              .map((element) => describe(element)),
+          };
+        }, operableControlSelector);
 
       expect(result.controlCount, fixture.id).toBeGreaterThan(0);
       expect(result.positiveTabIndex, `${fixture.id} positive tabindex controls`).toEqual([]);
@@ -2115,7 +2119,7 @@ test.describe("manual harness", () => {
       "Selected A",
     );
 
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
     });
@@ -2181,7 +2185,7 @@ test.describe("manual harness", () => {
 
     await page.goto("/");
     await pasteXml(page, fixture.xml);
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
     await expect(page.locator("#score-status")).toContainText("Score blocked");
     await expect(page.locator("#validation-count")).toHaveText("1");
@@ -2307,7 +2311,7 @@ test.describe("manual harness", () => {
     );
 
     await page.getByRole("checkbox", { name: "A" }).check();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
     await expect(page.locator("#events")).toContainText("requires at least 2 responses");
     await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
 
@@ -2316,7 +2320,7 @@ test.describe("manual harness", () => {
       "aria-invalid",
       "true",
     );
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
@@ -2349,7 +2353,7 @@ test.describe("manual harness", () => {
 
     await page.getByRole("checkbox", { name: "A" }).check();
     await page.getByRole("checkbox", { name: "B" }).check();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
     await expect(page.locator("#events")).toContainText("response.maximum");
@@ -2401,7 +2405,7 @@ test.describe("manual harness", () => {
         '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="C"]',
       )
       .click();
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
     await expect(page.locator("#events")).toContainText("response.matchMax");
@@ -2429,7 +2433,7 @@ test.describe("manual harness", () => {
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`,
     );
-    await page.getByRole("button", { name: "Score", exact: true }).click();
+    await page.locator("#debug-score").click();
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
