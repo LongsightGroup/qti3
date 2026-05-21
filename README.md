@@ -34,30 +34,30 @@ typed model, validate against its response and element contract, render in the b
 player, score in the core runtime, ship with a public reference fixture, pass fixture and
 conformance tests, include accessibility metadata, and run through browser rendering tests.
 
-| Spec interaction  | QTI element                         | qti3 status           | Evidence                                                                          |
-| ----------------- | ----------------------------------- | --------------------- | --------------------------------------------------------------------------------- |
-| Choice            | `qti-choice-interaction`            | Supported             | `choice-reference.xml`; core, fixture, conformance, a11y, browser tests           |
-| Text Entry        | `qti-text-entry-interaction`        | Supported             | `textEntry-reference.xml`; core, fixture, conformance, a11y, browser tests        |
-| Extended Text     | `qti-extended-text-interaction`     | Supported             | `extendedText-reference.xml`; core, fixture, conformance, a11y, browser tests     |
-| Gap Match         | `qti-gap-match-interaction`         | Supported             | `gapMatch-reference.xml`; core, fixture, conformance, a11y, browser tests         |
-| Hotspot           | `qti-hotspot-interaction`           | Supported             | `hotspot-reference.xml`; core, fixture, conformance, a11y, browser tests          |
-| Hot Text          | `qti-hottext-interaction`           | Supported             | `hottext-reference.xml`; core, fixture, conformance, a11y, browser tests          |
-| Inline Choice     | `qti-inline-choice-interaction`     | Supported             | `inlineChoice-reference.xml`; core, fixture, conformance, a11y, browser tests     |
-| Match             | `qti-match-interaction`             | Supported             | `match-reference.xml`; core, fixture, conformance, a11y, browser tests            |
-| Order             | `qti-order-interaction`             | Supported             | `order-reference.xml`; core, fixture, conformance, a11y, browser tests            |
-| Graphic Order     | `qti-graphic-order-interaction`     | Supported             | `graphicOrder-reference.xml`; core, fixture, conformance, a11y, browser tests     |
-| Associate         | `qti-associate-interaction`         | Supported             | `associate-reference.xml`; core, fixture, conformance, a11y, browser tests        |
-| Graphic Associate | `qti-graphic-associate-interaction` | Supported             | `graphicAssociate-reference.xml`; core, fixture, conformance, a11y, browser tests |
-| Graphic Gap Match | `qti-graphic-gap-match-interaction` | Supported             | `graphicGapMatch-reference.xml`; core, fixture, conformance, a11y, browser tests  |
-| Media             | `qti-media-interaction`             | Supported             | `media-reference.xml`; core, fixture, conformance, a11y, browser tests            |
-| Position Object   | `qti-position-object-interaction`   | Supported             | `positionObject-reference.xml`; core, fixture, conformance, a11y, browser tests   |
-| Select Point      | `qti-select-point-interaction`      | Supported             | `selectPoint-reference.xml`; core, fixture, conformance, a11y, browser tests      |
-| Slider            | `qti-slider-interaction`            | Supported             | `slider-reference.xml`; core, fixture, conformance, a11y, browser tests           |
-| Upload            | `qti-upload-interaction`            | Supported             | `upload-reference.xml`; core, fixture, conformance, a11y, browser tests           |
-| Drawing           | `qti-drawing-interaction`           | Supported             | `drawing-reference.xml`; core, fixture, conformance, a11y, browser tests          |
-| Portable Custom   | `qti-portable-custom-interaction`   | Supported             | `portableCustom-reference.xml`; core, fixture, conformance, a11y, browser tests   |
-| Custom            | `qti-custom-interaction`            | Deprecated diagnostic | Parsed for explicit warning; not a supported runtime target                       |
-| End Attempt       | `qti-end-attempt-interaction`       | Supported             | `endAttempt-reference.xml`; core, fixture, conformance, a11y, browser tests       |
+| Spec interaction  | QTI element                         | qti3 status             | Evidence                                                                          |
+| ----------------- | ----------------------------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| Choice            | `qti-choice-interaction`            | Supported               | `choice-reference.xml`; core, fixture, conformance, a11y, browser tests           |
+| Text Entry        | `qti-text-entry-interaction`        | Supported               | `textEntry-reference.xml`; core, fixture, conformance, a11y, browser tests        |
+| Extended Text     | `qti-extended-text-interaction`     | Supported               | `extendedText-reference.xml`; core, fixture, conformance, a11y, browser tests     |
+| Gap Match         | `qti-gap-match-interaction`         | Supported               | `gapMatch-reference.xml`; core, fixture, conformance, a11y, browser tests         |
+| Hotspot           | `qti-hotspot-interaction`           | Supported               | `hotspot-reference.xml`; core, fixture, conformance, a11y, browser tests          |
+| Hot Text          | `qti-hottext-interaction`           | Supported               | `hottext-reference.xml`; core, fixture, conformance, a11y, browser tests          |
+| Inline Choice     | `qti-inline-choice-interaction`     | Supported               | `inlineChoice-reference.xml`; core, fixture, conformance, a11y, browser tests     |
+| Match             | `qti-match-interaction`             | Supported               | `match-reference.xml`; core, fixture, conformance, a11y, browser tests            |
+| Order             | `qti-order-interaction`             | Supported               | `order-reference.xml`; core, fixture, conformance, a11y, browser tests            |
+| Graphic Order     | `qti-graphic-order-interaction`     | Supported               | `graphicOrder-reference.xml`; core, fixture, conformance, a11y, browser tests     |
+| Associate         | `qti-associate-interaction`         | Supported               | `associate-reference.xml`; core, fixture, conformance, a11y, browser tests        |
+| Graphic Associate | `qti-graphic-associate-interaction` | Supported               | `graphicAssociate-reference.xml`; core, fixture, conformance, a11y, browser tests |
+| Graphic Gap Match | `qti-graphic-gap-match-interaction` | Supported               | `graphicGapMatch-reference.xml`; core, fixture, conformance, a11y, browser tests  |
+| Media             | `qti-media-interaction`             | Supported               | `media-reference.xml`; core, fixture, conformance, a11y, browser tests            |
+| Position Object   | `qti-position-object-interaction`   | Supported               | `positionObject-reference.xml`; core, fixture, conformance, a11y, browser tests   |
+| Select Point      | `qti-select-point-interaction`      | Supported               | `selectPoint-reference.xml`; core, fixture, conformance, a11y, browser tests      |
+| Slider            | `qti-slider-interaction`            | Supported               | `slider-reference.xml`; core, fixture, conformance, a11y, browser tests           |
+| Upload            | `qti-upload-interaction`            | Supported               | `upload-reference.xml`; core, fixture, conformance, a11y, browser tests           |
+| Drawing           | `qti-drawing-interaction`           | Supported               | `drawing-reference.xml`; core, fixture, conformance, a11y, browser tests          |
+| Portable Custom   | `qti-portable-custom-interaction`   | Supported host contract | `portableCustom-reference.xml`; core, fixture, conformance, a11y, browser tests   |
+| Custom            | `qti-custom-interaction`            | Deprecated diagnostic   | Parsed for explicit warning; not a supported runtime target                       |
+| End Attempt       | `qti-end-attempt-interaction`       | Supported               | `endAttempt-reference.xml`; core, fixture, conformance, a11y, browser tests       |
 
 For automated review, the same support matrix is available as JSON:
 
@@ -157,12 +157,13 @@ Two response-bearing interactions have format-specific contracts worth calling o
 - `qti-media-interaction` records play experiences as a `single` / `integer` response.
 - `qti-drawing-interaction` requires a `single` / `file` response and serializes candidate
   drawings as image file data URLs.
-- `qti-portable-custom-interaction` parses PCI module metadata, interaction markup,
-  template/context bindings, stylesheets, and catalog info. The player exposes a
-  `qti3-portable-custom-host` element with small launch metadata and emits
-  `qti-portable-custom-mount` with the full parsed definition so a host or optional
-  runtime can attach the PCI module. Production sandboxing, CSP, tenant allowlists, and
-  audit policy remain host responsibilities.
+- `qti-portable-custom-interaction` supports the Portable Custom Interaction (PCI) host
+  contract: parsing and validating launch metadata, interaction markup, template/context
+  bindings, stylesheets, catalog info, opaque suspend/resume state, and response/state
+  events. The player exposes a `qti3-portable-custom-host` element with small launch
+  metadata and emits `qti-portable-custom-mount` with the full parsed definition so a
+  host-provided PCI runtime can attach the module. Production module loading, sandboxing,
+  CSP, tenant allowlists, and audit policy remain host responsibilities.
 
 ## Styling
 
