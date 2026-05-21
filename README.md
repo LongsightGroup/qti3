@@ -2,16 +2,15 @@
 
 `qti3` is a dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.
 
-The project is being prepared for its first public release. The release target is a clean,
-auditable item engine that can parse, validate, render, score, serialize, restore, and test
-QTI 3 items across products without binding the core implementation to a UI framework.
+The project is being prepared for its first public release. The 0.1.0 target is a clean,
+auditable item engine for parsing, validating, rendering, scoring, serializing, restoring,
+and testing QTI 3 items across products. The core stays independent of any UI framework.
 
-This is not another framework-specific item player. The public project is focused on QTI
-item and question-type conformance. Runners, controllers, LMS shells, candidate attempt
-policy, analytics, proctoring, rostering, and gradebook integrations are expected to be
-owned by host products.
+This is not another framework-specific item player. The public project focuses on QTI
+item and question-type conformance. Host products own runners, controllers, LMS shells,
+candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations.
 
-## First Release Goals
+## First release goals
 
 For 0.1.0, we are focusing on:
 
@@ -21,7 +20,7 @@ For 0.1.0, we are focusing on:
 - Machine-readable support metadata.
 - Explicit diagnostics for unsupported, deprecated, invalid, or ambiguous item behavior.
 
-## Question-Type Support
+## Question-type support
 
 The target is the current public QTI 3 item interaction set described by the
 [1EdTech QTI 3 Implementation Guide](https://www.imsglobal.org/spec/qti/v3p0/impl)
@@ -29,11 +28,10 @@ with element names from the
 [QTI 3 XML Binding](https://www.imsglobal.org/spec/qti/v3p0/bind/) and tracked
 internally as the `QTI 3.0.1 ASI item profile`.
 
-In this README, **Supported** means the interaction is parsed into the typed model,
-validated against its response and element contract, rendered by the browser player,
-processed/scored by the core runtime, covered by a public reference fixture, covered by
-fixture/conformance tests, covered by accessibility metadata, and exercised by browser
-rendering tests.
+In this README, "Supported" has a specific meaning. The interaction must parse into the
+typed model, validate against its response and element contract, render in the browser
+player, score in the core runtime, ship with a public reference fixture, pass fixture and
+conformance tests, include accessibility metadata, and run through browser rendering tests.
 
 | Spec interaction  | QTI element                         | qti3 status           | Evidence                                                                          |
 | ----------------- | ----------------------------------- | --------------------- | --------------------------------------------------------------------------------- |
@@ -68,7 +66,7 @@ node packages/cli/dist/index.js support-matrix
 
 ## Goals
 
-- Implement the latest public QTI 3 item behavior faithfully and explicitly, tracking QTI 3.0.1 ASI documents where applicable.
+- Implement the latest public QTI 3 item behavior explicitly, tracking QTI 3.0.1 ASI documents where applicable.
 - Support all QTI 3 interaction/question types in the target item profile.
 - Make scoring and response processing runnable in Node without a browser.
 - Provide an accessible, style-neutral web component player that can be embedded in any product.
@@ -77,16 +75,16 @@ node packages/cli/dist/index.js support-matrix
 - Keep dependencies as small as possible.
 - Make unsupported or invalid behavior visible through structured diagnostics.
 
-## Non-Goals
+## Non-goals
 
-- No dependency on a heavy UI framework such as React or Vue.
-- No Lit dependency for the browser player (native custom elements keep the surface small).
-- No reusable LMS runner/controller; that is the responsibility of the LMS or harness.
-- No attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
-- No hidden fallback behavior for required production configuration.
-- No compiling QTI XML as framework templates.
-- No global singleton state store (multiple players should not share a brain).
-- No runtime XSD or schema validation (semantic diagnostics stay fast and embeddable).
+- The project does not depend on a heavy UI framework such as React or Vue.
+- The browser player does not use Lit. Native custom elements keep the surface small.
+- The project does not provide a reusable LMS runner or controller. The LMS or harness owns that.
+- The project does not handle attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
+- Production configuration must be explicit. The project should fail fast instead of using hidden fallbacks.
+- QTI XML is not compiled as framework templates.
+- There is no global singleton state store. Multiple players should not share a brain.
+- The runtime does not run XSD or schema validation. Semantic diagnostics stay fast and embeddable.
 
 ## Packages
 
@@ -100,7 +98,9 @@ packages/
   cli/           # validation, scoring, fixture, and support-matrix CLI
 ```
 
-Assessment-test/package support belongs in tooling and examples only when it helps discover, load, and verify item references. The player package renders one item at a time and exposes state/events for host-owned runners.
+Assessment-test/package support belongs in tooling and examples, and only when it helps
+discover, load, and verify item references. The player package renders one item at a time
+and exposes state/events for host-owned runners.
 
 The browser player surface is a native web component:
 
@@ -137,7 +137,9 @@ player.addEventListener("qti-statechange", (event) => {
 });
 ```
 
-`resolveAsset` is a host hook for package or virtual-file environments. The player calls it for relative `src`, `href`, and `data` asset URLs after rendering the item; normal web-served items can omit it.
+`resolveAsset` is a host hook for package or virtual-file environments. The player calls it
+for relative `src`, `href`, and `data` asset URLs after rendering the item. Normal
+web-served items can omit it.
 
 ## Styling
 
@@ -171,7 +173,7 @@ like `qti3-choice`, `qti3-textEntry`, and `qti3-hotspot`. Authored QTI shared-vo
 classes that start with `qti-` are preserved on rendered interactions where applicable.
 
 QTI shared vocabulary classes are authoring hints defined by the specification, not
-product theme classes. For example, classes such as `qti-labels-none`,
+product theme classes. Classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-selections-light`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
@@ -179,9 +181,12 @@ See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.
 
-Framework adapters may be added later, but they should wrap the web component or core API. They must not own the QTI implementation.
+Framework adapters may be added later, but they should wrap the web component or core API.
+They must not own the QTI implementation.
 
-The initial player should use native custom elements directly. Lit is not part of the initial stack and should be reconsidered only if plain custom element code creates a clear maintenance problem that outweighs the dependency and abstraction cost.
+The initial player should use native custom elements directly. Lit is not part of the
+initial stack and should come back into scope only if plain custom element code creates a
+maintenance problem that outweighs the dependency and abstraction cost.
 
 ## Platform
 
@@ -189,9 +194,9 @@ The initial player should use native custom elements directly. Lit is not part o
 - Node.js 22+.
 - Modern browsers.
 - Deno 2+.
-- Light DOM for the default player (rendered into the page DOM so host CSS and tooling can inspect and style it directly).
+- Light DOM for the default player, rendered into the page DOM so host CSS and tooling can inspect and style it directly.
 
-## Tooling Choices
+## Tooling choices
 
 - TypeScript 6+
 - pnpm
@@ -262,8 +267,8 @@ processing patterns, and adaptive behavior:
 node packages/cli/dist/index.js write-fixtures packages/fixtures/xml
 ```
 
-The support matrix is machine-readable and includes interaction, deprecated
-interaction, and processing element evidence:
+The support matrix is machine-readable. It includes evidence for supported interactions,
+deprecated interactions, and processing elements:
 
 ```sh
 node packages/cli/dist/index.js support-matrix
@@ -276,26 +281,29 @@ keyboard contract, automated evidence, and manual assistive-technology scripts:
 node packages/cli/dist/index.js a11y-proof
 ```
 
-For releases, the bar is:
+The release bar is:
 
 - Supported interactions need parser, validation, scoring, rendering, keyboard, and accessibility evidence.
-- Accessibility checks cover real operation, not just automated scans.
-- Dependencies are kept small, exact, and reviewed.
+- Accessibility checks cover real operation as well as automated scans.
+- Dependencies stay small, exact, and reviewed.
 - Published packages use explicit npm `files` allowlists so package contents stay small and deliberate.
 - Release checks must pass before publishing.
 
 ## Status
 
-This repository is a reference implementation for QTI 3 item behavior. It has a strict TypeScript core, a native web component player, fixture-based scoring, a manual browser harness, automated accessibility checks, Playwright coverage, and standalone canonical XML reference items under `packages/fixtures/xml`.
+This repository is a reference implementation for QTI 3 item behavior. It has a strict
+TypeScript core, a native web component player, fixture-based scoring, a manual browser
+harness, automated accessibility checks, Playwright coverage, and standalone canonical XML
+reference items under `packages/fixtures/xml`.
 
-### Attempt State
+### Attempt state
 
 Serialized attempt state uses `qti3.attempt-state.v1`. It captures responses, outcomes,
 generated template values, validation messages, lifecycle status, and QTI's built-in
 `completionStatus` outcome.
 
 - Hosts can save, restore, and review attempts through this state contract.
-- Restored JSON can be checked with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
+- Hosts can check restored JSON with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
 - Non-adaptive items reset authored outcomes before each scoring run.
 - Adaptive items retain outcome values across response-processing runs.
 - For non-adaptive items, `endAttempt()` completes the item after a valid score run.
@@ -305,7 +313,7 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 ## Coverage
 
 `qti3` includes public synthetic fixtures for every current, non-deprecated QTI 3 item
-interaction. Those fixtures cover response shape, scoring, browser rendering, keyboard
+interaction. The fixtures cover response shape, scoring, browser rendering, keyboard
 operation, and accessibility evidence.
 
 Processing coverage includes response processing, template processing, feedback, printed
@@ -331,10 +339,11 @@ Packages publish under the `longsightgroup` npm organization:
 - `@longsightgroup/qti3-a11y`
 - `@longsightgroup/qti3-cli`
 
-Releases are published from the `longsightgroup/qti3` repository after the full release
-check passes. Package tarballs are generated from the same checked build output that CI
-verifies.
+Releases publish from the `longsightgroup/qti3` repository after the full release check
+passes. Package tarballs come from the same checked build output that CI verifies.
 
 ## Certification
 
-The project is not currently certified. We plan to pursue relevant QTI certification once the implementation, fixtures, conformance tests, and public API are stable enough for review.
+The project is not currently certified. We plan to pursue relevant QTI certification once
+the implementation, fixtures, conformance tests, and public API are stable enough for
+review.
