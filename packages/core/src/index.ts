@@ -32,6 +32,8 @@ export type {
   QtiInteractionElementSupport,
   QtiInteraction,
   QtiInteractionType,
+  QtiMediaSource,
+  QtiMediaTrack,
   QtiModalFeedback,
   QtiObjectAsset,
   QtiParseResult,

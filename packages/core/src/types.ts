@@ -231,7 +231,26 @@ export interface QtiObjectAsset {
   type?: string | undefined;
   width?: string | undefined;
   height?: string | undefined;
+  sources: QtiMediaSource[];
+  tracks: QtiMediaTrack[];
   text: string;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiMediaSource {
+  src?: string | undefined;
+  type?: string | undefined;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiMediaTrack {
+  kind?: string | undefined;
+  src?: string | undefined;
+  srclang?: string | undefined;
+  label?: string | undefined;
+  default?: boolean | undefined;
   attributes: Record<string, string>;
   source?: QtiSourceLocation | undefined;
 }

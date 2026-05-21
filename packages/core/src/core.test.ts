@@ -1832,8 +1832,9 @@ describe("@longsightgroup/qti3-core", () => {
   it("preserves object asset metadata on media-backed interactions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
-          <qti-media-interaction autostart="false">
+          <qti-media-interaction response-identifier="RESPONSE" autostart="false">
             <object data="clips/washington.mp3" type="audio/mpeg" width="320" height="32">
               Washington audio
             </object>
@@ -1850,6 +1851,85 @@ describe("@longsightgroup/qti3-core", () => {
       height: "32",
       text: "Washington audio",
     });
+  });
+
+  it("preserves audio and video source and track metadata on media interactions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-sources">
+        <qti-response-declaration identifier="AUDIO_RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="VIDEO_RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="AUDIO_RESPONSE" autostart="false">
+            <audio width="320" height="32">
+              <source src="clips/washington.mp3" type="audio/mpeg"/>
+            </audio>
+          </qti-media-interaction>
+          <qti-media-interaction response-identifier="VIDEO_RESPONSE" autostart="false" loop="true">
+            <video width="640" height="360">
+              <source src="clips/bubble.mp4" type="video/mp4"/>
+              <source src="clips/bubble.webm"/>
+              <track kind="captions" src="captions/bubble.vtt" srclang="en" label="English" default="default"/>
+            </video>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]?.object).toMatchObject({
+      type: "audio/mpeg",
+      sources: [{ src: "clips/washington.mp3", type: "audio/mpeg" }],
+    });
+    expect(result.document?.item.interactions[1]?.object).toMatchObject({
+      type: "video/mp4",
+      width: "640",
+      height: "360",
+      sources: [
+        { src: "clips/bubble.mp4", type: "video/mp4" },
+        { src: "clips/bubble.webm", type: "video/*" },
+      ],
+      tracks: [
+        {
+          kind: "captions",
+          src: "captions/bubble.vtt",
+          srclang: "en",
+          label: "English",
+          default: true,
+        },
+      ],
+    });
+  });
+
+  it("validates media response declarations and playback attributes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-media">
+        <qti-response-declaration identifier="WRONG" cardinality="multiple" base-type="identifier"/>
+        <qti-response-declaration identifier="VALID" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction autostart="false">
+            <object data="clips/missing-response.mp3" type="audio/mpeg"/>
+          </qti-media-interaction>
+          <qti-media-interaction response-identifier="WRONG" autostart="maybe" loop="sometimes" min-plays="3" max-plays="2">
+            <object data="clips/wrong-shape.mp3" type="audio/mpeg"/>
+          </qti-media-interaction>
+          <qti-media-interaction response-identifier="VALID" min-plays="-1" max-plays="many">
+            <audio><source src="clips/valid.mp3"/></audio>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "interaction.responseIdentifier" }),
+        expect.objectContaining({ code: "interaction.cardinality" }),
+        expect.objectContaining({ code: "interaction.baseType" }),
+        expect.objectContaining({ code: "interaction.booleanAttribute" }),
+        expect.objectContaining({ code: "interaction.integerAttribute" }),
+        expect.objectContaining({ code: "interaction.minMax" }),
+      ]),
+    );
   });
 
   it("preserves hotspot geometry on choice metadata", () => {

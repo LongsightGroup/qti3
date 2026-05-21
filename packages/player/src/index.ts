@@ -45,6 +45,11 @@ export interface QtiStateChangeEventDetail {
   state: QtiAttemptStateV1;
 }
 
+export interface QtiResponseChangeEventDetail {
+  responseIdentifier: string;
+  value: QtiValue;
+}
+
 export type QtiScoreEventDetail = QtiScoreResult;
 
 export interface QtiValidationEventDetail {
@@ -63,6 +68,7 @@ export interface QtiEndAttemptEventDetail {
 export interface QtiAssessmentItemPlayerEventDetailMap {
   "qti-ready": QtiReadyEventDetail;
   "qti-statechange": QtiStateChangeEventDetail;
+  "qti-responsechange": QtiResponseChangeEventDetail;
   "qti-score": QtiScoreEventDetail;
   "qti-validation": QtiValidationEventDetail;
   "qti-suspend": QtiSuspendEventDetail;
@@ -289,11 +295,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       if (!responseIdentifier || !this.session) return;
       this.session.respond(responseIdentifier, value);
       this.clearValidationMessage(responseIdentifier);
-      this.dispatchEvent(
-        new CustomEvent("qti-responsechange", {
-          detail: { responseIdentifier, value },
-        }),
-      );
+      this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
       this.emitStateChange();
     };
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
@@ -405,7 +407,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
 
     if (interaction.type === "media") {
-      field.append(renderObjectAsset(interaction));
+      field.append(
+        renderObjectAsset(interaction, {
+          currentValue,
+          update,
+          isCompleted: () => this.attemptIsCompleted(),
+        }),
+      );
       return field;
     }
 
@@ -430,11 +438,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       if (!responseIdentifier || !this.session) return;
       this.session.respond(responseIdentifier, value);
       this.clearValidationMessage(responseIdentifier);
-      this.dispatchEvent(
-        new CustomEvent("qti-responsechange", {
-          detail: { responseIdentifier, value },
-        }),
-      );
+      this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
       this.emitStateChange();
     };
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
@@ -675,10 +679,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     );
     const diagnostics: QtiDiagnostic[] = [];
     for (const declaration of this.documentModel.item.responseDeclarations) {
-      if (declaration.correctResponse === null) continue;
       const interaction = interactionsByResponse.get(declaration.identifier);
+      if (declaration.correctResponse === null && interaction?.type !== "media") continue;
       const minimum = minimumRequiredResponses(interaction);
-      const count = responseCount(state.responses[declaration.identifier] ?? null);
+      const count =
+        interaction?.type === "media"
+          ? mediaPlayCount(state.responses[declaration.identifier] ?? null)
+          : responseCount(state.responses[declaration.identifier] ?? null);
       const maximum = maximumAllowedResponses(interaction);
       if (count < minimum) {
         diagnostics.push({
@@ -686,9 +693,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
           severity: "error",
           message:
             interaction?.attributes["data-min-selections-message"] ??
-            (minimum === 1
-              ? `${declaration.identifier} requires a response.`
-              : `${declaration.identifier} requires at least ${minimum} responses.`),
+            (interaction?.type === "media"
+              ? `${declaration.identifier} requires at least ${minimum} play${minimum === 1 ? "" : "s"}.`
+              : minimum === 1
+                ? `${declaration.identifier} requires a response.`
+                : `${declaration.identifier} requires at least ${minimum} responses.`),
           path: declaration.identifier,
         });
       }
@@ -698,7 +707,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
           severity: "error",
           message:
             interaction?.attributes["data-max-selections-message"] ??
-            `${declaration.identifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`,
+            (interaction?.type === "media"
+              ? `${declaration.identifier} allows at most ${maximum} play${maximum === 1 ? "" : "s"}.`
+              : `${declaration.identifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`),
           path: declaration.identifier,
         });
       }
@@ -2769,29 +2780,30 @@ function renderHotspotResponse(
   return group;
 }
 
-function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
-  const object = interaction.object;
-  const type = object?.type ?? "";
-  const label = interaction.prompt ?? object?.text ?? "Media interaction";
+interface MediaResponseBinding {
+  currentValue?: QtiValue | undefined;
+  update?: ((value: QtiValue) => void) | undefined;
+  isCompleted?: (() => boolean) | undefined;
+}
 
-  if (object?.data && type.startsWith("audio/")) {
+function renderObjectAsset(
+  interaction: QtiInteraction,
+  mediaResponse: MediaResponseBinding = {},
+): HTMLElement {
+  const object = interaction.object;
+  const label = interaction.prompt ?? object?.text ?? "Media interaction";
+  const mediaType = object ? mediaElementType(object) : undefined;
+
+  if (object && mediaType === "audio") {
     const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.preload = "none";
-    audio.src = object.data;
-    audio.setAttribute("aria-label", label);
-    audio.style.maxInlineSize = "100%";
+    configureMediaElement(audio, interaction, object, label, mediaResponse);
     audio.style.inlineSize = "100%";
     return audio;
   }
 
-  if (object?.data && type.startsWith("video/")) {
+  if (object && mediaType === "video") {
     const video = document.createElement("video");
-    video.controls = true;
-    video.preload = "none";
-    video.src = object.data;
-    video.setAttribute("aria-label", label);
-    video.style.maxInlineSize = "100%";
+    configureMediaElement(video, interaction, object, label, mediaResponse);
     if (object.width) video.width = Number(object.width);
     if (object.height) video.height = Number(object.height);
     return video;
@@ -2811,15 +2823,138 @@ function renderObjectAsset(interaction: QtiInteraction): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
   group.setAttribute("aria-label", label);
-  if (object?.data) {
+  const fallbackHref = object?.data ?? object?.sources.find((source) => source.src)?.src;
+  if (fallbackHref) {
     const link = document.createElement("a");
-    link.href = object.data;
-    link.textContent = object.text || object.data;
+    link.href = fallbackHref;
+    link.textContent = object?.text || fallbackHref;
     group.append(link);
   } else {
     group.textContent = label;
   }
   return group;
+}
+
+function configureMediaElement(
+  media: HTMLAudioElement | HTMLVideoElement,
+  interaction: QtiInteraction,
+  object: QtiObjectAsset,
+  label: string,
+  mediaResponse: MediaResponseBinding,
+): void {
+  media.controls = mediaControlsMode(interaction, object) !== "none";
+  media.preload = "none";
+  media.autoplay = parseBooleanAttribute(interaction.attributes.autostart) ?? false;
+  media.loop = parseBooleanAttribute(interaction.attributes.loop) ?? false;
+  media.setAttribute("aria-label", label);
+  media.style.maxInlineSize = "100%";
+  copyMediaDataAttributes(media, interaction.attributes);
+  copyMediaDataAttributes(media, object.attributes);
+
+  if (object.data) media.src = object.data;
+  for (const source of object.sources) {
+    if (!source.src) continue;
+    const sourceElement = document.createElement("source");
+    sourceElement.src = source.src;
+    if (source.type) sourceElement.type = source.type;
+    media.append(sourceElement);
+  }
+  for (const track of object.tracks) {
+    if (!track.src) continue;
+    const trackElement = document.createElement("track");
+    trackElement.src = track.src;
+    if (track.kind) trackElement.kind = track.kind;
+    if (track.srclang) trackElement.srclang = track.srclang;
+    if (track.label) trackElement.label = track.label;
+    if (track.default) trackElement.default = true;
+    media.append(trackElement);
+  }
+
+  bindMediaPlayCount(media, interaction, mediaResponse);
+}
+
+function copyMediaDataAttributes(element: HTMLElement, attributes: Record<string, string>): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    if (!name.startsWith("data-")) continue;
+    element.setAttribute(name, value);
+  }
+}
+
+function mediaElementType(object: QtiObjectAsset): "audio" | "video" | undefined {
+  const types = [object.type, ...object.sources.map((source) => source.type)].filter(
+    (value): value is string => Boolean(value),
+  );
+  if (types.some((value) => value.startsWith("audio/"))) return "audio";
+  if (types.some((value) => value.startsWith("video/"))) return "video";
+  return undefined;
+}
+
+function mediaControlsMode(
+  interaction: QtiInteraction,
+  object: QtiObjectAsset,
+): string | undefined {
+  return (
+    interaction.attributes["data-qti-media-player-controls"] ??
+    object.attributes["data-qti-media-player-controls"]
+  );
+}
+
+function bindMediaPlayCount(
+  media: HTMLAudioElement | HTMLVideoElement,
+  interaction: QtiInteraction,
+  mediaResponse: MediaResponseBinding,
+): void {
+  if (!mediaResponse.update) return;
+  let playCount = mediaPlayCount(mediaResponse.currentValue ?? null);
+  let activePlaySession = false;
+  let readyAfterEnded = false;
+  const maximum = maximumMediaPlays(interaction);
+
+  const syncState = () => {
+    media.dataset.playCount = String(playCount);
+    if (maximum !== undefined && playCount >= maximum && !activePlaySession) {
+      media.dataset.maxPlaysReached = "true";
+    } else {
+      delete media.dataset.maxPlaysReached;
+    }
+  };
+
+  media.addEventListener("play", () => {
+    if (mediaResponse.isCompleted?.()) {
+      return;
+    }
+    if (!activePlaySession && maximum !== undefined && playCount >= maximum) {
+      media.pause();
+      syncState();
+      return;
+    }
+    if (!activePlaySession && (readyAfterEnded || media.currentTime <= 0.25)) {
+      playCount += 1;
+      mediaResponse.update?.(playCount);
+      activePlaySession = true;
+      readyAfterEnded = false;
+      syncState();
+      return;
+    }
+    activePlaySession = true;
+    readyAfterEnded = false;
+    syncState();
+  });
+
+  media.addEventListener("ended", () => {
+    activePlaySession = false;
+    readyAfterEnded = true;
+    syncState();
+  });
+
+  media.addEventListener("seeked", () => {
+    if (!media.paused || media.currentTime > 0.25) return;
+    activePlaySession = false;
+    readyAfterEnded = false;
+    syncState();
+  });
+
+  syncState();
 }
 
 function objectIsImage(object: QtiObjectAsset): boolean {
@@ -3924,6 +4059,7 @@ function responseCount(value: QtiValue): number {
 
 function maximumAllowedResponses(interaction: QtiInteraction | undefined): number | undefined {
   if (!interaction) return undefined;
+  if (interaction.type === "media") return maximumMediaPlays(interaction);
   const explicit =
     interaction.attributes["max-choices"] ?? interaction.attributes["max-associations"];
   if (explicit === undefined) return undefined;
@@ -3934,11 +4070,33 @@ function maximumAllowedResponses(interaction: QtiInteraction | undefined): numbe
 
 function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
   if (!interaction) return 1;
+  if (interaction.type === "media") return minimumMediaPlays(interaction);
   const explicit =
     interaction.attributes["min-choices"] ?? interaction.attributes["min-associations"];
   if (explicit === undefined) return 1;
   const parsed = Number(explicit);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
+}
+
+function minimumMediaPlays(interaction: QtiInteraction): number {
+  const parsed = Number(interaction.attributes["min-plays"] ?? "0");
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function maximumMediaPlays(interaction: QtiInteraction): number | undefined {
+  const parsed = Number(interaction.attributes["max-plays"] ?? "0");
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function mediaPlayCount(value: QtiValue): number {
+  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : 0;
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function parseBooleanAttribute(value: string | undefined): boolean | undefined {
+  if (value === "true" || value === "1") return true;
+  if (value === "false" || value === "0") return false;
+  return undefined;
 }
 
 function matchMaxDiagnostics(
