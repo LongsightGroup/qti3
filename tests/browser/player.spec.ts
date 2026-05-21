@@ -698,6 +698,63 @@ test.describe("manual harness", () => {
     expect(await page.evaluate(() => window.qtiUnsafe)).toBe(false);
   });
 
+  test("applies shared QTI accessibility vocabulary semantics", async ({ page }) => {
+    const image =
+      "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2010%2010'%3E%3Crect%20width='10'%20height='10'%20fill='white'/%3E%3C/svg%3E";
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="shared-vocabulary" title="shared-vocabulary" time-dependent="false">
+  <qti-item-body>
+    <p id="hidden" class="qti-hidden">Hidden from everyone.</p>
+    <p id="visually-hidden" class="qti-visually-hidden">Screen reader only text.</p>
+    <span id="diagram-label">Diagram label</span>
+    <img id="diagram" src="${image}" alt="Diagram" data-qti-aria-labelledby="diagram-label" data-qti-aria-details="long-desc"/>
+    <div id="long-desc" class="qti-visually-hidden" data-qti-a11y-content-role="long-description">Long description content.</div>
+    <span id="suppress-all" data-qti-suppress-tts="all">$25.00</span>
+    <span id="suppress-screen-reader" data-qti-suppress-tts="screen-reader">Visual-only label</span>
+    <span id="suppress-read-aloud" data-qti-suppress-tts="computer-read-aloud">Screen-reader-visible label</span>
+    <span id="explicit-aria" aria-label="Explicit label" data-qti-aria-label="Backup label">Named content</span>
+    <span id="explicit-qti-hidden" data-qti-suppress-tts="all" data-qti-aria-hidden="false">Explicitly exposed</span>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await pasteXml(page, xml);
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator("#hidden")).toHaveCSS("display", "none");
+
+    const visuallyHiddenStyle = await player.locator("#visually-hidden").evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return {
+        blockSize: style.blockSize,
+        display: style.display,
+        inlineSize: style.inlineSize,
+        overflow: style.overflow,
+        position: style.position,
+      };
+    });
+    expect(visuallyHiddenStyle).toMatchObject({
+      blockSize: "1px",
+      display: "block",
+      inlineSize: "1px",
+      overflow: "hidden",
+      position: "absolute",
+    });
+
+    await expect(player.locator("#diagram")).toHaveAttribute("aria-labelledby", "diagram-label");
+    await expect(player.locator("#diagram")).toHaveAttribute("aria-details", "long-desc");
+    await expect(player.locator("#diagram")).toHaveAttribute("data-qti-aria-details", "long-desc");
+    await expect(player.locator("#long-desc")).toHaveAttribute(
+      "data-qti-a11y-content-role",
+      "long-description",
+    );
+    await expect(player.locator("#suppress-all")).toHaveAttribute("aria-hidden", "true");
+    await expect(player.locator("#suppress-screen-reader")).toHaveAttribute("aria-hidden", "true");
+    await expect(player.locator("#suppress-read-aloud")).not.toHaveAttribute("aria-hidden", /.*/);
+    await expect(player.locator("#explicit-aria")).toHaveAttribute("aria-label", "Explicit label");
+    await expect(player.locator("#explicit-qti-hidden")).toHaveAttribute("aria-hidden", "false");
+  });
+
   test("renders object-backed media interactions with native controls", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "media");
