@@ -61,7 +61,7 @@ export const manualAssistiveTechnologyScripts: ManualAssistiveTechnologyScript[]
       "Load each reference fixture from the fixture selector.",
     ],
     procedure: [
-      "Navigate from the item heading into the interaction with standard VoiceOver navigation.",
+      "Navigate from the item body into the interaction with standard VoiceOver navigation.",
       "Confirm the prompt, role, current value or selection state, and validation message are announced.",
       "Complete the response using keyboard-only commands.",
       "Score the item and navigate to any feedback or updated state.",
@@ -155,7 +155,7 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       keyboardModel: [
         "Tab moves through each item handle and its move buttons.",
         "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
-        "Move up and move down buttons provide an explicit button fallback.",
+        "Arrow icon buttons provide an explicit move-button fallback.",
       ],
       requiredStates: [
         "position in accessible name",
