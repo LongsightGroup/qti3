@@ -794,6 +794,7 @@ function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined
   const data = node.attributes.data ?? node.attributes.src ?? pictureImage?.attributes.src;
   const sources = parseMediaSources(node);
   const tracks = parseMediaTracks(node);
+  const inferredSvgDimensions = inlineSvgDimensions(data);
   return {
     data,
     type:
@@ -801,14 +802,99 @@ function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined
       pictureImage?.attributes.type ??
       assetTypeFromData(data) ??
       firstSourceType(sources),
-    width: node.attributes.width ?? pictureImage?.attributes.width,
-    height: node.attributes.height ?? pictureImage?.attributes.height,
+    width: node.attributes.width ?? pictureImage?.attributes.width ?? inferredSvgDimensions?.width,
+    height:
+      node.attributes.height ?? pictureImage?.attributes.height ?? inferredSvgDimensions?.height,
     sources,
     tracks,
     text: textContent(node) || pictureImage?.attributes.alt || "",
     attributes: node.attributes,
     source: node.source,
   };
+}
+
+function inlineSvgDimensions(
+  data: string | undefined,
+): { width: string; height: string } | undefined {
+  const svgText = decodeInlineSvgData(data);
+  if (!svgText) return undefined;
+  const tree = parseXmlTree(svgText);
+  const svg = tree.root;
+  if (!svg || svg.localName !== "svg") return undefined;
+
+  const width = svgLength(svg.attributes.width);
+  const height = svgLength(svg.attributes.height);
+  if (width !== undefined && height !== undefined) {
+    return { width: formatDimension(width), height: formatDimension(height) };
+  }
+
+  const viewBox = svgViewBoxDimensions(svg.attributes.viewBox);
+  if (!viewBox) return undefined;
+  const inferredWidth = width ?? viewBox.width;
+  const inferredHeight = height ?? viewBox.height;
+  if (inferredWidth <= 0 || inferredHeight <= 0) return undefined;
+  return { width: formatDimension(inferredWidth), height: formatDimension(inferredHeight) };
+}
+
+function decodeInlineSvgData(data: string | undefined): string | undefined {
+  if (!data) return undefined;
+  const comma = data.indexOf(",");
+  if (comma < 0) return undefined;
+  const metadata = data.slice(0, comma);
+  if (!/^data:image\/svg\+xml(?:[;,]|$)/i.test(metadata)) return undefined;
+  const payload = data.slice(comma + 1);
+  if (/;base64(?:[;,]|$)/i.test(metadata)) return decodeBase64Ascii(payload);
+  try {
+    return decodeURIComponent(payload);
+  } catch {
+    return payload;
+  }
+}
+
+function decodeBase64Ascii(value: string): string | undefined {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const cleaned = value.replace(/\s+/g, "").replace(/=+$/, "");
+  let bits = 0;
+  let buffer = 0;
+  let output = "";
+  for (const char of cleaned) {
+    const digit = alphabet.indexOf(char);
+    if (digit < 0) return undefined;
+    buffer = (buffer << 6) | digit;
+    bits += 6;
+    if (bits < 8) continue;
+    bits -= 8;
+    output += String.fromCharCode((buffer >> bits) & 0xff);
+  }
+  return output;
+}
+
+function svgLength(value: string | undefined): number | undefined {
+  if (!value || value.trim().endsWith("%")) return undefined;
+  const match = value.trim().match(/^(\d+(?:\.\d+)?|\.\d+)(?:px)?$/i);
+  if (!match?.[1]) return undefined;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function svgViewBoxDimensions(
+  value: string | undefined,
+): { width: number; height: number } | undefined {
+  const parts = value
+    ?.trim()
+    .split(/[\s,]+/)
+    .map((part) => Number(part));
+  if (!parts || parts.length !== 4 || parts.some((part) => !Number.isFinite(part))) {
+    return undefined;
+  }
+  const width = parts[2];
+  const height = parts[3];
+  if (width === undefined || height === undefined || width <= 0 || height <= 0) return undefined;
+  return { width, height };
+}
+
+function formatDimension(value: number): string {
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(4)));
 }
 
 function parseMediaSources(node: XmlNode): QtiMediaSource[] {

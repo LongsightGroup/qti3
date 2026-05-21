@@ -2139,6 +2139,53 @@ test.describe("manual harness", () => {
     await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(0);
   });
 
+  test("infers inline SVG dimensions and supports dragging graphic associate lines", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const timelineSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="260" viewBox="0 0 480 260"><rect width="480" height="260" fill="#f4f2ea"/><line x1="80" y1="130" x2="400" y2="130" stroke="#b08d57" stroke-width="6"/><circle cx="120" cy="90" r="18" fill="#2f4858"/><circle cx="120" cy="170" r="18" fill="#2f4858"/><circle cx="360" cy="90" r="18" fill="#2f4858"/><circle cx="360" cy="170" r="18" fill="#2f4858"/></svg>`;
+    const image = `data:image/svg+xml,${encodeURIComponent(timelineSvg)}`;
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-svg-graphic-associate">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+    <qti-correct-response><qti-value>A B</qti-value><qti-value>C D</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-item-body>
+    <qti-graphic-associate-interaction response-identifier="RESPONSE" max-associations="2">
+      <qti-prompt>Select or drag between matching era markers.</qti-prompt>
+      <object data="${image}" type="image/png">Timeline graphic with paired era markers.</object>
+      <qti-associable-hotspot identifier="A" shape="circle" coords="120,90,18" match-max="1"/>
+      <qti-associable-hotspot identifier="B" shape="circle" coords="120,170,18" match-max="1"/>
+      <qti-associable-hotspot identifier="C" shape="circle" coords="360,90,18" match-max="1"/>
+      <qti-associable-hotspot identifier="D" shape="circle" coords="360,170,18" match-max="1"/>
+    </qti-graphic-associate-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    const box = await surface.boundingBox();
+    expect(box?.width).toBe(480);
+    expect(box?.height).toBe(260);
+    await expect(surface.getByRole("button", { name: "Region 4" })).toBeVisible();
+
+    const source = surface.getByRole("button", { name: "Region 1" });
+    const target = surface.getByRole("button", { name: "Region 2" });
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) throw new Error("Missing graphic associate drag boxes.");
+
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+    await page.mouse.up();
+
+    await expectResponse(page, ["A B"]);
+    await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(1);
+  });
+
   test("supports keyboard graphic associate pairing and deletion", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "graphicAssociate");
