@@ -755,6 +755,80 @@ test.describe("manual harness", () => {
     await expect(player.locator("#explicit-qti-hidden")).toHaveAttribute("aria-hidden", "false");
   });
 
+  test("exposes Data-SSML read-aloud traversal metadata", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="data-ssml-player" title="data-ssml-player" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Read <span id="mrna" data-ssml='{"sub":{"alias":"messenger RNA"}}'>mRNA</span>.</p>
+    <p><span id="skip-read-aloud" data-qti-suppress-tts="computer-read-aloud">Visual pronunciation hint.</span></p>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-prompt id="spoken-prompt" data-ssml='{"prosody":{"rate":"slow"}}'>Choose the spoken word.</qti-prompt>
+      <qti-simple-choice identifier="A" data-ssml='{"phoneme":{"ph":"t@meItoU","alphabet":"x-sampa"}}'>tomato</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await pasteXml(page, xml);
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator("#mrna")).toHaveAttribute(
+      "data-ssml",
+      '{"sub":{"alias":"messenger RNA"}}',
+    );
+    await expect(player.locator("#spoken-prompt")).toHaveAttribute(
+      "data-ssml",
+      '{"prosody":{"rate":"slow"}}',
+    );
+
+    const traversal = await player.evaluate((element) => {
+      return (
+        element as HTMLElement & {
+          getTextToSpeechTraversal: () =>
+            | {
+                diagnostics: unknown[];
+                segments: Array<{
+                  choiceIdentifier?: string;
+                  kind: string;
+                  ssml?: unknown;
+                  suppressTts?: string[];
+                  text: string;
+                }>;
+              }
+            | undefined;
+        }
+      ).getTextToSpeechTraversal();
+    });
+
+    expect(traversal?.diagnostics).toEqual([]);
+    expect(traversal?.segments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "content",
+          text: "mRNA",
+          ssml: { sub: { alias: "messenger RNA" } },
+        }),
+        expect.objectContaining({
+          kind: "content",
+          text: "Visual pronunciation hint.",
+          suppressTts: ["computer-read-aloud"],
+        }),
+        expect.objectContaining({
+          kind: "interactionPrompt",
+          text: "Choose the spoken word.",
+          ssml: { prosody: { rate: "slow" } },
+        }),
+        expect.objectContaining({
+          choiceIdentifier: "A",
+          kind: "choice",
+          ssml: { phoneme: { ph: "t@meItoU", alphabet: "x-sampa" } },
+          text: "tomato",
+        }),
+      ]),
+    );
+  });
+
   test("renders object-backed media interactions with native controls", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "media");

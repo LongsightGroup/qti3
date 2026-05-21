@@ -192,6 +192,8 @@ export interface QtiInteraction {
   responseCardinality?: QtiCardinality | undefined;
   responseBaseType?: QtiBaseType | undefined;
   prompt?: string | undefined;
+  promptAttributes?: Record<string, string> | undefined;
+  promptSource?: QtiSourceLocation | undefined;
   contextText?: string | undefined;
   object?: QtiObjectAsset | undefined;
   positionObjectStage?: QtiObjectAsset | undefined;

@@ -1,6 +1,7 @@
 import {
   assertQtiAttemptStateV1,
   createItemSession,
+  createTextToSpeechTraversal,
   parseQtiXml,
   visibleModalFeedback,
   type QtiAssessmentItem,
@@ -16,6 +17,7 @@ import {
   type QtiPortableCustomDefinition,
   type QtiPortableCustomStateValue,
   type QtiScoreResult,
+  type QtiTextToSpeechTraversal,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 
@@ -236,6 +238,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     return state;
   }
 
+  getTextToSpeechTraversal(): QtiTextToSpeechTraversal | undefined {
+    if (!this.documentModel) return undefined;
+    return createTextToSpeechTraversal(this.documentModel);
+  }
+
   private emitStateChange(state = this.serialize()): void {
     if (!state) return;
     this.dispatchPlayerEvent("qti-statechange", { state });
@@ -299,6 +306,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       field.dataset.responseIdentifier = interaction.responseIdentifier;
 
     const heading = document.createElement("h3");
+    copySafeAttributes(heading, interaction.promptAttributes ?? {});
     heading.textContent = interactionLabel(interaction);
     field.append(heading);
     if (interaction.responseIdentifier) {
