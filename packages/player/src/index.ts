@@ -2403,6 +2403,7 @@ function renderGraphicGapMatchResponse(
       renderTargets();
       commit();
     });
+    button.style.position = "absolute";
     placeHotspotButton(button, gap, width, height);
     if (assigned) {
       const assignedLabel = document.createElement("span");
