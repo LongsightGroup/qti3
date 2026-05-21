@@ -191,8 +191,7 @@ The initial player should use native custom elements directly. Lit is not part o
 - Node.js 22+.
 - Modern browsers.
 - Deno 2+.
-- GitHub Actions for CI.
-- Light DOM for the default player.
+- Light DOM for the default player (rendered into the page DOM so host CSS and tooling can inspect and style it directly).
 
 ## Tooling Choices
 
