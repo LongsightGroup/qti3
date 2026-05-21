@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-conformance",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Fixture runner and conformance helpers for qti3 QTI 3 assessment items.",
   "keywords": [
     "assessment",

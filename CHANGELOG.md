@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0 - 2026-05-21
+
+### Added
+
+- Add QTI 3 portable custom interaction parsing, validation, response/state retention, host mount events, and player fallback rendering.
+- Add catalog support resolution APIs for `data-catalog-idref` content so hosts can select transcript, audio-description, sign-language, and media-alternative metadata by support and language.
+- Add Data-SSML parsing, validation diagnostics, and text-to-speech traversal metadata for read-aloud integrations.
+- Add shared QTI accessibility vocabulary handling for `qti-hidden`, `qti-visually-hidden`, `data-qti-suppress-tts`, `data-qti-aria-*`, and `data-qti-a11y-content-role`.
+- Add graphic associate, graphic gap match, and position-object rendering improvements, including image-backed drag/drop and initial unplaced markers.
+
+### Changed
+
+- Preserve broader authored HTML accessibility and internationalization semantics in player content, including headings, Ruby markup, bidirectional text, `aria-*`, `dir`, `lang`, and `xml:lang`.
+- Preserve QTI media `<source>` and `<track>` child metadata beyond native fields, including safe authored `id`, `class`, `title`, `media`, `sizes`, and `data-*` attributes.
+- Clarify portable custom interaction host responsibilities and accessibility proof requirements in documentation and a11y metadata.
+
+### Fixed
+
+- Improve object-backed graphic interaction accessible names and image sizing behavior.
+- Render graphic gap match hotspots against the authored image instead of an empty target surface.
+- Keep position object markers unplaced until the candidate chooses a point.
+
 ## 0.1.2 - 2026-05-21
 
 ### Added
