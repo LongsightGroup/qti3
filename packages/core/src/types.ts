@@ -412,6 +412,7 @@ export interface QtiStylesheet {
 export interface QtiAssessmentItem {
   identifier: string;
   title?: string | undefined;
+  language?: string | undefined;
   adaptive: boolean;
   prompt?: string | undefined;
   responseDeclarations: QtiResponseDeclaration[];
