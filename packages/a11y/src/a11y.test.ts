@@ -76,4 +76,21 @@ describe("@longsightgroup/qti3-a11y", () => {
     );
     expect(byType.get("drawing")?.keyboardModel).toContain("Pointer input draws freehand strokes.");
   });
+
+  it("documents PCI accessibility as a host-runtime contract", () => {
+    const contract = a11yContracts.find((entry) => entry.interactionType === "portableCustom");
+    expect(contract?.focusStrategy).toContain("host-provided PCI runtime");
+    expect(contract?.keyboardModel.join(" ")).toContain(
+      "The host-provided PCI runtime must expose keyboard-operable response controls.",
+    );
+    expect(contract?.keyboardModel.join(" ")).not.toContain("fallback text input");
+    expect(contract?.requiredStates).toEqual(
+      expect.arrayContaining([
+        "host metadata",
+        "host accessible name",
+        "runtime accessible name, role, and state",
+        "runtime validation bridge",
+      ]),
+    );
+  });
 });

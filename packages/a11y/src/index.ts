@@ -115,7 +115,7 @@ export const manualAssistiveTechnologyScripts: ManualAssistiveTechnologyScript[]
     expectedResults: [
       "JAWS announces a stable role and name for every operable control.",
       "Validation and feedback are reachable after scoring.",
-      "Graphic, point, drawing, and custom-host fixtures expose a keyboard-operable fallback or control.",
+      "Graphic, point, and drawing fixtures expose keyboard-operable controls; PCI fixtures expose a focusable host for a keyboard-operable runtime.",
       "The item can be completed without hidden instructions or product-specific UI.",
     ],
   },
@@ -334,12 +334,20 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     return {
       ...base,
       primaryRole: "group",
-      focusStrategy: "Focus enters the portable custom host and its fallback control.",
+      focusStrategy:
+        "Focus enters the portable custom host; the host-provided PCI runtime owns focus routing for internal response controls.",
       keyboardModel: [
-        "The host integration must expose a keyboard-operable response control.",
-        "The fallback text input accepts a response when no integration has rendered.",
+        "The qti3-ts player exposes a focusable portable custom host and mount event.",
+        "The host-provided PCI runtime must expose keyboard-operable response controls.",
+        "The PCI runtime must expose accessible names, roles, values, and selected or invalid states for its rendered controls.",
+        "Response, validity, and suspend/resume state changes are reported through the portable custom interaction event contract.",
       ],
-      requiredStates: ["host metadata", "aria-invalid", "aria-describedby"],
+      requiredStates: [
+        "host metadata",
+        "host accessible name",
+        "runtime accessible name, role, and state",
+        "runtime validation bridge",
+      ],
     };
   }
 
