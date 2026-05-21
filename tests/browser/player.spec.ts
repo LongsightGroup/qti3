@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { deflateRawSync } from "node:zlib";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import {
   adaptiveFixtures,
   interactionFixtures,
@@ -2264,11 +2264,12 @@ test.describe("manual harness", () => {
     await page.keyboard.press("ArrowUp");
     await expectResponse(page, ["B", "A", "C"]);
 
-    await expect(
+    await expectMoveButtons(
       page.locator(
-        'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] .qti3-icon-button',
+        'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] .qti3-move-button',
       ),
-    ).toHaveText(["\u2191", "\u2193"]);
+      ["up", "down"],
+    );
     await page
       .locator(
         'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] [data-move-direction="down"]',
@@ -2282,10 +2283,10 @@ test.describe("manual harness", () => {
 
     for (const fixture of ["selectPoint", "positionObject"]) {
       await loadFixture(page, fixture);
-      const labels = await page
-        .locator("qti-assessment-item-player .qti3-point-controls .qti3-icon-button")
-        .evaluateAll((buttons) => buttons.map((button) => button.textContent?.trim()));
-      expect(labels, fixture).toEqual(["\u2191", "\u2190", "\u2192", "\u2193"]);
+      await expectMoveButtons(
+        page.locator("qti-assessment-item-player .qti3-point-controls .qti3-move-button"),
+        ["up", "left", "right", "down"],
+      );
     }
   });
 
@@ -2309,11 +2310,12 @@ test.describe("manual harness", () => {
     await expectResponse(page, ["B", "A", "C"]);
     await expect(surface.locator("svg.qti3-graphic-sequence-lines line")).toHaveCount(2);
 
-    await expect(
+    await expectMoveButtons(
       page.locator(
-        'qti-assessment-item-player .qti3-graphic-order-item[data-choice-identifier="B"] .qti3-icon-button',
+        'qti-assessment-item-player .qti3-graphic-order-item[data-choice-identifier="B"] .qti3-move-button',
       ),
-    ).toHaveText(["\u2191", "\u2193"]);
+      ["up", "down"],
+    );
     await page
       .locator(
         'qti-assessment-item-player .qti3-graphic-order-item[data-choice-identifier="B"] [data-move-direction="down"]',
@@ -2448,9 +2450,138 @@ test.describe("manual harness", () => {
     await surface.getByRole("button", { name: "Processing rules" }).click();
     await expectResponse(page, ["A B"]);
 
-    await page.getByRole("button", { name: "Remove Item XML to Response capture" }).click();
+    const remove = page.getByRole("button", { name: "Remove Item XML to Response capture" });
+    await expect(remove.locator("svg.qti3-trash-icon")).toHaveCount(1);
+    const hiddenPathStroke = await remove
+      .locator("svg.qti3-trash-icon path")
+      .first()
+      .evaluate((path) => getComputedStyle(path).stroke);
+    expect(hiddenPathStroke).toBe("none");
+    await expect(remove).toHaveAttribute("title", "Remove");
+    await remove.click();
     await expectResponse(page, []);
     await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(0);
+  });
+
+  test("resolves player language-of-interface and message overrides", async ({ page }) => {
+    await page.goto("/");
+    const browserLocale = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const language = navigator.languages[0] ?? navigator.language;
+      return {
+        locale: (element as HTMLElement & { languageOfInterface: string }).languageOfInterface,
+        expected: Intl.getCanonicalLocales(language)[0],
+      };
+    });
+    expect(browserLocale.locale).toBe(browserLocale.expected);
+    const locale = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      element.setAttribute("language-of-interface", "es-MX");
+      return (element as HTMLElement & { languageOfInterface: string }).languageOfInterface;
+    });
+    expect(locale).toBe("es-MX");
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      (
+        element as HTMLElement & {
+          messages: {
+            remove: () => string;
+            removePair: (params: { label: string }) => string;
+          };
+        }
+      ).messages = {
+        remove: () => "Eliminar",
+        removePair: ({ label }) => `Eliminar ${label}`,
+      };
+    });
+    await loadFixture(page, "graphicAssociate");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    await surface.getByRole("button", { name: "Item XML" }).click();
+    await surface.getByRole("button", { name: "Response capture" }).click();
+
+    const remove = page.getByRole("button", { name: "Eliminar Item XML to Response capture" });
+    await expect(remove).toHaveAttribute("title", "Eliminar");
+    await expect(remove.locator("svg.qti3-trash-icon")).toHaveCount(1);
+    await remove.click();
+    await expectResponse(page, []);
+  });
+
+  test("switches language-of-interface from the manual harness", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#language-of-interface").selectOption("de-DE");
+    await loadFixture(page, "graphicAssociate");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    await surface.getByRole("button", { name: "Item XML" }).click();
+    await surface.getByRole("button", { name: "Response capture" }).click();
+
+    const remove = page.getByRole("button", {
+      name: "Item XML to Response capture entfernen",
+    });
+    await expect(remove).toHaveAttribute("title", "Entfernen");
+    await remove.click();
+    await expectResponse(page, []);
+  });
+
+  test("uses built-in player chrome locale catalogs", async ({ page }) => {
+    await page.goto("/");
+    const examples = [
+      {
+        locale: "es-MX",
+        title: "Quitar",
+        removeName: "Quitar Item XML to Response capture",
+      },
+      {
+        locale: "es-ES",
+        title: "Quitar",
+        removeName: "Quitar Item XML to Response capture",
+      },
+      {
+        locale: "sv-SE",
+        title: "Ta bort",
+        removeName: "Ta bort Item XML to Response capture",
+      },
+      {
+        locale: "de-DE",
+        title: "Entfernen",
+        removeName: "Item XML to Response capture entfernen",
+      },
+      {
+        locale: "pt-BR",
+        title: "Remover",
+        removeName: "Remover Item XML to Response capture",
+      },
+      {
+        locale: "pt-PT",
+        title: "Remover",
+        removeName: "Remover Item XML to Response capture",
+      },
+      {
+        locale: "fr-FR",
+        title: "Supprimer",
+        removeName: "Supprimer Item XML to Response capture",
+      },
+    ];
+
+    for (const example of examples) {
+      await page.locator("qti-assessment-item-player").evaluate((element, locale) => {
+        (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = locale;
+        (
+          element as HTMLElement & {
+            messages: undefined;
+          }
+        ).messages = undefined;
+      }, example.locale);
+      await loadFixture(page, "graphicAssociate");
+
+      const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+      await surface.getByRole("button", { name: "Item XML" }).click();
+      await surface.getByRole("button", { name: "Response capture" }).click();
+
+      const remove = page.getByRole("button", { name: example.removeName });
+      await expect(remove, example.locale).toHaveAttribute("title", example.title);
+      await expect(remove.locator("svg.qti3-trash-icon"), example.locale).toHaveCount(1);
+      await remove.click();
+      await expectResponse(page, []);
+    }
   });
 
   test("infers inline SVG dimensions and supports dragging graphic associate lines", async ({
@@ -3349,6 +3480,34 @@ async function currentResponse(page: import("@playwright/test").Page): Promise<u
     return element.serialize();
   });
   return state.responses.RESPONSE;
+}
+
+async function expectMoveButtons(
+  buttons: Locator,
+  expectedDirections: Array<"up" | "down" | "left" | "right">,
+): Promise<void> {
+  await expect(buttons).toHaveCount(expectedDirections.length);
+  const actual = await buttons.evaluateAll((elements) =>
+    elements.map((button) => {
+      const icon = button.querySelector("svg.qti3-movement-icon");
+      return {
+        direction: (button as HTMLElement).dataset.moveDirection ?? "",
+        focusable: icon?.getAttribute("focusable") ?? "",
+        hidden: icon?.getAttribute("aria-hidden") ?? "",
+        pathCount: icon?.querySelectorAll("path").length ?? 0,
+        text: button.textContent?.trim() ?? "",
+      };
+    }),
+  );
+  expect(actual).toEqual(
+    expectedDirections.map((direction) => ({
+      direction,
+      focusable: "false",
+      hidden: "true",
+      pathCount: 3,
+      text: "",
+    })),
+  );
 }
 
 function decodeDataUrlText(dataUrl: string): string {

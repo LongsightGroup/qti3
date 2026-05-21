@@ -8,6 +8,7 @@ import { defineQtiAssessmentItemPlayer } from "@longsightgroup/qti3-player";
 defineQtiAssessmentItemPlayer();
 
 const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
+const languageOfInterface = document.querySelector<HTMLSelectElement>("#language-of-interface");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
 const loadXml = document.querySelector<HTMLButtonElement>("#load-xml");
 const fileInput = document.querySelector<HTMLInputElement>("#file");
@@ -45,6 +46,7 @@ const player = document.querySelector("qti-assessment-item-player");
 
 if (
   !fixtureSelect ||
+  !languageOfInterface ||
   !loadFixture ||
   !loadXml ||
   !fileInput ||
@@ -133,6 +135,10 @@ for (const category of ["interaction", "processing", "adaptive"] as const) {
   }
   fixtureSelect.append(group);
 }
+
+languageOfInterface.addEventListener("change", () => {
+  player.languageOfInterface = languageOfInterface.value || undefined;
+});
 
 loadFixture.addEventListener("click", async () => {
   const fixture =

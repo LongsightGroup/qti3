@@ -44,6 +44,17 @@ export interface QtiPlayerLoadOptions {
   resolveAsset?: QtiPlayerResolveAsset | undefined;
 }
 
+export interface QtiPlayerRemoveMessageParams {
+  label: string;
+}
+
+export interface QtiPlayerMessages {
+  remove: () => string;
+  removePair: (params: QtiPlayerRemoveMessageParams) => string;
+}
+
+export type QtiPlayerMessageOverrides = Partial<QtiPlayerMessages>;
+
 export interface QtiReadyEventDetail {
   item: QtiAssessmentItem;
 }
@@ -112,14 +123,58 @@ const HTMLElementBase: typeof HTMLElement =
   } as unknown as typeof HTMLElement);
 
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
+  static get observedAttributes(): string[] {
+    return ["language-of-interface", "locale"];
+  }
+
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
   private resolveAsset: QtiPlayerResolveAsset | undefined;
   private validationMessages: QtiDiagnostic[] = [];
+  private languageOfInterfaceOverride: string | undefined;
+  private messageOverrides: QtiPlayerMessageOverrides = {};
   private sessionControl: Required<QtiPlayerSessionControl> = {
     validateResponses: true,
     showFeedback: true,
   };
+
+  get languageOfInterface(): string {
+    return (
+      this.languageOfInterfaceOverride ??
+      this.getAttribute?.("language-of-interface") ??
+      this.getAttribute?.("locale") ??
+      defaultPlayerLocale(this)
+    );
+  }
+
+  set languageOfInterface(value: string | undefined) {
+    this.languageOfInterfaceOverride = normalizedLocale(value);
+    this.rerenderIfLoaded();
+  }
+
+  get locale(): string {
+    return this.languageOfInterface;
+  }
+
+  set locale(value: string | undefined) {
+    this.languageOfInterface = value;
+  }
+
+  get messages(): QtiPlayerMessageOverrides {
+    return this.messageOverrides;
+  }
+
+  set messages(value: QtiPlayerMessageOverrides | undefined) {
+    this.messageOverrides = value ?? {};
+    this.rerenderIfLoaded();
+  }
+
+  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+    if ((name !== "language-of-interface" && name !== "locale") || oldValue === newValue) {
+      return;
+    }
+    this.rerenderIfLoaded();
+  }
 
   async loadXml(xml: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
     this.sessionControl = {
@@ -265,6 +320,17 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.dispatchEvent(new CustomEvent<QtiAssessmentItemPlayerEventDetailMap[T]>(type, { detail }));
   }
 
+  private playerMessages(): QtiPlayerMessages {
+    return resolvePlayerMessages(this.languageOfInterface, this.messageOverrides);
+  }
+
+  private rerenderIfLoaded(): void {
+    if (!this.documentModel) return;
+    this.render();
+    this.renderValidationMessages();
+    this.updateAttemptAvailability();
+  }
+
   private render(): void {
     const documentModel = this.documentModel;
     if (!documentModel) return;
@@ -308,6 +374,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   private renderInteraction(interaction: QtiInteraction): HTMLElement {
+    const messages = this.playerMessages();
     const field = document.createElement("section");
     field.className = `qti3-interaction qti3-${interaction.type}`;
     field.classList.add(...qtiSharedClassNames(interaction.attributes.class));
@@ -335,7 +402,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
     if (interaction.type === "graphicOrder") {
-      field.append(renderGraphicOrderResponse(interaction, update, currentValue));
+      field.append(renderGraphicOrderResponse(interaction, update, currentValue, messages));
       return field;
     }
 
@@ -350,17 +417,17 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     }
 
     if (interaction.type === "graphicAssociate") {
-      field.append(renderGraphicAssociateResponse(interaction, update, currentValue));
+      field.append(renderGraphicAssociateResponse(interaction, update, currentValue, messages));
       return field;
     }
 
     if (interaction.type === "match") {
-      field.append(renderMatchResponse(interaction, update, currentValue));
+      field.append(renderMatchResponse(interaction, update, currentValue, messages));
       return field;
     }
 
     if (usesPairResponse(interaction)) {
-      field.append(renderPairResponse(interaction, update, currentValue));
+      field.append(renderPairResponse(interaction, update, currentValue, messages));
       return field;
     }
 
@@ -951,6 +1018,146 @@ declare global {
   }
 }
 
+const defaultEnglishPlayerMessages: QtiPlayerMessages = {
+  remove: () => "Remove",
+  removePair: ({ label }) => `Remove ${label}`,
+};
+
+const playerMessages = {
+  defaultEnglish: defaultEnglishPlayerMessages,
+  spanish: playerMessageCatalog("Quitar", ({ label }) => `Quitar ${label}`),
+  swedish: playerMessageCatalog("Ta bort", ({ label }) => `Ta bort ${label}`),
+  german: playerMessageCatalog("Entfernen", ({ label }) => `${label} entfernen`),
+  portuguese: playerMessageCatalog("Remover", ({ label }) => `Remover ${label}`),
+  french: playerMessageCatalog("Supprimer", ({ label }) => `Supprimer ${label}`),
+};
+
+const builtInPlayerMessageCatalogs: ReadonlyMap<string, QtiPlayerMessages> = new Map([
+  ["en", playerMessages.defaultEnglish],
+  ["es", playerMessages.spanish],
+  ["es-es", playerMessages.spanish],
+  ["es-mx", playerMessages.spanish],
+  ["sv", playerMessages.swedish],
+  ["sv-se", playerMessages.swedish],
+  ["de", playerMessages.german],
+  ["de-de", playerMessages.german],
+  ["pt", playerMessages.portuguese],
+  ["pt-br", playerMessages.portuguese],
+  ["pt-pt", playerMessages.portuguese],
+  ["fr", playerMessages.french],
+  ["fr-ca", playerMessages.french],
+  ["fr-fr", playerMessages.french],
+]);
+
+function playerMessageCatalog(
+  remove: string,
+  removePair: QtiPlayerMessages["removePair"],
+): QtiPlayerMessages {
+  return {
+    remove: () => remove,
+    removePair,
+  };
+}
+
+function resolvePlayerMessages(
+  locale: string,
+  overrides: QtiPlayerMessageOverrides,
+): QtiPlayerMessages {
+  const catalog = builtInPlayerMessageCatalog(locale);
+  return {
+    remove: overrides.remove ?? catalog?.remove ?? defaultEnglishPlayerMessages.remove,
+    removePair:
+      overrides.removePair ?? catalog?.removePair ?? defaultEnglishPlayerMessages.removePair,
+  };
+}
+
+function builtInPlayerMessageCatalog(locale: string): QtiPlayerMessages | undefined {
+  for (const candidate of localeFallbacks(locale)) {
+    const catalog = builtInPlayerMessageCatalogs.get(candidate);
+    if (catalog) return catalog;
+  }
+  return undefined;
+}
+
+function localeFallbacks(locale: string): string[] {
+  const normalized = normalizedLocale(locale)?.toLowerCase();
+  if (!normalized) return ["en"];
+  const parts = normalized.split("-");
+  const fallbacks: string[] = [];
+  for (let length = parts.length; length > 0; length -= 1) {
+    fallbacks.push(parts.slice(0, length).join("-"));
+  }
+  return fallbacks.includes("en") ? fallbacks : [...fallbacks, "en"];
+}
+
+function normalizedLocale(value: string | undefined | null): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  try {
+    return Intl.getCanonicalLocales(trimmed)[0] ?? trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+function defaultPlayerLocale(host?: Element): string {
+  const elementLanguage = normalizedLocale(host?.getAttribute("lang"));
+  if (elementLanguage) return elementLanguage;
+
+  const navigatorLanguages = globalThis.navigator?.languages ?? [];
+  for (const language of navigatorLanguages) {
+    const normalized = normalizedLocale(language);
+    if (normalized) return normalized;
+  }
+  return (
+    normalizedLocale(globalThis.navigator?.language) ??
+    normalizedLocale(host?.closest("[lang]")?.getAttribute("lang")) ??
+    normalizedLocale(host?.ownerDocument?.documentElement.lang) ??
+    normalizedLocale(globalThis.document?.documentElement.lang) ??
+    "en"
+  );
+}
+
+function removeButton(label: string | null, messages: QtiPlayerMessages): HTMLButtonElement {
+  const safeLabel = label?.trim() || messages.remove();
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "qti3-icon-button qti3-remove-button";
+  button.title = messages.remove();
+  button.setAttribute("aria-label", messages.removePair({ label: safeLabel }));
+  button.append(trashIcon());
+  return button;
+}
+
+type IconPath = string | { d: string; fill?: string; stroke?: string };
+
+function inlineIcon(className: string, paths: IconPath[]): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  svg.setAttribute("class", className);
+
+  for (const entry of paths) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    if (typeof entry === "string") {
+      path.setAttribute("d", entry);
+    } else {
+      path.setAttribute("d", entry.d);
+      if (entry.stroke) {
+        path.setAttribute("stroke", entry.stroke);
+        path.style.stroke = entry.stroke;
+      }
+      if (entry.fill) {
+        path.setAttribute("fill", entry.fill);
+        path.style.fill = entry.fill;
+      }
+    }
+    svg.append(path);
+  }
+  return svg;
+}
+
 function renderChoice(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -1021,12 +1228,27 @@ function responseGroup(className?: string): HTMLElement {
 
 type MovementDirection = "up" | "down" | "left" | "right";
 
-const movementGlyphs: Record<MovementDirection, string> = {
-  up: "\u2191",
-  down: "\u2193",
-  left: "\u2190",
-  right: "\u2192",
+function trashIcon(): SVGSVGElement {
+  return inlineIcon("qti3-trash-icon", [
+    { d: "M0 0h24v24H0z", stroke: "none", fill: "none" },
+    "M4 7l16 0",
+    "M10 11l0 6",
+    "M14 11l0 6",
+    "M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12",
+    "M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3",
+  ]);
+}
+
+const movementIconPaths: Record<MovementDirection, string[]> = {
+  up: ["M12 5l0 14", "M18 11l-6 -6", "M6 11l6 -6"],
+  down: ["M12 5l0 14", "M18 13l-6 6", "M6 13l6 6"],
+  left: ["M5 12l14 0", "M5 12l6 6", "M5 12l6 -6"],
+  right: ["M5 12l14 0", "M13 18l6 -6", "M13 6l6 6"],
 };
+
+function movementIcon(direction: MovementDirection): SVGSVGElement {
+  return inlineIcon("qti3-movement-icon", movementIconPaths[direction]);
+}
 
 function movementButton(
   direction: MovementDirection,
@@ -1035,10 +1257,10 @@ function movementButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "qti3-icon-button";
+  button.className = "qti3-icon-button qti3-move-button";
   button.dataset.moveDirection = direction;
-  button.textContent = movementGlyphs[direction];
   button.setAttribute("aria-label", accessibleName);
+  button.append(movementIcon(direction));
   button.addEventListener("click", onClick);
   return button;
 }
@@ -1282,6 +1504,7 @@ function renderPairResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
   appendGraphicContext(group, interaction);
@@ -1346,10 +1569,7 @@ function renderPairResponse(
         item.className = "qti3-pair-chip";
         const text = document.createElement("span");
         text.textContent = `${choiceText(sources, source)} to ${choiceText(targets, target)}`;
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "Remove";
-        remove.setAttribute("aria-label", `Remove ${text.textContent}`);
+        const remove = removeButton(text.textContent, messages);
         remove.addEventListener("click", () => {
           const index = selectedPairs.indexOf(pair);
           if (index >= 0) selectedPairs.splice(index, 1);
@@ -1411,6 +1631,7 @@ function renderMatchResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -1470,10 +1691,7 @@ function renderMatchResponse(
         item.className = "qti3-pair-chip";
         const text = document.createElement("span");
         text.textContent = label;
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "Remove";
-        remove.setAttribute("aria-label", `Remove ${label}`);
+        const remove = removeButton(label, messages);
         remove.addEventListener("click", () => {
           removePair(pair);
           syncPressed();
@@ -1608,6 +1826,7 @@ function renderGraphicOrderResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -1783,10 +2002,7 @@ function renderGraphicOrderResponse(
         );
         down.disabled = index === currentChoices.length - 1;
 
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "Remove";
-        remove.setAttribute("aria-label", `Remove ${choiceLabel}`);
+        const remove = removeButton(choiceLabel, messages);
         remove.addEventListener("click", () => removeHotspot(choice.identifier));
 
         item.append(label, up, down, remove);
@@ -1837,6 +2053,7 @@ function renderGraphicAssociateResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -2047,10 +2264,7 @@ function renderGraphicAssociateResponse(
         item.className = "qti3-pair-chip";
         const text = document.createElement("span");
         text.textContent = pairLabel;
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "Remove";
-        remove.setAttribute("aria-label", `Remove ${pairLabel}`);
+        const remove = removeButton(pairLabel, messages);
         remove.addEventListener("click", () => removePair(pair));
         item.append(text, remove);
         return item;
@@ -4663,6 +4877,33 @@ function playerStyleElement(): HTMLStyleElement {
       block-size: 2.25rem;
       padding: 0;
       line-height: 1;
+    }
+
+    .qti3-remove-button {
+      border: 1px solid currentColor;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .qti3-remove-button:hover {
+      background: color-mix(in srgb, currentColor 14%, transparent);
+    }
+
+    .qti3-trash-icon,
+    .qti3-movement-icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    .qti3-trash-icon path,
+    .qti3-movement-icon path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
     }
 
     .qti3-token[aria-pressed="true"],
