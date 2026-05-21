@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Include packaged TypeScript source files referenced by published source maps.
+- Add a release check that verifies package tarballs include every non-URL source referenced by shipped source maps.
+
 ## 0.1.1 - 2026-05-21
 
 ### Changed
