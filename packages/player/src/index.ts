@@ -1133,7 +1133,15 @@ type IconPath = string | { d: string; fill?: string; stroke?: string };
 
 function inlineIcon(className: string, paths: IconPath[]): SVGSVGElement {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  svg.setAttribute("width", "24");
+  svg.setAttribute("height", "24");
   svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
   svg.setAttribute("aria-hidden", "true");
   svg.setAttribute("focusable", "false");
   svg.setAttribute("class", className);
@@ -4890,7 +4898,11 @@ function playerStyleElement(): HTMLStyleElement {
       background: color-mix(in srgb, currentColor 14%, transparent);
     }
 
-    .qti3-trash-icon,
+    .qti3-trash-icon {
+      inline-size: 1.125rem;
+      block-size: 1.125rem;
+    }
+
     .qti3-movement-icon {
       inline-size: 1rem;
       block-size: 1rem;
