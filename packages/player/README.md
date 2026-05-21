@@ -39,6 +39,25 @@ player?.addEventListener("qti-statechange", (event) => {
 });
 ```
 
+## Player Chrome Messages
+
+The player keeps authored QTI content language separate from player chrome such as
+remove buttons. Chrome language defaults to the player `languageOfInterface` property,
+the `language-of-interface` attribute, browser language, document language, then
+English. Hosts can override it when delivery settings require a fixed interface language.
+
+Built-in catalogs are currently available for English, Spanish (`es-MX`, `es-ES`),
+Swedish (`sv-SE`), German (`de-DE`), Portuguese (`pt-BR`, `pt-PT`), and French
+(`fr-FR`, `fr-CA`).
+
+```ts
+player.languageOfInterface = "es-MX";
+player.messages = {
+  remove: () => "Eliminar",
+  removePair: ({ label }) => `Eliminar ${label}`,
+};
+```
+
 ## Portable Custom Interactions
 
 For `qti-portable-custom-interaction`, the player renders a
