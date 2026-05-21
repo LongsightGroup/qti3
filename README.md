@@ -278,7 +278,7 @@ keyboard contract, automated evidence, and manual assistive-technology scripts:
 node packages/cli/dist/index.js a11y-proof
 ```
 
-Quality expectations are part of the public contract:
+For releases, the bar is:
 
 - Supported interactions need parser, validation, scoring, rendering, keyboard, and accessibility evidence.
 - Accessibility checks cover real operation, not just automated scans.
