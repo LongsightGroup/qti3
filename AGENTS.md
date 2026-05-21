@@ -13,6 +13,7 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 
 - This directory may reference lessons from existing repositories, but it should stand alone as a clean project.
 - Do not keep private coordination notes in this Git repo.
+- Keep private, generated, and customer QTI packages outside this repository unless they have been explicitly scrubbed and licensed for publication.
 
 ## Technical Preferences
 

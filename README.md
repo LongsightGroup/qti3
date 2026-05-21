@@ -310,7 +310,7 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 - Processing coverage includes response processing, template processing, feedback, printed variables, MathML/template variables, catalogs, shared CSS vocabulary, advanced numeric/container/point expressions, and adaptive `completionStatus` behavior.
 - Serialized attempt state is the public save/resume/review contract. Core and player APIs clone returned state and score values so hosts do not depend on or mutate private runtime state.
 - The manual harness debugger exposes responses, outcomes, template values, diagnostics, validation messages, serialized state, package item navigation, action history, and accessibility proof scripts.
-- Public fixtures are synthetic and MIT-licensed. Private, generated, or customer packages stay outside this repository unless explicitly scrubbed and licensed for publication.
+- Public fixtures are synthetic and MIT-licensed.
 - Package and assessment-test support is limited to item discovery, item-reference traversal, asset resolution, validation, and item loading. A full runner/controller remains a host-product concern.
 
 ## Publishing
