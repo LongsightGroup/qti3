@@ -1,3 +1,10 @@
+export {
+  createCatalogSupportResolution,
+  type QtiCatalogSupportResolution,
+  type QtiCatalogSupportResolutionOptions,
+  type QtiResolvedCatalogReference,
+  type QtiResolvedCatalogSupport,
+} from "./catalog.js";
 export { parseQtiXml } from "./parser.js";
 export {
   createTextToSpeechTraversal,
@@ -39,6 +46,13 @@ export type {
   QtiAssessmentItem,
   QtiAttemptStatus,
   QtiAttemptStateV1,
+  QtiCatalog,
+  QtiCatalogCard,
+  QtiCatalogCardEntry,
+  QtiCatalogFileHref,
+  QtiCatalogHtmlContent,
+  QtiCatalogInfo,
+  QtiCatalogReference,
   QtiChoice,
   QtiChoiceRole,
   QtiContentNode,

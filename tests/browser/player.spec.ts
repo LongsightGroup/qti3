@@ -140,6 +140,103 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-catalogs")).toContainText("Accurate means correct.");
   });
 
+  test("exposes resolved catalog supports for media alternatives", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <p data-catalog-idref="audio-transcript">Listen to the recording.</p>
+          <qti-media-interaction response-identifier="RESPONSE" data-catalog-idref="video-alternatives">
+            <qti-prompt>Watch the clip.</qti-prompt>
+            <video width="320" height="180">
+              <source src="clips/presentation.mp4" type="video/mp4"/>
+              <track kind="captions" src="captions/presentation.vtt" srclang="en" label="English"/>
+            </video>
+          </qti-media-interaction>
+        </qti-item-body>
+        <qti-catalog-info>
+          <qti-catalog id="audio-transcript">
+            <qti-card support="transcript">
+              <qti-card-entry xml:lang="en" default="true">
+                <qti-html-content><p>English transcript.</p></qti-html-content>
+              </qti-card-entry>
+              <qti-card-entry xml:lang="es">
+                <qti-html-content><p>Transcripción en español.</p></qti-html-content>
+              </qti-card-entry>
+            </qti-card>
+          </qti-catalog>
+          <qti-catalog id="video-alternatives">
+            <qti-card support="audio-description">
+              <qti-card-entry default="true">
+                <qti-file-href mime-type="audio/mpeg">audio/presentation-description.mp3</qti-file-href>
+              </qti-card-entry>
+            </qti-card>
+            <qti-card support="sign-language">
+              <qti-card-entry xml:lang="ase" default="true">
+                <qti-html-content><p>ASL interpretation clip.</p></qti-html-content>
+              </qti-card-entry>
+            </qti-card>
+          </qti-catalog>
+        </qti-catalog-info>
+      </qti-assessment-item>
+    `,
+    );
+
+    const resolution = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return (
+        element as HTMLElement & {
+          getCatalogSupportResolution: (options?: { languages?: string[]; supports?: string[] }) =>
+            | {
+                references: Array<{
+                  idref: string;
+                  matches: Array<{
+                    fileHrefs: Array<{ href: string; mimeType?: string }>;
+                    htmlContent?: { text: string };
+                    language?: string;
+                    support: string;
+                  }>;
+                }>;
+              }
+            | undefined;
+        }
+      ).getCatalogSupportResolution({
+        supports: ["transcript", "audio-description", "sign-language"],
+        languages: ["es", "ase"],
+      });
+    });
+
+    expect(resolution?.references.map((reference) => reference.idref)).toEqual([
+      "audio-transcript",
+      "video-alternatives",
+    ]);
+    expect(resolution?.references[0]?.matches).toEqual([
+      expect.objectContaining({
+        language: "es",
+        support: "transcript",
+        htmlContent: expect.objectContaining({ text: "Transcripción en español." }),
+      }),
+    ]);
+    expect(resolution?.references[1]?.matches).toEqual([
+      expect.objectContaining({
+        support: "audio-description",
+        fileHrefs: [
+          expect.objectContaining({
+            href: "audio/presentation-description.mp3",
+            mimeType: "audio/mpeg",
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        language: "ase",
+        support: "sign-language",
+        htmlContent: expect.objectContaining({ text: "ASL interpretation clip." }),
+      }),
+    ]);
+  });
+
   test("shows item stylesheet references in the manual debugger", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
@@ -853,9 +950,9 @@ test.describe("manual harness", () => {
           <qti-media-interaction response-identifier="RESPONSE" autostart="false" loop="true">
             <qti-prompt>Watch the delivery clip.</qti-prompt>
             <video width="320" height="180" data-qti-media-player-controls="default">
-              <source src="clips/delivery.mp4" type="video/mp4"/>
+              <source id="mp4-source" class="primary-source" src="clips/delivery.mp4" type="video/mp4" data-qti-media-variant="primary"/>
               <source src="clips/delivery.webm"/>
-              <track kind="captions" src="captions/delivery.vtt" srclang="en" label="English" default="default"/>
+              <track id="captions-track" class="caption-track" kind="captions" src="captions/delivery.vtt" srclang="en" label="English" default="default" data-qti-a11y-content-role="captions"/>
             </video>
           </qti-media-interaction>
         </qti-item-body>
@@ -872,12 +969,21 @@ test.describe("manual harness", () => {
     await expect(video).toHaveAccessibleName("Watch the delivery clip.");
     await expect(video.locator("source").first()).toHaveAttribute("src", "clips/delivery.mp4");
     await expect(video.locator("source").first()).toHaveAttribute("type", "video/mp4");
+    await expect(video.locator("source").first()).toHaveAttribute("id", "mp4-source");
+    await expect(video.locator("source").first()).toHaveAttribute("class", "primary-source");
+    await expect(video.locator("source").first()).toHaveAttribute(
+      "data-qti-media-variant",
+      "primary",
+    );
     await expect(video.locator("source").nth(1)).toHaveAttribute("src", "clips/delivery.webm");
     await expect(video.locator("track")).toHaveAttribute("src", "captions/delivery.vtt");
     await expect(video.locator("track")).toHaveAttribute("kind", "captions");
     await expect(video.locator("track")).toHaveAttribute("srclang", "en");
     await expect(video.locator("track")).toHaveAttribute("label", "English");
     await expect(video.locator("track")).toHaveAttribute("default", "");
+    await expect(video.locator("track")).toHaveAttribute("id", "captions-track");
+    await expect(video.locator("track")).toHaveAttribute("class", "caption-track");
+    await expect(video.locator("track")).toHaveAttribute("data-qti-a11y-content-role", "captions");
   });
 
   test("honors authored media control suppression without custom chrome", async ({ page }) => {

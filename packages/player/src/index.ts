@@ -1,6 +1,7 @@
 import {
   assertQtiAttemptStateV1,
   createItemSession,
+  createCatalogSupportResolution,
   createTextToSpeechTraversal,
   parseQtiXml,
   visibleModalFeedback,
@@ -17,6 +18,8 @@ import {
   type QtiPortableCustomDefinition,
   type QtiPortableCustomStateValue,
   type QtiScoreResult,
+  type QtiCatalogSupportResolution,
+  type QtiCatalogSupportResolutionOptions,
   type QtiTextToSpeechTraversal,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
@@ -241,6 +244,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   getTextToSpeechTraversal(): QtiTextToSpeechTraversal | undefined {
     if (!this.documentModel) return undefined;
     return createTextToSpeechTraversal(this.documentModel);
+  }
+
+  getCatalogSupportResolution(
+    options: QtiCatalogSupportResolutionOptions = {},
+  ): QtiCatalogSupportResolution | undefined {
+    if (!this.documentModel) return undefined;
+    return createCatalogSupportResolution(this.documentModel, options);
   }
 
   private emitStateChange(state = this.serialize()): void {
@@ -3294,6 +3304,7 @@ function configureMediaElement(
     const sourceElement = document.createElement("source");
     sourceElement.src = source.src;
     if (source.type) sourceElement.type = source.type;
+    copySafeMediaChildAttributes(sourceElement, source.attributes, sourceAttributeNames);
     media.append(sourceElement);
   }
   for (const track of object.tracks) {
@@ -3304,6 +3315,7 @@ function configureMediaElement(
     if (track.srclang) trackElement.srclang = track.srclang;
     if (track.label) trackElement.label = track.label;
     if (track.default) trackElement.default = true;
+    copySafeMediaChildAttributes(trackElement, track.attributes, trackAttributeNames);
     media.append(trackElement);
   }
 
@@ -3314,6 +3326,30 @@ function copyMediaDataAttributes(element: HTMLElement, attributes: Record<string
   for (const [name, value] of Object.entries(attributes)) {
     if (!name.startsWith("data-")) continue;
     element.setAttribute(name, value);
+  }
+}
+
+const sourceAttributeNames = new Set(["src", "srcset", "type"]);
+const trackAttributeNames = new Set(["default", "kind", "label", "src", "srclang"]);
+
+function copySafeMediaChildAttributes(
+  element: HTMLElement,
+  attributes: Record<string, string>,
+  controlledNames: Set<string>,
+): void {
+  for (const [name, value] of Object.entries(attributes)) {
+    const normalizedName = name.toLowerCase();
+    if (controlledNames.has(normalizedName)) continue;
+    if (
+      normalizedName === "class" ||
+      normalizedName === "id" ||
+      normalizedName === "title" ||
+      normalizedName === "media" ||
+      normalizedName === "sizes" ||
+      normalizedName.startsWith("data-")
+    ) {
+      element.setAttribute(name, value);
+    }
   }
 }
 

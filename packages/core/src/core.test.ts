@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assertQtiAttemptStateV1,
+  createCatalogSupportResolution,
   createTextToSpeechTraversal,
   createItemSession,
   deprecatedInteractionSupport,
@@ -656,6 +657,103 @@ describe("@longsightgroup/qti3-core", () => {
           },
         ],
       },
+    ]);
+  });
+
+  it("resolves catalog supports for media alternatives in reference order", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <p data-catalog-idref="audio-transcript">Listen to the recording.</p>
+          <qti-media-interaction response-identifier="RESPONSE" data-catalog-idref="video-alternatives">
+            <qti-prompt>Watch the clip.</qti-prompt>
+            <video width="320" height="180">
+              <source src="clips/presentation.mp4" type="video/mp4"/>
+              <track kind="captions" src="captions/presentation.vtt" srclang="en" label="English"/>
+            </video>
+          </qti-media-interaction>
+        </qti-item-body>
+        <qti-catalog-info>
+          <qti-catalog id="audio-transcript">
+            <qti-card support="transcript">
+              <qti-card-entry xml:lang="en" default="true">
+                <qti-html-content><p>English transcript.</p></qti-html-content>
+              </qti-card-entry>
+              <qti-card-entry xml:lang="es">
+                <qti-html-content><p>Transcripción en español.</p></qti-html-content>
+              </qti-card-entry>
+            </qti-card>
+          </qti-catalog>
+          <qti-catalog id="video-alternatives">
+            <qti-card support="audio-description">
+              <qti-card-entry default="true">
+                <qti-file-href mime-type="audio/mpeg">audio/presentation-description.mp3</qti-file-href>
+              </qti-card-entry>
+            </qti-card>
+            <qti-card support="sign-language">
+              <qti-card-entry xml:lang="ase" default="true">
+                <qti-html-content><p>ASL interpretation clip.</p></qti-html-content>
+              </qti-card-entry>
+            </qti-card>
+            <qti-card support="media-alternative">
+              <qti-file-href mime-type="video/mp4">video/presentation-described.mp4</qti-file-href>
+            </qti-card>
+          </qti-catalog>
+        </qti-catalog-info>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+
+    const spanishTranscript = createCatalogSupportResolution(result.document!, {
+      supports: "transcript",
+      languages: ["es"],
+    });
+    expect(spanishTranscript.references.map((reference) => reference.idref)).toEqual([
+      "audio-transcript",
+      "video-alternatives",
+    ]);
+    expect(spanishTranscript.references[0]?.matches).toEqual([
+      expect.objectContaining({
+        support: "transcript",
+        language: "es",
+        default: false,
+        htmlContent: expect.objectContaining({ text: "Transcripción en español." }),
+      }),
+    ]);
+    expect(spanishTranscript.references[1]?.matches).toEqual([]);
+
+    const mediaAlternatives = createCatalogSupportResolution(result.document!, {
+      supports: ["audio-description", "sign-language", "media-alternative"],
+      languages: ["ase"],
+    });
+    expect(mediaAlternatives.references[1]?.matches).toEqual([
+      expect.objectContaining({
+        support: "audio-description",
+        default: true,
+        fileHrefs: [
+          expect.objectContaining({
+            href: "audio/presentation-description.mp3",
+            mimeType: "audio/mpeg",
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        support: "sign-language",
+        language: "ase",
+        htmlContent: expect.objectContaining({ text: "ASL interpretation clip." }),
+      }),
+      expect.objectContaining({
+        support: "media-alternative",
+        default: true,
+        fileHrefs: [
+          expect.objectContaining({
+            href: "video/presentation-described.mp4",
+            mimeType: "video/mp4",
+          }),
+        ],
+      }),
     ]);
   });
 
