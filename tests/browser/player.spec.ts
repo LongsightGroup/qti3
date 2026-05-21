@@ -18,7 +18,6 @@ test.describe("manual harness", () => {
     for (const fixture of interactionFixtures) {
       await page.locator("#fixture").selectOption(fixture.id);
       await page.locator("#load-fixture").click();
-      await expect(page.locator("qti-assessment-item-player")).toContainText(fixture.id);
       await expect(
         page.locator(`[data-interaction-type="${fixture.interactionType}"]`).first(),
       ).toBeVisible();
@@ -28,6 +27,21 @@ test.describe("manual harness", () => {
         return await window.axe.run(document.querySelector("qti-assessment-item-player"));
       });
       expect(result.violations, fixture.id).toEqual([]);
+    }
+  });
+
+  test("does not render generic fieldset or legend wrappers around interactions", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    for (const fixture of interactionFixtures) {
+      await page.locator("#fixture").selectOption(fixture.id);
+      await page.locator("#load-fixture").click();
+
+      const player = page.locator("qti-assessment-item-player");
+      await expect(player.locator("fieldset"), fixture.id).toHaveCount(0);
+      await expect(player.locator("legend"), fixture.id).toHaveCount(0);
     }
   });
 
@@ -135,8 +149,32 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-at-scripts")).toContainText("NVDA on Windows");
     await expect(page.locator("#debug-at-scripts")).toContainText("JAWS on Windows");
     await expect(page.locator("#debug-at-scripts ol li").first()).toContainText(
-      "Navigate from the item heading",
+      "Navigate from the item body",
     );
+  });
+
+  test("does not render qti-assessment-item title metadata as candidate content", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item
+        xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+        identifier="candidate-visible-item"
+        title="Internal Item Bank Title">
+        <qti-item-body>
+          <p>Candidate-visible item body.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player).toContainText("Candidate-visible item body.");
+    await expect(player).not.toContainText("Internal Item Bank Title");
+    await expect(player.locator("#qti3-item-title")).toHaveCount(0);
   });
 
   test("loads processing and adaptive canonical fixtures from the picker", async ({ page }) => {
@@ -155,12 +193,16 @@ test.describe("manual harness", () => {
 
     await page.locator("#fixture").selectOption(templateFixture.id);
     await page.locator("#load-fixture").click();
-    await expect(page.locator("qti-assessment-item-player")).toContainText(templateFixture.id);
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Template processing generates the correct numeric response before delivery.",
+    );
     await expect(page.locator("#debug-template-values")).toContainText('"ANSWER": 5');
 
     await page.locator("#fixture").selectOption(adaptiveFixture.id);
     await page.locator("#load-fixture").click();
-    await expect(page.locator("qti-assessment-item-player")).toContainText(adaptiveFixture.id);
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Use the hint control or answer the item.",
+    );
     await page.getByRole("button", { name: "Show hint" }).click();
     await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toContainText(
       "Hint feedback is visible",
@@ -250,6 +292,38 @@ test.describe("manual harness", () => {
     await expect(
       player.locator('[data-response-identifier="RESPONSE_OUTCOME"] select'),
     ).toBeVisible();
+  });
+
+  test("renders inline choice placeholder without locale text and clears to null", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await loadFixture(page, "inlineChoice");
+
+    const select = page.locator(
+      'qti-assessment-item-player [data-response-identifier="RESPONSE_DECLARATION"] select',
+    );
+    await expect(select.locator("option").first()).toHaveText("");
+    const placeholderValue = await select
+      .locator("option")
+      .first()
+      .evaluate((option) => (option as HTMLOptionElement).value);
+    expect(placeholderValue).toBe("");
+    await expect(select).toHaveValue("");
+
+    await select.selectOption("A");
+    await expect(select).toHaveValue("A");
+    let state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.RESPONSE_DECLARATION).toBe("A");
+
+    await select.selectOption("");
+    await expect(select).toHaveValue("");
+    state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.RESPONSE_DECLARATION).toBeNull();
   });
 
   test("renders choice options as a vertical list", async ({ page }) => {
@@ -692,7 +766,9 @@ test.describe("manual harness", () => {
     });
 
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
-    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Select one answer from a standard single-choice interaction.",
+    );
     await expect(page.locator("#debug-package")).toContainText('"status": "loaded"');
     await expect(page.locator("#debug-package")).toContainText('"items/choice.xml"');
     await expect(page.locator("#debug-package")).toContainText(
@@ -701,7 +777,9 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-action-log")).toContainText("package-load");
     await page.locator("#next-file").click();
     await expect(page.locator("#file-summary")).toContainText("2 of 2");
-    await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Type a short QTI outcome name in the sentence.",
+    );
     await expect(page.locator("#debug-package")).toContainText(
       '"selectedItem": "items/text-entry.xml"',
     );
@@ -751,11 +829,15 @@ test.describe("manual harness", () => {
 
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
-    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Select one answer from a standard single-choice interaction.",
+    );
     await page.locator("#next-file").click();
     await expect(page.locator("#file-summary")).toContainText("2 of 2");
     await expect(page.locator("#file-summary")).toContainText("items/text-entry.xml");
-    await expect(page.locator("qti-assessment-item-player")).toContainText("textEntry-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Type a short QTI outcome name in the sentence.",
+    );
   });
 
   test("loads ordinary deflated package zips", async ({ page }) => {
@@ -783,7 +865,9 @@ test.describe("manual harness", () => {
 
     await expect(page.locator("#file-summary")).toContainText("1 of 1");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
-    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Select one answer from a standard single-choice interaction.",
+    );
   });
 
   test("reports unreadable package zips", async ({ page }) => {
@@ -899,7 +983,9 @@ test.describe("manual harness", () => {
 
     await expect(page.locator("#file-summary")).toContainText("1 of 1");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
-    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Select one answer from a standard single-choice interaction.",
+    );
   });
 
   test("resolves relative item assets from a zip upload", async ({ page }) => {
@@ -1354,7 +1440,7 @@ test.describe("manual harness", () => {
     for (let index = 0; index < 50; index += 1) {
       await page.keyboard.press("ArrowRight");
     }
-    await expectResponse(page, "50");
+    await expectResponse(page, 50);
     await expect(page.locator("qti-assessment-item-player output")).toHaveText("50");
 
     await loadFixture(page, "positionObject");
@@ -1422,9 +1508,47 @@ test.describe("manual harness", () => {
     await expect(player).toContainText("while scoring writes SCORE to an");
     await expect(player.locator(".qti3-gap-region")).not.toContainText("G1");
     await expect(player.locator(".qti3-gap-region")).not.toContainText("G2");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("Empty");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("Remove");
+
+    const inlineFlow = await player.locator(".qti3-gap-region").evaluate((region) => {
+      const walker = document.createTreeWalker(region, NodeFilter.SHOW_TEXT);
+      let textNode: Text | undefined;
+      while (walker.nextNode()) {
+        const node = walker.currentNode as Text;
+        if (node.data.includes("candidate answer in a")) {
+          textNode = node;
+          break;
+        }
+      }
+      if (!textNode) throw new Error("Missing text before first gap.");
+
+      const range = document.createRange();
+      const phrase = "candidate answer in a";
+      const start = textNode.data.indexOf(phrase);
+      range.setStart(textNode, start);
+      range.setEnd(textNode, start + phrase.length);
+      const textRect = range.getBoundingClientRect();
+      const gapRect = region
+        .querySelector<HTMLElement>('[data-gap-identifier="G1"]')
+        ?.getBoundingClientRect();
+      if (!gapRect) throw new Error("Missing first gap target.");
+
+      return {
+        textRight: textRect.right,
+        textCenterY: textRect.top + textRect.height / 2,
+        gapLeft: gapRect.left,
+        gapCenterY: gapRect.top + gapRect.height / 2,
+      };
+    });
+    expect(inlineFlow.gapLeft).toBeGreaterThan(inlineFlow.textRight);
+    expect(Math.abs(inlineFlow.gapCenterY - inlineFlow.textCenterY)).toBeLessThan(24);
 
     await assignGap(page, "Gap match", "A", "G1");
     await expectResponse(page, ["A G1"]);
+    await page.locator('qti-assessment-item-player [data-gap-identifier="G1"] button').focus();
+    await page.keyboard.press("Delete");
+    await expectResponse(page, []);
   });
 
   test("exposes accessible names for every operable fixture control", async ({ page }) => {
@@ -1577,12 +1701,29 @@ test.describe("manual harness", () => {
     await page.keyboard.press("ArrowUp");
     await expectResponse(page, ["B", "A", "C"]);
 
+    await expect(
+      page.locator(
+        'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] .qti3-icon-button',
+      ),
+    ).toHaveText(["\u2191", "\u2193"]);
     await page
       .locator(
-        'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] button[aria-label$=" down"]',
+        'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] [data-move-direction="down"]',
       )
       .click();
     await expectResponse(page, ["A", "B", "C"]);
+  });
+
+  test("renders point movement controls as arrow icon buttons", async ({ page }) => {
+    await page.goto("/");
+
+    for (const fixture of ["selectPoint", "positionObject"]) {
+      await loadFixture(page, fixture);
+      const labels = await page
+        .locator("qti-assessment-item-player .qti3-point-controls .qti3-icon-button")
+        .evaluateAll((buttons) => buttons.map((button) => button.textContent?.trim()));
+      expect(labels, fixture).toEqual(["\u2191", "\u2190", "\u2192", "\u2193"]);
+    }
   });
 
   test("orders graphic order hotspots with pointer and keyboard controls", async ({ page }) => {
@@ -1605,7 +1746,16 @@ test.describe("manual harness", () => {
     await expectResponse(page, ["B", "A", "C"]);
     await expect(surface.locator("svg.qti3-graphic-sequence-lines line")).toHaveCount(2);
 
-    await page.getByRole("button", { name: "Move Response capture down" }).click();
+    await expect(
+      page.locator(
+        'qti-assessment-item-player .qti3-graphic-order-item[data-choice-identifier="B"] .qti3-icon-button',
+      ),
+    ).toHaveText(["\u2191", "\u2193"]);
+    await page
+      .locator(
+        'qti-assessment-item-player .qti3-graphic-order-item[data-choice-identifier="B"] [data-move-direction="down"]',
+      )
+      .click();
     await expectResponse(page, ["A", "B", "C"]);
 
     await surface.getByRole("button", { name: "Outcomes" }).focus();
@@ -1674,11 +1824,32 @@ test.describe("manual harness", () => {
     await page.goto("/");
 
     await loadFixture(page, "match");
-    await expect(page.locator("qti-assessment-item-player .qti3-match-grid")).toBeVisible();
+    await expect(page.locator("qti-assessment-item-player .qti3-match-selector")).toBeVisible();
     await expect(page.locator("qti-assessment-item-player .qti3-pair-selector")).toHaveCount(0);
-    await expect(
-      page.locator('qti-assessment-item-player .qti3-match-row[data-source-identifier="A"]'),
-    ).toContainText("Response declaration");
+    await expect(page.locator("qti-assessment-item-player .qti3-match-source-bank")).toContainText(
+      "Response declaration",
+    );
+    await expect(page.locator("qti-assessment-item-player .qti3-match-source")).toHaveCount(3);
+    await expect(page.locator("qti-assessment-item-player .qti3-match-target")).toHaveCount(3);
+    const matchStyles = await page.locator("qti-assessment-item-player").evaluate((player) => {
+      const source = player.querySelector<HTMLElement>(".qti3-match-source");
+      const target = player.querySelector<HTMLElement>(".qti3-match-target");
+      if (!source || !target) throw new Error("Missing match source or target.");
+      const sourceStyle = getComputedStyle(source);
+      const targetStyle = getComputedStyle(target);
+      return {
+        sourceBackground: sourceStyle.backgroundColor,
+        sourceBorder: sourceStyle.borderColor,
+        sourceColor: sourceStyle.color,
+        targetBackground: targetStyle.backgroundColor,
+        targetBorder: targetStyle.borderColor,
+        targetWeight: Number(targetStyle.fontWeight),
+      };
+    });
+    expect(matchStyles.sourceBorder).toBe(matchStyles.sourceColor);
+    expect(matchStyles.targetBorder).not.toBe(matchStyles.sourceBorder);
+    expect(matchStyles.targetBackground).not.toBe(matchStyles.sourceBackground);
+    expect(matchStyles.targetWeight).toBeGreaterThanOrEqual(600);
     await assignMatch(page, "A", "G1");
     await expectResponse(page, ["A G1"]);
   });
@@ -1743,8 +1914,14 @@ test.describe("manual harness", () => {
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /hotspot-flow\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
-    await expect(page.getByRole("group", { name: "Graphic gap match", exact: true })).toBeVisible();
+    await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).toBeVisible();
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-gap-button").first(),
+    ).toHaveAccessibleName("Gap 1, empty");
     await expect(page.locator("qti-assessment-item-player .qti3-gap-button").first()).toHaveText(
+      "",
+    );
+    await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).not.toContainText(
       "Empty",
     );
     await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).not.toContainText(
@@ -1774,7 +1951,8 @@ test.describe("manual harness", () => {
       target.getByRole("button", { name: "Gap 1, assigned response declaration" }),
     ).toHaveText("response declaration");
 
-    await page.getByRole("button", { name: "Remove gap 1 assignment" }).click();
+    await target.getByRole("button", { name: "Gap 1, assigned response declaration" }).focus();
+    await page.keyboard.press("Delete");
     await expectResponse(page, []);
   });
 
@@ -2019,6 +2197,91 @@ test.describe("manual harness", () => {
     await expect(radio).not.toHaveAttribute("aria-invalid", "true");
   });
 
+  test("can bypass response validation when scoring or ending an attempt", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-bypass" title="validation-bypass">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-outcome-declaration identifier="MAXSCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>1</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" min-choices="1">
+      <qti-simple-choice identifier="A">Correct</qti-simple-choice>
+      <qti-simple-choice identifier="B">Incorrect</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    );
+
+    const blocked = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const validationEvents: Array<{
+        validationMessages: unknown[];
+        state: { validationMessages: unknown[]; outcomes: Record<string, unknown> };
+      }> = [];
+      element.addEventListener("qti-validation", (event) => {
+        validationEvents.push((event as CustomEvent).detail);
+      });
+      return {
+        blocked: element.scoreAttempt() === undefined,
+        validationDetail: validationEvents[0],
+        state: element.serialize(),
+      };
+    });
+    expect(blocked.blocked).toBe(true);
+    expect(blocked.validationDetail.validationMessages).toEqual([
+      expect.objectContaining({ code: "response.required", path: "RESPONSE" }),
+    ]);
+    expect(blocked.validationDetail.state.validationMessages).toEqual(
+      blocked.validationDetail.validationMessages,
+    );
+    expect(blocked.state.validationMessages).toEqual(blocked.validationDetail.validationMessages);
+    expect(blocked.validationDetail.state.outcomes.MAXSCORE).toBe(1);
+
+    const scored = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const scoreEvents: Array<{ state: { validationMessages: unknown[] } }> = [];
+      element.addEventListener("qti-score", (event) => {
+        scoreEvents.push((event as CustomEvent).detail);
+      });
+      return {
+        result: element.scoreAttempt({ validateResponses: false }),
+        scoreDetail: scoreEvents[0],
+        state: element.serialize(),
+      };
+    });
+    expect(scored.result.outcomes.SCORE).toBe(0);
+    expect(scored.result.state.outcomes.MAXSCORE).toBe(1);
+    expect(typeof scored.result.state.outcomes.MAXSCORE).toBe("number");
+    expect(scored.result.state.validationMessages).toEqual([]);
+    expect(scored.scoreDetail.state.validationMessages).toEqual([]);
+    expect(scored.state.validationMessages).toEqual([]);
+
+    const ended = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const endAttemptEvents: Array<{ state: { status: string } }> = [];
+      element.addEventListener("qti-endattempt", (event) => {
+        endAttemptEvents.push((event as CustomEvent).detail);
+      });
+      element.reset();
+      element.endAttempt({ validateResponses: false });
+      return {
+        endAttemptDetail: endAttemptEvents[0],
+        state: element.serialize(),
+      };
+    });
+    expect(ended.endAttemptDetail.state.status).toBe("completed");
+    expect(ended.state.status).toBe("completed");
+    expect(ended.state.outcomes.SCORE).toBe(0);
+    expect(ended.state.outcomes.MAXSCORE).toBe(1);
+  });
+
   test("honors authored minimum response counts during validation", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
@@ -2185,7 +2448,9 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "choice");
 
-    await expect(page.locator("qti-assessment-item-player")).toContainText("choice-reference");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Select one answer from a standard single-choice interaction.",
+    );
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await expectResponse(page, "A");
 
@@ -2205,7 +2470,9 @@ test.describe("manual harness", () => {
     for (const fixture of interactionFixtures) {
       await page.locator("#fixture").selectOption(fixture.id);
       await page.locator("#load-fixture").click();
-      await expect(page.locator("qti-assessment-item-player")).toContainText(fixture.id);
+      await expect(
+        page.locator(`[data-interaction-type="${fixture.interactionType}"]`).first(),
+      ).toBeVisible();
 
       const overflow = await page.evaluate(() => {
         return document.documentElement.scrollWidth - window.innerWidth;
@@ -2356,9 +2623,11 @@ async function assignMatch(
   targetIdentifier: string,
 ): Promise<void> {
   await page
-    .locator(
-      `qti-assessment-item-player .qti3-match-row[data-source-identifier="${sourceIdentifier}"]`,
-    )
+    .locator("qti-assessment-item-player .qti3-match-source-bank")
+    .locator(`[data-choice-identifier="${sourceIdentifier}"]`)
+    .click();
+  await page
+    .locator("qti-assessment-item-player .qti3-match-target-bank")
     .locator(`[data-choice-identifier="${targetIdentifier}"]`)
     .click();
 }
@@ -2546,14 +2815,22 @@ async function provideResponse(
     for (const [targetIndex, value] of response.map(String).entries()) {
       let currentIndex = current.indexOf(value);
       while (currentIndex > targetIndex) {
-        await page.getByRole("button", { name: `Move ${value} up` }).click();
+        await page
+          .locator(
+            `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="up"]`,
+          )
+          .click();
         moved = true;
         current.splice(currentIndex, 1);
         current.splice(currentIndex - 1, 0, value);
         currentIndex -= 1;
       }
       while (currentIndex < targetIndex) {
-        await page.getByRole("button", { name: `Move ${value} down` }).click();
+        await page
+          .locator(
+            `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="down"]`,
+          )
+          .click();
         moved = true;
         current.splice(currentIndex, 1);
         current.splice(currentIndex + 1, 0, value);
@@ -2566,8 +2843,8 @@ async function provideResponse(
       const firstItem = page.locator(
         `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${first}"]`,
       );
-      await firstItem.locator('button[aria-label$=" down"]').click();
-      await firstItem.locator('button[aria-label$=" up"]').click();
+      await firstItem.locator('[data-move-direction="down"]').click();
+      await firstItem.locator('[data-move-direction="up"]').click();
     }
     return;
   }

@@ -1,6 +1,7 @@
 import { getInteractionSupport, interactionNameToType, processingSupport } from "./support.js";
 import type {
   QtiAssessmentItem,
+  QtiBaseType,
   QtiCatalogCard,
   QtiCatalogCardEntry,
   QtiCatalogFileHref,
@@ -28,6 +29,7 @@ import type {
   QtiResponseProcessing,
   QtiResponseRule,
   QtiSetOutcomeValue,
+  QtiScalarValue,
   QtiStylesheet,
   QtiTemplateDeclaration,
   QtiTemplateProcessing,
@@ -370,14 +372,15 @@ function parseCatalogFileHref(node: XmlNode): QtiCatalogFileHref {
 
 function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
   const cardinality = parseCardinality(node.attributes.cardinality);
+  const baseType = node.attributes["base-type"] as QtiResponseDeclaration["baseType"];
   return {
     kind: "response",
     identifier: node.attributes.identifier ?? "",
     cardinality,
-    baseType: node.attributes["base-type"] as QtiResponseDeclaration["baseType"],
-    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    baseType,
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
     correctResponse: normalizeValueForCardinality(
-      parseVariableValue(childElements(node, "qti-correct-response")[0]),
+      parseVariableValue(childElements(node, "qti-correct-response")[0], baseType),
       cardinality,
     ),
     mapping: parseMapping(childElements(node, "qti-mapping")[0]),
@@ -394,7 +397,7 @@ function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
     identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType,
-    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
     lookupTable: parseLookupTable(node, baseType),
     attributes: node.attributes,
     source: node.source,
@@ -402,12 +405,13 @@ function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
 }
 
 function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
+  const baseType = node.attributes["base-type"] as QtiTemplateDeclaration["baseType"];
   return {
     kind: "template",
     identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
-    baseType: node.attributes["base-type"] as QtiTemplateDeclaration["baseType"],
-    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0]),
+    baseType,
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
     attributes: node.attributes,
     source: node.source,
   };
@@ -666,27 +670,29 @@ function matchSetIndex(node: XmlNode): number {
   return siblings.indexOf(node);
 }
 
-function parseVariableValue(node: XmlNode | undefined): QtiValue {
+function parseVariableValue(
+  node: XmlNode | undefined,
+  baseType: QtiBaseType | undefined,
+): QtiValue {
   if (!node) return null;
   const valueNodes = childElements(node, "qti-value");
-  const recordEntries = valueNodes
-    .map((valueNode) => ({
-      fieldIdentifier: valueNode.attributes["field-identifier"],
-      value: coerceValue(textContent(valueNode), valueNode.attributes["base-type"]),
-    }))
-    .filter((entry): entry is { fieldIdentifier: string; value: QtiValue } =>
+  const entries = valueNodes.map((valueNode) => ({
+    fieldIdentifier: valueNode.attributes["field-identifier"],
+    value: coerceValue(textContent(valueNode), valueNode.attributes["base-type"] ?? baseType),
+  }));
+  const recordEntries = entries.filter(
+    (entry): entry is { fieldIdentifier: string; value: QtiScalarValue } =>
       Boolean(entry.fieldIdentifier),
-    );
+  );
   if (recordEntries.length > 0) {
     return Object.fromEntries(recordEntries.map((entry) => [entry.fieldIdentifier, entry.value]));
   }
-  const values = valueNodes.map((valueNode) => textContent(valueNode));
-  if (values.length === 0) {
+  if (entries.length === 0) {
     const text = textContent(node);
-    return text.length > 0 ? text : null;
+    return text.length > 0 ? coerceValue(text, baseType) : null;
   }
-  if (values.length === 1) return values[0] ?? null;
-  return values;
+  if (entries.length === 1) return entries[0]?.value ?? null;
+  return entries.map((entry) => entry.value);
 }
 
 function parseMapping(node: XmlNode | undefined): QtiResponseDeclaration["mapping"] | undefined {
@@ -1481,10 +1487,13 @@ function durationCompareOperatorFor(localName: string): "lt" | "gte" | undefined
   return undefined;
 }
 
-function coerceValue(value: string, baseType: string | undefined): QtiValue {
+function coerceValue(value: string, baseType: string | undefined): QtiScalarValue {
   if (baseType === "integer") return Number.parseInt(value, 10);
   if (baseType === "float") return Number.parseFloat(value);
-  if (baseType === "boolean") return value === "true";
+  if (baseType === "boolean") {
+    if (value === "true") return true;
+    if (value === "false") return false;
+  }
   return value;
 }
 

@@ -87,6 +87,53 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("coerces declaration values using declaration base-types", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="typed-defaults">
+        <qti-template-declaration identifier="TEMPLATE_COUNT" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>4</qti-value></qti-default-value>
+        </qti-template-declaration>
+        <qti-response-declaration identifier="COUNT" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>2</qti-value></qti-default-value>
+          <qti-correct-response><qti-value>3</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="FLAGS" cardinality="multiple" base-type="boolean">
+          <qti-default-value>
+            <qti-value>true</qti-value>
+            <qti-value>false</qti-value>
+          </qti-default-value>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="MAXSCORE" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>1</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="ATTEMPTS" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="PASSED" cardinality="single" base-type="boolean">
+          <qti-default-value><qti-value>false</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body><p>Typed defaults.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.document).toBeDefined();
+    const document = result.document!;
+    const countDeclaration = document.item.responseDeclarations.find(
+      (declaration) => declaration.identifier === "COUNT",
+    );
+    expect(countDeclaration?.defaultValue).toBe(2);
+    expect(countDeclaration?.correctResponse).toBe(3);
+
+    const session = createItemSession(document);
+    const state = session.serialize();
+    expect(state.responses.COUNT).toBe(2);
+    expect(state.responses.FLAGS).toEqual([true, false]);
+    expect(state.outcomes.MAXSCORE).toBe(1);
+    expect(state.outcomes.ATTEMPTS).toBe(0);
+    expect(state.outcomes.PASSED).toBe(false);
+    expect(state.templateValues?.TEMPLATE_COUNT).toBe(4);
+  });
+
   it("preserves authored gap match sentence segments", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-segments">
@@ -2011,7 +2058,7 @@ describe("@longsightgroup/qti3-core", () => {
     session.respond("RESPONSE", "B");
     expect(session.serialize().outcomes.completionStatus).toBe("unknown");
     expect(session.score().outcomes).toMatchObject({
-      SCORE: "0",
+      SCORE: 0,
       TRACE: "wrong-first",
       completionStatus: "unknown",
     });
@@ -2540,7 +2587,7 @@ describe("@longsightgroup/qti3-core", () => {
     const session = createItemSession(result.document!);
     const score = session.score();
     expect(score.outcomes.SCORE).toBe(1);
-    expect(score.outcomes.TRACE).toBe("0");
+    expect(score.outcomes.TRACE).toBe(0);
   });
 
   it("looks up outcome values from match and interpolation tables", () => {
