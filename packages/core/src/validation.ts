@@ -29,6 +29,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   const item = document.item;
 
   requireIdentifier("qti-assessment-item", item.identifier, diagnostics, item.source);
+  validateItemBody(item, diagnostics);
   validateDeclarationIdentifiers(item, diagnostics);
   validateOutcomeLookupTables(item, diagnostics);
   validateInteractions(item, diagnostics);
@@ -36,12 +37,46 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateCatalogInfo(item, diagnostics);
   validateStylesheets(item, diagnostics);
   diagnostics.push(...validateQtiDataSsmlMetadata(item));
+  validateResponseProcessingTemplate(item, diagnostics);
   validateProcessingReferences(item, diagnostics);
 
   return {
     ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
     diagnostics,
   };
+}
+
+function validateResponseProcessingTemplate(
+  item: QtiAssessmentItem,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const template = item.responseProcessing?.template;
+  if (!template) return;
+  if (responseProcessingTemplateIsSupported(template)) return;
+  diagnostics.push({
+    code: "processing.template.unsupported",
+    severity: "error",
+    message: `qti-response-processing template ${template} is not currently supported.`,
+    path: item.source?.path,
+    source: item.source,
+  });
+}
+
+function responseProcessingTemplateIsSupported(template: string): boolean {
+  const path = template.split(/[?#]/, 1)[0] ?? "";
+  const name = path.slice(path.lastIndexOf("/") + 1).replace(/\.xml$/i, "");
+  return name === "match_correct" || name === "map_response" || name === "map_response_point";
+}
+
+function validateItemBody(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  if (item.itemBodySource) return;
+  diagnostics.push({
+    code: "itemBody.required",
+    severity: "error",
+    message: "qti-assessment-item requires a qti-item-body.",
+    path: item.source?.path,
+    source: item.source,
+  });
 }
 
 function requireIdentifier(

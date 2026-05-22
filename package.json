@@ -33,6 +33,7 @@
     "test": "vitest run",
     "test:conformance": "vitest run packages/conformance",
     "test:external": "vitest run packages/conformance/src/external-qti.test.ts",
+    "test:external:required": "QTI3_REQUIRE_EXTERNAL=1 QTI3_EXTERNAL_SCORE_CORRECT=1 vitest run packages/conformance/src/external-qti.test.ts",
     "test:a11y": "vitest run packages/a11y",
     "test:browser": "playwright test",
     "check:deps": "node scripts/check-dependencies.mjs",
@@ -41,8 +42,10 @@
     "build": "tsc -b",
     "pages:build": "vite build examples/manual --base /qti3/ --outDir ../../dist/pages --emptyOutDir",
     "dev": "vite --host 127.0.0.1 examples/manual",
+    "readiness:basic:item-player": "vitest run packages/conformance/src/conformance.test.ts packages/fixtures/src/fixtures.test.ts packages/cli/src/index.test.ts && playwright test --grep \"Basic item player readiness\" && pnpm build && node packages/cli/dist/index.js basic-item-player-report packages/fixtures/packages/basic-item-player",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build && pnpm check:maps && pnpm check:exports",
-    "release:check": "pnpm verify && pnpm test:browser && node packages/cli/dist/index.js assert-support && node packages/cli/dist/index.js run-fixtures"
+    "certification:check": "pnpm test:external:required && pnpm build && node packages/cli/dist/index.js assert-support && node packages/cli/dist/index.js run-fixtures",
+    "release:check": "pnpm verify && pnpm test:browser && pnpm certification:check"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0",

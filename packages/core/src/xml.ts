@@ -3,6 +3,8 @@ import { StaxXmlParserSync, XmlEventType } from "stax-xml";
 export interface XmlNode {
   name: string;
   localName: string;
+  prefix?: string | undefined;
+  uri?: string | undefined;
   attributes: Record<string, string>;
   children: XmlNode[];
   content: Array<string | XmlNode>;
@@ -40,6 +42,8 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
       const node: XmlNode = {
         name: event.name,
         localName: event.localName ?? event.name,
+        prefix: event.prefix,
+        uri: event.uri,
         attributes: event.attributes,
         children: [],
         content: [],

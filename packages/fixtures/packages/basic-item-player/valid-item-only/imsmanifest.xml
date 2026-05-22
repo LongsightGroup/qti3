@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiv3p0_imscpv1p2_v1p0.xsd"
+  identifier="basic-item-player-valid-item-only">
+  <metadata>
+    <schema>QTI Package</schema>
+    <schemaversion>3.0.0</schemaversion>
+  </metadata>
+  <organizations/>
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml"><file href="items/choice.xml"/></resource>
+    <resource identifier="extended-text" type="imsqti_item_xmlv3p0" href="items/extended-text.xml"><file href="items/extended-text.xml"/></resource>
+    <resource identifier="match" type="imsqti_item_xmlv3p0" href="items/match.xml"><file href="items/match.xml"/></resource>
+    <resource identifier="text-entry" type="imsqti_item_xmlv3p0" href="items/text-entry.xml"><file href="items/text-entry.xml"/></resource>
+    <resource identifier="html-subset" type="imsqti_item_xmlv3p0" href="items/html-subset.xml"><file href="items/html-subset.xml"/></resource>
+    <resource identifier="template-processing" type="imsqti_item_xmlv3p0" href="items/template-processing.xml"><file href="items/template-processing.xml"/></resource>
+    <resource identifier="composite" type="imsqti_item_xmlv3p0" href="items/composite.xml"><file href="items/composite.xml"/></resource>
+    <resource identifier="mathml" type="imsqti_item_xmlv3p0" href="items/mathml.xml"><file href="items/mathml.xml"/></resource>
+    <resource identifier="shared-vocabulary" type="imsqti_item_xmlv3p0" href="items/shared-vocabulary.xml"><file href="items/shared-vocabulary.xml"/></resource>
+    <resource identifier="alt-text" type="imsqti_item_xmlv3p0" href="items/alt-text.xml"><file href="items/alt-text.xml"/></resource>
+    <resource identifier="tolerance-extra-features" type="imsqti_item_xmlv3p0" href="items/tolerance-extra-features.xml">
+      <file href="items/tolerance-extra-features.xml"/>
+      <dependency identifierref="tolerance-extra-stimulus"/>
+      <dependency identifierref="tolerance-extra-stylesheet"/>
+      <dependency identifierref="tolerance-extra-reference-card"/>
+      <dependency identifierref="tolerance-extra-reference-icon"/>
+    </resource>
+    <resource identifier="tolerance-extra-stimulus" type="imsqti_stimulus_xmlv3p0" href="stimuli/stimulus.xml"><file href="stimuli/stimulus.xml"/></resource>
+    <resource identifier="tolerance-extra-stylesheet" type="css3" href="styles/extra.css"><file href="styles/extra.css"/></resource>
+    <resource identifier="tolerance-extra-reference-card" type="webcontent" href="materials/reference.txt"><file href="materials/reference.txt"/></resource>
+    <resource identifier="tolerance-extra-reference-icon" type="webcontent" href="materials/reference.svg"><file href="materials/reference.svg"/></resource>
+  </resources>
+</manifest>

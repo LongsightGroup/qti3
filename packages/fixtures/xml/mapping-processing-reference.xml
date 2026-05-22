@@ -11,7 +11,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Choose the best-supported scoring expression for a mapped response.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">qti-map-response</qti-simple-choice>
       <qti-simple-choice identifier="B">qti-match</qti-simple-choice>
       <qti-simple-choice identifier="C">qti-null</qti-simple-choice>

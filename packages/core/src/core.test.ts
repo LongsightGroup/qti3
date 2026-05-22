@@ -931,6 +931,35 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("requires the QTI ASI namespace and item body for assessment items", () => {
+    const wrongNamespace = parseQtiXml(`
+      <qti-assessment-item xmlns="https://example.invalid/not-qti" identifier="wrong-namespace">
+        <qti-item-body/>
+      </qti-assessment-item>
+    `);
+
+    expect(wrongNamespace.ok).toBe(false);
+    expect(wrongNamespace.document).toBeUndefined();
+    expect(wrongNamespace.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "qti.root",
+        message: expect.stringContaining("Expected qti-assessment-item in namespace"),
+      }),
+    );
+
+    const missingBody = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-body"/>
+    `);
+
+    expect(missingBody.ok).toBe(false);
+    expect(missingBody.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "itemBody.required",
+        message: "qti-assessment-item requires a qti-item-body.",
+      }),
+    );
+  });
+
   it("does not mask missing choice identifiers with parser defaults", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-choice-id">
@@ -1145,6 +1174,31 @@ describe("@longsightgroup/qti3-core", () => {
         code: "processing.response.forbidden",
         message: "qti-outcome-minimum must not be used in qti-response-processing.",
         path: "/qti-assessment-item/qti-response-processing[1]/qti-set-outcome-value[1]/qti-outcome-minimum[1]",
+      }),
+    );
+  });
+
+  it("diagnoses unsupported response-processing templates", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-template">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://example.invalid/not_map_response"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "processing.template.unsupported",
+        severity: "error",
       }),
     );
   });
@@ -1386,6 +1440,28 @@ describe("@longsightgroup/qti3-core", () => {
     session.respond("RESPONSE2", "B");
     expect(session.score().outcomes.SCORE).toBe(3);
     expect(session.score().outcomes.SCORE).toBe(3);
+  });
+
+  it("maps scalar numeric responses in map-response templates", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-integer">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="5" mapped-value="2"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", 5);
+    expect(session.score().outcomes.SCORE).toBe(2);
   });
 
   it("sums built-in match-correct template scores across response declarations", () => {

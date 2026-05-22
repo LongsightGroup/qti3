@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-stimulus xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stimulus-extra" title="Optional shared stimulus" xml:lang="en">
+  <qti-stimulus-body>
+    <p>Shared stimulus dependency for Basic item-player tolerance evidence.</p>
+  </qti-stimulus-body>
+</qti-assessment-stimulus>

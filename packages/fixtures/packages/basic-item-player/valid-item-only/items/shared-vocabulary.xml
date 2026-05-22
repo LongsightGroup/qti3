@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="basic-shared-vocabulary" title="basic-shared-vocabulary" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1" class="qti-labels-decimal qti-labels-suffix-parenthesis">
+      <qti-simple-choice identifier="A">Shared vocabulary is preserved.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Shared vocabulary is removed.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

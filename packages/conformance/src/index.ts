@@ -8,6 +8,22 @@ import {
 } from "@longsightgroup/qti3-core";
 import type { QtiExpectedDiagnostic, QtiFixture } from "@longsightgroup/qti3-fixtures";
 
+export {
+  basicItemPlayerCertificationContext,
+  basicItemPlayerProfile,
+  runBasicItemPlayerReadiness,
+  type QtiBasicItemPlayerCertificationContext,
+  type QtiBasicItemPlayerFeatureResult,
+  type QtiBasicItemPlayerFeatureStatus,
+  type QtiBasicItemPlayerPackageEvidence,
+  type QtiBasicItemPlayerProfile,
+  type QtiBasicItemPlayerProfileFeature,
+  type QtiBasicItemPlayerReadinessOptions,
+  type QtiBasicItemPlayerReadinessReport,
+  type QtiBasicItemPlayerToleranceResult,
+  type QtiBasicItemPlayerValidatorEvidence,
+} from "./basic.js";
+
 export interface QtiConformanceResult {
   fixtureId: string;
   ok: boolean;
@@ -17,7 +33,7 @@ export interface QtiConformanceResult {
 export function runFixture(fixture: QtiFixture): QtiConformanceResult {
   const parseResult = parseQtiXml(fixture.xml);
   const parseDiagnostics = parseResult.diagnostics.filter(isParseDiagnostic);
-  const diagnostics = [...parseDiagnostics];
+  const diagnostics: QtiDiagnostic[] = [];
   assertExpectedDiagnostics(
     fixture,
     "parse",
@@ -121,6 +137,8 @@ function isParseDiagnostic(diagnostic: QtiDiagnostic): boolean {
     diagnostic.code === "xml.parse" ||
     diagnostic.code === "xml.empty" ||
     diagnostic.code === "qti.root" ||
+    diagnostic.code === "processing.unsupported" ||
+    diagnostic.code === "processing.response.forbidden" ||
     diagnostic.code === "interaction.unsupported" ||
     diagnostic.code === "interaction.deprecated"
   );

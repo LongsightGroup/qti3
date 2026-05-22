@@ -255,6 +255,19 @@ The publish gate is the combined release check:
 pnpm release:check
 ```
 
+The certification-oriented portion of the release gate is available separately:
+
+```sh
+QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
+QTI3_EXTERNAL_VALIDATOR_REPORT=/path/to/validator-report.json \
+pnpm certification:check
+```
+
+`pnpm test:external` remains optional for local development and skips when
+`QTI3_EXTERNAL_QTI_DIR` is not configured. `pnpm test:external:required`,
+`pnpm certification:check`, and `pnpm release:check` fail fast unless official
+external QTI content and a non-empty validator report artifact are provided.
+
 The browser harness is available with:
 
 ```sh
@@ -290,6 +303,16 @@ node packages/cli/dist/index.js inspect-package /path/to/package.zip
 
 This enumerates XML files, assets, manifest/test item references, and parse diagnostics
 for loadable assessment items.
+
+Use strict package validation for conformance-oriented package checks:
+
+```sh
+node packages/cli/dist/index.js validate-package /path/to/package.zip
+```
+
+Strict package validation requires `imsmanifest.xml`, requires manifest or
+assessment-test item references, and fails direct item XML files that are not referenced
+by the package metadata.
 
 It can also write standalone canonical reference items for targeted interactions,
 processing patterns, and adaptive behavior:
@@ -378,4 +401,5 @@ passes. Package tarballs come from the same checked build output that CI verifie
 
 The project is not currently certified. We plan to pursue relevant QTI certification once
 the implementation, fixtures, conformance tests, and public API are stable enough for
-review.
+review. The `certification:check` script is intentionally strict so certification work
+cannot pass without official 1EdTech external content and validator evidence.

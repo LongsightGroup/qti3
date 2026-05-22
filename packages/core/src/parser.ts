@@ -44,6 +44,7 @@ import type {
 import { validateAssessmentItem } from "./validation.js";
 import { childElements, descendants, parseXmlTree, textContent, type XmlNode } from "./xml.js";
 
+const qtiAssessmentItemNamespace = "http://www.imsglobal.org/xsd/imsqtiasi_v3p0";
 const supportedProcessingNames = new Set(processingSupport.map((entry) => entry.qtiName));
 const processingContainerNames = new Set(["qti-template-processing", "qti-response-processing"]);
 const responseProcessingForbiddenNames = new Set([
@@ -78,12 +79,18 @@ export function parseQtiXml(xml: string): QtiParseResult {
     return { ok: false, diagnostics };
   }
 
-  const itemNode = tree.root.localName === "qti-assessment-item" ? tree.root : undefined;
+  const itemNode =
+    tree.root.localName === "qti-assessment-item" && tree.root.uri === qtiAssessmentItemNamespace
+      ? tree.root
+      : undefined;
   if (!itemNode) {
     diagnostics.push({
       code: "qti.root",
       severity: "error",
-      message: `Expected qti-assessment-item root, found ${tree.root.localName}.`,
+      message:
+        tree.root.localName === "qti-assessment-item"
+          ? `Expected qti-assessment-item in namespace ${qtiAssessmentItemNamespace}, found ${tree.root.uri ?? "(none)"}.`
+          : `Expected qti-assessment-item root, found ${tree.root.localName}.`,
       path: tree.root.source.path,
       source: tree.root.source,
     });
@@ -147,6 +154,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     language: node.attributes["xml:lang"] ?? node.attributes.lang,
     adaptive: node.attributes.adaptive === "true",
     prompt: prompt ? textContent(prompt) : undefined,
+    itemBodySource: itemBody?.source,
     responseDeclarations,
     outcomeDeclarations,
     templateDeclarations,

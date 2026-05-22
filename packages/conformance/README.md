@@ -33,5 +33,24 @@ if (fixture) {
 - Score fixture attempts and compare outcomes.
 - Compare serialized attempt state when a fixture declares expected state.
 
+## External 1EdTech Content
+
+Local external-content smoke tests are optional:
+
+```sh
+QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti pnpm test:external
+```
+
+Certification-oriented runs are required and fail fast without official inputs:
+
+```sh
+QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
+QTI3_EXTERNAL_VALIDATOR_REPORT=/path/to/validator-report.json \
+pnpm test:external:required
+```
+
+Set `QTI3_EXTERNAL_SCORE_CORRECT=1` to also score every discovered assessment item with
+its declared correct responses.
+
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

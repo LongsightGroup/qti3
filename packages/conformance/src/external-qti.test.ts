@@ -1,20 +1,44 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { createItemSession, parseQtiXml } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 
 const externalDir = process.env.QTI3_EXTERNAL_QTI_DIR;
-const runIfConfigured = externalDir ? describe : describe.skip;
+const requireExternal = process.env.QTI3_REQUIRE_EXTERNAL === "1";
+const validatorReport = process.env.QTI3_EXTERNAL_VALIDATOR_REPORT;
+const runIfConfigured = externalDir ? describe : requireExternal ? describe : describe.skip;
 
 runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () => {
+  it.runIf(requireExternal)("requires official external conformance content", () => {
+    expect(
+      externalDir,
+      "Set QTI3_EXTERNAL_QTI_DIR to the official 1EdTech QTI 3 test content.",
+    ).toBeTruthy();
+  });
+
+  it.runIf(requireExternal)("requires a non-empty official validator report artifact", async () => {
+    expect(
+      validatorReport,
+      "Set QTI3_EXTERNAL_VALIDATOR_REPORT to the official 1EdTech validator report.",
+    ).toBeTruthy();
+    const report = await stat(validatorReport!);
+    expect(report.isFile()).toBe(true);
+    expect(report.size).toBeGreaterThan(0);
+  });
+
   it("parses every XML assessment item under QTI3_EXTERNAL_QTI_DIR", async () => {
+    expect(
+      externalDir,
+      "Set QTI3_EXTERNAL_QTI_DIR to the official 1EdTech QTI 3 test content.",
+    ).toBeTruthy();
     const files = await findXmlFiles(externalDir!);
-    expect(files.length).toBeGreaterThan(0);
+    let checked = 0;
 
     const failures: string[] = [];
     for (const file of files) {
       const xml = await readFile(file, "utf8");
       if (!xml.includes("qti-assessment-item")) continue;
+      checked += 1;
       const result = parseQtiXml(xml);
       if (!result.ok) {
         failures.push(
@@ -23,14 +47,20 @@ runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () =>
       }
     }
 
+    expect(checked).toBeGreaterThan(0);
     expect(failures).toEqual([]);
   });
 
   it.runIf(process.env.QTI3_EXTERNAL_SCORE_CORRECT === "1")(
     "scores each XML assessment item with its declared correct responses",
     async () => {
+      expect(
+        externalDir,
+        "Set QTI3_EXTERNAL_QTI_DIR to the official 1EdTech QTI 3 test content.",
+      ).toBeTruthy();
       const files = await findXmlFiles(externalDir!);
       const failures: string[] = [];
+      let checked = 0;
 
       for (const file of files) {
         const xml = await readFile(file, "utf8");
@@ -43,11 +73,15 @@ runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () =>
         }
 
         const session = createItemSession(result.document);
+        let scorable = false;
         for (const declaration of result.document.item.responseDeclarations) {
           if (declaration.correctResponse !== null) {
+            scorable = true;
             session.respond(declaration.identifier, declaration.correctResponse);
           }
         }
+        if (!scorable) continue;
+        checked += 1;
 
         const scored = session.score();
         if (typeof scored.outcomes.SCORE !== "number" || scored.outcomes.SCORE <= 0) {
@@ -55,6 +89,7 @@ runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () =>
         }
       }
 
+      expect(checked).toBeGreaterThan(0);
       expect(failures).toEqual([]);
     },
   );

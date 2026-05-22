@@ -20,7 +20,7 @@
       <qti-content-body><p>The distractor branch should be hidden.</p></qti-content-body>
     </qti-template-block>
     <p>The generated count appears in MathML as <math><mrow><mi>COUNT</mi><mo>+</mo><mn>1</mn></mrow></math>.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Template content is controlled by template variables.</qti-simple-choice>
       <qti-simple-choice identifier="B">Template content ignores template variables.</qti-simple-choice>
     </qti-choice-interaction>

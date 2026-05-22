@@ -12,7 +12,7 @@
   <qti-outcome-declaration identifier="IN_POLY" cardinality="single" base-type="boolean"/>
   <qti-item-body>
     <p>Reference fixture for advanced QTI response-processing expressions.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Run advanced response processing.</qti-simple-choice>
       <qti-simple-choice identifier="B">Do not run advanced response processing.</qti-simple-choice>
     </qti-choice-interaction>

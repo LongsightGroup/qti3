@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="basic-mathml" title="basic-mathml" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response><qti-value>4</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p><math><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math> = <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

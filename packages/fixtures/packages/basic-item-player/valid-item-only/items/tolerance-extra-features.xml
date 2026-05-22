@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="tolerance-extra-features" title="tolerance-extra-features" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-assessment-stimulus-ref identifier="stimulus-extra" href="../stimuli/stimulus.xml" title="Optional shared stimulus"/>
+  <qti-companion-materials-info>
+    <qti-digital-material label="Reference card" mime-type="text/plain">
+      <qti-file-href>../materials/reference.txt</qti-file-href>
+      <qti-resource-icon>../materials/reference.svg</qti-resource-icon>
+    </qti-digital-material>
+  </qti-companion-materials-info>
+  <qti-stylesheet href="../styles/extra.css" type="text/css" media="screen"/>
+  <qti-item-body>
+    <qti-rubric-block view="candidate">
+      <qti-content-body>
+        <p>Optional rubric guidance remains visible.</p>
+      </qti-content-body>
+    </qti-rubric-block>
+    <p data-catalog-idref="term-extra">Select the Basic response while extra item metadata is present.</p>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Which option should score?</qti-prompt>
+      <qti-simple-choice identifier="A">Supported Basic choice</qti-simple-choice>
+      <qti-simple-choice identifier="B">Unsupported extra feature</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="term-extra">
+      <qti-card support="linguistic-guidance">
+        <qti-html-content>Extra means beyond the Basic evidence target.</qti-html-content>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

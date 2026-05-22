@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="basic-alt-text" title="basic-alt-text" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p><img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2020%2010'%3E%3Crect%20width='20'%20height='10'%20fill='white'/%3E%3C/svg%3E" alt="Timeline diagram with two milestones" width="20" height="10"/></p>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-simple-choice identifier="A">Alternative text</qti-simple-choice>
+      <qti-simple-choice identifier="B">No text</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

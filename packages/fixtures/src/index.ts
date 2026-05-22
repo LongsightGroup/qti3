@@ -22,7 +22,7 @@ export interface QtiFixtureAttempt {
 
 export interface QtiFixture {
   id: string;
-  category: "interaction" | "processing" | "adaptive";
+  category: "interaction" | "processing" | "adaptive" | "basic" | "tolerance";
   interactionType?: QtiInteractionType | undefined;
   qtiName?: string | undefined;
   title: string;
@@ -50,6 +50,20 @@ export const processingFixtures: QtiFixture[] = [
 ];
 
 export const adaptiveFixtures: QtiFixture[] = [createAdaptiveFeedbackFixture()];
+
+export const basicItemPlayerFixtures: QtiFixture[] = [
+  createBasicHtmlSubsetFixture(),
+  createBasicTemplateResponseProcessingFixture(),
+  createBasicCompositeItemFixture(),
+  createBasicMathMlFixture(),
+  createBasicSharedVocabularyFixture(),
+  createBasicAltTextFixture(),
+];
+
+export const basicItemPlayerToleranceFixtures: QtiFixture[] = [
+  createBasicExtraItemFeatureToleranceFixture(),
+  createBasicModalFeedbackToleranceFixture(),
+];
 
 export const canonicalFixtures: QtiFixture[] = [
   ...interactionFixtures,
@@ -164,7 +178,7 @@ function createMappingProcessingFixture(): QtiFixture {
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Choose the best-supported scoring expression for a mapped response.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">qti-map-response</qti-simple-choice>
       <qti-simple-choice identifier="B">qti-match</qti-simple-choice>
       <qti-simple-choice identifier="C">qti-null</qti-simple-choice>
@@ -200,7 +214,7 @@ function createGenericMatchProcessingFixture(): QtiFixture {
   <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
   <qti-item-body>
     <p>Choose the expression that compares two arbitrary processing values.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">qti-match</qti-simple-choice>
       <qti-simple-choice identifier="B">qti-map-response</qti-simple-choice>
       <qti-simple-choice identifier="C">qti-random</qti-simple-choice>
@@ -310,7 +324,7 @@ function createTemplateContentFixture(): QtiFixture {
       <qti-content-body><p>The distractor branch should be hidden.</p></qti-content-body>
     </qti-template-block>
     <p>The generated count appears in MathML as <math><mrow><mi>COUNT</mi><mo>+</mo><mn>1</mn></mrow></math>.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Template content is controlled by template variables.</qti-simple-choice>
       <qti-simple-choice identifier="B">Template content ignores template variables.</qti-simple-choice>
     </qti-choice-interaction>
@@ -351,7 +365,7 @@ function createAdvancedProcessingFixture(): QtiFixture {
   <qti-outcome-declaration identifier="IN_POLY" cardinality="single" base-type="boolean"/>
   <qti-item-body>
     <p>Reference fixture for advanced QTI response-processing expressions.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Run advanced response processing.</qti-simple-choice>
       <qti-simple-choice identifier="B">Do not run advanced response processing.</qti-simple-choice>
     </qti-choice-interaction>
@@ -470,7 +484,7 @@ function createAdaptiveFeedbackFixture(): QtiFixture {
   <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
   <qti-item-body>
     <p>Use the hint control or answer the item.</p>
-    <qti-choice-interaction response-identifier="RESPONSE">
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Reference implementations expose feedback through outcomes.</qti-simple-choice>
       <qti-simple-choice identifier="B">Reference implementations hide all outcomes.</qti-simple-choice>
     </qti-choice-interaction>
@@ -513,6 +527,317 @@ function createAdaptiveFeedbackFixture(): QtiFixture {
         expectedState: { status: "completed" },
       },
     ],
+  };
+}
+
+function createBasicHtmlSubsetFixture(): QtiFixture {
+  const id = "basic-html-subset";
+  const image =
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2010%2010'%3E%3Crect%20width='10'%20height='10'%20fill='white'/%3E%3C/svg%3E";
+  return {
+    id,
+    category: "basic",
+    interactionType: "choice",
+    qtiName: "qti-choice-interaction",
+    title: "Basic HTML subset fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <section>
+      <h2>QTI item body content</h2>
+      <figure>
+        <img src="${image}" alt="Simple square diagram" width="10" height="10"/>
+        <figcaption>Diagram caption.</figcaption>
+      </figure>
+      <table>
+        <caption>Declaration roles</caption>
+        <thead><tr><th scope="col">Declaration</th><th scope="col">Role</th></tr></thead>
+        <tbody><tr><td>response</td><td>candidate answer</td></tr></tbody>
+      </table>
+    </section>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-simple-choice identifier="A">The HTML subset is preserved.</qti-simple-choice>
+      <qti-simple-choice identifier="B">The HTML subset is ignored.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1 }, id)],
+  };
+}
+
+function createBasicTemplateResponseProcessingFixture(): QtiFixture {
+  const id = "basic-template-response-processing";
+  return {
+    id,
+    category: "basic",
+    interactionType: "choice",
+    qtiName: "qti-choice-interaction",
+    title: "Basic template response processing fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-mapping default-value="0">
+      <qti-map-entry map-key="A" mapped-value="2"/>
+      <qti-map-entry map-key="B" mapped-value="0"/>
+    </qti-mapping>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Select the mapped response.</qti-prompt>
+      <qti-simple-choice identifier="A">Mapped response</qti-simple-choice>
+      <qti-simple-choice identifier="B">Default response</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 2 }, id)],
+  };
+}
+
+function createBasicCompositeItemFixture(): QtiFixture {
+  const id = "basic-composite-item";
+  return {
+    id,
+    category: "basic",
+    title: "Basic composite item fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="CHOICE_RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="TEXT_RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response><qti-value>SCORE</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="CHOICE_RESPONSE" max-choices="1">
+      <qti-prompt>Which declaration stores candidate input?</qti-prompt>
+      <qti-simple-choice identifier="A">Response declaration</qti-simple-choice>
+      <qti-simple-choice identifier="B">Outcome declaration</qti-simple-choice>
+    </qti-choice-interaction>
+    <p>Type the built-in score outcome name: <qti-text-entry-interaction response-identifier="TEXT_RESPONSE" expected-length="8"/></p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      basicCorrectAttempt({ CHOICE_RESPONSE: "A", TEXT_RESPONSE: "SCORE" }, { SCORE: 2 }, id),
+    ],
+  };
+}
+
+function createBasicMathMlFixture(): QtiFixture {
+  const id = "basic-mathml";
+  return {
+    id,
+    category: "basic",
+    interactionType: "textEntry",
+    qtiName: "qti-text-entry-interaction",
+    title: "Basic MathML fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response><qti-value>4</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p>Solve <math><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math>: <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "4" }, { SCORE: 1 }, id)],
+  };
+}
+
+function createBasicSharedVocabularyFixture(): QtiFixture {
+  const id = "basic-shared-vocabulary";
+  return {
+    id,
+    category: "basic",
+    interactionType: "choice",
+    qtiName: "qti-choice-interaction",
+    title: "Basic shared interaction vocabulary fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p data-qti-suppress-tts="computer-read-aloud">Shared QTI vocabulary remains authored content metadata.</p>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1" class="qti-labels-decimal qti-labels-suffix-parenthesis">
+      <qti-simple-choice identifier="A">Shared vocabulary is preserved.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Shared vocabulary is removed.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1 }, id)],
+  };
+}
+
+function createBasicAltTextFixture(): QtiFixture {
+  const id = "basic-alt-text";
+  const image =
+    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2020%2010'%3E%3Crect%20width='20'%20height='10'%20fill='white'/%3E%3C/svg%3E";
+  return {
+    id,
+    category: "basic",
+    interactionType: "choice",
+    qtiName: "qti-choice-interaction",
+    title: "Basic image alt text fixture",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p><img src="${image}" alt="Timeline diagram with two milestones" width="20" height="10"/></p>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>What accessibility text is required for graphics?</qti-prompt>
+      <qti-simple-choice identifier="A">Alternative text</qti-simple-choice>
+      <qti-simple-choice identifier="B">A package title</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1 }, id)],
+  };
+}
+
+function createBasicExtraItemFeatureToleranceFixture(): QtiFixture {
+  const id = "basic-extra-item-feature-tolerance";
+  return {
+    id,
+    category: "tolerance",
+    interactionType: "choice",
+    qtiName: "qti-choice-interaction",
+    title: "Basic tolerance fixture with extra QTI item features",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-assessment-stimulus-ref identifier="stimulus-extra" href="../stimuli/stimulus.xml" title="Optional shared stimulus"/>
+  <qti-companion-materials-info>
+    <qti-digital-material label="Reference card" mime-type="text/plain">
+      <qti-file-href>../materials/reference.txt</qti-file-href>
+      <qti-resource-icon>../materials/reference.svg</qti-resource-icon>
+    </qti-digital-material>
+  </qti-companion-materials-info>
+  <qti-stylesheet href="../styles/extra.css" type="text/css" media="screen"/>
+  <qti-item-body>
+    <qti-rubric-block view="candidate">
+      <qti-content-body>
+        <p>Optional rubric guidance remains visible.</p>
+      </qti-content-body>
+    </qti-rubric-block>
+    <p data-catalog-idref="term-extra">Select the Basic response while extra item metadata is present.</p>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Which option should score?</qti-prompt>
+      <qti-simple-choice identifier="A">Supported Basic choice</qti-simple-choice>
+      <qti-simple-choice identifier="B">Unsupported extra feature</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="term-extra">
+      <qti-card support="linguistic-guidance">
+        <qti-html-content>Extra means beyond the Basic evidence target.</qti-html-content>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1 }, id)],
+  };
+}
+
+function createBasicModalFeedbackToleranceFixture(): QtiFixture {
+  const id = "basic-modal-feedback-tolerance";
+  return {
+    id,
+    category: "tolerance",
+    interactionType: "choice",
+    qtiName: "qti-choice-interaction",
+    title: "Basic tolerance fixture with extra modal feedback",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Which content path should keep working with extra feedback metadata?</qti-prompt>
+      <qti-simple-choice identifier="A">Supported Basic interaction</qti-simple-choice>
+      <qti-simple-choice identifier="B">Unsupported extra behavior</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE"/>
+          <qti-correct identifier="RESPONSE"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">correct</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">incorrect</qti-base-value></qti-set-outcome-value>
+      </qti-response-else>
+    </qti-response-condition>
+  </qti-response-processing>
+  <qti-modal-feedback identifier="correct" outcome-identifier="FEEDBACK" show-hide="show">
+    <qti-content-body><p>Extra modal feedback is available.</p></qti-content-body>
+  </qti-modal-feedback>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1, FEEDBACK: "correct" }, id)],
+  };
+}
+
+function basicCorrectAttempt(
+  responses: Record<string, QtiValue>,
+  expectedOutcomes: Record<string, QtiValue>,
+  itemIdentifier: string,
+): QtiFixtureAttempt {
+  return {
+    name: "correct",
+    responses,
+    expectedResponses: responses,
+    expectedOutcomes,
+    expectedState: {
+      schema: "qti3.attempt-state.v1",
+      itemIdentifier,
+      status: "interacting",
+      responses,
+      outcomes: expectedOutcomes,
+    },
   };
 }
 
@@ -714,7 +1039,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
   if (interactionType === "gapMatch") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Complete the sentence about QTI runtime state.</qti-prompt><qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text><qti-gap-text identifier="B" match-max="1">outcome declaration</qti-gap-text><qti-gap-text identifier="C" match-max="1">template declaration</qti-gap-text><p>An interaction records the candidate answer in a <qti-gap identifier="G1"/>, while scoring writes SCORE to an <qti-gap identifier="G2"/>.</p></${qtiName}>`;
   }
-  return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Which QTI element declares the variable that stores a candidate response?</qti-prompt><qti-simple-choice identifier="A">qti-response-declaration</qti-simple-choice><qti-simple-choice identifier="B">qti-outcome-declaration</qti-simple-choice><qti-simple-choice identifier="C">qti-template-declaration</qti-simple-choice><qti-simple-choice identifier="D">qti-rubric-block</qti-simple-choice></${qtiName}>`;
+  return `<${qtiName} response-identifier="RESPONSE" max-choices="1"><qti-prompt>Which QTI element declares the variable that stores a candidate response?</qti-prompt><qti-simple-choice identifier="A">qti-response-declaration</qti-simple-choice><qti-simple-choice identifier="B">qti-outcome-declaration</qti-simple-choice><qti-simple-choice identifier="C">qti-template-declaration</qti-simple-choice><qti-simple-choice identifier="D">qti-rubric-block</qti-simple-choice></${qtiName}>`;
 }
 
 function itemIntro(identifier: string): string {

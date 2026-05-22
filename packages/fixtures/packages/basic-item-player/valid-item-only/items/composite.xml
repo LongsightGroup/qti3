@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="basic-composite" title="basic-composite" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="CHOICE_RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="TEXT_RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response><qti-value>SCORE</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="CHOICE_RESPONSE" max-choices="1">
+      <qti-simple-choice identifier="A">Response declaration</qti-simple-choice>
+      <qti-simple-choice identifier="B">Outcome declaration</qti-simple-choice>
+    </qti-choice-interaction>
+    <p>Type SCORE: <qti-text-entry-interaction response-identifier="TEXT_RESPONSE" expected-length="8"/></p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

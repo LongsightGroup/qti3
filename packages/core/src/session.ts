@@ -628,8 +628,11 @@ function applyResponseProcessing(
     return;
   }
 
-  const template = processing?.template ?? "";
-  if (template.includes("map_response")) {
+  const templateKind = responseProcessingTemplateKind(processing?.template);
+  if (templateKind === "unsupported") {
+    return;
+  }
+  if (templateKind === "mapResponse" || templateKind === "mapResponsePoint") {
     let score = 0;
     for (const declaration of document.item.responseDeclarations) {
       score += mapOrMatchResponse(
@@ -655,6 +658,18 @@ function applyResponseProcessing(
     }
   }
   if (scored) outcomes.SCORE = score;
+}
+
+function responseProcessingTemplateKind(
+  template: string | undefined,
+): "matchCorrect" | "mapResponse" | "mapResponsePoint" | "unsupported" | undefined {
+  if (!template) return undefined;
+  const path = template.split(/[?#]/, 1)[0] ?? "";
+  const name = path.slice(path.lastIndexOf("/") + 1).replace(/\.xml$/i, "");
+  if (name === "match_correct") return "matchCorrect";
+  if (name === "map_response") return "mapResponse";
+  if (name === "map_response_point") return "mapResponsePoint";
+  return "unsupported";
 }
 
 function applyResponseRules(
@@ -1907,7 +1922,10 @@ function scoreMapping(
     );
     return clampMappedScore(score, mapping.attributes);
   }
-  const score = typeof response === "string" ? (values[response] ?? mapping.defaultValue) : 0;
+  const score =
+    response === null || isRecordValue(response)
+      ? 0
+      : (values[String(response)] ?? mapping.defaultValue);
   return clampMappedScore(score, mapping.attributes);
 }
 

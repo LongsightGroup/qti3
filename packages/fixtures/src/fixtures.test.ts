@@ -1,6 +1,9 @@
+import { createItemSession, parseQtiXml, validateAssessmentItem } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import {
   adaptiveFixtures,
+  basicItemPlayerFixtures,
+  basicItemPlayerToleranceFixtures,
   canonicalFixtures,
   interactionFixtures,
   processingFixtures,
@@ -25,5 +28,63 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(canonicalFixtures).toHaveLength(
       interactionFixtures.length + processingFixtures.length + adaptiveFixtures.length,
     );
+  });
+
+  it("keeps Basic item-player fixtures as explicit supplemental evidence", () => {
+    expect(basicItemPlayerFixtures.map((fixture) => fixture.id)).toEqual([
+      "basic-html-subset",
+      "basic-template-response-processing",
+      "basic-composite-item",
+      "basic-mathml",
+      "basic-shared-vocabulary",
+      "basic-alt-text",
+    ]);
+    expect(canonicalFixtures.map((fixture) => fixture.id)).not.toEqual(
+      expect.arrayContaining(basicItemPlayerFixtures.map((fixture) => fixture.id)),
+    );
+    expect(basicItemPlayerToleranceFixtures.map((fixture) => fixture.id)).toEqual([
+      "basic-extra-item-feature-tolerance",
+      "basic-modal-feedback-tolerance",
+    ]);
+    expect(canonicalFixtures.map((fixture) => fixture.id)).not.toEqual(
+      expect.arrayContaining(basicItemPlayerToleranceFixtures.map((fixture) => fixture.id)),
+    );
+  });
+
+  it("parses, validates, scores, and serializes Basic item-player fixture attempts", () => {
+    for (const fixture of [...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures]) {
+      const parsed = parseQtiXml(fixture.xml);
+      expect(parsed.ok, fixture.id).toBe(true);
+      expect(parsed.document, fixture.id).toBeDefined();
+      if (!parsed.document) continue;
+
+      const validation = validateAssessmentItem(parsed.document);
+      expect(
+        validation.diagnostics.filter((diagnostic) => diagnostic.severity === "error"),
+        fixture.id,
+      ).toEqual([]);
+
+      for (const attempt of fixture.attempts) {
+        const session = createItemSession(parsed.document);
+        for (const [identifier, value] of Object.entries(attempt.responses)) {
+          session.respond(identifier, value);
+        }
+
+        const scored = session.score();
+        expect(
+          scored.diagnostics.filter((diagnostic) => diagnostic.severity === "error"),
+          `${fixture.id}/${attempt.name}`,
+        ).toEqual([]);
+        for (const [identifier, expected] of Object.entries(attempt.expectedOutcomes)) {
+          expect(scored.outcomes[identifier], `${fixture.id}/${attempt.name}`).toEqual(expected);
+        }
+        const state = scored.state;
+        expect(state.schema, `${fixture.id}/${attempt.name}`).toBe("qti3.attempt-state.v1");
+        expect(state.itemIdentifier, `${fixture.id}/${attempt.name}`).toBe(fixture.id);
+        for (const [identifier, expected] of Object.entries(attempt.expectedResponses ?? {})) {
+          expect(state.responses[identifier], `${fixture.id}/${attempt.name}`).toEqual(expected);
+        }
+      }
+    }
   });
 });
