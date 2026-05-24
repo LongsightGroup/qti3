@@ -148,7 +148,7 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     };
   }
 
-  if (interactionType === "order" || interactionType === "graphicOrder") {
+  if (interactionType === "order") {
     return {
       ...base,
       primaryRole: "group",
@@ -156,9 +156,38 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
         "Tab moves through each item handle and its move buttons.",
         "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
         "Arrow icon buttons provide an explicit move-button fallback.",
+        "Adjacent moves are announced directionally in a polite live region; larger jumps announce the new position.",
       ],
       requiredStates: [
         "position in accessible name",
+        "reorder announcement",
+        "disabled",
+        "aria-invalid",
+        "aria-describedby",
+      ],
+    };
+  }
+
+  if (interactionType === "graphicOrder") {
+    return {
+      ...base,
+      primaryRole: "group",
+      focusStrategy:
+        "Focus moves through graphic hotspot buttons and ordered-list controls; the selection summary is a live region, not a tab stop.",
+      keyboardModel: [
+        "Tab moves through hotspot buttons, ordered-list controls, and remove buttons.",
+        "On hotspot buttons, Enter or Space adds the region to the sequence.",
+        "On hotspot buttons, Arrow Up, Arrow Down, Arrow Left, or Arrow Right moves focus between hotspots.",
+        "On hotspot buttons, Delete or Backspace removes the region from the sequence.",
+        "On ordered-list controls, Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused region.",
+        "On ordered-list controls, Delete or Backspace removes the region from the sequence.",
+        "Arrow icon buttons provide an explicit move-button fallback.",
+        "Selection count and reordering are announced in a polite live region.",
+      ],
+      requiredStates: [
+        "aria-pressed on hotspots",
+        "position in accessible name",
+        "selection summary",
         "disabled",
         "aria-invalid",
         "aria-describedby",

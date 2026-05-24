@@ -1277,6 +1277,47 @@ function movementLabel(target: string, direction: MovementDirection): string {
   return `Move ${target} ${direction}`;
 }
 
+function createSelectionSummary(): HTMLParagraphElement {
+  const summary = document.createElement("p");
+  summary.className = "qti3-selection-summary";
+  summary.setAttribute("aria-live", "polite");
+  return summary;
+}
+
+function orderedItemAccessibleName(label: string, index: number, total: number): string {
+  return `${label}, position ${index + 1} of ${total}`;
+}
+
+function announceOrderedItemMove(
+  summary: HTMLElement,
+  label: string,
+  to: number,
+  total: number,
+  from?: number,
+): void {
+  if (from !== undefined && Math.abs(to - from) === 1) {
+    summary.textContent = `${label} moved ${to < from ? "up" : "down"}.`;
+    return;
+  }
+  summary.textContent = `${label} moved to position ${to + 1} of ${total}.`;
+}
+
+function announceOrderedSelectionCount(
+  summary: HTMLElement,
+  count: number,
+  singular: string,
+  plural: string,
+): void {
+  summary.textContent =
+    count > 0 ? `${count} ${count === 1 ? singular : plural}.` : `No ${plural}.`;
+}
+
+function focusReorderControl(container: ParentNode, identifier: string): void {
+  container
+    .querySelector<HTMLButtonElement>(`button[data-choice-identifier="${identifier}"]`)
+    ?.focus();
+}
+
 function renderHottextResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -1405,6 +1446,7 @@ function renderOrderedResponse(
   const list = document.createElement("ol");
   list.className = "qti3-reorder-list";
   list.setAttribute("aria-label", `${readableType(interaction.type)} current order`);
+  const summary = createSelectionSummary();
   let draggedIdentifier: string | undefined;
   let pointerDraggedIdentifier: string | undefined;
 
@@ -1415,10 +1457,9 @@ function renderOrderedResponse(
     if (!choice) return;
     ordered.splice(to, 0, choice);
     renderList();
+    announceOrderedItemMove(summary, choice.text, to, ordered.length, from);
     commit();
-    list
-      .querySelector<HTMLButtonElement>(`[data-choice-identifier="${choice.identifier}"]`)
-      ?.focus();
+    focusReorderControl(list, choice.identifier);
   };
   const renderList = () => {
     list.replaceChildren(
@@ -1475,7 +1516,7 @@ function renderOrderedResponse(
         handle.dataset.choiceIdentifier = choice.identifier;
         handle.setAttribute(
           "aria-label",
-          `${choice.text}, position ${index + 1} of ${ordered.length}`,
+          orderedItemAccessibleName(choice.text, index, ordered.length),
         );
         handle.textContent = choice.text;
         handle.addEventListener("keydown", (event) => {
@@ -1504,7 +1545,7 @@ function renderOrderedResponse(
     );
   };
   renderList();
-  group.append(list);
+  group.append(list, summary);
   return group;
 }
 
@@ -1889,9 +1930,7 @@ function renderGraphicOrderResponse(
   sequenceLines.append(defs);
   surface.append(sequenceLines);
 
-  const summary = document.createElement("p");
-  summary.className = "qti3-selection-summary";
-  summary.setAttribute("aria-live", "polite");
+  const summary = createSelectionSummary();
   const list = document.createElement("ol");
   list.className = "qti3-graphic-order-list";
   list.setAttribute("aria-label", `${readableType(interaction.type)} selected order`);
@@ -1901,6 +1940,14 @@ function renderGraphicOrderResponse(
       .map((identifier) => choices.find((choice) => choice.identifier === identifier))
       .filter((choice): choice is QtiChoice => Boolean(choice));
   const commit = () => update([...orderedIdentifiers]);
+  const updateSelectionCountSummary = () => {
+    announceOrderedSelectionCount(
+      summary,
+      orderedIdentifiers.length,
+      "region ordered",
+      "regions ordered",
+    );
+  };
   const focusHotspot = (identifier: string) => {
     surface.querySelector<HTMLButtonElement>(`[data-choice-identifier="${identifier}"]`)?.focus();
   };
@@ -1914,6 +1961,7 @@ function renderGraphicOrderResponse(
     if (existingIndex >= 0) orderedIdentifiers.splice(existingIndex, 1);
     orderedIdentifiers.push(choice.identifier);
     renderState();
+    updateSelectionCountSummary();
     commit();
     focusHotspot(choice.identifier);
   };
@@ -1922,6 +1970,7 @@ function renderGraphicOrderResponse(
     if (index < 0) return;
     orderedIdentifiers.splice(index, 1);
     renderState();
+    updateSelectionCountSummary();
     commit();
     focusHotspot(identifier);
   };
@@ -1929,12 +1978,15 @@ function renderGraphicOrderResponse(
     const index = orderedIdentifiers.indexOf(identifier);
     const targetIndex = index + delta;
     if (index < 0 || targetIndex < 0 || targetIndex >= orderedIdentifiers.length) return;
+    const choice = choices.find((entry) => entry.identifier === identifier);
+    const choiceLabel = choice ? hotspotDisplayLabel(choice, choices) : identifier;
     const [entry] = orderedIdentifiers.splice(index, 1);
     if (!entry) return;
     orderedIdentifiers.splice(targetIndex, 0, entry);
     renderState();
+    announceOrderedItemMove(summary, choiceLabel, targetIndex, orderedIdentifiers.length, index);
     commit();
-    list.querySelector<HTMLButtonElement>(`[data-choice-identifier="${identifier}"]`)?.focus();
+    focusReorderControl(list, identifier);
   };
   const renderState = () => {
     for (const line of sequenceLines.querySelectorAll("line")) line.remove();
@@ -1965,11 +2017,6 @@ function renderGraphicOrderResponse(
       if (badge) badge.textContent = isSelected ? String(index + 1) : "";
     }
 
-    summary.textContent =
-      orderedIdentifiers.length > 0
-        ? `${orderedIdentifiers.length} ${orderedIdentifiers.length === 1 ? "region" : "regions"} ordered.`
-        : "No regions ordered";
-
     list.replaceChildren(
       ...currentChoices.map((choice, index) => {
         const item = document.createElement("li");
@@ -1984,7 +2031,7 @@ function renderGraphicOrderResponse(
         label.textContent = `${index + 1}. ${choiceLabel}`;
         label.setAttribute(
           "aria-label",
-          `${choiceLabel}, position ${index + 1} of ${currentChoices.length}`,
+          orderedItemAccessibleName(choiceLabel, index, currentChoices.length),
         );
         label.addEventListener("click", () => focusHotspot(choice.identifier));
         label.addEventListener("keydown", (event) => {
@@ -2053,7 +2100,8 @@ function renderGraphicOrderResponse(
   }
 
   renderState();
-  group.append(surface, summary, list);
+  updateSelectionCountSummary();
+  group.append(surface, list, summary);
   return group;
 }
 

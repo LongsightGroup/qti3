@@ -2386,6 +2386,22 @@ test.describe("manual harness", () => {
       .focus();
     await page.keyboard.press("ArrowUp");
     await expectResponse(page, ["B", "A", "C"]);
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
+      /moved up\.$/,
+    );
+    await expect(
+      page.locator(
+        'qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]',
+      ),
+    ).toBeFocused();
+
+    await page.keyboard.press("ArrowDown");
+    await expectResponse(page, ["A", "B", "C"]);
+    await expect(
+      page.locator(
+        'qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]',
+      ),
+    ).toBeFocused();
 
     await expectMoveButtons(
       page.locator(
@@ -2398,7 +2414,10 @@ test.describe("manual harness", () => {
         'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] [data-move-direction="down"]',
       )
       .click();
-    await expectResponse(page, ["A", "B", "C"]);
+    await expectResponse(page, ["A", "C", "B"]);
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
+      /moved down\.$/,
+    );
   });
 
   test("renders point movement controls as arrow icon buttons", async ({ page }) => {
@@ -2445,6 +2464,9 @@ test.describe("manual harness", () => {
       )
       .click();
     await expectResponse(page, ["A", "B", "C"]);
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
+      /Response capture moved down\.$/,
+    );
 
     await surface.getByRole("button", { name: "Outcomes" }).focus();
     await page.keyboard.press("Delete");

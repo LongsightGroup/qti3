@@ -68,6 +68,18 @@ describe("@longsightgroup/qti3-a11y", () => {
     expect(byType.get("order")?.keyboardModel).toContain(
       "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
     );
+    expect(byType.get("order")?.keyboardModel).toContain(
+      "Adjacent moves are announced directionally in a polite live region; larger jumps announce the new position.",
+    );
+    expect(byType.get("graphicOrder")?.focusStrategy).toContain(
+      "the selection summary is a live region, not a tab stop",
+    );
+    expect(byType.get("graphicOrder")?.keyboardModel).toContain(
+      "On hotspot buttons, Arrow Up, Arrow Down, Arrow Left, or Arrow Right moves focus between hotspots.",
+    );
+    expect(byType.get("graphicOrder")?.keyboardModel).toContain(
+      "On ordered-list controls, Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused region.",
+    );
     expect(byType.get("associate")?.keyboardModel).toContain(
       "Remove buttons delete selected pairs.",
     );
