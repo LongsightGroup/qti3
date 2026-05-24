@@ -63,6 +63,7 @@ import {
   validateItemResponses,
   validationMessageElement,
 } from "./player-validation.js";
+import { syncValidationMessages } from "./player-validation-dom.js";
 
 const HTMLElementBase: typeof HTMLElement =
   globalThis.HTMLElement ??
@@ -83,6 +84,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private session?: QtiItemSession;
   private resolveAsset: QtiPlayerResolveAsset | undefined;
   private validationMessages: QtiDiagnostic[] = [];
+  private authoringDiagnostics: QtiDiagnostic[] = [];
   private languageOfInterfaceOverride: string | undefined;
   private messageOverrides: QtiPlayerMessageOverrides = {};
   private sessionControl: Required<QtiPlayerSessionControl> = {
@@ -146,6 +148,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         detail: { diagnostics: [...result.diagnostics, ...playerDiagnostics] },
       }),
     );
+    this.authoringDiagnostics = cloneDiagnostics(
+      playerDiagnostics.filter((diagnostic) => diagnostic.severity === "error"),
+    );
     if (!result.document) {
       this.replaceChildren(errorView("Unable to parse QTI item."));
       return;
@@ -172,14 +177,15 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!session) return undefined;
     const shouldValidateResponses =
       options.validateResponses ?? this.sessionControl.validateResponses;
-    const validationMessages = shouldValidateResponses ? this.validateResponses() : [];
+    const responseValidation = shouldValidateResponses ? this.validateResponses() : [];
+    const validationMessages = [...this.authoringDiagnostics, ...responseValidation];
     if (validationMessages.length > 0) {
-      this.validationMessages = cloneDiagnostics(validationMessages);
+      this.validationMessages = cloneDiagnostics(responseValidation);
       this.renderValidationMessages();
       const state = this.serialize();
       if (!state) return undefined;
       this.dispatchPlayerEvent("qti-validation", {
-        validationMessages: cloneDiagnostics(this.validationMessages),
+        validationMessages: cloneDiagnostics(validationMessages),
         state,
       });
       this.emitStateChange(state);
@@ -252,7 +258,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   serialize(): QtiAttemptStateV1 | undefined {
     const state = this.session?.serialize();
-    if (state) state.validationMessages = cloneDiagnostics(this.validationMessages);
+    if (state) {
+      state.validationMessages = cloneDiagnostics(this.visibleValidationMessages());
+    }
     return state;
   }
 
@@ -362,7 +370,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         currentValue,
         messages,
         isCompleted: () => this.attemptIsCompleted(),
-        interactionLabel: label,
         endAttempt: () => this.endAttempt(),
         renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
           this.renderPortableCustomResponse(portableInteraction, portableUpdate, portableValue),
@@ -606,36 +613,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     return validateItemResponses(this.documentModel, state);
   }
 
+  private visibleValidationMessages(): QtiDiagnostic[] {
+    return [...this.authoringDiagnostics, ...this.validationMessages];
+  }
+
   private renderValidationMessages(): void {
-    const messagesByIdentifier = new Map(
-      this.validationMessages
-        .filter((message) => message.path)
-        .map((message) => [message.path!, message]),
-    );
-    for (const section of this.querySelectorAll<HTMLElement>("[data-response-identifier]")) {
-      const responseIdentifier = section.dataset.responseIdentifier;
-      if (!responseIdentifier) continue;
-      const message = messagesByIdentifier.get(responseIdentifier);
-      const messageElement = section.querySelector<HTMLElement>(
-        `[data-validation-for="${responseIdentifier}"]`,
-      );
-      const controls = section.querySelectorAll<HTMLElement>("input, select, textarea, button");
-      if (message && messageElement) {
-        messageElement.textContent = message.message;
-        messageElement.hidden = false;
-        for (const control of controls) {
-          control.setAttribute("aria-invalid", "true");
-          control.setAttribute("aria-describedby", messageElement.id);
-        }
-      } else if (messageElement) {
-        messageElement.textContent = "";
-        messageElement.hidden = true;
-        for (const control of controls) {
-          control.removeAttribute("aria-invalid");
-          control.removeAttribute("aria-describedby");
-        }
-      }
-    }
+    syncValidationMessages(this, this.visibleValidationMessages());
   }
 
   private clearValidationMessage(responseIdentifier: string): void {

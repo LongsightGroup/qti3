@@ -122,6 +122,54 @@ export const GRAPHIC_PLAYER_STYLES = `
   color: CanvasText;
   touch-action: none;
   overflow: visible;
+  margin-block-end: calc(var(--qti3-position-object-marker-block-size, 2rem) + 12px);
+}
+
+.qti3-graphic-object-image {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.qti3-position-object-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid CanvasText;
+  background: Canvas;
+  color: CanvasText;
+  padding: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.qti3-position-object-marker[data-placed="false"] {
+  inset-inline-start: var(--qti3-position-object-unplaced-inline-start, 50%);
+  inset-block-start: var(--qti3-position-object-unplaced-block-start, calc(100% + 1rem));
+}
+
+.qti3-position-object-marker img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.qti3-point-marker {
+  position: absolute;
+  inline-size: 8px;
+  block-size: 8px;
+  border: 2px solid CanvasText;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.qti3-point-marker[data-active="true"] {
+  outline: 2px solid Highlight;
+  outline-offset: 1px;
 }
 
 .qti3-graphic-gap-hotspot {

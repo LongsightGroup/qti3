@@ -29,24 +29,16 @@ export function renderPositionObjectResponse(
 
   const stage = document.createElement("div");
   applyGraphicSurfaceLayout(stage, width, height, "qti3-position-object-stage");
+  stage.style.setProperty("--qti3-position-object-marker-block-size", `${movableHeight}px`);
   stage.tabIndex = 0;
   stage.role = "group";
   stage.setAttribute("aria-label", `${readableType(interaction.type)} placement stage`);
-  stage.style.boxSizing = "border-box";
-  stage.style.color = "CanvasText";
-  stage.style.touchAction = "none";
-  stage.style.marginBlockEnd = `${Math.ceil(movableHeight + 12)}px`;
 
   if (stageObject?.data && objectIsImage(stageObject)) {
     const image = document.createElement("img");
+    image.className = "qti3-graphic-object-image";
     image.src = stageObject.data;
     image.alt = stageObject.text || "";
-    image.style.position = "absolute";
-    image.style.inset = "0";
-    image.style.inlineSize = "100%";
-    image.style.blockSize = "100%";
-    image.style.objectFit = "contain";
-    image.style.pointerEvents = "none";
     stage.append(image);
   }
 
@@ -54,26 +46,14 @@ export function renderPositionObjectResponse(
   marker.type = "button";
   marker.className = "qti3-position-object-marker";
   marker.setAttribute("aria-label", "Movable object");
-  marker.style.position = "absolute";
   marker.style.inlineSize = `${movableWidth}px`;
   marker.style.blockSize = `${movableHeight}px`;
-  marker.style.transform = "translate(-50%, -50%)";
-  marker.style.border = "2px solid CanvasText";
-  marker.style.background = "Canvas";
-  marker.style.color = "CanvasText";
-  marker.style.padding = "0";
-  marker.style.cursor = "grab";
-  marker.style.touchAction = "none";
   marker.draggable = false;
 
   if (movableObject?.data && objectIsImage(movableObject)) {
     const image = document.createElement("img");
     image.src = movableObject.data;
     image.alt = "";
-    image.style.inlineSize = "100%";
-    image.style.blockSize = "100%";
-    image.style.objectFit = "contain";
-    image.style.pointerEvents = "none";
     marker.append(image);
   } else {
     marker.textContent = "Place";
@@ -93,8 +73,16 @@ export function renderPositionObjectResponse(
   const syncMarker = () => {
     if (!isPlaced) {
       marker.dataset.placed = "false";
-      marker.style.insetInlineStart = `${Math.round(movableWidth / 2)}px`;
-      marker.style.insetBlockStart = `calc(100% + ${Math.round(movableHeight / 2 + 8)}px)`;
+      marker.style.removeProperty("insetInlineStart");
+      marker.style.removeProperty("insetBlockStart");
+      marker.style.setProperty(
+        "--qti3-position-object-unplaced-inline-start",
+        `${Math.round(movableWidth / 2)}px`,
+      );
+      marker.style.setProperty(
+        "--qti3-position-object-unplaced-block-start",
+        `calc(100% + ${Math.round(movableHeight / 2 + 8)}px)`,
+      );
       coordinate.value = "";
       coordinate.textContent = "Object not placed";
       stage.setAttribute(
@@ -105,6 +93,8 @@ export function renderPositionObjectResponse(
     }
     clamp();
     marker.dataset.placed = "true";
+    marker.style.removeProperty("--qti3-position-object-unplaced-inline-start");
+    marker.style.removeProperty("--qti3-position-object-unplaced-block-start");
     marker.style.insetInlineStart = `${percent(point.x, width)}%`;
     marker.style.insetBlockStart = `${percent(point.y, height)}%`;
     coordinate.value = pointToString(point);

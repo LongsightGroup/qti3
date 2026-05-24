@@ -23,9 +23,18 @@ export function applyGraphicSurfaceLayout(
   ...classNames: string[]
 ): void {
   surface.classList.add("qti3-graphic-surface", ...classNames);
-  surface.style.inlineSize = "100%";
-  surface.style.maxInlineSize = `${width}px`;
-  surface.style.aspectRatio = `${width} / ${height}`;
+  applyResponsiveGraphicSize(surface, width, height);
+}
+
+export function applyResponsiveGraphicSize(
+  element: HTMLElement | SVGSVGElement,
+  width: number,
+  height: number,
+): void {
+  element.style.display = "block";
+  element.style.inlineSize = "100%";
+  element.style.maxInlineSize = `${width}px`;
+  element.style.aspectRatio = `${width} / ${height}`;
 }
 
 export function choiceSelector(identifier: string): string {

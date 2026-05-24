@@ -43,6 +43,10 @@ describe("interaction routing", () => {
       usesPairResponse(interaction({ type: "custom", responseBaseType: "directedPair" })),
     ).toBe(true);
     expect(usesPairResponse(interaction({ type: "match" }))).toBe(false);
+    expect(
+      usesPairResponse(interaction({ type: "match", responseBaseType: "directedPair" })),
+    ).toBe(false);
     expect(usesPairResponse(interaction({ type: "graphicAssociate" }))).toBe(false);
+    expect(usesPairResponse(interaction({ type: "gapMatch" }))).toBe(false);
   });
 });

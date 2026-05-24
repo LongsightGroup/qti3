@@ -25,22 +25,13 @@ export function renderSelectPointResponse(
   surface.type = "button";
   applyGraphicSurfaceLayout(surface, objectWidth(interaction), objectHeight(interaction), "qti3-point-surface");
   surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
-  surface.style.display = "block";
-  surface.style.boxSizing = "border-box";
-  surface.style.cursor = "crosshair";
-  surface.style.color = "CanvasText";
 
   const object = interaction.object;
   if (object?.data && object.type?.startsWith("image/")) {
     const image = document.createElement("img");
+    image.className = "qti3-graphic-object-image";
     image.src = object.data;
     image.alt = "";
-    image.style.position = "absolute";
-    image.style.inset = "0";
-    image.style.inlineSize = "100%";
-    image.style.blockSize = "100%";
-    image.style.objectFit = "contain";
-    image.style.pointerEvents = "none";
     surface.append(image);
   }
 
@@ -74,13 +65,6 @@ export function renderSelectPointResponse(
       const marker = document.createElement("span");
       marker.className = "qti3-point-marker";
       marker.setAttribute("aria-hidden", "true");
-      marker.style.position = "absolute";
-      marker.style.inlineSize = "8px";
-      marker.style.blockSize = "8px";
-      marker.style.border = "2px solid CanvasText";
-      marker.style.borderRadius = "50%";
-      marker.style.transform = "translate(-50%, -50%)";
-      marker.style.pointerEvents = "none";
       marker.style.insetInlineStart = `${(point.x / width) * 100}%`;
       marker.style.insetBlockStart = `${(point.y / height) * 100}%`;
       if (index === activeIndex) marker.dataset.active = "true";

@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
-import { objectIsImage, readableType } from "../interaction-support.js";
+import { applyResponsiveGraphicSize, objectIsImage, readableType } from "../interaction-support.js";
 
 export const DRAWING_STROKE_COLOR = "#000";
 export const DRAWING_STROKE_WIDTH = 3;
@@ -21,10 +21,7 @@ export function renderDrawingResponse(
   const width = drawingWidth(interaction);
   const height = drawingHeight(interaction);
   surface.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  surface.style.display = "block";
-  surface.style.inlineSize = `${width}px`;
-  surface.style.aspectRatio = `${width} / ${height}`;
-  surface.style.maxInlineSize = "100%";
+  applyResponsiveGraphicSize(surface, width, height);
   surface.style.touchAction = "none";
   const restoredStrokes = parseDrawingValue(currentValue);
   const authoredBackgroundHref = drawingBackgroundHref(interaction);
