@@ -1,8 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { buildQtiDeliverySafeXml } from "./delivery-security.js";
+import { parseQtiXml } from "./parser.js";
 import { parseXmlTree } from "./xml.js";
 
 describe("parseXmlTree source ranges", () => {
+  it("records exact ranges for nested same-name elements", () => {
+    const xml = `<root><item id="outer"><item id="inner">inner</item></item></root>`;
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    const outer = parsed.root?.children[0];
+    const inner = outer?.children[0];
+    expect(sourceSlice(xml, outer)).toBe(`<item id="outer"><item id="inner">inner</item></item>`);
+    expect(sourceSlice(xml, inner)).toBe(`<item id="inner">inner</item>`);
+  });
+
   it("records full element ranges and ignores decoy closing tags in comments and CDATA", () => {
     const xml = `
       <root>
@@ -25,6 +38,64 @@ describe("parseXmlTree source ranges", () => {
     }
   });
 
+  it("ignores decoy closing tags in processing instructions", () => {
+    const xml = `<root><child><?decoy </child> ?>content</child></root>`;
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    const child = parsed.root?.children[0];
+    expect(sourceSlice(xml, child)).toBe(`<child><?decoy </child> ?>content</child>`);
+  });
+
+  it("records self-closing ranges and ignores quoted tag terminators", () => {
+    const xml = `<root><leaf data="A > B"/></root>`;
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    const leaf = parsed.root?.children[0];
+    expect(sourceSlice(xml, leaf)).toBe(`<leaf data="A > B"/>`);
+  });
+
+  it("records ranges for prefixed elements using raw qualified names", () => {
+    const xml = `<qti:root xmlns:qti="urn:test"><qti:item qti:label="A > B">Value</qti:item></qti:root>`;
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    const item = parsed.root?.children[0];
+    expect(item?.name).toBe("qti:item");
+    expect(item?.localName).toBe("item");
+    expect(sourceSlice(xml, item)).toBe(`<qti:item qti:label="A > B">Value</qti:item>`);
+  });
+
+  it("records ranges when a doctype declaration precedes the root element", () => {
+    const xml = `<!DOCTYPE qti-assessment-item [
+      <!ENTITY decoy "</qti-response-processing>">
+    ]><qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="doctype" title="doctype" time-dependent="false"><qti-item-body><p>Doctype.</p></qti-item-body></qti-assessment-item>`;
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.root?.name).toBe("qti-assessment-item");
+    expect(sourceSlice(xml, parsed.root)).toBe(
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="doctype" title="doctype" time-dependent="false"><qti-item-body><p>Doctype.</p></qti-item-body></qti-assessment-item>`,
+    );
+  });
+
+  it("treats XML parse errors as fatal instead of returning a partial QTI document", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="partial" title="partial" time-dependent="false">
+        <qti-item-body><p>Partial.</p></qti-item-body>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document).toBeUndefined();
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "xml.parse", severity: "error" }),
+    );
+  });
+
   it("supports redaction ranges used by delivery security", () => {
     const xml = `
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="range" title="range" time-dependent="false">
@@ -42,3 +113,11 @@ describe("parseXmlTree source ranges", () => {
     expect(result.xml).not.toContain("<qti-value>A</qti-value>");
   });
 });
+
+function sourceSlice(
+  xml: string,
+  node: ReturnType<typeof parseXmlTree>["root"],
+): string | undefined {
+  if (!node || node.sourceRange.endOffset === undefined) return undefined;
+  return xml.slice(node.sourceRange.startOffset, node.sourceRange.endOffset);
+}

@@ -19,17 +19,19 @@ import { createItemSession, parseQtiXml, validateAssessmentItem } from "@longsig
 
 const parsed = parseQtiXml(xml);
 
-if (parsed.document) {
-  const validation = validateAssessmentItem(parsed.document);
-  const session = createItemSession(parsed.document);
-
-  session.respond("RESPONSE", "A");
-  const result = session.score();
-
-  console.log(validation.diagnostics);
-  console.log(result.outcomes);
-  console.log(result.state);
+if (!parsed.ok || !parsed.document) {
+  throw new Error(parsed.diagnostics.map((item) => item.message).join("; "));
 }
+
+const validation = validateAssessmentItem(parsed.document);
+const session = createItemSession(parsed.document);
+
+session.respond("RESPONSE", "A");
+const result = session.score();
+
+console.log(validation.diagnostics);
+console.log(result.outcomes);
+console.log(result.state);
 ```
 
 ### Candidate-safe delivery XML
@@ -49,14 +51,32 @@ if (!delivery.ok) {
 sendToCandidate(delivery.xml);
 ```
 
-The redactor removes correct responses, response and area mappings, response
-processing, and authored feedback subtrees. It also reports secure-delivery v1
-blockers such as template processing, set-correct-response, and adaptive response
-processing.
+Use `buildQtiDeliverySafeXml().ok` for deliverability. The
+`analyzeQtiDeliverySecurity().deliverySafe` flag describes the exact XML being analyzed,
+so it is normally `false` for an authoritative scorable item before redaction and `true`
+only for the redacted output.
 
-Byte-range redaction aligns element boundaries to the same stax parse tree used by
-`parseQtiXml`. End-tag lookup ignores matches inside XML comments and CDATA sections,
-but hosts should still treat redacted XML as untrusted presentation input.
+The redactor removes correct responses, response and area mappings, outcome lookup
+tables, response/outcome/template declaration default values, response processing, and
+authored feedback subtrees. It also reports secure-delivery v1 blockers such as
+template processing, set-correct-response, and adaptive response processing.
+
+String-range redaction aligns a private XML tag scan to the same stax parse tree used by
+`parseQtiXml`. Alignment failures are reported as `xml.parse` error diagnostics; hosts
+must treat those diagnostics, `parseQtiXml().ok === false`, and
+`buildQtiDeliverySafeXml().ok === false` as non-deliverable. The redacted output is
+re-analyzed before `ok` is returned, but hosts should still treat redacted XML as
+untrusted presentation input.
+
+The scanner adds a second full pass over each XML string. That is acceptable for
+item-scale delivery and scoring, but package-level batch redaction should treat XML
+parsing as a hot path if whole packages are processed repeatedly.
+
+Candidate-safe XML is not a full content audit. It does not remove solution text an
+author wrote directly into the item body, and it does not validate Portable Custom
+Interaction module/config URLs or host runtime policy. If candidates should see item
+point values, expose them intentionally through host metadata or visible item content;
+do not rely on hidden QTI declaration defaults as the presentation channel.
 
 ### Server-side scoring
 
@@ -80,7 +100,14 @@ console.log(scored.state);
 
 This API does not accept restored outcomes or a full prior attempt state, so browser
 submitted `SCORE`, `MAXSCORE`, or similar outcome variables cannot become trusted
-server results.
+server results. It validates trusted response identifiers and JSON-shaped QTI values,
+then runs response processing. It does not run candidate response-validation policy such
+as required interactions, cardinality limits, or min/max response counts; delivery hosts
+should enforce that policy before accepting a submission or finalizing an attempt.
+
+The delivery redaction and server-scoring APIs are library APIs in `0.4.x`. CLI commands
+for delivery-safe XML generation and server-style scoring are not part of this release
+line yet.
 
 ## Scope
 

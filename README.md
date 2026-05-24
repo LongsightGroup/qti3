@@ -386,6 +386,10 @@ It can also score each item by applying its declared correct responses:
 node packages/cli/dist/index.js score-correct-dir /path/to/items
 ```
 
+Delivery-safe XML generation and server-style scoring are library APIs in `0.4.x`.
+Dedicated CLI commands for those operations are planned separately, not shipped in this
+release line.
+
 For package-level inspection without creating an open-source runner, use:
 
 ```sh

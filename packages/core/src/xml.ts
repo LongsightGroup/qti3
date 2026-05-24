@@ -23,11 +23,11 @@ export interface XmlSourceLocation {
 }
 
 export interface XmlSourceRange {
-  /** Byte offset of `<` for this element's start tag in the source XML string. */
+  /** String offset of `<` for this element's start tag in the source XML string. */
   startOffset: number;
-  /** Byte offset of `>` closing the start tag (or `/>` for self-closing tags). */
+  /** String offset of `>` closing the start tag (or `/>` for self-closing tags). */
   startTagEndOffset: number;
-  /** Byte offset one past the element's closing `>` (or self-closing `/>`). */
+  /** String offset one past the element's closing `>` (or self-closing `/>`). */
   endOffset?: number | undefined;
 }
 
@@ -35,11 +35,11 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
   const parser = new StaxXmlParserSync(xml, {
     autoDecodeEntities: true,
   });
+  const tagTokens = scanXmlTagTokens(xml);
   const stack: XmlNode[] = [];
   const errors: Error[] = [];
   let root: XmlNode | undefined;
-  let searchOffset = 0;
-  let endSearchOffset = 0;
+  let tagTokenIndex = 0;
 
   try {
     for (const event of parser) {
@@ -50,14 +50,19 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
 
       if (event.type === XmlEventType.START_ELEMENT) {
         const parent = stack.at(-1);
-        const offset = findStartElementOffset(xml, event.name, searchOffset);
-        const startTagEndOffset = offset >= 0 ? findTagEndOffset(xml, offset + 1) : -1;
         const path = nodePath(parent, event.localName ?? event.name);
-        const sourceRange: XmlSourceRange = { startOffset: offset, startTagEndOffset };
-        if (startTagEndOffset >= 0 && isSelfClosingStartTag(xml, startTagEndOffset)) {
-          sourceRange.endOffset = startTagEndOffset + 1;
+        const sourceRange: XmlSourceRange = { startOffset: -1, startTagEndOffset: -1 };
+        const token = tagTokens[tagTokenIndex];
+        if (token?.kind === "start" && token.name === event.name) {
+          tagTokenIndex += 1;
+          sourceRange.startOffset = token.startOffset;
+          sourceRange.startTagEndOffset = token.startTagEndOffset;
+          if (token.endOffset !== undefined) {
+            sourceRange.endOffset = token.endOffset;
+          }
+        } else {
+          errors.push(new Error(`XML source range alignment failed for <${event.name}>.`));
         }
-        searchOffset = startTagEndOffset >= 0 ? startTagEndOffset + 1 : offset + 1;
         const node: XmlNode = {
           name: event.name,
           localName: event.localName ?? event.name,
@@ -67,7 +72,7 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
           children: [],
           content: [],
           text: "",
-          source: sourceLocation(xml, offset, path),
+          source: sourceLocation(xml, sourceRange.startOffset, path),
           sourceRange,
         };
 
@@ -86,22 +91,14 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
         const node = stack.pop();
         if (node) {
           if (node.sourceRange.endOffset === undefined) {
-            const endTagOffset = findEndElementOffset(
-              xml,
-              event.name,
-              Math.max(endSearchOffset, node.sourceRange.startTagEndOffset + 1),
-            );
-            const endTagEndOffset =
-              endTagOffset >= 0 ? findTagEndOffset(xml, endTagOffset + 2) : -1;
-            if (endTagOffset >= 0 && endTagEndOffset >= 0) {
-              node.sourceRange.endOffset = endTagEndOffset + 1;
-              node.endSource = sourceLocation(xml, endTagOffset, node.source.path);
+            const token = tagTokens[tagTokenIndex];
+            if (token?.kind === "end" && token.name === event.name) {
+              tagTokenIndex += 1;
+              node.sourceRange.endOffset = token.endOffset;
+              node.endSource = sourceLocation(xml, token.startOffset, node.source.path);
             } else {
-              errors.push(new Error(`Missing closing tag for <${node.name}>.`));
+              errors.push(new Error(`XML source range alignment failed for </${event.name}>.`));
             }
-          }
-          if (node.sourceRange.endOffset !== undefined) {
-            endSearchOffset = Math.max(endSearchOffset, node.sourceRange.endOffset);
           }
         }
         continue;
@@ -146,77 +143,124 @@ export function textContent(node: XmlNode): string {
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
-function findStartElementOffset(xml: string, name: string, from: number): number {
-  let offset = from;
+interface XmlTagToken {
+  kind: "start" | "end";
+  name: string;
+  startOffset: number;
+  startTagEndOffset: number;
+  endOffset?: number | undefined;
+  selfClosing: boolean;
+}
+
+function scanXmlTagTokens(xml: string): XmlTagToken[] {
+  const tokens: XmlTagToken[] = [];
+  let offset = 0;
+
   while (offset < xml.length) {
-    const start = xml.indexOf("<", offset);
-    if (start === -1) return -1;
-    const next = xml.charAt(start + 1);
-    if (next === "/" || next === "!" || next === "?") {
-      offset = start + 1;
+    const startOffset = xml.indexOf("<", offset);
+    if (startOffset === -1 || startOffset + 1 >= xml.length) return tokens;
+
+    if (xml.startsWith("<!--", startOffset)) {
+      offset = skipPastSequence(xml, "-->", startOffset + 4);
       continue;
     }
-    const afterName = start + 1 + name.length;
-    if (
-      xml.slice(start + 1, afterName) === name &&
-      (afterName >= xml.length || /[\s/>]/.test(xml.charAt(afterName))) &&
-      !isInsideCommentOrCdata(xml, start)
-    ) {
-      return start;
+
+    if (xml.startsWith("<![CDATA[", startOffset)) {
+      offset = skipPastSequence(xml, "]]>", startOffset + 9);
+      continue;
     }
-    offset = start + 1;
+
+    const next = xml.charAt(startOffset + 1);
+    if (next === "?") {
+      offset = skipPastSequence(xml, "?>", startOffset + 2);
+      continue;
+    }
+
+    if (next === "!") {
+      const declarationEndOffset = findMarkupDeclarationEndOffset(xml, startOffset + 2);
+      offset = declarationEndOffset >= 0 ? declarationEndOffset + 1 : xml.length;
+      continue;
+    }
+
+    if (next === "/") {
+      const tagEndOffset = findTagEndOffset(xml, startOffset + 2);
+      if (tagEndOffset < 0) return tokens;
+      const name = readTagName(xml, startOffset + 2, tagEndOffset);
+      if (name) {
+        tokens.push({
+          kind: "end",
+          name,
+          startOffset,
+          startTagEndOffset: tagEndOffset,
+          endOffset: tagEndOffset + 1,
+          selfClosing: false,
+        });
+      }
+      offset = tagEndOffset + 1;
+      continue;
+    }
+
+    const tagEndOffset = findTagEndOffset(xml, startOffset + 1);
+    if (tagEndOffset < 0) return tokens;
+    const name = readTagName(xml, startOffset + 1, tagEndOffset);
+    if (name) {
+      const selfClosing = isSelfClosingStartTag(xml, tagEndOffset);
+      tokens.push({
+        kind: "start",
+        name,
+        startOffset,
+        startTagEndOffset: tagEndOffset,
+        endOffset: selfClosing ? tagEndOffset + 1 : undefined,
+        selfClosing,
+      });
+    }
+    offset = tagEndOffset + 1;
+  }
+
+  return tokens;
+}
+
+function skipPastSequence(xml: string, sequence: string, from: number): number {
+  const endOffset = xml.indexOf(sequence, from);
+  return endOffset >= 0 ? endOffset + sequence.length : xml.length;
+}
+
+function findMarkupDeclarationEndOffset(xml: string, from: number): number {
+  let quote: string | null = null;
+  let internalSubsetDepth = 0;
+  for (let index = from; index < xml.length; index += 1) {
+    const char = xml.charAt(index);
+    if (quote) {
+      if (char === quote) quote = null;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === "[") {
+      internalSubsetDepth += 1;
+      continue;
+    }
+    if (char === "]" && internalSubsetDepth > 0) {
+      internalSubsetDepth -= 1;
+      continue;
+    }
+    if (char === ">" && internalSubsetDepth === 0) return index;
   }
   return -1;
 }
 
-function findEndElementOffset(xml: string, name: string, from: number): number {
-  let offset = from;
-  while (offset < xml.length) {
-    const start = xml.indexOf("</", offset);
-    if (start === -1) return -1;
-    if (isInsideCommentOrCdata(xml, start)) {
-      offset = start + 2;
-      continue;
-    }
-    const afterName = start + 2 + name.length;
-    if (
-      xml.slice(start + 2, afterName) === name &&
-      (afterName >= xml.length || /[\s>]/.test(xml.charAt(afterName)))
-    ) {
-      return start;
-    }
-    offset = start + 2;
+function readTagName(xml: string, from: number, to: number): string {
+  let start = from;
+  while (start < to && /\s/.test(xml.charAt(start))) start += 1;
+  let end = start;
+  while (end < to) {
+    const char = xml.charAt(end);
+    if (/\s/.test(char) || char === "/" || char === ">") break;
+    end += 1;
   }
-  return -1;
-}
-
-function isInsideCommentOrCdata(xml: string, offset: number): boolean {
-  let inComment = false;
-  let inCdata = false;
-  for (let index = 0; index < offset && index < xml.length; ) {
-    if (!inComment && !inCdata && xml.startsWith("<!--", index)) {
-      inComment = true;
-      index += 4;
-      continue;
-    }
-    if (inComment && xml.startsWith("-->", index)) {
-      inComment = false;
-      index += 3;
-      continue;
-    }
-    if (!inComment && !inCdata && xml.startsWith("<![CDATA[", index)) {
-      inCdata = true;
-      index += 9;
-      continue;
-    }
-    if (inCdata && xml.startsWith("]]>", index)) {
-      inCdata = false;
-      index += 3;
-      continue;
-    }
-    index += 1;
-  }
-  return inComment || inCdata;
+  return xml.slice(start, end);
 }
 
 function findTagEndOffset(xml: string, from: number): number {

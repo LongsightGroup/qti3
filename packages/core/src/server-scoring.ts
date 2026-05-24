@@ -18,6 +18,11 @@ export interface QtiServerScoringResponseInput {
 
 export interface QtiServerScoringInput {
   itemXml: string;
+  /**
+   * Server-trusted response values. This API validates JSON/QTI value shape and declared
+   * identifiers, but it does not run candidate response-validation policy such as required
+   * interactions or min/max response counts.
+   */
   trustedResponses?: Record<string, unknown> | readonly QtiServerScoringResponseInput[] | undefined;
   trustedInteractionStates?: Record<string, QtiPortableCustomStateValue> | undefined;
   status?: QtiAttemptStatus | undefined;

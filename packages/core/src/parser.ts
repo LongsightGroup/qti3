@@ -70,6 +70,10 @@ export function parseQtiXml(xml: string): QtiParseResult {
     });
   }
 
+  if (tree.errors.length > 0) {
+    return { ok: false, diagnostics };
+  }
+
   if (!tree.root) {
     diagnostics.push({
       code: "xml.empty",

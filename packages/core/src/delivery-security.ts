@@ -5,6 +5,8 @@ const FORBIDDEN_DELIVERY_ELEMENT_NAMES = new Set([
   "correct-response",
   "mapping",
   "area-mapping",
+  "match-table",
+  "interpolation-table",
   "response-processing",
   "feedback-inline",
   "feedback-block",
@@ -14,6 +16,12 @@ const FORBIDDEN_DELIVERY_ELEMENT_NAMES = new Set([
 const UNSUPPORTED_SECURE_DELIVERY_ELEMENT_NAMES = new Set([
   "template-processing",
   "set-correct-response",
+]);
+
+const DEFAULT_VALUE_DECLARATION_ELEMENT_NAMES = new Set([
+  "response-declaration",
+  "outcome-declaration",
+  "template-declaration",
 ]);
 
 export type QtiDeliverySecurityFindingKind =
@@ -32,7 +40,9 @@ export interface QtiDeliverySecurityFinding {
 export interface QtiDeliverySecurityAnalysis {
   diagnostics: QtiDiagnostic[];
   findings: QtiDeliverySecurityFinding[];
+  /** True when this exact XML contains no known answer/scoring/feedback delivery leaks. */
   deliverySafe: boolean;
+  /** True when secure-delivery redaction can be attempted for this XML. */
   secureDeliverySupported: boolean;
 }
 
@@ -45,6 +55,13 @@ export interface QtiDeliverySafeXmlResult {
 
 export function analyzeQtiDeliverySecurity(xml: string): QtiDeliverySecurityAnalysis {
   const parsed = parseDeliveryXml(xml);
+  return analyzeParsedDeliveryXml(parsed);
+}
+
+function analyzeParsedDeliveryXml(parsed: {
+  root: XmlNode | undefined;
+  diagnostics: QtiDiagnostic[];
+}): QtiDeliverySecurityAnalysis {
   const diagnostics = [...parsed.diagnostics];
   const findings: QtiDeliverySecurityFinding[] = [];
 
@@ -52,7 +69,7 @@ export function analyzeQtiDeliverySecurity(xml: string): QtiDeliverySecurityAnal
     const nodes = [parsed.root, ...descendants(parsed.root, () => true)];
     for (const node of nodes) {
       const normalizedName = normalizedQtiElementName(node.localName);
-      if (FORBIDDEN_DELIVERY_ELEMENT_NAMES.has(normalizedName)) {
+      if (isForbiddenDeliveryElement(node, normalizedName)) {
         findings.push({
           kind: "forbidden-delivery-element",
           qtiName: node.name,
@@ -106,7 +123,8 @@ export function analyzeQtiDeliverySecurity(xml: string): QtiDeliverySecurityAnal
 }
 
 export function buildQtiDeliverySafeXml(xml: string): QtiDeliverySafeXmlResult {
-  const analysis = analyzeQtiDeliverySecurity(xml);
+  const parsed = parseDeliveryXml(xml);
+  const analysis = analyzeParsedDeliveryXml(parsed);
   if (!analysis.secureDeliverySupported) {
     return {
       ok: false,
@@ -115,7 +133,6 @@ export function buildQtiDeliverySafeXml(xml: string): QtiDeliverySafeXmlResult {
     };
   }
 
-  const parsed = parseDeliveryXml(xml);
   if (!parsed.root) {
     return {
       ok: false,
@@ -124,10 +141,10 @@ export function buildQtiDeliverySafeXml(xml: string): QtiDeliverySafeXmlResult {
     };
   }
 
-  const redactionRanges = readRedactionRanges(
-    [parsed.root, ...descendants(parsed.root, () => true)],
-    FORBIDDEN_DELIVERY_ELEMENT_NAMES,
-  );
+  const redactionRanges = readRedactionRanges([
+    parsed.root,
+    ...descendants(parsed.root, () => true),
+  ]);
   const redactedXml = removeSourceRanges(xml, redactionRanges);
   const redactedAnalysis = analyzeQtiDeliverySecurity(redactedXml);
   if (!redactedAnalysis.deliverySafe) {
@@ -194,11 +211,21 @@ function parseXmlBoolean(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
+function isForbiddenDeliveryElement(
+  node: XmlNode,
+  normalizedName = normalizedQtiElementName(node.localName),
+): boolean {
+  if (FORBIDDEN_DELIVERY_ELEMENT_NAMES.has(normalizedName)) return true;
+  return (
+    normalizedName === "default-value" &&
+    DEFAULT_VALUE_DECLARATION_ELEMENT_NAMES.has(
+      normalizedQtiElementName(node.parent?.localName ?? ""),
+    )
+  );
+}
+
 function findingToDiagnostic(finding: QtiDeliverySecurityFinding): QtiDiagnostic {
-  const code =
-    finding.kind === "forbidden-delivery-element"
-      ? "delivery.forbiddenElement"
-      : "delivery.unsupportedSecureDelivery";
+  const code = diagnosticCodeForFinding(finding.kind);
   return {
     code,
     severity: "error",
@@ -208,17 +235,22 @@ function findingToDiagnostic(finding: QtiDeliverySecurityFinding): QtiDiagnostic
   };
 }
 
+function diagnosticCodeForFinding(kind: QtiDeliverySecurityFindingKind): string {
+  if (kind === "forbidden-delivery-element") return "delivery.forbiddenElement";
+  if (kind === "unsupported-adaptive-response-processing") {
+    return "delivery.unsupportedAdaptiveResponseProcessing";
+  }
+  return "delivery.unsupportedSecureDelivery";
+}
+
 interface RedactionRange {
   startOffset: number;
   endOffset: number;
 }
 
-function readRedactionRanges(
-  nodes: XmlNode[],
-  strippedElementNames: Set<string>,
-): RedactionRange[] {
+function readRedactionRanges(nodes: XmlNode[]): RedactionRange[] {
   const ranges = nodes.flatMap((node) => {
-    if (!strippedElementNames.has(normalizedQtiElementName(node.localName))) return [];
+    if (!isForbiddenDeliveryElement(node)) return [];
     const endOffset = node.sourceRange.endOffset;
     if (node.sourceRange.startOffset < 0 || endOffset === undefined) return [];
     return [{ startOffset: node.sourceRange.startOffset, endOffset }];

@@ -12,8 +12,18 @@
 
 - Document the player scoring trust boundary: browser scoring is local convenience only for high-stakes delivery.
 - Treat delivery-security forbidden elements as error-severity diagnostics.
+- Give unsupported adaptive response-processing its own delivery-security diagnostic code.
 - Redact response and area mappings during secure delivery preparation.
-- Ignore XML comment and CDATA decoys when locating element end tags for byte-range redaction.
+- Redact outcome lookup tables and hidden response/outcome/template declaration default
+  values during secure delivery preparation while documenting intentionally displayed
+  point values as host/content policy.
+- Clarify delivery-safe API semantics, server-scoring response-validation scope, and the
+  lack of delivery/security CLI commands in the `0.4.x` release line.
+- Replace delivery redaction's string-search range lookup with a private XML tag scanner
+  aligned to the stax parse tree, including comment, CDATA, processing-instruction,
+  prefixed-tag, self-closing-tag, and doctype coverage.
+- Treat XML parse/source-range alignment errors as fatal `parseQtiXml` errors without
+  returning a partial parsed document.
 
 ## 0.3.0 - 2026-05-23
 

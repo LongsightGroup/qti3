@@ -48,6 +48,37 @@ describe("QTI delivery security", () => {
     expect(analyzeQtiDeliverySecurity(result.xml!).deliverySafe).toBe(true);
   });
 
+  it("detects and strips lookup tables and hidden declaration defaults", () => {
+    const xml = scoredEssayXml();
+    const result = buildQtiDeliverySafeXml(xml);
+
+    expect(result.ok).toBe(true);
+    expect(result.xml).toBeDefined();
+    expect(result.xml).not.toContain("qti-match-table");
+    expect(result.xml).not.toContain("qti-match-table-entry");
+    expect(result.xml).not.toContain("qti-interpolation-table");
+    expect(result.xml).not.toContain("qti-interpolation-table-entry");
+    expect(result.xml).not.toContain("<qti-default-value>");
+    expect(result.xml).not.toContain("draft answer clue");
+    expect(result.xml).not.toContain("template clue");
+    expect(result.xml).not.toContain("<qti-value>25</qti-value>");
+    expect(result.xml).toContain("This essay is worth 25 points.");
+
+    const analysis = analyzeQtiDeliverySecurity(xml);
+    expect(analysis.deliverySafe).toBe(false);
+    expect(analysis.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ localName: "qti-default-value" }),
+        expect.objectContaining({ localName: "qti-match-table" }),
+        expect.objectContaining({ localName: "qti-interpolation-table" }),
+      ]),
+    );
+    expect(
+      analysis.findings.filter((finding) => finding.localName === "qti-default-value"),
+    ).toHaveLength(4);
+    expect(analyzeQtiDeliverySecurity(result.xml!).deliverySafe).toBe(true);
+  });
+
   it("redacts forbidden elements when comments or CDATA contain decoy closing tags", () => {
     const xml = `
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="decoy-tags" title="decoy-tags" time-dependent="false">
@@ -61,7 +92,7 @@ describe("QTI delivery security", () => {
           <qti-choice-interaction response-identifier="RESPONSE">
             <qti-simple-choice identifier="A">A</qti-simple-choice>
           </qti-choice-interaction>
-          <qti-feedback-inline outcome-identifier="FEEDBACK" identifier="yes" show-hide="show">Inline feedback.</qti-feedback-inline>
+          <qti-feedback-inline outcome-identifier="FEEDBACK" identifier="yes" show-hide="show"><?decoy </qti-feedback-inline> ?>Inline feedback.</qti-feedback-inline>
         </qti-item-body>
         <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti-assessment-item>
@@ -76,7 +107,7 @@ describe("QTI delivery security", () => {
   });
 
   it("detects prefixed QTI scoring elements by parsed local name", () => {
-    const analysis = analyzeQtiDeliverySecurity(`
+    const xml = `
       <qti:assessment-item xmlns:qti="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="prefixed" title="prefixed" time-dependent="false">
         <qti:response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti:correct-response><qti:value>A</qti:value></qti:correct-response>
@@ -84,7 +115,8 @@ describe("QTI delivery security", () => {
         <qti:item-body><p>Prefixed.</p></qti:item-body>
         <qti:response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti:assessment-item>
-    `);
+    `;
+    const analysis = analyzeQtiDeliverySecurity(xml);
 
     expect(analysis.deliverySafe).toBe(false);
     expect(analysis.secureDeliverySupported).toBe(true);
@@ -94,6 +126,46 @@ describe("QTI delivery security", () => {
         expect.objectContaining({ localName: "response-processing" }),
       ]),
     );
+
+    const result = buildQtiDeliverySafeXml(xml);
+    expect(result.ok).toBe(true);
+    expect(result.xml).not.toMatch(/<qti:correct-response\b/);
+    expect(result.xml).not.toMatch(/<qti:response-processing\b/);
+    expect(analyzeQtiDeliverySecurity(result.xml!).deliverySafe).toBe(true);
+  });
+
+  it("redacts self-closing forbidden response processing elements", () => {
+    const result = buildQtiDeliverySafeXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="self-closing" title="self-closing" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body><p>Self closing.</p></qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.xml).not.toMatch(/<qti-response-processing\b/);
+    expect(analyzeQtiDeliverySecurity(result.xml!).deliverySafe).toBe(true);
+  });
+
+  it("redacts QTI items when a doctype declaration precedes the root element", () => {
+    const result = buildQtiDeliverySafeXml(`
+      <!DOCTYPE qti-assessment-item [
+        <!ENTITY decoy "</qti-response-processing>">
+      ]>
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="doctype" title="doctype" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-item-body><p>Doctype.</p></qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.xml).not.toMatch(/<qti-correct-response\b/);
+    expect(result.xml).not.toMatch(/<qti-response-processing\b/);
+    expect(analyzeQtiDeliverySecurity(result.xml!).deliverySafe).toBe(true);
   });
 
   it("reports secure-delivery v1 blockers", () => {
@@ -114,11 +186,17 @@ describe("QTI delivery security", () => {
         expect.objectContaining({ kind: "unsupported-secure-delivery-element" }),
       ]),
     );
+    expect(template.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "delivery.unsupportedSecureDelivery" }),
+    );
 
     const adaptive = analyzeQtiDeliverySecurity(scoredChoiceXml({ adaptive: true }));
     expect(adaptive.secureDeliverySupported).toBe(false);
     expect(adaptive.findings).toContainEqual(
       expect.objectContaining({ kind: "unsupported-adaptive-response-processing" }),
+    );
+    expect(adaptive.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "delivery.unsupportedAdaptiveResponseProcessing" }),
     );
   });
 
@@ -155,7 +233,7 @@ describe("QTI delivery trust boundary", () => {
 
     const browserSession = createItemSession(redacted.document!);
     browserSession.respond("RESPONSE", "A");
-    expect(browserSession.score().outcomes.SCORE).toBe(0);
+    expect(browserSession.score().outcomes.SCORE).toBeNull();
 
     const correct = scoreQtiItemServerSide({
       itemXml: authoritative,
@@ -216,6 +294,46 @@ function mappedChoiceXml(): string {
   `;
 }
 
+function scoredEssayXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="scored-essay" title="scored-essay" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+        <qti-default-value><qti-value>draft answer clue</qti-value></qti-default-value>
+      </qti-response-declaration>
+      <qti-template-declaration identifier="TEMPLATE_HINT" cardinality="single" base-type="string">
+        <qti-default-value><qti-value>template clue</qti-value></qti-default-value>
+      </qti-template-declaration>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+        <qti-default-value><qti-value>0</qti-value></qti-default-value>
+      </qti-outcome-declaration>
+      <qti-outcome-declaration identifier="MAXSCORE" cardinality="single" base-type="float">
+        <qti-default-value><qti-value>25</qti-value></qti-default-value>
+      </qti-outcome-declaration>
+      <qti-outcome-declaration identifier="GRADE" cardinality="single" base-type="identifier">
+        <qti-interpolation-table default-value="F">
+          <qti-interpolation-table-entry source-value="20" target-value="B"/>
+          <qti-interpolation-table-entry source-value="25" target-value="A"/>
+        </qti-interpolation-table>
+      </qti-outcome-declaration>
+      <qti-outcome-declaration identifier="RUBRIC" cardinality="single" base-type="string">
+        <qti-match-table default-value="unknown">
+          <qti-match-table-entry source-value="1" target-value="developing"/>
+          <qti-match-table-entry source-value="2" target-value="proficient"/>
+        </qti-match-table>
+      </qti-outcome-declaration>
+      <qti-item-body>
+        <p>This essay is worth 25 points.</p>
+        <qti-extended-text-interaction response-identifier="RESPONSE"/>
+      </qti-item-body>
+      <qti-response-processing>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-base-value base-type="float">25</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-processing>
+    </qti-assessment-item>
+  `;
+}
+
 function scoredChoiceXml(options: { adaptive?: boolean } = {}): string {
   return `
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice" title="choice" adaptive="${String(
@@ -227,6 +345,7 @@ function scoredChoiceXml(options: { adaptive?: boolean } = {}): string {
       <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
         <qti-default-value><qti-value>0</qti-value></qti-default-value>
       </qti-outcome-declaration>
+      <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
       <qti-item-body>
         <p>A <strong>B</strong> C</p>
         <qti-choice-interaction response-identifier="RESPONSE">
