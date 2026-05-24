@@ -26,6 +26,7 @@
 
 ### Fixed
 
+- Keep package release checks publish-safe by leaving official 1EdTech certification artifacts in the explicit `certification:check` gate.
 - Fix restore validation deduplication when reloading serialized player state.
 - Unify graphic object image rendering and reflow behavior after resize.
 - Fix block interaction routing for nested interaction content.

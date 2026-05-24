@@ -95,7 +95,7 @@ runners or LMS delivery shells.
 ### Remaining
 
 - Collect official 1EdTech certification evidence by running `certification:check` against licensed external QTI content and a non-empty validator report. Internal Basic readiness is not certification.
-- Expand external corpus coverage in `test:external` as official item banks become available, while keeping `test:external:required` strict in publish workflows.
+- Expand external corpus coverage in `test:external` as official item banks become available, while keeping `test:external:required` strict for explicit certification runs.
 - Deepen host integration for portable custom interactions: clearer mount contracts, harness examples, and integration guidance. Production module loading, CSP, sandboxing, and tenant policy remain host-owned.
 - Add optional framework adapters only as thin wrappers around the web component once the native API is stable enough to freeze.
 - Keep accessibility evidence current: manual assistive-technology scripts, localized player chrome, and keyboard, reflow, and forced-colors coverage as interactions evolve.
@@ -336,13 +336,17 @@ pnpm check:exports
 pnpm test:browser
 ```
 
-The publish gate is the combined release check:
+The publish gate is the release check:
 
 ```sh
 pnpm release:check
 ```
 
-The certification-oriented portion of the release gate is available separately:
+`pnpm release:check` uses the public fixture set, browser coverage, support metadata,
+package exports, and built CLI fixture runner. It does not require official 1EdTech
+certification artifacts.
+
+The future certification-oriented gate is available separately:
 
 ```sh
 QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
@@ -351,9 +355,9 @@ pnpm certification:check
 ```
 
 `pnpm test:external` remains optional for local development and skips when
-`QTI3_EXTERNAL_QTI_DIR` is not configured. `pnpm test:external:required`,
-`pnpm certification:check`, and `pnpm release:check` fail fast unless official
-external QTI content and a non-empty validator report artifact are provided.
+`QTI3_EXTERNAL_QTI_DIR` is not configured. `pnpm test:external:required` and
+`pnpm certification:check` fail fast unless official external QTI content and
+a non-empty validator report artifact are provided.
 
 The browser harness is available with:
 
@@ -428,7 +432,8 @@ The release bar is:
 - Accessibility checks cover real operation as well as automated scans.
 - Dependencies stay small, exact, and reviewed.
 - Published packages use explicit npm `files` allowlists so package contents stay small and deliberate.
-- Release checks must pass before publishing.
+- Release checks must pass before publishing; certification evidence remains a separate
+  future gate.
 
 ## Status
 
@@ -481,7 +486,7 @@ Packages publish under the `longsightgroup` npm organization:
 - `@longsightgroup/qti3-a11y`
 - `@longsightgroup/qti3-cli`
 
-Releases publish from the `longsightgroup/qti3` repository after the full release check
+Releases publish from the `longsightgroup/qti3` repository after `pnpm release:check`
 passes. Package tarballs come from the same checked build output that CI verifies.
 
 ## Certification
