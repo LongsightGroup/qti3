@@ -1,0 +1,107 @@
+import { movementButton, movementLabel } from "../movement.js";
+import { orderedItemAccessibleName } from "./a11y.js";
+
+export interface ReorderHandleOptions {
+  identifier: string;
+  label: string;
+  index: number;
+  total: number;
+  handleClassName: string;
+  visibleText: string;
+  onMoveBy: (delta: number) => void;
+}
+
+export function createReorderHandleControls(options: ReorderHandleOptions): {
+  handle: HTMLButtonElement;
+  up: HTMLButtonElement;
+  down: HTMLButtonElement;
+} {
+  const { identifier, label, index, total, handleClassName, visibleText, onMoveBy } = options;
+
+  const handle = document.createElement("button");
+  handle.type = "button";
+  handle.className = handleClassName;
+  handle.dataset.choiceIdentifier = identifier;
+  handle.setAttribute("aria-label", orderedItemAccessibleName(label, index, total));
+  handle.textContent = visibleText;
+  handle.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      onMoveBy(-1);
+    } else if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+      event.preventDefault();
+      onMoveBy(1);
+    }
+  });
+
+  const up = movementButton("up", movementLabel(label, "up"), () => onMoveBy(-1));
+  up.disabled = index === 0;
+
+  const down = movementButton("down", movementLabel(label, "down"), () => onMoveBy(1));
+  down.disabled = index === total - 1;
+
+  return { handle, up, down };
+}
+
+export interface OrderDragState {
+  draggedIdentifier?: string;
+  pointerDraggedIdentifier?: string;
+}
+
+export function bindOrderListItemDrag(
+  item: HTMLLIElement,
+  choiceIdentifier: string,
+  index: number,
+  dragState: OrderDragState,
+  moveChoice: (from: number, to: number) => void,
+  findIndex: (identifier: string) => number,
+): void {
+  item.draggable = true;
+  item.dataset.choiceIdentifier = choiceIdentifier;
+
+  item.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || (event.target as Element).closest("button")) return;
+    dragState.pointerDraggedIdentifier = choiceIdentifier;
+    try {
+      item.setPointerCapture(event.pointerId);
+    } catch {
+      // Synthetic pointer events and some browser drag paths do not create a capturable pointer.
+    }
+  });
+
+  item.addEventListener("pointerup", (event) => {
+    if (!dragState.pointerDraggedIdentifier) return;
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>(".qti3-reorder-item");
+    const targetIdentifier = target?.dataset.choiceIdentifier;
+    delete dragState.pointerDraggedIdentifier;
+    if (!targetIdentifier) return;
+    moveChoice(findIndex(choiceIdentifier), findIndex(targetIdentifier));
+  });
+
+  item.addEventListener("pointercancel", () => {
+    delete dragState.pointerDraggedIdentifier;
+  });
+
+  item.addEventListener("dragstart", (event) => {
+    dragState.draggedIdentifier = choiceIdentifier;
+    event.dataTransfer?.setData("text/plain", choiceIdentifier);
+    event.dataTransfer?.setDragImage(item, 12, 12);
+  });
+
+  item.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    item.classList.add("qti3-drop-target");
+  });
+
+  item.addEventListener("dragleave", () => item.classList.remove("qti3-drop-target"));
+
+  item.addEventListener("drop", (event) => {
+    event.preventDefault();
+    item.classList.remove("qti3-drop-target");
+    const dragged = event.dataTransfer?.getData("text/plain") || dragState.draggedIdentifier;
+    if (!dragged) return;
+    moveChoice(findIndex(dragged), index);
+  });
+}
