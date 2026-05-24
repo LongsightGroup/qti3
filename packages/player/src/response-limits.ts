@@ -1,4 +1,4 @@
-import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
+import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 
 export function maximumAllowedResponses(interaction: QtiInteraction | undefined): number | undefined {
   if (!interaction) return undefined;
@@ -22,6 +22,11 @@ export function minimumMediaPlays(interaction: QtiInteraction): number {
 }
 
 export { maximumMediaPlays };
+
+export function mediaPlayCount(value: QtiValue): number {
+  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : 0;
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+}
 
 export function exceedsHotspotMatchMax(choice: QtiChoice, selectedPairs: string[]): boolean {
   const maximum = parseUnlimitedMaximum(choice.attributes["match-max"]);
