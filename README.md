@@ -3,9 +3,9 @@
 `qti3` is a dependency-light, framework-neutral TypeScript reference implementation for
 QTI 3 assessment items.
 
-The project is in early public releases. The current target is a clean, auditable item
-engine for parsing, validating, rendering, scoring, serializing, restoring, and testing QTI
-3 items across products. The core stays independent of any UI framework.
+The project ships public releases on npm. The target is a clean, auditable item engine for
+parsing, validating, rendering, scoring, serializing, restoring, and testing QTI 3 items
+across products. The core stays independent of any UI framework.
 
 This is not another framework-specific item player. The public project focuses on QTI
 item and question-type conformance. Host products own runners, controllers, LMS shells,
@@ -76,13 +76,37 @@ flowchart LR
 
 ## Release goals
 
-For the `0.2.x` release line, we are hardening:
+`0.2.x` established the reference item engine. `0.3.0` adds internal Basic item-player
+readiness evidence and a maintainable player architecture. Work after `0.3.0` focuses on
+certification evidence, host integration depth, and hardening — not building assessment
+runners or LMS delivery shells.
 
-- A strict TypeScript core for parsing, validation, response processing, scoring, saved attempt state, and host-readable metadata.
-- A native web component player that host products can embed without adopting a framework.
-- Public, synthetic fixtures for every supported current QTI 3 item interaction.
+### Delivered in `0.2.x`–`0.3.0`
+
+- Strict TypeScript core for parsing, validation, response and template processing, scoring, saved attempt state, and host-readable metadata.
+- Native web component player that host products can embed without adopting a framework.
+- Public synthetic fixtures and browser tests for every supported current QTI 3 item interaction.
 - Machine-readable support, accessibility, catalog, read-aloud, and media metadata.
 - Explicit diagnostics for unsupported, deprecated, invalid, or ambiguous item behavior.
+- Internal QTI 3 Basic item-player readiness profile with item-only package fixtures, `readiness:basic:item-player`, CLI `basic-item-player-report`, and Playwright coverage for the narrow Basic scope.
+- Modular player implementation with unified interaction dispatch, load-time diagnostics mirrored into validation UI, and domain-split styles.
+- Type-aware oxlint and explicit workspace package exports (types from source, runtime from `dist`).
+
+### Remaining
+
+- Collect official 1EdTech certification evidence by running `certification:check` against licensed external QTI content and a non-empty validator report. Internal Basic readiness is not certification.
+- Expand external corpus coverage in `test:external` as official item banks become available, while keeping `test:external:required` strict in publish workflows.
+- Deepen host integration for portable custom interactions: clearer mount contracts, harness examples, and integration guidance. Production module loading, CSP, sandboxing, and tenant policy remain host-owned.
+- Add optional framework adapters only as thin wrappers around the web component once the native API is stable enough to freeze.
+- Keep accessibility evidence current: manual assistive-technology scripts, localized player chrome, and keyboard, reflow, and forced-colors coverage as interactions evolve.
+
+### Still out of scope
+
+These belong in host products, not in the open-source item engine:
+
+- Full assessment-test runner, reusable LMS controller, or test navigation UI.
+- Shared stimulus delivery (`S-*`), full test delivery (`T-*`), timing policy, proctoring, analytics, rostering, LTI, and gradebook integration.
+- Runtime XSD or schema validation.
 
 ## Question-type support
 
