@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.3.0 - 2026-05-23
+
+### Added
+
+- Add the Basic item-player readiness profile with fixture evidence, item-only package fixtures, CLI `basic-item-player-report`, and Playwright coverage for the narrow 1EdTech Basic item-player scope.
+- Add `readiness:basic:item-player` as a single local verification entry point for that readiness profile.
+- Add load-time interaction diagnostics for unsupported interactions, missing choices, and unsupported embeds, mirrored into player validation UI and serialized state handling.
+- Add a unified interaction registry as the single dispatch source for player rendering, with routing unit tests.
+- Add player orchestration modules for content state, dynamic body, feedback panel, interaction rendering, render shell, asset resolution, default XML fetch, and validation message merging.
+- Add domain-split player stylesheets and extract portable custom interaction rendering into its own module.
+- Add explicit oxlint configuration with type-aware linting (`oxlint-tsgolint`), Vitest CI guardrails, and `no-explicit-any` enforcement.
+- Add shared `QtiValue` formatting helpers in `@longsightgroup/qti3-core` for safe scalar and record stringification.
+- Add expanded player chrome localization for control labels, empty selection status messages, and graphic interaction copy, with `player-locale` unit coverage.
+- Add qti3 project architecture diagrams in repository documentation.
+
+### Changed
+
+- Refactor `@longsightgroup/qti3-player` from a monolithic index module into per-interaction renderers, shared content infrastructure, and a slim `player-element` lifecycle shell.
+- Replace tsconfig `baseUrl` / `paths` aliases with workspace package exports that resolve TypeScript types from source while keeping runtime imports on built `dist` output.
+- Run the GitHub Pages workflow with `verify`, `build`, and `pages:build` instead of full `release:check`, so Pages deploy does not require official external 1EdTech conformance content.
+- Gate external QTI parse and score conformance tests on a configured `QTI3_EXTERNAL_QTI_DIR`.
+- Filter serialized response validation messages when restoring or loading player attempt state so authoring diagnostics are not duplicated in the UI.
+- Apply oxfmt across the player package and extract `defaultFetchXml` for shared XML loading.
+
+### Fixed
+
+- Fix restore validation deduplication when reloading serialized player state.
+- Unify graphic object image rendering and reflow behavior after resize.
+- Fix block interaction routing for nested interaction content.
+- Fix QTI conformance validation and response-processing edge cases, including composite items, inline choice handling, and session expression evaluation.
+- Keep drawing strokes visible in dark and forced-colors presentation modes.
+- Improve keyboard-only reorder operability for order and graphic order interactions.
+
 ## 0.2.1 - 2026-05-21
 
 ### Added
