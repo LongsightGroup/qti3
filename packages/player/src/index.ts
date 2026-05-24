@@ -40,13 +40,26 @@ import {
 } from "./interaction-support.js";
 import { movementButton, movementLabel } from "./movement.js";
 import type { QtiPlayerMessages, QtiPlayerRemoveMessageParams } from "./player-messages.js";
+import {
+  sourceChoices,
+  targetChoices,
+  tokenButton,
+  tokenRegion,
+} from "./interactions/shared.js";
+import { renderGraphicAssociateResponse } from "./interactions/graphic-associate-interaction.js";
+import { renderMatchResponse } from "./interactions/match-interaction.js";
+import { renderPairResponse } from "./interactions/pair-interaction.js";
+import { playerStyleElement } from "./player-styles.js";
 import { renderGraphicOrderResponse } from "./reorder/graphic-order-interaction.js";
 import { renderOrderedResponse } from "./reorder/order-interaction.js";
-import { playerStyleElement } from "./player-styles.js";
+import {
+  maximumAllowedResponses,
+  maximumMediaPlays,
+  minimumMediaPlays,
+  parseUnlimitedMaximum,
+} from "./response-limits.js";
 
 export type { QtiPlayerMessages, QtiPlayerRemoveMessageParams } from "./player-messages.js";
-
-
 
 export interface QtiPlayerSessionControl {
   validateResponses?: boolean | undefined;
@@ -1195,7 +1208,6 @@ function renderChoice(
   return group;
 }
 
-
 function renderHottextResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -1310,6 +1322,8 @@ function usesPairResponse(interaction: QtiInteraction): boolean {
     interaction.type === "graphicGapMatch"
   );
 }
+
+
 
 function renderGapMatchResponse(
   interaction: QtiInteraction,
@@ -2748,12 +2762,6 @@ function graphicGapLabelBlockSize(sources: QtiChoice[]): number {
   return Number((estimatedLines * 0.95 + 0.9).toFixed(2));
 }
 
-function hotspotCoords(choice: QtiChoice): number[] {
-  return (choice.attributes.coords ?? "")
-    .split(",")
-    .map((value) => Number(value.trim()))
-    .filter((value) => Number.isFinite(value));
-}
 
 function svgPoint(surface: SVGSVGElement, event: PointerEvent): { x: number; y: number } {
   const rect = surface.getBoundingClientRect();
@@ -3348,6 +3356,7 @@ function cloneDiagnostics(diagnostics: QtiDiagnostic[]): QtiDiagnostic[] {
   }));
 }
 
+
 function responseIsEmpty(value: QtiValue): boolean {
   return value === null || value === "" || (Array.isArray(value) && value.length === 0);
 }
@@ -3355,6 +3364,7 @@ function responseIsEmpty(value: QtiValue): boolean {
 function responseCount(value: QtiValue): number {
   return responseIsEmpty(value) ? 0 : Array.isArray(value) ? value.length : 1;
 }
+
 
 function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
   if (!interaction) return 1;
@@ -3365,6 +3375,7 @@ function minimumRequiredResponses(interaction: QtiInteraction | undefined): numb
   const parsed = Number(explicit);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
 }
+
 
 function mediaPlayCount(value: QtiValue): number {
   const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value) : 0;
@@ -3410,3 +3421,12 @@ function responseChoiceIdentifiers(response: QtiValue): string[] {
   return values.flatMap((value) => String(value).split(/\s+/).filter(Boolean));
 }
 
+
+async function defaultFetchXml(url: string): Promise<string> {
+  if (!globalThis.fetch) {
+    throw new Error("No fetch implementation is available. Provide loadUrl(url, { fetchXml }).");
+  }
+  const response = await globalThis.fetch(url);
+  if (!response.ok) throw new Error(`Failed to load QTI XML from ${url}: ${response.status}.`);
+  return response.text();
+}
