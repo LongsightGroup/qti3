@@ -1,0 +1,92 @@
+import type { QtiDiagnostic, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import { minimumMediaPlays, parseUnlimitedMaximum } from "./response-limits.js";
+
+export function errorView(message: string): HTMLElement {
+  const element = document.createElement("p");
+  element.role = "alert";
+  element.textContent = message;
+  return element;
+}
+
+export function validationMessageElement(responseIdentifier: string): HTMLElement {
+  const element = document.createElement("p");
+  element.id = validationMessageId(responseIdentifier);
+  element.dataset.validationFor = responseIdentifier;
+  element.hidden = true;
+  element.role = "alert";
+  return element;
+}
+
+export function inlineValidationMessageElement(responseIdentifier: string): HTMLElement {
+  const element = document.createElement("span");
+  element.id = validationMessageId(responseIdentifier);
+  element.dataset.validationFor = responseIdentifier;
+  element.hidden = true;
+  element.role = "alert";
+  return element;
+}
+
+export function validationMessageId(responseIdentifier: string): string {
+  return `qti3-validation-${responseIdentifier}`;
+}
+
+export function cloneDiagnostics(diagnostics: QtiDiagnostic[]): QtiDiagnostic[] {
+  return diagnostics.map((diagnostic) => ({
+    ...diagnostic,
+    source: diagnostic.source ? { ...diagnostic.source } : undefined,
+  }));
+}
+
+
+export function responseIsEmpty(value: QtiValue): boolean {
+  return value === null || value === "" || (Array.isArray(value) && value.length === 0);
+}
+
+export function responseCount(value: QtiValue): number {
+  return responseIsEmpty(value) ? 0 : Array.isArray(value) ? value.length : 1;
+}
+
+
+export function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
+  if (!interaction) return 1;
+  if (interaction.type === "media") return minimumMediaPlays(interaction);
+  const explicit =
+    interaction.attributes["min-choices"] ?? interaction.attributes["min-associations"];
+  if (explicit === undefined) return 1;
+  const parsed = Number(explicit);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
+}
+
+
+export function matchMaxDiagnostics(
+  responseIdentifier: string,
+  interaction: QtiInteraction,
+  response: QtiValue,
+): QtiDiagnostic[] {
+  const identifiers = responseChoiceIdentifiers(response);
+  if (identifiers.length === 0) return [];
+  const counts = new Map<string, number>();
+  for (const identifier of identifiers) {
+    counts.set(identifier, (counts.get(identifier) ?? 0) + 1);
+  }
+
+  const diagnostics: QtiDiagnostic[] = [];
+  for (const choice of interaction.choices) {
+    const maximum = parseUnlimitedMaximum(choice.attributes["match-max"]);
+    if (maximum === undefined) continue;
+    const count = counts.get(choice.identifier) ?? 0;
+    if (count <= maximum) continue;
+    diagnostics.push({
+      code: "response.matchMax",
+      severity: "error",
+      message: `${choice.text || choice.identifier} may be used at most ${maximum} time${maximum === 1 ? "" : "s"}.`,
+      path: responseIdentifier,
+    });
+  }
+  return diagnostics;
+}
+
+export function responseChoiceIdentifiers(response: QtiValue): string[] {
+  const values = Array.isArray(response) ? response : response === null ? [] : [response];
+  return values.flatMap((value) => String(value).split(/\s+/).filter(Boolean));
+}
