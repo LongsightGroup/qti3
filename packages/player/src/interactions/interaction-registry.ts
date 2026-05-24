@@ -17,7 +17,6 @@ import { renderPositionObjectResponse } from "./position-object-interaction.js";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
 import { renderSelectPointResponse } from "./select-point-interaction.js";
 import {
-  renderInlineTextEntry,
   renderSliderResponse,
   renderTextResponse,
 } from "./text-interaction.js";

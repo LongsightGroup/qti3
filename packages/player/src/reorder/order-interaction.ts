@@ -1,4 +1,4 @@
-import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   interactionChoices,
   missingChoicesMessage,

@@ -1,7 +1,6 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
-  applyPointMarkerPlacement,
   applyPositionObjectMarkerPlacement,
   applyPositionObjectMarkerSize,
   appendGraphicObjectImage,

@@ -2,7 +2,6 @@ import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
   appendGraphicObjectImage,
-  choiceSelector,
   interactionChoices,
   missingChoicesMessage,
   objectHeight,

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment happy-dom
  */
-import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import type { QtiContentNode, QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import {
   renderContentNode,
