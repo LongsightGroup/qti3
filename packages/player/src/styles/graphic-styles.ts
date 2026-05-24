@@ -13,6 +13,11 @@ export const GRAPHIC_PLAYER_STYLES = `
 }
 
 .qti3-hotspot-button {
+  position: absolute;
+  inset-inline-start: var(--qti3-graphic-region-inline-start, 0);
+  inset-block-start: var(--qti3-graphic-region-block-start, 0);
+  inline-size: var(--qti3-graphic-region-inline-size, auto);
+  block-size: var(--qti3-graphic-region-block-size, auto);
   display: grid;
   place-items: start;
   padding: 0.25rem;
@@ -23,6 +28,27 @@ export const GRAPHIC_PLAYER_STYLES = `
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+}
+
+.qti3-hotspot-button[data-shape="circle"] {
+  border-radius: 50%;
+}
+
+.qti3-graphic-associate-hotspot,
+.qti3-graphic-gap-hotspot,
+.qti3-graphic-order-hotspot {
+  position: absolute;
+  inset-inline-start: var(--qti3-graphic-region-inline-start, 0);
+  inset-block-start: var(--qti3-graphic-region-block-start, 0);
+  inline-size: var(--qti3-graphic-region-inline-size, auto);
+  block-size: var(--qti3-graphic-region-block-size, auto);
+  z-index: 2;
+}
+
+.qti3-graphic-associate-hotspot[data-shape="circle"],
+.qti3-graphic-gap-hotspot[data-shape="circle"],
+.qti3-graphic-order-hotspot[data-shape="circle"] {
+  border-radius: 50%;
 }
 
 .qti3-hotspot.qti-selections-light .qti3-hotspot-button {
@@ -102,7 +128,7 @@ export const GRAPHIC_PLAYER_STYLES = `
 .qti3-graphic-associate-hotspot,
 .qti3-graphic-gap-hotspot,
 .qti3-graphic-order-hotspot {
-  z-index: 2;
+  touch-action: none;
 }
 
 .qti3-graphic-gap-match-surface {
@@ -136,6 +162,8 @@ export const GRAPHIC_PLAYER_STYLES = `
 
 .qti3-position-object-marker {
   position: absolute;
+  inline-size: var(--qti3-position-object-marker-inline-size, 2rem);
+  block-size: var(--qti3-position-object-marker-block-size, 2rem);
   transform: translate(-50%, -50%);
   border: 2px solid CanvasText;
   background: Canvas;
@@ -143,6 +171,15 @@ export const GRAPHIC_PLAYER_STYLES = `
   padding: 0;
   cursor: grab;
   touch-action: none;
+}
+
+.qti3-position-object-marker[data-placed="true"] {
+  inset-inline-start: var(--qti3-position-object-marker-inline-start);
+  inset-block-start: var(--qti3-position-object-marker-block-start);
+}
+
+.qti3-position-object-marker[data-dragging="true"] {
+  cursor: grabbing;
 }
 
 .qti3-position-object-marker[data-placed="false"] {
@@ -159,6 +196,8 @@ export const GRAPHIC_PLAYER_STYLES = `
 
 .qti3-point-marker {
   position: absolute;
+  inset-inline-start: var(--qti3-point-marker-inline-start);
+  inset-block-start: var(--qti3-point-marker-block-start);
   inline-size: 8px;
   block-size: 8px;
   border: 2px solid CanvasText;

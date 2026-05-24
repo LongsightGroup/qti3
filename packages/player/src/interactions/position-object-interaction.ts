@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { applyGraphicSurfaceLayout, objectIsImage, percent, readableType, responseGroup } from "../interaction-support.js";
+import { applyGraphicSurfaceLayout, applyPointMarkerPlacement, applyPositionObjectMarkerPlacement, applyPositionObjectMarkerSize, objectIsImage, percent, readableType, responseGroup } from "../interaction-support.js";
 import { movementButton, movementLabel } from "../movement.js";
 import {
   objectAssetHeight,
@@ -46,8 +46,7 @@ export function renderPositionObjectResponse(
   marker.type = "button";
   marker.className = "qti3-position-object-marker";
   marker.setAttribute("aria-label", "Movable object");
-  marker.style.inlineSize = `${movableWidth}px`;
-  marker.style.blockSize = `${movableHeight}px`;
+  applyPositionObjectMarkerSize(marker, movableWidth, movableHeight);
   marker.draggable = false;
 
   if (movableObject?.data && objectIsImage(movableObject)) {
@@ -95,8 +94,11 @@ export function renderPositionObjectResponse(
     marker.dataset.placed = "true";
     marker.style.removeProperty("--qti3-position-object-unplaced-inline-start");
     marker.style.removeProperty("--qti3-position-object-unplaced-block-start");
-    marker.style.insetInlineStart = `${percent(point.x, width)}%`;
-    marker.style.insetBlockStart = `${percent(point.y, height)}%`;
+    applyPositionObjectMarkerPlacement(
+      marker,
+      `${percent(point.x, width)}%`,
+      `${percent(point.y, height)}%`,
+    );
     coordinate.value = pointToString(point);
     coordinate.textContent = `Object positioned at ${pointToString(point)}`;
     stage.setAttribute(
@@ -144,8 +146,8 @@ export function renderPositionObjectResponse(
   marker.addEventListener("pointerdown", (event) => {
     dragging = true;
     dragMoved = false;
+    marker.dataset.dragging = "true";
     marker.setPointerCapture(event.pointerId);
-    marker.style.cursor = "grabbing";
     if (isPlaced) {
       pointFromPointer(event);
       syncMarker();
@@ -161,8 +163,8 @@ export function renderPositionObjectResponse(
   marker.addEventListener("pointerup", (event) => {
     if (!dragging) return;
     dragging = false;
+    delete marker.dataset.dragging;
     marker.releasePointerCapture(event.pointerId);
-    marker.style.cursor = "grab";
     if (dragMoved || isPlaced) {
       pointFromPointer(event);
       syncMarker();
@@ -171,7 +173,7 @@ export function renderPositionObjectResponse(
   });
   marker.addEventListener("pointercancel", () => {
     dragging = false;
-    marker.style.cursor = "grab";
+    delete marker.dataset.dragging;
   });
   stage.addEventListener("click", (event) => {
     if (event.target === marker) return;

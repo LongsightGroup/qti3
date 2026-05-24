@@ -1,6 +1,7 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
+  applyPointMarkerPlacement,
   objectHeight,
   objectWidth,
   readableType,
@@ -65,8 +66,11 @@ export function renderSelectPointResponse(
       const marker = document.createElement("span");
       marker.className = "qti3-point-marker";
       marker.setAttribute("aria-hidden", "true");
-      marker.style.insetInlineStart = `${(point.x / width) * 100}%`;
-      marker.style.insetBlockStart = `${(point.y / height) * 100}%`;
+      applyPointMarkerPlacement(
+        marker,
+        `${(point.x / width) * 100}%`,
+        `${(point.y / height) * 100}%`,
+      );
       if (index === activeIndex) marker.dataset.active = "true";
       surface.append(marker);
     });

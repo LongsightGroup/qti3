@@ -100,6 +100,59 @@ function hotspotCoords(choice: QtiChoice): number[] {
     .filter((value) => Number.isFinite(value));
 }
 
+export function applyGraphicRegionPlacement(
+  element: HTMLElement,
+  placement: {
+    insetInlineStart: string;
+    insetBlockStart: string;
+    inlineSize?: string;
+    blockSize?: string;
+    shape?: string;
+  },
+): void {
+  element.style.setProperty("--qti3-graphic-region-inline-start", placement.insetInlineStart);
+  element.style.setProperty("--qti3-graphic-region-block-start", placement.insetBlockStart);
+  if (placement.inlineSize !== undefined) {
+    element.style.setProperty("--qti3-graphic-region-inline-size", placement.inlineSize);
+  } else {
+    element.style.removeProperty("--qti3-graphic-region-inline-size");
+  }
+  if (placement.blockSize !== undefined) {
+    element.style.setProperty("--qti3-graphic-region-block-size", placement.blockSize);
+  } else {
+    element.style.removeProperty("--qti3-graphic-region-block-size");
+  }
+  if (placement.shape) element.dataset.shape = placement.shape;
+  else delete element.dataset.shape;
+}
+
+export function applyPointMarkerPlacement(
+  marker: HTMLElement,
+  insetInlineStart: string,
+  insetBlockStart: string,
+): void {
+  marker.style.setProperty("--qti3-point-marker-inline-start", insetInlineStart);
+  marker.style.setProperty("--qti3-point-marker-block-start", insetBlockStart);
+}
+
+export function applyPositionObjectMarkerSize(
+  marker: HTMLElement,
+  inlineSize: number,
+  blockSize: number,
+): void {
+  marker.style.setProperty("--qti3-position-object-marker-inline-size", `${inlineSize}px`);
+  marker.style.setProperty("--qti3-position-object-marker-block-size", `${blockSize}px`);
+}
+
+export function applyPositionObjectMarkerPlacement(
+  marker: HTMLElement,
+  insetInlineStart: string,
+  insetBlockStart: string,
+): void {
+  marker.style.setProperty("--qti3-position-object-marker-inline-start", insetInlineStart);
+  marker.style.setProperty("--qti3-position-object-marker-block-start", insetBlockStart);
+}
+
 export function placeHotspotButton(
   button: HTMLButtonElement,
   choice: QtiChoice,
@@ -111,20 +164,25 @@ export function placeHotspotButton(
 
   if (shape === "circle" && coords.length >= 3) {
     const [x, y, radius] = coords as [number, number, number];
-    button.style.insetInlineStart = `${percent(x - radius, width)}%`;
-    button.style.insetBlockStart = `${percent(y - radius, height)}%`;
-    button.style.inlineSize = `${percent(radius * 2, width)}%`;
-    button.style.blockSize = `${percent(radius * 2, height)}%`;
-    button.style.borderRadius = "50%";
+    applyGraphicRegionPlacement(button, {
+      insetInlineStart: `${percent(x - radius, width)}%`,
+      insetBlockStart: `${percent(y - radius, height)}%`,
+      inlineSize: `${percent(radius * 2, width)}%`,
+      blockSize: `${percent(radius * 2, height)}%`,
+      shape: "circle",
+    });
     return;
   }
 
   if (shape === "rect" && coords.length >= 4) {
     const [left, top, right, bottom] = coords as [number, number, number, number];
-    button.style.insetInlineStart = `${percent(left, width)}%`;
-    button.style.insetBlockStart = `${percent(top, height)}%`;
-    button.style.inlineSize = `${percent(Math.max(1, right - left), width)}%`;
-    button.style.blockSize = `${percent(Math.max(1, bottom - top), height)}%`;
+    applyGraphicRegionPlacement(button, {
+      insetInlineStart: `${percent(left, width)}%`,
+      insetBlockStart: `${percent(top, height)}%`,
+      inlineSize: `${percent(Math.max(1, right - left), width)}%`,
+      blockSize: `${percent(Math.max(1, bottom - top), height)}%`,
+      shape: "rect",
+    });
     return;
   }
 
@@ -135,15 +193,20 @@ export function placeHotspotButton(
     const top = Math.min(...ys);
     const right = Math.max(...xs);
     const bottom = Math.max(...ys);
-    button.style.insetInlineStart = `${percent(left, width)}%`;
-    button.style.insetBlockStart = `${percent(top, height)}%`;
-    button.style.inlineSize = `${percent(Math.max(1, right - left), width)}%`;
-    button.style.blockSize = `${percent(Math.max(1, bottom - top), height)}%`;
+    applyGraphicRegionPlacement(button, {
+      insetInlineStart: `${percent(left, width)}%`,
+      insetBlockStart: `${percent(top, height)}%`,
+      inlineSize: `${percent(Math.max(1, right - left), width)}%`,
+      blockSize: `${percent(Math.max(1, bottom - top), height)}%`,
+      shape: "poly",
+    });
     return;
   }
 
-  button.style.insetInlineStart = "0";
-  button.style.insetBlockStart = "0";
+  applyGraphicRegionPlacement(button, {
+    insetInlineStart: "0",
+    insetBlockStart: "0",
+  });
 }
 
 export function hotspotCenter(choice: QtiChoice, width: number, height: number): { x: number; y: number } {

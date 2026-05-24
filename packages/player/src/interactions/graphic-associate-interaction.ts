@@ -250,8 +250,6 @@ export function renderGraphicAssociateResponse(
     button.title = hotspotAccessibleLabel(choice, index);
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
-    button.style.position = "absolute";
-    button.style.touchAction = "none";
     placeHotspotButton(button, choice, width, height);
     button.addEventListener("click", (event) => {
       if (suppressNextClick) {

@@ -4,10 +4,7 @@ import {
   createCatalogSupportResolution,
   createTextToSpeechTraversal,
   parseQtiXml,
-  visibleModalFeedback,
-  type QtiAttemptStatus,
   type QtiAttemptStateV1,
-  type QtiContentNode,
   type QtiDiagnostic,
   type QtiDocument,
   type QtiInteraction,
@@ -20,16 +17,10 @@ import {
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 import {
-  contentNodeText,
-  copySafeAttributes,
-  formatPrintedValue,
-  isResolvableAssetUrl,
-} from "./content/content-dom.js";
-import {
   renderContentNodes,
   type PlayerContentContext,
 } from "./content/content-renderer.js";
-import { renderInteractionResponse } from "./interactions/interaction-dispatch.js";
+import { contentNodeText } from "./content/content-dom.js";
 import {
   portableCustomValidityDiagnostic,
   renderPortableCustomResponse,
@@ -38,15 +29,23 @@ import {
   collectEmbeddedInteractionDiagnostics,
   collectInteractionRenderDiagnostics,
 } from "./interactions/interaction-diagnostics.js";
-import { renderUnsupportedEmbeddedInteraction } from "./interactions/unsupported-interaction.js";
-import { interactionLabel, qtiSharedClassNames } from "./interactions/interaction-label.js";
-import {
-  renderInlineTextEntry,
-} from "./interactions/text-interaction.js";
-import { renderSelect } from "./interactions/inline-choice-interaction.js";
 import { defaultPlayerLocale, normalizedLocale, resolvePlayerMessages } from "./player-locale.js";
-import type { QtiPlayerMessages } from "./player-messages.js";
-import { playerStyleElement } from "./player-styles.js";
+import { syncAttemptAvailability } from "./player/attempt-availability.js";
+import {
+  currentTemplateValue,
+  currentVariableValue,
+  isFeedbackVisible,
+  isTemplateContentVisible,
+  mathTemplateValue,
+} from "./player/content-state.js";
+import { syncDynamicBodyState } from "./player/dynamic-body.js";
+import { syncFeedbackPanel } from "./player/feedback-panel.js";
+import {
+  renderBlockInteractionSection,
+  renderEmbeddedInteractionSection,
+} from "./player/interaction-render.js";
+import { renderPlayerShell } from "./player/render-shell.js";
+import { resolveRenderedAssets } from "./player/resolve-assets.js";
 import type {
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
@@ -59,9 +58,7 @@ import type {
 import {
   cloneDiagnostics,
   errorView,
-  inlineValidationMessageElement,
   validateItemResponses,
-  validationMessageElement,
 } from "./player-validation.js";
 import { syncValidationMessages } from "./player-validation-dom.js";
 
@@ -288,7 +285,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.dispatchEvent(new CustomEvent<QtiAssessmentItemPlayerEventDetailMap[T]>(type, { detail }));
   }
 
-  private playerMessages(): QtiPlayerMessages {
+  private playerMessages() {
     return resolvePlayerMessages(this.languageOfInterface, this.messageOverrides);
   }
 
@@ -304,78 +301,27 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!documentModel) return;
 
     this.applyDefaultStyles();
-    const root = document.createElement("article");
-    root.className = "qti3-player";
-    if (documentModel.item.language) {
-      root.lang = documentModel.item.language;
-      root.setAttribute("xml:lang", documentModel.item.language);
-    }
-    root.append(playerStyleElement());
-
-    if (documentModel.item.prompt && documentModel.item.body.length === 0) {
-      const prompt = document.createElement("p");
-      prompt.className = "qti3-item-prompt";
-      prompt.textContent = documentModel.item.prompt;
-      root.append(prompt);
-    }
-
-    if (documentModel.item.body.length > 0) {
-      const body = document.createElement("div");
-      body.className = "qti3-item-body";
-      body.append(...renderContentNodes(documentModel.item.body, this.contentContext()));
-      root.append(body);
-    } else {
-      for (const interaction of documentModel.item.interactions) {
-        root.append(this.renderInteraction(interaction));
-      }
-    }
-
-    const feedback = document.createElement("section");
-    feedback.className = "qti3-feedback";
-    feedback.role = "status";
-    feedback.setAttribute("aria-live", "polite");
-    feedback.hidden = true;
-    root.append(feedback);
-
-    this.resolveRenderedAssets(root);
+    const root = renderPlayerShell({
+      documentModel,
+      contentContext: this.contentContext(),
+      renderStandaloneInteraction: (interaction) => this.renderInteraction(interaction),
+    });
+    if (this.resolveAsset) resolveRenderedAssets(root, this.resolveAsset);
     this.replaceChildren(root);
   }
 
   private renderInteraction(interaction: QtiInteraction): HTMLElement {
-    const messages = this.playerMessages();
-    const field = document.createElement("section");
-    field.className = `qti3-interaction qti3-${interaction.type}`;
-    field.classList.add(...qtiSharedClassNames(interaction.attributes.class));
-    field.dataset.interactionType = interaction.type;
-    if (interaction.responseIdentifier)
-      field.dataset.responseIdentifier = interaction.responseIdentifier;
-
-    const heading = document.createElement("h3");
-    copySafeAttributes(heading, interaction.promptAttributes ?? {});
-    const label = interactionLabel(interaction);
-    heading.textContent = label;
-    field.append(heading);
-    if (interaction.responseIdentifier) {
-      field.append(validationMessageElement(interaction.responseIdentifier));
-    }
-
     const responseIdentifier = interaction.responseIdentifier;
-    const update = this.bindResponseUpdate(responseIdentifier);
-    const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
-
-    field.append(
-      renderInteractionResponse({
-        interaction,
-        update,
-        currentValue,
-        messages,
-        isCompleted: () => this.attemptIsCompleted(),
-        endAttempt: () => this.endAttempt(),
-        renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
-          this.renderPortableCustomResponse(portableInteraction, portableUpdate, portableValue),
-      }),
-    );
-    return field;
+    return renderBlockInteractionSection({
+      interaction,
+      messages: this.playerMessages(),
+      update: this.bindResponseUpdate(responseIdentifier),
+      currentValue: responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
+      isCompleted: () => this.attemptIsCompleted(),
+      endAttempt: () => this.endAttempt(),
+      renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
+        this.renderPortableCustomResponse(portableInteraction, portableUpdate, portableValue),
+    });
   }
 
   private bindResponseUpdate(responseIdentifier: string | undefined): (value: QtiValue) => void {
@@ -390,15 +336,36 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   private contentContext(): PlayerContentContext {
+    const sessionState = () => this.session?.serialize();
     return {
       interactionAt: (index) => this.documentModel?.item.interactions[index],
       renderBlockInteraction: (interaction) => this.renderInteraction(interaction),
-      renderEmbeddedInteraction: (embeddedInteraction) =>
-        this.renderEmbeddedInteraction(embeddedInteraction),
-      currentVariableValue: (identifier) => this.currentVariableValue(identifier),
-      mathTemplateValue: (node) => this.mathTemplateValue(node),
-      isFeedbackVisible: (node) => this.isFeedbackVisible(node),
-      isTemplateContentVisible: (element) => this.isTemplateContentVisible(element),
+      renderEmbeddedInteraction: (embeddedInteraction) => {
+        const responseIdentifier = embeddedInteraction.responseIdentifier;
+        return renderEmbeddedInteractionSection(
+          embeddedInteraction,
+          this.bindResponseUpdate(responseIdentifier),
+          responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
+        );
+      },
+      currentVariableValue: (identifier) => currentVariableValue(sessionState(), identifier),
+      mathTemplateValue: (node) => {
+        const identifier = contentNodeText(node).trim();
+        return mathTemplateValue(
+          node,
+          this.documentModel,
+          identifier ? currentTemplateValue(sessionState(), identifier) : null,
+        );
+      },
+      isFeedbackVisible: (node) =>
+        isFeedbackVisible(node, currentVariableValue(sessionState(), node.outcomeIdentifier)),
+      isTemplateContentVisible: (element) => {
+        const templateIdentifier = element.dataset.templateIdentifier;
+        return isTemplateContentVisible(
+          element,
+          templateIdentifier ? currentTemplateValue(sessionState(), templateIdentifier) : null,
+        );
+      },
     };
   }
 
@@ -424,145 +391,24 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     });
   }
 
-  private renderEmbeddedInteraction(interaction: QtiInteraction): HTMLElement {
-    if (interaction.type !== "inlineChoice" && interaction.type !== "textEntry") {
-      return renderUnsupportedEmbeddedInteraction(interaction);
-    }
-
-    const wrapper = document.createElement("span");
-    wrapper.className = `qti3-interaction qti3-${interaction.type} qti3-embedded-interaction`;
-    wrapper.dataset.interactionType = interaction.type;
-    if (interaction.responseIdentifier)
-      wrapper.dataset.responseIdentifier = interaction.responseIdentifier;
-
-    const responseIdentifier = interaction.responseIdentifier;
-    const update = this.bindResponseUpdate(responseIdentifier);
-    const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
-
-    if (interaction.responseIdentifier) {
-      wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));
-    }
-    wrapper.append(
-      interaction.type === "inlineChoice"
-        ? renderSelect(interaction, update, currentValue)
-        : renderInlineTextEntry(interaction, update, currentValue),
-    );
-    return wrapper;
-  }
-
   private updateDynamicBodyState(): void {
-    for (const output of this.querySelectorAll<HTMLOutputElement>(".qti3-printed-variable")) {
-      const identifier = output.dataset.identifier;
-      if (!identifier) continue;
-      output.value = formatPrintedValue(
-        this.currentVariableValue(identifier),
-        output.dataset.format,
-      );
-      output.textContent = output.value;
-    }
-
-    for (const element of this.querySelectorAll<HTMLElement>(
-      ".qti3-feedback-block, .qti3-feedback-inline",
-    )) {
-      const identifier = element.dataset.feedbackIdentifier;
-      const outcomeIdentifier = element.dataset.outcomeIdentifier;
-      if (!identifier || !outcomeIdentifier) continue;
-      const value = this.currentVariableValue(outcomeIdentifier);
-      const hasIdentifier = Array.isArray(value)
-        ? value.map(String).includes(identifier)
-        : String(value ?? "") === identifier;
-      element.hidden = element.dataset.showHide === "hide" ? hasIdentifier : !hasIdentifier;
-    }
-
-    for (const element of this.querySelectorAll<HTMLElement>(
-      ".qti3-template-block, .qti3-template-inline",
-    )) {
-      element.hidden = !this.isTemplateContentVisible(element);
-    }
+    const sessionState = this.session?.serialize();
+    syncDynamicBodyState(this, {
+      variableValue: (identifier) => currentVariableValue(sessionState, identifier),
+      templateValue: (identifier) => currentTemplateValue(sessionState, identifier),
+    });
   }
 
   private updateAttemptAvailability(): void {
-    const completed = this.attemptIsCompleted();
-    this.dataset.status = this.session?.serialize().status ?? "unloaded";
-    const article = this.querySelector<HTMLElement>(".qti3-player");
-    if (article) article.dataset.status = this.dataset.status;
-
-    for (const control of this.querySelectorAll<
-      HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >(
-      ".qti3-interaction button, .qti3-interaction input, .qti3-interaction select, .qti3-interaction textarea",
-    )) {
-      control.disabled = completed;
-    }
-
-    for (const element of this.querySelectorAll<HTMLElement>(
-      ".qti3-interaction [tabindex]:not(button):not(input):not(select):not(textarea)",
-    )) {
-      if (completed) {
-        element.dataset.previousTabIndex = element.getAttribute("tabindex") ?? "0";
-        element.tabIndex = -1;
-        element.setAttribute("aria-disabled", "true");
-      } else {
-        const previous = element.dataset.previousTabIndex;
-        if (previous !== undefined) {
-          element.tabIndex = Number(previous);
-          delete element.dataset.previousTabIndex;
-        }
-        element.removeAttribute("aria-disabled");
-      }
-    }
+    syncAttemptAvailability(this, {
+      completed: this.attemptIsCompleted(),
+      status: this.session?.serialize().status ?? "unloaded",
+      host: this,
+    });
   }
 
   private attemptIsCompleted(): boolean {
     return this.session?.serialize().status === "completed";
-  }
-
-  private isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean {
-    const value = this.currentVariableValue(node.outcomeIdentifier);
-    const hasIdentifier = Array.isArray(value)
-      ? value.map(String).includes(node.identifier)
-      : String(value ?? "") === node.identifier;
-    return node.showHide === "show" ? hasIdentifier : !hasIdentifier;
-  }
-
-  private isTemplateContentVisible(element: HTMLElement): boolean {
-    const templateIdentifier = element.dataset.templateIdentifier;
-    const identifier = element.dataset.templateValueIdentifier;
-    if (!templateIdentifier || !identifier) return true;
-    const value = this.currentTemplateValue(templateIdentifier);
-    const hasIdentifier = Array.isArray(value)
-      ? value.map(String).includes(identifier)
-      : String(value ?? "") === identifier;
-    return element.dataset.showHide === "hide" ? !hasIdentifier : hasIdentifier;
-  }
-
-  private currentVariableValue(identifier: string): QtiValue {
-    const state = this.session?.serialize();
-    return (
-      state?.outcomes[identifier] ??
-      state?.templateValues?.[identifier] ??
-      state?.responses[identifier] ??
-      null
-    );
-  }
-
-  private currentTemplateValue(identifier: string): QtiValue {
-    return this.session?.serialize().templateValues?.[identifier] ?? null;
-  }
-
-  private mathTemplateValue(
-    node: Extract<QtiContentNode, { kind: "element" }>,
-  ): string | undefined {
-    if (node.qtiName !== "mi" && node.qtiName !== "mo") return undefined;
-    const identifier = contentNodeText(node).trim();
-    if (!identifier) return undefined;
-    const declaration = this.documentModel?.item.templateDeclarations.find(
-      (template) =>
-        template.identifier === identifier && template.attributes["math-variable"] === "true",
-    );
-    if (!declaration) return undefined;
-    const value = this.currentTemplateValue(identifier);
-    return value === null ? "" : String(value);
   }
 
   private currentResponseValue(identifier: string): QtiValue {
@@ -596,17 +442,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.style.colorScheme = "light dark";
   }
 
-  private resolveRenderedAssets(root: HTMLElement): void {
-    if (!this.resolveAsset) return;
-    for (const element of root.querySelectorAll("[src], [href], [data]")) {
-      for (const attribute of ["src", "href", "data"]) {
-        const value = element.getAttribute(attribute);
-        if (!value || !isResolvableAssetUrl(value)) continue;
-        element.setAttribute(attribute, this.resolveAsset(value));
-      }
-    }
-  }
-
   private validateResponses(): QtiDiagnostic[] {
     const state = this.session?.serialize();
     if (!state || !this.documentModel) return [];
@@ -631,19 +466,8 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   private renderFeedback(outcomes: Record<string, QtiValue>): void {
     const documentModel = this.documentModel;
-    const feedback = this.querySelector<HTMLElement>(".qti3-feedback");
-    if (!documentModel || !feedback) return;
-
-    const visibleFeedback = visibleModalFeedback(documentModel.item, outcomes);
-    feedback.replaceChildren(
-      ...visibleFeedback.map((item) => {
-        const element = document.createElement("p");
-        element.dataset.feedbackIdentifier = item.identifier;
-        element.textContent = item.text;
-        return element;
-      }),
-    );
-    feedback.hidden = visibleFeedback.length === 0;
+    if (!documentModel) return;
+    syncFeedbackPanel(this.querySelector<HTMLElement>(".qti3-feedback"), documentModel.item, outcomes);
   }
 }
 

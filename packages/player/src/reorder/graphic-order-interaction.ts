@@ -225,7 +225,6 @@ export function renderGraphicOrderResponse(
     button.title = hotspotAccessibleLabel(choice, index);
     button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
     button.setAttribute("aria-pressed", "false");
-    button.style.position = "absolute";
     placeHotspotButton(button, choice, width, height);
     const text = document.createElement("span");
     text.className = "qti3-hotspot-label";

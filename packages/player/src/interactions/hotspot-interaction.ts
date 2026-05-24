@@ -64,7 +64,6 @@ export function renderHotspotResponse(
     button.textContent = choice.text;
     button.title = choice.text;
     button.setAttribute("aria-pressed", "false");
-    button.style.position = "absolute";
     placeHotspotButton(button, choice, width, height);
     button.addEventListener("click", () => {
       if (multiple) {

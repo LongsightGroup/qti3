@@ -205,14 +205,9 @@ function renderGraphicGapMatchResponse(
 
   if (interaction.object?.data && objectIsImage(interaction.object)) {
     const image = document.createElement("img");
+    image.className = "qti3-graphic-object-image";
     image.src = interaction.object.data;
     image.alt = interaction.object.text || `${readableType(interaction.type)} image`;
-    image.style.position = "absolute";
-    image.style.inset = "0";
-    image.style.inlineSize = "100%";
-    image.style.blockSize = "100%";
-    image.style.objectFit = "contain";
-    image.style.pointerEvents = "none";
     surface.append(image);
   }
 
@@ -291,7 +286,6 @@ function renderGraphicGapMatchResponse(
       renderTargets();
       commit();
     });
-    button.style.position = "absolute";
     placeHotspotButton(button, gap, width, height);
     if (assigned) {
       const assignedLabel = document.createElement("span");
