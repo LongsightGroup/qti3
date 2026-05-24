@@ -44,4 +44,20 @@ describe("QtiAssessmentItemPlayer", () => {
 
     player.remove();
   });
+
+  it("does not duplicate authoring validation messages when loading serialized state", async () => {
+    defineQtiAssessmentItemPlayer();
+    const player = document.createElement("qti-assessment-item-player") as QtiAssessmentItemPlayer;
+    document.body.append(player);
+
+    await player.loadXml(EMPTY_CHOICE_ITEM);
+    const saved = player.serialize();
+    expect(saved).toBeDefined();
+
+    await player.loadXml(EMPTY_CHOICE_ITEM, { state: saved });
+    expect(validationAlerts(player)).toHaveLength(1);
+    expect(validationAlerts(player)[0]?.textContent).toContain("No choices are defined");
+
+    player.remove();
+  });
 });

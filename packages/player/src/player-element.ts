@@ -159,7 +159,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     this.documentModel = result.document;
     this.session = createItemSession(result.document, options.state);
-    this.validationMessages = cloneDiagnostics(options.state?.validationMessages ?? []);
+    this.validationMessages = cloneDiagnostics(
+      responseValidationMessages(options.state?.validationMessages ?? []),
+    );
     if (options.status) this.session.setStatus(options.status);
     this.render();
     this.renderValidationMessages();
