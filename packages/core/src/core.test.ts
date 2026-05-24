@@ -51,7 +51,7 @@ describe("@longsightgroup/qti3-core", () => {
     ]);
 
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="deprecated-custom">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="deprecated-custom" title="deprecated-custom" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <qti-custom-interaction response-identifier="RESPONSE"/>
@@ -67,7 +67,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("diagnoses unknown QTI interaction elements", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-interaction">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-interaction" title="unsupported-interaction" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-item-body>
           <qti-unsupported-interaction response-identifier="RESPONSE"/>
@@ -92,7 +92,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("coerces declaration values using declaration base-types", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="typed-defaults">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="typed-defaults" title="typed-defaults" time-dependent="false">
         <qti-template-declaration identifier="TEMPLATE_COUNT" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>4</qti-value></qti-default-value>
         </qti-template-declaration>
@@ -129,17 +129,22 @@ describe("@longsightgroup/qti3-core", () => {
 
     const session = createItemSession(document);
     const state = session.serialize();
-    expect(state.responses.COUNT).toBe(2);
-    expect(state.responses.FLAGS).toEqual([true, false]);
+    expect(state.responses.COUNT).toBeUndefined();
+    expect(state.responses.FLAGS).toBeUndefined();
     expect(state.outcomes.MAXSCORE).toBe(1);
     expect(state.outcomes.ATTEMPTS).toBe(0);
     expect(state.outcomes.PASSED).toBe(false);
+
+    session.respond("COUNT", 3);
+    const startedState = session.serialize();
+    expect(startedState.responses.COUNT).toBe(3);
+    expect(startedState.responses.FLAGS).toEqual([true, false]);
     expect(state.templateValues?.TEMPLATE_COUNT).toBe(4);
   });
 
   it("preserves authored gap match sentence segments", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-segments">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-segments" title="gap-segments" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
         <qti-item-body>
           <qti-gap-match-interaction response-identifier="RESPONSE">
@@ -164,7 +169,7 @@ describe("@longsightgroup/qti3-core", () => {
     const image =
       "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnLz4=";
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="qflow-variants">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="qflow-variants" title="qflow-variants" time-dependent="false">
         <qti-response-declaration identifier="ASSOCIATE" cardinality="multiple" base-type="pair"/>
         <qti-response-declaration identifier="GRAPHIC_GAP" cardinality="multiple" base-type="directedPair"/>
         <qti-response-declaration identifier="POINT" cardinality="single" base-type="point"/>
@@ -223,7 +228,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("parses position object stage separately from the movable object", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="position-stage">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="position-stage" title="position-stage" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point"/>
         <qti-item-body>
           <qti-position-object-stage>
@@ -253,7 +258,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("parses and scores a choice item", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice" title="choice" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -267,6 +272,7 @@ describe("@longsightgroup/qti3-core", () => {
             <qti-simple-choice identifier="B">Adams</qti-simple-choice>
           </qti-choice-interaction>
         </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti-assessment-item>
     `);
 
@@ -290,7 +296,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("captures parent prose for inline interactions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-choice">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-choice" title="inline-choice" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <p>Choose <qti-inline-choice-interaction response-identifier="RESPONSE">
@@ -310,7 +316,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("keeps serialized attempt state detached from live session internals", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-contract">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-contract" title="state-contract" time-dependent="false">
         <qti-response-declaration identifier="ORDER" cardinality="ordered" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -356,7 +362,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves restored validation messages until the attempt changes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-state">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-state" title="validation-state" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -404,7 +410,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("rejects incompatible restored attempt state", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-target">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-target" title="state-target" time-dependent="false">
         <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -467,7 +473,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("rejects restored state values that do not match declarations", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-value-shape">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-value-shape" title="state-value-shape" time-dependent="false">
         <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier"/>
         <qti-response-declaration identifier="ORDER" cardinality="ordered" base-type="identifier"/>
@@ -517,7 +523,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("exposes a runtime guard for the public attempt state contract", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-guard">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-guard" title="state-guard" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body><p>State guard.</p></qti-item-body>
       </qti-assessment-item>
@@ -549,7 +555,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves item body mixed-content order with embedded interactions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mixed-body">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mixed-body" title="mixed-body" time-dependent="false">
         <qti-response-declaration identifier="FIRST" cardinality="single" base-type="identifier"/>
         <qti-response-declaration identifier="SECOND" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -597,7 +603,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves assessment item language metadata", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="language" xml:lang="ja">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="language" xml:lang="ja" title="language" time-dependent="false">
         <qti-item-body>
           <p>言語メタデータを保持します。</p>
         </qti-item-body>
@@ -610,7 +616,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves and validates item catalog metadata", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-item">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-item" title="catalog-item" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -662,7 +668,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("resolves catalog supports for media alternatives in reference order", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog" title="media-catalog" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <p data-catalog-idref="audio-transcript">Listen to the recording.</p>
@@ -759,7 +765,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("diagnoses invalid catalog references and card content", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-catalog-item">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-catalog-item" title="bad-catalog-item" time-dependent="false">
         <qti-item-body>
           <p data-catalog-idref="missing">Term</p>
         </qti-item-body>
@@ -789,7 +795,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves and validates item stylesheet references", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-item">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-item" title="stylesheet-item" time-dependent="false">
         <qti-stylesheet href="style/item.css" type="text/css" media="screen" title="Item styles"/>
         <qti-item-body><p>Styled item.</p></qti-item-body>
       </qti-assessment-item>
@@ -806,7 +812,7 @@ describe("@longsightgroup/qti3-core", () => {
     ]);
 
     const invalid = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-stylesheet-item">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-stylesheet-item" title="bad-stylesheet-item" time-dependent="false">
         <qti-stylesheet type="text/css"/>
         <qti-item-body/>
       </qti-assessment-item>
@@ -819,7 +825,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates response declaration references and response shape", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid" title="invalid" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-order-interaction response-identifier="RESPONSE">
@@ -843,7 +849,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("attaches source locations and paths to parsed model nodes and validation diagnostics", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="located">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="located" title="located" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-choice-interaction response-identifier="MISSING">
@@ -883,7 +889,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates direct child contracts for supported interactions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-child">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-child" title="bad-child" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"/>
         <qti-item-body>
           <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10">
@@ -906,7 +912,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("does not mask missing or unsupported declaration attributes with parser defaults", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" time-dependent="false">
         <qti-response-declaration cardinality="many" base-type="nonsense"/>
         <qti-outcome-declaration identifier="SCORE"/>
         <qti-item-body>
@@ -933,7 +939,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("requires the QTI ASI namespace and item body for assessment items", () => {
     const wrongNamespace = parseQtiXml(`
-      <qti-assessment-item xmlns="https://example.invalid/not-qti" identifier="wrong-namespace">
+      <qti-assessment-item xmlns="https://example.invalid/not-qti" identifier="wrong-namespace" title="wrong-namespace" time-dependent="false">
         <qti-item-body/>
       </qti-assessment-item>
     `);
@@ -948,7 +954,7 @@ describe("@longsightgroup/qti3-core", () => {
     );
 
     const missingBody = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-body"/>
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-body" title="missing-body" time-dependent="false"/>
     `);
 
     expect(missingBody.ok).toBe(false);
@@ -960,9 +966,36 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("requires schema-required assessment item root attributes", () => {
+    const missingAttributes = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-root-attrs">
+        <qti-item-body/>
+      </qti-assessment-item>
+    `);
+
+    expect(missingAttributes.ok).toBe(false);
+    expect(missingAttributes.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "assessmentItem.title.required" }),
+        expect.objectContaining({ code: "assessmentItem.timeDependent.required" }),
+      ]),
+    );
+
+    const invalidTimeDependent = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-time" title="bad-time" time-dependent="maybe">
+        <qti-item-body/>
+      </qti-assessment-item>
+    `);
+
+    expect(invalidTimeDependent.ok).toBe(false);
+    expect(invalidTimeDependent.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "assessmentItem.timeDependent.boolean" }),
+    );
+  });
+
   it("does not mask missing choice identifiers with parser defaults", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-choice-id">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-choice-id" title="missing-choice-id" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-choice-interaction response-identifier="RESPONSE">
@@ -988,7 +1021,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("exposes validation independent of XML parsing", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice" title="choice" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-choice-interaction response-identifier="RESPONSE">
@@ -1003,7 +1036,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates and exposes Data-SSML read-aloud metadata", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="data-ssml">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="data-ssml" title="data-ssml" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <p>Read <span id="mrna" data-ssml='{"sub":{"alias":"messenger RNA"}}'>mRNA</span>.</p>
@@ -1057,7 +1090,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("diagnoses invalid Data-SSML metadata without blocking item parsing", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-data-ssml">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-data-ssml" title="bad-data-ssml" time-dependent="false">
         <qti-item-body>
           <p>
             <span data-ssml="not json">Invalid JSON</span>
@@ -1107,7 +1140,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("diagnoses unsupported and response-processing-forbidden processing elements", () => {
     const unsupported = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-processing" title="unsupported-processing" time-dependent="false">
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body><p>Unsupported processing expression.</p></qti-item-body>
         <qti-response-processing>
@@ -1129,7 +1162,7 @@ describe("@longsightgroup/qti3-core", () => {
     );
 
     const forbidden = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="forbidden-response-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="forbidden-response-processing" title="forbidden-response-processing" time-dependent="false">
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body><p>Forbidden processing expression.</p></qti-item-body>
         <qti-response-processing>
@@ -1152,7 +1185,7 @@ describe("@longsightgroup/qti3-core", () => {
       "qti-test-variables",
     ]) {
       const result = parseQtiXml(`
-        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${name}">
+        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${name}" title="${name}" time-dependent="false">
           <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
           <qti-item-body><p>Forbidden processing expression.</p></qti-item-body>
           <qti-response-processing>
@@ -1180,7 +1213,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("diagnoses unsupported response-processing templates", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-template">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-template" title="unsupported-template" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -1205,7 +1238,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("requires bound end-attempt interactions to use a single boolean response", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="end-attempt-shape">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="end-attempt-shape" title="end-attempt-shape" time-dependent="false">
         <qti-response-declaration identifier="END" cardinality="single" base-type="boolean"/>
         <qti-response-declaration identifier="WRONG" cardinality="multiple" base-type="identifier"/>
         <qti-item-body>
@@ -1232,7 +1265,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates declaration default and correct response values against base types", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-declaration-values">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-declaration-values" title="bad-declaration-values" time-dependent="false">
         <qti-response-declaration identifier="INT_RESPONSE" cardinality="single" base-type="integer">
           <qti-correct-response>
             <qti-value>abc</qti-value>
@@ -1303,7 +1336,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates correct response choice references", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs" title="bad-correct-response-refs" time-dependent="false">
         <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>MISSING</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -1343,7 +1376,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("scores an inline response condition with map-response", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped" title="mapped" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-mapping default-value="0">
             <qti-map-entry map-key="A" mapped-value="2"/>
@@ -1383,7 +1416,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("uses mapping default-value for unmapped responses", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-default">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-default" title="mapped-default" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-mapping default-value="-1">
             <qti-map-entry map-key="A" mapped-value="2"/>
@@ -1406,9 +1439,9 @@ describe("@longsightgroup/qti3-core", () => {
     expect(session.score().outcomes.SCORE).toBe(-1);
   });
 
-  it("sums built-in map-response template scores across response declarations", () => {
+  it("rejects built-in map-response templates across multiple response declarations", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-template-sum">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-template-sum" title="mapped-template-sum" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier">
           <qti-mapping default-value="0">
             <qti-map-entry map-key="A" mapped-value="1"/>
@@ -1434,17 +1467,18 @@ describe("@longsightgroup/qti3-core", () => {
       </qti-assessment-item>
     `);
 
-    expect(result.ok).toBe(true);
-    const session = createItemSession(result.document!);
-    session.respond("RESPONSE1", "A");
-    session.respond("RESPONSE2", "B");
-    expect(session.score().outcomes.SCORE).toBe(3);
-    expect(session.score().outcomes.SCORE).toBe(3);
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.template.responseIdentifier" }),
+        expect.objectContaining({ code: "processing.template.singleInteraction" }),
+      ]),
+    );
   });
 
   it("maps scalar numeric responses in map-response templates", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-integer">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-integer" title="mapped-integer" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
           <qti-mapping default-value="0">
             <qti-map-entry map-key="5" mapped-value="2"/>
@@ -1464,9 +1498,9 @@ describe("@longsightgroup/qti3-core", () => {
     expect(session.score().outcomes.SCORE).toBe(2);
   });
 
-  it("sums built-in match-correct template scores across response declarations", () => {
+  it("rejects built-in match-correct templates across multiple response declarations", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-template-sum">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-template-sum" title="match-template-sum" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -1488,18 +1522,18 @@ describe("@longsightgroup/qti3-core", () => {
       </qti-assessment-item>
     `);
 
-    expect(result.ok).toBe(true);
-    const session = createItemSession(result.document!);
-    session.respond("RESPONSE1", "A");
-    session.respond("RESPONSE2", "B");
-    expect(session.score().outcomes.SCORE).toBe(2);
-    session.respond("RESPONSE2", "Z");
-    expect(session.score().outcomes.SCORE).toBe(1);
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "processing.template.responseIdentifier" }),
+        expect.objectContaining({ code: "processing.template.singleInteraction" }),
+      ]),
+    );
   });
 
   it("applies mapping lower and upper bounds to mapped scores", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-bounds">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-bounds" title="mapped-bounds" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
           <qti-mapping default-value="-2" lower-bound="0" upper-bound="3">
             <qti-map-entry map-key="A" mapped-value="2"/>
@@ -1528,7 +1562,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates mapping entry attributes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping" title="bad-mapping" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-mapping default-value="none" lower-bound="high" upper-bound="low">
             <qti-map-entry mapped-value="1"/>
@@ -1566,7 +1600,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates mapping keys against interaction choices", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping-refs">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-mapping-refs" title="bad-mapping-refs" time-dependent="false">
         <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
           <qti-mapping default-value="0">
             <qti-map-entry map-key="MISSING" mapped-value="1"/>
@@ -1610,7 +1644,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates processing rule targets and variable references", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-processing-refs">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-processing-refs" title="bad-processing-refs" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -1656,7 +1690,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates qti-match variable and correct identifiers", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-match-correct">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-match-correct" title="bad-match-correct" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body>
@@ -1696,7 +1730,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates generic qti-match expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="generic-match-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="generic-match-processing" title="generic-match-processing" time-dependent="false">
         <qti-response-declaration identifier="ORDERED_RESPONSE" cardinality="ordered" base-type="identifier"/>
         <qti-outcome-declaration identifier="BASE_MATCH" cardinality="single" base-type="boolean"/>
         <qti-outcome-declaration identifier="ORDERED_MATCH" cardinality="single" base-type="boolean"/>
@@ -1739,7 +1773,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("does not mask missing processing identifiers with parser defaults", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-processing-ids">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-processing-ids" title="missing-processing-ids" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -1798,7 +1832,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("parses picture-backed drawing canvases", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-picture">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-picture" title="drawing-picture" time-dependent="false">
         <qti-response-declaration identifier="DRAWING" cardinality="single" base-type="file"/>
         <qti-item-body>
           <qti-drawing-interaction response-identifier="DRAWING">
@@ -1825,7 +1859,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("uses object alt text as graphical object text", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="object-alt">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="object-alt" title="object-alt" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hotspot-interaction response-identifier="RESPONSE">
@@ -1844,7 +1878,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("requires drawing interactions to bind a single file response and canvas object", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-contract">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-contract" title="drawing-contract" time-dependent="false">
         <qti-response-declaration identifier="DRAWING" cardinality="single" base-type="string"/>
         <qti-item-body>
           <qti-drawing-interaction response-identifier="DRAWING">
@@ -1865,7 +1899,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("rejects source-only drawing canvases because no canvas image is renderable", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-source-only">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-source-only" title="drawing-source-only" time-dependent="false">
         <qti-response-declaration identifier="DRAWING" cardinality="single" base-type="file"/>
         <qti-item-body>
           <qti-drawing-interaction response-identifier="DRAWING">
@@ -1885,7 +1919,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("parses, validates, and resolves modal feedback", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -1944,7 +1978,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates response else-if branches before the final else", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="else-if">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="else-if" title="else-if" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -2000,7 +2034,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("resolves outcome variables during cumulative response processing", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="cumulative">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="cumulative" title="cumulative" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier">
           <qti-mapping default-value="0">
             <qti-map-entry map-key="A" mapped-value="1"/>
@@ -2061,7 +2095,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates modal feedback outcome references", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-invalid">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-invalid" title="feedback-invalid" time-dependent="false">
         <qti-item-body>
           <p>No interaction.</p>
         </qti-item-body>
@@ -2077,7 +2111,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("scores map-response-point with circular area mapping", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="point">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="point" title="point" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point">
           <qti-area-mapping default-value="0">
             <qti-area-map-entry shape="circle" coords="93,111,16" mapped-value="1"/>
@@ -2101,7 +2135,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates explicit correct, default, and map-response-point expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="explicit-declaration-expressions">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="explicit-declaration-expressions" title="explicit-declaration-expressions" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
           <qti-default-value><qti-value>B</qti-value></qti-default-value>
@@ -2153,7 +2187,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates area mapping entry attributes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-area-mapping">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-area-mapping" title="bad-area-mapping" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="point">
           <qti-area-mapping default-value="none" lower-bound="low" upper-bound="high">
             <qti-area-map-entry coords="93,not-a-number,16"/>
@@ -2188,7 +2222,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("classifies match choices into source and target roles", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match" title="match" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
         <qti-item-body>
           <qti-match-interaction response-identifier="RESPONSE">
@@ -2211,7 +2245,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves object asset metadata on media-backed interactions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media" title="media" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <qti-media-interaction response-identifier="RESPONSE" autostart="false">
@@ -2235,7 +2269,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves audio and video source and track metadata on media interactions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-sources">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-sources" title="media-sources" time-dependent="false">
         <qti-response-declaration identifier="AUDIO_RESPONSE" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="VIDEO_RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
@@ -2282,7 +2316,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates media response declarations and playback attributes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-media">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-media" title="bad-media" time-dependent="false">
         <qti-response-declaration identifier="WRONG" cardinality="multiple" base-type="identifier"/>
         <qti-response-declaration identifier="VALID" cardinality="single" base-type="integer"/>
         <qti-item-body>
@@ -2314,7 +2348,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves hotspot geometry on choice metadata", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot" title="hotspot" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hotspot-interaction response-identifier="RESPONSE">
@@ -2337,7 +2371,7 @@ describe("@longsightgroup/qti3-core", () => {
     const image =
       "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0ODAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNDgwIDI2MCI+PC9zdmc+";
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-svg-dimensions">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-svg-dimensions" title="inline-svg-dimensions" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
         <qti-item-body>
           <qti-graphic-associate-interaction response-identifier="RESPONSE">
@@ -2363,7 +2397,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("warns when graphical hotspot coords cannot map cleanly to object dimensions", () => {
     const missingDimensions = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-hotspot-dimensions">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-hotspot-dimensions" title="missing-hotspot-dimensions" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hotspot-interaction response-identifier="RESPONSE">
@@ -2374,7 +2408,7 @@ describe("@longsightgroup/qti3-core", () => {
       </qti-assessment-item>
     `);
     const outOfBounds = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="out-of-bounds-hotspot">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="out-of-bounds-hotspot" title="out-of-bounds-hotspot" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hotspot-interaction response-identifier="RESPONSE">
@@ -2404,7 +2438,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates hotspot geometry attributes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-hotspot-geometry">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-hotspot-geometry" title="bad-hotspot-geometry" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hotspot-interaction response-identifier="RESPONSE">
@@ -2433,7 +2467,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("preserves portable custom interaction launch metadata", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci" title="pci" time-dependent="false">
         <qti-template-declaration identifier="START" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>2</qti-value></qti-default-value>
         </qti-template-declaration>
@@ -2482,7 +2516,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("keeps portable custom interaction markup inert", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-markup-inert">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-markup-inert" title="pci-markup-inert" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-response-declaration identifier="NESTED" cardinality="single" base-type="identifier"/>
         <qti-item-body>
@@ -2514,7 +2548,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("rejects duplicate portable custom interaction singleton children", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-duplicates">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-duplicates" title="pci-duplicates" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-item-body>
           <qti-portable-custom-interaction
@@ -2548,7 +2582,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("restores opaque portable custom interaction state", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-state">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci-state" title="pci-state" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-item-body>
           <qti-portable-custom-interaction
@@ -2577,7 +2611,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates required interaction attributes and object assets", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="required-interaction-attrs">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="required-interaction-attrs" title="required-interaction-attrs" time-dependent="false">
         <qti-response-declaration identifier="POINT" cardinality="single" base-type="point"/>
         <qti-response-declaration identifier="SLIDER" cardinality="single" base-type="float"/>
         <qti-response-declaration identifier="PCI" cardinality="single" base-type="string"/>
@@ -2603,7 +2637,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates interaction and choice limit attributes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-limits">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-limits" title="interaction-limits" time-dependent="false">
         <qti-response-declaration identifier="CHOICE" cardinality="multiple" base-type="identifier"/>
         <qti-response-declaration identifier="ASSOCIATE" cardinality="multiple" base-type="pair"/>
         <qti-response-declaration identifier="GAP" cardinality="multiple" base-type="directedPair"/>
@@ -2640,7 +2674,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("keeps ordered cardinality order-sensitive", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order" title="order" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -2651,6 +2685,7 @@ describe("@longsightgroup/qti3-core", () => {
             <qti-simple-choice identifier="B">B</qti-simple-choice>
           </qti-order-interaction>
         </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti-assessment-item>
     `);
 
@@ -2663,7 +2698,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("tracks built-in completionStatus and adaptive outcome retention", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive" adaptive="true">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive" adaptive="true" title="adaptive" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -2727,7 +2762,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("rejects explicit declarations for built-in completionStatus", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-completion">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-completion" title="bad-completion" time-dependent="false">
         <qti-outcome-declaration identifier="completionStatus" cardinality="single" base-type="identifier"/>
         <qti-item-body><p>Bad item.</p></qti-item-body>
       </qti-assessment-item>
@@ -2741,7 +2776,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("runs deterministic template processing before scoring", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated" title="templated" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
@@ -2763,6 +2798,7 @@ describe("@longsightgroup/qti3-core", () => {
         <qti-item-body>
           <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
         </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti-assessment-item>
     `);
 
@@ -2776,7 +2812,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("restores generated template values before deriving correct responses", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated-restore">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated-restore" title="templated-restore" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
@@ -2798,6 +2834,7 @@ describe("@longsightgroup/qti3-core", () => {
         <qti-item-body>
           <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="200"/>
         </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti-assessment-item>
     `);
 
@@ -2818,7 +2855,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates template conditions and templated default values", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-condition">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-condition" title="template-condition" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -2855,14 +2892,16 @@ describe("@longsightgroup/qti3-core", () => {
         <qti-item-body>
           <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
         </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
       </qti-assessment-item>
     `);
 
     expect(result.ok).toBe(true);
     const session = createItemSession(result.document!);
     expect(session.serialize().templateValues).toEqual({ A: 7 });
-    expect(session.serialize().responses.RESPONSE).toBe(7);
+    expect(session.serialize().responses.RESPONSE).toBeUndefined();
     expect(session.serialize().outcomes.SCORE).toBe(2.5);
+    session.setStatus("interacting");
     expect(session.score().outcomes.SCORE).toBe(1);
     session.respond("RESPONSE", 0);
     expect(session.score().outcomes.SCORE).toBe(0);
@@ -2870,7 +2909,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("honors exit-template rules during template processing", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-template">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-template" title="exit-template" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
         </qti-template-declaration>
@@ -2897,7 +2936,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("restarts template processing until template constraints are satisfied", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint" title="template-constraint" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
         </qti-template-declaration>
@@ -2935,7 +2974,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("does not retain generated correct responses from rejected template constraint passes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-correct-reset">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-correct-reset" title="template-constraint-correct-reset" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -2984,7 +3023,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("does not retain generated defaults from rejected template constraint passes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-default-reset">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-default-reset" title="template-constraint-default-reset" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -3042,7 +3081,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates random integer processing attributes", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-random-integer">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-random-integer" title="bad-random-integer" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="C" cardinality="single" base-type="integer"/>
@@ -3078,7 +3117,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("validates base value processing content", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-base-values">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-base-values" title="bad-base-values" time-dependent="false">
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="B" cardinality="single" base-type="float"/>
         <qti-template-declaration identifier="C" cardinality="single" base-type="boolean"/>
@@ -3113,7 +3152,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates qti-null as an explicit null expression", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="null-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="null-processing" title="null-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-response-declaration identifier="MISSING" cardinality="single" base-type="identifier"/>
         <qti-outcome-declaration identifier="NULL_VALUE" cardinality="single" base-type="identifier"/>
@@ -3143,9 +3182,116 @@ describe("@longsightgroup/qti3-core", () => {
     expect(score.outcomes.MISSING_IS_NULL).toBe(true);
   });
 
+  it("preserves QTI null semantics across response processing operators", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="null-operators" title="null-operators" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-response-declaration identifier="FLAGS" cardinality="multiple" base-type="identifier"/>
+        <qti-outcome-declaration identifier="MATCH_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="EQUAL_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="SUM_NULL" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="PRODUCT_NULL" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="AND_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="OR_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="STRING_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="SUBSTRING_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="MEMBER_NULL" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="CONTAINS_NULL" cardinality="single" base-type="boolean"/>
+        <qti-item-body>
+          <qti-extended-text-interaction response-identifier="RESPONSE"/>
+        </qti-item-body>
+        <qti-response-processing>
+          <qti-set-outcome-value identifier="MATCH_NULL">
+            <qti-match>
+              <qti-variable identifier="RESPONSE"/>
+              <qti-base-value base-type="string">A</qti-base-value>
+            </qti-match>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="EQUAL_NULL">
+            <qti-equal>
+              <qti-variable identifier="RESPONSE"/>
+              <qti-base-value base-type="string">A</qti-base-value>
+            </qti-equal>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="SUM_NULL">
+            <qti-sum>
+              <qti-variable identifier="RESPONSE"/>
+              <qti-base-value base-type="float">1</qti-base-value>
+            </qti-sum>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="PRODUCT_NULL">
+            <qti-product>
+              <qti-variable identifier="RESPONSE"/>
+              <qti-base-value base-type="float">2</qti-base-value>
+            </qti-product>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="AND_NULL">
+            <qti-and>
+              <qti-string-match>
+                <qti-variable identifier="RESPONSE"/>
+                <qti-base-value base-type="string">A</qti-base-value>
+              </qti-string-match>
+              <qti-base-value base-type="boolean">true</qti-base-value>
+            </qti-and>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="OR_NULL">
+            <qti-or>
+              <qti-string-match>
+                <qti-variable identifier="RESPONSE"/>
+                <qti-base-value base-type="string">A</qti-base-value>
+              </qti-string-match>
+              <qti-base-value base-type="boolean">false</qti-base-value>
+            </qti-or>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="STRING_NULL">
+            <qti-string-match>
+              <qti-variable identifier="RESPONSE"/>
+              <qti-base-value base-type="string">A</qti-base-value>
+            </qti-string-match>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="SUBSTRING_NULL">
+            <qti-substring>
+              <qti-base-value base-type="string">A</qti-base-value>
+              <qti-variable identifier="RESPONSE"/>
+            </qti-substring>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="MEMBER_NULL">
+            <qti-member>
+              <qti-base-value base-type="identifier">A</qti-base-value>
+              <qti-variable identifier="FLAGS"/>
+            </qti-member>
+          </qti-set-outcome-value>
+          <qti-set-outcome-value identifier="CONTAINS_NULL">
+            <qti-contains>
+              <qti-variable identifier="FLAGS"/>
+              <qti-base-value base-type="identifier">A</qti-base-value>
+            </qti-contains>
+          </qti-set-outcome-value>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const score = createItemSession(result.document!).score();
+    for (const identifier of [
+      "MATCH_NULL",
+      "EQUAL_NULL",
+      "SUM_NULL",
+      "PRODUCT_NULL",
+      "AND_NULL",
+      "OR_NULL",
+      "STRING_NULL",
+      "SUBSTRING_NULL",
+      "MEMBER_NULL",
+      "CONTAINS_NULL",
+    ]) {
+      expect(score.outcomes[identifier], identifier).toBeNull();
+    }
+  });
+
   it("evaluates boolean response processing expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean-processing" title="boolean-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-response-declaration identifier="FLAGS" cardinality="multiple" base-type="identifier">
           <qti-default-value><qti-value>A</qti-value><qti-value>B</qti-value></qti-default-value>
@@ -3195,7 +3341,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("honors response-processing fragments and exit-response rules", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-response">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-response" title="exit-response" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
@@ -3244,7 +3390,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("looks up outcome values from match and interpolation tables", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="lookup-outcome">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="lookup-outcome" title="lookup-outcome" time-dependent="false">
         <qti-response-declaration identifier="RAW" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="CODE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="GRADE" cardinality="single" base-type="identifier">
@@ -3292,7 +3438,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates numeric division and comparison processing expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-processing" title="numeric-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body>
@@ -3338,7 +3484,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates duration comparisons and preserves null comparison results", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duration-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duration-processing" title="duration-processing" time-dependent="false">
         <qti-response-declaration identifier="MISSING" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="FAST" cardinality="single" base-type="boolean"/>
         <qti-outcome-declaration identifier="LONG_ENOUGH" cardinality="single" base-type="boolean"/>
@@ -3389,7 +3535,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates integer and rounding processing expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rounding-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rounding-processing" title="rounding-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body>
@@ -3439,7 +3585,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates container, index, substring, and conversion expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="container-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="container-processing" title="container-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="SECOND" cardinality="single" base-type="identifier"/>
         <qti-outcome-declaration identifier="CONTAINS" cardinality="single" base-type="boolean"/>
@@ -3502,7 +3648,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates min, max, power, and seeded random float expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-helper-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-helper-processing" title="numeric-helper-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="MIN_VALUE" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="MAX_VALUE" cardinality="single" base-type="float"/>
@@ -3556,7 +3702,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates pattern, delete, any-n, and container-size expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="collection-helper-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="collection-helper-processing" title="collection-helper-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="PATTERN_OK" cardinality="single" base-type="boolean"/>
         <qti-outcome-declaration identifier="ANY_OK" cardinality="single" base-type="boolean"/>
@@ -3622,7 +3768,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates advanced math, repeat, and stats expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="advanced-math-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="advanced-math-processing" title="advanced-math-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-outcome-declaration identifier="ROUNDED" cardinality="single" base-type="boolean"/>
         <qti-outcome-declaration identifier="GCD_VALUE" cardinality="single" base-type="integer"/>
@@ -3707,7 +3853,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates inside point-shape processing expressions", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inside-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inside-processing" title="inside-processing" time-dependent="false">
         <qti-response-declaration identifier="POINTS" cardinality="multiple" base-type="point"/>
         <qti-outcome-declaration identifier="ANY_INSIDE" cardinality="single" base-type="boolean"/>
         <qti-outcome-declaration identifier="NONE_INSIDE" cardinality="single" base-type="boolean"/>
@@ -3753,7 +3899,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates field values from record variables", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="record-field-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="record-field-processing" title="record-field-processing" time-dependent="false">
         <qti-outcome-declaration identifier="RECORD" cardinality="record">
           <qti-default-value>
             <qti-value field-identifier="raw" base-type="integer">7</qti-value>
@@ -3799,7 +3945,7 @@ describe("@longsightgroup/qti3-core", () => {
 
   it("evaluates custom operators through a host extension hook", () => {
     const result = parseQtiXml(`
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="custom-operator-processing">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="custom-operator-processing" title="custom-operator-processing" time-dependent="false">
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body/>
         <qti-response-processing>

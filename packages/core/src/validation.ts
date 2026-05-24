@@ -29,6 +29,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   const item = document.item;
 
   requireIdentifier("qti-assessment-item", item.identifier, diagnostics, item.source);
+  validateAssessmentItemRoot(item, diagnostics);
   validateItemBody(item, diagnostics);
   validateDeclarationIdentifiers(item, diagnostics);
   validateOutcomeLookupTables(item, diagnostics);
@@ -52,7 +53,11 @@ function validateResponseProcessingTemplate(
 ): void {
   const template = item.responseProcessing?.template;
   if (!template) return;
-  if (responseProcessingTemplateIsSupported(template)) return;
+  const templateKind = responseProcessingTemplateKind(template);
+  if (templateKind) {
+    validateBuiltInResponseProcessingTemplate(item, templateKind, diagnostics);
+    return;
+  }
   diagnostics.push({
     code: "processing.template.unsupported",
     severity: "error",
@@ -62,10 +67,119 @@ function validateResponseProcessingTemplate(
   });
 }
 
-function responseProcessingTemplateIsSupported(template: string): boolean {
+function responseProcessingTemplateKind(
+  template: string,
+): "matchCorrect" | "mapResponse" | "mapResponsePoint" | undefined {
   const path = template.split(/[?#]/, 1)[0] ?? "";
   const name = path.slice(path.lastIndexOf("/") + 1).replace(/\.xml$/i, "");
-  return name === "match_correct" || name === "map_response" || name === "map_response_point";
+  if (name === "match_correct") return "matchCorrect";
+  if (name === "map_response") return "mapResponse";
+  if (name === "map_response_point") return "mapResponsePoint";
+  return undefined;
+}
+
+function validateAssessmentItemRoot(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  if (!item.attributes.title?.trim()) {
+    diagnostics.push({
+      code: "assessmentItem.title.required",
+      severity: "error",
+      message: "qti-assessment-item requires a non-empty title attribute.",
+      path: item.source?.path,
+      source: item.source,
+    });
+  }
+  const timeDependent = item.attributes["time-dependent"];
+  if (timeDependent === undefined || timeDependent.trim() === "") {
+    diagnostics.push({
+      code: "assessmentItem.timeDependent.required",
+      severity: "error",
+      message: "qti-assessment-item requires a time-dependent attribute.",
+      path: item.source?.path,
+      source: item.source,
+    });
+  } else if (!isXmlBoolean(timeDependent)) {
+    diagnostics.push({
+      code: "assessmentItem.timeDependent.boolean",
+      severity: "error",
+      message: `qti-assessment-item time-dependent must be an XML boolean, found ${timeDependent}.`,
+      path: item.source?.path,
+      source: item.source,
+    });
+  }
+}
+
+function validateBuiltInResponseProcessingTemplate(
+  item: QtiAssessmentItem,
+  templateKind: "matchCorrect" | "mapResponse" | "mapResponsePoint",
+  diagnostics: QtiDiagnostic[],
+): void {
+  const response = item.responseDeclarations.find(
+    (declaration) => declaration.identifier === "RESPONSE",
+  );
+  const score = item.outcomeDeclarations.find((declaration) => declaration.identifier === "SCORE");
+  if (!response) {
+    diagnostics.push({
+      code: "processing.template.responseIdentifier",
+      severity: "error",
+      message:
+        "Built-in response-processing templates require a response declaration named RESPONSE.",
+      path: item.source?.path,
+      source: item.source,
+    });
+  }
+  if (!score) {
+    diagnostics.push({
+      code: "processing.template.scoreIdentifier",
+      severity: "error",
+      message: "Built-in response-processing templates require an outcome declaration named SCORE.",
+      path: item.source?.path,
+      source: item.source,
+    });
+  } else if (score.cardinality !== "single" || score.baseType !== "float") {
+    diagnostics.push({
+      code: "processing.template.scoreDeclaration",
+      severity: "error",
+      message:
+        "Built-in response-processing templates require SCORE to be single cardinality with base-type float.",
+      path: score.source?.path,
+      source: score.source,
+    });
+  }
+  const responseInteractions = item.interactions.filter(
+    (interaction) => interaction.responseIdentifier === "RESPONSE",
+  );
+  if (responseInteractions.length !== 1 || item.interactions.length !== 1) {
+    diagnostics.push({
+      code: "processing.template.singleInteraction",
+      severity: "error",
+      message:
+        "Built-in response-processing templates require a single interaction bound to RESPONSE.",
+      path: item.source?.path,
+      source: item.source,
+    });
+  }
+  if (templateKind === "mapResponse" && response && !response.mapping) {
+    diagnostics.push({
+      code: "processing.template.mapping",
+      severity: "error",
+      message: "The map_response template requires RESPONSE to define qti-mapping.",
+      path: response.source?.path,
+      source: response.source,
+    });
+  }
+  if (templateKind === "mapResponsePoint" && response && !response.areaMapping) {
+    diagnostics.push({
+      code: "processing.template.areaMapping",
+      severity: "error",
+      message: "The map_response_point template requires RESPONSE to define qti-area-mapping.",
+      path: response.source?.path,
+      source: response.source,
+    });
+  }
+}
+
+function isXmlBoolean(value: string): boolean {
+  return value === "true" || value === "false" || value === "1" || value === "0";
 }
 
 function validateItemBody(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {

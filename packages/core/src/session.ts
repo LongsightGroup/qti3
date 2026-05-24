@@ -84,6 +84,7 @@ export function createItemSession(
   );
   let validationMessages = cloneDiagnostics(priorState?.validationMessages ?? []);
   const responses: Record<string, QtiValue> = {};
+  const responseDefaults: Record<string, QtiValue> = {};
   const outcomes: Record<string, QtiValue> = {};
   const templateValues: Record<string, QtiValue> = {};
   const interactionStates: Record<string, QtiPortableCustomStateValue> = {};
@@ -100,8 +101,8 @@ export function createItemSession(
 
   for (const declaration of document.item.responseDeclarations) {
     correctResponses[declaration.identifier] = cloneValue(declaration.correctResponse);
-    if (declaration.defaultValue !== null && responses[declaration.identifier] === undefined) {
-      responses[declaration.identifier] = cloneValue(declaration.defaultValue);
+    if (declaration.defaultValue !== null) {
+      responseDefaults[declaration.identifier] = cloneValue(declaration.defaultValue);
     }
   }
   for (const declaration of document.item.templateDeclarations) {
@@ -112,18 +113,21 @@ export function createItemSession(
   }
   outcomes[COMPLETION_STATUS] = COMPLETION_NOT_ATTEMPTED;
   const baseResponses = cloneValueRecord(responses);
+  const baseResponseDefaults = cloneValueRecord(responseDefaults);
   const baseOutcomes = cloneValueRecord(outcomes);
 
   applyTemplateProcessing(
     document,
     templateValues,
     responses,
+    responseDefaults,
     outcomes,
     correctResponses,
     random,
     customOperators,
     new Set(),
     baseResponses,
+    baseResponseDefaults,
     baseOutcomes,
   );
   if (priorState) {
@@ -133,12 +137,14 @@ export function createItemSession(
       document,
       templateValues,
       responses,
+      responseDefaults,
       outcomes,
       correctResponses,
       random,
       customOperators,
       new Set(Object.keys(priorTemplateValues)),
       baseResponses,
+      baseResponseDefaults,
       baseOutcomes,
     );
   }
@@ -174,7 +180,7 @@ export function createItemSession(
     },
     score() {
       const diagnostics: QtiDiagnostic[] = [];
-      if (document.item.adaptive || status !== "initialized" || Object.keys(responses).length > 0) {
+      if (document.item.adaptive || status !== "initialized") {
         startAttempt();
       }
       const completionStatus = outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
@@ -218,6 +224,9 @@ export function createItemSession(
   };
 
   function startAttempt(): void {
+    for (const [identifier, value] of Object.entries(responseDefaults)) {
+      if (responses[identifier] === undefined) responses[identifier] = cloneValue(value);
+    }
     if (status === "initialized" || status === "suspended") status = "interacting";
     if (outcomes[COMPLETION_STATUS] === COMPLETION_NOT_ATTEMPTED) {
       outcomes[COMPLETION_STATUS] = COMPLETION_UNKNOWN;
@@ -431,12 +440,14 @@ function applyTemplateProcessing(
   document: QtiDocument,
   templateValues: Record<string, QtiValue>,
   responses: Record<string, QtiValue>,
+  responseDefaults: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
   customOperators: QtiCustomOperatorRegistry,
   preservedTemplateIdentifiers = new Set<string>(),
   baseResponses: Record<string, QtiValue> = cloneValueRecord(responses),
+  baseResponseDefaults: Record<string, QtiValue> = cloneValueRecord(responseDefaults),
   baseOutcomes: Record<string, QtiValue> = cloneValueRecord(outcomes),
 ): void {
   const rules = document.item.templateProcessing?.rules ?? [];
@@ -448,6 +459,7 @@ function applyTemplateProcessing(
       document,
       templateValues,
       responses,
+      responseDefaults,
       outcomes,
       correctResponses,
       random,
@@ -469,6 +481,7 @@ function applyTemplateProcessing(
       if (!satisfied) {
         resetTemplateValues(document, templateValues);
         resetRecord(responses, cloneValueRecord(baseResponses));
+        resetRecord(responseDefaults, cloneValueRecord(baseResponseDefaults));
         resetRecord(outcomes, cloneValueRecord(baseOutcomes));
         resetCorrectResponses(document, correctResponses);
         restarts += 1;
@@ -504,6 +517,7 @@ function applyTemplateRule(
   document: QtiDocument,
   templateValues: Record<string, QtiValue>,
   responses: Record<string, QtiValue>,
+  responseDefaults: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
   correctResponses: Record<string, QtiValue>,
   random: () => number,
@@ -552,6 +566,7 @@ function applyTemplateRule(
         document,
         templateValues,
         responses,
+        responseDefaults,
         outcomes,
         correctResponses,
         random,
@@ -583,7 +598,11 @@ function applyTemplateRule(
     const responseDeclaration = getResponseDeclaration(document, rule.identifier);
     if (responseDeclaration) {
       const normalized = normalizeValueForCardinality(value, responseDeclaration.cardinality);
-      responses[rule.identifier] = normalized;
+      if (normalized === null) {
+        delete responseDefaults[rule.identifier];
+      } else {
+        responseDefaults[rule.identifier] = normalized;
+      }
       return false;
     }
     const outcomeDeclaration = document.item.outcomeDeclarations.find(
@@ -633,31 +652,28 @@ function applyResponseProcessing(
     return;
   }
   if (templateKind === "mapResponse" || templateKind === "mapResponsePoint") {
-    let score = 0;
-    for (const declaration of document.item.responseDeclarations) {
-      score += mapOrMatchResponse(
-        declaration,
-        responses[declaration.identifier] ?? null,
-        correctResponses[declaration.identifier] ?? null,
-      );
-    }
-    outcomes.SCORE = score;
+    const declaration = getResponseDeclaration(document, "RESPONSE");
+    outcomes.SCORE = declaration
+      ? mapOrMatchResponse(
+          declaration,
+          responses.RESPONSE ?? null,
+          correctResponses.RESPONSE ?? null,
+        )
+      : 0;
     return;
   }
 
-  let score = 0;
-  let scored = false;
-  for (const declaration of document.item.responseDeclarations) {
-    const response = responses[declaration.identifier] ?? null;
-    const correctResponse = correctResponses[declaration.identifier] ?? null;
-    if (correctResponse !== null) {
-      score += valuesEqual(response, correctResponse, declaration.cardinality === "ordered")
-        ? 1
-        : 0;
-      scored = true;
-    }
+  if (templateKind === "matchCorrect") {
+    const declaration = getResponseDeclaration(document, "RESPONSE");
+    const matches = declaration
+      ? qtiMatchValues(
+          responses.RESPONSE ?? null,
+          correctResponses.RESPONSE ?? null,
+          declaration.cardinality === "ordered",
+        )
+      : null;
+    outcomes.SCORE = matches === true ? 1 : 0;
   }
-  if (scored) outcomes.SCORE = score;
 }
 
 function responseProcessingTemplateKind(
@@ -838,7 +854,7 @@ function evaluateValue(
   if (expression.type === "matchCorrect") {
     const declaration = getResponseDeclaration(document, expression.correctIdentifier);
     return declaration
-      ? valuesEqual(
+      ? qtiMatchValues(
           responses[expression.identifier] ?? null,
           correctResponses[expression.correctIdentifier] ?? null,
           declaration.cardinality === "ordered",
@@ -846,27 +862,29 @@ function evaluateValue(
       : false;
   }
   if (expression.type === "match") {
-    return valuesEqual(
-      evaluateValue(
-        expression.left,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
-      evaluateValue(
-        expression.right,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const left = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
+    const right = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
+    return qtiMatchValues(
+      left,
+      right,
       expressionIsOrdered(expression.left, document) ||
         expressionIsOrdered(expression.right, document),
     );
@@ -972,89 +990,57 @@ function evaluateValue(
     ).length;
   }
   if (expression.type === "sum") {
-    return expression.expressions.reduce(
-      (sum, item) =>
-        sum +
-        numericValue(
-          evaluateValue(
-            item,
-            document,
-            responses,
-            outcomes,
-            templateValues,
-            correctResponses,
-            random,
-            customOperators,
-          ),
-        ),
-      0,
+    const values = evaluateNumericOperands(
+      expression.expressions,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    return values ? values.reduce((sum, value) => sum + value, 0) : null;
   }
   if (expression.type === "product") {
-    return expression.expressions.reduce(
-      (product, item) =>
-        product *
-        numericValue(
-          evaluateValue(
-            item,
-            document,
-            responses,
-            outcomes,
-            templateValues,
-            correctResponses,
-            random,
-            customOperators,
-          ),
-        ),
-      1,
+    const values = evaluateNumericOperands(
+      expression.expressions,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    return values ? values.reduce((product, value) => product * value, 1) : null;
   }
   if (expression.type === "min" || expression.type === "max") {
-    const values = expression.expressions.flatMap((item) =>
-      valueContainer(
-        evaluateValue(
-          item,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      ),
+    const values = evaluateNumericOperands(
+      expression.expressions,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
-    if (values.length === 0) return null;
-    const numericValues = values.map((value) => numericValue(value));
-    return expression.type === "min" ? Math.min(...numericValues) : Math.max(...numericValues);
+    if (!values || values.length === 0) return null;
+    return expression.type === "min" ? Math.min(...values) : Math.max(...values);
   }
   if (expression.type === "subtract") {
-    return (
-      numericValue(
-        evaluateValue(
-          expression.left,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      ) -
-      numericValue(
-        evaluateValue(
-          expression.right,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      )
+    const values = evaluateNumericOperands(
+      [expression.left, expression.right],
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    return values && values.length === 2 ? values[0]! - values[1]! : null;
   }
   if (expression.type === "divide") {
     const dividendValue = evaluateValue(
@@ -1078,38 +1064,25 @@ function evaluateValue(
       customOperators,
     );
     if (dividendValue === null || divisorValue === null) return null;
-    const divisor = numericValue(divisorValue);
-    if (divisor === 0) return null;
-    const quotient = numericValue(dividendValue) / divisor;
+    const dividend = numericValueOrNull(dividendValue);
+    const divisor = numericValueOrNull(divisorValue);
+    if (dividend === null || divisor === null || divisor === 0) return null;
+    const quotient = dividend / divisor;
     return Number.isFinite(quotient) ? quotient : null;
   }
   if (expression.type === "power") {
-    const value = Math.pow(
-      numericValue(
-        evaluateValue(
-          expression.left,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      ),
-      numericValue(
-        evaluateValue(
-          expression.right,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      ),
+    const values = evaluateNumericOperands(
+      [expression.left, expression.right],
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    if (!values || values.length !== 2) return null;
+    const value = Math.pow(values[0]!, values[1]!);
     return Number.isFinite(value) ? value : null;
   }
   if (expression.type === "integerDivide") {
@@ -1134,9 +1107,10 @@ function evaluateValue(
       customOperators,
     );
     if (dividendValue === null || divisorValue === null) return null;
-    const divisor = numericValue(divisorValue);
-    if (divisor === 0) return null;
-    return Math.floor(numericValue(dividendValue) / divisor);
+    const dividend = numericValueOrNull(dividendValue);
+    const divisor = numericValueOrNull(divisorValue);
+    if (dividend === null || divisor === null || divisor === 0) return null;
+    return Math.floor(dividend / divisor);
   }
   if (expression.type === "integerModulus") {
     const dividendValue = evaluateValue(
@@ -1160,29 +1134,13 @@ function evaluateValue(
       customOperators,
     );
     if (dividendValue === null || divisorValue === null) return null;
-    const divisor = numericValue(divisorValue);
-    if (divisor === 0) return null;
-    const dividend = numericValue(dividendValue);
+    const dividend = numericValueOrNull(dividendValue);
+    const divisor = numericValueOrNull(divisorValue);
+    if (dividend === null || divisor === null || divisor === 0) return null;
     return dividend - Math.floor(dividend / divisor) * divisor;
   }
   if (expression.type === "round") {
-    return Math.round(
-      numericValue(
-        evaluateValue(
-          expression.expression,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
-      ),
-    );
-  }
-  if (expression.type === "roundTo") {
-    const value = numericValue(
+    const value = numericValueOrNull(
       evaluateValue(
         expression.expression,
         document,
@@ -1194,25 +1152,40 @@ function evaluateValue(
         customOperators,
       ),
     );
+    return value === null ? null : Math.round(value);
+  }
+  if (expression.type === "roundTo") {
+    const value = numericValueOrNull(
+      evaluateValue(
+        expression.expression,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
+      ),
+    );
+    if (value === null) return null;
     return expression.roundingMode === "decimalPlaces"
       ? roundToDecimalPlaces(value, expression.figures)
       : roundToSignificantFigures(value, expression.figures);
   }
   if (expression.type === "truncate") {
-    return Math.trunc(
-      numericValue(
-        evaluateValue(
-          expression.expression,
-          document,
-          responses,
-          outcomes,
-          templateValues,
-          correctResponses,
-          random,
-          customOperators,
-        ),
+    const value = numericValueOrNull(
+      evaluateValue(
+        expression.expression,
+        document,
+        responses,
+        outcomes,
+        templateValues,
+        correctResponses,
+        random,
+        customOperators,
       ),
     );
+    return value === null ? null : Math.trunc(value);
   }
   if (expression.type === "integerToFloat") {
     const value = evaluateValue(
@@ -1225,11 +1198,12 @@ function evaluateValue(
       random,
       customOperators,
     );
-    return value === null ? null : numericValue(value);
+    return numericValueOrNull(value);
   }
   if (expression.type === "and") {
-    return expression.expressions.every((item) =>
-      booleanValue(
+    let sawNull = false;
+    for (const item of expression.expressions) {
+      const value = booleanValueOrNull(
         evaluateValue(
           item,
           document,
@@ -1240,8 +1214,11 @@ function evaluateValue(
           random,
           customOperators,
         ),
-      ),
-    );
+      );
+      if (value === false) return false;
+      if (value === null) sawNull = true;
+    }
+    return sawNull ? null : true;
   }
   if (expression.type === "anyN") {
     const min = indexValue(expression.min, outcomes, templateValues) ?? 0;
@@ -1265,8 +1242,9 @@ function evaluateValue(
     return null;
   }
   if (expression.type === "or") {
-    return expression.expressions.some((item) =>
-      booleanValue(
+    let sawNull = false;
+    for (const item of expression.expressions) {
+      const value = booleanValueOrNull(
         evaluateValue(
           item,
           document,
@@ -1277,11 +1255,14 @@ function evaluateValue(
           random,
           customOperators,
         ),
-      ),
-    );
+      );
+      if (value === true) return true;
+      if (value === null) sawNull = true;
+    }
+    return sawNull ? null : false;
   }
   if (expression.type === "not") {
-    return !booleanValue(
+    const value = booleanValueOrNull(
       evaluateValue(
         expression.expression,
         document,
@@ -1293,30 +1274,30 @@ function evaluateValue(
         customOperators,
       ),
     );
+    return value === null ? null : !value;
   }
   if (expression.type === "equal") {
-    return valuesEqual(
-      evaluateValue(
-        expression.left,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
-      evaluateValue(
-        expression.right,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const left = evaluateValue(
+      expression.left,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    const right = evaluateValue(
+      expression.right,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
+    return left === null || right === null ? null : valuesEqual(left, right);
   }
   if (expression.type === "equalRounded") {
     const left = evaluateValue(
@@ -1340,16 +1321,11 @@ function evaluateValue(
       customOperators,
     );
     if (left === null || right === null) return null;
-    const roundedLeft = roundWithMode(
-      numericValue(left),
-      expression.roundingMode,
-      expression.figures,
-    );
-    const roundedRight = roundWithMode(
-      numericValue(right),
-      expression.roundingMode,
-      expression.figures,
-    );
+    const leftNumber = numericValueOrNull(left);
+    const rightNumber = numericValueOrNull(right);
+    if (leftNumber === null || rightNumber === null) return null;
+    const roundedLeft = roundWithMode(leftNumber, expression.roundingMode, expression.figures);
+    const roundedRight = roundWithMode(rightNumber, expression.roundingMode, expression.figures);
     return roundedLeft === null || roundedRight === null ? null : roundedLeft === roundedRight;
   }
   if (expression.type === "numericCompare") {
@@ -1374,8 +1350,9 @@ function evaluateValue(
       customOperators,
     );
     if (leftValue === null || rightValue === null) return null;
-    const left = numericValue(leftValue);
-    const right = numericValue(rightValue);
+    const left = numericValueOrNull(leftValue);
+    const right = numericValueOrNull(rightValue);
+    if (left === null || right === null) return null;
     if (expression.operator === "lt") return left < right;
     if (expression.operator === "lte") return left <= right;
     if (expression.operator === "gt") return left > right;
@@ -1516,8 +1493,9 @@ function evaluateValue(
       random,
       customOperators,
     );
+    if (value === null || collection === null) return null;
     const values = valueContainer(collection);
-    return value === null ? null : values.some((item) => valuesEqual(item, value));
+    return values.some((item) => valuesEqual(item, value));
   }
   if (expression.type === "delete") {
     const value = evaluateValue(
@@ -1530,47 +1508,46 @@ function evaluateValue(
       random,
       customOperators,
     );
-    const collection = valueContainer(
-      evaluateValue(
-        expression.collection,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const collectionValue = evaluateValue(
+      expression.collection,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
-    if (value === null || collection.length === 0) return null;
+    if (value === null || collectionValue === null) return null;
+    const collection = valueContainer(collectionValue);
+    if (collection.length === 0) return null;
     const filtered = collection.filter((item) => !valuesEqual(item, value));
     return filtered.length > 0 ? filtered : null;
   }
   if (expression.type === "contains") {
-    const collection = valueContainer(
-      evaluateValue(
-        expression.collection,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const collectionValue = evaluateValue(
+      expression.collection,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
-    const values = valueContainer(
-      evaluateValue(
-        expression.values,
-        document,
-        responses,
-        outcomes,
-        templateValues,
-        correctResponses,
-        random,
-        customOperators,
-      ),
+    const valuesValue = evaluateValue(
+      expression.values,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
     );
+    if (collectionValue === null || valuesValue === null) return null;
+    const collection = valueContainer(collectionValue);
+    const values = valueContainer(valuesValue);
     if (collection.length === 0 || values.length === 0) return null;
     return containsValues(collection, values);
   }
@@ -1968,6 +1945,11 @@ function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boo
   return scalarValuesEqual(actual, expected);
 }
 
+function qtiMatchValues(actual: QtiValue, expected: QtiValue, ordered = false): boolean | null {
+  if (actual === null || expected === null) return null;
+  return valuesEqual(actual, expected, ordered);
+}
+
 function scalarValuesEqual(actual: QtiValue, expected: QtiValue): boolean {
   if (typeof actual === "boolean" && typeof expected === "string") {
     return String(actual) === expected;
@@ -2070,8 +2052,41 @@ function indexValue(
   const parsed = Number(n);
   if (Number.isInteger(parsed)) return parsed;
   const value = outcomes[n] ?? templateValues[n] ?? null;
-  const numeric = numericValue(value);
-  return Number.isInteger(numeric) ? numeric : undefined;
+  const numeric = numericValueOrNull(value);
+  return numeric !== null && Number.isInteger(numeric) ? numeric : undefined;
+}
+
+function evaluateNumericOperands(
+  expressions: QtiProcessingExpression[],
+  document: QtiDocument,
+  responses: Record<string, QtiValue>,
+  outcomes: Record<string, QtiValue>,
+  templateValues: Record<string, QtiValue>,
+  correctResponses: Record<string, QtiValue>,
+  random: () => number,
+  customOperators: QtiCustomOperatorRegistry,
+): number[] | null {
+  const numericValues: number[] = [];
+  for (const expression of expressions) {
+    const value = evaluateValue(
+      expression,
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+    );
+    if (value === null || isRecordValue(value)) return null;
+    const values = Array.isArray(value) ? value : [value];
+    for (const item of values) {
+      const numeric = numericValueOrNull(item);
+      if (numeric === null) return null;
+      numericValues.push(numeric);
+    }
+  }
+  return numericValues;
 }
 
 function containsValues(collection: QtiScalarValue[], values: QtiScalarValue[]): boolean {
@@ -2093,6 +2108,16 @@ function numericValue(value: QtiValue): number {
   if (typeof value === "boolean") return value ? 1 : 0;
   if (typeof value === "string") return Number(value);
   return 0;
+}
+
+function numericValueOrNull(value: QtiValue): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 function durationSeconds(value: QtiValue): number | null {
@@ -2123,6 +2148,11 @@ function booleanValue(value: QtiValue): boolean {
   if (typeof value === "string") return value.length > 0 && value !== "false";
   if (Array.isArray(value)) return value.length > 0;
   return false;
+}
+
+function booleanValueOrNull(value: QtiValue): boolean | null {
+  if (value === null) return null;
+  return booleanValue(value);
 }
 
 function roundToDecimalPlaces(value: number, figures: number): number {
@@ -2274,7 +2304,8 @@ function stringMatch(
   right: QtiValue,
   caseSensitive: boolean,
   substring: boolean,
-): boolean {
+): boolean | null {
+  if (left === null || right === null) return null;
   let actual = String(left ?? "");
   let expected = String(right ?? "");
   if (!caseSensitive) {

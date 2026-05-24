@@ -139,7 +139,36 @@ function createInlineChoiceFixture(qtiName: string): QtiFixture {
     <p>Choose QTI terms directly in the sentence.</p>
     <p>In QTI 3.0, an interaction writes a candidate answer to a <${qtiName} response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">response declaration</qti-inline-choice><qti-inline-choice identifier="B">template declaration</qti-inline-choice><qti-inline-choice identifier="C">rubric block</qti-inline-choice></${qtiName}>, and response processing writes derived values such as SCORE to an <${qtiName} response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">item body</qti-inline-choice><qti-inline-choice identifier="B">outcome declaration</qti-inline-choice><qti-inline-choice identifier="C">choice interaction</qti-inline-choice></${qtiName}>.</p>
   </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE_DECLARATION"/>
+          <qti-correct identifier="RESPONSE_DECLARATION"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE_OUTCOME"/>
+          <qti-correct identifier="RESPONSE_OUTCOME"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
 </qti-assessment-item>`,
     expectedParseDiagnostics: [],
     expectedValidationDiagnostics: [],
@@ -545,7 +574,9 @@ function createBasicHtmlSubsetFixture(): QtiFixture {
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
   <qti-item-body>
     <section>
       <h2>QTI item body content</h2>
@@ -588,7 +619,9 @@ function createBasicTemplateResponseProcessingFixture(): QtiFixture {
       <qti-map-entry map-key="B" mapped-value="0"/>
     </qti-mapping>
   </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
   <qti-item-body>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-prompt>Select the mapped response.</qti-prompt>
@@ -618,7 +651,9 @@ function createBasicCompositeItemFixture(): QtiFixture {
   <qti-response-declaration identifier="TEXT_RESPONSE" cardinality="single" base-type="string">
     <qti-correct-response><qti-value>SCORE</qti-value></qti-correct-response>
   </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
   <qti-item-body>
     <qti-choice-interaction response-identifier="CHOICE_RESPONSE" max-choices="1">
       <qti-prompt>Which declaration stores candidate input?</qti-prompt>
@@ -627,7 +662,36 @@ function createBasicCompositeItemFixture(): QtiFixture {
     </qti-choice-interaction>
     <p>Type the built-in score outcome name: <qti-text-entry-interaction response-identifier="TEXT_RESPONSE" expected-length="8"/></p>
   </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="CHOICE_RESPONSE"/>
+          <qti-correct identifier="CHOICE_RESPONSE"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="TEXT_RESPONSE"/>
+          <qti-correct identifier="TEXT_RESPONSE"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
 </qti-assessment-item>`,
     expectedParseDiagnostics: [],
     expectedValidationDiagnostics: [],

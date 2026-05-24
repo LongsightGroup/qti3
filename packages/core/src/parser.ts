@@ -152,7 +152,9 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     identifier,
     title: node.attributes.title,
     language: node.attributes["xml:lang"] ?? node.attributes.lang,
-    adaptive: node.attributes.adaptive === "true",
+    adaptive: parseXmlBoolean(node.attributes.adaptive) === true,
+    timeDependent: parseXmlBoolean(node.attributes["time-dependent"]),
+    attributes: node.attributes,
     prompt: prompt ? textContent(prompt) : undefined,
     itemBodySource: itemBody?.source,
     responseDeclarations,
@@ -1848,6 +1850,12 @@ function coerceValue(value: string, baseType: string | undefined): QtiScalarValu
 function parseCardinality(value: string | undefined): QtiCardinality {
   if (value === "multiple" || value === "ordered" || value === "record") return value;
   return "single";
+}
+
+function parseXmlBoolean(value: string | undefined): boolean | undefined {
+  if (value === "true" || value === "1") return true;
+  if (value === "false" || value === "0") return false;
+  return undefined;
 }
 
 function normalizeValueForCardinality(value: QtiValue, cardinality: QtiCardinality): QtiValue {

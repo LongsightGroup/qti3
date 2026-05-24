@@ -236,7 +236,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-debug">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-debug" title="catalog-debug" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
           <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -268,7 +268,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog" title="media-catalog" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <p data-catalog-idref="audio-transcript">Listen to the recording.</p>
@@ -365,7 +365,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-debug">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-debug" title="stylesheet-debug" time-dependent="false">
         <qti-stylesheet href="style/item.css" type="text/css" media="screen"/>
         <qti-item-body><p>Styled item body.</p></qti-item-body>
       </qti-assessment-item>
@@ -406,7 +406,7 @@ test.describe("manual harness", () => {
       <qti-assessment-item
         xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
         identifier="candidate-visible-item"
-        title="Internal Item Bank Title">
+        title="Internal Item Bank Title" time-dependent="false">
         <qti-item-body>
           <p>Candidate-visible item body.</p>
         </qti-item-body>
@@ -614,7 +614,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hottext-punctuation">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hottext-punctuation" title="hottext-punctuation" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hottext-interaction response-identifier="RESPONSE">
@@ -1067,7 +1067,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="video-media">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="video-media" title="video-media" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <qti-media-interaction response-identifier="RESPONSE" autostart="false" loop="true">
@@ -1114,7 +1114,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-none">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-none" title="media-controls-none" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <qti-media-interaction response-identifier="RESPONSE" autostart="true">
@@ -1145,7 +1145,7 @@ test.describe("manual harness", () => {
   </resources>
 </manifest>`,
       "items/media.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-media">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-media" title="packaged-media" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
   <qti-item-body>
     <qti-media-interaction response-identifier="RESPONSE" autostart="false">
@@ -1179,7 +1179,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-count">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-count" title="media-count" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
           <qti-correct-response><qti-value>2</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -1223,7 +1223,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-min">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-min" title="media-min" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
           <qti-correct-response><qti-value>2</qti-value></qti-correct-response>
         </qti-response-declaration>
@@ -2722,7 +2722,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-svg-graphic-associate">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-svg-graphic-associate" title="inline-svg-graphic-associate" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
     <qti-correct-response><qti-value>A B</qti-value><qti-value>C D</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -2833,7 +2833,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-backed-graphic-gap-match">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-backed-graphic-gap-match" title="hotspot-backed-graphic-gap-match" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
     <qti-correct-response><qti-value>A T1</qti-value><qti-value>B T2</qti-value><qti-value>C T3</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -2895,7 +2895,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bottom-label-graphic-gap-match">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bottom-label-graphic-gap-match" title="bottom-label-graphic-gap-match" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
   <qti-item-body>
     <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
@@ -2945,7 +2945,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="select-point-multiple" title="select-point-multiple">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="select-point-multiple" title="select-point-multiple" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="point"/>
   <qti-item-body>
     <qti-select-point-interaction response-identifier="RESPONSE" max-choices="2">
@@ -3068,7 +3068,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-sized" title="drawing-sized">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-sized" title="drawing-sized" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
   <qti-item-body>
     <qti-drawing-interaction response-identifier="RESPONSE">
@@ -3091,7 +3091,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-raster" title="drawing-raster">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-raster" title="drawing-raster" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
   <qti-item-body>
     <qti-drawing-interaction response-identifier="RESPONSE">
@@ -3132,7 +3132,7 @@ test.describe("manual harness", () => {
   </resources>
 </manifest>`,
       "items/drawing.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-drawing">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-drawing" title="packaged-drawing" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
   <qti-item-body>
     <qti-drawing-interaction response-identifier="RESPONSE">
@@ -3215,7 +3215,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-shared-css">
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-shared-css" title="hotspot-shared-css" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
           <qti-hotspot-interaction
@@ -3271,7 +3271,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-bypass" title="validation-bypass">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-bypass" title="validation-bypass" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -3356,7 +3356,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="minimum-choice" title="minimum-choice">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="minimum-choice" title="minimum-choice" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
     <qti-correct-response>
       <qti-value>A</qti-value>
@@ -3399,7 +3399,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-choice" title="maximum-choice">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-choice" title="maximum-choice" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
     <qti-correct-response>
       <qti-value>A</qti-value>
@@ -3431,7 +3431,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-max-associate" title="match-max-associate">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-max-associate" title="match-max-associate" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
     <qti-correct-response>
       <qti-value>A B</qti-value>
@@ -3482,7 +3482,7 @@ test.describe("manual harness", () => {
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="optional-choice" title="optional-choice">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="optional-choice" title="optional-choice" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
     <qti-correct-response>
       <qti-value>A</qti-value>

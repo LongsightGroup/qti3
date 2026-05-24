@@ -416,6 +416,8 @@ export interface QtiAssessmentItem {
   title?: string | undefined;
   language?: string | undefined;
   adaptive: boolean;
+  timeDependent?: boolean | undefined;
+  attributes: Record<string, string>;
   prompt?: string | undefined;
   itemBodySource?: QtiSourceLocation | undefined;
   responseDeclarations: QtiResponseDeclaration[];

@@ -6,7 +6,9 @@
   <qti-response-declaration identifier="TEXT_RESPONSE" cardinality="single" base-type="string">
     <qti-correct-response><qti-value>SCORE</qti-value></qti-correct-response>
   </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
   <qti-item-body>
     <qti-choice-interaction response-identifier="CHOICE_RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Response declaration</qti-simple-choice>
@@ -14,5 +16,34 @@
     </qti-choice-interaction>
     <p>Type SCORE: <qti-text-entry-interaction response-identifier="TEXT_RESPONSE" expected-length="8"/></p>
   </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="CHOICE_RESPONSE"/>
+          <qti-correct identifier="CHOICE_RESPONSE"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="TEXT_RESPONSE"/>
+          <qti-correct identifier="TEXT_RESPONSE"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
 </qti-assessment-item>

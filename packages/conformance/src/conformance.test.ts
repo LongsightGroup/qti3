@@ -23,7 +23,7 @@ describe("@longsightgroup/qti3-conformance", () => {
       qtiName: "qti-choice-interaction",
       title: "Conformance state",
       xml: `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="conformance-state" title="conformance-state">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="conformance-state" title="conformance-state" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -67,7 +67,7 @@ describe("@longsightgroup/qti3-conformance", () => {
       qtiName: "qti-slider-interaction",
       title: "Conformance diagnostic",
       xml: `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="conformance-diagnostic" title="conformance-diagnostic">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="conformance-diagnostic" title="conformance-diagnostic" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <qti-slider-interaction response-identifier="RESPONSE">
@@ -104,7 +104,7 @@ describe("@longsightgroup/qti3-conformance", () => {
       category: "processing",
       title: "Conformance unsupported processing",
       xml: `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="conformance-unsupported-processing" title="conformance-unsupported-processing">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="conformance-unsupported-processing" title="conformance-unsupported-processing" time-dependent="false">
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body><p>Unsupported processing expression.</p></qti-item-body>
   <qti-response-processing>

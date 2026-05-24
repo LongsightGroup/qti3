@@ -216,6 +216,7 @@ describe("@longsightgroup/qti3-cli", () => {
   <qti-item-body>
     <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
   </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`,
         "utf8",
       );
