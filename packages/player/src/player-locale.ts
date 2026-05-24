@@ -4,16 +4,85 @@ import type { QtiPlayerMessageOverrides } from "./player-types.js";
 const defaultEnglishPlayerMessages: QtiPlayerMessages = {
   remove: () => "Remove",
   removePair: ({ label }) => `Remove ${label}`,
+  clearDrawing: () => "Clear drawing",
+  clearPoints: () => "Clear points",
+  endAttempt: () => "End attempt",
+  uploadResponse: () => "Upload response",
+  movableObject: () => "Movable object",
+  placeObject: () => "Place",
+  moveChoice: ({ label, direction }) => `Move ${label} ${direction}`,
+  movePoint: ({ direction }) => `Move point ${direction}`,
+  moveObject: ({ direction }) => `Move object ${direction}`,
 };
 
 const playerMessages = {
   defaultEnglish: defaultEnglishPlayerMessages,
-  spanish: playerMessageCatalog("Quitar", ({ label }) => `Quitar ${label}`),
-  swedish: playerMessageCatalog("Ta bort", ({ label }) => `Ta bort ${label}`),
-  german: playerMessageCatalog("Entfernen", ({ label }) => `${label} entfernen`),
-  portuguese: playerMessageCatalog("Remover", ({ label }) => `Remover ${label}`),
-  french: playerMessageCatalog("Supprimer", ({ label }) => `Supprimer ${label}`),
-};
+  spanish: {
+    remove: () => "Quitar",
+    removePair: ({ label }) => `Quitar ${label}`,
+    clearDrawing: () => "Borrar dibujo",
+    clearPoints: () => "Borrar puntos",
+    endAttempt: () => "Finalizar intento",
+    uploadResponse: () => "Subir respuesta",
+    movableObject: () => "Objeto movible",
+    placeObject: () => "Colocar",
+    moveChoice: ({ label, direction }) => `Mover ${label} ${spanishDirection(direction)}`,
+    movePoint: ({ direction }) => `Mover punto ${spanishDirection(direction)}`,
+    moveObject: ({ direction }) => `Mover objeto ${spanishDirection(direction)}`,
+  },
+  swedish: {
+    remove: () => "Ta bort",
+    removePair: ({ label }) => `Ta bort ${label}`,
+    clearDrawing: () => "Rensa ritning",
+    clearPoints: () => "Rensa punkter",
+    endAttempt: () => "Avsluta forsok",
+    uploadResponse: () => "Ladda upp svar",
+    movableObject: () => "Flyttbart objekt",
+    placeObject: () => "Placera",
+    moveChoice: ({ label, direction }) => `Flytta ${label} ${swedishDirection(direction)}`,
+    movePoint: ({ direction }) => `Flytta punkt ${swedishDirection(direction)}`,
+    moveObject: ({ direction }) => `Flytta objekt ${swedishDirection(direction)}`,
+  },
+  german: {
+    remove: () => "Entfernen",
+    removePair: ({ label }) => `${label} entfernen`,
+    clearDrawing: () => "Zeichnung loeschen",
+    clearPoints: () => "Punkte loeschen",
+    endAttempt: () => "Versuch beenden",
+    uploadResponse: () => "Antwort hochladen",
+    movableObject: () => "Bewegliches Objekt",
+    placeObject: () => "Platzieren",
+    moveChoice: ({ label, direction }) => `${label} ${germanDirection(direction)} bewegen`,
+    movePoint: ({ direction }) => `Punkt ${germanDirection(direction)} bewegen`,
+    moveObject: ({ direction }) => `Objekt ${germanDirection(direction)} bewegen`,
+  },
+  portuguese: {
+    remove: () => "Remover",
+    removePair: ({ label }) => `Remover ${label}`,
+    clearDrawing: () => "Limpar desenho",
+    clearPoints: () => "Limpar pontos",
+    endAttempt: () => "Finalizar tentativa",
+    uploadResponse: () => "Enviar resposta",
+    movableObject: () => "Objeto movel",
+    placeObject: () => "Posicionar",
+    moveChoice: ({ label, direction }) => `Mover ${label} ${portugueseDirection(direction)}`,
+    movePoint: ({ direction }) => `Mover ponto ${portugueseDirection(direction)}`,
+    moveObject: ({ direction }) => `Mover objeto ${portugueseDirection(direction)}`,
+  },
+  french: {
+    remove: () => "Supprimer",
+    removePair: ({ label }) => `Supprimer ${label}`,
+    clearDrawing: () => "Effacer le dessin",
+    clearPoints: () => "Effacer les points",
+    endAttempt: () => "Terminer la tentative",
+    uploadResponse: () => "Televerser la reponse",
+    movableObject: () => "Objet mobile",
+    placeObject: () => "Placer",
+    moveChoice: ({ label, direction }) => `Deplacer ${label} vers ${frenchDirection(direction)}`,
+    movePoint: ({ direction }) => `Deplacer le point vers ${frenchDirection(direction)}`,
+    moveObject: ({ direction }) => `Deplacer l'objet vers ${frenchDirection(direction)}`,
+  },
+} satisfies Record<string, QtiPlayerMessages>;
 
 const builtInPlayerMessageCatalogs: ReadonlyMap<string, QtiPlayerMessages> = new Map([
   ["en", playerMessages.defaultEnglish],
@@ -32,16 +101,6 @@ const builtInPlayerMessageCatalogs: ReadonlyMap<string, QtiPlayerMessages> = new
   ["fr-fr", playerMessages.french],
 ]);
 
-function playerMessageCatalog(
-  remove: string,
-  removePair: QtiPlayerMessages["removePair"],
-): QtiPlayerMessages {
-  return {
-    remove: () => remove,
-    removePair,
-  };
-}
-
 export function resolvePlayerMessages(
   locale: string,
   overrides: QtiPlayerMessageOverrides,
@@ -51,7 +110,52 @@ export function resolvePlayerMessages(
     remove: overrides.remove ?? catalog?.remove ?? defaultEnglishPlayerMessages.remove,
     removePair:
       overrides.removePair ?? catalog?.removePair ?? defaultEnglishPlayerMessages.removePair,
+    clearDrawing:
+      overrides.clearDrawing ?? catalog?.clearDrawing ?? defaultEnglishPlayerMessages.clearDrawing,
+    clearPoints:
+      overrides.clearPoints ?? catalog?.clearPoints ?? defaultEnglishPlayerMessages.clearPoints,
+    endAttempt:
+      overrides.endAttempt ?? catalog?.endAttempt ?? defaultEnglishPlayerMessages.endAttempt,
+    uploadResponse:
+      overrides.uploadResponse ??
+      catalog?.uploadResponse ??
+      defaultEnglishPlayerMessages.uploadResponse,
+    movableObject:
+      overrides.movableObject ??
+      catalog?.movableObject ??
+      defaultEnglishPlayerMessages.movableObject,
+    placeObject:
+      overrides.placeObject ?? catalog?.placeObject ?? defaultEnglishPlayerMessages.placeObject,
+    moveChoice:
+      overrides.moveChoice ?? catalog?.moveChoice ?? defaultEnglishPlayerMessages.moveChoice,
+    movePoint: overrides.movePoint ?? catalog?.movePoint ?? defaultEnglishPlayerMessages.movePoint,
+    moveObject:
+      overrides.moveObject ?? catalog?.moveObject ?? defaultEnglishPlayerMessages.moveObject,
   };
+}
+
+function spanishDirection(direction: "up" | "down" | "left" | "right"): string {
+  return { up: "arriba", down: "abajo", left: "a la izquierda", right: "a la derecha" }[direction];
+}
+
+function swedishDirection(direction: "up" | "down" | "left" | "right"): string {
+  return { up: "upp", down: "ned", left: "vanster", right: "hoger" }[direction];
+}
+
+function germanDirection(direction: "up" | "down" | "left" | "right"): string {
+  return { up: "nach oben", down: "nach unten", left: "nach links", right: "nach rechts" }[
+    direction
+  ];
+}
+
+function portugueseDirection(direction: "up" | "down" | "left" | "right"): string {
+  return { up: "para cima", down: "para baixo", left: "para a esquerda", right: "para a direita" }[
+    direction
+  ];
+}
+
+function frenchDirection(direction: "up" | "down" | "left" | "right"): string {
+  return { up: "le haut", down: "le bas", left: "la gauche", right: "la droite" }[direction];
 }
 
 function builtInPlayerMessageCatalog(locale: string): QtiPlayerMessages | undefined {

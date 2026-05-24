@@ -1,4 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import type { QtiPlayerMessages } from "../player-messages.js";
 import {
   interactionChoices,
   missingChoicesMessage,
@@ -17,6 +18,7 @@ export function renderOrderedResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
   const choices = interactionChoices(interaction).filter((choice) => choice.role !== "gap");
@@ -58,6 +60,7 @@ export function renderOrderedResponse(
           total: ordered.length,
           handleClassName: "qti3-token qti3-reorder-handle",
           visibleText: choice.text,
+          messages,
           onMoveBy: (delta) => moveChoice(index, index + delta),
         });
 

@@ -16,7 +16,7 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
-import { movementButton, movementLabel } from "../movement.js";
+import { movementButton } from "../movement.js";
 import type { QtiPlayerMessages } from "../player-messages.js";
 import {
   announceOrderedItemMove,
@@ -198,13 +198,17 @@ export function renderGraphicOrderResponse(
           }
         });
 
-        const up = movementButton("up", movementLabel(choiceLabel, "up"), () =>
-          moveHotspot(choice.identifier, -1),
+        const up = movementButton(
+          "up",
+          messages.moveChoice({ label: choiceLabel, direction: "up" }),
+          () => moveHotspot(choice.identifier, -1),
         );
         up.disabled = index === 0;
 
-        const down = movementButton("down", movementLabel(choiceLabel, "down"), () =>
-          moveHotspot(choice.identifier, 1),
+        const down = movementButton(
+          "down",
+          messages.moveChoice({ label: choiceLabel, direction: "down" }),
+          () => moveHotspot(choice.identifier, 1),
         );
         down.disabled = index === currentChoices.length - 1;
 

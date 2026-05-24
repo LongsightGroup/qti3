@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Draw a freehand response on the canvas.</p>
-    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Sketch an arrow showing a response moving from capture to scoring.</qti-prompt><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='white'/%3E%3C/svg%3E" type="image/svg+xml" width="640" height="360"/></qti-drawing-interaction>
+    <p>Annotate the delivery-flow diagram with a freehand drawing.</p>
+    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Annotate the diagram by circling the response capture step.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-drawing-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

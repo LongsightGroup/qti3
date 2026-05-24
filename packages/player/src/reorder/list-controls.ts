@@ -1,4 +1,5 @@
-import { movementButton, movementLabel } from "../movement.js";
+import { movementButton } from "../movement.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 import { orderedItemAccessibleName } from "./a11y.js";
 
 export interface ReorderHandleOptions {
@@ -8,6 +9,7 @@ export interface ReorderHandleOptions {
   total: number;
   handleClassName: string;
   visibleText: string;
+  messages: QtiPlayerMessages;
   onMoveBy: (delta: number) => void;
 }
 
@@ -16,7 +18,8 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
   up: HTMLButtonElement;
   down: HTMLButtonElement;
 } {
-  const { identifier, label, index, total, handleClassName, visibleText, onMoveBy } = options;
+  const { identifier, label, index, total, handleClassName, visibleText, messages, onMoveBy } =
+    options;
 
   const handle = document.createElement("button");
   handle.type = "button";
@@ -34,10 +37,14 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
     }
   });
 
-  const up = movementButton("up", movementLabel(label, "up"), () => onMoveBy(-1));
+  const up = movementButton("up", messages.moveChoice({ label, direction: "up" }), () =>
+    onMoveBy(-1),
+  );
   up.disabled = index === 0;
 
-  const down = movementButton("down", movementLabel(label, "down"), () => onMoveBy(1));
+  const down = movementButton("down", messages.moveChoice({ label, direction: "down" }), () =>
+    onMoveBy(1),
+  );
   down.disabled = index === total - 1;
 
   return { handle, up, down };

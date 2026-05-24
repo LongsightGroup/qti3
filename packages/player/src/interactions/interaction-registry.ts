@@ -74,8 +74,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "ordered",
     matches: usesOrderedResponse,
-    render: ({ interaction, update, currentValue }) =>
-      renderOrderedResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderOrderedResponse(interaction, update, currentValue, messages),
   },
   {
     id: "gapMatch",
@@ -135,20 +135,20 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "selectPoint",
     matches: (interaction) => interaction.type === "selectPoint",
-    render: ({ interaction, update, currentValue }) =>
-      renderSelectPointResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderSelectPointResponse(interaction, update, currentValue, messages),
   },
   {
     id: "positionObject",
     matches: (interaction) => interaction.type === "positionObject",
-    render: ({ interaction, update, currentValue }) =>
-      renderPositionObjectResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderPositionObjectResponse(interaction, update, currentValue, messages),
   },
   {
     id: "drawing",
     matches: (interaction) => interaction.type === "drawing",
-    render: ({ interaction, update, currentValue }) =>
-      renderDrawingResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderDrawingResponse(interaction, update, currentValue, messages),
   },
   {
     id: "portableCustom",
@@ -171,13 +171,14 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "upload",
     matches: (interaction) => interaction.type === "upload",
-    render: ({ interaction, update }) => renderUploadResponse(interaction, update),
+    render: ({ interaction, update, messages }) =>
+      renderUploadResponse(interaction, update, messages),
   },
   {
     id: "endAttempt",
     matches: (interaction) => interaction.type === "endAttempt",
-    render: ({ interaction, update, endAttempt }) =>
-      renderEndAttemptResponse(interaction, update, endAttempt),
+    render: ({ interaction, update, endAttempt, messages }) =>
+      renderEndAttemptResponse(interaction, update, endAttempt, messages),
   },
   {
     id: "media",

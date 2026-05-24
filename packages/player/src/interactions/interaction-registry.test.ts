@@ -9,6 +9,21 @@ import {
   renderInteractionResponse,
   type InteractionResponseContext,
 } from "./interaction-registry.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
+
+const testMessages: QtiPlayerMessages = {
+  remove: () => "Remove",
+  removePair: ({ label }) => `Remove ${label}`,
+  clearDrawing: () => "Clear drawing",
+  clearPoints: () => "Clear points",
+  endAttempt: () => "End attempt",
+  uploadResponse: () => "Upload response",
+  movableObject: () => "Movable object",
+  placeObject: () => "Place",
+  moveChoice: ({ label, direction }) => `Move ${label} ${direction}`,
+  movePoint: ({ direction }) => `Move point ${direction}`,
+  moveObject: ({ direction }) => `Move object ${direction}`,
+};
 
 function interaction(
   overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
@@ -35,7 +50,7 @@ function renderContext(
     interaction: baseInteraction,
     update: () => {},
     currentValue: null,
-    messages: {} as InteractionResponseContext["messages"],
+    messages: testMessages,
     isCompleted: () => false,
     endAttempt: () => {},
     renderPortableCustom: () => document.createElement("div"),

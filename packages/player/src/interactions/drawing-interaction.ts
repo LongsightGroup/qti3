@@ -1,5 +1,6 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
 import { applyResponsiveGraphicSize, objectIsImage, readableType } from "../interaction-support.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 
 export const DRAWING_STROKE_COLOR = "#000";
 export const DRAWING_STROKE_WIDTH = 3;
@@ -8,6 +9,7 @@ export function renderDrawingResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
@@ -41,7 +43,8 @@ export function renderDrawingResponse(
   resetSurface();
 
   const summary = document.createElement("output");
-  summary.className = "qti3-coordinate-output";
+  summary.className = "qti3-coordinate-output qti-visually-hidden";
+  summary.setAttribute("aria-live", "polite");
   const strokes: DrawingStroke[] = [];
   let activeStroke: DrawingStroke | undefined;
   let commitVersion = 0;
@@ -124,7 +127,7 @@ export function renderDrawingResponse(
 
   const clear = document.createElement("button");
   clear.type = "button";
-  clear.textContent = "Clear drawing";
+  clear.textContent = messages.clearDrawing();
   clear.addEventListener("click", () => {
     strokes.splice(0, strokes.length);
     activeStroke = undefined;

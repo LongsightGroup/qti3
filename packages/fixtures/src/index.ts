@@ -36,8 +36,6 @@ export interface QtiFixture {
 
 const silentWavDataUri =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
-const drawingCanvasDataUri =
-  "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20640%20360'%3E%3Crect%20width='640'%20height='360'%20fill='white'/%3E%3C/svg%3E";
 
 export const interactionFixtures: QtiFixture[] = interactionSupport.map((support) =>
   createInteractionFixture(support.interactionType, support.qtiName),
@@ -1088,7 +1086,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Upload a text file named upload.txt containing implementation notes.</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "drawing") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Sketch an arrow showing a response moving from capture to scoring.</qti-prompt><object data="${drawingCanvasDataUri}" type="image/svg+xml" width="640" height="360"/></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Annotate the diagram by circling the response capture step.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></${qtiName}>`;
   }
   if (interactionType === "portableCustom") {
     return `<${qtiName} response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom interaction contract to return A.</qti-prompt><qti-interaction-modules primary-configuration="modules/module_resolution.js"><qti-interaction-module id="fixture-portable-custom" primary-path="modules/fixture-portable-custom"/></qti-interaction-modules><qti-interaction-markup><div class="qti3-fixture-pci-markup">Portable custom fixture markup</div></qti-interaction-markup></${qtiName}>`;
@@ -1115,7 +1113,7 @@ function itemIntro(identifier: string): string {
   const intros: Record<string, string> = {
     "associate-reference": "Create one association from a shared pool of QTI concepts.",
     "choice-reference": "Select one answer from a standard single-choice interaction.",
-    "drawing-reference": "Draw a freehand response on the canvas.",
+    "drawing-reference": "Annotate the delivery-flow diagram with a freehand drawing.",
     "endAttempt-reference": "Use an end-attempt control to request an adaptive action.",
     "extendedText-reference": "Write a short explanation in a multiline response.",
     "gapMatch-reference": "Fill the sentence with QTI terms from the token bank.",

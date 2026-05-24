@@ -8,7 +8,8 @@ import {
   readableType,
   responseGroup,
 } from "../interaction-support.js";
-import { movementButton, movementLabel } from "../movement.js";
+import { movementButton } from "../movement.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 import { parsePointValues, pointToString } from "./point-value.js";
 
@@ -16,6 +17,7 @@ export function renderSelectPointResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
   group.role = "group";
@@ -156,7 +158,7 @@ export function renderSelectPointResponse(
     ["down", 0, 1],
   ] as const) {
     controls.append(
-      movementButton(direction, movementLabel("point", direction), () => {
+      movementButton(direction, messages.movePoint({ direction }), () => {
         const point = mutableActivePoint();
         point.x += dx;
         point.y += dy;
@@ -169,7 +171,7 @@ export function renderSelectPointResponse(
   if (isMultiple) {
     const clear = document.createElement("button");
     clear.type = "button";
-    clear.textContent = "Clear points";
+    clear.textContent = messages.clearPoints();
     clear.addEventListener("click", () => {
       points = [];
       activeIndex = -1;

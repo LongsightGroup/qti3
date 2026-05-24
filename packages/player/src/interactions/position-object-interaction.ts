@@ -9,7 +9,8 @@ import {
   readableType,
   responseGroup,
 } from "../interaction-support.js";
-import { movementButton, movementLabel } from "../movement.js";
+import { movementButton } from "../movement.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 import {
   objectAssetHeight,
   objectAssetWidth,
@@ -21,6 +22,7 @@ export function renderPositionObjectResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
   group.role = "group";
@@ -50,7 +52,7 @@ export function renderPositionObjectResponse(
   const marker = document.createElement("button");
   marker.type = "button";
   marker.className = "qti3-position-object-marker";
-  marker.setAttribute("aria-label", "Movable object");
+  marker.setAttribute("aria-label", messages.movableObject());
   applyPositionObjectMarkerSize(marker, movableWidth, movableHeight);
   marker.draggable = false;
 
@@ -60,7 +62,7 @@ export function renderPositionObjectResponse(
     image.alt = "";
     marker.append(image);
   } else {
-    marker.textContent = "Place";
+    marker.textContent = messages.placeObject();
   }
   stage.append(marker);
 
@@ -198,7 +200,7 @@ export function renderPositionObjectResponse(
     ["down", 0, 1],
   ] as const) {
     controls.append(
-      movementButton(direction, movementLabel("object", direction), () => moveBy(dx, dy)),
+      movementButton(direction, messages.moveObject({ direction }), () => moveBy(dx, dy)),
     );
   }
 

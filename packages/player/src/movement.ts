@@ -27,7 +27,3 @@ export function movementButton(
   button.addEventListener("click", onClick);
   return button;
 }
-
-export function movementLabel(target: string, direction: MovementDirection): string {
-  return `Move ${target} ${direction}`;
-}

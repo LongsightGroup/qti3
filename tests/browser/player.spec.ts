@@ -2698,36 +2698,50 @@ test.describe("manual harness", () => {
         locale: "es-MX",
         title: "Quitar",
         removeName: "Quitar Item XML to Response capture",
+        moveName: "Mover Load and parse the assessment item abajo",
+        clearDrawingName: "Borrar dibujo",
       },
       {
         locale: "es-ES",
         title: "Quitar",
         removeName: "Quitar Item XML to Response capture",
+        moveName: "Mover Load and parse the assessment item abajo",
+        clearDrawingName: "Borrar dibujo",
       },
       {
         locale: "sv-SE",
         title: "Ta bort",
         removeName: "Ta bort Item XML to Response capture",
+        moveName: "Flytta Load and parse the assessment item ned",
+        clearDrawingName: "Rensa ritning",
       },
       {
         locale: "de-DE",
         title: "Entfernen",
         removeName: "Item XML to Response capture entfernen",
+        moveName: "Load and parse the assessment item nach unten bewegen",
+        clearDrawingName: "Zeichnung loeschen",
       },
       {
         locale: "pt-BR",
         title: "Remover",
         removeName: "Remover Item XML to Response capture",
+        moveName: "Mover Load and parse the assessment item para baixo",
+        clearDrawingName: "Limpar desenho",
       },
       {
         locale: "pt-PT",
         title: "Remover",
         removeName: "Remover Item XML to Response capture",
+        moveName: "Mover Load and parse the assessment item para baixo",
+        clearDrawingName: "Limpar desenho",
       },
       {
         locale: "fr-FR",
         title: "Supprimer",
         removeName: "Supprimer Item XML to Response capture",
+        moveName: "Deplacer Load and parse the assessment item vers le bas",
+        clearDrawingName: "Effacer le dessin",
       },
     ];
 
@@ -2751,6 +2765,18 @@ test.describe("manual harness", () => {
       await expect(remove.locator("svg.qti3-trash-icon"), example.locale).toHaveCount(1);
       await remove.click();
       await expectResponse(page, []);
+
+      await loadFixture(page, "order");
+      await expect(
+        page.getByRole("button", { name: example.moveName }),
+        example.locale,
+      ).toHaveCount(1);
+
+      await loadFixture(page, "drawing");
+      await expect(
+        page.getByRole("button", { name: example.clearDrawingName }),
+        example.locale,
+      ).toBeVisible();
     }
   });
 
@@ -3064,9 +3090,10 @@ test.describe("manual harness", () => {
     const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
     const box = await surface.boundingBox();
     if (!box) throw new Error("Missing drawing surface box.");
-    expect(box.width).toBe(640);
-    expect(box.height).toBe(360);
-    await expect(surface).toHaveAttribute("viewBox", "0 0 640 360");
+    expect(box.width).toBe(480);
+    expect(box.height).toBe(300);
+    await expect(surface).toHaveAttribute("viewBox", "0 0 480 300");
+    await expect(surface.locator("image")).toHaveAttribute("href", "hotspot-flow.svg");
 
     await page.mouse.move(box.x + 10, box.y + 10);
     await page.mouse.down();
@@ -3085,9 +3112,10 @@ test.describe("manual harness", () => {
     expect(svg).toContain("data-qti3-strokes");
     expect(svg).not.toMatch(/timestamp/i);
     await expect(surface.locator("polyline")).toHaveCount(2);
-    await expect(page.locator("qti-assessment-item-player output")).toContainText(
-      "2 drawing strokes.",
-    );
+    const drawingStatus = page.locator("qti-assessment-item-player .qti3-coordinate-output");
+    await expect(drawingStatus).toContainText("2 drawing strokes.");
+    await expect(drawingStatus).toHaveClass(/qti-visually-hidden/);
+    await expect(drawingStatus).toHaveAttribute("aria-live", "polite");
 
     const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
       return element.serialize();
