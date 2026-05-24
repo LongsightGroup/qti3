@@ -1,4 +1,8 @@
-export const PLAYER_STYLES = `    .qti3-player {
+export const PLAYER_STYLES = `    .qti3-embedded-interaction-unsupported {
+      color: CanvasText;
+    }
+
+    .qti3-player {
       --qti3-match-accent: #2f6fca;
       --qti3-match-target-bg: #f5f6f7;
       --qti3-match-target-border: #6f7782;

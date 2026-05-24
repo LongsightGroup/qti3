@@ -18,7 +18,14 @@ describe("player-validation", () => {
   });
 
   it("clones diagnostics without sharing nested source objects", () => {
-    const original = [{ code: "x", severity: "error" as const, message: "m", source: { line: 1 } }];
+    const original = [
+      {
+        code: "x",
+        severity: "error" as const,
+        message: "m",
+        source: { line: 1, column: 1, offset: 0, path: "item" },
+      },
+    ];
     const cloned = cloneDiagnostics(original);
     cloned[0]!.source!.line = 2;
     expect(original[0]!.source!.line).toBe(1);
@@ -31,19 +38,21 @@ describe("player-validation", () => {
           {
             type: "choice",
             responseIdentifier: "RESPONSE",
-            choices: [{ identifier: "A", text: "A", role: "simpleChoice", qtiName: "qti-simple-choice", attributes: {}, source: { start: 0, end: 0 } }],
+            choices: [{ identifier: "A", text: "A", role: "simpleChoice", qtiName: "qti-simple-choice", attributes: {}, source: { line: 1, column: 1, offset: 0, path: "choice" } }],
             attributes: {},
-          } as QtiInteraction,
+          } as unknown as QtiInteraction,
         ],
         responseDeclarations: [{ identifier: "RESPONSE", correctResponse: "A", cardinality: "single", baseType: "identifier" }],
       },
     } as unknown as QtiDocument;
 
     const diagnostics = validateItemResponses(document, {
+      schema: "qti3.attempt-state.v1",
       itemIdentifier: "item",
-      status: "open",
+      status: "interacting",
       responses: { RESPONSE: null },
       outcomes: {},
+      validationMessages: [],
     });
     expect(diagnostics.some((entry) => entry.code === "response.required")).toBe(true);
   });

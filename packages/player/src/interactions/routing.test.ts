@@ -2,16 +2,17 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
 
-function interaction(overrides: Partial<QtiInteraction> & Pick<QtiInteraction, "type">): QtiInteraction {
+function interaction(overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] }): QtiInteraction {
   return {
     qtiName: "qti-interaction",
-    type: overrides.type,
     responseIdentifier: "RESPONSE",
     responseCardinality: "single",
     responseBaseType: "identifier",
     choices: [],
     attributes: {},
-    source: { start: 0, end: 0 },
+    childElements: [],
+    text: "",
+    source: { line: 1, column: 1, offset: 0, path: "item" },
     ...overrides,
   } as QtiInteraction;
 }

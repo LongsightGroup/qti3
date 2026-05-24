@@ -9,6 +9,7 @@ import {
 
 export interface PlayerContentContext {
   interactionAt(index: number): QtiInteraction | undefined;
+  renderBlockInteraction(interaction: QtiInteraction): HTMLElement;
   renderEmbeddedInteraction(interaction: QtiInteraction): HTMLElement;
   currentVariableValue(identifier: string): QtiValue;
   mathTemplateValue(node: Extract<QtiContentNode, { kind: "element" }>): string | undefined;
@@ -24,7 +25,11 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   if (node.kind === "text") return [document.createTextNode(node.text)];
   if (node.kind === "interaction") {
     const interaction = context.interactionAt(node.interactionIndex);
-    return interaction ? [context.renderEmbeddedInteraction(interaction)] : [];
+    if (!interaction) return [];
+    if (interaction.type === "inlineChoice" || interaction.type === "textEntry") {
+      return [context.renderEmbeddedInteraction(interaction)];
+    }
+    return [context.renderBlockInteraction(interaction)];
   }
   if (node.kind === "printedVariable") {
     return [renderPrintedVariable(node.identifier, node.format, context)];

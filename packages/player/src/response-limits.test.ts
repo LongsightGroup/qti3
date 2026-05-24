@@ -19,7 +19,7 @@ describe("response-limits", () => {
     const interaction = {
       type: "choice",
       choices: [],
-    } as QtiInteraction;
+    } as unknown as QtiInteraction;
     expect(interactionChoices(interaction)).toEqual([]);
   });
 
@@ -27,7 +27,7 @@ describe("response-limits", () => {
     const interaction = {
       type: "media",
       attributes: { "min-plays": "2", "max-plays": "4" },
-    } as QtiInteraction;
+    } as unknown as QtiInteraction;
     expect(minimumMediaPlays(interaction)).toBe(2);
     expect(maximumAllowedResponses(interaction)).toBe(4);
     expect(mediaPlayCount(3)).toBe(3);

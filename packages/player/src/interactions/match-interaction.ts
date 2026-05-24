@@ -1,6 +1,6 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
-import { responseGroup, valueToStrings } from "../interaction-support.js";
+import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
 import type { QtiPlayerMessages } from "../player-messages.js";
 import { parseUnlimitedMaximum } from "../response-limits.js";
 import { choiceText, sourceChoices, targetChoices, tokenButton, tokenRegion } from "./shared.js";
@@ -15,6 +15,10 @@ export function renderMatchResponse(
 
   const sources = sourceChoices(interaction);
   const targets = targetChoices(interaction);
+  if (sources.length === 0 || targets.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
   const selectedPairs: string[] = valueToStrings(currentValue);
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;

@@ -30,6 +30,11 @@ import {
   type PlayerContentContext,
 } from "./content/content-renderer.js";
 import { renderInteractionResponse } from "./interactions/interaction-dispatch.js";
+import {
+  collectEmbeddedInteractionDiagnostics,
+  collectInteractionRenderDiagnostics,
+} from "./interactions/interaction-diagnostics.js";
+import { renderUnsupportedEmbeddedInteraction } from "./interactions/unsupported-interaction.js";
 import { interactionLabel, qtiSharedClassNames } from "./interactions/interaction-label.js";
 import {
   renderInlineTextEntry,
@@ -133,8 +138,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     };
     this.resolveAsset = options.resolveAsset;
     const result = parseQtiXml(xml);
+    const playerDiagnostics = result.document
+      ? [
+          ...collectInteractionRenderDiagnostics(result.document.item.interactions),
+          ...collectEmbeddedInteractionDiagnostics(result.document.item),
+        ]
+      : [];
     this.dispatchEvent(
-      new CustomEvent("qti-diagnostics", { detail: { diagnostics: result.diagnostics } }),
+      new CustomEvent("qti-diagnostics", {
+        detail: { diagnostics: [...result.diagnostics, ...playerDiagnostics] },
+      }),
     );
     if (!result.document) {
       this.replaceChildren(errorView("Unable to parse QTI item."));
@@ -375,6 +388,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private contentContext(): PlayerContentContext {
     return {
       interactionAt: (index) => this.documentModel?.item.interactions[index],
+      renderBlockInteraction: (interaction) => this.renderInteraction(interaction),
       renderEmbeddedInteraction: (embeddedInteraction) =>
         this.renderEmbeddedInteraction(embeddedInteraction),
       currentVariableValue: (identifier) => this.currentVariableValue(identifier),
@@ -479,7 +493,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   private renderEmbeddedInteraction(interaction: QtiInteraction): HTMLElement {
     if (interaction.type !== "inlineChoice" && interaction.type !== "textEntry") {
-      return this.renderInteraction(interaction);
+      return renderUnsupportedEmbeddedInteraction(interaction);
     }
 
     const wrapper = document.createElement("span");

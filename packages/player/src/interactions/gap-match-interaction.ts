@@ -1,6 +1,7 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
+  missingChoicesMessage,
   objectHeight,
   objectIsImage,
   objectWidth,
@@ -45,6 +46,10 @@ export function renderGapMatchResponse(
   appendGraphicContext(group, interaction);
   const sources = sourceChoices(interaction);
   const gaps = targetChoices(interaction);
+  if (sources.length === 0 || gaps.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
   const assignments = new Map<string, QtiChoice>();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
@@ -174,6 +179,10 @@ function renderGraphicGapMatchResponse(
   const height = objectHeight(interaction);
   const sources = sourceChoices(interaction);
   const gaps = targetChoices(interaction).filter((choice) => choice.role === "hotspot");
+  if (sources.length === 0 || gaps.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
   const assignments = new Map<string, QtiChoice>();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
