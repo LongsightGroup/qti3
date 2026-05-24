@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { createItemSession, parseQtiXml } from "@longsightgroup/qti3-core";
+import { createItemSession, parseQtiXml, unknownToDisplayString } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 
 const externalDir = process.env.QTI3_EXTERNAL_QTI_DIR;
@@ -85,7 +85,9 @@ runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () =>
 
         const scored = session.score();
         if (typeof scored.outcomes.SCORE !== "number" || scored.outcomes.SCORE <= 0) {
-          failures.push(`${file}: expected positive SCORE, got ${String(scored.outcomes.SCORE)}`);
+          failures.push(
+            `${file}: expected positive SCORE, got ${unknownToDisplayString(scored.outcomes.SCORE)}`,
+          );
         }
       }
 

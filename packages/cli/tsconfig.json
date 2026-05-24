@@ -6,11 +6,5 @@
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "references": [
-    { "path": "../core" },
-    { "path": "../conformance" },
-    { "path": "../fixtures" },
-    { "path": "../a11y" }
-  ],
   "include": ["src/**/*.ts"]
 }

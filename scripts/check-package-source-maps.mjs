@@ -94,7 +94,7 @@ async function listFiles(directory, prefix = "") {
       files.push(path);
     }
   }
-  return files.sort();
+  return files.sort((left, right) => left.localeCompare(right));
 }
 
 async function mkdirs(...directories) {

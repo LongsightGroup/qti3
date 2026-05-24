@@ -83,3 +83,10 @@ export type {
   QtiValidationResult,
   QtiValue,
 } from "./types.js";
+export {
+  qtiScalarToString,
+  qtiValueToIdentifierList,
+  qtiValueToString,
+  qtiValueToStringList,
+  unknownToDisplayString,
+} from "./value-format.js";

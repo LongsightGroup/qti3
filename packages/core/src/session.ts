@@ -17,6 +17,7 @@ import type {
   QtiValue,
   QtiVariableDeclaration,
 } from "./types.js";
+import { qtiScalarToString, qtiValueToString, qtiValueToStringList } from "./value-format.js";
 
 export interface QtiCustomOperatorContext {
   definition?: string | undefined;
@@ -64,8 +65,9 @@ export function visibleModalFeedback(
   return item.modalFeedback.filter((feedback) => {
     if (feedback.showHide === "hide") return false;
     const outcome = outcomes[feedback.outcomeIdentifier];
-    if (Array.isArray(outcome)) return outcome.includes(feedback.identifier);
-    return String(outcome ?? "") === feedback.identifier;
+    const outcomeValue: QtiValue = outcome === undefined ? null : outcome;
+    if (Array.isArray(outcomeValue)) return outcomeValue.includes(feedback.identifier);
+    return qtiValueToString(outcomeValue) === feedback.identifier;
   });
 }
 
@@ -306,7 +308,9 @@ function assertCompatiblePriorState(
     completionStatus !== COMPLETION_COMPLETED &&
     completionStatus !== "incomplete"
   ) {
-    throw new Error(`Cannot restore unsupported completionStatus ${String(completionStatus)}.`);
+    throw new Error(
+      `Cannot restore unsupported completionStatus ${qtiValueToString(completionStatus)}.`,
+    );
   }
 }
 
@@ -1454,7 +1458,9 @@ function evaluateValue(
       templateValues[expression.pattern] ??
       expression.pattern;
     try {
-      return new RegExp(String(patternValue)).test(String(value));
+      return new RegExp(
+        typeof patternValue === "string" ? patternValue : qtiValueToString(patternValue),
+      ).test(qtiValueToString(value));
     } catch {
       return null;
     }
@@ -1761,7 +1767,11 @@ function scoreAreaMapping(
   response: QtiValue,
   areaMapping: NonNullable<QtiResponseDeclaration["areaMapping"]>,
 ): number {
-  const points = Array.isArray(response) ? response : response === null ? [] : [String(response)];
+  const points = Array.isArray(response)
+    ? response.map(qtiScalarToString)
+    : response === null
+      ? []
+      : qtiValueToStringList(response);
   let score = 0;
   for (const point of points) {
     const parsed = parsePoint(String(point));
@@ -2306,8 +2316,8 @@ function stringMatch(
   substring: boolean,
 ): boolean | null {
   if (left === null || right === null) return null;
-  let actual = String(left ?? "");
-  let expected = String(right ?? "");
+  let actual = qtiValueToString(left);
+  let expected = qtiValueToString(right);
   if (!caseSensitive) {
     actual = actual.toLocaleLowerCase();
     expected = expected.toLocaleLowerCase();

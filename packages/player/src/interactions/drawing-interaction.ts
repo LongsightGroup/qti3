@@ -388,7 +388,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-      resolve(String(reader.result ?? ""));
+      resolve(typeof reader.result === "string" ? reader.result : "");
     });
     reader.addEventListener("error", () => {
       reject(reader.error ?? new Error("Unable to read drawing background."));

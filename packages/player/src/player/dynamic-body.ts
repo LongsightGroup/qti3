@@ -1,4 +1,4 @@
-import type { QtiValue } from "@longsightgroup/qti3-core";
+import { qtiValueToString, type QtiValue } from "@longsightgroup/qti3-core";
 import { formatPrintedValue } from "../content/content-dom.js";
 import { isTemplateContentVisible } from "./content-state.js";
 
@@ -24,7 +24,7 @@ export function syncDynamicBodyState(root: ParentNode, context: DynamicBodyConte
     const value = context.variableValue(outcomeIdentifier);
     const hasIdentifier = Array.isArray(value)
       ? value.map(String).includes(identifier)
-      : String(value ?? "") === identifier;
+      : qtiValueToString(value) === identifier;
     element.hidden = element.dataset.showHide === "hide" ? hasIdentifier : !hasIdentifier;
   }
 

@@ -21,6 +21,7 @@ import type {
   QtiValidationResult,
 } from "./types.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
+import { qtiValueToStringList } from "./value-format.js";
 
 const BUILT_IN_COMPLETION_STATUS = "completionStatus";
 
@@ -1748,8 +1749,7 @@ function validateCorrectResponseReferences(
 }
 
 function responseValues(value: QtiResponseDeclaration["correctResponse"]): string[] {
-  if (Array.isArray(value)) return value.map(String);
-  return [String(value)];
+  return qtiValueToStringList(value);
 }
 
 function invalidCorrectResponseReference(

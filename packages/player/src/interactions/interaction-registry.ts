@@ -16,10 +16,7 @@ import { renderPairResponse } from "./pair-interaction.js";
 import { renderPositionObjectResponse } from "./position-object-interaction.js";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
 import { renderSelectPointResponse } from "./select-point-interaction.js";
-import {
-  renderSliderResponse,
-  renderTextResponse,
-} from "./text-interaction.js";
+import { renderSliderResponse, renderTextResponse } from "./text-interaction.js";
 import { renderUnsupportedInteraction } from "./unsupported-interaction.js";
 import { renderUploadResponse } from "./upload-interaction.js";
 

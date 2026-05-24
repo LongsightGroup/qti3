@@ -117,17 +117,17 @@ async function checkLockfilePackages() {
   const expected = new Set(policy.lockfilePackages ?? []);
   const actual = new Set(lockfilePackageKeys(await readFile(join(root, "pnpm-lock.yaml"), "utf8")));
 
-  for (const key of [...actual].sort()) {
+  for (const key of [...actual].sort((left, right) => left.localeCompare(right))) {
     if (!expected.has(key)) {
       failures.push(
         `pnpm-lock.yaml contains unreviewed package ${key}. Update scripts/dependency-policy.json only after dependency review.`,
       );
     }
   }
-  for (const key of [...expected].sort()) {
+  for (const key of [...expected].sort((left, right) => left.localeCompare(right))) {
     if (!actual.has(key)) {
       failures.push(
-        `Dependency policy allows ${key}, but it is no longer present in pnpm-lock.yaml.`,
+        `Dependency policy allows ${String(key)}, but it is no longer present in pnpm-lock.yaml.`,
       );
     }
   }
@@ -158,7 +158,7 @@ function lockfilePackageKeys(lockfile) {
     const match = line.match(/^  ('[^']+'|[^\s].*):$/);
     if (match) keys.push(match[1].replace(/^'|'$/g, ""));
   }
-  return keys.sort();
+  return keys.sort((left, right) => left.localeCompare(right));
 }
 
 async function checkInstalledPackageLicenses() {

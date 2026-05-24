@@ -490,9 +490,13 @@ function valueFromRecord(record: Record<string, unknown>, key: string): unknown 
 
 function formatValue(value: unknown): string {
   if (value === undefined || value === null) return "-";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return String(value);
+  }
   if (Array.isArray(value)) return value.join(", ");
   if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  return JSON.stringify(value);
 }
 
 function stableJson(value: unknown): string {

@@ -13,14 +13,6 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "verbatimModuleSyntax": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": {
-      "@longsightgroup/qti3-core": ["packages/core/src/index.ts"],
-      "@longsightgroup/qti3-fixtures": ["packages/fixtures/src/index.ts"],
-      "@longsightgroup/qti3-player": ["packages/player/src/index.ts"],
-      "@longsightgroup/qti3-conformance": ["packages/conformance/src/index.ts"],
-      "@longsightgroup/qti3-a11y": ["packages/a11y/src/index.ts"]
-    }
+    "ignoreDeprecations": "6.0"
   }
 }

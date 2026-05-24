@@ -1,8 +1,9 @@
-import type {
-  QtiAttemptStateV1,
-  QtiContentNode,
-  QtiDocument,
-  QtiValue,
+import {
+  qtiValueToString,
+  type QtiAttemptStateV1,
+  type QtiContentNode,
+  type QtiDocument,
+  type QtiValue,
 } from "@longsightgroup/qti3-core";
 import { contentNodeText } from "../content/content-dom.js";
 
@@ -31,7 +32,7 @@ export function isFeedbackVisible(
 ): boolean {
   const hasIdentifier = Array.isArray(value)
     ? value.map(String).includes(node.identifier)
-    : String(value ?? "") === node.identifier;
+    : qtiValueToString(value) === node.identifier;
   return node.showHide === "show" ? hasIdentifier : !hasIdentifier;
 }
 
@@ -41,7 +42,7 @@ export function isTemplateContentVisible(element: HTMLElement, value: QtiValue):
   if (!templateIdentifier || !identifier) return true;
   const hasIdentifier = Array.isArray(value)
     ? value.map(String).includes(identifier)
-    : String(value ?? "") === identifier;
+    : qtiValueToString(value) === identifier;
   return element.dataset.showHide === "hide" ? !hasIdentifier : hasIdentifier;
 }
 
@@ -58,5 +59,5 @@ export function mathTemplateValue(
       template.identifier === identifier && template.attributes["math-variable"] === "true",
   );
   if (!declaration) return undefined;
-  return templateValue === null ? "" : String(templateValue);
+  return qtiValueToString(templateValue);
 }

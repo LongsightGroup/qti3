@@ -1,5 +1,7 @@
 import {
   interactionSupport,
+  qtiScalarToString,
+  qtiValueToString,
   type QtiAttemptStateV1,
   type QtiDiagnostic,
   type QtiInteractionType,
@@ -937,9 +939,12 @@ function assessmentItem(
 }
 
 function valuesXml(value: QtiValue): string {
-  if (Array.isArray(value))
-    return value.map((item) => `<qti-value>${escapeXml(String(item))}</qti-value>`).join("");
-  return `<qti-value>${escapeXml(String(value ?? ""))}</qti-value>`;
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => `<qti-value>${escapeXml(qtiScalarToString(item))}</qti-value>`)
+      .join("");
+  }
+  return `<qti-value>${escapeXml(qtiValueToString(value))}</qti-value>`;
 }
 
 function defaultResponse(interactionType: QtiInteractionType): {

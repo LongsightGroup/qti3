@@ -1,3 +1,4 @@
+import { qtiValueToIdentifierList } from "@longsightgroup/qti3-core";
 import type {
   QtiChoice,
   QtiInteraction,
@@ -47,9 +48,7 @@ export function choiceSelector(identifier: string): string {
 }
 
 export function valueToStrings(value: QtiValue): string[] {
-  if (value === null) return [];
-  if (Array.isArray(value)) return value.map((item) => String(item));
-  return [String(value)];
+  return qtiValueToIdentifierList(value);
 }
 
 export function orderChoicesFromValue(choices: QtiChoice[], value: QtiValue): QtiChoice[] {

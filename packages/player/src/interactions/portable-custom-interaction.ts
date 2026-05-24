@@ -79,7 +79,7 @@ export function renderPortableCustomResponse(context: PortableCustomResponseCont
       host.dataset.state = JSON.stringify(state);
     }
     if (value !== undefined) {
-      fallback.value = String(value ?? "");
+      fallback.value = scalarString(value ?? null);
       update(value);
     }
     if (validity && responseIdentifier) {

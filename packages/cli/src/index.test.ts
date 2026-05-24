@@ -542,7 +542,7 @@ describe("@longsightgroup/qti3-cli", () => {
         }),
       ),
     );
-    expect(report.packages[0]).toMatchObject({
+    expect(report.packages[0]!).toMatchObject({
       checked: 11,
       failed: 0,
       assessmentTestFiles: [],
@@ -562,7 +562,7 @@ describe("@longsightgroup/qti3-cli", () => {
 
       expect(code).toBe(1);
       expect(report.ok).toBe(false);
-      expect(report.packages[0].packageErrors).toEqual(
+      expect(report.packages[0]!.packageErrors).toEqual(
         expect.arrayContaining(["strict package validation requires imsmanifest.xml."]),
       );
     } finally {
@@ -590,7 +590,7 @@ describe("@longsightgroup/qti3-cli", () => {
       const { code, report } = await runCliJson(["basic-item-player-report", file]);
 
       expect(code).toBe(1);
-      expect(report.packages[0]).toMatchObject({
+      expect(report.packages[0]!).toMatchObject({
         checked: 0,
         failed: 1,
         discoveredReferences: ["items/missing.xml"],
@@ -685,7 +685,7 @@ describe("@longsightgroup/qti3-cli", () => {
       const { code, report } = await runCliJson(["validate-package", file]);
 
       expect(code).toBe(1);
-      expect(report.results[0].diagnostics).toEqual(
+      expect(report.results[0]!.diagnostics).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ code: "package.itemChild.order", severity: "error" }),
         ]),
@@ -718,7 +718,7 @@ describe("@longsightgroup/qti3-cli", () => {
       const { code, report } = await runCliJson(["basic-item-player-report", file]);
 
       expect(code).toBe(1);
-      expect(report.packages[0]).toMatchObject({ checked: 1, failed: 0 });
+      expect(report.packages[0]!).toMatchObject({ checked: 1, failed: 0 });
       expect(report.missingPackageFeatures).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ featureId: "Q-2" }),
@@ -754,7 +754,7 @@ describe("@longsightgroup/qti3-cli", () => {
       const { code, report } = await runCliJson(["basic-item-player-report", file]);
 
       expect(code).toBe(1);
-      expect(report.packages[0].packageErrors).toEqual(
+      expect(report.packages[0]!.packageErrors).toEqual(
         expect.arrayContaining([
           "strict package validation requires manifest or assessment-test item references.",
           "qti-assessment-item items/choice.xml is not referenced by the package manifest or assessment test.",
@@ -796,8 +796,8 @@ describe("@longsightgroup/qti3-cli", () => {
       const { code, report } = await runCliJson(["basic-item-player-report", file]);
 
       expect(code).toBe(1);
-      expect(report.packages[0].assessmentTestFiles).toEqual(["assessment.xml"]);
-      expect(report.packages[0].packageErrors).toEqual(
+      expect(report.packages[0]!.assessmentTestFiles).toEqual(["assessment.xml"]);
+      expect(report.packages[0]!.packageErrors).toEqual(
         expect.arrayContaining([
           "assessment-test packages are out of scope for Basic item-player readiness: assessment.xml.",
         ]),
@@ -808,11 +808,40 @@ describe("@longsightgroup/qti3-cli", () => {
   });
 });
 
-async function runCliJson(args: string[]): Promise<{ code: number; report: any }> {
+interface CliPackageJsonReport {
+  packageErrors?: unknown;
+  checked?: number;
+  failed?: number;
+  assessmentTestFiles?: unknown;
+}
+
+interface CliResultJsonReport {
+  diagnostics?: unknown;
+}
+
+interface CliJsonReport {
+  ok?: boolean;
+  target?: unknown;
+  interactions?: unknown;
+  manualAssistiveTechnologyScripts?: unknown;
+  assetFiles?: unknown;
+  basicFeatures?: unknown;
+  packageErrors?: unknown;
+  missingPackageFeatures?: unknown;
+  packages: CliPackageJsonReport[];
+  results: CliResultJsonReport[];
+}
+
+async function runCliJson(args: string[]): Promise<{ code: number; report: CliJsonReport }> {
   const log = vi.spyOn(console, "log").mockImplementation(() => {});
   try {
     const code = await main(args);
-    const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+    const payload = JSON.parse(String(log.mock.calls.at(-1)?.[0])) as Partial<CliJsonReport>;
+    const report: CliJsonReport = {
+      packages: [],
+      results: [],
+      ...payload,
+    };
     return { code, report };
   } finally {
     log.mockRestore();

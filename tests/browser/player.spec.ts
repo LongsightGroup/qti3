@@ -3984,7 +3984,7 @@ async function provideResponse(
   if (interactionType === "hottext") {
     await page
       .locator(
-        `qti-assessment-item-player .qti3-hottext-token[data-choice-identifier="${response}"]`,
+        `qti-assessment-item-player .qti3-hottext-token[data-choice-identifier="${String(response)}"]`,
       )
       .click();
     return;

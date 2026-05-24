@@ -1,3 +1,4 @@
+import { qtiValueToIdentifierList } from "@longsightgroup/qti3-core";
 import type {
   QtiAttemptStateV1,
   QtiDiagnostic,
@@ -95,8 +96,7 @@ export function matchMaxDiagnostics(
 }
 
 export function responseChoiceIdentifiers(response: QtiValue): string[] {
-  const values = Array.isArray(response) ? response : response === null ? [] : [response];
-  return values.flatMap((value) => String(value).split(/\s+/).filter(Boolean));
+  return qtiValueToIdentifierList(response).flatMap((value) => value.split(/\s+/).filter(Boolean));
 }
 
 export function validateItemResponses(
