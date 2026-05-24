@@ -105,8 +105,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "hotspot",
     matches: (interaction) => interaction.type === "hotspot" && Boolean(interaction.object),
-    render: ({ interaction, update, currentValue }) =>
-      renderHotspotResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderHotspotResponse(interaction, update, currentValue, messages),
   },
   {
     id: "hottext",

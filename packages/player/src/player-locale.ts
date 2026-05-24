@@ -10,6 +10,8 @@ const defaultEnglishPlayerMessages: QtiPlayerMessages = {
   uploadResponse: () => "Upload response",
   movableObject: () => "Movable object",
   placeObject: () => "Place",
+  noPointSelected: () => "No point selected",
+  noRegionSelected: () => "No region selected",
   moveChoice: ({ label, direction }) => `Move ${label} ${direction}`,
   movePoint: ({ direction }) => `Move point ${direction}`,
   moveObject: ({ direction }) => `Move object ${direction}`,
@@ -26,6 +28,8 @@ const playerMessages = {
     uploadResponse: () => "Subir respuesta",
     movableObject: () => "Objeto movible",
     placeObject: () => "Colocar",
+    noPointSelected: () => "Ningun punto seleccionado",
+    noRegionSelected: () => "Ninguna region seleccionada",
     moveChoice: ({ label, direction }) => `Mover ${label} ${spanishDirection(direction)}`,
     movePoint: ({ direction }) => `Mover punto ${spanishDirection(direction)}`,
     moveObject: ({ direction }) => `Mover objeto ${spanishDirection(direction)}`,
@@ -39,6 +43,8 @@ const playerMessages = {
     uploadResponse: () => "Ladda upp svar",
     movableObject: () => "Flyttbart objekt",
     placeObject: () => "Placera",
+    noPointSelected: () => "Ingen punkt vald",
+    noRegionSelected: () => "Ingen region vald",
     moveChoice: ({ label, direction }) => `Flytta ${label} ${swedishDirection(direction)}`,
     movePoint: ({ direction }) => `Flytta punkt ${swedishDirection(direction)}`,
     moveObject: ({ direction }) => `Flytta objekt ${swedishDirection(direction)}`,
@@ -52,6 +58,8 @@ const playerMessages = {
     uploadResponse: () => "Antwort hochladen",
     movableObject: () => "Bewegliches Objekt",
     placeObject: () => "Platzieren",
+    noPointSelected: () => "Kein Punkt ausgewaehlt",
+    noRegionSelected: () => "Keine Region ausgewaehlt",
     moveChoice: ({ label, direction }) => `${label} ${germanDirection(direction)} bewegen`,
     movePoint: ({ direction }) => `Punkt ${germanDirection(direction)} bewegen`,
     moveObject: ({ direction }) => `Objekt ${germanDirection(direction)} bewegen`,
@@ -65,6 +73,8 @@ const playerMessages = {
     uploadResponse: () => "Enviar resposta",
     movableObject: () => "Objeto movel",
     placeObject: () => "Posicionar",
+    noPointSelected: () => "Nenhum ponto selecionado",
+    noRegionSelected: () => "Nenhuma regiao selecionada",
     moveChoice: ({ label, direction }) => `Mover ${label} ${portugueseDirection(direction)}`,
     movePoint: ({ direction }) => `Mover ponto ${portugueseDirection(direction)}`,
     moveObject: ({ direction }) => `Mover objeto ${portugueseDirection(direction)}`,
@@ -78,6 +88,8 @@ const playerMessages = {
     uploadResponse: () => "Televerser la reponse",
     movableObject: () => "Objet mobile",
     placeObject: () => "Placer",
+    noPointSelected: () => "Aucun point selectionne",
+    noRegionSelected: () => "Aucune region selectionnee",
     moveChoice: ({ label, direction }) => `Deplacer ${label} vers ${frenchDirection(direction)}`,
     movePoint: ({ direction }) => `Deplacer le point vers ${frenchDirection(direction)}`,
     moveObject: ({ direction }) => `Deplacer l'objet vers ${frenchDirection(direction)}`,
@@ -126,6 +138,14 @@ export function resolvePlayerMessages(
       defaultEnglishPlayerMessages.movableObject,
     placeObject:
       overrides.placeObject ?? catalog?.placeObject ?? defaultEnglishPlayerMessages.placeObject,
+    noPointSelected:
+      overrides.noPointSelected ??
+      catalog?.noPointSelected ??
+      defaultEnglishPlayerMessages.noPointSelected,
+    noRegionSelected:
+      overrides.noRegionSelected ??
+      catalog?.noRegionSelected ??
+      defaultEnglishPlayerMessages.noRegionSelected,
     moveChoice:
       overrides.moveChoice ?? catalog?.moveChoice ?? defaultEnglishPlayerMessages.moveChoice,
     movePoint: overrides.movePoint ?? catalog?.movePoint ?? defaultEnglishPlayerMessages.movePoint,

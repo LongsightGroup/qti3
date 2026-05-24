@@ -62,7 +62,7 @@ export function renderSelectPointResponse(
     surface.querySelectorAll(".qti3-point-marker").forEach((marker) => marker.remove());
     if (points.length === 0) {
       coordinate.value = "";
-      coordinate.textContent = "No point selected";
+      coordinate.textContent = messages.noPointSelected();
       surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
       return;
     }

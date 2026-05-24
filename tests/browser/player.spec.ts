@@ -2700,6 +2700,8 @@ test.describe("manual harness", () => {
         removeName: "Quitar Item XML to Response capture",
         moveName: "Mover Load and parse the assessment item abajo",
         clearDrawingName: "Borrar dibujo",
+        noPointText: "Ningun punto seleccionado",
+        noRegionText: "Ninguna region seleccionada",
       },
       {
         locale: "es-ES",
@@ -2707,6 +2709,8 @@ test.describe("manual harness", () => {
         removeName: "Quitar Item XML to Response capture",
         moveName: "Mover Load and parse the assessment item abajo",
         clearDrawingName: "Borrar dibujo",
+        noPointText: "Ningun punto seleccionado",
+        noRegionText: "Ninguna region seleccionada",
       },
       {
         locale: "sv-SE",
@@ -2714,6 +2718,8 @@ test.describe("manual harness", () => {
         removeName: "Ta bort Item XML to Response capture",
         moveName: "Flytta Load and parse the assessment item ned",
         clearDrawingName: "Rensa ritning",
+        noPointText: "Ingen punkt vald",
+        noRegionText: "Ingen region vald",
       },
       {
         locale: "de-DE",
@@ -2721,6 +2727,8 @@ test.describe("manual harness", () => {
         removeName: "Item XML to Response capture entfernen",
         moveName: "Load and parse the assessment item nach unten bewegen",
         clearDrawingName: "Zeichnung loeschen",
+        noPointText: "Kein Punkt ausgewaehlt",
+        noRegionText: "Keine Region ausgewaehlt",
       },
       {
         locale: "pt-BR",
@@ -2728,6 +2736,8 @@ test.describe("manual harness", () => {
         removeName: "Remover Item XML to Response capture",
         moveName: "Mover Load and parse the assessment item para baixo",
         clearDrawingName: "Limpar desenho",
+        noPointText: "Nenhum ponto selecionado",
+        noRegionText: "Nenhuma regiao selecionada",
       },
       {
         locale: "pt-PT",
@@ -2735,6 +2745,8 @@ test.describe("manual harness", () => {
         removeName: "Remover Item XML to Response capture",
         moveName: "Mover Load and parse the assessment item para baixo",
         clearDrawingName: "Limpar desenho",
+        noPointText: "Nenhum ponto selecionado",
+        noRegionText: "Nenhuma regiao selecionada",
       },
       {
         locale: "fr-FR",
@@ -2742,6 +2754,8 @@ test.describe("manual harness", () => {
         removeName: "Supprimer Item XML to Response capture",
         moveName: "Deplacer Load and parse the assessment item vers le bas",
         clearDrawingName: "Effacer le dessin",
+        noPointText: "Aucun point selectionne",
+        noRegionText: "Aucune region selectionnee",
       },
     ];
 
@@ -2777,6 +2791,18 @@ test.describe("manual harness", () => {
         page.getByRole("button", { name: example.clearDrawingName }),
         example.locale,
       ).toBeVisible();
+
+      await loadFixture(page, "selectPoint");
+      await expect(
+        page.locator("qti-assessment-item-player .qti3-coordinate-output"),
+        example.locale,
+      ).toHaveText(example.noPointText);
+
+      await loadFixture(page, "hotspot");
+      await expect(
+        page.locator("qti-assessment-item-player .qti3-selection-summary"),
+        example.locale,
+      ).toHaveText(example.noRegionText);
     }
   });
 

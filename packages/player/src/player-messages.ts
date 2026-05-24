@@ -13,6 +13,8 @@ export interface QtiPlayerMessages {
   uploadResponse: () => string;
   movableObject: () => string;
   placeObject: () => string;
+  noPointSelected: () => string;
+  noRegionSelected: () => string;
   moveChoice: (params: { label: string; direction: QtiPlayerMovementDirection }) => string;
   movePoint: (params: { direction: QtiPlayerMovementDirection }) => string;
   moveObject: (params: { direction: QtiPlayerMovementDirection }) => string;

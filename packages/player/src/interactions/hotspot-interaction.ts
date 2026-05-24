@@ -11,11 +11,13 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 
 export function renderHotspotResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -44,7 +46,7 @@ export function renderHotspotResponse(
   const selectedSummary = document.createElement("p");
   selectedSummary.className = "qti3-selection-summary";
   selectedSummary.setAttribute("aria-live", "polite");
-  selectedSummary.textContent = "No region selected";
+  selectedSummary.textContent = messages.noRegionSelected();
   const syncSelected = () => {
     for (const button of surface.querySelectorAll<HTMLButtonElement>("button")) {
       const isSelected = selected.has(button.dataset.choiceIdentifier ?? "");
@@ -52,7 +54,7 @@ export function renderHotspotResponse(
       button.dataset.selected = isSelected ? "true" : "false";
     }
     selectedSummary.textContent =
-      selected.size > 0 ? `Selected ${[...selected].join(", ")}` : "No region selected";
+      selected.size > 0 ? `Selected ${[...selected].join(", ")}` : messages.noRegionSelected();
   };
   for (const choice of choices) {
     const button = document.createElement("button");
