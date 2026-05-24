@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-player",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Style-neutral web component player for rendering and scoring QTI 3 assessment items.",
   "keywords": [
     "assessment",

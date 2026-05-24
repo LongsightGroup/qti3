@@ -39,6 +39,13 @@ player?.addEventListener("qti-statechange", (event) => {
 });
 ```
 
+## Scoring Trust Boundary
+
+The player can score attempts locally through `@longsightgroup/qti3-core`, but browser
+scoring is a convenience for validation, feedback, previews, and response snapshots.
+High-stakes assessment systems must treat browser outcomes as untrusted and recompute
+scores server-side from authoritative QTI XML and trusted response variables.
+
 ## Player Chrome Messages
 
 The player keeps authored QTI content language separate from player chrome such as

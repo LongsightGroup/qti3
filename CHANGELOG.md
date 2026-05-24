@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 - 2026-05-24
+
+### Added
+
+- Add `@longsightgroup/qti3-core` delivery security analysis and redaction APIs for candidate-safe item XML.
+- Add `scoreQtiItemServerSide` for authoritative server scoring from full item XML and trusted response variables.
+- Add public `isQtiValue` and `readQtiJsonValue` helpers for validating JSON-shaped QTI values.
+
+### Changed
+
+- Document the player scoring trust boundary: browser scoring is local convenience only for high-stakes delivery.
+- Treat delivery-security forbidden elements as error-severity diagnostics.
+- Redact response and area mappings during secure delivery preparation.
+- Ignore XML comment and CDATA decoys when locating element end tags for byte-range redaction.
+
 ## 0.3.0 - 2026-05-23
 
 ### Added

@@ -17,7 +17,13 @@ import type {
   QtiValue,
   QtiVariableDeclaration,
 } from "./types.js";
-import { qtiScalarToString, qtiValueToString, qtiValueToStringList } from "./value-format.js";
+import {
+  isQtiPortableCustomStateValue,
+  isQtiValue,
+  qtiScalarToString,
+  qtiValueToString,
+  qtiValueToStringList,
+} from "./value-format.js";
 
 export interface QtiCustomOperatorContext {
   definition?: string | undefined;
@@ -1995,33 +2001,13 @@ function isRecordValue(value: QtiValue): value is QtiRecordValue {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isQtiValue(value: unknown): value is QtiValue {
-  if (value === null) return true;
-  if (isQtiScalarValue(value)) return true;
-  if (Array.isArray(value)) return value.every(isQtiScalarValue);
-  return isQtiValueRecord(value);
-}
-
-function isQtiScalarValue(value: unknown): value is QtiScalarValue {
-  return (
-    typeof value === "string" ||
-    typeof value === "boolean" ||
-    (typeof value === "number" && Number.isFinite(value))
-  );
-}
-
 function isQtiValueRecord(value: unknown): value is Record<string, QtiValue> {
   if (!isRecord(value)) return false;
   return Object.values(value).every(isQtiValue);
 }
 
 function isPortableCustomState(value: unknown): value is QtiPortableCustomStateValue {
-  if (value === null) return true;
-  if (typeof value === "string" || typeof value === "boolean") return true;
-  if (typeof value === "number") return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isPortableCustomState);
-  if (isRecord(value)) return Object.values(value).every(isPortableCustomState);
-  return false;
+  return isQtiPortableCustomStateValue(value);
 }
 
 function isPortableCustomStateObject(

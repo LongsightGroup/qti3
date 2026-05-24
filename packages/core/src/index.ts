@@ -5,7 +5,21 @@ export {
   type QtiResolvedCatalogReference,
   type QtiResolvedCatalogSupport,
 } from "./catalog.js";
+export {
+  analyzeQtiDeliverySecurity,
+  buildQtiDeliverySafeXml,
+  type QtiDeliverySafeXmlResult,
+  type QtiDeliverySecurityAnalysis,
+  type QtiDeliverySecurityFinding,
+  type QtiDeliverySecurityFindingKind,
+} from "./delivery-security.js";
 export { parseQtiXml } from "./parser.js";
+export {
+  scoreQtiItemServerSide,
+  type QtiServerScoringInput,
+  type QtiServerScoringResponseInput,
+  type QtiServerScoringResult,
+} from "./server-scoring.js";
 export {
   createTextToSpeechTraversal,
   parseQtiDataSsml,
@@ -84,9 +98,13 @@ export type {
   QtiValue,
 } from "./types.js";
 export {
+  isQtiPortableCustomStateValue,
+  isQtiValue,
   qtiScalarToString,
   qtiValueToIdentifierList,
   qtiValueToString,
   qtiValueToStringList,
+  readQtiPortableCustomStateValue,
+  readQtiJsonValue,
   unknownToDisplayString,
 } from "./value-format.js";

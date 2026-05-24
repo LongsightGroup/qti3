@@ -32,6 +32,56 @@ if (parsed.document) {
 }
 ```
 
+### Candidate-safe delivery XML
+
+High-stakes delivery systems can redact answer-bearing item XML before sending it to
+a browser:
+
+```ts
+import { buildQtiDeliverySafeXml } from "@longsightgroup/qti3-core";
+
+const delivery = buildQtiDeliverySafeXml(authoritativeItemXml);
+
+if (!delivery.ok) {
+  throw new Error(delivery.diagnostics.map((item) => item.message).join("; "));
+}
+
+sendToCandidate(delivery.xml);
+```
+
+The redactor removes correct responses, response and area mappings, response
+processing, and authored feedback subtrees. It also reports secure-delivery v1
+blockers such as template processing, set-correct-response, and adaptive response
+processing.
+
+Byte-range redaction aligns element boundaries to the same stax parse tree used by
+`parseQtiXml`. End-tag lookup ignores matches inside XML comments and CDATA sections,
+but hosts should still treat redacted XML as untrusted presentation input.
+
+### Server-side scoring
+
+Use full authoritative item XML on the server and pass only trusted response variables:
+
+```ts
+import { scoreQtiItemServerSide } from "@longsightgroup/qti3-core";
+
+const scored = scoreQtiItemServerSide({
+  itemXml: authoritativeItemXml,
+  trustedResponses: { RESPONSE: "A" },
+});
+
+if (!scored.ok) {
+  throw new Error(scored.diagnostics.map((item) => item.message).join("; "));
+}
+
+console.log(scored.score);
+console.log(scored.state);
+```
+
+This API does not accept restored outcomes or a full prior attempt state, so browser
+submitted `SCORE`, `MAXSCORE`, or similar outcome variables cannot become trusted
+server results.
+
 ## Scope
 
 - Parse QTI XML into a typed item model.

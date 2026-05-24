@@ -346,7 +346,7 @@ pnpm release:check
 package exports, and built CLI fixture runner. It does not require official 1EdTech
 certification artifacts.
 
-The future certification-oriented gate is available separately:
+The certification-oriented gate is available separately:
 
 ```sh
 QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
@@ -356,8 +356,8 @@ pnpm certification:check
 
 `pnpm test:external` remains optional for local development and skips when
 `QTI3_EXTERNAL_QTI_DIR` is not configured. `pnpm test:external:required` and
-`pnpm certification:check` fail fast unless official external QTI content and
-a non-empty validator report artifact are provided.
+`pnpm certification:check` fail fast unless official external QTI content and a
+non-empty validator report artifact are provided.
 
 The browser harness is available with:
 
@@ -435,14 +435,7 @@ The release bar is:
 - Release checks must pass before publishing; certification evidence remains a separate
   future gate.
 
-## Status
-
-This repository is a reference implementation for QTI 3 item behavior. It has a strict
-TypeScript core, a native web component player, fixture-based scoring, a manual browser
-harness, automated accessibility checks, Playwright coverage, and standalone canonical XML
-reference items under `packages/fixtures/xml`.
-
-### Attempt state
+## Attempt State
 
 Serialized attempt state uses `qti3.attempt-state.v1`. It captures responses, outcomes,
 generated template values, validation messages, lifecycle status, and QTI's built-in
