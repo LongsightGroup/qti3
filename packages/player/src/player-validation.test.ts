@@ -38,11 +38,27 @@ describe("player-validation", () => {
           {
             type: "choice",
             responseIdentifier: "RESPONSE",
-            choices: [{ identifier: "A", text: "A", role: "simpleChoice", qtiName: "qti-simple-choice", attributes: {}, source: { line: 1, column: 1, offset: 0, path: "choice" } }],
+            choices: [
+              {
+                identifier: "A",
+                text: "A",
+                role: "simpleChoice",
+                qtiName: "qti-simple-choice",
+                attributes: {},
+                source: { line: 1, column: 1, offset: 0, path: "choice" },
+              },
+            ],
             attributes: {},
           } as unknown as QtiInteraction,
         ],
-        responseDeclarations: [{ identifier: "RESPONSE", correctResponse: "A", cardinality: "single", baseType: "identifier" }],
+        responseDeclarations: [
+          {
+            identifier: "RESPONSE",
+            correctResponse: "A",
+            cardinality: "single",
+            baseType: "identifier",
+          },
+        ],
       },
     } as unknown as QtiDocument;
 

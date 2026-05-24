@@ -1,4 +1,9 @@
-import type { QtiAttemptStateV1, QtiContentNode, QtiDocument, QtiValue } from "@longsightgroup/qti3-core";
+import type {
+  QtiAttemptStateV1,
+  QtiContentNode,
+  QtiDocument,
+  QtiValue,
+} from "@longsightgroup/qti3-core";
 import { contentNodeText } from "../content/content-dom.js";
 
 export function currentVariableValue(

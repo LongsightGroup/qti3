@@ -1,6 +1,8 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 
-export function maximumAllowedResponses(interaction: QtiInteraction | undefined): number | undefined {
+export function maximumAllowedResponses(
+  interaction: QtiInteraction | undefined,
+): number | undefined {
   if (!interaction) return undefined;
   if (interaction.type === "media") return maximumMediaPlays(interaction);
   const explicit =

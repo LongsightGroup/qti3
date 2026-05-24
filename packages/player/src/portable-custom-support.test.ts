@@ -15,7 +15,9 @@ describe("portable-custom-support", () => {
   });
 
   it("parses portable custom response events", () => {
-    const responseEvent = new CustomEvent("qti3-portable-custom-response", { detail: { value: "A" } });
+    const responseEvent = new CustomEvent("qti3-portable-custom-response", {
+      detail: { value: "A" },
+    });
     expect(portableCustomEventValue(responseEvent)).toBe("A");
 
     const stateEvent = new CustomEvent("qti3-portable-custom-state", {
@@ -26,7 +28,10 @@ describe("portable-custom-support", () => {
     const validityEvent = new CustomEvent("qti3-portable-custom-validity", {
       detail: { valid: false, message: "Invalid" },
     });
-    expect(portableCustomEventValidity(validityEvent)).toEqual({ valid: false, message: "Invalid" });
+    expect(portableCustomEventValidity(validityEvent)).toEqual({
+      valid: false,
+      message: "Invalid",
+    });
   });
 
   it("validates portable custom state shapes", () => {

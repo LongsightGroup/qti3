@@ -1,4 +1,9 @@
-import type { QtiAssessmentItem, QtiContentNode, QtiDiagnostic, QtiInteraction } from "@longsightgroup/qti3-core";
+import type {
+  QtiAssessmentItem,
+  QtiContentNode,
+  QtiDiagnostic,
+  QtiInteraction,
+} from "@longsightgroup/qti3-core";
 import { contentElementName } from "../content/content-dom.js";
 import { interactionChoices } from "../interaction-support.js";
 import { sourceChoices, targetChoices } from "./shared.js";
@@ -49,9 +54,7 @@ export function collectInteractionRenderDiagnostics(
 
 const embeddableInteractionTypes = new Set<QtiInteraction["type"]>(["inlineChoice", "textEntry"]);
 
-export function interactionEmbeddedDiagnostics(
-  interaction: QtiInteraction,
-): QtiDiagnostic[] {
+export function interactionEmbeddedDiagnostics(interaction: QtiInteraction): QtiDiagnostic[] {
   if (embeddableInteractionTypes.has(interaction.type)) return [];
   const path = diagnosticPath(interaction);
   return [
@@ -143,10 +146,7 @@ function interactionHasRequiredChoices(interaction: QtiInteraction): boolean {
     case "gapMatch":
       return sourceChoices(interaction).length > 0 && targetChoices(interaction).length > 0;
     case "graphicGapMatch":
-      if (
-        interaction.object &&
-        interaction.choices.some((choice) => choice.role === "hotspot")
-      ) {
+      if (interaction.object && interaction.choices.some((choice) => choice.role === "hotspot")) {
         return (
           sourceChoices(interaction).length > 0 &&
           targetChoices(interaction).filter((choice) => choice.role === "hotspot").length > 0

@@ -194,7 +194,13 @@ function renderGraphicGapMatchResponse(
   }
 
   const surface = document.createElement("div");
-  applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-context", "qti3-graphic-gap-match-surface");
+  applyGraphicSurfaceLayout(
+    surface,
+    width,
+    height,
+    "qti3-graphic-context",
+    "qti3-graphic-gap-match-surface",
+  );
   surface.role = "group";
   surface.setAttribute("aria-label", `${readableType(interaction.type)} target image`);
   surface.style.overflow = "visible";

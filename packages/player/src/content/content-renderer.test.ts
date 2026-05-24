@@ -3,7 +3,11 @@
  */
 import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
-import { renderContentNode, renderContentNodes, type PlayerContentContext } from "./content-renderer.js";
+import {
+  renderContentNode,
+  renderContentNodes,
+  type PlayerContentContext,
+} from "./content-renderer.js";
 
 function context(overrides: Partial<PlayerContentContext> = {}): PlayerContentContext {
   return {

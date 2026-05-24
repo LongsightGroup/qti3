@@ -6,12 +6,12 @@ import {
   readableType,
   responseGroup,
 } from "../interaction-support.js";
+import { announceOrderedItemMove, createSelectionSummary, focusReorderControl } from "./a11y.js";
 import {
-  announceOrderedItemMove,
-  createSelectionSummary,
-  focusReorderControl,
-} from "./a11y.js";
-import { bindOrderListItemDrag, createReorderHandleControls, type OrderDragState } from "./list-controls.js";
+  bindOrderListItemDrag,
+  createReorderHandleControls,
+  type OrderDragState,
+} from "./list-controls.js";
 
 export function renderOrderedResponse(
   interaction: QtiInteraction,

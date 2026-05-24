@@ -41,8 +41,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   if (node.qtiName === "qti-position-object-stage") {
     return renderContentNodes(
       node.children.filter(
-        (child) =>
-          !("qtiName" in child) || (child.qtiName !== "object" && child.qtiName !== "img"),
+        (child) => !("qtiName" in child) || (child.qtiName !== "object" && child.qtiName !== "img"),
       ),
       context,
     );

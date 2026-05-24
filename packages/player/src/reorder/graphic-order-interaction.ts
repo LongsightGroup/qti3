@@ -51,7 +51,11 @@ export function renderGraphicOrderResponse(
 
   const object = interaction.object;
   if (object) {
-    appendGraphicObjectImage(surface, object, object.text || `${readableType(interaction.type)} image`);
+    appendGraphicObjectImage(
+      surface,
+      object,
+      object.text || `${readableType(interaction.type)} image`,
+    );
   }
 
   const sequenceLines = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -94,7 +98,9 @@ export function renderGraphicOrderResponse(
     );
   };
   const focusHotspot = (identifier: string) => {
-    surface.querySelector<HTMLButtonElement>(`.qti3-hotspot-button${choiceSelector(identifier)}`)?.focus();
+    surface
+      .querySelector<HTMLButtonElement>(`.qti3-hotspot-button${choiceSelector(identifier)}`)
+      ?.focus();
   };
   const focusRelativeHotspot = (choice: QtiChoice, delta: number) => {
     const index = choices.findIndex((entry) => entry.identifier === choice.identifier);

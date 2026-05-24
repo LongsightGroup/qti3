@@ -1,4 +1,8 @@
-import { visibleModalFeedback, type QtiAssessmentItem, type QtiValue } from "@longsightgroup/qti3-core";
+import {
+  visibleModalFeedback,
+  type QtiAssessmentItem,
+  type QtiValue,
+} from "@longsightgroup/qti3-core";
 
 export function syncFeedbackPanel(
   feedback: HTMLElement | null,

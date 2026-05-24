@@ -16,10 +16,7 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import type { QtiPlayerMessages } from "../player-messages.js";
-import {
-  exceedsHotspotMatchMax,
-  maximumAllowedResponses,
-} from "../response-limits.js";
+import { exceedsHotspotMatchMax, maximumAllowedResponses } from "../response-limits.js";
 
 export function renderGraphicAssociateResponse(
   interaction: QtiInteraction,
@@ -54,7 +51,11 @@ export function renderGraphicAssociateResponse(
 
   const object = interaction.object;
   if (object) {
-    appendGraphicObjectImage(surface, object, object.text || `${readableType(interaction.type)} image`);
+    appendGraphicObjectImage(
+      surface,
+      object,
+      object.text || `${readableType(interaction.type)} image`,
+    );
   }
 
   const connections = document.createElementNS("http://www.w3.org/2000/svg", "svg");

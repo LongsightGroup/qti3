@@ -32,15 +32,15 @@ describe("QtiAssessmentItemPlayer", () => {
     expect(validationAlerts(player)[0]?.textContent).toContain("No choices are defined");
 
     const saved = player.serialize();
-    expect(saved?.validationMessages.some((message) => message.code === "interaction.choices.missing")).toBe(
-      true,
-    );
+    expect(
+      saved?.validationMessages.some((message) => message.code === "interaction.choices.missing"),
+    ).toBe(true);
 
     player.restore(saved!);
     expect(validationAlerts(player)).toHaveLength(1);
-    expect(saved?.validationMessages.filter((message) => message.code === "interaction.choices.missing")).toHaveLength(
-      1,
-    );
+    expect(
+      saved?.validationMessages.filter((message) => message.code === "interaction.choices.missing"),
+    ).toHaveLength(1);
 
     player.remove();
   });

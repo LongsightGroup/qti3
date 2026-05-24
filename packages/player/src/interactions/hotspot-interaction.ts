@@ -33,7 +33,11 @@ export function renderHotspotResponse(
 
   const object = interaction.object;
   if (object) {
-    appendGraphicObjectImage(surface, object, object.text || `${readableType(interaction.type)} image`);
+    appendGraphicObjectImage(
+      surface,
+      object,
+      object.text || `${readableType(interaction.type)} image`,
+    );
   }
 
   const selected = new Set(valueToStrings(currentValue));

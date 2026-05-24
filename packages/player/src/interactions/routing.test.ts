@@ -2,7 +2,9 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
 
-function interaction(overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] }): QtiInteraction {
+function interaction(
+  overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
+): QtiInteraction {
   return {
     qtiName: "qti-interaction",
     responseIdentifier: "RESPONSE",
@@ -22,7 +24,11 @@ describe("interaction routing", () => {
     expect(usesChoiceSet(interaction({ type: "choice" }))).toBe(true);
     expect(
       usesChoiceSet(
-        interaction({ type: "custom", responseCardinality: "multiple", responseBaseType: "identifier" }),
+        interaction({
+          type: "custom",
+          responseCardinality: "multiple",
+          responseBaseType: "identifier",
+        }),
       ),
     ).toBe(true);
     expect(usesChoiceSet(interaction({ type: "hotspot" }))).toBe(false);
@@ -31,9 +37,9 @@ describe("interaction routing", () => {
 
   it("usesOrderedResponse matches ordered cardinality and order type only", () => {
     expect(usesOrderedResponse(interaction({ type: "order" }))).toBe(true);
-    expect(usesOrderedResponse(interaction({ type: "custom", responseCardinality: "ordered" }))).toBe(
-      true,
-    );
+    expect(
+      usesOrderedResponse(interaction({ type: "custom", responseCardinality: "ordered" })),
+    ).toBe(true);
     expect(usesOrderedResponse(interaction({ type: "graphicOrder" }))).toBe(false);
   });
 
@@ -43,9 +49,9 @@ describe("interaction routing", () => {
       usesPairResponse(interaction({ type: "custom", responseBaseType: "directedPair" })),
     ).toBe(true);
     expect(usesPairResponse(interaction({ type: "match" }))).toBe(false);
-    expect(
-      usesPairResponse(interaction({ type: "match", responseBaseType: "directedPair" })),
-    ).toBe(false);
+    expect(usesPairResponse(interaction({ type: "match", responseBaseType: "directedPair" }))).toBe(
+      false,
+    );
     expect(usesPairResponse(interaction({ type: "graphicAssociate" }))).toBe(false);
     expect(usesPairResponse(interaction({ type: "gapMatch" }))).toBe(false);
   });

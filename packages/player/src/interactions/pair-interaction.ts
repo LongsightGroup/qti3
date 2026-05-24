@@ -1,6 +1,11 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
-import { missingChoicesMessage, readableType, responseGroup, valueToStrings } from "../interaction-support.js";
+import {
+  missingChoicesMessage,
+  readableType,
+  responseGroup,
+  valueToStrings,
+} from "../interaction-support.js";
 import type { QtiPlayerMessages } from "../player-messages.js";
 import {
   choiceText,

@@ -442,4 +442,3 @@ function polylineElement(points: DrawingPoint[]): SVGPolylineElement {
   line.setAttribute("points", serializeSvgPoints(points));
   return line;
 }
-

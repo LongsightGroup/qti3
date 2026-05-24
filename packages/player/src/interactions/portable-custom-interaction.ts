@@ -45,8 +45,7 @@ export function renderPortableCustomResponse(context: PortableCustomResponseCont
   const { interaction, update, currentValue } = context;
   const definition =
     interaction.portableCustom ?? portableCustomDefinitionFromAttributes(interaction);
-  const responseIdentifier =
-    interaction.responseIdentifier ?? definition.responseIdentifier ?? "";
+  const responseIdentifier = interaction.responseIdentifier ?? definition.responseIdentifier ?? "";
   const currentState = context.currentState;
 
   const group = document.createElement("div");

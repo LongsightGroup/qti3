@@ -1,5 +1,9 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { interactionChoices, missingChoicesMessage, valueToStrings } from "../interaction-support.js";
+import {
+  interactionChoices,
+  missingChoicesMessage,
+  valueToStrings,
+} from "../interaction-support.js";
 import { interactionLabel } from "./interaction-label.js";
 
 function appendOptions(select: HTMLSelectElement, choices: QtiChoice[]): void {

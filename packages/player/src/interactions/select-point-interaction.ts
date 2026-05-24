@@ -25,7 +25,12 @@ export function renderSelectPointResponse(
 
   const surface = document.createElement("button");
   surface.type = "button";
-  applyGraphicSurfaceLayout(surface, objectWidth(interaction), objectHeight(interaction), "qti3-point-surface");
+  applyGraphicSurfaceLayout(
+    surface,
+    objectWidth(interaction),
+    objectHeight(interaction),
+    "qti3-point-surface",
+  );
   surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
 
   const object = interaction.object;

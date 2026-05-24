@@ -23,7 +23,5 @@ const explicitNonPairInteractionTypes = new Set<QtiInteraction["type"]>([
 export function usesPairResponse(interaction: QtiInteraction): boolean {
   if (interaction.type === "associate") return true;
   if (explicitNonPairInteractionTypes.has(interaction.type)) return false;
-  return (
-    interaction.responseBaseType === "pair" || interaction.responseBaseType === "directedPair"
-  );
+  return interaction.responseBaseType === "pair" || interaction.responseBaseType === "directedPair";
 }

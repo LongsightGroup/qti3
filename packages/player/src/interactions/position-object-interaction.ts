@@ -1,5 +1,15 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { applyGraphicSurfaceLayout, applyPointMarkerPlacement, applyPositionObjectMarkerPlacement, applyPositionObjectMarkerSize, appendGraphicObjectImage, objectIsImage, percent, readableType, responseGroup } from "../interaction-support.js";
+import {
+  applyGraphicSurfaceLayout,
+  applyPointMarkerPlacement,
+  applyPositionObjectMarkerPlacement,
+  applyPositionObjectMarkerSize,
+  appendGraphicObjectImage,
+  objectIsImage,
+  percent,
+  readableType,
+  responseGroup,
+} from "../interaction-support.js";
 import { movementButton, movementLabel } from "../movement.js";
 import {
   objectAssetHeight,

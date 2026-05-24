@@ -16,10 +16,7 @@ import {
   type QtiTextToSpeechTraversal,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
-import {
-  renderContentNodes,
-  type PlayerContentContext,
-} from "./content/content-renderer.js";
+import { renderContentNodes, type PlayerContentContext } from "./content/content-renderer.js";
 import { contentNodeText } from "./content/content-dom.js";
 import {
   portableCustomValidityDiagnostic,
@@ -39,6 +36,7 @@ import {
   mathTemplateValue,
 } from "./player/content-state.js";
 import { syncDynamicBodyState } from "./player/dynamic-body.js";
+import { defaultFetchXml } from "./player/fetch-xml.js";
 import { syncFeedbackPanel } from "./player/feedback-panel.js";
 import {
   renderBlockInteractionSection,
@@ -55,11 +53,7 @@ import type {
   QtiPlayerSessionControl,
   QtiScoreAttemptOptions,
 } from "./player-types.js";
-import {
-  cloneDiagnostics,
-  errorView,
-  validateItemResponses,
-} from "./player-validation.js";
+import { cloneDiagnostics, errorView, validateItemResponses } from "./player-validation.js";
 import { syncValidationMessages } from "./player-validation-dom.js";
 import {
   mergeVisibleValidationMessages,
@@ -74,7 +68,6 @@ const HTMLElementBase: typeof HTMLElement =
       return true;
     }
   } as unknown as typeof HTMLElement);
-
 
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   static get observedAttributes(): string[] {
@@ -226,7 +219,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       );
     }
     this.session = createItemSession(this.documentModel, state);
-    this.validationMessages = cloneDiagnostics(responseValidationMessages(state.validationMessages));
+    this.validationMessages = cloneDiagnostics(
+      responseValidationMessages(state.validationMessages),
+    );
     this.render();
     this.renderValidationMessages();
     this.updateAttemptAvailability();
@@ -391,7 +386,8 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         ? this.currentInteractionState(responseIdentifier)
         : undefined,
       renderMarkup: (nodes) => renderContentNodes(nodes, this.contentContext()),
-      setInteractionState: (identifier, state) => this.session?.setInteractionState(identifier, state),
+      setInteractionState: (identifier, state) =>
+        this.session?.setInteractionState(identifier, state),
       setValidity: (identifier, valid, message) =>
         this.setPortableCustomValidity(identifier, valid, message),
       emitStateChange: () => this.emitStateChange(),
@@ -475,7 +471,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private renderFeedback(outcomes: Record<string, QtiValue>): void {
     const documentModel = this.documentModel;
     if (!documentModel) return;
-    syncFeedbackPanel(this.querySelector<HTMLElement>(".qti3-feedback"), documentModel.item, outcomes);
+    syncFeedbackPanel(
+      this.querySelector<HTMLElement>(".qti3-feedback"),
+      documentModel.item,
+      outcomes,
+    );
   }
 }
 
@@ -489,13 +489,4 @@ declare global {
   interface HTMLElementTagNameMap {
     "qti-assessment-item-player": QtiAssessmentItemPlayer;
   }
-}
-
-async function defaultFetchXml(url: string): Promise<string> {
-  if (!globalThis.fetch) {
-    throw new Error("No fetch implementation is available. Provide loadUrl(url, { fetchXml }).");
-  }
-  const response = await globalThis.fetch(url);
-  if (!response.ok) throw new Error(`Failed to load QTI XML from ${url}: ${response.status}.`);
-  return response.text();
 }

@@ -2390,17 +2390,13 @@ test.describe("manual harness", () => {
       /moved up\.$/,
     );
     await expect(
-      page.locator(
-        'qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]',
-      ),
+      page.locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]'),
     ).toBeFocused();
 
     await page.keyboard.press("ArrowDown");
     await expectResponse(page, ["A", "B", "C"]);
     await expect(
-      page.locator(
-        'qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]',
-      ),
+      page.locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]'),
     ).toBeFocused();
 
     await expectMoveButtons(

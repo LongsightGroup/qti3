@@ -1,4 +1,9 @@
-import type { QtiChoice, QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
+import type {
+  QtiChoice,
+  QtiInteraction,
+  QtiObjectAsset,
+  QtiValue,
+} from "@longsightgroup/qti3-core";
 import { errorView } from "./player-validation.js";
 
 export function responseGroup(className?: string): HTMLElement {
@@ -81,8 +86,8 @@ export function objectHeight(interaction: QtiInteraction): number {
 export function objectIsImage(object: QtiObjectAsset): boolean {
   return Boolean(
     object.type?.startsWith("image/") ||
-      object.data?.startsWith("data:image/") ||
-      /\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(object.data ?? ""),
+    object.data?.startsWith("data:image/") ||
+    /\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(object.data ?? ""),
   );
 }
 
@@ -222,7 +227,11 @@ export function placeHotspotButton(
   });
 }
 
-export function hotspotCenter(choice: QtiChoice, width: number, height: number): { x: number; y: number } {
+export function hotspotCenter(
+  choice: QtiChoice,
+  width: number,
+  height: number,
+): { x: number; y: number } {
   const coords = hotspotCoords(choice);
   const shape = choice.attributes.shape;
   if ((shape === "circle" || shape === "ellipse") && coords.length >= 2) {

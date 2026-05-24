@@ -27,7 +27,9 @@ function interaction(
   } as QtiInteraction;
 }
 
-function renderContext(overrides: Partial<InteractionResponseContext> = {}): InteractionResponseContext {
+function renderContext(
+  overrides: Partial<InteractionResponseContext> = {},
+): InteractionResponseContext {
   const baseInteraction = interaction({ type: "choice" });
   return {
     interaction: baseInteraction,
@@ -103,7 +105,10 @@ describe("interaction registry ordering", () => {
     expect(matchInteractionRegistryEntry(interaction({ type: "associate" }))?.id).toBe("pair");
     expect(
       matchInteractionRegistryEntry(
-        interaction({ type: "customUnknown" as QtiInteraction["type"], responseBaseType: "directedPair" }),
+        interaction({
+          type: "customUnknown" as QtiInteraction["type"],
+          responseBaseType: "directedPair",
+        }),
       )?.id,
     ).toBe("pair");
   });

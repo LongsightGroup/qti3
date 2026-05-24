@@ -5,7 +5,12 @@ import type {
   QtiInteraction,
   QtiValue,
 } from "@longsightgroup/qti3-core";
-import { maximumAllowedResponses, mediaPlayCount, minimumMediaPlays, parseUnlimitedMaximum } from "./response-limits.js";
+import {
+  maximumAllowedResponses,
+  mediaPlayCount,
+  minimumMediaPlays,
+  parseUnlimitedMaximum,
+} from "./response-limits.js";
 
 export function errorView(message: string): HTMLElement {
   const element = document.createElement("p");
@@ -43,7 +48,6 @@ export function cloneDiagnostics(diagnostics: QtiDiagnostic[]): QtiDiagnostic[] 
   }));
 }
 
-
 export function responseIsEmpty(value: QtiValue): boolean {
   return value === null || value === "" || (Array.isArray(value) && value.length === 0);
 }
@@ -51,7 +55,6 @@ export function responseIsEmpty(value: QtiValue): boolean {
 export function responseCount(value: QtiValue): number {
   return responseIsEmpty(value) ? 0 : Array.isArray(value) ? value.length : 1;
 }
-
 
 export function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
   if (!interaction) return 1;
@@ -62,7 +65,6 @@ export function minimumRequiredResponses(interaction: QtiInteraction | undefined
   const parsed = Number(explicit);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
 }
-
 
 export function matchMaxDiagnostics(
   responseIdentifier: string,

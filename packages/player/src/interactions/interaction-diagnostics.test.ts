@@ -8,7 +8,9 @@ import {
   interactionUnsupportedDiagnostics,
 } from "./interaction-diagnostics.js";
 
-function interaction(overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] }): QtiInteraction {
+function interaction(
+  overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
+): QtiInteraction {
   return {
     qtiName: "qti-interaction",
     responseIdentifier: "RESPONSE",
@@ -25,10 +27,44 @@ function interaction(overrides: Partial<QtiInteraction> & { type: QtiInteraction
 
 describe("interaction-dispatch support", () => {
   it("recognizes supported interaction types", () => {
-    expect(isInteractionSupported(interaction({ type: "choice", choices: [{ identifier: "A", text: "A", role: "simpleChoice", qtiName: "qti-simple-choice", attributes: {}, source: { line: 1, column: 1, offset: 0, path: "choice" } }] }))).toBe(true);
-    expect(isInteractionSupported(interaction({ type: "hotspot", object: { data: "x", type: "image/png", text: "", width: "100", height: "100", sources: [], tracks: [], attributes: {} } }))).toBe(true);
+    expect(
+      isInteractionSupported(
+        interaction({
+          type: "choice",
+          choices: [
+            {
+              identifier: "A",
+              text: "A",
+              role: "simpleChoice",
+              qtiName: "qti-simple-choice",
+              attributes: {},
+              source: { line: 1, column: 1, offset: 0, path: "choice" },
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isInteractionSupported(
+        interaction({
+          type: "hotspot",
+          object: {
+            data: "x",
+            type: "image/png",
+            text: "",
+            width: "100",
+            height: "100",
+            sources: [],
+            tracks: [],
+            attributes: {},
+          },
+        }),
+      ),
+    ).toBe(true);
     expect(isInteractionSupported(interaction({ type: "hotspot" }))).toBe(false);
-    expect(isInteractionSupported(interaction({ type: "customUnknown" as QtiInteraction["type"] }))).toBe(false);
+    expect(
+      isInteractionSupported(interaction({ type: "customUnknown" as QtiInteraction["type"] })),
+    ).toBe(false);
   });
 });
 

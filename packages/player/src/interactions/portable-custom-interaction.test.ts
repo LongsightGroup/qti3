@@ -49,9 +49,7 @@ describe("portable-custom-interaction", () => {
       currentValue: "A",
       currentState: { count: 1 },
       renderMarkup: (nodes) =>
-        nodes.flatMap((node) =>
-          node.kind === "text" ? [document.createTextNode(node.text)] : [],
-        ),
+        nodes.flatMap((node) => (node.kind === "text" ? [document.createTextNode(node.text)] : [])),
       setInteractionState: () => {},
       setValidity: () => {},
       emitStateChange: () => {},
@@ -94,11 +92,15 @@ describe("portable-custom-interaction", () => {
     const host = element.querySelector(".qti3-portable-custom-host");
     if (!host) throw new Error("Missing portable custom host.");
 
-    host.dispatchEvent(new CustomEvent("qti3-portable-custom-state", { detail: { state: { ok: true } } }));
+    host.dispatchEvent(
+      new CustomEvent("qti3-portable-custom-state", { detail: { state: { ok: true } } }),
+    );
     expect(setInteractionState).toHaveBeenCalledWith("RESPONSE", { ok: true });
     expect(emitStateChange).toHaveBeenCalled();
 
-    host.dispatchEvent(new CustomEvent("qti3-portable-custom-response", { detail: { value: "B" } }));
+    host.dispatchEvent(
+      new CustomEvent("qti3-portable-custom-response", { detail: { value: "B" } }),
+    );
     expect(update).toHaveBeenCalledWith("B");
 
     host.dispatchEvent(

@@ -6,10 +6,7 @@ import { renderSelect } from "../interactions/inline-choice-interaction.js";
 import { renderInlineTextEntry } from "../interactions/text-interaction.js";
 import { renderUnsupportedEmbeddedInteraction } from "../interactions/unsupported-interaction.js";
 import type { QtiPlayerMessages } from "../player-messages.js";
-import {
-  inlineValidationMessageElement,
-  validationMessageElement,
-} from "../player-validation.js";
+import { inlineValidationMessageElement, validationMessageElement } from "../player-validation.js";
 
 export interface BlockInteractionRenderOptions {
   interaction: QtiInteraction;
@@ -26,13 +23,21 @@ export interface BlockInteractionRenderOptions {
 }
 
 export function renderBlockInteractionSection(options: BlockInteractionRenderOptions): HTMLElement {
-  const { interaction, messages, update, currentValue, isCompleted, endAttempt, renderPortableCustom } =
-    options;
+  const {
+    interaction,
+    messages,
+    update,
+    currentValue,
+    isCompleted,
+    endAttempt,
+    renderPortableCustom,
+  } = options;
   const field = document.createElement("section");
   field.className = `qti3-interaction qti3-${interaction.type}`;
   field.classList.add(...qtiSharedClassNames(interaction.attributes.class));
   field.dataset.interactionType = interaction.type;
-  if (interaction.responseIdentifier) field.dataset.responseIdentifier = interaction.responseIdentifier;
+  if (interaction.responseIdentifier)
+    field.dataset.responseIdentifier = interaction.responseIdentifier;
 
   const heading = document.createElement("h3");
   copySafeAttributes(heading, interaction.promptAttributes ?? {});
@@ -68,7 +73,8 @@ export function renderEmbeddedInteractionSection(
   const wrapper = document.createElement("span");
   wrapper.className = `qti3-interaction qti3-${interaction.type} qti3-embedded-interaction`;
   wrapper.dataset.interactionType = interaction.type;
-  if (interaction.responseIdentifier) wrapper.dataset.responseIdentifier = interaction.responseIdentifier;
+  if (interaction.responseIdentifier)
+    wrapper.dataset.responseIdentifier = interaction.responseIdentifier;
 
   if (interaction.responseIdentifier) {
     wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));

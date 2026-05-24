@@ -1,5 +1,9 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { interactionChoices, missingChoicesMessage, valueToStrings } from "../interaction-support.js";
+import {
+  interactionChoices,
+  missingChoicesMessage,
+  valueToStrings,
+} from "../interaction-support.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 
 export function renderHottextResponse(
