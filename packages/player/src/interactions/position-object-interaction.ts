@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { applyGraphicSurfaceLayout, applyPointMarkerPlacement, applyPositionObjectMarkerPlacement, applyPositionObjectMarkerSize, objectIsImage, percent, readableType, responseGroup } from "../interaction-support.js";
+import { applyGraphicSurfaceLayout, applyPointMarkerPlacement, applyPositionObjectMarkerPlacement, applyPositionObjectMarkerSize, appendGraphicObjectImage, objectIsImage, percent, readableType, responseGroup } from "../interaction-support.js";
 import { movementButton, movementLabel } from "../movement.js";
 import {
   objectAssetHeight,
@@ -35,11 +35,7 @@ export function renderPositionObjectResponse(
   stage.setAttribute("aria-label", `${readableType(interaction.type)} placement stage`);
 
   if (stageObject?.data && objectIsImage(stageObject)) {
-    const image = document.createElement("img");
-    image.className = "qti3-graphic-object-image";
-    image.src = stageObject.data;
-    image.alt = stageObject.text || "";
-    stage.append(image);
+    appendGraphicObjectImage(stage, stageObject, stageObject.text || "");
   }
 
   const marker = document.createElement("button");

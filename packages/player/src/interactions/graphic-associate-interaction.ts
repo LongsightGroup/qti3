@@ -2,13 +2,13 @@ import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-c
 import { removeButton } from "../controls/remove-button.js";
 import {
   applyGraphicSurfaceLayout,
+  appendGraphicObjectImage,
   interactionChoices,
   missingChoicesMessage,
   hotspotAccessibleLabel,
   hotspotCenter,
   hotspotDisplayLabel,
   objectHeight,
-  objectIsImage,
   objectWidth,
   placeHotspotButton,
   readableType,
@@ -53,14 +53,8 @@ export function renderGraphicAssociateResponse(
   surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
 
   const object = interaction.object;
-  if (object?.data && objectIsImage(object)) {
-    const image = document.createElement("img");
-    image.src = object.data;
-    image.alt = object.text || `${readableType(interaction.type)} image`;
-    image.style.inlineSize = "100%";
-    image.style.blockSize = "100%";
-    image.style.objectFit = "contain";
-    surface.append(image);
+  if (object) {
+    appendGraphicObjectImage(surface, object, object.text || `${readableType(interaction.type)} image`);
   }
 
   const connections = document.createElementNS("http://www.w3.org/2000/svg", "svg");

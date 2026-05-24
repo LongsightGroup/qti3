@@ -1,9 +1,9 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
+  appendGraphicObjectImage,
   missingChoicesMessage,
   objectHeight,
-  objectIsImage,
   objectWidth,
   placeHotspotButton,
   readableType,
@@ -203,12 +203,12 @@ function renderGraphicGapMatchResponse(
     `${graphicGapLabelBlockSize(sources)}rem`,
   );
 
-  if (interaction.object?.data && objectIsImage(interaction.object)) {
-    const image = document.createElement("img");
-    image.className = "qti3-graphic-object-image";
-    image.src = interaction.object.data;
-    image.alt = interaction.object.text || `${readableType(interaction.type)} image`;
-    surface.append(image);
+  if (interaction.object) {
+    appendGraphicObjectImage(
+      surface,
+      interaction.object,
+      interaction.object.text || `${readableType(interaction.type)} image`,
+    );
   }
 
   const sourceRegion = tokenRegion(`${readableType(interaction.type)} choices`);

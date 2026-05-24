@@ -38,6 +38,12 @@ export interface QtiReadyEventDetail {
 }
 
 export interface QtiStateChangeEventDetail {
+  /**
+   * Attempt snapshot. `state.validationMessages` combines load-time authoring diagnostics
+   * (unsupported interactions, missing choices, illegal embeds) with response validation
+   * messages. After `restore()`, response messages are reapplied separately from authoring
+   * diagnostics captured at `loadXml`.
+   */
   state: QtiAttemptStateV1;
 }
 
@@ -58,6 +64,7 @@ export interface QtiPortableCustomMountEventDetail {
 export type QtiScoreEventDetail = QtiScoreResult;
 
 export interface QtiValidationEventDetail {
+  /** Authoring and response validation messages currently visible to the candidate. */
   validationMessages: QtiDiagnostic[];
   state: QtiAttemptStateV1;
 }

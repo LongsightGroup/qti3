@@ -86,6 +86,19 @@ export function objectIsImage(object: QtiObjectAsset): boolean {
   );
 }
 
+export function appendGraphicObjectImage(
+  surface: HTMLElement,
+  object: QtiObjectAsset,
+  alt: string,
+): void {
+  if (!object.data || !objectIsImage(object)) return;
+  const image = document.createElement("img");
+  image.className = "qti3-graphic-object-image";
+  image.src = object.data;
+  image.alt = alt;
+  surface.append(image);
+}
+
 function percent(value: number, total: number): number {
   if (total <= 0) return 0;
   return (value / total) * 100;

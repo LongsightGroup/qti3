@@ -1,6 +1,6 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
-import { isInteractionSupported } from "./interaction-capabilities.js";
+import { isInteractionSupported } from "./interaction-registry.js";
 import {
   collectEmbeddedInteractionDiagnostics,
   collectInteractionRenderDiagnostics,

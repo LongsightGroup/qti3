@@ -2,7 +2,7 @@ import type { QtiAssessmentItem, QtiContentNode, QtiDiagnostic, QtiInteraction }
 import { contentElementName } from "../content/content-dom.js";
 import { interactionChoices } from "../interaction-support.js";
 import { sourceChoices, targetChoices } from "./shared.js";
-import { isInteractionSupported } from "./interaction-capabilities.js";
+import { isInteractionSupported } from "./interaction-registry.js";
 
 function diagnosticPath(interaction: QtiInteraction): string | undefined {
   return interaction.responseIdentifier ?? undefined;

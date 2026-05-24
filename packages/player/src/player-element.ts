@@ -61,6 +61,10 @@ import {
   validateItemResponses,
 } from "./player-validation.js";
 import { syncValidationMessages } from "./player-validation-dom.js";
+import {
+  mergeVisibleValidationMessages,
+  responseValidationMessages,
+} from "./player/validation-messages.js";
 
 const HTMLElementBase: typeof HTMLElement =
   globalThis.HTMLElement ??
@@ -220,7 +224,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       );
     }
     this.session = createItemSession(this.documentModel, state);
-    this.validationMessages = cloneDiagnostics(state.validationMessages);
+    this.validationMessages = cloneDiagnostics(responseValidationMessages(state.validationMessages));
     this.render();
     this.renderValidationMessages();
     this.updateAttemptAvailability();
@@ -256,7 +260,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   serialize(): QtiAttemptStateV1 | undefined {
     const state = this.session?.serialize();
     if (state) {
-      state.validationMessages = cloneDiagnostics(this.visibleValidationMessages());
+      state.validationMessages = cloneDiagnostics(
+        mergeVisibleValidationMessages(this.authoringDiagnostics, this.validationMessages),
+      );
     }
     return state;
   }
@@ -449,7 +455,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   private visibleValidationMessages(): QtiDiagnostic[] {
-    return [...this.authoringDiagnostics, ...this.validationMessages];
+    return mergeVisibleValidationMessages(this.authoringDiagnostics, this.validationMessages);
   }
 
   private renderValidationMessages(): void {

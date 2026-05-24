@@ -2,6 +2,7 @@ import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
   applyPointMarkerPlacement,
+  appendGraphicObjectImage,
   objectHeight,
   objectWidth,
   readableType,
@@ -28,12 +29,8 @@ export function renderSelectPointResponse(
   surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
 
   const object = interaction.object;
-  if (object?.data && object.type?.startsWith("image/")) {
-    const image = document.createElement("img");
-    image.className = "qti3-graphic-object-image";
-    image.src = object.data;
-    image.alt = "";
-    surface.append(image);
+  if (object) {
+    appendGraphicObjectImage(surface, object, "");
   }
 
   const width = objectWidth(interaction);

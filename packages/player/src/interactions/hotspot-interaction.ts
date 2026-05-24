@@ -1,6 +1,7 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
+  appendGraphicObjectImage,
   choiceSelector,
   interactionChoices,
   missingChoicesMessage,
@@ -31,14 +32,8 @@ export function renderHotspotResponse(
   }
 
   const object = interaction.object;
-  if (object?.data && object.type?.startsWith("image/")) {
-    const image = document.createElement("img");
-    image.src = object.data;
-    image.alt = object.text || `${readableType(interaction.type)} image`;
-    image.style.inlineSize = "100%";
-    image.style.blockSize = "100%";
-    image.style.objectFit = "contain";
-    surface.append(image);
+  if (object) {
+    appendGraphicObjectImage(surface, object, object.text || `${readableType(interaction.type)} image`);
   }
 
   const selected = new Set(valueToStrings(currentValue));
