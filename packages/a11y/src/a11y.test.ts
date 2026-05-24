@@ -87,6 +87,12 @@ describe("@longsightgroup/qti3-a11y", () => {
       "Enter or Space on a target gap assigns the selected source.",
     );
     expect(byType.get("drawing")?.keyboardModel).toContain("Pointer input draws freehand strokes.");
+    expect(byType.get("drawing")?.keyboardModel).toContain(
+      "The live drawing surface uses a light canvas and dark pen so strokes stay visible when the page is in dark mode.",
+    );
+    expect(byType.get("drawing")?.focusStrategy).toContain(
+      "the live canvas renders as a light surface independent of page color scheme",
+    );
   });
 
   it("documents PCI accessibility as a host-runtime contract", () => {

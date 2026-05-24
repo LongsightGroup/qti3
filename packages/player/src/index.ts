@@ -3296,8 +3296,6 @@ function renderDrawingResponse(
   surface.style.inlineSize = `${width}px`;
   surface.style.aspectRatio = `${width} / ${height}`;
   surface.style.maxInlineSize = "100%";
-  surface.style.border = "1px solid CanvasText";
-  surface.style.background = "Canvas";
   surface.style.touchAction = "none";
   const restoredStrokes = parseDrawingValue(currentValue);
   const authoredBackgroundHref = drawingBackgroundHref(interaction);
@@ -4271,12 +4269,8 @@ function xmlAttribute(value: string): string {
 
 function polylineElement(points: DrawingPoint[]): SVGPolylineElement {
   const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  line.classList.add("qti3-drawing-stroke");
   line.setAttribute("points", serializeSvgPoints(points));
-  line.setAttribute("fill", "none");
-  line.setAttribute("stroke", "CanvasText");
-  line.setAttribute("stroke-width", "3");
-  line.setAttribute("stroke-linecap", "round");
-  line.setAttribute("stroke-linejoin", "round");
   return line;
 }
 
@@ -5053,6 +5047,33 @@ function playerStyleElement(): HTMLStyleElement {
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-block-start: 0.5rem;
+    }
+
+    .qti3-drawing-surface {
+      color-scheme: light;
+      box-sizing: border-box;
+      border: 1px solid #000;
+      background: #fff;
+      color: #000;
+    }
+
+    .qti3-drawing-surface .qti3-drawing-stroke {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (forced-colors: active) {
+      .qti3-drawing-surface {
+        border-color: CanvasText;
+        background: Canvas;
+      }
+
+      .qti3-drawing-surface .qti3-drawing-stroke {
+        stroke: #000;
+      }
     }
 
     .qti3-coordinate-output {

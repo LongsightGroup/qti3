@@ -3085,6 +3085,42 @@ test.describe("manual harness", () => {
     await expect(page.getByRole("button", { name: "Replay last stroke" })).toHaveCount(0);
   });
 
+  test("keeps drawing strokes visible in dark color scheme", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/");
+    await loadFixture(page, "drawing");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    const box = await surface.boundingBox();
+    if (!box) throw new Error("Missing drawing surface box.");
+
+    await page.mouse.move(box.x + 10, box.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 90, box.y + 90);
+    await page.mouse.up();
+
+    await expect(surface.locator("polyline")).toHaveCount(1);
+    await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(0, 0, 0)");
+  });
+
+  test("keeps drawing strokes visible under forced colors", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark", forcedColors: "active" });
+    await page.goto("/");
+    await loadFixture(page, "drawing");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    const box = await surface.boundingBox();
+    if (!box) throw new Error("Missing drawing surface box.");
+
+    await page.mouse.move(box.x + 10, box.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 90, box.y + 90);
+    await page.mouse.up();
+
+    await expect(surface.locator("polyline")).toHaveCount(1);
+    await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(0, 0, 0)");
+  });
+
   test("honors authored drawing object dimensions", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
