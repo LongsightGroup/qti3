@@ -1,6 +1,7 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
-  choicesOrFallback,
+  interactionChoices,
+  missingChoicesMessage,
   orderChoicesFromValue,
   readableType,
   responseGroup,
@@ -18,7 +19,11 @@ export function renderOrderedResponse(
   currentValue: QtiValue,
 ): HTMLElement {
   const group = responseGroup();
-  const choices = choicesOrFallback(interaction).filter((choice) => choice.role !== "gap");
+  const choices = interactionChoices(interaction).filter((choice) => choice.role !== "gap");
+  if (choices.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
   const ordered = orderChoicesFromValue(choices, currentValue);
   const list = document.createElement("ol");
   list.className = "qti3-reorder-list";

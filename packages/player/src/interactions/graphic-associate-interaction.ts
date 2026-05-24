@@ -1,7 +1,9 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
 import {
-  choicesOrFallback,
+  applyGraphicSurfaceLayout,
+  interactionChoices,
+  missingChoicesMessage,
   hotspotAccessibleLabel,
   hotspotCenter,
   hotspotDisplayLabel,
@@ -29,7 +31,11 @@ export function renderGraphicAssociateResponse(
 
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
-  const choices = choicesOrFallback(interaction).filter((choice) => choice.role === "hotspot");
+  const choices = interactionChoices(interaction).filter((choice) => choice.role === "hotspot");
+  if (choices.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
   const selectedPairs = valueToStrings(currentValue);
   const maximumAssociations =
     interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
@@ -42,16 +48,9 @@ export function renderGraphicAssociateResponse(
   let previewLine: SVGLineElement | undefined;
 
   const surface = document.createElement("div");
-  surface.className = "qti3-graphic-associate-surface";
+  applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-associate-surface");
   surface.role = "group";
   surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
-  surface.style.position = "relative";
-  surface.style.inlineSize = `${width}px`;
-  surface.style.aspectRatio = `${width} / ${height}`;
-  surface.style.maxInlineSize = "100%";
-  surface.style.border = "1px solid CanvasText";
-  surface.style.background = "Canvas";
-  surface.style.overflow = "hidden";
 
   const object = interaction.object;
   if (object?.data && objectIsImage(object)) {

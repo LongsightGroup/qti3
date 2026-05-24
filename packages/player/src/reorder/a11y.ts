@@ -1,3 +1,5 @@
+import { choiceSelector } from "../interaction-support.js";
+
 export function createSelectionSummary(): HTMLParagraphElement {
   const summary = document.createElement("p");
   summary.className = "qti3-selection-summary";
@@ -34,7 +36,5 @@ export function announceOrderedSelectionCount(
 }
 
 export function focusReorderControl(container: ParentNode, identifier: string): void {
-  container
-    .querySelector<HTMLButtonElement>(`button[data-choice-identifier="${identifier}"]`)
-    ?.focus();
+  container.querySelector<HTMLButtonElement>(`button${choiceSelector(identifier)}`)?.focus();
 }

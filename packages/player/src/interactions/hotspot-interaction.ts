@@ -1,6 +1,9 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
-  choicesOrFallback,
+  applyGraphicSurfaceLayout,
+  choiceSelector,
+  interactionChoices,
+  missingChoicesMessage,
   objectHeight,
   objectWidth,
   placeHotspotButton,
@@ -17,16 +20,15 @@ export function renderHotspotResponse(
   const group = responseGroup();
 
   const surface = document.createElement("div");
-  surface.className = "qti3-hotspot-surface";
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
-  surface.style.position = "relative";
-  surface.style.inlineSize = `${width}px`;
-  surface.style.aspectRatio = `${width} / ${height}`;
-  surface.style.maxInlineSize = "100%";
-  surface.style.border = "1px solid CanvasText";
-  surface.style.background = "Canvas";
-  surface.style.overflow = "hidden";
+  applyGraphicSurfaceLayout(surface, width, height, "qti3-hotspot-surface");
+
+  const choices = interactionChoices(interaction);
+  if (choices.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
 
   const object = interaction.object;
   if (object?.data && object.type?.startsWith("image/")) {
@@ -54,7 +56,7 @@ export function renderHotspotResponse(
     selectedSummary.textContent =
       selected.size > 0 ? `Selected ${[...selected].join(", ")}` : "No region selected";
   };
-  for (const choice of choicesOrFallback(interaction)) {
+  for (const choice of choices) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "qti3-hotspot-button";

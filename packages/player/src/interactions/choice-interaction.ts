@@ -1,6 +1,7 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
-  choicesOrFallback,
+  interactionChoices,
+  missingChoicesMessage,
   readableType,
   responseGroup,
   valueToStrings,
@@ -43,7 +44,12 @@ export function renderChoice(
       label.dataset.selected = selected.has(identifier) ? "true" : "false";
     }
   };
-  for (const [index, choice] of choicesOrFallback(interaction).entries()) {
+  const choices = interactionChoices(interaction);
+  if (choices.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
+  for (const [index, choice] of choices.entries()) {
     const label = document.createElement("label");
     label.className = "qti3-choice-option";
     label.dataset.choiceIdentifier = choice.identifier;

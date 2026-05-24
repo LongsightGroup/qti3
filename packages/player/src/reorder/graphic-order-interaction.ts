@@ -1,10 +1,13 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
 import {
-  choicesOrFallback,
+  applyGraphicSurfaceLayout,
+  choiceSelector,
   hotspotAccessibleLabel,
   hotspotCenter,
   hotspotDisplayLabel,
+  interactionChoices,
+  missingChoicesMessage,
   objectHeight,
   objectIsImage,
   objectWidth,
@@ -32,22 +35,19 @@ export function renderGraphicOrderResponse(
   const group = responseGroup();
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
-  const choices = choicesOrFallback(interaction).filter((choice) => choice.role === "hotspot");
+  const choices = interactionChoices(interaction).filter((choice) => choice.role === "hotspot");
+  if (choices.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
   const orderedIdentifiers = valueToStrings(currentValue).filter((identifier) =>
     choices.some((choice) => choice.identifier === identifier),
   );
 
   const surface = document.createElement("div");
-  surface.className = "qti3-graphic-order-surface";
+  applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-order-surface");
   surface.role = "group";
   surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
-  surface.style.position = "relative";
-  surface.style.inlineSize = `${width}px`;
-  surface.style.aspectRatio = `${width} / ${height}`;
-  surface.style.maxInlineSize = "100%";
-  surface.style.border = "1px solid CanvasText";
-  surface.style.background = "Canvas";
-  surface.style.overflow = "hidden";
 
   const object = interaction.object;
   if (object?.data && objectIsImage(object)) {
@@ -64,7 +64,7 @@ export function renderGraphicOrderResponse(
   sequenceLines.classList.add("qti3-graphic-sequence-lines");
   sequenceLines.setAttribute("viewBox", `0 0 ${width} ${height}`);
   sequenceLines.setAttribute("aria-hidden", "true");
-  const markerId = `qti3-arrow-${Math.random().toString(36).slice(2)}`;
+  const markerId = `qti3-graphic-order-marker-${(interaction.responseIdentifier ?? interaction.type).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
   const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   marker.setAttribute("id", markerId);
@@ -100,7 +100,7 @@ export function renderGraphicOrderResponse(
     );
   };
   const focusHotspot = (identifier: string) => {
-    surface.querySelector<HTMLButtonElement>(`[data-choice-identifier="${identifier}"]`)?.focus();
+    surface.querySelector<HTMLButtonElement>(`.qti3-hotspot-button${choiceSelector(identifier)}`)?.focus();
   };
   const focusRelativeHotspot = (choice: QtiChoice, delta: number) => {
     const index = choices.findIndex((entry) => entry.identifier === choice.identifier);

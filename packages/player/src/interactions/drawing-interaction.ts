@@ -1,6 +1,9 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
 import { objectIsImage, readableType } from "../interaction-support.js";
 
+export const DRAWING_STROKE_COLOR = "#000";
+export const DRAWING_STROKE_WIDTH = 3;
+
 export function renderDrawingResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -308,7 +311,7 @@ function svgDrawingMarkup(
       : "";
   const lines = strokes
     .map((stroke) => {
-      return `<polyline points="${xmlAttribute(serializeSvgPoints(stroke.points))}" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+      return `<polyline points="${xmlAttribute(serializeSvgPoints(stroke.points))}" fill="none" stroke="${DRAWING_STROKE_COLOR}" stroke-width="${DRAWING_STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`;
     })
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><metadata id="qti3-drawing-response" data-qti3-strokes="${xmlAttribute(encodeURIComponent(strokePayload))}"></metadata>${background}${lines}</svg>`;
@@ -342,8 +345,8 @@ async function rasterDrawingDataUrl(
     }
   }
 
-  context.strokeStyle = "#000";
-  context.lineWidth = 3;
+  context.strokeStyle = DRAWING_STROKE_COLOR;
+  context.lineWidth = DRAWING_STROKE_WIDTH;
   context.lineCap = "round";
   context.lineJoin = "round";
   for (const stroke of strokes) {

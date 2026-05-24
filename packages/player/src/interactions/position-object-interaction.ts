@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { objectIsImage, percent, readableType } from "../interaction-support.js";
+import { applyGraphicSurfaceLayout, objectIsImage, percent, readableType } from "../interaction-support.js";
 import { movementButton, movementLabel } from "../movement.js";
 import {
   objectAssetHeight,
@@ -28,16 +28,11 @@ export function renderPositionObjectResponse(
   let isPlaced = Boolean(parsedPoint);
 
   const stage = document.createElement("div");
-  stage.className = "qti3-position-object-stage";
+  applyGraphicSurfaceLayout(stage, width, height, "qti3-position-object-stage");
   stage.tabIndex = 0;
   stage.role = "group";
   stage.setAttribute("aria-label", `${readableType(interaction.type)} placement stage`);
-  stage.style.position = "relative";
-  stage.style.inlineSize = `min(100%, ${width}px)`;
-  stage.style.aspectRatio = `${width} / ${height}`;
   stage.style.boxSizing = "border-box";
-  stage.style.border = "1px solid CanvasText";
-  stage.style.background = "Canvas";
   stage.style.color = "CanvasText";
   stage.style.overflow = "visible";
   stage.style.touchAction = "none";

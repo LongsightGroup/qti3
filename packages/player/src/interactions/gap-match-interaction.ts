@@ -1,5 +1,6 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
+  applyGraphicSurfaceLayout,
   objectHeight,
   objectIsImage,
   objectWidth,
@@ -184,15 +185,9 @@ function renderGraphicGapMatchResponse(
   }
 
   const surface = document.createElement("div");
-  surface.className = "qti3-graphic-context qti3-graphic-gap-match-surface";
+  applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-context", "qti3-graphic-gap-match-surface");
   surface.role = "group";
   surface.setAttribute("aria-label", `${readableType(interaction.type)} target image`);
-  surface.style.position = "relative";
-  surface.style.inlineSize = `${width}px`;
-  surface.style.aspectRatio = `${width} / ${height}`;
-  surface.style.maxInlineSize = "100%";
-  surface.style.border = "1px solid CanvasText";
-  surface.style.background = "Canvas";
   surface.style.overflow = "visible";
   surface.style.setProperty(
     "--qti3-graphic-gap-label-block-size",

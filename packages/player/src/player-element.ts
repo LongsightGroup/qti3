@@ -20,33 +20,21 @@ import {
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 import {
-  contentElementName,
   contentNodeText,
   copySafeAttributes,
-  createContentElement,
   formatPrintedValue,
   isResolvableAssetUrl,
-  unsafeContentElements,
 } from "./content/content-dom.js";
-import { renderChoice } from "./interactions/choice-interaction.js";
-import { renderDrawingResponse } from "./interactions/drawing-interaction.js";
-import { renderGapMatchResponse } from "./interactions/gap-match-interaction.js";
-import { renderGraphicAssociateResponse } from "./interactions/graphic-associate-interaction.js";
-import { renderHottextResponse } from "./interactions/hottext-interaction.js";
+import {
+  renderContentNodes,
+  type PlayerContentContext,
+} from "./content/content-renderer.js";
+import { renderInteractionResponse } from "./interactions/interaction-dispatch.js";
 import { interactionLabel, qtiSharedClassNames } from "./interactions/interaction-label.js";
-import { renderSelect } from "./interactions/inline-choice-interaction.js";
-import { renderMatchResponse } from "./interactions/match-interaction.js";
-import { renderObjectAsset } from "./interactions/object-asset.js";
-import { renderPairResponse } from "./interactions/pair-interaction.js";
-import { renderPositionObjectResponse } from "./interactions/position-object-interaction.js";
-import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./interactions/routing.js";
-import { renderSelectPointResponse } from "./interactions/select-point-interaction.js";
 import {
   renderInlineTextEntry,
-  renderSliderResponse,
-  renderTextResponse,
 } from "./interactions/text-interaction.js";
-import { renderHotspotResponse } from "./interactions/hotspot-interaction.js";
+import { renderSelect } from "./interactions/inline-choice-interaction.js";
 import { defaultPlayerLocale, normalizedLocale, resolvePlayerMessages } from "./player-locale.js";
 import type { QtiPlayerMessages } from "./player-messages.js";
 import { playerStyleElement } from "./player-styles.js";
@@ -63,9 +51,7 @@ import {
   cloneDiagnostics,
   errorView,
   inlineValidationMessageElement,
-  matchMaxDiagnostics,
-  minimumRequiredResponses,
-  responseCount,
+  validateItemResponses,
   validationMessageElement,
 } from "./player-validation.js";
 import {
@@ -75,9 +61,6 @@ import {
   portableCustomEventValue,
   scalarString,
 } from "./portable-custom-support.js";
-import { renderGraphicOrderResponse } from "./reorder/graphic-order-interaction.js";
-import { renderOrderedResponse } from "./reorder/order-interaction.js";
-import { maximumAllowedResponses, mediaPlayCount } from "./response-limits.js";
 
 const HTMLElementBase: typeof HTMLElement =
   globalThis.HTMLElement ??
@@ -321,7 +304,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (documentModel.item.body.length > 0) {
       const body = document.createElement("div");
       body.className = "qti3-item-body";
-      body.append(...this.renderContentNodes(documentModel.item.body));
+      body.append(...renderContentNodes(documentModel.item.body, this.contentContext()));
       root.append(body);
     } else {
       for (const interaction of documentModel.item.interactions) {
@@ -351,14 +334,35 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
     const heading = document.createElement("h3");
     copySafeAttributes(heading, interaction.promptAttributes ?? {});
-    heading.textContent = interactionLabel(interaction);
+    const label = interactionLabel(interaction);
+    heading.textContent = label;
     field.append(heading);
     if (interaction.responseIdentifier) {
       field.append(validationMessageElement(interaction.responseIdentifier));
     }
 
     const responseIdentifier = interaction.responseIdentifier;
-    const update = (value: QtiValue) => {
+    const update = this.bindResponseUpdate(responseIdentifier);
+    const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
+
+    field.append(
+      renderInteractionResponse({
+        interaction,
+        update,
+        currentValue,
+        messages,
+        isCompleted: () => this.attemptIsCompleted(),
+        interactionLabel: label,
+        endAttempt: () => this.endAttempt(),
+        renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
+          this.renderPortableCustomResponse(portableInteraction, portableUpdate, portableValue),
+      }),
+    );
+    return field;
+  }
+
+  private bindResponseUpdate(responseIdentifier: string | undefined): (value: QtiValue) => void {
+    return (value) => {
       if (this.attemptIsCompleted()) return;
       if (!responseIdentifier || !this.session) return;
       this.session.respond(responseIdentifier, value);
@@ -366,127 +370,18 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
       this.emitStateChange();
     };
-    const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
+  }
 
-    if (interaction.type === "graphicOrder") {
-      field.append(renderGraphicOrderResponse(interaction, update, currentValue, messages));
-      return field;
-    }
-
-    if (usesOrderedResponse(interaction)) {
-      field.append(renderOrderedResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "gapMatch" || interaction.type === "graphicGapMatch") {
-      field.append(renderGapMatchResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "graphicAssociate") {
-      field.append(renderGraphicAssociateResponse(interaction, update, currentValue, messages));
-      return field;
-    }
-
-    if (interaction.type === "match") {
-      field.append(renderMatchResponse(interaction, update, currentValue, messages));
-      return field;
-    }
-
-    if (usesPairResponse(interaction)) {
-      field.append(renderPairResponse(interaction, update, currentValue, messages));
-      return field;
-    }
-
-    if (interaction.type === "hotspot" && interaction.object) {
-      field.append(renderHotspotResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "hottext") {
-      field.append(renderHottextResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (usesChoiceSet(interaction)) {
-      field.append(renderChoice(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "inlineChoice") {
-      field.append(renderSelect(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "extendedText") {
-      field.append(renderTextResponse(interaction, update, "extended", currentValue));
-      return field;
-    }
-
-    if (interaction.type === "selectPoint") {
-      field.append(renderSelectPointResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "positionObject") {
-      field.append(renderPositionObjectResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "drawing") {
-      field.append(renderDrawingResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "portableCustom") {
-      field.append(this.renderPortableCustomResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "textEntry") {
-      field.append(renderTextResponse(interaction, update, "entry", currentValue));
-      return field;
-    }
-
-    if (interaction.type === "slider") {
-      field.append(renderSliderResponse(interaction, update, currentValue));
-      return field;
-    }
-
-    if (interaction.type === "upload") {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.setAttribute("aria-label", heading.textContent ?? "Upload response");
-      input.addEventListener("change", () => update(input.files?.[0]?.name ?? ""));
-      field.append(input);
-      return field;
-    }
-
-    if (interaction.type === "endAttempt") {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = interaction.attributes.title ?? "End attempt";
-      button.addEventListener("click", () => {
-        if (responseIdentifier) update(true);
-        this.endAttempt();
-      });
-      field.append(button);
-      return field;
-    }
-
-    if (interaction.type === "media") {
-      field.append(
-        renderObjectAsset(interaction, {
-          currentValue,
-          update,
-          isCompleted: () => this.attemptIsCompleted(),
-        }),
-      );
-      return field;
-    }
-
-    field.append(renderSelect(interaction, update, currentValue));
-    return field;
+  private contentContext(): PlayerContentContext {
+    return {
+      interactionAt: (index) => this.documentModel?.item.interactions[index],
+      renderEmbeddedInteraction: (embeddedInteraction) =>
+        this.renderEmbeddedInteraction(embeddedInteraction),
+      currentVariableValue: (identifier) => this.currentVariableValue(identifier),
+      mathTemplateValue: (node) => this.mathTemplateValue(node),
+      isFeedbackVisible: (node) => this.isFeedbackVisible(node),
+      isTemplateContentVisible: (element) => this.isTemplateContentVisible(element),
+    };
   }
 
   private renderPortableCustomResponse(
@@ -529,7 +424,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (definition.interactionMarkup.length > 0) {
       const markup = document.createElement("div");
       markup.className = "qti3-portable-custom-markup";
-      markup.append(...this.renderContentNodes(definition.interactionMarkup));
+      markup.append(...renderContentNodes(definition.interactionMarkup, this.contentContext()));
       host.append(markup);
     } else {
       host.textContent = "Portable custom interaction host";
@@ -594,14 +489,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       wrapper.dataset.responseIdentifier = interaction.responseIdentifier;
 
     const responseIdentifier = interaction.responseIdentifier;
-    const update = (value: QtiValue) => {
-      if (this.attemptIsCompleted()) return;
-      if (!responseIdentifier || !this.session) return;
-      this.session.respond(responseIdentifier, value);
-      this.clearValidationMessage(responseIdentifier);
-      this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
-      this.emitStateChange();
-    };
+    const update = this.bindResponseUpdate(responseIdentifier);
     const currentValue = responseIdentifier ? this.currentResponseValue(responseIdentifier) : null;
 
     if (interaction.responseIdentifier) {
@@ -613,87 +501,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         : renderInlineTextEntry(interaction, update, currentValue),
     );
     return wrapper;
-  }
-
-  private renderContentNodes(nodes: QtiContentNode[]): Node[] {
-    return nodes.flatMap((node) => this.renderContentNode(node));
-  }
-
-  private renderContentNode(node: QtiContentNode): Node[] {
-    if (node.kind === "text") return [document.createTextNode(node.text)];
-    if (node.kind === "interaction") {
-      const interaction = this.documentModel?.item.interactions[node.interactionIndex];
-      return interaction ? [this.renderEmbeddedInteraction(interaction)] : [];
-    }
-    if (node.kind === "printedVariable")
-      return [this.renderPrintedVariable(node.identifier, node.format)];
-    if (node.kind === "feedback") return this.renderFeedbackContent(node);
-    if (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline") {
-      return [this.renderTemplateContent(node)];
-    }
-    if (node.qtiName === "qti-position-object-stage") {
-      return this.renderContentNodes(
-        node.children.filter(
-          (child) =>
-            !("qtiName" in child) || (child.qtiName !== "object" && child.qtiName !== "img"),
-        ),
-      );
-    }
-    if (node.qtiName === "qti-prompt") {
-      const prompt = document.createElement("p");
-      copySafeAttributes(prompt, node.attributes);
-      prompt.classList.add("qti3-item-prompt");
-      prompt.append(...this.renderContentNodes(node.children));
-      return [prompt];
-    }
-
-    if (unsafeContentElements.has(node.qtiName)) return [];
-    const elementName = contentElementName(node.qtiName);
-    if (!elementName) return this.renderContentNodes(node.children);
-    const element = createContentElement(elementName);
-    copySafeAttributes(element, node.attributes);
-    const mathTemplateValue = this.mathTemplateValue(node);
-    if (mathTemplateValue === undefined) {
-      element.append(...this.renderContentNodes(node.children));
-    } else {
-      element.textContent = mathTemplateValue;
-    }
-    return [element];
-  }
-
-  private renderTemplateContent(node: Extract<QtiContentNode, { kind: "element" }>): HTMLElement {
-    const element = document.createElement(node.qtiName === "qti-template-block" ? "div" : "span");
-    copySafeAttributes(element, node.attributes);
-    element.classList.add(
-      node.qtiName === "qti-template-block" ? "qti3-template-block" : "qti3-template-inline",
-    );
-    element.dataset.templateIdentifier = node.attributes["template-identifier"] ?? "";
-    element.dataset.templateValueIdentifier = node.attributes.identifier ?? "";
-    element.dataset.showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
-    element.hidden = !this.isTemplateContentVisible(element);
-    element.append(...this.renderContentNodes(node.children));
-    return element;
-  }
-
-  private renderPrintedVariable(identifier: string, format: string | undefined): HTMLElement {
-    const output = document.createElement("output");
-    output.className = "qti3-printed-variable";
-    output.dataset.identifier = identifier;
-    if (format) output.dataset.format = format;
-    output.value = formatPrintedValue(this.currentVariableValue(identifier), format);
-    output.textContent = output.value;
-    return output;
-  }
-
-  private renderFeedbackContent(node: Extract<QtiContentNode, { kind: "feedback" }>): Node[] {
-    const element = document.createElement(node.feedbackType === "block" ? "section" : "span");
-    element.className = `qti3-feedback-${node.feedbackType}`;
-    element.dataset.feedbackIdentifier = node.identifier;
-    element.dataset.outcomeIdentifier = node.outcomeIdentifier;
-    element.dataset.showHide = node.showHide;
-    element.hidden = !this.isFeedbackVisible(node);
-    element.append(...this.renderContentNodes(node.children));
-    return [element];
   }
 
   private updateDynamicBodyState(): void {
@@ -861,58 +668,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private validateResponses(): QtiDiagnostic[] {
     const state = this.session?.serialize();
     if (!state || !this.documentModel) return [];
-    const interactionsByResponse = new Map(
-      this.documentModel.item.interactions
-        .filter((interaction) => interaction.responseIdentifier)
-        .map((interaction) => [interaction.responseIdentifier!, interaction]),
-    );
-    const diagnostics: QtiDiagnostic[] = [];
-    for (const declaration of this.documentModel.item.responseDeclarations) {
-      const interaction = interactionsByResponse.get(declaration.identifier);
-      if (declaration.correctResponse === null && interaction?.type !== "media") continue;
-      const minimum = minimumRequiredResponses(interaction);
-      const count =
-        interaction?.type === "media"
-          ? mediaPlayCount(state.responses[declaration.identifier] ?? null)
-          : responseCount(state.responses[declaration.identifier] ?? null);
-      const maximum = maximumAllowedResponses(interaction);
-      if (count < minimum) {
-        diagnostics.push({
-          code: "response.required",
-          severity: "error",
-          message:
-            interaction?.attributes["data-min-selections-message"] ??
-            (interaction?.type === "media"
-              ? `${declaration.identifier} requires at least ${minimum} play${minimum === 1 ? "" : "s"}.`
-              : minimum === 1
-                ? `${declaration.identifier} requires a response.`
-                : `${declaration.identifier} requires at least ${minimum} responses.`),
-          path: declaration.identifier,
-        });
-      }
-      if (maximum !== undefined && count > maximum) {
-        diagnostics.push({
-          code: "response.maximum",
-          severity: "error",
-          message:
-            interaction?.attributes["data-max-selections-message"] ??
-            (interaction?.type === "media"
-              ? `${declaration.identifier} allows at most ${maximum} play${maximum === 1 ? "" : "s"}.`
-              : `${declaration.identifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`),
-          path: declaration.identifier,
-        });
-      }
-      if (interaction) {
-        diagnostics.push(
-          ...matchMaxDiagnostics(
-            declaration.identifier,
-            interaction,
-            state.responses[declaration.identifier] ?? null,
-          ),
-        );
-      }
-    }
-    return diagnostics;
+    return validateItemResponses(this.documentModel, state);
   }
 
   private renderValidationMessages(): void {

@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { choicesOrFallback, valueToStrings } from "../interaction-support.js";
+import { interactionChoices, missingChoicesMessage, valueToStrings } from "../interaction-support.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 
 export function renderHottextResponse(
@@ -30,13 +30,18 @@ export function renderHottextResponse(
   const segments =
     interaction.hottextSegments && interaction.hottextSegments.length > 0
       ? interaction.hottextSegments
-      : choicesOrFallback(interaction).map((choice) => ({
+      : interactionChoices(interaction).map((choice) => ({
           kind: "hottext" as const,
           identifier: choice.identifier,
           text: choice.text,
           attributes: choice.attributes,
           source: choice.source,
         }));
+
+  if (segments.length === 0) {
+    group.append(missingChoicesMessage(interaction));
+    return group;
+  }
 
   const content: Array<Node | string> = [];
   for (const [segmentIndex, segment] of segments.entries()) {

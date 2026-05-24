@@ -402,7 +402,7 @@ export const PLAYER_STYLES = `    .qti3-player {
 
     .qti3-drawing-surface .qti3-drawing-stroke {
       fill: none;
-      stroke: currentColor;
+      stroke: #000;
       stroke-width: 3;
       stroke-linecap: round;
       stroke-linejoin: round;
@@ -412,6 +412,7 @@ export const PLAYER_STYLES = `    .qti3-player {
       .qti3-drawing-surface {
         border-color: CanvasText;
         background: Canvas;
+        color: #000;
       }
 
       .qti3-drawing-surface .qti3-drawing-stroke {
@@ -477,6 +478,20 @@ export const PLAYER_STYLES = `    .qti3-player {
       }
     }
 
+    .qti3-graphic-surface,
+    .qti3-hotspot-surface,
+    .qti3-point-surface,
+    .qti3-position-object-stage,
+    .qti3-graphic-associate-surface,
+    .qti3-graphic-gap-match-surface,
+    .qti3-graphic-order-surface {
+      position: relative;
+      border: 1px solid CanvasText;
+      background: Canvas;
+      overflow: hidden;
+      max-inline-size: 100%;
+    }
+
     .qti3-graphic-associate-surface,
     .qti3-graphic-gap-match-surface,
     .qti3-graphic-order-surface {
@@ -512,7 +527,21 @@ export const PLAYER_STYLES = `    .qti3-player {
     }
 
     .qti3-graphic-gap-match-surface {
+      overflow: visible;
       margin-block-end: calc(var(--qti3-graphic-gap-label-block-size, 2rem) + 0.75rem);
+    }
+
+    .qti3-point-surface {
+      display: block;
+      box-sizing: border-box;
+      cursor: crosshair;
+      color: CanvasText;
+    }
+
+    .qti3-position-object-stage {
+      box-sizing: border-box;
+      color: CanvasText;
+      touch-action: none;
     }
 
     .qti3-graphic-gap-hotspot {

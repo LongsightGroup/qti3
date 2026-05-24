@@ -1,5 +1,6 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
+  applyGraphicSurfaceLayout,
   objectHeight,
   objectWidth,
   readableType,
@@ -21,18 +22,12 @@ export function renderSelectPointResponse(
 
   const surface = document.createElement("button");
   surface.type = "button";
-  surface.className = "qti3-point-surface";
+  applyGraphicSurfaceLayout(surface, objectWidth(interaction), objectHeight(interaction), "qti3-point-surface");
   surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
   surface.style.display = "block";
-  surface.style.position = "relative";
-  surface.style.inlineSize = `min(100%, ${objectWidth(interaction)}px)`;
-  surface.style.aspectRatio = `${objectWidth(interaction)} / ${objectHeight(interaction)}`;
   surface.style.boxSizing = "border-box";
-  surface.style.border = "1px solid CanvasText";
-  surface.style.background = "Canvas";
-  surface.style.color = "CanvasText";
   surface.style.cursor = "crosshair";
-  surface.style.overflow = "hidden";
+  surface.style.color = "CanvasText";
 
   const object = interaction.object;
   if (object?.data && object.type?.startsWith("image/")) {

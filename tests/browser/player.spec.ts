@@ -2432,6 +2432,29 @@ test.describe("manual harness", () => {
     }
   });
 
+  test("selects graphic order hotspots with keyboard only", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "graphicOrder");
+
+    await page
+      .locator('qti-assessment-item-player .qti3-graphic-order-hotspot[data-choice-identifier="B"]')
+      .focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["B"]);
+
+    await page
+      .locator('qti-assessment-item-player .qti3-graphic-order-hotspot[data-choice-identifier="A"]')
+      .focus();
+    await page.keyboard.press("Space");
+    await expectResponse(page, ["B", "A"]);
+
+    await page
+      .locator('qti-assessment-item-player .qti3-graphic-order-hotspot[data-choice-identifier="C"]')
+      .focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["B", "A", "C"]);
+  });
+
   test("orders graphic order hotspots with pointer and keyboard controls", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "graphicOrder");

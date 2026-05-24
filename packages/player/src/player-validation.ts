@@ -1,5 +1,11 @@
-import type { QtiDiagnostic, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { minimumMediaPlays, parseUnlimitedMaximum } from "./response-limits.js";
+import type {
+  QtiAttemptStateV1,
+  QtiDiagnostic,
+  QtiDocument,
+  QtiInteraction,
+  QtiValue,
+} from "@longsightgroup/qti3-core";
+import { maximumAllowedResponses, mediaPlayCount, minimumMediaPlays, parseUnlimitedMaximum } from "./response-limits.js";
 
 export function errorView(message: string): HTMLElement {
   const element = document.createElement("p");
@@ -89,4 +95,62 @@ export function matchMaxDiagnostics(
 export function responseChoiceIdentifiers(response: QtiValue): string[] {
   const values = Array.isArray(response) ? response : response === null ? [] : [response];
   return values.flatMap((value) => String(value).split(/\s+/).filter(Boolean));
+}
+
+export function validateItemResponses(
+  document: QtiDocument,
+  state: QtiAttemptStateV1,
+): QtiDiagnostic[] {
+  const interactionsByResponse = new Map(
+    document.item.interactions
+      .filter((interaction) => interaction.responseIdentifier)
+      .map((interaction) => [interaction.responseIdentifier!, interaction]),
+  );
+  const diagnostics: QtiDiagnostic[] = [];
+  for (const declaration of document.item.responseDeclarations) {
+    const interaction = interactionsByResponse.get(declaration.identifier);
+    if (declaration.correctResponse === null && interaction?.type !== "media") continue;
+    const minimum = minimumRequiredResponses(interaction);
+    const count =
+      interaction?.type === "media"
+        ? mediaPlayCount(state.responses[declaration.identifier] ?? null)
+        : responseCount(state.responses[declaration.identifier] ?? null);
+    const maximum = maximumAllowedResponses(interaction);
+    if (count < minimum) {
+      diagnostics.push({
+        code: "response.required",
+        severity: "error",
+        message:
+          interaction?.attributes["data-min-selections-message"] ??
+          (interaction?.type === "media"
+            ? `${declaration.identifier} requires at least ${minimum} play${minimum === 1 ? "" : "s"}.`
+            : minimum === 1
+              ? `${declaration.identifier} requires a response.`
+              : `${declaration.identifier} requires at least ${minimum} responses.`),
+        path: declaration.identifier,
+      });
+    }
+    if (maximum !== undefined && count > maximum) {
+      diagnostics.push({
+        code: "response.maximum",
+        severity: "error",
+        message:
+          interaction?.attributes["data-max-selections-message"] ??
+          (interaction?.type === "media"
+            ? `${declaration.identifier} allows at most ${maximum} play${maximum === 1 ? "" : "s"}.`
+            : `${declaration.identifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`),
+        path: declaration.identifier,
+      });
+    }
+    if (interaction) {
+      diagnostics.push(
+        ...matchMaxDiagnostics(
+          declaration.identifier,
+          interaction,
+          state.responses[declaration.identifier] ?? null,
+        ),
+      );
+    }
+  }
+  return diagnostics;
 }

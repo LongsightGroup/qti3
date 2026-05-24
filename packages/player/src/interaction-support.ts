@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
+import { errorView } from "./player-validation.js";
 
 export function responseGroup(className?: string): HTMLElement {
   const group = document.createElement("div");
@@ -6,24 +7,28 @@ export function responseGroup(className?: string): HTMLElement {
   return group;
 }
 
-export function choicesOrFallback(interaction: QtiInteraction): QtiChoice[] {
-  if (interaction.choices.length > 0) return interaction.choices;
-  return [
-    {
-      identifier: "A",
-      text: "A",
-      role: "simpleChoice",
-      qtiName: "qti-simple-choice",
-      attributes: {},
-    },
-    {
-      identifier: "B",
-      text: "B",
-      role: "simpleChoice",
-      qtiName: "qti-simple-choice",
-      attributes: {},
-    },
-  ];
+export function interactionChoices(interaction: QtiInteraction): QtiChoice[] {
+  return interaction.choices;
+}
+
+export function missingChoicesMessage(interaction: QtiInteraction): HTMLElement {
+  const identifier = interaction.responseIdentifier ? ` (${interaction.responseIdentifier})` : "";
+  return errorView(`No choices are defined for the ${interaction.type} interaction${identifier}.`);
+}
+
+export function applyGraphicSurfaceLayout(
+  surface: HTMLElement,
+  width: number,
+  height: number,
+  ...classNames: string[]
+): void {
+  surface.classList.add("qti3-graphic-surface", ...classNames);
+  surface.style.inlineSize = `${width}px`;
+  surface.style.aspectRatio = `${width} / ${height}`;
+}
+
+export function choiceSelector(identifier: string): string {
+  return `[data-choice-identifier="${CSS.escape(identifier)}"]`;
 }
 
 export function valueToStrings(value: QtiValue): string[] {

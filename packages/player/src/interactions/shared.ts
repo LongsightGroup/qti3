@@ -1,5 +1,5 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
-import { choicesOrFallback } from "../interaction-support.js";
+import { interactionChoices } from "../interaction-support.js";
 
 export function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
   const region = document.createElement("div");
@@ -31,7 +31,7 @@ export function choiceText(choices: QtiChoice[], identifier: string | undefined)
 }
 
 export function sourceChoices(interaction: QtiInteraction): QtiChoice[] {
-  const choices = choicesOrFallback(interaction);
+  const choices = interactionChoices(interaction);
   if (interaction.type === "gapMatch" || interaction.type === "graphicGapMatch") {
     const gapChoices = choices.filter((choice) => choice.role === "gapChoice");
     return gapChoices.length > 0 ? gapChoices : choices;
@@ -42,7 +42,7 @@ export function sourceChoices(interaction: QtiInteraction): QtiChoice[] {
 }
 
 export function targetChoices(interaction: QtiInteraction): QtiChoice[] {
-  const choices = choicesOrFallback(interaction);
+  const choices = interactionChoices(interaction);
   if (interaction.type === "associate" || interaction.type === "graphicAssociate") return choices;
   const targetRoles = new Set(["matchTarget", "gap", "hotspot"]);
   const targets = choices.filter((choice) => targetRoles.has(choice.role));
