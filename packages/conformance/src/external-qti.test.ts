@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 const externalDir = process.env.QTI3_EXTERNAL_QTI_DIR;
 const requireExternal = process.env.QTI3_REQUIRE_EXTERNAL === "1";
 const validatorReport = process.env.QTI3_EXTERNAL_VALIDATOR_REPORT;
-const runIfConfigured = externalDir ? describe : requireExternal ? describe : describe.skip;
+const scoreCorrect = process.env.QTI3_EXTERNAL_SCORE_CORRECT === "1";
+const hasExternalDir = Boolean(externalDir);
+const runIfConfigured = hasExternalDir || requireExternal ? describe : describe.skip;
 
 runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () => {
   it.runIf(requireExternal)("requires official external conformance content", () => {
@@ -26,38 +28,33 @@ runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () =>
     expect(report.size).toBeGreaterThan(0);
   });
 
-  it("parses every XML assessment item under QTI3_EXTERNAL_QTI_DIR", async () => {
-    expect(
-      externalDir,
-      "Set QTI3_EXTERNAL_QTI_DIR to the official 1EdTech QTI 3 test content.",
-    ).toBeTruthy();
-    const files = await findXmlFiles(externalDir!);
-    let checked = 0;
+  it.runIf(hasExternalDir)(
+    "parses every XML assessment item under QTI3_EXTERNAL_QTI_DIR",
+    async () => {
+      const files = await findXmlFiles(externalDir!);
+      let checked = 0;
 
-    const failures: string[] = [];
-    for (const file of files) {
-      const xml = await readFile(file, "utf8");
-      if (!xml.includes("qti-assessment-item")) continue;
-      checked += 1;
-      const result = parseQtiXml(xml);
-      if (!result.ok) {
-        failures.push(
-          `${file}: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
-        );
+      const failures: string[] = [];
+      for (const file of files) {
+        const xml = await readFile(file, "utf8");
+        if (!xml.includes("qti-assessment-item")) continue;
+        checked += 1;
+        const result = parseQtiXml(xml);
+        if (!result.ok) {
+          failures.push(
+            `${file}: ${result.diagnostics.map((diagnostic) => diagnostic.message).join("; ")}`,
+          );
+        }
       }
-    }
 
-    expect(checked).toBeGreaterThan(0);
-    expect(failures).toEqual([]);
-  });
+      expect(checked).toBeGreaterThan(0);
+      expect(failures).toEqual([]);
+    },
+  );
 
-  it.runIf(process.env.QTI3_EXTERNAL_SCORE_CORRECT === "1")(
+  it.runIf(hasExternalDir && scoreCorrect)(
     "scores each XML assessment item with its declared correct responses",
     async () => {
-      expect(
-        externalDir,
-        "Set QTI3_EXTERNAL_QTI_DIR to the official 1EdTech QTI 3 test content.",
-      ).toBeTruthy();
       const files = await findXmlFiles(externalDir!);
       const failures: string[] = [];
       let checked = 0;
