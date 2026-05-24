@@ -2,6 +2,11 @@ export interface QtiPlayerRemoveMessageParams {
   label: string;
 }
 
+export interface QtiPlayerAssociationPairLabelParams {
+  source: string;
+  target: string;
+}
+
 export type QtiPlayerMovementDirection = "up" | "down" | "left" | "right";
 
 export interface QtiPlayerMessages {
@@ -13,8 +18,13 @@ export interface QtiPlayerMessages {
   uploadResponse: () => string;
   movableObject: () => string;
   placeObject: () => string;
+  inlineChoicePrompt: () => string;
   noPointSelected: () => string;
   noRegionSelected: () => string;
+  noAssociationsMade: () => string;
+  associationsMade: (params: { count: number }) => string;
+  associationPairLabel: (params: QtiPlayerAssociationPairLabelParams) => string;
+  hotspotSelectedChooseAnother: (params: { label: string }) => string;
   moveChoice: (params: { label: string; direction: QtiPlayerMovementDirection }) => string;
   movePoint: (params: { direction: QtiPlayerMovementDirection }) => string;
   moveObject: (params: { direction: QtiPlayerMovementDirection }) => string;

@@ -65,6 +65,7 @@ export function renderEmbeddedInteractionSection(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   if (interaction.type !== "inlineChoice" && interaction.type !== "textEntry") {
     return renderUnsupportedEmbeddedInteraction(interaction);
@@ -81,7 +82,7 @@ export function renderEmbeddedInteractionSection(
   }
   wrapper.append(
     interaction.type === "inlineChoice"
-      ? renderSelect(interaction, update, currentValue)
+      ? renderSelect(interaction, update, currentValue, messages)
       : renderInlineTextEntry(interaction, update, currentValue),
   );
   return wrapper;

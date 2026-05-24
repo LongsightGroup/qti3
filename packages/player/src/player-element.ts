@@ -349,6 +349,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
           embeddedInteraction,
           this.bindResponseUpdate(responseIdentifier),
           responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
+          this.playerMessages(),
         );
       },
       currentVariableValue: (identifier) => currentVariableValue(sessionState(), identifier),

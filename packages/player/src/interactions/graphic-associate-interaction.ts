@@ -214,16 +214,21 @@ export function renderGraphicAssociateResponse(
       button.dataset.selected = isActive || isPaired ? "true" : "false";
     }
     summary.textContent = selectedHotspot
-      ? `${hotspotDisplayLabel(selectedHotspot, choices)} selected. Choose another hotspot.`
+      ? messages.hotspotSelectedChooseAnother({
+          label: hotspotDisplayLabel(selectedHotspot, choices),
+        })
       : selectedPairs.length > 0
-        ? `${selectedPairs.length} ${selectedPairs.length === 1 ? "association" : "associations"} made.`
-        : "No associations made";
+        ? messages.associationsMade({ count: selectedPairs.length })
+        : messages.noAssociationsMade();
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
-        const [source, target] = pair.split(" ");
+        const [source = "", target = ""] = pair.split(" ");
         const sourceChoice = choices.find((choice) => choice.identifier === source);
         const targetChoice = choices.find((choice) => choice.identifier === target);
-        const pairLabel = `${sourceChoice ? hotspotDisplayLabel(sourceChoice, choices) : source} to ${targetChoice ? hotspotDisplayLabel(targetChoice, choices) : target}`;
+        const pairLabel = messages.associationPairLabel({
+          source: sourceChoice ? hotspotDisplayLabel(sourceChoice, choices) : source,
+          target: targetChoice ? hotspotDisplayLabel(targetChoice, choices) : target,
+        });
         const item = document.createElement("li");
         item.className = "qti3-pair-chip";
         const text = document.createElement("span");

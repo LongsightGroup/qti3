@@ -1,4 +1,8 @@
-export type { QtiPlayerMessages, QtiPlayerRemoveMessageParams } from "./player-messages.js";
+export type {
+  QtiPlayerAssociationPairLabelParams,
+  QtiPlayerMessages,
+  QtiPlayerRemoveMessageParams,
+} from "./player-messages.js";
 export type {
   QtiAssessmentItemPlayerCustomEventMap,
   QtiAssessmentItemPlayerEvent,

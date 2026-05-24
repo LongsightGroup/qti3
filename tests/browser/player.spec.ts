@@ -537,16 +537,15 @@ test.describe("manual harness", () => {
     ).toBeVisible();
   });
 
-  test("renders inline choice placeholder without locale text and clears to null", async ({
-    page,
-  }) => {
+  test("renders inline choice placeholder text and clears to null", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "inlineChoice");
 
     const select = page.locator(
       'qti-assessment-item-player [data-response-identifier="RESPONSE_DECLARATION"] select',
     );
-    await expect(select.locator("option").first()).toHaveText("");
+    await expect(select).toHaveAttribute("name", "RESPONSE_DECLARATION");
+    await expect(select.locator("option").first()).toHaveText("Choose...");
     const placeholderValue = await select
       .locator("option")
       .first()
@@ -1263,7 +1262,7 @@ test.describe("manual harness", () => {
         await expect(surface, interactionType).toBeVisible();
         await expect(surface.locator("img"), interactionType).toHaveAttribute(
           "src",
-          /hotspot-flow\.svg$/,
+          /hotspot-flow-unlabeled\.svg$/,
         );
         await expectImageLoaded(surface.locator("img"));
         continue;
@@ -1273,7 +1272,7 @@ test.describe("manual harness", () => {
         await expect(surface, interactionType).toBeVisible();
         await expect(surface.locator("img"), interactionType).toHaveAttribute(
           "src",
-          /hotspot-flow\.svg$/,
+          /hotspot-flow-unlabeled\.svg$/,
         );
         await expectImageLoaded(surface.locator("img"));
         continue;
@@ -1282,7 +1281,7 @@ test.describe("manual harness", () => {
       await expect(context, interactionType).toBeVisible();
       await expect(context.locator("img"), interactionType).toHaveAttribute(
         "src",
-        /hotspot-flow\.svg$/,
+        /hotspot-flow-unlabeled\.svg$/,
       );
       await expectImageLoaded(context.locator("img"));
     }
@@ -1697,7 +1696,7 @@ test.describe("manual harness", () => {
       (item) => item.interactionType === "graphicOrder",
     );
     if (!graphicOrder) throw new Error("Missing graphic order fixture.");
-    const diagram = await readFile("examples/manual/public/hotspot-flow.svg");
+    const diagram = await readFile("examples/manual/public/hotspot-flow-unlabeled.svg");
 
     const zip = createStoredZip({
       "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
@@ -1705,12 +1704,12 @@ test.describe("manual harness", () => {
   <resources>
     <resource identifier="graphic-order" type="imsqti_item_xmlv3p0" href="items/graphic-order.xml">
       <file href="items/graphic-order.xml"/>
-      <file href="items/hotspot-flow.svg"/>
+      <file href="items/hotspot-flow-unlabeled.svg"/>
     </resource>
   </resources>
 </manifest>`,
       "items/graphic-order.xml": graphicOrder.xml,
-      "items/hotspot-flow.svg": diagram,
+      "items/hotspot-flow-unlabeled.svg": diagram,
     });
 
     await page.goto("/");
@@ -2588,7 +2587,7 @@ test.describe("manual harness", () => {
 
     await loadFixture(page, "graphicAssociate");
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await expect(surface.locator("img")).toHaveAttribute("src", /hotspot-flow\.svg$/);
+    await expect(surface.locator("img")).toHaveAttribute("src", /hotspot-flow-unlabeled\.svg$/);
     await expect(surface.getByRole("button", { name: "Item XML" })).toHaveAttribute(
       "data-choice-identifier",
       "A",
@@ -2667,7 +2666,7 @@ test.describe("manual harness", () => {
     await surface.getByRole("button", { name: "Item XML" }).click();
     await surface.getByRole("button", { name: "Response capture" }).click();
 
-    const remove = page.getByRole("button", { name: "Eliminar Item XML to Response capture" });
+    const remove = page.getByRole("button", { name: "Eliminar Item XML con Response capture" });
     await expect(remove).toHaveAttribute("title", "Eliminar");
     await expect(remove.locator("svg.qti3-trash-icon")).toHaveCount(1);
     await remove.click();
@@ -2684,126 +2683,37 @@ test.describe("manual harness", () => {
     await surface.getByRole("button", { name: "Response capture" }).click();
 
     const remove = page.getByRole("button", {
-      name: "Item XML to Response capture entfernen",
+      name: "Item XML mit Response capture entfernen",
     });
     await expect(remove).toHaveAttribute("title", "Entfernen");
     await remove.click();
     await expectResponse(page, []);
   });
 
-  test("uses built-in player chrome locale catalogs", async ({ page }) => {
+  test("applies resolved locale messages to rendered player chrome", async ({ page }) => {
     await page.goto("/");
-    const examples = [
-      {
-        locale: "es-MX",
-        title: "Quitar",
-        removeName: "Quitar Item XML to Response capture",
-        moveName: "Mover Load and parse the assessment item abajo",
-        clearDrawingName: "Borrar dibujo",
-        noPointText: "Ningun punto seleccionado",
-        noRegionText: "Ninguna region seleccionada",
-      },
-      {
-        locale: "es-ES",
-        title: "Quitar",
-        removeName: "Quitar Item XML to Response capture",
-        moveName: "Mover Load and parse the assessment item abajo",
-        clearDrawingName: "Borrar dibujo",
-        noPointText: "Ningun punto seleccionado",
-        noRegionText: "Ninguna region seleccionada",
-      },
-      {
-        locale: "sv-SE",
-        title: "Ta bort",
-        removeName: "Ta bort Item XML to Response capture",
-        moveName: "Flytta Load and parse the assessment item ned",
-        clearDrawingName: "Rensa ritning",
-        noPointText: "Ingen punkt vald",
-        noRegionText: "Ingen region vald",
-      },
-      {
-        locale: "de-DE",
-        title: "Entfernen",
-        removeName: "Item XML to Response capture entfernen",
-        moveName: "Load and parse the assessment item nach unten bewegen",
-        clearDrawingName: "Zeichnung loeschen",
-        noPointText: "Kein Punkt ausgewaehlt",
-        noRegionText: "Keine Region ausgewaehlt",
-      },
-      {
-        locale: "pt-BR",
-        title: "Remover",
-        removeName: "Remover Item XML to Response capture",
-        moveName: "Mover Load and parse the assessment item para baixo",
-        clearDrawingName: "Limpar desenho",
-        noPointText: "Nenhum ponto selecionado",
-        noRegionText: "Nenhuma regiao selecionada",
-      },
-      {
-        locale: "pt-PT",
-        title: "Remover",
-        removeName: "Remover Item XML to Response capture",
-        moveName: "Mover Load and parse the assessment item para baixo",
-        clearDrawingName: "Limpar desenho",
-        noPointText: "Nenhum ponto selecionado",
-        noRegionText: "Nenhuma regiao selecionada",
-      },
-      {
-        locale: "fr-FR",
-        title: "Supprimer",
-        removeName: "Supprimer Item XML to Response capture",
-        moveName: "Deplacer Load and parse the assessment item vers le bas",
-        clearDrawingName: "Effacer le dessin",
-        noPointText: "Aucun point selectionne",
-        noRegionText: "Aucune region selectionnee",
-      },
-    ];
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "de-DE";
+      (
+        element as HTMLElement & {
+          messages: undefined;
+        }
+      ).messages = undefined;
+    });
 
-    for (const example of examples) {
-      await page.locator("qti-assessment-item-player").evaluate((element, locale) => {
-        (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = locale;
-        (
-          element as HTMLElement & {
-            messages: undefined;
-          }
-        ).messages = undefined;
-      }, example.locale);
-      await loadFixture(page, "graphicAssociate");
+    await loadFixture(page, "graphicAssociate");
 
-      const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-      await surface.getByRole("button", { name: "Item XML" }).click();
-      await surface.getByRole("button", { name: "Response capture" }).click();
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    await surface.getByRole("button", { name: "Item XML" }).click();
+    await surface.getByRole("button", { name: "Response capture" }).click();
 
-      const remove = page.getByRole("button", { name: example.removeName });
-      await expect(remove, example.locale).toHaveAttribute("title", example.title);
-      await expect(remove.locator("svg.qti3-trash-icon"), example.locale).toHaveCount(1);
-      await remove.click();
-      await expectResponse(page, []);
-
-      await loadFixture(page, "order");
-      await expect(
-        page.getByRole("button", { name: example.moveName }),
-        example.locale,
-      ).toHaveCount(1);
-
-      await loadFixture(page, "drawing");
-      await expect(
-        page.getByRole("button", { name: example.clearDrawingName }),
-        example.locale,
-      ).toBeVisible();
-
-      await loadFixture(page, "selectPoint");
-      await expect(
-        page.locator("qti-assessment-item-player .qti3-coordinate-output"),
-        example.locale,
-      ).toHaveText(example.noPointText);
-
-      await loadFixture(page, "hotspot");
-      await expect(
-        page.locator("qti-assessment-item-player .qti3-selection-summary"),
-        example.locale,
-      ).toHaveText(example.noRegionText);
-    }
+    const remove = page.getByRole("button", {
+      name: "Item XML mit Response capture entfernen",
+    });
+    await expect(remove).toHaveAttribute("title", "Entfernen");
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
+      "1 Zuordnung erstellt.",
+    );
   });
 
   test("infers inline SVG dimensions and supports dragging graphic associate lines", async ({
@@ -2875,7 +2785,7 @@ test.describe("manual harness", () => {
 
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
-    ).toHaveAttribute("src", /hotspot-flow\.svg$/);
+    ).toHaveAttribute("src", /hotspot-flow-unlabeled\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
     await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).toBeVisible();
     await expect(

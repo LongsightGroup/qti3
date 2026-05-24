@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300" role="img" aria-label="Unlabeled QTI delivery flow diagram">
+  <!-- Geometry mirrors hotspot-flow.svg; keep fixture hotspot coordinates synchronized. -->
+  <rect width="480" height="300" fill="#f7f7f4"/>
+  <rect x="24" y="52" width="112" height="72" rx="8" fill="#dcecff" stroke="#314158" stroke-width="2"/>
+  <rect x="184" y="52" width="112" height="72" rx="8" fill="#dbf3df" stroke="#314158" stroke-width="2"/>
+  <rect x="344" y="52" width="112" height="72" rx="8" fill="#ffe4c8" stroke="#314158" stroke-width="2"/>
+  <rect x="184" y="178" width="112" height="72" rx="8" fill="#f7dcff" stroke="#314158" stroke-width="2"/>
+  <path d="M136 88H176" fill="none" stroke="#314158" stroke-width="3"/>
+  <path d="M296 88H336" fill="none" stroke="#314158" stroke-width="3"/>
+  <path d="M240 124V168" fill="none" stroke="#314158" stroke-width="3"/>
+  <path d="M168 82l10 6-10 6" fill="none" stroke="#314158" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M328 82l10 6-10 6" fill="none" stroke="#314158" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M234 160l6 10 6-10" fill="none" stroke="#314158" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

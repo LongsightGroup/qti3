@@ -9,7 +9,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>Order diagram regions by selecting them in sequence.</p>
-    <qti-graphic-order-interaction response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-hotspot-choice identifier="A" hotspot-label="Item XML" shape="rect" coords="24,52,136,124"/><qti-hotspot-choice identifier="B" hotspot-label="Response capture" shape="rect" coords="184,52,296,124"/><qti-hotspot-choice identifier="C" hotspot-label="Outcomes" shape="rect" coords="184,178,296,250"/></qti-graphic-order-interaction>
+    <qti-graphic-order-interaction response-identifier="RESPONSE"><qti-prompt>Order the visual regions from item definition to candidate response to scoring outcome.</qti-prompt><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"/><qti-hotspot-choice identifier="A" hotspot-label="Item XML" shape="rect" coords="24,52,136,124"/><qti-hotspot-choice identifier="B" hotspot-label="Response capture" shape="rect" coords="184,52,296,124"/><qti-hotspot-choice identifier="C" hotspot-label="Outcomes" shape="rect" coords="184,178,296,250"/></qti-graphic-order-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

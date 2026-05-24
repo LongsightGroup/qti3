@@ -1,6 +1,8 @@
 import type { QtiPlayerMessages } from "./player-messages.js";
 import type { QtiPlayerMessageOverrides } from "./player-types.js";
 
+type QtiPlayerMessageCatalog = Readonly<Partial<QtiPlayerMessages>>;
+
 const defaultEnglishPlayerMessages: QtiPlayerMessages = {
   remove: () => "Remove",
   removePair: ({ label }) => `Remove ${label}`,
@@ -10,8 +12,13 @@ const defaultEnglishPlayerMessages: QtiPlayerMessages = {
   uploadResponse: () => "Upload response",
   movableObject: () => "Movable object",
   placeObject: () => "Place",
+  inlineChoicePrompt: () => "Choose...",
   noPointSelected: () => "No point selected",
   noRegionSelected: () => "No region selected",
+  noAssociationsMade: () => "No associations made",
+  associationsMade: ({ count }) => `${count} ${count === 1 ? "association" : "associations"} made.`,
+  associationPairLabel: ({ source, target }) => `${source} to ${target}`,
+  hotspotSelectedChooseAnother: ({ label }) => `${label} selected. Choose another hotspot.`,
   moveChoice: ({ label, direction }) => `Move ${label} ${direction}`,
   movePoint: ({ direction }) => `Move point ${direction}`,
   moveObject: ({ direction }) => `Move object ${direction}`,
@@ -28,8 +35,14 @@ const playerMessages = {
     uploadResponse: () => "Subir respuesta",
     movableObject: () => "Objeto movible",
     placeObject: () => "Colocar",
+    inlineChoicePrompt: () => "Elija...",
     noPointSelected: () => "Ningun punto seleccionado",
     noRegionSelected: () => "Ninguna region seleccionada",
+    noAssociationsMade: () => "Ninguna asociacion realizada",
+    associationsMade: ({ count }) =>
+      `${count} ${count === 1 ? "asociacion realizada" : "asociaciones realizadas"}.`,
+    associationPairLabel: ({ source, target }) => `${source} con ${target}`,
+    hotspotSelectedChooseAnother: ({ label }) => `${label} seleccionado. Elija otro punto activo.`,
     moveChoice: ({ label, direction }) => `Mover ${label} ${spanishDirection(direction)}`,
     movePoint: ({ direction }) => `Mover punto ${spanishDirection(direction)}`,
     moveObject: ({ direction }) => `Mover objeto ${spanishDirection(direction)}`,
@@ -43,8 +56,14 @@ const playerMessages = {
     uploadResponse: () => "Ladda upp svar",
     movableObject: () => "Flyttbart objekt",
     placeObject: () => "Placera",
+    inlineChoicePrompt: () => "Valj...",
     noPointSelected: () => "Ingen punkt vald",
     noRegionSelected: () => "Ingen region vald",
+    noAssociationsMade: () => "Inga associationer gjorda",
+    associationsMade: ({ count }) =>
+      `${count} ${count === 1 ? "association gjord" : "associationer gjorda"}.`,
+    associationPairLabel: ({ source, target }) => `${source} med ${target}`,
+    hotspotSelectedChooseAnother: ({ label }) => `${label} valt. Valj en annan hotspot.`,
     moveChoice: ({ label, direction }) => `Flytta ${label} ${swedishDirection(direction)}`,
     movePoint: ({ direction }) => `Flytta punkt ${swedishDirection(direction)}`,
     moveObject: ({ direction }) => `Flytta objekt ${swedishDirection(direction)}`,
@@ -58,8 +77,15 @@ const playerMessages = {
     uploadResponse: () => "Antwort hochladen",
     movableObject: () => "Bewegliches Objekt",
     placeObject: () => "Platzieren",
+    inlineChoicePrompt: () => "Waehlen...",
     noPointSelected: () => "Kein Punkt ausgewaehlt",
     noRegionSelected: () => "Keine Region ausgewaehlt",
+    noAssociationsMade: () => "Keine Zuordnungen erstellt",
+    associationsMade: ({ count }) =>
+      `${count} ${count === 1 ? "Zuordnung erstellt" : "Zuordnungen erstellt"}.`,
+    associationPairLabel: ({ source, target }) => `${source} mit ${target}`,
+    hotspotSelectedChooseAnother: ({ label }) =>
+      `${label} ausgewaehlt. Waehlen Sie einen weiteren Hotspot.`,
     moveChoice: ({ label, direction }) => `${label} ${germanDirection(direction)} bewegen`,
     movePoint: ({ direction }) => `Punkt ${germanDirection(direction)} bewegen`,
     moveObject: ({ direction }) => `Objekt ${germanDirection(direction)} bewegen`,
@@ -73,8 +99,14 @@ const playerMessages = {
     uploadResponse: () => "Enviar resposta",
     movableObject: () => "Objeto movel",
     placeObject: () => "Posicionar",
+    inlineChoicePrompt: () => "Escolha...",
     noPointSelected: () => "Nenhum ponto selecionado",
     noRegionSelected: () => "Nenhuma regiao selecionada",
+    noAssociationsMade: () => "Nenhuma associacao feita",
+    associationsMade: ({ count }) =>
+      `${count} ${count === 1 ? "associacao feita" : "associacoes feitas"}.`,
+    associationPairLabel: ({ source, target }) => `${source} com ${target}`,
+    hotspotSelectedChooseAnother: ({ label }) => `${label} selecionado. Escolha outro ponto ativo.`,
     moveChoice: ({ label, direction }) => `Mover ${label} ${portugueseDirection(direction)}`,
     movePoint: ({ direction }) => `Mover ponto ${portugueseDirection(direction)}`,
     moveObject: ({ direction }) => `Mover objeto ${portugueseDirection(direction)}`,
@@ -88,15 +120,22 @@ const playerMessages = {
     uploadResponse: () => "Televerser la reponse",
     movableObject: () => "Objet mobile",
     placeObject: () => "Placer",
+    inlineChoicePrompt: () => "Choisir...",
     noPointSelected: () => "Aucun point selectionne",
     noRegionSelected: () => "Aucune region selectionnee",
+    noAssociationsMade: () => "Aucune association effectuee",
+    associationsMade: ({ count }) =>
+      `${count} ${count === 1 ? "association effectuee" : "associations effectuees"}.`,
+    associationPairLabel: ({ source, target }) => `${source} avec ${target}`,
+    hotspotSelectedChooseAnother: ({ label }) =>
+      `${label} selectionne. Choisissez un autre point actif.`,
     moveChoice: ({ label, direction }) => `Deplacer ${label} vers ${frenchDirection(direction)}`,
     movePoint: ({ direction }) => `Deplacer le point vers ${frenchDirection(direction)}`,
     moveObject: ({ direction }) => `Deplacer l'objet vers ${frenchDirection(direction)}`,
   },
-} satisfies Record<string, QtiPlayerMessages>;
+} satisfies Record<string, QtiPlayerMessageCatalog>;
 
-const builtInPlayerMessageCatalogs: ReadonlyMap<string, QtiPlayerMessages> = new Map([
+const builtInPlayerMessageCatalogs: ReadonlyMap<string, QtiPlayerMessageCatalog> = new Map([
   ["en", playerMessages.defaultEnglish],
   ["es", playerMessages.spanish],
   ["es-es", playerMessages.spanish],
@@ -118,40 +157,7 @@ export function resolvePlayerMessages(
   overrides: QtiPlayerMessageOverrides,
 ): QtiPlayerMessages {
   const catalog = builtInPlayerMessageCatalog(locale);
-  return {
-    remove: overrides.remove ?? catalog?.remove ?? defaultEnglishPlayerMessages.remove,
-    removePair:
-      overrides.removePair ?? catalog?.removePair ?? defaultEnglishPlayerMessages.removePair,
-    clearDrawing:
-      overrides.clearDrawing ?? catalog?.clearDrawing ?? defaultEnglishPlayerMessages.clearDrawing,
-    clearPoints:
-      overrides.clearPoints ?? catalog?.clearPoints ?? defaultEnglishPlayerMessages.clearPoints,
-    endAttempt:
-      overrides.endAttempt ?? catalog?.endAttempt ?? defaultEnglishPlayerMessages.endAttempt,
-    uploadResponse:
-      overrides.uploadResponse ??
-      catalog?.uploadResponse ??
-      defaultEnglishPlayerMessages.uploadResponse,
-    movableObject:
-      overrides.movableObject ??
-      catalog?.movableObject ??
-      defaultEnglishPlayerMessages.movableObject,
-    placeObject:
-      overrides.placeObject ?? catalog?.placeObject ?? defaultEnglishPlayerMessages.placeObject,
-    noPointSelected:
-      overrides.noPointSelected ??
-      catalog?.noPointSelected ??
-      defaultEnglishPlayerMessages.noPointSelected,
-    noRegionSelected:
-      overrides.noRegionSelected ??
-      catalog?.noRegionSelected ??
-      defaultEnglishPlayerMessages.noRegionSelected,
-    moveChoice:
-      overrides.moveChoice ?? catalog?.moveChoice ?? defaultEnglishPlayerMessages.moveChoice,
-    movePoint: overrides.movePoint ?? catalog?.movePoint ?? defaultEnglishPlayerMessages.movePoint,
-    moveObject:
-      overrides.moveObject ?? catalog?.moveObject ?? defaultEnglishPlayerMessages.moveObject,
-  };
+  return { ...defaultEnglishPlayerMessages, ...catalog, ...overrides };
 }
 
 function spanishDirection(direction: "up" | "down" | "left" | "right"): string {
@@ -178,7 +184,7 @@ function frenchDirection(direction: "up" | "down" | "left" | "right"): string {
   return { up: "le haut", down: "le bas", left: "la gauche", right: "la droite" }[direction];
 }
 
-function builtInPlayerMessageCatalog(locale: string): QtiPlayerMessages | undefined {
+function builtInPlayerMessageCatalog(locale: string): QtiPlayerMessageCatalog | undefined {
   for (const candidate of localeFallbacks(locale)) {
     const catalog = builtInPlayerMessageCatalogs.get(candidate);
     if (catalog) return catalog;

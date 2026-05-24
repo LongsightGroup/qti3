@@ -123,8 +123,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "inlineChoice",
     matches: (interaction) => interaction.type === "inlineChoice",
-    render: ({ interaction, update, currentValue }) =>
-      renderSelect(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderSelect(interaction, update, currentValue, messages),
   },
   {
     id: "extendedText",
