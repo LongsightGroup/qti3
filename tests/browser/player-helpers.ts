@@ -1,0 +1,568 @@
+import { deflateRawSync } from "node:zlib";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { interactionFixtures } from "../../packages/fixtures/src/index.js";
+
+export const operableControlSelector = [
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "audio[controls]",
+  "video[controls]",
+  "a[href]",
+  '[role="button"]',
+  '[role="slider"]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+export async function loadFixture(page: Page, interactionType: string): Promise<void> {
+  const fixture = interactionFixtures.find((item) => item.interactionType === interactionType);
+  if (!fixture) throw new Error(`Missing ${interactionType} fixture.`);
+  await page.locator("#fixture").selectOption(fixture.id);
+  await page.locator("#load-fixture").click();
+}
+
+export async function pasteXml(page: Page, xml: string): Promise<void> {
+  const loader = page.locator("#xml-loader");
+  if (!(await loader.evaluate((element) => (element as HTMLDetailsElement).open))) {
+    await loader.locator("summary").click();
+  }
+  await page.locator("#xml").fill(xml);
+  await page.locator("#load-xml").click();
+}
+
+export async function visibleValidationAlertCount(
+  page: Page,
+  responseIdentifier = "RESPONSE",
+): Promise<number> {
+  return page
+    .locator(`qti-assessment-item-player [data-validation-for="${responseIdentifier}"]`)
+    .evaluateAll(
+      (elements) => elements.filter((element) => !element.hidden && element.textContent).length,
+    );
+}
+
+export async function suspendRestoreCurrentAttempt(page: Page): Promise<void> {
+  const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+    element.suspend();
+    return element.serialize();
+  });
+  await page.locator("qti-assessment-item-player").evaluate((element, attemptState) => {
+    element.reset();
+    element.restore(attemptState);
+  }, state);
+}
+
+export async function scoreCurrentAttempt(page: Page): Promise<
+  | {
+      outcomes: Record<string, unknown>;
+      state: { responses: Record<string, unknown> };
+    }
+  | undefined
+> {
+  return page.locator("qti-assessment-item-player").evaluate((element) => {
+    return element.scoreAttempt({ validateResponses: false });
+  });
+}
+
+export async function expectResponse(page: Page, expected: unknown): Promise<void> {
+  expect(await currentResponse(page)).toEqual(expected);
+}
+
+export async function currentResponse(page: Page): Promise<unknown> {
+  const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+    return element.serialize();
+  });
+  return state.responses.RESPONSE;
+}
+
+export async function expectStringResponse(page: Page, pattern: RegExp): Promise<string> {
+  await expect
+    .poll(async () => {
+      const value = await currentResponse(page);
+      return typeof value === "string" ? value : "";
+    })
+    .toMatch(pattern);
+  const value = await currentResponse(page);
+  if (typeof value !== "string") throw new Error("Expected string response.");
+  return value;
+}
+
+export async function expectMoveButtons(
+  buttons: Locator,
+  expectedDirections: Array<"up" | "down" | "left" | "right">,
+): Promise<void> {
+  await expect(buttons).toHaveCount(expectedDirections.length);
+  const actual = await buttons.evaluateAll((elements) =>
+    elements.map((button) => {
+      const icon = button.querySelector("svg.qti3-movement-icon");
+      return {
+        direction: (button as HTMLElement).dataset.moveDirection ?? "",
+        focusable: icon?.getAttribute("focusable") ?? "",
+        hidden: icon?.getAttribute("aria-hidden") ?? "",
+        pathCount: icon?.querySelectorAll("path").length ?? 0,
+        text: button.textContent?.trim() ?? "",
+      };
+    }),
+  );
+  expect(actual).toEqual(
+    expectedDirections.map((direction) => ({
+      direction,
+      focusable: "false",
+      hidden: "true",
+      pathCount: 3,
+      text: "",
+    })),
+  );
+}
+
+export function decodeDataUrlText(dataUrl: string): string {
+  const comma = dataUrl.indexOf(",");
+  if (comma === -1) return "";
+  const metadata = dataUrl.slice(0, comma);
+  const payload = dataUrl.slice(comma + 1);
+  return metadata.includes(";base64")
+    ? Buffer.from(payload, "base64").toString("utf8")
+    : decodeURIComponent(payload);
+}
+
+export async function expectPointResponse(
+  page: Page,
+  expected: string | string[],
+  tolerance = 1,
+): Promise<void> {
+  const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+    return element.serialize();
+  });
+  const actual = state.responses.RESPONSE;
+  const actualPoints = Array.isArray(actual) ? actual : [actual];
+  const expectedPoints = Array.isArray(expected) ? expected : [expected];
+  expect(actualPoints).toHaveLength(expectedPoints.length);
+  for (const [index, expectedPoint] of expectedPoints.entries()) {
+    expectPointNear(actualPoints[index], expectedPoint, tolerance);
+  }
+}
+
+function expectPointNear(actual: unknown, expected: string, tolerance: number): void {
+  const actualPoint = parsePointValue(actual);
+  const expectedPoint = parsePointValue(expected);
+  expect(Math.abs(actualPoint.x - expectedPoint.x)).toBeLessThanOrEqual(tolerance);
+  expect(Math.abs(actualPoint.y - expectedPoint.y)).toBeLessThanOrEqual(tolerance);
+}
+
+function parsePointValue(value: unknown): { x: number; y: number } {
+  const [x, y] = String(value)
+    .trim()
+    .split(/\s+/)
+    .map((coordinate) => Number(coordinate));
+  expect(Number.isFinite(x)).toBe(true);
+  expect(Number.isFinite(y)).toBe(true);
+  return { x: x as number, y: y as number };
+}
+
+export async function clickAuthoredCoordinate(
+  locator: Locator,
+  x: number,
+  y: number,
+): Promise<void> {
+  await locator.evaluate(
+    (element, point) => {
+      const rect = element.getBoundingClientRect();
+      const image = element.querySelector("img");
+      const authoredWidth = image?.naturalWidth || rect.width;
+      const authoredHeight = image?.naturalHeight || rect.height;
+      const clientX = Math.ceil(rect.left + ((point.x - 0.49) / authoredWidth) * rect.width);
+      const clientY = Math.ceil(rect.top + ((point.y - 0.49) / authoredHeight) * rect.height);
+      element.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          clientX,
+          clientY,
+          detail: 1,
+          view: window,
+        }),
+      );
+    },
+    { x, y },
+  );
+}
+
+export async function expectImageLoaded(locator: Locator): Promise<void> {
+  await expect
+    .poll(async () => {
+      return locator.evaluate((image) => {
+        const element = image as HTMLImageElement;
+        return element.complete && element.naturalWidth > 0 && element.naturalHeight > 0;
+      });
+    })
+    .toBe(true);
+}
+
+export async function assignGap(
+  page: Page,
+  interactionLabel: string,
+  source: string,
+  gapIdentifier: string,
+): Promise<void> {
+  const choices = page.locator(
+    `qti-assessment-item-player [aria-label="${interactionLabel} choices"]`,
+  );
+  const sourceToken = choices.locator(`[data-choice-identifier="${source}"]`).first();
+  if (await sourceToken.isVisible().catch(() => false)) {
+    await sourceToken.click();
+  } else {
+    await choices.getByRole("button", { name: source }).click();
+  }
+  await page
+    .locator(`qti-assessment-item-player [data-gap-identifier="${gapIdentifier}"]`)
+    .getByRole("button")
+    .first()
+    .click();
+}
+
+export async function assignMatch(
+  page: Page,
+  sourceIdentifier: string,
+  targetIdentifier: string,
+): Promise<void> {
+  await page
+    .locator("qti-assessment-item-player .qti3-match-source-bank")
+    .locator(`[data-choice-identifier="${sourceIdentifier}"]`)
+    .click();
+  await page
+    .locator("qti-assessment-item-player .qti3-match-target-bank")
+    .locator(`[data-choice-identifier="${targetIdentifier}"]`)
+    .click();
+}
+
+async function clickToken(
+  page: Page,
+  regionSuffix: "sources" | "targets",
+  identifierOrName: string | undefined,
+): Promise<void> {
+  if (!identifierOrName) return;
+  const region = page.locator(`qti-assessment-item-player [aria-label$="${regionSuffix}"]`);
+  await clickTokenInRegion(region, identifierOrName);
+}
+
+async function clickTokenInRegion(region: Locator, identifierOrName: string): Promise<void> {
+  const byIdentifier = region.locator(`[data-choice-identifier="${identifierOrName}"]`).first();
+  if (await byIdentifier.isVisible().catch(() => false)) {
+    await byIdentifier.click();
+    return;
+  }
+  await region.getByRole("button", { name: identifierOrName }).click();
+}
+
+export async function provideResponse(
+  page: Page,
+  interactionType: string,
+  response: unknown,
+  responseIdentifier = "RESPONSE",
+): Promise<void> {
+  if (interactionType === "inlineChoice") {
+    await page
+      .locator(
+        `qti-assessment-item-player [data-response-identifier="${responseIdentifier}"] select`,
+      )
+      .selectOption(String(response));
+    return;
+  }
+
+  if (interactionType === "slider") {
+    await page.locator('input[type="range"]').evaluate((element, value) => {
+      const input = element as HTMLInputElement;
+      input.value = String(value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }, response);
+    return;
+  }
+
+  if (interactionType === "upload") {
+    await page.locator('qti-assessment-item-player input[type="file"]').setInputFiles({
+      name: String(response),
+      mimeType: "text/plain",
+      buffer: Buffer.from("qti3 upload fixture"),
+    });
+    return;
+  }
+
+  if (interactionType === "selectPoint") {
+    const [x, y] = String(response)
+      .split(" ")
+      .map((coordinate) => Number(coordinate));
+    await clickAuthoredCoordinate(
+      page.locator("qti-assessment-item-player .qti3-point-surface"),
+      x,
+      y,
+    );
+    return;
+  }
+
+  if (interactionType === "positionObject") {
+    const [x, y] = String(response)
+      .split(" ")
+      .map((coordinate) => Number(coordinate));
+    await page
+      .locator("qti-assessment-item-player .qti3-position-object-stage")
+      .click({ position: { x, y } });
+    return;
+  }
+
+  if (interactionType === "drawing") {
+    await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
+    await page.keyboard.press("Enter");
+    return;
+  }
+
+  if (interactionType === "portableCustom") {
+    await page
+      .locator("qti-assessment-item-player .qti3-portable-custom-host")
+      .evaluate((element, value) => {
+        element.dispatchEvent(
+          new CustomEvent("qti3-portable-custom-response", {
+            detail: { value },
+            bubbles: true,
+          }),
+        );
+      }, response);
+    return;
+  }
+
+  if (interactionType === "media") {
+    await page
+      .locator("qti-assessment-item-player audio, qti-assessment-item-player video")
+      .evaluate((element) => {
+        element.dispatchEvent(new Event("play"));
+      });
+    return;
+  }
+
+  if (interactionType === "endAttempt") {
+    await page
+      .locator('qti-assessment-item-player [data-interaction-type="endAttempt"]')
+      .getByRole("button")
+      .click();
+    return;
+  }
+
+  if (interactionType === "hotspot") {
+    await page
+      .locator("qti-assessment-item-player .qti3-hotspot-surface")
+      .getByRole("button", { name: String(response) })
+      .click();
+    return;
+  }
+
+  if (interactionType === "hottext") {
+    await page
+      .locator(
+        `qti-assessment-item-player .qti3-hottext-token[data-choice-identifier="${String(response)}"]`,
+      )
+      .click();
+    return;
+  }
+
+  if (
+    Array.isArray(response) &&
+    (interactionType === "gapMatch" || interactionType === "graphicGapMatch")
+  ) {
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await assignGap(
+        page,
+        interactionType === "gapMatch" ? "Gap match" : "Graphic gap match",
+        source,
+        target,
+      );
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "match") {
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await assignMatch(page, source, target);
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "graphicAssociate") {
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await surface.locator(`[data-choice-identifier="${source}"]`).click();
+      await surface.locator(`[data-choice-identifier="${target}"]`).click();
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && response.some((value) => String(value).includes(" "))) {
+    for (const pair of response) {
+      const [source, target] = String(pair).split(" ");
+      await clickToken(page, "sources", source);
+      await clickToken(page, "targets", target);
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "graphicOrder") {
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-order-surface");
+    for (const identifier of response.map(String)) {
+      await surface.locator(`[data-choice-identifier="${identifier}"]`).click();
+    }
+    return;
+  }
+
+  if (Array.isArray(response) && interactionType === "order") {
+    const current = await page.locator("qti-assessment-item-player").evaluate(() => {
+      return [...document.querySelectorAll(".qti3-reorder-item")].map(
+        (item) => (item as HTMLElement).dataset.choiceIdentifier,
+      );
+    });
+    let moved = false;
+    for (const [targetIndex, value] of response.map(String).entries()) {
+      let currentIndex = current.indexOf(value);
+      while (currentIndex > targetIndex) {
+        await page
+          .locator(
+            `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="up"]`,
+          )
+          .click();
+        moved = true;
+        current.splice(currentIndex, 1);
+        current.splice(currentIndex - 1, 0, value);
+        currentIndex -= 1;
+      }
+      while (currentIndex < targetIndex) {
+        await page
+          .locator(
+            `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="down"]`,
+          )
+          .click();
+        moved = true;
+        current.splice(currentIndex, 1);
+        current.splice(currentIndex + 1, 0, value);
+        currentIndex += 1;
+      }
+    }
+    if (!moved && current.length > 1) {
+      const first = current[0];
+      if (!first) return;
+      const firstItem = page.locator(
+        `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${first}"]`,
+      );
+      await firstItem.locator('[data-move-direction="down"]').click();
+      await firstItem.locator('[data-move-direction="up"]').click();
+    }
+    return;
+  }
+
+  const value = Array.isArray(response) ? String(response[0]) : String(response);
+  const choiceInput = page
+    .locator(`qti-assessment-item-player [data-choice-identifier="${value}"] input`)
+    .first();
+  if (await choiceInput.isVisible().catch(() => false)) {
+    await choiceInput.check();
+    return;
+  }
+
+  const checkbox = page.getByRole("checkbox", { name: value }).first();
+  if (await checkbox.isVisible().catch(() => false)) {
+    await checkbox.check();
+    return;
+  }
+
+  const radio = page.getByRole("radio", { name: value }).first();
+  if (await radio.isVisible().catch(() => false)) {
+    await radio.check();
+    return;
+  }
+
+  const select = page.locator("qti-assessment-item-player select").first();
+  if (await select.isVisible().catch(() => false)) {
+    await select.selectOption(value);
+    return;
+  }
+
+  const textarea = page.locator("qti-assessment-item-player textarea").first();
+  if (await textarea.isVisible().catch(() => false)) {
+    await textarea.fill(value);
+    return;
+  }
+
+  const input = page
+    .locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])')
+    .first();
+  if (await input.isVisible().catch(() => false)) {
+    await input.fill(value);
+    await input.dispatchEvent("change");
+  }
+}
+
+export function createStoredZip(files: Record<string, string | Buffer>): Buffer {
+  return createZip(files, 0);
+}
+
+export function createDeflatedZip(files: Record<string, string | Buffer>): Buffer {
+  return createZip(files, 8);
+}
+
+function createZip(files: Record<string, string | Buffer>, method: 0 | 8): Buffer {
+  const localParts: Buffer[] = [];
+  const centralParts: Buffer[] = [];
+  let offset = 0;
+
+  for (const [name, content] of Object.entries(files)) {
+    const nameBytes = Buffer.from(name);
+    const data = Buffer.isBuffer(content) ? content : Buffer.from(content);
+    const compressed = method === 8 ? deflateRawSync(data) : data;
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0, 6);
+    local.writeUInt16LE(method, 8);
+    local.writeUInt32LE(0, 10);
+    local.writeUInt32LE(0, 14);
+    local.writeUInt32LE(compressed.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBytes.length, 26);
+    local.writeUInt16LE(0, 28);
+    localParts.push(local, nameBytes, compressed);
+
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8);
+    central.writeUInt16LE(method, 10);
+    central.writeUInt32LE(0, 12);
+    central.writeUInt32LE(0, 16);
+    central.writeUInt32LE(compressed.length, 20);
+    central.writeUInt32LE(data.length, 24);
+    central.writeUInt16LE(nameBytes.length, 28);
+    central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32);
+    central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36);
+    central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    centralParts.push(central, nameBytes);
+
+    offset += local.length + nameBytes.length + compressed.length;
+  }
+
+  const centralDirectory = Buffer.concat(centralParts);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(0, 4);
+  end.writeUInt16LE(0, 6);
+  end.writeUInt16LE(Object.keys(files).length, 8);
+  end.writeUInt16LE(Object.keys(files).length, 10);
+  end.writeUInt32LE(centralDirectory.length, 12);
+  end.writeUInt32LE(offset, 16);
+  end.writeUInt16LE(0, 20);
+
+  return Buffer.concat([...localParts, centralDirectory, end]);
+}

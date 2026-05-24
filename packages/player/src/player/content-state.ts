@@ -36,7 +36,18 @@ export function isFeedbackVisible(
   return node.showHide === "show" ? hasIdentifier : !hasIdentifier;
 }
 
-export function isTemplateContentVisible(element: HTMLElement, value: QtiValue): boolean {
+interface TemplateContentVisibilityElement {
+  dataset: {
+    templateIdentifier?: string;
+    templateValueIdentifier?: string;
+    showHide?: string;
+  };
+}
+
+export function isTemplateContentVisible(
+  element: TemplateContentVisibilityElement,
+  value: QtiValue,
+): boolean {
   const templateIdentifier = element.dataset.templateIdentifier;
   const identifier = element.dataset.templateValueIdentifier;
   if (!templateIdentifier || !identifier) return true;

@@ -1,36 +1,6 @@
-/**
- * @vitest-environment happy-dom
- */
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
-import {
-  interactionRegistry,
-  matchInteractionRegistryEntry,
-  renderInteractionResponse,
-  type InteractionResponseContext,
-} from "./interaction-registry.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
-
-const testMessages: QtiPlayerMessages = {
-  remove: () => "Remove",
-  removePair: ({ label }) => `Remove ${label}`,
-  clearDrawing: () => "Clear drawing",
-  clearPoints: () => "Clear points",
-  endAttempt: () => "End attempt",
-  uploadResponse: () => "Upload response",
-  movableObject: () => "Movable object",
-  placeObject: () => "Place",
-  inlineChoicePrompt: () => "Choose...",
-  noPointSelected: () => "No point selected",
-  noRegionSelected: () => "No region selected",
-  noAssociationsMade: () => "No associations made",
-  associationsMade: ({ count }) => `${count} ${count === 1 ? "association" : "associations"} made.`,
-  associationPairLabel: ({ source, target }) => `${source} to ${target}`,
-  hotspotSelectedChooseAnother: ({ label }) => `${label} selected. Choose another hotspot.`,
-  moveChoice: ({ label, direction }) => `Move ${label} ${direction}`,
-  movePoint: ({ direction }) => `Move point ${direction}`,
-  moveObject: ({ direction }) => `Move object ${direction}`,
-};
+import { interactionRegistry, matchInteractionRegistryEntry } from "./interaction-registry.js";
 
 function interaction(
   overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
@@ -47,22 +17,6 @@ function interaction(
     source: { line: 1, column: 1, offset: 0, path: "item" },
     ...overrides,
   } as QtiInteraction;
-}
-
-function renderContext(
-  overrides: Partial<InteractionResponseContext> = {},
-): InteractionResponseContext {
-  const baseInteraction = interaction({ type: "choice" });
-  return {
-    interaction: baseInteraction,
-    update: () => {},
-    currentValue: null,
-    messages: testMessages,
-    isCompleted: () => false,
-    endAttempt: () => {},
-    renderPortableCustom: () => document.createElement("div"),
-    ...overrides,
-  };
 }
 
 describe("interaction registry ordering", () => {
@@ -154,37 +108,5 @@ describe("interaction registry ordering", () => {
         }),
       )?.id,
     ).toBe("hotspot");
-  });
-});
-
-describe("renderInteractionResponse", () => {
-  it("renders unsupported interactions as alerts", () => {
-    const element = renderInteractionResponse(
-      renderContext({
-        interaction: interaction({ type: "customUnknown" as QtiInteraction["type"] }),
-      }),
-    );
-    expect(element.getAttribute("role")).toBe("alert");
-    expect(element.textContent).toContain("customUnknown");
-  });
-
-  it("renders upload interactions through the upload renderer", () => {
-    const element = renderInteractionResponse(
-      renderContext({
-        interaction: interaction({ type: "upload" }),
-      }),
-    );
-    expect(element.className).toBe("qti3-upload-input");
-    expect(element.getAttribute("type")).toBe("file");
-  });
-
-  it("renders endAttempt interactions through the end attempt renderer", () => {
-    const element = renderInteractionResponse(
-      renderContext({
-        interaction: interaction({ type: "endAttempt", attributes: { title: "Finish" } }),
-      }),
-    );
-    expect(element.className).toBe("qti3-end-attempt-button");
-    expect(element.textContent).toBe("Finish");
   });
 });

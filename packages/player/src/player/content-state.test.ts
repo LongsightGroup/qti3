@@ -1,6 +1,3 @@
-/**
- * @vitest-environment happy-dom
- */
 import { describe, expect, it } from "vitest";
 import {
   currentVariableValue,
@@ -67,10 +64,13 @@ describe("content-state", () => {
       ),
     ).toBe(true);
 
-    const element = document.createElement("div");
-    element.dataset.templateIdentifier = "TEMP";
-    element.dataset.templateValueIdentifier = "A";
-    element.dataset.showHide = "show";
+    const element = {
+      dataset: {
+        templateIdentifier: "TEMP",
+        templateValueIdentifier: "A",
+        showHide: "show",
+      },
+    };
     expect(isTemplateContentVisible(element, "A")).toBe(true);
     expect(isTemplateContentVisible(element, "B")).toBe(false);
   });

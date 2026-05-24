@@ -67,3 +67,14 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 - Add Playwright and axe-core coverage for browser-facing behavior.
 - Enforce accessibility with semantic assertions, not only screenshot comparison or axe-core scans.
 - Do not add dependencies to `qti3-core` without documented rationale.
+
+## Testing Rules
+
+- Run Vitest in the Node environment by default. Do not add, install, or use `happy-dom`, `jsdom`, or other DOM shims; do not use `@vitest-environment happy-dom` or `@vitest-environment jsdom`. Test DOM behavior in Playwright only.
+- If Vitest optional peers pull `happy-dom` or `jsdom` into `pnpm-lock.yaml`, review and allow the exact versions in `scripts/dependency-policy.json` `lockfilePackages` only. Do not add them to root `devDependencies`.
+- Keep Vitest coverage DOM-free for parsing, scoring, processing, diagnostics, and other non-rendering logic.
+- Test anything that creates or mutates DOM nodes, custom elements, ARIA state, or browser events in Playwright under `tests/browser/`.
+- Keep focused DOM regression coverage in `tests/browser/player-dom-behavior.spec.ts`; use `tests/browser/player-helpers.ts` for shared harness helpers instead of growing `player.spec.ts`.
+- Split other focused browser suites into `tests/browser/player-validation.spec.ts`, `tests/browser/player-lifecycle.spec.ts`, `tests/browser/player-portable-custom.spec.ts`, `tests/browser/player-package.spec.ts`, `tests/browser/player-keyboard-a11y.spec.ts`, and `tests/browser/player-graphic.spec.ts` when adding related coverage.
+- Prefer pure-function tests with plain data or minimal typed stubs when a helper only reads simple fields such as `dataset`.
+- When moving behavior from Vitest to Playwright, preserve the assertion intent: visible DOM state, accessibility attributes, and serialized player state should still be covered.
