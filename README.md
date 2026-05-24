@@ -11,6 +11,69 @@ This is not another framework-specific item player. The public project focuses o
 item and question-type conformance. Host products own runners, controllers, LMS shells,
 candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations.
 
+## Project shape
+
+`qti3` is item-focused: the core owns QTI semantics, the player renders one item at a
+time, tooling proves conformance and accessibility behavior, and host products own the
+surrounding assessment application.
+
+```mermaid
+flowchart LR
+  content["QTI item XML<br/>and package assets"]
+  host["Host product<br/>runner, policy, LMS shell, analytics"]
+  review["CI, release, and<br/>certification checks"]
+
+  subgraph qti3["qti3 packages"]
+    core["core<br/>parse, validate, process,<br/>score, serialize state"]
+    player["player<br/>native web component<br/>item renderer"]
+    fixtures["fixtures<br/>synthetic reference items"]
+    conformance["conformance<br/>fixture runner and<br/>support matrix"]
+    a11y["a11y<br/>keyboard and accessibility<br/>proof contracts"]
+    cli["cli<br/>validate, score, inspect,<br/>write fixtures"]
+  end
+
+  content --> core
+  content --> cli
+  core --> player
+  core --> cli
+  fixtures --> conformance
+  fixtures --> cli
+  conformance --> review
+  a11y --> review
+  cli --> review
+  player --> host
+  core --> host
+```
+
+## Interaction families
+
+Most interaction support starts from the same parser, normalized `QtiInteraction` model,
+and validation gates. The browser player then routes each interaction to a renderer or
+helper family based on response shape and user interaction model.
+
+```mermaid
+flowchart LR
+  xml["QTI interaction XML"]
+  parser["parseInteraction<br/>parseChoices"]
+  model["QtiInteraction<br/>normalized model"]
+  validation["common validation<br/>response, choice, limits,<br/>mapping checks"]
+  registry["player registry"]
+  renderer["family renderer<br/>or helper layer"]
+
+  xml --> parser --> model --> validation --> registry --> renderer
+```
+
+| Family                     | Interactions                                                             | Shared implementation                                       |
+| -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Identifier choices         | Choice, Inline Choice, Hot Text, Hotspot                                 | Choice parsing, identifier response checks, choice metadata |
+| Ordered choices            | Order, Graphic Order                                                     | Ordered identifier contract and reorder behavior            |
+| Pairing and matching       | Associate, Match, Graphic Associate                                      | Source/target choices, token controls, selected pair chips  |
+| Gap assignment             | Gap Match, Graphic Gap Match                                             | Source choices assigned to text or graphic gaps             |
+| Graphic and coordinate UI  | Hotspot, Graphic Order, Graphic Associate, Select Point, Position Object | Responsive surfaces, object images, hotspot/point placement |
+| Text responses             | Text Entry, Extended Text                                                | String response contract and text-entry renderer            |
+| File responses             | Upload, Drawing                                                          | File response contract                                      |
+| Scalar and host-controlled | Slider, Media, End Attempt, Portable Custom                              | Small specialized renderers and host event bridges          |
+
 ## Release goals
 
 For the `0.2.x` release line, we are hardening:
