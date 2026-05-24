@@ -31,6 +31,10 @@ import {
 } from "./content/content-renderer.js";
 import { renderInteractionResponse } from "./interactions/interaction-dispatch.js";
 import {
+  portableCustomValidityDiagnostic,
+  renderPortableCustomResponse,
+} from "./interactions/portable-custom-interaction.js";
+import {
   collectEmbeddedInteractionDiagnostics,
   collectInteractionRenderDiagnostics,
 } from "./interactions/interaction-diagnostics.js";
@@ -59,13 +63,6 @@ import {
   validateItemResponses,
   validationMessageElement,
 } from "./player-validation.js";
-import {
-  portableCustomDefinitionFromAttributes,
-  portableCustomEventState,
-  portableCustomEventValidity,
-  portableCustomEventValue,
-  scalarString,
-} from "./portable-custom-support.js";
 
 const HTMLElementBase: typeof HTMLElement =
   globalThis.HTMLElement ??
@@ -403,92 +400,21 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     update: (value: QtiValue) => void,
     currentValue: QtiValue,
   ): HTMLElement {
-    const definition =
-      interaction.portableCustom ?? portableCustomDefinitionFromAttributes(interaction);
-    const responseIdentifier =
-      interaction.responseIdentifier ?? definition.responseIdentifier ?? "";
-    const currentState = responseIdentifier
-      ? this.currentInteractionState(responseIdentifier)
-      : undefined;
-
-    const group = document.createElement("div");
-    group.role = "group";
-    group.setAttribute("aria-label", interaction.prompt ?? "Portable custom interaction");
-
-    const host = document.createElement("div");
-    host.className = "qti3-portable-custom-host";
-    host.tabIndex = 0;
-    host.dataset.responseIdentifier = responseIdentifier;
-    host.dataset.typeIdentifier = definition.customInteractionTypeIdentifier ?? "";
-    host.dataset.module = definition.module ?? "";
-    host.dataset.qtiName = interaction.qtiName;
-    if (definition.interactionModules?.primaryConfiguration) {
-      host.dataset.primaryConfiguration = definition.interactionModules.primaryConfiguration;
-    }
-    if (definition.interactionModules?.secondaryConfiguration) {
-      host.dataset.secondaryConfiguration = definition.interactionModules.secondaryConfiguration;
-    }
-    if (currentState !== undefined) host.dataset.state = JSON.stringify(currentState);
-    host.setAttribute("role", "application");
-    host.setAttribute("aria-label", interaction.prompt ?? "Portable custom interaction host");
-    host.style.border = "1px solid CanvasText";
-    host.style.padding = "0.5rem";
-    host.style.marginBlockEnd = "0.5rem";
-
-    if (definition.interactionMarkup.length > 0) {
-      const markup = document.createElement("div");
-      markup.className = "qti3-portable-custom-markup";
-      markup.append(...renderContentNodes(definition.interactionMarkup, this.contentContext()));
-      host.append(markup);
-    } else {
-      host.textContent = "Portable custom interaction host";
-    }
-
-    const fallback = document.createElement("input");
-    fallback.type = "hidden";
-    fallback.className = "qti3-portable-custom-response";
-    fallback.hidden = true;
-    fallback.tabIndex = -1;
-    fallback.setAttribute("aria-hidden", "true");
-    fallback.value = scalarString(currentValue);
-
-    const handlePortableCustomEvent = (event: Event) => {
-      const state = portableCustomEventState(event);
-      const value = portableCustomEventValue(event);
-      const validity = portableCustomEventValidity(event);
-      if (state !== undefined && responseIdentifier && this.session) {
-        this.session.setInteractionState(responseIdentifier, state);
-        host.dataset.state = JSON.stringify(state);
-      }
-      if (value !== undefined) {
-        fallback.value = String(value ?? "");
-        update(value);
-      }
-      if (validity && responseIdentifier) {
-        this.setPortableCustomValidity(responseIdentifier, validity.valid, validity.message);
-        this.emitStateChange();
-      }
-      if (value === undefined && state !== undefined && !validity) this.emitStateChange();
-    };
-
-    host.addEventListener("qti3-portable-custom-response", handlePortableCustomEvent);
-    host.addEventListener("qti3-pci-response", handlePortableCustomEvent);
-    host.addEventListener("qti3-portable-custom-state", handlePortableCustomEvent);
-    host.addEventListener("qti3-portable-custom-validity", handlePortableCustomEvent);
-
-    queueMicrotask(() => {
-      this.dispatchPlayerEvent("qti-portable-custom-mount", {
-        responseIdentifier,
-        interaction,
-        definition,
-        host,
-        value: currentValue,
-        state: currentState,
-      });
+    const responseIdentifier = interaction.responseIdentifier;
+    return renderPortableCustomResponse({
+      interaction,
+      update,
+      currentValue,
+      currentState: responseIdentifier
+        ? this.currentInteractionState(responseIdentifier)
+        : undefined,
+      renderMarkup: (nodes) => renderContentNodes(nodes, this.contentContext()),
+      setInteractionState: (identifier, state) => this.session?.setInteractionState(identifier, state),
+      setValidity: (identifier, valid, message) =>
+        this.setPortableCustomValidity(identifier, valid, message),
+      emitStateChange: () => this.emitStateChange(),
+      onMount: (detail) => this.dispatchPlayerEvent("qti-portable-custom-mount", detail),
     });
-
-    group.append(host, fallback);
-    return group;
   }
 
   private renderEmbeddedInteraction(interaction: QtiInteraction): HTMLElement {
@@ -645,16 +571,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     valid: boolean,
     message: string | undefined,
   ): void {
-    if (valid) {
+    const diagnostic = portableCustomValidityDiagnostic(responseIdentifier, valid, message);
+    if (!diagnostic) {
       this.clearValidationMessage(responseIdentifier);
       return;
     }
-    const diagnostic: QtiDiagnostic = {
-      code: "response.portableCustom.validity",
-      severity: "error",
-      message: message?.trim() || `${responseIdentifier} is not valid.`,
-      path: responseIdentifier,
-    };
     this.validationMessages = [
       ...this.validationMessages.filter((entry) => entry.path !== responseIdentifier),
       diagnostic,

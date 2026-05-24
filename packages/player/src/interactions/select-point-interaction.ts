@@ -4,6 +4,7 @@ import {
   objectHeight,
   objectWidth,
   readableType,
+  responseGroup,
 } from "../interaction-support.js";
 import { movementButton, movementLabel } from "../movement.js";
 import { maximumAllowedResponses } from "../response-limits.js";
@@ -14,7 +15,7 @@ export function renderSelectPointResponse(
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
 ): HTMLElement {
-  const group = document.createElement("div");
+  const group = responseGroup();
   group.role = "group";
   group.setAttribute("aria-label", `${readableType(interaction.type)} coordinate response`);
   const isMultiple = interaction.responseCardinality === "multiple";

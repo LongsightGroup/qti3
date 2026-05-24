@@ -23,7 +23,8 @@ export function applyGraphicSurfaceLayout(
   ...classNames: string[]
 ): void {
   surface.classList.add("qti3-graphic-surface", ...classNames);
-  surface.style.inlineSize = `${width}px`;
+  surface.style.inlineSize = "100%";
+  surface.style.maxInlineSize = `${width}px`;
   surface.style.aspectRatio = `${width} / ${height}`;
 }
 
