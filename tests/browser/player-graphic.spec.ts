@@ -380,7 +380,8 @@ test.describe("player graphic interactions", () => {
     await expect(marker).toHaveAttribute("data-placed", "false");
     await expectResponse(page, undefined);
     const placementStatus = page.locator("qti-assessment-item-player .qti3-coordinate-output");
-    await expect(placementStatus).toBeHidden();
+    await expect(placementStatus).toHaveClass(/qti-visually-hidden/);
+    await expect(placementStatus).toHaveAttribute("aria-live", "polite");
     await expect(placementStatus).toContainText("Object not placed");
 
     const box = await stage.boundingBox();

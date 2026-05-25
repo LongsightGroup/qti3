@@ -215,7 +215,8 @@ test.describe("player keyboard and accessibility", () => {
     await page.keyboard.press("ArrowUp");
     await expectResponse(page, ["B", "A", "C"]);
     const moveSummary = page.locator("qti-assessment-item-player .qti3-selection-summary");
-    await expect(moveSummary).toBeHidden();
+    await expect(moveSummary).toHaveAttribute("aria-live", "polite");
+    await expect(moveSummary).toHaveCSS("clip-path", "inset(50%)");
     await expect(moveSummary).toHaveText(/moved up\.$/);
     await expect(
       page.locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]'),
