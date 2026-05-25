@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-cli",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Command-line tools for parsing, validating, scoring, inspecting, and checking QTI 3 items.",
   "keywords": [
     "assessment",
@@ -39,7 +39,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },

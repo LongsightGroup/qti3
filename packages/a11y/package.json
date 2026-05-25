@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-a11y",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Accessibility contracts and proof metadata for qti3 QTI 3 item interactions.",
   "keywords": [
     "a11y",
@@ -36,7 +36,7 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },

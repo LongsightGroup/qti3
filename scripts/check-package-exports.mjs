@@ -73,6 +73,7 @@ async function checkExportMap(packageDirectory, manifest) {
         );
       }
       if (typeof target.types === "string") {
+        assertDeclarationExport(target.types, `${manifest.name} export ${subpath} types`);
         await assertFile(
           packageDirectory,
           target.types,
@@ -130,6 +131,16 @@ async function assertExportFile(packageDirectory, path, label) {
   }
 
   await assertFile(packageDirectory, path, label);
+}
+
+function assertDeclarationExport(path, label) {
+  if (!path.startsWith("./dist/")) {
+    failures.push(`${label} must point to a dist declaration file, not ${path}.`);
+    return;
+  }
+  if (!/\.d\.[cm]?ts$/.test(path)) {
+    failures.push(`${label} must point to a built declaration file, not ${path}.`);
+  }
 }
 
 async function checkWorkspaceImport(packageRoot, manifest) {

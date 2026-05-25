@@ -40,11 +40,21 @@ jobs:
           pnpm --dir packages/cli pack --pack-destination ../../.release
       - run: |
           VERSION=$(node -p "require('./package.json').version")
-          npm publish ".release/longsightgroup-qti3-core-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-fixtures-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-a11y-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-conformance-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-player-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-player-preact-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-player-react-${VERSION}.tgz" --access public
-          npm publish ".release/longsightgroup-qti3-cli-${VERSION}.tgz" --access public
+          publish_package() {
+            PACKAGE_NAME="$1"
+            TARBALL="$2"
+            if npm view "${PACKAGE_NAME}@${VERSION}" version >/dev/null 2>&1; then
+              echo "Skipping ${PACKAGE_NAME}@${VERSION}; already published."
+              return 0
+            fi
+            npm publish "${TARBALL}" --access public
+          }
+
+          publish_package "@longsightgroup/qti3-core" ".release/longsightgroup-qti3-core-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-fixtures" ".release/longsightgroup-qti3-fixtures-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-a11y" ".release/longsightgroup-qti3-a11y-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-conformance" ".release/longsightgroup-qti3-conformance-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-player" ".release/longsightgroup-qti3-player-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-player-preact" ".release/longsightgroup-qti3-player-preact-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-player-react" ".release/longsightgroup-qti3-player-react-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-cli" ".release/longsightgroup-qti3-cli-${VERSION}.tgz"
