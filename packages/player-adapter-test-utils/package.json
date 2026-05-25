@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-player-adapter-test-utils",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Private shared test contract for qti3 player framework adapters.",
   "type": "module",

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.1 - 2026-05-24
+
+### Added
+
+- Add a minimal React adapter manual harness at `examples/manual/adapter-react.html`
+  (`pnpm dev:adapter-react`).
+
+### Changed
+
+- Rename adapter chrome sync helper to `syncQtiAssessmentItemPlayerAdapterChrome` (old name kept
+  as deprecated alias).
+- Document declarative `xml` clearing, empty-string load behavior, stable `messageCatalog` /
+  `loadOptions` references, and JSON state reload keys.
+- Strengthen adapter contract and element load-lifecycle tests for superseded async loads.
+
 ## 0.5.0 - 2026-05-24
 
 ### Added
