@@ -2,10 +2,10 @@ import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import {
   interactionChoices,
   missingChoicesMessage,
-  readableType,
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 
 function choicePresentationLabel(interaction: QtiInteraction, index: number): string {
   const classNames = new Set((interaction.attributes.class ?? "").split(/\s+/).filter(Boolean));
@@ -28,6 +28,7 @@ export function renderChoice(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
+  messages: QtiPlayerMessages,
 ): HTMLElement {
   const group = responseGroup("qti3-choice-group");
 
@@ -37,7 +38,7 @@ export function renderChoice(
   const list = document.createElement("div");
   list.className = "qti3-choice-list";
   list.role = "group";
-  list.setAttribute("aria-label", `${readableType(interaction.type)} options`);
+  list.setAttribute("aria-label", messages.interactionOptionsList({ type: interaction.type }));
   const syncSelected = () => {
     for (const label of list.querySelectorAll<HTMLElement>(".qti3-choice-option")) {
       const identifier = label.dataset.choiceIdentifier ?? "";

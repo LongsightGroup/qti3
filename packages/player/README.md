@@ -55,7 +55,10 @@ English. Hosts can override it when delivery settings require a fixed interface 
 
 Built-in catalogs are currently available for English, Spanish (`es-MX`, `es-ES`),
 Swedish (`sv-SE`), German (`de-DE`), Portuguese (`pt-BR`, `pt-PT`), and French
-(`fr-FR`, `fr-CA`).
+(`fr-FR`, `fr-CA`). They cover player chrome such as remove buttons, match pair
+labels, coordinate and placement status, drawing stroke counts, reorder
+announcements, gap assignment states, and default control labels when an item does
+not provide its own prompt.
 
 ```ts
 player.languageOfInterface = "es-MX";
@@ -80,6 +83,12 @@ system.
 The player uses light DOM and is style-neutral by design. Host applications can style
 the rendered `qti3-*` classes directly while preserving the item author's QTI shared
 vocabulary classes.
+
+Screen-reader status lines (`.qti3-selection-summary`, `aria-live="polite"`) are
+visually hidden by default so LMS shells do not show reorder or selection announcements
+to sighted users. They remain available to assistive technology. Set
+`data-show-live-regions` on `qti-assessment-item-player` only in local debug or harness
+pages when you want those messages visible on screen.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

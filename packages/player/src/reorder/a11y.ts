@@ -1,4 +1,5 @@
 import { choiceSelector } from "../interaction-support.js";
+import type { QtiPlayerMessages } from "../player-messages.js";
 
 export function createSelectionSummary(): HTMLParagraphElement {
   const summary = document.createElement("p");
@@ -7,32 +8,46 @@ export function createSelectionSummary(): HTMLParagraphElement {
   return summary;
 }
 
-export function orderedItemAccessibleName(label: string, index: number, total: number): string {
-  return `${label}, position ${index + 1} of ${total}`;
+export function orderedItemAccessibleName(
+  messages: QtiPlayerMessages,
+  label: string,
+  index: number,
+  total: number,
+): string {
+  return messages.orderedItemAtPosition({ label, position: index + 1, total });
 }
 
 export function announceOrderedItemMove(
   summary: HTMLElement,
+  messages: QtiPlayerMessages,
   label: string,
   to: number,
   total: number,
   from?: number,
 ): void {
   if (from !== undefined && Math.abs(to - from) === 1) {
-    summary.textContent = `${label} moved ${to < from ? "up" : "down"}.`;
+    summary.textContent = messages.orderedItemMovedOneStep({
+      label,
+      direction: to < from ? "up" : "down",
+    });
     return;
   }
-  summary.textContent = `${label} moved to position ${to + 1} of ${total}.`;
+  summary.textContent = messages.orderedItemMovedToPosition({
+    label,
+    position: to + 1,
+    total,
+  });
 }
 
 export function announceOrderedSelectionCount(
   summary: HTMLElement,
+  messages: QtiPlayerMessages,
   count: number,
-  singular: string,
-  plural: string,
 ): void {
   summary.textContent =
-    count > 0 ? `${count} ${count === 1 ? singular : plural}.` : `No ${plural}.`;
+    count > 0
+      ? messages.graphicOrderRegionsSelected({ count })
+      : messages.graphicOrderNoRegionsSelected();
 }
 
 export function focusReorderControl(container: ParentNode, identifier: string): void {

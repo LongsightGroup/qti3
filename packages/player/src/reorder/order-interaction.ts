@@ -4,7 +4,6 @@ import {
   interactionChoices,
   missingChoicesMessage,
   orderChoicesFromValue,
-  readableType,
   responseGroup,
 } from "../interaction-support.js";
 import { announceOrderedItemMove, createSelectionSummary, focusReorderControl } from "./a11y.js";
@@ -29,7 +28,10 @@ export function renderOrderedResponse(
   const ordered = orderChoicesFromValue(choices, currentValue);
   const list = document.createElement("ol");
   list.className = "qti3-reorder-list";
-  list.setAttribute("aria-label", `${readableType(interaction.type)} current order`);
+  list.setAttribute(
+    "aria-label",
+    messages.interactionCurrentOrderList({ type: interaction.type }),
+  );
   const summary = createSelectionSummary();
   const dragState: OrderDragState = {};
 
@@ -42,7 +44,7 @@ export function renderOrderedResponse(
     if (!choice) return;
     ordered.splice(to, 0, choice);
     renderList();
-    announceOrderedItemMove(summary, choice.text, to, ordered.length, from);
+    announceOrderedItemMove(summary, messages, choice.text, to, ordered.length, from);
     commit();
     focusReorderControl(list, choice.identifier);
   };

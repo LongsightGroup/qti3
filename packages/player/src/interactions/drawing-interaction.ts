@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
-import { applyResponsiveGraphicSize, objectIsImage, readableType } from "../interaction-support.js";
+import { applyResponsiveGraphicSize, objectIsImage } from "../interaction-support.js";
 import type { QtiPlayerMessages } from "../player-messages.js";
 
 export const DRAWING_STROKE_COLOR = "#000";
@@ -13,12 +13,12 @@ export function renderDrawingResponse(
 ): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
-  group.setAttribute("aria-label", `${readableType(interaction.type)} response`);
+  group.setAttribute("aria-label", messages.interactionDrawingResponse({ type: interaction.type }));
 
   const surface = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   surface.classList.add("qti3-drawing-surface");
   surface.setAttribute("role", "img");
-  surface.setAttribute("aria-label", "Drawing response surface");
+  surface.setAttribute("aria-label", messages.drawingSurface());
   surface.setAttribute("tabindex", "0");
   const width = drawingWidth(interaction);
   const height = drawingHeight(interaction);
@@ -68,12 +68,14 @@ export function renderDrawingResponse(
     const count = strokes.length;
     summary.value = serializeDrawingStrokes(strokes);
     summary.textContent =
-      count === 0 ? "No drawing strokes." : `${count} drawing stroke${count === 1 ? "" : "s"}.`;
+      count === 0
+        ? messages.drawingStatusEmpty()
+        : messages.drawingStatusStrokeCount({ count });
     surface.setAttribute(
       "aria-label",
       count === 0
-        ? "Drawing response surface, no strokes"
-        : `Drawing response surface, ${count} stroke${count === 1 ? "" : "s"}`,
+        ? messages.drawingSurfaceEmpty()
+        : messages.drawingSurfaceStrokeCount({ count }),
     );
   };
   for (const points of restoredStrokes) {

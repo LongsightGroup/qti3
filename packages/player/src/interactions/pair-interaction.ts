@@ -2,7 +2,6 @@ import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-c
 import { removeButton } from "../controls/remove-button.js";
 import {
   missingChoicesMessage,
-  readableType,
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
@@ -33,15 +32,24 @@ export function renderPairResponse(
   const selectedPairs: string[] = valueToStrings(currentValue);
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
-  const labels = pairRegionLabels(interaction);
+  const labels = pairRegionLabels(interaction, messages);
 
-  const sourceRegion = tokenRegion(`${readableType(interaction.type)} sources`, labels.source);
-  const targetRegion = tokenRegion(`${readableType(interaction.type)} targets`, labels.target);
+  const sourceRegion = tokenRegion(
+    messages.interactionSourcesBank({ type: interaction.type }),
+    labels.source,
+  );
+  const targetRegion = tokenRegion(
+    messages.interactionTargetsBank({ type: interaction.type }),
+    labels.target,
+  );
   const selector = document.createElement("div");
   selector.className = "qti3-pair-selector";
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
-  pairList.setAttribute("aria-label", `${readableType(interaction.type)} selected pairs`);
+  pairList.setAttribute(
+    "aria-label",
+    messages.interactionSelectedPairsList({ type: interaction.type }),
+  );
   let draggedSource: string | undefined;
 
   const commit = () => {
@@ -84,11 +92,15 @@ export function renderPairResponse(
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
         const [source, target] = pair.split(" ");
+        const label = messages.associationPairLabel({
+          source: choiceText(sources, source),
+          target: choiceText(targets, target),
+        });
         const item = document.createElement("li");
         item.className = "qti3-pair-chip";
         const text = document.createElement("span");
-        text.textContent = `${choiceText(sources, source)} to ${choiceText(targets, target)}`;
-        const remove = removeButton(text.textContent, messages);
+        text.textContent = label;
+        const remove = removeButton(label, messages);
         remove.addEventListener("click", () => {
           const index = selectedPairs.indexOf(pair);
           if (index >= 0) selectedPairs.splice(index, 1);

@@ -11,7 +11,6 @@ import {
   objectHeight,
   objectWidth,
   placeHotspotButton,
-  readableType,
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
@@ -47,14 +46,14 @@ export function renderGraphicAssociateResponse(
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-associate-surface");
   surface.role = "group";
-  surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
+  surface.setAttribute("aria-label", messages.interactionHotspots({ type: interaction.type }));
 
   const object = interaction.object;
   if (object) {
     appendGraphicObjectImage(
       surface,
       object,
-      object.text || `${readableType(interaction.type)} image`,
+      object.text || messages.interactionImageAlt({ type: interaction.type }),
     );
   }
 
@@ -69,7 +68,10 @@ export function renderGraphicAssociateResponse(
   summary.setAttribute("aria-live", "polite");
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
-  pairList.setAttribute("aria-label", `${readableType(interaction.type)} selected pairs`);
+  pairList.setAttribute(
+    "aria-label",
+    messages.interactionSelectedPairsList({ type: interaction.type }),
+  );
 
   const commit = () => {
     if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);

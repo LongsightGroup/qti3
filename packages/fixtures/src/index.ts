@@ -1013,7 +1013,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
     };
   }
   if (interactionType === "slider") {
-    return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: 50 };
+    return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: 2024 };
   }
   if (interactionType === "hotspot") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "identifier", correct: "A" };
@@ -1056,7 +1056,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<${qtiName} response-identifier="RESPONSE" autostart="false" min-plays="1"><object data="${silentWavDataUri}" type="audio/wav">Silent WAV fixture audio</object></${qtiName}>`;
   }
   if (interactionType === "slider") {
-    return `<${qtiName} response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the response-processing share to 50 percent.</qti-prompt></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE" lower-bound="2010" upper-bound="2030" step="1"><qti-prompt>In what year was the QTI 3.0 specification line published?</qti-prompt></${qtiName}>`;
   }
   if (interactionType === "extendedText") {
     return `<${qtiName} response-identifier="RESPONSE" expected-lines="4"><qti-prompt>Explain why a QTI item player should keep response capture separate from scoring and analytics.</qti-prompt></${qtiName}>`;
@@ -1131,7 +1131,7 @@ function itemIntro(identifier: string): string {
     "positionObject-reference": "Move the marker object onto the target stage.",
     "portableCustom-reference": "Exercise the portable custom interaction host contract.",
     "selectPoint-reference": "Mark an exact point on the diagram.",
-    "slider-reference": "Set a numeric response with a range control.",
+    "slider-reference": "Choose a publication year with a range control.",
     "textEntry-reference": "Type a short QTI outcome name in the sentence.",
     "upload-reference": "Choose a file as the candidate response.",
   };

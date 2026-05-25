@@ -48,7 +48,9 @@ export const BASE_PLAYER_STYLES = `
   display: none !important;
 }
 
-.qti3-player .qti-visually-hidden {
+.qti3-player .qti-visually-hidden,
+.qti3-player .qti3-selection-summary,
+.qti3-player .qti3-coordinate-output {
   position: absolute !important;
   overflow: hidden !important;
   clip: rect(1px, 1px, 1px, 1px) !important;
@@ -59,6 +61,23 @@ export const BASE_PLAYER_STYLES = `
   padding: 0 !important;
   border: 0 !important;
   white-space: nowrap !important;
+}
+
+qti-assessment-item-player[data-show-live-regions] .qti3-selection-summary,
+qti-assessment-item-player[data-show-live-regions] .qti3-coordinate-output {
+  position: static !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+  inline-size: auto !important;
+  block-size: auto !important;
+  margin: 0 0 0.5rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: normal !important;
+  font-size: 0.875rem;
+  color: light-dark(#5f6368, #bdc1c6);
+  font-style: italic;
 }
 
 .qti3-embedded-interaction {
@@ -93,10 +112,6 @@ export const BASE_PLAYER_STYLES = `
 
 .qti3-response-group > * + * {
   margin-block-start: 0.75rem;
-}
-
-.qti3-selection-summary {
-  margin: 0;
 }
 
 .qti3-token:focus,

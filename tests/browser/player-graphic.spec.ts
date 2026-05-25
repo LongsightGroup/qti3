@@ -381,9 +381,9 @@ test.describe("player graphic interactions", () => {
     await expect(marker).toBeVisible();
     await expect(marker).toHaveAttribute("data-placed", "false");
     await expectResponse(page, undefined);
-    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
-      "Object not placed",
-    );
+    const placementStatus = page.locator("qti-assessment-item-player .qti3-coordinate-output");
+    await expect(placementStatus).toBeHidden();
+    await expect(placementStatus).toContainText("Object not placed");
 
     const box = await stage.boundingBox();
     expect(box?.width).toBe(480);
@@ -395,9 +395,22 @@ test.describe("player graphic interactions", () => {
     await clickAuthoredCoordinate(stage, 240, 88);
     await expectPointResponse(page, "240 88");
     await expect(marker).toHaveAttribute("data-placed", "true");
-    await expect(page.locator("qti-assessment-item-player .qti3-coordinate-output")).toContainText(
-      /Object positioned at 240 8[78]/,
-    );
+    await expect(placementStatus).toContainText(/Object positioned at 240 8[78]/);
+  });
+
+  test("localizes position object status with language-of-interface", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "sv-SE";
+    });
+    await loadFixture(page, "positionObject");
+
+    const stage = page.locator("qti-assessment-item-player .qti3-position-object-stage");
+    await expect(stage.getByRole("button", { name: "Flyttbart objekt" })).toBeVisible();
+    await clickAuthoredCoordinate(stage, 254, 210);
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-coordinate-output"),
+    ).toHaveText("Objekt placerat vid 254 210");
   });
 
   test("captures drawing responses as file data URLs", async ({ page }) => {
@@ -604,6 +617,14 @@ test.describe("player graphic interactions", () => {
     await expect(hotspot).toHaveAttribute("data-selected", "true");
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toContainText(
       "Selected A",
+    );
+
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "sv-SE";
+    });
+    await hotspot.click();
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
+      "Valt A",
     );
 
     await page.locator("#debug-score").click();

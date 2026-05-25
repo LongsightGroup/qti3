@@ -1371,6 +1371,17 @@ test.describe("manual harness", () => {
     );
   });
 
+  test("localizes extended text counter with language-of-interface", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "sv-SE";
+    });
+    await loadFixture(page, "extendedText");
+
+    await page.locator("qti-assessment-item-player textarea").fill("Hej");
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveText("3 tecken, 1 ord");
+  });
+
   test("creates match pairs", async ({ page }) => {
     await page.goto("/");
 
@@ -1403,6 +1414,22 @@ test.describe("manual harness", () => {
     expect(matchStyles.targetWeight).toBeGreaterThanOrEqual(600);
     await assignMatch(page, "A", "G1");
     await expectResponse(page, ["A G1"]);
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-pair-chip span").first(),
+    ).toHaveText("Response declaration to Candidate response value");
+  });
+
+  test("localizes match pair labels with language-of-interface", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "sv-SE";
+    });
+    await loadFixture(page, "match");
+
+    await assignMatch(page, "B", "G1");
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-pair-chip span").first(),
+    ).toHaveText("Outcome declaration med Candidate response value");
   });
 
   test("resolves player language-of-interface and message overrides", async ({ page }) => {

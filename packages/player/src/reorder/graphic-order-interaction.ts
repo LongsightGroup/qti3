@@ -12,7 +12,6 @@ import {
   objectHeight,
   objectWidth,
   placeHotspotButton,
-  readableType,
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
@@ -47,14 +46,14 @@ export function renderGraphicOrderResponse(
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-order-surface");
   surface.role = "group";
-  surface.setAttribute("aria-label", `${readableType(interaction.type)} hotspots`);
+  surface.setAttribute("aria-label", messages.interactionHotspots({ type: interaction.type }));
 
   const object = interaction.object;
   if (object) {
     appendGraphicObjectImage(
       surface,
       object,
-      object.text || `${readableType(interaction.type)} image`,
+      object.text || messages.interactionImageAlt({ type: interaction.type }),
     );
   }
 
@@ -82,7 +81,7 @@ export function renderGraphicOrderResponse(
   const summary = createSelectionSummary();
   const list = document.createElement("ol");
   list.className = "qti3-graphic-order-list";
-  list.setAttribute("aria-label", `${readableType(interaction.type)} selected order`);
+  list.setAttribute("aria-label", messages.interactionSelectedOrderList({ type: interaction.type }));
 
   const orderedChoices = () =>
     orderedIdentifiers
@@ -90,12 +89,7 @@ export function renderGraphicOrderResponse(
       .filter((choice): choice is QtiChoice => Boolean(choice));
   const commit = () => update([...orderedIdentifiers]);
   const updateSelectionCountSummary = () => {
-    announceOrderedSelectionCount(
-      summary,
-      orderedIdentifiers.length,
-      "region ordered",
-      "regions ordered",
-    );
+    announceOrderedSelectionCount(summary, messages, orderedIdentifiers.length);
   };
   const focusHotspot = (identifier: string) => {
     surface
@@ -135,7 +129,14 @@ export function renderGraphicOrderResponse(
     if (!entry) return;
     orderedIdentifiers.splice(targetIndex, 0, entry);
     renderState();
-    announceOrderedItemMove(summary, choiceLabel, targetIndex, orderedIdentifiers.length, index);
+    announceOrderedItemMove(
+      summary,
+      messages,
+      choiceLabel,
+      targetIndex,
+      orderedIdentifiers.length,
+      index,
+    );
     commit();
     focusReorderControl(list, identifier);
   };
@@ -182,7 +183,7 @@ export function renderGraphicOrderResponse(
         label.textContent = `${index + 1}. ${choiceLabel}`;
         label.setAttribute(
           "aria-label",
-          orderedItemAccessibleName(choiceLabel, index, currentChoices.length),
+          orderedItemAccessibleName(messages, choiceLabel, index, currentChoices.length),
         );
         label.addEventListener("click", () => focusHotspot(choice.identifier));
         label.addEventListener("keydown", (event) => {

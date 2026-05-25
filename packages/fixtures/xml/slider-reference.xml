@@ -2,14 +2,14 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="slider-reference" title="slider-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer">
-        <qti-correct-response><qti-value>50</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>2024</qti-value></qti-correct-response>
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Set a numeric response with a range control.</p>
-    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="100" step="1"><qti-prompt>Set the response-processing share to 50 percent.</qti-prompt></qti-slider-interaction>
+    <p>Choose a publication year on the timeline.</p>
+    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="2010" upper-bound="2030" step="1"><qti-prompt>In what year was the QTI 3.0 specification line published?</qti-prompt></qti-slider-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

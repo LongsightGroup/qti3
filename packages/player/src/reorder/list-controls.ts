@@ -25,7 +25,7 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
   handle.type = "button";
   handle.className = handleClassName;
   handle.dataset.choiceIdentifier = identifier;
-  handle.setAttribute("aria-label", orderedItemAccessibleName(label, index, total));
+  handle.setAttribute("aria-label", orderedItemAccessibleName(messages, label, index, total));
   handle.textContent = visibleText;
   handle.addEventListener("keydown", (event) => {
     if (event.key === "ArrowUp" || event.key === "ArrowLeft") {

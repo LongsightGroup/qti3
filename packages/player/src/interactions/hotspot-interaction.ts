@@ -7,7 +7,6 @@ import {
   objectHeight,
   objectWidth,
   placeHotspotButton,
-  readableType,
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
@@ -37,7 +36,7 @@ export function renderHotspotResponse(
     appendGraphicObjectImage(
       surface,
       object,
-      object.text || `${readableType(interaction.type)} image`,
+      object.text || messages.interactionImageAlt({ type: interaction.type }),
     );
   }
 
@@ -54,7 +53,12 @@ export function renderHotspotResponse(
       button.dataset.selected = isSelected ? "true" : "false";
     }
     selectedSummary.textContent =
-      selected.size > 0 ? `Selected ${[...selected].join(", ")}` : messages.noRegionSelected();
+      selected.size > 0
+        ? messages.hotspotSelectionSummary({
+            selection: [...selected].join(", "),
+            count: selected.size,
+          })
+        : messages.noRegionSelected();
   };
   for (const choice of choices) {
     const button = document.createElement("button");

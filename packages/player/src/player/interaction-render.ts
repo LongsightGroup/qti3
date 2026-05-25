@@ -83,7 +83,7 @@ export function renderEmbeddedInteractionSection(
   wrapper.append(
     interaction.type === "inlineChoice"
       ? renderSelect(interaction, update, currentValue, messages)
-      : renderInlineTextEntry(interaction, update, currentValue),
+      : renderInlineTextEntry(interaction, update, currentValue, messages),
   );
   return wrapper;
 }

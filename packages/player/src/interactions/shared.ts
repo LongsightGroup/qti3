@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
+import type { QtiPlayerMessages } from "../player-messages.js";
 import { interactionChoices } from "../interaction-support.js";
 
 export function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
@@ -49,8 +50,24 @@ export function targetChoices(interaction: QtiInteraction): QtiChoice[] {
   return targets.length > 0 ? targets : choices;
 }
 
-export function pairRegionLabels(interaction: QtiInteraction): { source: string; target: string } {
-  if (interaction.type === "associate") return { source: "First concept", target: "Pair with" };
-  if (interaction.type === "match") return { source: "Prompt", target: "Match" };
-  return { source: "Source", target: "Target" };
+export function pairRegionLabels(
+  interaction: QtiInteraction,
+  messages: QtiPlayerMessages,
+): { source: string; target: string } {
+  if (interaction.type === "associate") {
+    return {
+      source: messages.associateFirstConceptRegion(),
+      target: messages.associatePairWithRegion(),
+    };
+  }
+  if (interaction.type === "match") {
+    return {
+      source: messages.matchPromptRegion(),
+      target: messages.matchMatchRegion(),
+    };
+  }
+  return {
+    source: messages.genericSourceRegion(),
+    target: messages.genericTargetRegion(),
+  };
 }

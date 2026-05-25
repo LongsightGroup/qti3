@@ -6,7 +6,6 @@ import {
   appendGraphicObjectImage,
   objectIsImage,
   percent,
-  readableType,
   responseGroup,
 } from "../interaction-support.js";
 import { movementButton } from "../movement.js";
@@ -26,7 +25,10 @@ export function renderPositionObjectResponse(
 ): HTMLElement {
   const group = responseGroup();
   group.role = "group";
-  group.setAttribute("aria-label", `${readableType(interaction.type)} object placement response`);
+  group.setAttribute(
+    "aria-label",
+    messages.interactionPlacementResponse({ type: interaction.type }),
+  );
 
   const stageObject = interaction.positionObjectStage ?? interaction.object;
   const movableObject = interaction.positionObjectStage ? interaction.object : undefined;
@@ -43,7 +45,7 @@ export function renderPositionObjectResponse(
   stage.style.setProperty("--qti3-position-object-marker-block-size", `${movableHeight}px`);
   stage.tabIndex = 0;
   stage.role = "group";
-  stage.setAttribute("aria-label", `${readableType(interaction.type)} placement stage`);
+  stage.setAttribute("aria-label", messages.interactionPlacementStage({ type: interaction.type }));
 
   if (stageObject?.data && objectIsImage(stageObject)) {
     appendGraphicObjectImage(stage, stageObject, stageObject.text || "");
@@ -67,7 +69,8 @@ export function renderPositionObjectResponse(
   stage.append(marker);
 
   const coordinate = document.createElement("output");
-  coordinate.className = "qti3-coordinate-output";
+  coordinate.className = "qti3-coordinate-output qti-visually-hidden";
+  coordinate.setAttribute("aria-live", "polite");
   const clamp = () => {
     point.x = Math.max(0, Math.min(width, point.x));
     point.y = Math.max(0, Math.min(height, point.y));
@@ -90,10 +93,10 @@ export function renderPositionObjectResponse(
         `calc(100% + ${Math.round(movableHeight / 2 + 8)}px)`,
       );
       coordinate.value = "";
-      coordinate.textContent = "Object not placed";
+      coordinate.textContent = messages.objectNotPlaced();
       stage.setAttribute(
         "aria-label",
-        `${readableType(interaction.type)} placement stage, object not placed`,
+        messages.interactionPlacementStageEmpty({ type: interaction.type }),
       );
       return;
     }
@@ -107,10 +110,11 @@ export function renderPositionObjectResponse(
       `${percent(point.y, height)}%`,
     );
     coordinate.value = pointToString(point);
-    coordinate.textContent = `Object positioned at ${pointToString(point)}`;
+    const coordinates = pointToString(point);
+    coordinate.textContent = messages.objectPositionedAt({ coordinates });
     stage.setAttribute(
       "aria-label",
-      `${readableType(interaction.type)} placement stage, object at ${pointToString(point)}`,
+      messages.interactionPlacementStageAt({ type: interaction.type, coordinates }),
     );
   };
   const pointFromPointer = (event: MouseEvent | PointerEvent) => {

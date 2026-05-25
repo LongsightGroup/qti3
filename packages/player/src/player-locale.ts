@@ -1,3 +1,12 @@
+import {
+  englishChromeMessages,
+  englishDirection,
+  frenchChromeMessages,
+  germanChromeMessages,
+  portugueseChromeMessages,
+  spanishChromeMessages,
+  swedishChromeMessages,
+} from "./player-chrome-messages.js";
 import type { QtiPlayerMessages } from "./player-messages.js";
 import type { QtiPlayerMessageOverrides } from "./player-types.js";
 
@@ -13,15 +22,19 @@ const defaultEnglishPlayerMessages: QtiPlayerMessages = {
   movableObject: () => "Movable object",
   placeObject: () => "Place",
   inlineChoicePrompt: () => "Choose...",
+  extendedTextCounter: ({ characters, words }) =>
+    `${characters} ${characters === 1 ? "character" : "characters"}, ${words} ${words === 1 ? "word" : "words"}`,
+  hotspotSelectionSummary: ({ selection }) => `Selected ${selection}`,
   noPointSelected: () => "No point selected",
   noRegionSelected: () => "No region selected",
   noAssociationsMade: () => "No associations made",
   associationsMade: ({ count }) => `${count} ${count === 1 ? "association" : "associations"} made.`,
   associationPairLabel: ({ source, target }) => `${source} to ${target}`,
   hotspotSelectedChooseAnother: ({ label }) => `${label} selected. Choose another hotspot.`,
-  moveChoice: ({ label, direction }) => `Move ${label} ${direction}`,
-  movePoint: ({ direction }) => `Move point ${direction}`,
-  moveObject: ({ direction }) => `Move object ${direction}`,
+  moveChoice: ({ label, direction }) => `Move ${label} ${englishDirection(direction)}`,
+  movePoint: ({ direction }) => `Move point ${englishDirection(direction)}`,
+  moveObject: ({ direction }) => `Move object ${englishDirection(direction)}`,
+  ...englishChromeMessages,
 };
 
 const playerMessages = {
@@ -36,6 +49,10 @@ const playerMessages = {
     movableObject: () => "Objeto movible",
     placeObject: () => "Colocar",
     inlineChoicePrompt: () => "Elija...",
+    extendedTextCounter: ({ characters, words }) =>
+      `${characters} ${characters === 1 ? "caracter" : "caracteres"}, ${words} ${words === 1 ? "palabra" : "palabras"}`,
+    hotspotSelectionSummary: ({ selection, count }) =>
+      count === 1 ? `Seleccionado ${selection}` : `Seleccionados ${selection}`,
     noPointSelected: () => "Ningun punto seleccionado",
     noRegionSelected: () => "Ninguna region seleccionada",
     noAssociationsMade: () => "Ninguna asociacion realizada",
@@ -46,6 +63,7 @@ const playerMessages = {
     moveChoice: ({ label, direction }) => `Mover ${label} ${spanishDirection(direction)}`,
     movePoint: ({ direction }) => `Mover punto ${spanishDirection(direction)}`,
     moveObject: ({ direction }) => `Mover objeto ${spanishDirection(direction)}`,
+    ...spanishChromeMessages,
   },
   swedish: {
     remove: () => "Ta bort",
@@ -57,6 +75,9 @@ const playerMessages = {
     movableObject: () => "Flyttbart objekt",
     placeObject: () => "Placera",
     inlineChoicePrompt: () => "Valj...",
+    extendedTextCounter: ({ characters, words }) => `${characters} tecken, ${words} ord`,
+    hotspotSelectionSummary: ({ selection, count }) =>
+      count === 1 ? `Valt ${selection}` : `Valda ${selection}`,
     noPointSelected: () => "Ingen punkt vald",
     noRegionSelected: () => "Ingen region vald",
     noAssociationsMade: () => "Inga associationer gjorda",
@@ -67,6 +88,7 @@ const playerMessages = {
     moveChoice: ({ label, direction }) => `Flytta ${label} ${swedishDirection(direction)}`,
     movePoint: ({ direction }) => `Flytta punkt ${swedishDirection(direction)}`,
     moveObject: ({ direction }) => `Flytta objekt ${swedishDirection(direction)}`,
+    ...swedishChromeMessages,
   },
   german: {
     remove: () => "Entfernen",
@@ -78,6 +100,10 @@ const playerMessages = {
     movableObject: () => "Bewegliches Objekt",
     placeObject: () => "Platzieren",
     inlineChoicePrompt: () => "Waehlen...",
+    extendedTextCounter: ({ characters, words }) =>
+      `${characters} ${characters === 1 ? "Zeichen" : "Zeichen"}, ${words} ${words === 1 ? "Wort" : "Worter"}`,
+    hotspotSelectionSummary: ({ selection, count }) =>
+      count === 1 ? `Ausgewaehlt ${selection}` : `Ausgewaehlt ${selection}`,
     noPointSelected: () => "Kein Punkt ausgewaehlt",
     noRegionSelected: () => "Keine Region ausgewaehlt",
     noAssociationsMade: () => "Keine Zuordnungen erstellt",
@@ -89,6 +115,7 @@ const playerMessages = {
     moveChoice: ({ label, direction }) => `${label} ${germanDirection(direction)} bewegen`,
     movePoint: ({ direction }) => `Punkt ${germanDirection(direction)} bewegen`,
     moveObject: ({ direction }) => `Objekt ${germanDirection(direction)} bewegen`,
+    ...germanChromeMessages,
   },
   portuguese: {
     remove: () => "Remover",
@@ -100,6 +127,10 @@ const playerMessages = {
     movableObject: () => "Objeto movel",
     placeObject: () => "Posicionar",
     inlineChoicePrompt: () => "Escolha...",
+    extendedTextCounter: ({ characters, words }) =>
+      `${characters} ${characters === 1 ? "caractere" : "caracteres"}, ${words} ${words === 1 ? "palavra" : "palavras"}`,
+    hotspotSelectionSummary: ({ selection, count }) =>
+      count === 1 ? `Selecionado ${selection}` : `Selecionados ${selection}`,
     noPointSelected: () => "Nenhum ponto selecionado",
     noRegionSelected: () => "Nenhuma regiao selecionada",
     noAssociationsMade: () => "Nenhuma associacao feita",
@@ -110,6 +141,7 @@ const playerMessages = {
     moveChoice: ({ label, direction }) => `Mover ${label} ${portugueseDirection(direction)}`,
     movePoint: ({ direction }) => `Mover ponto ${portugueseDirection(direction)}`,
     moveObject: ({ direction }) => `Mover objeto ${portugueseDirection(direction)}`,
+    ...portugueseChromeMessages,
   },
   french: {
     remove: () => "Supprimer",
@@ -121,6 +153,10 @@ const playerMessages = {
     movableObject: () => "Objet mobile",
     placeObject: () => "Placer",
     inlineChoicePrompt: () => "Choisir...",
+    extendedTextCounter: ({ characters, words }) =>
+      `${characters} ${characters === 1 ? "caractere" : "caracteres"}, ${words} ${words === 1 ? "mot" : "mots"}`,
+    hotspotSelectionSummary: ({ selection, count }) =>
+      count === 1 ? `${selection} selectionne` : `${selection} selectionnes`,
     noPointSelected: () => "Aucun point selectionne",
     noRegionSelected: () => "Aucune region selectionnee",
     noAssociationsMade: () => "Aucune association effectuee",
@@ -132,6 +168,7 @@ const playerMessages = {
     moveChoice: ({ label, direction }) => `Deplacer ${label} vers ${frenchDirection(direction)}`,
     movePoint: ({ direction }) => `Deplacer le point vers ${frenchDirection(direction)}`,
     moveObject: ({ direction }) => `Deplacer l'objet vers ${frenchDirection(direction)}`,
+    ...frenchChromeMessages,
   },
 } satisfies Record<string, QtiPlayerMessageCatalog>;
 

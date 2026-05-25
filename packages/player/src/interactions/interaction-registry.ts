@@ -81,8 +81,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     id: "gapMatch",
     matches: (interaction) =>
       interaction.type === "gapMatch" || interaction.type === "graphicGapMatch",
-    render: ({ interaction, update, currentValue }) =>
-      renderGapMatchResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderGapMatchResponse(interaction, update, currentValue, messages),
   },
   {
     id: "graphicAssociate",
@@ -117,8 +117,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "choice",
     matches: usesChoiceSet,
-    render: ({ interaction, update, currentValue }) =>
-      renderChoice(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderChoice(interaction, update, currentValue, messages),
   },
   {
     id: "inlineChoice",
@@ -129,8 +129,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "extendedText",
     matches: (interaction) => interaction.type === "extendedText",
-    render: ({ interaction, update, currentValue }) =>
-      renderTextResponse(interaction, update, "extended", currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderTextResponse(interaction, update, "extended", currentValue, messages),
   },
   {
     id: "selectPoint",
@@ -159,14 +159,14 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   {
     id: "textEntry",
     matches: (interaction) => interaction.type === "textEntry",
-    render: ({ interaction, update, currentValue }) =>
-      renderTextResponse(interaction, update, "entry", currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderTextResponse(interaction, update, "entry", currentValue, messages),
   },
   {
     id: "slider",
     matches: (interaction) => interaction.type === "slider",
-    render: ({ interaction, update, currentValue }) =>
-      renderSliderResponse(interaction, update, currentValue),
+    render: ({ interaction, update, currentValue, messages }) =>
+      renderSliderResponse(interaction, update, currentValue, messages),
   },
   {
     id: "upload",

@@ -1,5 +1,7 @@
 export type {
   QtiPlayerAssociationPairLabelParams,
+  QtiPlayerExtendedTextCounterParams,
+  QtiPlayerHotspotSelectionSummaryParams,
   QtiPlayerMessages,
   QtiPlayerRemoveMessageParams,
 } from "./player-messages.js";

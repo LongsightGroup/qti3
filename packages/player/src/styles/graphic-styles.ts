@@ -1,10 +1,4 @@
 export const GRAPHIC_PLAYER_STYLES = `
-.qti3-coordinate-output {
-  display: block;
-  margin-block-start: 0.4rem;
-  font-size: 0.9rem;
-}
-
 .qti3-hotspot-button[data-selected="true"] {
   background: Highlight !important;
   color: HighlightText !important;

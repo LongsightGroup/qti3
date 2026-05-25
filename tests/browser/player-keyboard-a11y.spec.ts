@@ -32,11 +32,11 @@ test.describe("player keyboard and accessibility", () => {
 
     await loadFixture(page, "slider");
     await page.locator('qti-assessment-item-player input[type="range"]').focus();
-    for (let index = 0; index < 50; index += 1) {
+    for (let index = 0; index < 14; index += 1) {
       await page.keyboard.press("ArrowRight");
     }
-    await expectResponse(page, 50);
-    await expect(page.locator("qti-assessment-item-player output")).toHaveText("50");
+    await expectResponse(page, 2024);
+    await expect(page.locator("qti-assessment-item-player output")).toHaveText("2024");
 
     await loadFixture(page, "positionObject");
     await expectResponse(page, undefined);
@@ -214,9 +214,9 @@ test.describe("player keyboard and accessibility", () => {
       .focus();
     await page.keyboard.press("ArrowUp");
     await expectResponse(page, ["B", "A", "C"]);
-    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
-      /moved up\.$/,
-    );
+    const moveSummary = page.locator("qti-assessment-item-player .qti3-selection-summary");
+    await expect(moveSummary).toBeHidden();
+    await expect(moveSummary).toHaveText(/moved up\.$/);
     await expect(
       page.locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]'),
     ).toBeFocused();

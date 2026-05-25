@@ -15,6 +15,8 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Ningun punto seleccionado",
         noRegionSelected: "Ninguna region seleccionada",
         oneAssociation: "1 asociacion realizada.",
+        extendedTextCounter: "7 caracteres, 1 palabra",
+        hotspotSelectionSummary: "Seleccionado A",
       },
       {
         locale: "es-ES",
@@ -27,6 +29,8 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Ningun punto seleccionado",
         noRegionSelected: "Ninguna region seleccionada",
         oneAssociation: "1 asociacion realizada.",
+        extendedTextCounter: "7 caracteres, 1 palabra",
+        hotspotSelectionSummary: "Seleccionado A",
       },
       {
         locale: "sv-SE",
@@ -39,6 +43,10 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Ingen punkt vald",
         noRegionSelected: "Ingen region vald",
         oneAssociation: "1 association gjord.",
+        extendedTextCounter: "7 tecken, 1 ord",
+        hotspotSelectionSummary: "Valt A",
+        objectPositionedAt: "Objekt placerat vid 254 210",
+        orderedItemMoved: "Load and parse the assessment item flyttades ned.",
       },
       {
         locale: "de-DE",
@@ -51,6 +59,8 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Kein Punkt ausgewaehlt",
         noRegionSelected: "Keine Region ausgewaehlt",
         oneAssociation: "1 Zuordnung erstellt.",
+        extendedTextCounter: "7 Zeichen, 1 Wort",
+        hotspotSelectionSummary: "Ausgewaehlt A",
       },
       {
         locale: "pt-BR",
@@ -63,6 +73,8 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Nenhum ponto selecionado",
         noRegionSelected: "Nenhuma regiao selecionada",
         oneAssociation: "1 associacao feita.",
+        extendedTextCounter: "7 caracteres, 1 palavra",
+        hotspotSelectionSummary: "Selecionado A",
       },
       {
         locale: "pt-PT",
@@ -75,6 +87,8 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Nenhum ponto selecionado",
         noRegionSelected: "Nenhuma regiao selecionada",
         oneAssociation: "1 associacao feita.",
+        extendedTextCounter: "7 caracteres, 1 palavra",
+        hotspotSelectionSummary: "Selecionado A",
       },
       {
         locale: "fr-FR",
@@ -87,6 +101,8 @@ describe("resolvePlayerMessages", () => {
         noPointSelected: "Aucun point selectionne",
         noRegionSelected: "Aucune region selectionnee",
         oneAssociation: "1 association effectuee.",
+        extendedTextCounter: "7 caracteres, 1 mot",
+        hotspotSelectionSummary: "A selectionne",
       },
     ];
 
@@ -111,6 +127,25 @@ describe("resolvePlayerMessages", () => {
       expect(messages.noPointSelected(), example.locale).toBe(example.noPointSelected);
       expect(messages.noRegionSelected(), example.locale).toBe(example.noRegionSelected);
       expect(messages.associationsMade({ count: 1 }), example.locale).toBe(example.oneAssociation);
+      expect(
+        messages.extendedTextCounter({ characters: 7, words: 1 }),
+        example.locale,
+      ).toBe(example.extendedTextCounter);
+      expect(
+        messages.hotspotSelectionSummary({ selection: "A", count: 1 }),
+        example.locale,
+      ).toBe(example.hotspotSelectionSummary);
+      if (example.locale === "sv-SE") {
+        expect(messages.objectPositionedAt({ coordinates: "254 210" })).toBe(
+          example.objectPositionedAt,
+        );
+        expect(
+          messages.orderedItemMovedOneStep({
+            label: "Load and parse the assessment item",
+            direction: "down",
+          }),
+        ).toBe(example.orderedItemMoved);
+      }
     }
   });
 

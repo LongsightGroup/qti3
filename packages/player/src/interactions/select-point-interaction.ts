@@ -5,7 +5,6 @@ import {
   appendGraphicObjectImage,
   objectHeight,
   objectWidth,
-  readableType,
   responseGroup,
 } from "../interaction-support.js";
 import { movementButton } from "../movement.js";
@@ -21,7 +20,10 @@ export function renderSelectPointResponse(
 ): HTMLElement {
   const group = responseGroup();
   group.role = "group";
-  group.setAttribute("aria-label", `${readableType(interaction.type)} coordinate response`);
+  group.setAttribute(
+    "aria-label",
+    messages.interactionCoordinateResponse({ type: interaction.type }),
+  );
   const isMultiple = interaction.responseCardinality === "multiple";
   const maxPoints = isMultiple ? maximumAllowedResponses(interaction) : 1;
 
@@ -33,7 +35,7 @@ export function renderSelectPointResponse(
     objectHeight(interaction),
     "qti3-point-surface",
   );
-  surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
+  surface.setAttribute("aria-label", messages.interactionCoordinateArea({ type: interaction.type }));
 
   const object = interaction.object;
   if (object) {
@@ -45,7 +47,8 @@ export function renderSelectPointResponse(
   let points = parsePointValues(currentValue);
   let activeIndex = points.length > 0 ? points.length - 1 : -1;
   const coordinate = document.createElement("output");
-  coordinate.className = "qti3-coordinate-output";
+  coordinate.className = "qti3-coordinate-output qti-visually-hidden";
+  coordinate.setAttribute("aria-live", "polite");
   const initialPoint = () => ({
     x: Math.round(width / 2),
     y: Math.round(height / 2),
@@ -63,7 +66,7 @@ export function renderSelectPointResponse(
     if (points.length === 0) {
       coordinate.value = "";
       coordinate.textContent = messages.noPointSelected();
-      surface.setAttribute("aria-label", `${readableType(interaction.type)} coordinate area`);
+      surface.setAttribute("aria-label", messages.interactionCoordinateArea({ type: interaction.type }));
       return;
     }
     points.forEach((point, index) => {
@@ -83,11 +86,11 @@ export function renderSelectPointResponse(
       ? points.map(pointToString).join(" | ")
       : pointToString(points[0]);
     coordinate.textContent = isMultiple
-      ? `${points.length} selected point${points.length === 1 ? "" : "s"}: ${text}`
-      : `Selected point ${pointToString(points[0])}`;
+      ? messages.selectedPointsSummary({ count: points.length, coordinates: text })
+      : messages.selectedPointAt({ coordinates: pointToString(points[0]) });
     surface.setAttribute(
       "aria-label",
-      `${readableType(interaction.type)} coordinate area, selected ${text}`,
+      messages.interactionCoordinateAreaSelected({ type: interaction.type, coordinates: text }),
     );
   };
   const clampPoint = (point: { x: number; y: number }) => {
