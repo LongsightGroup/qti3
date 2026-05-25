@@ -1,16 +1,16 @@
 {
-  "name": "@longsightgroup/qti3-core",
+  "name": "@longsightgroup/qti3-player-preact",
   "version": "0.5.0",
-  "description": "Framework-neutral TypeScript core for parsing, validating, scoring, and serializing QTI 3 assessment items.",
+  "description": "Preact TSX adapter for the qti3 QTI 3 assessment item player web component.",
   "keywords": [
     "assessment",
-    "assessment-items",
+    "preact",
     "qti",
     "qti3",
-    "scoring",
-    "typescript"
+    "tsx",
+    "web-components"
   ],
-  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/core#readme",
+  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/player-preact#readme",
   "bugs": {
     "url": "https://github.com/LongsightGroup/qti3/issues"
   },
@@ -22,7 +22,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LongsightGroup/qti3.git",
-    "directory": "packages/core"
+    "directory": "packages/player-preact"
   },
   "files": [
     "dist/*.d.ts",
@@ -31,7 +31,9 @@
     "dist/*.js.map",
     "!dist/*.test.*",
     "src/**/*.ts",
-    "!src/**/*.test.ts"
+    "src/**/*.tsx",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx"
   ],
   "type": "module",
   "exports": {
@@ -48,6 +50,13 @@
     "prepublishOnly": "pnpm --dir ../.. release:check"
   },
   "dependencies": {
-    "stax-xml": "0.7.0"
+    "@longsightgroup/qti3-player": "workspace:*"
+  },
+  "devDependencies": {
+    "@longsightgroup/qti3-player-adapter-test-utils": "workspace:*",
+    "preact": "10.29.2"
+  },
+  "peerDependencies": {
+    "preact": ">=10.26 <11"
   }
 }

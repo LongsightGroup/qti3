@@ -97,7 +97,7 @@ runners or LMS delivery shells.
 - Collect official 1EdTech certification evidence by running `certification:check` against licensed external QTI content and a non-empty validator report. Internal Basic readiness is not certification.
 - Expand external corpus coverage in `test:external` as official item banks become available, while keeping `test:external:required` strict for explicit certification runs.
 - Deepen host integration for portable custom interactions: clearer mount contracts, harness examples, and integration guidance. Production module loading, CSP, sandboxing, and tenant policy remain host-owned.
-- Add optional framework adapters only as thin wrappers around the web component once the native API is stable enough to freeze.
+- Keep framework adapters (`@longsightgroup/qti3-player-react`, `@longsightgroup/qti3-player-preact`) aligned with the native web component API as player events and load options evolve.
 - Keep accessibility evidence current: manual assistive-technology scripts, localized player chrome, and keyboard, reflow, and forced-colors coverage as interactions evolve.
 
 ### Still out of scope
@@ -386,7 +386,7 @@ It can also score each item by applying its declared correct responses:
 node packages/cli/dist/index.js score-correct-dir /path/to/items
 ```
 
-Delivery-safe XML generation and server-style scoring are library APIs in `0.4.x`.
+Delivery-safe XML generation and server-style scoring are library APIs in `0.5.x`.
 Dedicated CLI commands for those operations are planned separately, not shipped in this
 release line.
 
@@ -478,6 +478,8 @@ Packages publish under the `longsightgroup` npm organization:
 
 - `@longsightgroup/qti3-core`
 - `@longsightgroup/qti3-player`
+- `@longsightgroup/qti3-player-preact`
+- `@longsightgroup/qti3-player-react`
 - `@longsightgroup/qti3-fixtures`
 - `@longsightgroup/qti3-conformance`
 - `@longsightgroup/qti3-a11y`

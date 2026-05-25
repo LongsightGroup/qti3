@@ -35,6 +35,8 @@ jobs:
           pnpm --dir packages/a11y pack --pack-destination ../../.release
           pnpm --dir packages/conformance pack --pack-destination ../../.release
           pnpm --dir packages/player pack --pack-destination ../../.release
+          pnpm --dir packages/player-preact pack --pack-destination ../../.release
+          pnpm --dir packages/player-react pack --pack-destination ../../.release
           pnpm --dir packages/cli pack --pack-destination ../../.release
       - run: |
           npm publish .release/longsightgroup-qti3-core-*.tgz --access public
@@ -42,4 +44,6 @@ jobs:
           npm publish .release/longsightgroup-qti3-a11y-*.tgz --access public
           npm publish .release/longsightgroup-qti3-conformance-*.tgz --access public
           npm publish .release/longsightgroup-qti3-player-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-player-preact-*.tgz --access public
+          npm publish .release/longsightgroup-qti3-player-react-*.tgz --access public
           npm publish .release/longsightgroup-qti3-cli-*.tgz --access public

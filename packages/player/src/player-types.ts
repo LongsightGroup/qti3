@@ -73,6 +73,18 @@ export interface QtiEndAttemptEventDetail {
   state: QtiAttemptStateV1;
 }
 
+export interface QtiDiagnosticsEventDetail {
+  diagnostics: QtiDiagnostic[];
+}
+
+export interface QtiResetEventDetail {
+  state?: QtiAttemptStateV1 | undefined;
+}
+
+export interface QtiRestoreEventDetail {
+  state?: QtiAttemptStateV1 | undefined;
+}
+
 export interface QtiAssessmentItemPlayerEventDetailMap {
   "qti-ready": QtiReadyEventDetail;
   "qti-statechange": QtiStateChangeEventDetail;
@@ -82,6 +94,9 @@ export interface QtiAssessmentItemPlayerEventDetailMap {
   "qti-validation": QtiValidationEventDetail;
   "qti-suspend": QtiSuspendEventDetail;
   "qti-endattempt": QtiEndAttemptEventDetail;
+  "qti-diagnostics": QtiDiagnosticsEventDetail;
+  "qti-reset": QtiResetEventDetail;
+  "qti-restore": QtiRestoreEventDetail;
 }
 
 export type QtiAssessmentItemPlayerEventName = keyof QtiAssessmentItemPlayerEventDetailMap;

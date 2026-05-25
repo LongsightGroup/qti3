@@ -1,9 +1,17 @@
 export type { QtiPlayerMovementDirection } from "./player-messages.js";
 export type {
+  QtiAttemptStateV1,
+  QtiCatalogSupportResolution,
+  QtiCatalogSupportResolutionOptions,
+  QtiScoreResult,
+  QtiTextToSpeechTraversal,
+} from "@longsightgroup/qti3-core";
+export type {
   QtiAssessmentItemPlayerCustomEventMap,
   QtiAssessmentItemPlayerEvent,
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
+  QtiDiagnosticsEventDetail,
   QtiEndAttemptEventDetail,
   QtiPlayerFetchXml,
   QtiPlayerLoadOptions,
@@ -12,12 +20,36 @@ export type {
   QtiPortableCustomMountEventDetail,
   QtiReadyEventDetail,
   QtiResponseChangeEventDetail,
+  QtiResetEventDetail,
+  QtiRestoreEventDetail,
   QtiScoreAttemptOptions,
   QtiScoreEventDetail,
   QtiStateChangeEventDetail,
   QtiSuspendEventDetail,
   QtiValidationEventDetail,
 } from "./player-types.js";
+export type {
+  QtiAssessmentItemPlayerAdapterEventCallback,
+  QtiAssessmentItemPlayerAdapterEventHandlerProps,
+  QtiAssessmentItemPlayerAdapterEventPropName,
+  QtiAssessmentItemPlayerAdapterLoadSyncInput,
+  QtiAssessmentItemPlayerAdapterProps,
+  QtiAssessmentItemPlayerAdapterPropName,
+  QtiAssessmentItemPlayerHandle,
+  QtiAssessmentItemPlayerLoadDependencies,
+} from "./player-adapter.js";
+export {
+  bindQtiAssessmentItemPlayerAdapterEvents,
+  createQtiAssessmentItemPlayerAdapterLoadSync,
+  createQtiAssessmentItemPlayerHandle,
+  isQtiAssessmentItemPlayerAdapterPropName,
+  normalizeQtiAssessmentItemPlayerLoadError,
+  qtiAssessmentItemPlayerAdapterEventEntries,
+  qtiAssessmentItemPlayerAdapterPropNames,
+  qtiAssessmentItemPlayerLoadDependencies,
+  qtiAssessmentItemPlayerLoadStateKey,
+  syncQtiAssessmentItemPlayerAdapterMessages,
+} from "./player-adapter.js";
 export type { PlayerMessageCatalog } from "./player-message-catalog.js";
 export type { PlayerMessageKey, PlayerMessageResolverKind } from "./player-message-manifest.js";
 export { PLAYER_MESSAGE_MANIFEST } from "./player-message-manifest.js";

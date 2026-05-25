@@ -176,6 +176,22 @@ definition. Host code can attach a PCI runtime and send response/state updates b
 Production sandboxing, CSP, origin policy, and audit logging belong to the host delivery
 system.
 
+## Framework adapters
+
+Optional React and Preact TSX wrappers ship as separate packages. They keep the web component as
+the rendering primitive and only handle framework lifecycle wiring:
+
+- `@longsightgroup/qti3-player-react`
+- `@longsightgroup/qti3-player-preact`
+
+Use the native element directly when you do not need React or Preact integration.
+
+## Clearing a loaded item
+
+`clearItem()` (or omitting declarative `xml` on the adapters) removes rendered content and in-memory
+session state. It does not emit `qti-statechange` or other player events because no item is loaded.
+Hosts should treat the prop transition or imperative call as the source of truth.
+
 ## Styling
 
 The player uses light DOM and is style-neutral by design. Host applications can style

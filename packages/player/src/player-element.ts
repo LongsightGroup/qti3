@@ -91,6 +91,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     validateResponses: true,
     showFeedback: true,
   };
+  private loadGeneration = 0;
 
   get languageOfInterface(): string {
     return (
@@ -147,12 +148,51 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.resolvedMessagesCache = undefined;
   }
 
+  /** Clears the loaded item. Does not emit player events; declarative hosts control this via `xml`. */
+  clearItem(): void {
+    this.loadGeneration += 1;
+    delete this.documentModel;
+    delete this.session;
+    this.validationMessages = [];
+    this.authoringDiagnostics = [];
+    this.replaceChildren();
+  }
+
   async loadXml(xml: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
+    const generation = this.beginLoad();
+    await this.applyLoadedXml(generation, xml, options);
+  }
+
+  async loadUrl(url: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
+    const generation = this.beginLoad();
+    const fetchXml = options.fetchXml ?? defaultFetchXml;
+    const xml = await fetchXml(url);
+    if (!this.isCurrentLoad(generation)) return;
+    await this.applyLoadedXml(generation, xml, options);
+  }
+
+  private beginLoad(): number {
+    this.loadGeneration += 1;
+    return this.loadGeneration;
+  }
+
+  private isCurrentLoad(generation: number): boolean {
+    return generation === this.loadGeneration;
+  }
+
+  private async applyLoadedXml(
+    generation: number,
+    xml: string,
+    options: QtiPlayerLoadOptions,
+  ): Promise<void> {
+    if (!this.isCurrentLoad(generation)) return;
+
     this.sessionControl = {
       validateResponses: options.sessionControl?.validateResponses ?? true,
       showFeedback: options.sessionControl?.showFeedback ?? true,
     };
     this.resolveAsset = options.resolveAsset;
+
     const result = parseQtiXml(xml);
     const playerDiagnostics = result.document
       ? [
@@ -160,6 +200,8 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
           ...collectEmbeddedInteractionDiagnostics(result.document.item),
         ]
       : [];
+    if (!this.isCurrentLoad(generation)) return;
+
     this.dispatchEvent(
       new CustomEvent("qti-diagnostics", {
         detail: { diagnostics: [...result.diagnostics, ...playerDiagnostics] },
@@ -169,9 +211,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       playerDiagnostics.filter((diagnostic) => diagnostic.severity === "error"),
     );
     if (!result.document) {
+      if (!this.isCurrentLoad(generation)) return;
       this.replaceChildren(errorView("Unable to parse QTI item."));
       return;
     }
+
+    if (!this.isCurrentLoad(generation)) return;
 
     this.documentModel = result.document;
     this.session = createItemSession(result.document, options.state);
@@ -184,11 +229,6 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.updateAttemptAvailability();
     this.dispatchPlayerEvent("qti-ready", { item: result.document.item });
     this.emitStateChange();
-  }
-
-  async loadUrl(url: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
-    const fetchXml = options.fetchXml ?? defaultFetchXml;
-    await this.loadXml(await fetchXml(url), options);
   }
 
   scoreAttempt(options: QtiScoreAttemptOptions = {}): QtiScoreResult | undefined {

@@ -4,6 +4,9 @@
     { "path": "./packages/core" },
     { "path": "./packages/fixtures" },
     { "path": "./packages/player" },
+    { "path": "./packages/player-adapter-test-utils" },
+    { "path": "./packages/player-preact" },
+    { "path": "./packages/player-react" },
     { "path": "./packages/conformance" },
     { "path": "./packages/a11y" },
     { "path": "./packages/cli" }

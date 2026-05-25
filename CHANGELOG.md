@@ -2,6 +2,15 @@
 
 ## 0.5.0 - 2026-05-24
 
+### Added
+
+- Add `@longsightgroup/qti3-player-preact` and `@longsightgroup/qti3-player-react`
+  TSX adapters for lifecycle-safe framework use of the web component player.
+- Add shared adapter helpers in `@longsightgroup/qti3-player` (`bindQtiAssessmentItemPlayerAdapterEvents`,
+  `createQtiAssessmentItemPlayerAdapterLoadSync`, `qtiAssessmentItemPlayerLoadStateKey`) and
+  `clearItem()` on the web component.
+- Framework adapters accept declarative `messageCatalog` for host-owned locale chrome.
+
 ### Changed
 
 - **Breaking:** Remove built-in non-English player chrome catalogs (Spanish, Swedish, German,
@@ -20,6 +29,7 @@
 - Add `validatePlayerMessageCatalog()` with structured diagnostics for unknown keys and placeholder
   mistakes; split browser locale tests into `player-chrome-locale.spec.ts` and
   `player-graphic-locale.spec.ts`.
+- Align workspace package versions on `0.5.0`.
 
 ### Removed
 
@@ -44,7 +54,7 @@
   values during secure delivery preparation while documenting intentionally displayed
   point values as host/content policy.
 - Clarify delivery-safe API semantics, server-scoring response-validation scope, and the
-  lack of delivery/security CLI commands in the `0.4.x` release line.
+  lack of delivery/security CLI commands in the `0.5.x` release line.
 - Replace delivery redaction's string-search range lookup with a private XML tag scanner
   aligned to the stax parse tree, including comment, CDATA, processing-instruction,
   prefixed-tag, self-closing-tag, and doctype coverage.
