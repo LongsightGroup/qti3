@@ -23,6 +23,28 @@ describe("qtiAssessmentItemPlayerLoadStateKey", () => {
       qtiAssessmentItemPlayerLoadStateKey({ ...state }),
     );
   });
+
+  it("treats different key order as different load keys", () => {
+    const first: QtiAttemptStateV1 = {
+      schema: "qti3.attempt-state.v1",
+      itemIdentifier: "ITEM-1",
+      status: "interacting",
+      responses: {},
+      outcomes: {},
+      validationMessages: [],
+    };
+    const second: QtiAttemptStateV1 = {
+      schema: "qti3.attempt-state.v1",
+      status: "interacting",
+      itemIdentifier: "ITEM-1",
+      responses: {},
+      outcomes: {},
+      validationMessages: [],
+    };
+    expect(qtiAssessmentItemPlayerLoadStateKey(first)).not.toBe(
+      qtiAssessmentItemPlayerLoadStateKey(second),
+    );
+  });
 });
 
 describe("createQtiAssessmentItemPlayerAdapterLoadSync", () => {

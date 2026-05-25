@@ -50,7 +50,22 @@ importers:
       '@longsightgroup/qti3-player':
         specifier: workspace:*
         version: link:../../packages/player
+      '@longsightgroup/qti3-player-react':
+        specifier: workspace:*
+        version: link:../../packages/player-react
     devDependencies:
+      '@types/react':
+        specifier: 19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.14)
+      react:
+        specifier: 19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: 19.2.6
+        version: 19.2.6(react@19.2.6)
       vite:
         specifier: 8.0.12
         version: 8.0.12(@types/node@22.19.19)
@@ -111,6 +126,9 @@ importers:
 
   packages/player-adapter-test-utils:
     dependencies:
+      '@longsightgroup/qti3-fixtures':
+        specifier: workspace:*
+        version: link:../fixtures
       '@longsightgroup/qti3-player':
         specifier: workspace:*
         version: link:../player

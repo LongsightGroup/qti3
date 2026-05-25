@@ -20,9 +20,14 @@
       "dependencies": {
         "@longsightgroup/qti3-a11y": "workspace:*",
         "@longsightgroup/qti3-fixtures": "workspace:*",
-        "@longsightgroup/qti3-player": "workspace:*"
+        "@longsightgroup/qti3-player": "workspace:*",
+        "@longsightgroup/qti3-player-react": "workspace:*"
       },
       "devDependencies": {
+        "@types/react": "19.2.14",
+        "@types/react-dom": "19.2.3",
+        "react": "19.2.6",
+        "react-dom": "19.2.6",
         "vite": "8.0.12"
       }
     },
@@ -70,6 +75,7 @@
     },
     "packages/player-adapter-test-utils": {
       "dependencies": {
+        "@longsightgroup/qti3-fixtures": "workspace:*",
         "@longsightgroup/qti3-player": "workspace:*"
       },
       "devDependencies": {

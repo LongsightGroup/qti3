@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>qti3 React adapter demo</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #151515;
+        background: #fafafa;
+      }
+
+      main {
+        display: grid;
+        gap: 1rem;
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      qti-assessment-item-player {
+        display: block;
+        padding: 1rem;
+        border: 1px solid #d8d8d8;
+        background: #fff;
+      }
+
+      pre {
+        margin: 0;
+        padding: 0.75rem;
+        border: 1px solid #d8d8d8;
+        background: #fff;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/adapter-react-demo.tsx"></script>
+  </body>
+</html>

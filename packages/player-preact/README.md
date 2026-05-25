@@ -52,12 +52,17 @@ export function Preview({
 
 - Pass `xml` to load an item after mount. Omit `xml` or set `xml={undefined}` to clear the player.
   Clearing does not emit player events; update host state from the prop transition.
+- `xml=""` is not the same as `xml={undefined}`: an empty string attempts a load and shows a parse
+  error when the XML is invalid.
 - Pass `messageCatalog` for localized player chrome (`languageOfInterface` alone does not load locale files).
 - The adapter reloads when `xml`, restored `loadOptions.state`, `status`, session-control flags,
   `fetchXml`, or `resolveAsset` change.
-- Equivalent `loadOptions.state` objects with different references do **not** trigger a reload.
-- Keep `fetchXml`, `resolveAsset`, and `loadOptions` object literals stable across renders
-  (`useMemo` / hooks memoization). New function references on every render cause unnecessary reloads.
+- Equivalent `loadOptions.state` objects with different references do **not** trigger a reload when
+  their serialized content matches. Key order follows object construction order; mutating a state
+  object in place without changing the reload key does not trigger a reload.
+- Keep `messageCatalog`, `fetchXml`, `resolveAsset`, and `loadOptions` object literals stable across
+  renders (`useMemo` / hooks memoization). New references on every render cause unnecessary resyncs or
+  reloads.
 - URL loading stays imperative: `ref.current?.loadUrl(url, loadOptions)`.
 
 ## Security Boundary

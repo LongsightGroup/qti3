@@ -1,8 +1,11 @@
+import { interactionFixtures } from "@longsightgroup/qti3-fixtures";
 import { describe, expect, it, vi, type MockInstance } from "vitest";
 import {
   QtiAssessmentItemPlayer as QtiAssessmentItemPlayerElement,
   type QtiAssessmentItemPlayerHandle,
 } from "@longsightgroup/qti3-player";
+
+const validItemXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
 
 export interface QtiAssessmentItemPlayerAdapterTestContract<Component, Ref> {
   adapterName: string;
@@ -173,18 +176,24 @@ export function describeQtiAssessmentItemPlayerAdapterContract<Component, Ref>(
       const first = new Promise<void>((resolve) => {
         resolveFirst = resolve;
       });
-      const loadXml = vi
-        .spyOn(QtiAssessmentItemPlayerElement.prototype, "loadXml")
-        .mockImplementationOnce(() => first)
-        .mockImplementationOnce(() => Promise.resolve());
+      const loadXml = vi.spyOn(QtiAssessmentItemPlayerElement.prototype, "loadXml");
+      loadXml.mockImplementationOnce(() => first);
 
-      contract.render(contract.createComponent({ xml: "<first/>" }));
-      contract.rerender(contract.createComponent({ xml: "<second/>" }));
+      const host = contract.render(contract.createComponent({ xml: "<first/>" }));
+      loadXml.mockRestore();
+      contract.rerender(contract.createComponent({ xml: validItemXml }));
+      await contract.flushLoadFailure();
+
+      const element = host.querySelector("qti-assessment-item-player");
+      expect(element).toBeInstanceOf(QtiAssessmentItemPlayerElement);
+      expect((element as QtiAssessmentItemPlayerElement).childElementCount).toBeGreaterThan(0);
+
       resolveFirst?.();
       await contract.flushLoadFailure();
 
-      expect(loadXml).toHaveBeenNthCalledWith(1, "<first/>", undefined);
-      expect(loadXml).toHaveBeenNthCalledWith(2, "<second/>", undefined);
+      expect((element as QtiAssessmentItemPlayerElement).childElementCount).toBeGreaterThan(0);
+      expect(element?.textContent).not.toContain("Unable to parse QTI item.");
+      expect((element as QtiAssessmentItemPlayerElement).serialize()?.itemIdentifier).toBeTruthy();
     });
 
     it("exposes an imperative handle", () => {

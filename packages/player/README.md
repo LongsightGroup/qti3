@@ -186,11 +186,21 @@ the rendering primitive and only handle framework lifecycle wiring:
 
 Use the native element directly when you do not need React or Preact integration.
 
+Local manual proof for the React adapter: from the repo root run
+`pnpm dev:adapter-react` and open `/adapter-react.html` (linked from the main manual harness).
+
 ## Clearing a loaded item
 
 `clearItem()` (or omitting declarative `xml` on the adapters) removes rendered content and in-memory
 session state. It does not emit `qti-statechange` or other player events because no item is loaded.
 Hosts should treat the prop transition or imperative call as the source of truth.
+
+Framework adapters treat `xml={undefined}` as a clear and `xml=""` as a load attempt. An empty
+string shows the parse error view when the XML is invalid.
+
+Restored `loadOptions.state` reload keys use JSON serialization: equivalent content with different
+object references does not reload, but key order follows construction order and in-place mutation
+without a reload key change is not detected.
 
 ## Styling
 

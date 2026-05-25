@@ -124,6 +124,7 @@ export function qtiAssessmentItemPlayerLoadStateKey(
   state: QtiAttemptStateV1 | undefined,
 ): string | undefined {
   if (!state) return undefined;
+  // JSON key order follows insertion order; in-place mutation without reload is not detected.
   return JSON.stringify(state);
 }
 
@@ -161,7 +162,7 @@ export function bindQtiAssessmentItemPlayerAdapterEvents(
   };
 }
 
-export function syncQtiAssessmentItemPlayerAdapterMessages(
+export function syncQtiAssessmentItemPlayerAdapterChrome(
   element: QtiAssessmentItemPlayer,
   props: Pick<
     QtiAssessmentItemPlayerAdapterProps,
@@ -172,6 +173,9 @@ export function syncQtiAssessmentItemPlayerAdapterMessages(
   element.messageCatalog = props.messageCatalog;
   element.messages = props.messages;
 }
+
+/** @deprecated Use {@link syncQtiAssessmentItemPlayerAdapterChrome}. */
+export const syncQtiAssessmentItemPlayerAdapterMessages = syncQtiAssessmentItemPlayerAdapterChrome;
 
 export interface QtiAssessmentItemPlayerAdapterLoadSyncInput {
   xml?: string | undefined;

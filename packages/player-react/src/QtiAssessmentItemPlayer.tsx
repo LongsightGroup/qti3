@@ -5,7 +5,7 @@ import {
   defineQtiAssessmentItemPlayer,
   isQtiAssessmentItemPlayerAdapterPropName,
   qtiAssessmentItemPlayerLoadDependencies,
-  syncQtiAssessmentItemPlayerAdapterMessages,
+  syncQtiAssessmentItemPlayerAdapterChrome,
   QtiAssessmentItemPlayer as QtiAssessmentItemPlayerElement,
   type QtiAssessmentItemPlayerAdapterPropName,
   type QtiAssessmentItemPlayerAdapterProps,
@@ -59,7 +59,7 @@ export const QtiAssessmentItemPlayer = forwardRef<
   useLayoutEffect(() => {
     const element = elementRef.current;
     if (!element) return;
-    syncQtiAssessmentItemPlayerAdapterMessages(element, props);
+    syncQtiAssessmentItemPlayerAdapterChrome(element, props);
   }, [props.languageOfInterface, props.messageCatalog, props.messages]);
 
   const [loadStateKey, status, validateResponses, showFeedback, fetchXml, resolveAsset] =
