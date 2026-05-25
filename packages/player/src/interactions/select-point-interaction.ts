@@ -8,7 +8,7 @@ import {
   responseGroup,
 } from "../interaction-support.js";
 import { movementButton } from "../movement.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 import { parsePointValues, pointToString } from "./point-value.js";
 
@@ -16,13 +16,13 @@ export function renderSelectPointResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
   group.role = "group";
   group.setAttribute(
     "aria-label",
-    messages.interactionCoordinateResponse({ type: interaction.type }),
+    messages.message("interactionCoordinateResponse", { type: interaction.type }),
   );
   const isMultiple = interaction.responseCardinality === "multiple";
   const maxPoints = isMultiple ? maximumAllowedResponses(interaction) : 1;
@@ -35,7 +35,10 @@ export function renderSelectPointResponse(
     objectHeight(interaction),
     "qti3-point-surface",
   );
-  surface.setAttribute("aria-label", messages.interactionCoordinateArea({ type: interaction.type }));
+  surface.setAttribute(
+    "aria-label",
+    messages.message("interactionCoordinateArea", { type: interaction.type }),
+  );
 
   const object = interaction.object;
   if (object) {
@@ -65,8 +68,11 @@ export function renderSelectPointResponse(
     surface.querySelectorAll(".qti3-point-marker").forEach((marker) => marker.remove());
     if (points.length === 0) {
       coordinate.value = "";
-      coordinate.textContent = messages.noPointSelected();
-      surface.setAttribute("aria-label", messages.interactionCoordinateArea({ type: interaction.type }));
+      coordinate.textContent = messages.message("noPointSelected");
+      surface.setAttribute(
+        "aria-label",
+        messages.message("interactionCoordinateArea", { type: interaction.type }),
+      );
       return;
     }
     points.forEach((point, index) => {
@@ -86,11 +92,14 @@ export function renderSelectPointResponse(
       ? points.map(pointToString).join(" | ")
       : pointToString(points[0]);
     coordinate.textContent = isMultiple
-      ? messages.selectedPointsSummary({ count: points.length, coordinates: text })
-      : messages.selectedPointAt({ coordinates: pointToString(points[0]) });
+      ? messages.message("selectedPointsSummary", { count: points.length, coordinates: text })
+      : messages.message("selectedPointAt", { coordinates: pointToString(points[0]) });
     surface.setAttribute(
       "aria-label",
-      messages.interactionCoordinateAreaSelected({ type: interaction.type, coordinates: text }),
+      messages.message("interactionCoordinateAreaSelected", {
+        type: interaction.type,
+        coordinates: text,
+      }),
     );
   };
   const clampPoint = (point: { x: number; y: number }) => {
@@ -161,7 +170,7 @@ export function renderSelectPointResponse(
     ["down", 0, 1],
   ] as const) {
     controls.append(
-      movementButton(direction, messages.movePoint({ direction }), () => {
+      movementButton(direction, messages.message("movePoint", { direction }), () => {
         const point = mutableActivePoint();
         point.x += dx;
         point.y += dy;
@@ -174,7 +183,7 @@ export function renderSelectPointResponse(
   if (isMultiple) {
     const clear = document.createElement("button");
     clear.type = "button";
-    clear.textContent = messages.clearPoints();
+    clear.textContent = messages.message("clearPoints");
     clear.addEventListener("click", () => {
       points = [];
       activeIndex = -1;

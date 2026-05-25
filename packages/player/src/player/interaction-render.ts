@@ -5,12 +5,12 @@ import { interactionLabel, qtiSharedClassNames } from "../interactions/interacti
 import { renderSelect } from "../interactions/inline-choice-interaction.js";
 import { renderInlineTextEntry } from "../interactions/text-interaction.js";
 import { renderUnsupportedEmbeddedInteraction } from "../interactions/unsupported-interaction.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { inlineValidationMessageElement, validationMessageElement } from "../player-validation.js";
 
 export interface BlockInteractionRenderOptions {
   interaction: QtiInteraction;
-  messages: QtiPlayerMessages;
+  messages: PlayerMessageResolver;
   update: (value: QtiValue) => void;
   currentValue: QtiValue;
   isCompleted: () => boolean;
@@ -65,7 +65,7 @@ export function renderEmbeddedInteractionSection(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   if (interaction.type !== "inlineChoice" && interaction.type !== "textEntry") {
     return renderUnsupportedEmbeddedInteraction(interaction);

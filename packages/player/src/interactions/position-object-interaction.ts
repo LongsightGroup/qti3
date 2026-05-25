@@ -9,7 +9,7 @@ import {
   responseGroup,
 } from "../interaction-support.js";
 import { movementButton } from "../movement.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   objectAssetHeight,
   objectAssetWidth,
@@ -21,13 +21,13 @@ export function renderPositionObjectResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
   group.role = "group";
   group.setAttribute(
     "aria-label",
-    messages.interactionPlacementResponse({ type: interaction.type }),
+    messages.message("interactionPlacementResponse", { type: interaction.type }),
   );
 
   const stageObject = interaction.positionObjectStage ?? interaction.object;
@@ -45,7 +45,10 @@ export function renderPositionObjectResponse(
   stage.style.setProperty("--qti3-position-object-marker-block-size", `${movableHeight}px`);
   stage.tabIndex = 0;
   stage.role = "group";
-  stage.setAttribute("aria-label", messages.interactionPlacementStage({ type: interaction.type }));
+  stage.setAttribute(
+    "aria-label",
+    messages.message("interactionPlacementStage", { type: interaction.type }),
+  );
 
   if (stageObject?.data && objectIsImage(stageObject)) {
     appendGraphicObjectImage(stage, stageObject, stageObject.text || "");
@@ -54,7 +57,7 @@ export function renderPositionObjectResponse(
   const marker = document.createElement("button");
   marker.type = "button";
   marker.className = "qti3-position-object-marker";
-  marker.setAttribute("aria-label", messages.movableObject());
+  marker.setAttribute("aria-label", messages.message("movableObject"));
   applyPositionObjectMarkerSize(marker, movableWidth, movableHeight);
   marker.draggable = false;
 
@@ -64,7 +67,7 @@ export function renderPositionObjectResponse(
     image.alt = "";
     marker.append(image);
   } else {
-    marker.textContent = messages.placeObject();
+    marker.textContent = messages.message("placeObject");
   }
   stage.append(marker);
 
@@ -93,10 +96,10 @@ export function renderPositionObjectResponse(
         `calc(100% + ${Math.round(movableHeight / 2 + 8)}px)`,
       );
       coordinate.value = "";
-      coordinate.textContent = messages.objectNotPlaced();
+      coordinate.textContent = messages.message("objectNotPlaced");
       stage.setAttribute(
         "aria-label",
-        messages.interactionPlacementStageEmpty({ type: interaction.type }),
+        messages.message("interactionPlacementStageEmpty", { type: interaction.type }),
       );
       return;
     }
@@ -111,10 +114,10 @@ export function renderPositionObjectResponse(
     );
     coordinate.value = pointToString(point);
     const coordinates = pointToString(point);
-    coordinate.textContent = messages.objectPositionedAt({ coordinates });
+    coordinate.textContent = messages.message("objectPositionedAt", { coordinates });
     stage.setAttribute(
       "aria-label",
-      messages.interactionPlacementStageAt({ type: interaction.type, coordinates }),
+      messages.message("interactionPlacementStageAt", { type: interaction.type, coordinates }),
     );
   };
   const pointFromPointer = (event: MouseEvent | PointerEvent) => {
@@ -204,7 +207,9 @@ export function renderPositionObjectResponse(
     ["down", 0, 1],
   ] as const) {
     controls.append(
-      movementButton(direction, messages.moveObject({ direction }), () => moveBy(dx, dy)),
+      movementButton(direction, messages.message("moveObject", { direction }), () =>
+        moveBy(dx, dy),
+      ),
     );
   }
 

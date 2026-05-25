@@ -10,13 +10,13 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 
 export function renderHotspotResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -36,7 +36,7 @@ export function renderHotspotResponse(
     appendGraphicObjectImage(
       surface,
       object,
-      object.text || messages.interactionImageAlt({ type: interaction.type }),
+      object.text || messages.message("interactionImageAlt", { type: interaction.type }),
     );
   }
 
@@ -45,7 +45,7 @@ export function renderHotspotResponse(
   const selectedSummary = document.createElement("p");
   selectedSummary.className = "qti3-selection-summary";
   selectedSummary.setAttribute("aria-live", "polite");
-  selectedSummary.textContent = messages.noRegionSelected();
+  selectedSummary.textContent = messages.message("noRegionSelected");
   const syncSelected = () => {
     for (const button of surface.querySelectorAll<HTMLButtonElement>("button")) {
       const isSelected = selected.has(button.dataset.choiceIdentifier ?? "");
@@ -54,11 +54,11 @@ export function renderHotspotResponse(
     }
     selectedSummary.textContent =
       selected.size > 0
-        ? messages.hotspotSelectionSummary({
+        ? messages.message("hotspotSelectionSummary", {
             selection: [...selected].join(", "),
             count: selected.size,
           })
-        : messages.noRegionSelected();
+        : messages.message("noRegionSelected");
   };
   for (const choice of choices) {
     const button = document.createElement("button");

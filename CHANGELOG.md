@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.5.0 - 2026-05-24
+
+### Changed
+
+- **Breaking:** Remove built-in non-English player chrome catalogs (Spanish, Swedish, German,
+  Portuguese, French). English defaults come from `defaultPlayerMessageCatalog`; hosts supply
+  other locales via `player.messageCatalog` JSON files.
+- **Breaking:** Remove the method-per-key chrome API. Chrome is `PlayerMessageResolver.message(key, params?)`
+  backed by `PLAYER_MESSAGE_MANIFEST`; use `createPlayerMessageResolver(catalog)` or
+  `resolvePlayerMessages(locale, overrides, catalog)`.
+- `language-of-interface` is metadata only and no longer selects packaged locale catalogs.
+- Add `player.messageCatalog`, `validatePlayerMessageCatalog()`, and manifest-driven placeholder
+  validation (allowed vs required placeholders per English default).
+- Cache the resolved resolver on the player element; dev warnings when locale is non-English without
+  a catalog or when a catalog key is missing.
+- Add `PLAYER_MESSAGE_MANIFEST` as the single source of truth for chrome message ids and resolver
+  behavior.
+- Add `validatePlayerMessageCatalog()` with structured diagnostics for unknown keys and placeholder
+  mistakes; split browser locale tests into `player-chrome-locale.spec.ts` and
+  `player-graphic-locale.spec.ts`.
+
+### Removed
+
+- Per-locale `*InteractionTypes` tables and `player-chrome-messages` locale matrices from the
+  player package.
+
 ## 0.4.0 - 2026-05-24
 
 ### Added
@@ -64,7 +90,7 @@
 ### Added
 
 - Add `language-of-interface` / `languageOfInterface` player chrome localization support with browser and document language resolution.
-- Add host message overrides and built-in player chrome catalogs for Spanish, Swedish, German, Portuguese, and French remove controls.
+- Add host message overrides and built-in player chrome catalogs for Spanish, Swedish, German, Portuguese, and French remove controls (removed in 0.5.0; hosts own non-English chrome).
 - Add a manual harness language-of-interface selector for browser testing localized player chrome.
 
 ### Changed

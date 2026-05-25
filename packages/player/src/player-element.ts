@@ -26,7 +26,12 @@ import {
   collectEmbeddedInteractionDiagnostics,
   collectInteractionRenderDiagnostics,
 } from "./interactions/interaction-diagnostics.js";
+import type { PlayerMessageCatalog } from "./player-message-catalog.js";
 import { defaultPlayerLocale, normalizedLocale, resolvePlayerMessages } from "./player-locale.js";
+import type {
+  PlayerMessageResolver,
+  QtiPlayerMessageOverrides,
+} from "./player-message-resolver.js";
 import { syncAttemptAvailability } from "./player/attempt-availability.js";
 import {
   currentTemplateValue,
@@ -48,7 +53,6 @@ import type {
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
   QtiPlayerLoadOptions,
-  QtiPlayerMessageOverrides,
   QtiPlayerResolveAsset,
   QtiPlayerSessionControl,
   QtiScoreAttemptOptions,
@@ -80,7 +84,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private validationMessages: QtiDiagnostic[] = [];
   private authoringDiagnostics: QtiDiagnostic[] = [];
   private languageOfInterfaceOverride: string | undefined;
+  private messageCatalogOverride: PlayerMessageCatalog | undefined;
   private messageOverrides: QtiPlayerMessageOverrides = {};
+  private resolvedMessagesCache: PlayerMessageResolver | undefined;
   private sessionControl: Required<QtiPlayerSessionControl> = {
     validateResponses: true,
     showFeedback: true,
@@ -97,6 +103,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   set languageOfInterface(value: string | undefined) {
     this.languageOfInterfaceOverride = normalizedLocale(value);
+    this.invalidatePlayerMessages();
     this.rerenderIfLoaded();
   }
 
@@ -114,6 +121,17 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   set messages(value: QtiPlayerMessageOverrides | undefined) {
     this.messageOverrides = value ?? {};
+    this.invalidatePlayerMessages();
+    this.rerenderIfLoaded();
+  }
+
+  get messageCatalog(): PlayerMessageCatalog | undefined {
+    return this.messageCatalogOverride;
+  }
+
+  set messageCatalog(value: PlayerMessageCatalog | undefined) {
+    this.messageCatalogOverride = value;
+    this.invalidatePlayerMessages();
     this.rerenderIfLoaded();
   }
 
@@ -121,7 +139,12 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if ((name !== "language-of-interface" && name !== "locale") || oldValue === newValue) {
       return;
     }
+    this.invalidatePlayerMessages();
     this.rerenderIfLoaded();
+  }
+
+  private invalidatePlayerMessages(): void {
+    this.resolvedMessagesCache = undefined;
   }
 
   async loadXml(xml: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
@@ -288,8 +311,15 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.dispatchEvent(new CustomEvent<QtiAssessmentItemPlayerEventDetailMap[T]>(type, { detail }));
   }
 
-  private playerMessages() {
-    return resolvePlayerMessages(this.languageOfInterface, this.messageOverrides);
+  private playerMessages(): PlayerMessageResolver {
+    if (!this.resolvedMessagesCache) {
+      this.resolvedMessagesCache = resolvePlayerMessages(
+        this.languageOfInterface,
+        this.messageOverrides,
+        this.messageCatalogOverride,
+      );
+    }
+    return this.resolvedMessagesCache;
   }
 
   private rerenderIfLoaded(): void {

@@ -1,6 +1,7 @@
 import { deflateRawSync } from "node:zlib";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
+import type { PlayerMessageCatalog } from "../../packages/player/src/player-message-catalog.js";
 
 export const operableControlSelector = [
   "button",
@@ -20,6 +21,17 @@ export async function loadFixture(page: Page, interactionType: string): Promise<
   if (!fixture) throw new Error(`Missing ${interactionType} fixture.`);
   await page.locator("#fixture").selectOption(fixture.id);
   await page.locator("#load-fixture").click();
+}
+
+/** Applies a host-owned locale catalog in the browser (JSON-serializable). */
+export async function setPlayerMessageCatalog(
+  page: Page,
+  catalog: PlayerMessageCatalog,
+): Promise<void> {
+  await page.locator("qti-assessment-item-player").evaluate((element, messageCatalog) => {
+    const player = element as HTMLElement & { messageCatalog?: PlayerMessageCatalog };
+    player.messageCatalog = messageCatalog;
+  }, catalog);
 }
 
 export async function pasteXml(page: Page, xml: string): Promise<void> {

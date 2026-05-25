@@ -1,5 +1,5 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionChoices } from "../interaction-support.js";
 
 export function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
@@ -52,22 +52,22 @@ export function targetChoices(interaction: QtiInteraction): QtiChoice[] {
 
 export function pairRegionLabels(
   interaction: QtiInteraction,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): { source: string; target: string } {
   if (interaction.type === "associate") {
     return {
-      source: messages.associateFirstConceptRegion(),
-      target: messages.associatePairWithRegion(),
+      source: messages.message("associateFirstConceptRegion"),
+      target: messages.message("associatePairWithRegion"),
     };
   }
   if (interaction.type === "match") {
     return {
-      source: messages.matchPromptRegion(),
-      target: messages.matchMatchRegion(),
+      source: messages.message("matchPromptRegion"),
+      target: messages.message("matchMatchRegion"),
     };
   }
   return {
-    source: messages.genericSourceRegion(),
-    target: messages.genericTargetRegion(),
+    source: messages.message("genericSourceRegion"),
+    target: messages.message("genericTargetRegion"),
   };
 }

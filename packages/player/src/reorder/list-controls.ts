@@ -1,5 +1,5 @@
 import { movementButton } from "../movement.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { orderedItemAccessibleName } from "./a11y.js";
 
 export interface ReorderHandleOptions {
@@ -9,7 +9,7 @@ export interface ReorderHandleOptions {
   total: number;
   handleClassName: string;
   visibleText: string;
-  messages: QtiPlayerMessages;
+  messages: PlayerMessageResolver;
   onMoveBy: (delta: number) => void;
 }
 
@@ -37,13 +37,15 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
     }
   });
 
-  const up = movementButton("up", messages.moveChoice({ label, direction: "up" }), () =>
+  const up = movementButton("up", messages.message("moveChoice", { label, direction: "up" }), () =>
     onMoveBy(-1),
   );
   up.disabled = index === 0;
 
-  const down = movementButton("down", messages.moveChoice({ label, direction: "down" }), () =>
-    onMoveBy(1),
+  const down = movementButton(
+    "down",
+    messages.message("moveChoice", { label, direction: "down" }),
+    () => onMoveBy(1),
   );
   down.disabled = index === total - 1;
 

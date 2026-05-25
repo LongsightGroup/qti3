@@ -16,7 +16,7 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import { movementButton } from "../movement.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   announceOrderedItemMove,
   announceOrderedSelectionCount,
@@ -29,7 +29,7 @@ export function renderGraphicOrderResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
   const width = objectWidth(interaction);
@@ -46,14 +46,17 @@ export function renderGraphicOrderResponse(
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-order-surface");
   surface.role = "group";
-  surface.setAttribute("aria-label", messages.interactionHotspots({ type: interaction.type }));
+  surface.setAttribute(
+    "aria-label",
+    messages.message("interactionHotspots", { type: interaction.type }),
+  );
 
   const object = interaction.object;
   if (object) {
     appendGraphicObjectImage(
       surface,
       object,
-      object.text || messages.interactionImageAlt({ type: interaction.type }),
+      object.text || messages.message("interactionImageAlt", { type: interaction.type }),
     );
   }
 
@@ -81,7 +84,10 @@ export function renderGraphicOrderResponse(
   const summary = createSelectionSummary();
   const list = document.createElement("ol");
   list.className = "qti3-graphic-order-list";
-  list.setAttribute("aria-label", messages.interactionSelectedOrderList({ type: interaction.type }));
+  list.setAttribute(
+    "aria-label",
+    messages.message("interactionSelectedOrderList", { type: interaction.type }),
+  );
 
   const orderedChoices = () =>
     orderedIdentifiers
@@ -201,14 +207,14 @@ export function renderGraphicOrderResponse(
 
         const up = movementButton(
           "up",
-          messages.moveChoice({ label: choiceLabel, direction: "up" }),
+          messages.message("moveChoice", { label: choiceLabel, direction: "up" }),
           () => moveHotspot(choice.identifier, -1),
         );
         up.disabled = index === 0;
 
         const down = movementButton(
           "down",
-          messages.moveChoice({ label: choiceLabel, direction: "down" }),
+          messages.message("moveChoice", { label: choiceLabel, direction: "down" }),
           () => moveHotspot(choice.identifier, 1),
         );
         down.disabled = index === currentChoices.length - 1;

@@ -9,7 +9,7 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { parseUnlimitedMaximum } from "../response-limits.js";
 import { appendGraphicContext } from "./graphic-context.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
@@ -33,7 +33,7 @@ export function renderGapMatchResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   if (
     interaction.type === "graphicGapMatch" &&
@@ -55,11 +55,16 @@ export function renderGapMatchResponse(
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
 
-  const sourceRegion = tokenRegion(messages.interactionChoicesBank({ type: interaction.type }));
+  const sourceRegion = tokenRegion(
+    messages.message("interactionChoicesBank", { type: interaction.type }),
+  );
   const gapRegion = document.createElement("div");
   gapRegion.className = "qti3-gap-region qti3-gap-passage";
   gapRegion.role = "group";
-  gapRegion.setAttribute("aria-label", messages.interactionGapTargets({ type: interaction.type }));
+  gapRegion.setAttribute(
+    "aria-label",
+    messages.message("interactionGapTargets", { type: interaction.type }),
+  );
   for (const pair of valueToStrings(currentValue)) {
     const [sourceIdentifier, gapIdentifier] = pair.split(/\s+/);
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
@@ -92,7 +97,7 @@ export function renderGapMatchResponse(
   };
   const gapControl = (gap: QtiChoice, index: number) => {
     const assigned = assignments.get(gap.identifier);
-    const gapLabel = messages.gapLabel({ index: index + 1 });
+    const gapLabel = messages.message("gapLabel", { index: index + 1 });
     const target = document.createElement("span");
     target.className = "qti3-gap-target";
     target.dataset.gapIdentifier = gap.identifier;
@@ -114,8 +119,8 @@ export function renderGapMatchResponse(
     button.setAttribute(
       "aria-label",
       assigned
-        ? messages.gapAssignedState({ label: gapLabel, assigned: assigned.text })
-        : messages.gapEmptyState({ label: gapLabel }),
+        ? messages.message("gapAssignedState", { label: gapLabel, assigned: assigned.text })
+        : messages.message("gapEmptyState", { label: gapLabel }),
     );
     button.addEventListener("click", () => assign(gap, selectedSource?.identifier));
     button.addEventListener("keydown", (event) => {
@@ -176,7 +181,7 @@ function renderGraphicGapMatchResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
   const width = objectWidth(interaction);
@@ -206,7 +211,10 @@ function renderGraphicGapMatchResponse(
     "qti3-graphic-gap-match-surface",
   );
   surface.role = "group";
-  surface.setAttribute("aria-label", messages.interactionTargetImage({ type: interaction.type }));
+  surface.setAttribute(
+    "aria-label",
+    messages.message("interactionTargetImage", { type: interaction.type }),
+  );
   surface.style.overflow = "visible";
   surface.style.setProperty(
     "--qti3-graphic-gap-label-block-size",
@@ -217,11 +225,14 @@ function renderGraphicGapMatchResponse(
     appendGraphicObjectImage(
       surface,
       interaction.object,
-      interaction.object.text || messages.interactionImageAlt({ type: interaction.type }),
+      interaction.object.text ||
+        messages.message("interactionImageAlt", { type: interaction.type }),
     );
   }
 
-  const sourceRegion = tokenRegion(messages.interactionChoicesBank({ type: interaction.type }));
+  const sourceRegion = tokenRegion(
+    messages.message("interactionChoicesBank", { type: interaction.type }),
+  );
   sourceRegion.classList.add("qti3-graphic-gap-source-region");
   const choicesWidth = positivePixelValue(interaction.attributes["data-choices-container-width"]);
   if (choicesWidth !== undefined) sourceRegion.style.maxInlineSize = `${choicesWidth}px`;
@@ -266,7 +277,7 @@ function renderGraphicGapMatchResponse(
   const targetLabel = (gap: QtiChoice, index: number) =>
     gap.attributes["aria-label"] ||
     gap.attributes["hotspot-label"] ||
-    messages.graphicGapTargetLabel({ index: index + 1 });
+    messages.message("graphicGapTargetLabel", { index: index + 1 });
   const renderTargetButton = (gap: QtiChoice, index: number): HTMLButtonElement => {
     const assigned = assignments.get(gap.identifier);
     const label = targetLabel(gap, index);
@@ -278,8 +289,8 @@ function renderGraphicGapMatchResponse(
     button.setAttribute(
       "aria-label",
       assigned
-        ? messages.gapAssignedState({ label, assigned: assigned.text })
-        : messages.gapEmptyState({ label }),
+        ? messages.message("gapAssignedState", { label, assigned: assigned.text })
+        : messages.message("gapEmptyState", { label }),
     );
     button.addEventListener("dragover", (event) => {
       event.preventDefault();
@@ -316,8 +327,8 @@ function renderGraphicGapMatchResponse(
     }
     summary.textContent =
       assignments.size > 0
-        ? messages.gapLabelsPlacedCount({ count: assignments.size })
-        : messages.gapNoLabelsPlaced();
+        ? messages.message("gapLabelsPlacedCount", { count: assignments.size })
+        : messages.message("gapNoLabelsPlaced");
   };
 
   for (const source of sources) {

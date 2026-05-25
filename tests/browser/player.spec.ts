@@ -1371,17 +1371,6 @@ test.describe("manual harness", () => {
     );
   });
 
-  test("localizes extended text counter with language-of-interface", async ({ page }) => {
-    await page.goto("/");
-    await page.locator("qti-assessment-item-player").evaluate((element) => {
-      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "sv-SE";
-    });
-    await loadFixture(page, "extendedText");
-
-    await page.locator("qti-assessment-item-player textarea").fill("Hej");
-    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveText("3 tecken, 1 ord");
-  });
-
   test("creates match pairs", async ({ page }) => {
     await page.goto("/");
 
@@ -1417,103 +1406,6 @@ test.describe("manual harness", () => {
     await expect(
       page.locator("qti-assessment-item-player .qti3-pair-chip span").first(),
     ).toHaveText("Response declaration to Candidate response value");
-  });
-
-  test("localizes match pair labels with language-of-interface", async ({ page }) => {
-    await page.goto("/");
-    await page.locator("qti-assessment-item-player").evaluate((element) => {
-      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "sv-SE";
-    });
-    await loadFixture(page, "match");
-
-    await assignMatch(page, "B", "G1");
-    await expect(
-      page.locator("qti-assessment-item-player .qti3-pair-chip span").first(),
-    ).toHaveText("Outcome declaration med Candidate response value");
-  });
-
-  test("resolves player language-of-interface and message overrides", async ({ page }) => {
-    await page.goto("/");
-    const browserLocale = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      const language = navigator.languages[0] ?? navigator.language;
-      return {
-        locale: (element as HTMLElement & { languageOfInterface: string }).languageOfInterface,
-        expected: Intl.getCanonicalLocales(language)[0],
-      };
-    });
-    expect(browserLocale.locale).toBe(browserLocale.expected);
-    const locale = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      element.setAttribute("language-of-interface", "es-MX");
-      return (element as HTMLElement & { languageOfInterface: string }).languageOfInterface;
-    });
-    expect(locale).toBe("es-MX");
-    await page.locator("qti-assessment-item-player").evaluate((element) => {
-      (
-        element as HTMLElement & {
-          messages: {
-            remove: () => string;
-            removePair: (params: { label: string }) => string;
-          };
-        }
-      ).messages = {
-        remove: () => "Eliminar",
-        removePair: ({ label }) => `Eliminar ${label}`,
-      };
-    });
-    await loadFixture(page, "graphicAssociate");
-
-    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Response capture" }).click();
-
-    const remove = page.getByRole("button", { name: "Eliminar Item XML con Response capture" });
-    await expect(remove).toHaveAttribute("title", "Eliminar");
-    await expect(remove.locator("svg.qti3-trash-icon")).toHaveCount(1);
-    await remove.click();
-    await expectResponse(page, []);
-  });
-
-  test("switches language-of-interface from the manual harness", async ({ page }) => {
-    await page.goto("/");
-    await page.locator("#language-of-interface").selectOption("de-DE");
-    await loadFixture(page, "graphicAssociate");
-
-    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Response capture" }).click();
-
-    const remove = page.getByRole("button", {
-      name: "Item XML mit Response capture entfernen",
-    });
-    await expect(remove).toHaveAttribute("title", "Entfernen");
-    await remove.click();
-    await expectResponse(page, []);
-  });
-
-  test("applies resolved locale messages to rendered player chrome", async ({ page }) => {
-    await page.goto("/");
-    await page.locator("qti-assessment-item-player").evaluate((element) => {
-      (element as HTMLElement & { languageOfInterface: string }).languageOfInterface = "de-DE";
-      (
-        element as HTMLElement & {
-          messages: undefined;
-        }
-      ).messages = undefined;
-    });
-
-    await loadFixture(page, "graphicAssociate");
-
-    const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Response capture" }).click();
-
-    const remove = page.getByRole("button", {
-      name: "Item XML mit Response capture entfernen",
-    });
-    await expect(remove).toHaveAttribute("title", "Entfernen");
-    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
-      "1 Zuordnung erstellt.",
-    );
   });
 
   test("renders under forced colors and reduced motion preferences", async ({ page }) => {

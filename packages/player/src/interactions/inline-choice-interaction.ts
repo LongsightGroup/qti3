@@ -4,17 +4,17 @@ import {
   missingChoicesMessage,
   valueToStrings,
 } from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionLabel } from "./interaction-label.js";
 
 function appendOptions(
   select: HTMLSelectElement,
   choices: QtiChoice[],
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): void {
   const empty = document.createElement("option");
   empty.value = "";
-  empty.textContent = messages.inlineChoicePrompt();
+  empty.textContent = messages.message("inlineChoicePrompt");
   select.append(empty);
   for (const choice of choices) {
     const option = document.createElement("option");
@@ -28,7 +28,7 @@ export function renderSelect(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const choices = interactionChoices(interaction);
   if (choices.length === 0) return missingChoicesMessage(interaction);

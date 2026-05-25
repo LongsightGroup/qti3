@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   interactionChoices,
   missingChoicesMessage,
@@ -17,7 +17,7 @@ export function renderOrderedResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
   const choices = interactionChoices(interaction).filter((choice) => choice.role !== "gap");
@@ -30,7 +30,7 @@ export function renderOrderedResponse(
   list.className = "qti3-reorder-list";
   list.setAttribute(
     "aria-label",
-    messages.interactionCurrentOrderList({ type: interaction.type }),
+    messages.message("interactionCurrentOrderList", { type: interaction.type }),
   );
   const summary = createSelectionSummary();
   const dragState: OrderDragState = {};

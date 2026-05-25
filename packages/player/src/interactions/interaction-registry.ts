@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { renderGraphicOrderResponse } from "../reorder/graphic-order-interaction.js";
 import { renderOrderedResponse } from "../reorder/order-interaction.js";
 import { renderChoice } from "./choice-interaction.js";
@@ -24,7 +24,7 @@ export interface InteractionResponseContext {
   interaction: QtiInteraction;
   update: (value: QtiValue) => void;
   currentValue: QtiValue;
-  messages: QtiPlayerMessages;
+  messages: PlayerMessageResolver;
   isCompleted: () => boolean;
   endAttempt: () => void;
   renderPortableCustom: (

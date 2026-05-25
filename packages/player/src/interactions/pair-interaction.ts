@@ -1,11 +1,7 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
-import {
-  missingChoicesMessage,
-  responseGroup,
-  valueToStrings,
-} from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   choiceText,
   pairRegionLabels,
@@ -19,7 +15,7 @@ export function renderPairResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -35,11 +31,11 @@ export function renderPairResponse(
   const labels = pairRegionLabels(interaction, messages);
 
   const sourceRegion = tokenRegion(
-    messages.interactionSourcesBank({ type: interaction.type }),
+    messages.message("interactionSourcesBank", { type: interaction.type }),
     labels.source,
   );
   const targetRegion = tokenRegion(
-    messages.interactionTargetsBank({ type: interaction.type }),
+    messages.message("interactionTargetsBank", { type: interaction.type }),
     labels.target,
   );
   const selector = document.createElement("div");
@@ -48,7 +44,7 @@ export function renderPairResponse(
   pairList.className = "qti3-pair-list";
   pairList.setAttribute(
     "aria-label",
-    messages.interactionSelectedPairsList({ type: interaction.type }),
+    messages.message("interactionSelectedPairsList", { type: interaction.type }),
   );
   let draggedSource: string | undefined;
 
@@ -92,7 +88,7 @@ export function renderPairResponse(
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
         const [source, target] = pair.split(" ");
-        const label = messages.associationPairLabel({
+        const label = messages.message("associationPairLabel", {
           source: choiceText(sources, source),
           target: choiceText(targets, target),
         });

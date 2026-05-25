@@ -1,7 +1,7 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { parseUnlimitedMaximum } from "../response-limits.js";
 import { choiceText, sourceChoices, targetChoices, tokenButton, tokenRegion } from "./shared.js";
 
@@ -9,7 +9,7 @@ export function renderMatchResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -26,13 +26,13 @@ export function renderMatchResponse(
 
   const selector = document.createElement("div");
   selector.className = "qti3-match-selector";
-  const sourceRegion = tokenRegion(messages.matchSourcesBank());
+  const sourceRegion = tokenRegion(messages.message("matchSourcesBank"));
   sourceRegion.classList.add("qti3-match-source-bank");
-  const targetRegion = tokenRegion(messages.matchTargetsBank());
+  const targetRegion = tokenRegion(messages.message("matchTargetsBank"));
   targetRegion.classList.add("qti3-match-target-bank");
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
-  pairList.setAttribute("aria-label", messages.matchSelectedPairsList());
+  pairList.setAttribute("aria-label", messages.message("matchSelectedPairsList"));
 
   const commit = () => {
     if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
@@ -68,7 +68,7 @@ export function renderMatchResponse(
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
         const [source, target] = pair.split(" ");
-        const label = messages.associationPairLabel({
+        const label = messages.message("associationPairLabel", {
           source: choiceText(sources, source),
           target: choiceText(targets, target),
         });

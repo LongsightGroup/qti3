@@ -1,5 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 
 function scalarString(value: QtiValue): string {
   if (value === null || Array.isArray(value) || typeof value === "object") return "";
@@ -33,7 +33,7 @@ export function renderTextResponse(
   update: (value: QtiValue) => void,
   mode: "entry" | "extended",
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = document.createElement("div");
   group.className = "qti3-text-response";
@@ -46,7 +46,9 @@ export function renderTextResponse(
   control.setAttribute(
     "aria-label",
     interaction.prompt ??
-      (mode === "extended" ? messages.extendedTextResponseLabel() : messages.textResponseLabel()),
+      (mode === "extended"
+        ? messages.message("extendedTextResponseLabel")
+        : messages.message("textResponseLabel")),
   );
   if (mode === "extended" && expectedLines > 0) {
     (control as HTMLTextAreaElement).rows = expectedLines;
@@ -63,7 +65,7 @@ export function renderTextResponse(
     const value = control.value;
     if (counter) {
       const words = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
-      counter.textContent = messages.extendedTextCounter({
+      counter.textContent = messages.message("extendedTextCounter", {
         characters: value.length,
         words,
       });
@@ -82,7 +84,7 @@ export function renderInlineTextEntry(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = document.createElement("span");
   group.className = "qti3-inline-text-response";
@@ -91,7 +93,7 @@ export function renderInlineTextEntry(
   input.value = scalarString(currentValue);
   input.setAttribute(
     "aria-label",
-    interaction.prompt ?? interaction.contextText ?? messages.textResponseLabel(),
+    interaction.prompt ?? interaction.contextText ?? messages.message("textResponseLabel"),
   );
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
   applyExpectedTextEntryWidth(input, expectedLength);
@@ -109,7 +111,7 @@ export function renderSliderResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = document.createElement("div");
   group.className = "qti3-slider-response";
@@ -119,7 +121,7 @@ export function renderSliderResponse(
   input.max = interaction.attributes["upper-bound"] ?? "100";
   input.step = interaction.attributes.step ?? "1";
   input.value = scalarString(currentValue) || interaction.attributes["lower-bound"] || "0";
-  input.setAttribute("aria-label", interaction.prompt ?? messages.sliderResponseLabel());
+  input.setAttribute("aria-label", interaction.prompt ?? messages.message("sliderResponseLabel"));
   const output = document.createElement("output");
   output.className = "qti3-slider-output";
   output.value = input.value;

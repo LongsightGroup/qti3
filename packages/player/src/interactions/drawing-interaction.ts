@@ -1,6 +1,6 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
 import { applyResponsiveGraphicSize, objectIsImage } from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 
 export const DRAWING_STROKE_COLOR = "#000";
 export const DRAWING_STROKE_WIDTH = 3;
@@ -9,16 +9,19 @@ export function renderDrawingResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = document.createElement("div");
   group.role = "group";
-  group.setAttribute("aria-label", messages.interactionDrawingResponse({ type: interaction.type }));
+  group.setAttribute(
+    "aria-label",
+    messages.message("interactionDrawingResponse", { type: interaction.type }),
+  );
 
   const surface = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   surface.classList.add("qti3-drawing-surface");
   surface.setAttribute("role", "img");
-  surface.setAttribute("aria-label", messages.drawingSurface());
+  surface.setAttribute("aria-label", messages.message("drawingSurface"));
   surface.setAttribute("tabindex", "0");
   const width = drawingWidth(interaction);
   const height = drawingHeight(interaction);
@@ -69,13 +72,13 @@ export function renderDrawingResponse(
     summary.value = serializeDrawingStrokes(strokes);
     summary.textContent =
       count === 0
-        ? messages.drawingStatusEmpty()
-        : messages.drawingStatusStrokeCount({ count });
+        ? messages.message("drawingStatusEmpty")
+        : messages.message("drawingStatusStrokeCount", { count });
     surface.setAttribute(
       "aria-label",
       count === 0
-        ? messages.drawingSurfaceEmpty()
-        : messages.drawingSurfaceStrokeCount({ count }),
+        ? messages.message("drawingSurfaceEmpty")
+        : messages.message("drawingSurfaceStrokeCount", { count }),
     );
   };
   for (const points of restoredStrokes) {
@@ -129,7 +132,7 @@ export function renderDrawingResponse(
 
   const clear = document.createElement("button");
   clear.type = "button";
-  clear.textContent = messages.clearDrawing();
+  clear.textContent = messages.message("clearDrawing");
   clear.addEventListener("click", () => {
     strokes.splice(0, strokes.length);
     activeStroke = undefined;

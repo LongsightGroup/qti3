@@ -9,8 +9,6 @@ import type {
   QtiScoreResult,
   QtiValue,
 } from "@longsightgroup/qti3-core";
-import type { QtiPlayerMessages } from "./player-messages.js";
-
 export interface QtiPlayerSessionControl {
   validateResponses?: boolean | undefined;
   showFeedback?: boolean | undefined;
@@ -30,8 +28,6 @@ export interface QtiPlayerLoadOptions {
   fetchXml?: QtiPlayerFetchXml | undefined;
   resolveAsset?: QtiPlayerResolveAsset | undefined;
 }
-
-export type QtiPlayerMessageOverrides = Partial<QtiPlayerMessages>;
 
 export interface QtiReadyEventDetail {
   item: QtiAssessmentItem;

@@ -46,27 +46,125 @@ scoring is a convenience for validation, feedback, previews, and response snapsh
 High-stakes assessment systems must treat browser outcomes as untrusted and recompute
 scores server-side from authoritative QTI XML and trusted response variables.
 
-## Player Chrome Messages
+## Player Chrome Messages (host-owned i18n)
 
-The player keeps authored QTI content language separate from player chrome such as
-remove buttons. Chrome language defaults to the player `languageOfInterface` property,
-the `language-of-interface` attribute, browser language, document language, then
-English. Hosts can override it when delivery settings require a fixed interface language.
+The player keeps **authored QTI content** (prompts, choice labels, `title` on
+end-attempt) separate from **player chrome** (remove buttons, aria labels, live-region
+status, gap labels).
 
-Built-in catalogs are currently available for English, Spanish (`es-MX`, `es-ES`),
-Swedish (`sv-SE`), German (`de-DE`), Portuguese (`pt-BR`, `pt-PT`), and French
-(`fr-FR`, `fr-CA`). They cover player chrome such as remove buttons, match pair
-labels, coordinate and placement status, drawing stroke counts, reorder
-announcements, gap assignment states, and default control labels when an item does
-not provide its own prompt.
+Only **English** ships in the package. `language-of-interface="sv-SE"` does **not**
+change chrome by itself; the host loads a locale file.
+
+### Locale files (recommended)
+
+Harbor or an LMS maintains JSON (or ICU/Fluent exported to JSON) with the shape
+`PlayerMessageCatalog`: a flat `strings` map, optional `interactionTypes`, and
+`directions`. Copy `defaultPlayerMessageCatalog` from the package as the template; omit
+keys you do not need to translate (missing keys fall back to English).
 
 ```ts
-player.languageOfInterface = "es-MX";
-player.messages = {
-  remove: () => "Eliminar",
-  removePair: ({ label }) => `Eliminar ${label}`,
-};
+import type { PlayerMessageCatalog } from "@longsightgroup/qti3-player";
+
+const sv = (await fetch("/locales/player/sv-SE.json")).json() as PlayerMessageCatalog;
+
+player.languageOfInterface = "sv-SE";
+player.messageCatalog = sv;
+await player.loadXml(xml);
 ```
+
+Example entries:
+
+```json
+{
+  "locale": "sv-SE",
+  "strings": {
+    "remove": "Ta bort",
+    "removePair": "Ta bort {label}",
+    "associationPairLabel": "{source} med {target}",
+    "extendedTextCounter": "{characters} tecken, {words} ord",
+    "associationsMade.one": "{count} koppling skapad.",
+    "associationsMade.other": "{count} kopplingar skapade."
+  },
+  "interactionTypes": {
+    "graphicOrder": "Grafisk ordning"
+  },
+  "directions": { "up": "upp", "down": "ner", "left": "vänster", "right": "höger" }
+}
+```
+
+Templates use `{placeholder}` names. For English-style singular/plural, use
+`messageKey.one` and `messageKey.other` (for example `associationsMade.one`). Languages
+that do not inflect by count can use a single key (for example one `extendedTextCounter`
+string for all counts).
+
+Validate locale files in CI with `validatePlayerMessageCatalog()` — pass `JSON.parse` output
+directly (`unknown`). Shape errors (non-object root, missing `strings`, numeric templates, bad
+`directions` / `interactionTypes`) return diagnostics instead of throwing:
+
+```ts
+import { validatePlayerMessageCatalog } from "@longsightgroup/qti3-player";
+
+const raw = JSON.parse(await readFile("locales/player/sv-SE.json", "utf8"));
+const result = validatePlayerMessageCatalog(raw);
+if (!result.valid) {
+  for (const issue of result.diagnostics) {
+    console.error(`${issue.code} ${issue.key}: ${issue.message}`);
+  }
+  process.exit(1);
+}
+```
+
+Use `requireAllKeys: true` only for complete locale files forked from `defaultPlayerMessageCatalog`.
+Partial delivery catalogs should omit that flag.
+
+Reference exports:
+
+- `PLAYER_MESSAGE_KEYS` — message ids from `PLAYER_MESSAGE_MANIFEST`
+- `PLAYER_MESSAGE_STRING_KEYS` — all keys in `defaultPlayerMessageCatalog.strings`
+- `defaultPlayerMessageCatalog` — English template to fork
+- `allowedCatalogPlaceholders(entry)` — placeholders a template may use
+- `requiredCatalogPlaceholders(catalogKey)` — placeholders required for that key per English default
+- `createPlayerMessageResolver(catalog)` — canonical key-driven runtime API
+- `PlayerMessageParams<K>` — typed params for `message(key, params)`
+
+Resolver kinds in the manifest (hosts only edit `strings`; behavior is fixed):
+
+| Resolver              | Meaning                                              |
+| --------------------- | ---------------------------------------------------- |
+| `plain`               | Static string                                        |
+| `template`            | `{placeholder}` interpolation from params            |
+| `plural`              | Uses `key.one` / `key.other` when `count` is present |
+| `typeLabel`           | Interaction type short name from `interactionTypes`  |
+| `typeTemplate`        | Template with `{typeName}` derived from `type`       |
+| `directionTemplate`   | Template with localized `{direction}`                |
+| `extendedTextCounter` | `{characters}`, `{words}`, and unit plural helpers   |
+
+### Runtime API
+
+Chrome resolves to a key-driven `PlayerMessageResolver`:
+
+```ts
+const messages = resolvePlayerMessages(locale, {}, catalog);
+
+messages.message("remove");
+messages.message("removePair", { label: pairLabel });
+messages.message("associationsMade", { count: 2 });
+```
+
+`createPlayerMessageResolver(catalog)` builds the same resolver directly from a locale file.
+
+### Per-message overrides
+
+`player.messages` accepts `QtiPlayerMessageOverrides` — each key uses the same param types as
+`message(key, params)` (for example `removePair: ({ label }) => ...`). Use only when a catalog
+entry is not enough; composed strings (for example `removePair` using `associationPairLabel`
+text) are easy to break.
+
+### Item language vs interface language
+
+Do not copy item `xml:lang` onto `<qti-assessment-item-player lang="...">` unless you
+intentionally want the player element's `lang` attribute to influence
+`defaultPlayerLocale()`. Prefer `player.messageCatalog` for UI chrome.
 
 ## Portable Custom Interactions
 

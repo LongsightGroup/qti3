@@ -1131,7 +1131,7 @@ function itemIntro(identifier: string): string {
     "positionObject-reference": "Move the marker object onto the target stage.",
     "portableCustom-reference": "Exercise the portable custom interaction host contract.",
     "selectPoint-reference": "Mark an exact point on the diagram.",
-    "slider-reference": "Choose a publication year with a range control.",
+    "slider-reference": "Choose a publication year on the timeline.",
     "textEntry-reference": "Type a short QTI outcome name in the sentence.",
     "upload-reference": "Choose a file as the candidate response.",
   };

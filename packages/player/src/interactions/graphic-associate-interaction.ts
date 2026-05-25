@@ -14,14 +14,14 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
-import type { QtiPlayerMessages } from "../player-messages.js";
+import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { exceedsHotspotMatchMax, maximumAllowedResponses } from "../response-limits.js";
 
 export function renderGraphicAssociateResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
   currentValue: QtiValue,
-  messages: QtiPlayerMessages,
+  messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
 
@@ -46,14 +46,17 @@ export function renderGraphicAssociateResponse(
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-associate-surface");
   surface.role = "group";
-  surface.setAttribute("aria-label", messages.interactionHotspots({ type: interaction.type }));
+  surface.setAttribute(
+    "aria-label",
+    messages.message("interactionHotspots", { type: interaction.type }),
+  );
 
   const object = interaction.object;
   if (object) {
     appendGraphicObjectImage(
       surface,
       object,
-      object.text || messages.interactionImageAlt({ type: interaction.type }),
+      object.text || messages.message("interactionImageAlt", { type: interaction.type }),
     );
   }
 
@@ -70,7 +73,7 @@ export function renderGraphicAssociateResponse(
   pairList.className = "qti3-pair-list";
   pairList.setAttribute(
     "aria-label",
-    messages.interactionSelectedPairsList({ type: interaction.type }),
+    messages.message("interactionSelectedPairsList", { type: interaction.type }),
   );
 
   const commit = () => {
@@ -216,18 +219,18 @@ export function renderGraphicAssociateResponse(
       button.dataset.selected = isActive || isPaired ? "true" : "false";
     }
     summary.textContent = selectedHotspot
-      ? messages.hotspotSelectedChooseAnother({
+      ? messages.message("hotspotSelectedChooseAnother", {
           label: hotspotDisplayLabel(selectedHotspot, choices),
         })
       : selectedPairs.length > 0
-        ? messages.associationsMade({ count: selectedPairs.length })
-        : messages.noAssociationsMade();
+        ? messages.message("associationsMade", { count: selectedPairs.length })
+        : messages.message("noAssociationsMade");
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
         const [source = "", target = ""] = pair.split(" ");
         const sourceChoice = choices.find((choice) => choice.identifier === source);
         const targetChoice = choices.find((choice) => choice.identifier === target);
-        const pairLabel = messages.associationPairLabel({
+        const pairLabel = messages.message("associationPairLabel", {
           source: sourceChoice ? hotspotDisplayLabel(sourceChoice, choices) : source,
           target: targetChoice ? hotspotDisplayLabel(targetChoice, choices) : target,
         });
