@@ -1,27 +1,28 @@
 # Changelog
 
-## 0.5.4 - 2026-05-24
+## 0.6.0 - 2026-05-25
 
-### Fixed
-
-- Publish exact versioned tarball names in the GitHub workflow so
-  `longsightgroup-qti3-player-*.tgz` does not also match the Preact and React adapter packages.
-
-### Changed
-
-- Add checked-in `.oxfmtrc.json` for deterministic formatting.
-
-## 0.5.3 - 2026-05-24
-
-No functional changes from 0.5.2.
-
-## 0.5.2 - 2026-05-24
+This release supersedes the attempted `0.5.2` through `0.5.5` release line, which had npm
+publication and package metadata issues.
 
 ### Fixed
 
 - Include nested `dist/**` build outputs in published `@longsightgroup/qti3-player` tarballs so
   `dist/player-element.js` can resolve its split renderer modules without relying on shipped source.
 - Validate packed package exports and relative `dist/` import graphs during release checks.
+- Publish exact versioned tarball names in the GitHub workflow so
+  `longsightgroup-qti3-player-*.tgz` does not also match the Preact and React adapter packages.
+- Point package export `types` entries at `./dist/index.d.ts` instead of `./src/index.ts`, so
+  downstream projects consume generated declarations instead of type-checking package source.
+- Make the publish workflow skip package versions that already exist on npm, allowing a partial
+  publish to be rerun after npm package settings are corrected.
+- Build generated declarations before type-aware linting so clean checkouts do not report unresolved
+  workspace package types as `any` / error-type lint failures.
+
+### Changed
+
+- Add checked-in `.oxfmtrc.json` for deterministic formatting.
+- Align workspace package versions on `0.6.0`.
 
 ## 0.5.1 - 2026-05-24
 
