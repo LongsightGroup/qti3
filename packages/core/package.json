@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-core",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Framework-neutral TypeScript core for parsing, validating, scoring, and serializing QTI 3 assessment items.",
   "keywords": [
     "assessment",
@@ -25,11 +25,11 @@
     "directory": "packages/core"
   },
   "files": [
-    "dist/*.d.ts",
-    "dist/*.d.ts.map",
-    "dist/*.js",
-    "dist/*.js.map",
-    "!dist/*.test.*",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "!dist/**/*.test.*",
     "src/**/*.ts",
     "!src/**/*.test.ts"
   ],

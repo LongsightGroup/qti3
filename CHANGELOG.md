@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.2 - 2026-05-24
+
+### Fixed
+
+- Include nested `dist/**` build outputs in published `@longsightgroup/qti3-player` tarballs so
+  `dist/player-element.js` can resolve its split renderer modules without relying on shipped source.
+- Validate packed package exports and relative `dist/` import graphs during release checks.
+
 ## 0.5.1 - 2026-05-24
 
 ### Added
