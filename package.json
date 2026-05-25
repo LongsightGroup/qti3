@@ -28,7 +28,8 @@
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
-    "lint": "oxlint --deny-warnings",
+    "lint": "pnpm build && pnpm lint:raw",
+    "lint:raw": "oxlint --deny-warnings",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:conformance": "vitest run packages/conformance",
@@ -44,7 +45,7 @@
     "dev": "vite --host 127.0.0.1 examples/manual",
     "dev:adapter-react": "vite --host 127.0.0.1 examples/manual --open /adapter-react.html",
     "readiness:basic:item-player": "vitest run packages/conformance/src/conformance.test.ts packages/fixtures/src/fixtures.test.ts packages/cli/src/index.test.ts && playwright test --grep \"Basic item player readiness\" && pnpm build && node packages/cli/dist/index.js basic-item-player-report packages/fixtures/packages/basic-item-player",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build && pnpm check:maps && pnpm check:exports",
+    "verify": "pnpm format:check && pnpm typecheck && pnpm lint:raw && pnpm test && pnpm test:conformance && pnpm test:a11y && pnpm check:deps && pnpm build && pnpm check:maps && pnpm check:exports",
     "release:check": "pnpm verify && pnpm test:browser && node packages/cli/dist/index.js assert-support && node packages/cli/dist/index.js run-fixtures",
     "certification:check": "pnpm test:external:required && pnpm release:check"
   },
