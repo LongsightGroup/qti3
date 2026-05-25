@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-cli",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Command-line tools for parsing, validating, scoring, inspecting, and checking QTI 3 items.",
   "keywords": [
     "assessment",

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.4 - 2026-05-24
+
+### Fixed
+
+- Publish exact versioned tarball names in the GitHub workflow so
+  `longsightgroup-qti3-player-*.tgz` does not also match the Preact and React adapter packages.
+
+### Changed
+
+- Add checked-in `.oxfmtrc.json` for deterministic formatting.
+
 ## 0.5.3 - 2026-05-24
 
 No functional changes from 0.5.2.
