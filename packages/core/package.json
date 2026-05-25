@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-core",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Framework-neutral TypeScript core for parsing, validating, scoring, and serializing QTI 3 assessment items.",
   "keywords": [
     "assessment",

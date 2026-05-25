@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3 - 2026-05-24
+
+No functional changes from 0.5.2.
+
 ## 0.5.2 - 2026-05-24
 
 ### Fixed
