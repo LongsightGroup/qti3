@@ -350,7 +350,7 @@ test.describe("player keyboard and accessibility", () => {
       page
         .locator('qti-assessment-item-player [aria-label="Associate targets"]')
         .locator(".qti3-token:visible"),
-    ).toHaveCount(3);
+    ).toHaveCount(4);
     await page
       .locator('qti-assessment-item-player [aria-label="Associate targets"]')
       .locator('[data-choice-identifier="B"]')
