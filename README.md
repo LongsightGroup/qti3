@@ -76,29 +76,12 @@ flowchart LR
 
 ## Release goals
 
-`0.2.x` established the reference item engine. `0.3.0` adds internal Basic item-player
-readiness evidence and a maintainable player architecture. Work after `0.3.0` focuses on
-certification evidence, host integration depth, and hardening — not building assessment
-runners or LMS delivery shells.
+Public releases focus on a clean, auditable QTI 3 item engine: conformance evidence,
+accessibility evidence, dependency-light host integration, and hardening of the
+framework-neutral packages.
 
-### Delivered in `0.2.x`–`0.3.0`
-
-- Strict TypeScript core for parsing, validation, response and template processing, scoring, saved attempt state, and host-readable metadata.
-- Native web component player that host products can embed without adopting a framework.
-- Public synthetic fixtures and browser tests for every supported current QTI 3 item interaction.
-- Machine-readable support, accessibility, catalog, read-aloud, and media metadata.
-- Explicit diagnostics for unsupported, deprecated, invalid, or ambiguous item behavior.
-- Internal QTI 3 Basic item-player readiness profile with item-only package fixtures, `readiness:basic:item-player`, CLI `basic-item-player-report`, and Playwright coverage for the narrow Basic scope.
-- Modular player implementation with unified interaction dispatch, load-time diagnostics mirrored into validation UI, and domain-split styles.
-- Type-aware oxlint and explicit workspace package exports (types from source, runtime from `dist`).
-
-### Remaining
-
-- Collect official 1EdTech certification evidence by running `certification:check` against licensed external QTI content and a non-empty validator report. Internal Basic readiness is not certification.
-- Expand external corpus coverage in `test:external` as official item banks become available, while keeping `test:external:required` strict for explicit certification runs.
-- Deepen host integration for portable custom interactions: clearer mount contracts, harness examples, and integration guidance. Production module loading, CSP, sandboxing, and tenant policy remain host-owned.
-- Keep framework adapters (`@longsightgroup/qti3-player-react`, `@longsightgroup/qti3-player-preact`) aligned with the native web component API as player events and load options evolve.
-- Keep accessibility evidence current: manual assistive-technology scripts, localized player chrome, and keyboard, reflow, and forced-colors coverage as interactions evolve.
+See [CHANGELOG.md](CHANGELOG.md) for release-by-release detail about delivered work,
+current release notes, compatibility notes, and follow-up goals.
 
 ### Still out of scope
 

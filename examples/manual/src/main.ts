@@ -9,6 +9,8 @@ defineQtiAssessmentItemPlayer();
 
 const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
+const previousFixture = document.querySelector<HTMLButtonElement>("#previous-fixture");
+const nextFixture = document.querySelector<HTMLButtonElement>("#next-fixture");
 const loadXml = document.querySelector<HTMLButtonElement>("#load-xml");
 const fileInput = document.querySelector<HTMLInputElement>("#file");
 const localFiles = document.querySelector<HTMLSelectElement>("#local-files");
@@ -46,6 +48,8 @@ const player = document.querySelector("qti-assessment-item-player");
 if (
   !fixtureSelect ||
   !loadFixture ||
+  !previousFixture ||
+  !nextFixture ||
   !loadXml ||
   !fileInput ||
   !localFiles ||
@@ -115,6 +119,7 @@ let latestCatalogs: unknown[] = [];
 let latestStylesheets: unknown[] = [];
 let latestPackage: PackageDebugState = emptyPackageDebugState();
 let currentInteractionTypes: string[] = [];
+const fixtureIds: string[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 
 for (const category of ["interaction", "processing", "adaptive"] as const) {
@@ -125,6 +130,7 @@ for (const category of ["interaction", "processing", "adaptive"] as const) {
   for (const fixture of fixtures) {
     const option = document.createElement("option");
     option.value = fixture.id;
+    fixtureIds.push(fixture.id);
     option.textContent =
       fixture.category === "interaction"
         ? `${fixture.interactionType} (${fixture.qtiName})`
@@ -134,12 +140,17 @@ for (const category of ["interaction", "processing", "adaptive"] as const) {
   fixtureSelect.append(group);
 }
 
-loadFixture.addEventListener("click", async () => {
-  const fixture =
-    canonicalFixtures.find((item) => item.id === fixtureSelect.value) ?? canonicalFixtures[0];
-  if (!fixture) return;
-  xmlInput.value = fixture.xml;
-  await player.loadXml(fixture.xml);
+updateFixtureNavigation();
+
+fixtureSelect.addEventListener("change", () => updateFixtureNavigation());
+loadFixture.addEventListener("click", () => loadSelectedFixture());
+
+previousFixture.addEventListener("click", async () => {
+  await loadFixtureAtIndex(selectedFixtureIndex() - 1);
+});
+
+nextFixture.addEventListener("click", async () => {
+  await loadFixtureAtIndex(selectedFixtureIndex() + 1);
 });
 
 loadXml.addEventListener("click", async () => {
@@ -217,12 +228,40 @@ for (const eventName of [
   });
 }
 
-loadFixture.click();
+void loadSelectedFixture();
 
 function categoryLabel(category: (typeof canonicalFixtures)[number]["category"]): string {
   if (category === "processing") return "Processing references";
   if (category === "adaptive") return "Adaptive references";
   return "Interaction references";
+}
+
+async function loadSelectedFixture(): Promise<void> {
+  const fixture =
+    canonicalFixtures.find((item) => item.id === fixtureSelect.value) ?? canonicalFixtures[0];
+  if (!fixture) return;
+  fixtureSelect.value = fixture.id;
+  updateFixtureNavigation();
+  xmlInput.value = fixture.xml;
+  await player.loadXml(fixture.xml);
+}
+
+async function loadFixtureAtIndex(index: number): Promise<void> {
+  const nextIndex = Math.min(Math.max(index, 0), fixtureIds.length - 1);
+  const fixtureId = fixtureIds[nextIndex];
+  if (!fixtureId) return;
+  fixtureSelect.value = fixtureId;
+  await loadSelectedFixture();
+}
+
+function selectedFixtureIndex(): number {
+  return Math.max(0, fixtureIds.indexOf(fixtureSelect.value));
+}
+
+function updateFixtureNavigation(): void {
+  const selectedIndex = selectedFixtureIndex();
+  previousFixture.disabled = selectedIndex <= 0;
+  nextFixture.disabled = selectedIndex >= fixtureIds.length - 1;
 }
 
 function resetScorePanel(): void {

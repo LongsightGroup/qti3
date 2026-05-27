@@ -52,6 +52,10 @@
         max-width: 100%;
       }
 
+      button {
+        min-height: 2.25rem;
+      }
+
       select,
       input,
       textarea,
@@ -168,6 +172,17 @@
         background: #fff;
       }
 
+      .fixture-controls {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: 2.75rem 1fr 2.75rem;
+      }
+
+      .fixture-controls button {
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+
       .debug-actions {
         display: grid;
         gap: 0.5rem;
@@ -257,7 +272,15 @@
                 Reference fixture
                 <select id="fixture"></select>
               </label>
-              <button id="load-fixture" type="button">Load fixture</button>
+              <div class="fixture-controls">
+                <button id="previous-fixture" type="button" aria-label="Load previous fixture">
+                  &larr;
+                </button>
+                <button id="load-fixture" type="button">Load fixture</button>
+                <button id="next-fixture" type="button" aria-label="Load next fixture">
+                  &rarr;
+                </button>
+              </div>
             </div>
           </details>
           <details class="load-option" name="load-options" id="package-loader">

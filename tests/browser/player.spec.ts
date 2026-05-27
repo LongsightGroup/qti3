@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { expect, test } from "@playwright/test";
+import { expect, type Locator, test } from "@playwright/test";
 import {
   adaptiveFixtures,
   basicItemPlayerFixtures,
@@ -20,6 +20,15 @@ import {
 } from "./player-helpers.js";
 
 const require = createRequire(import.meta.url);
+
+async function loadedItemIdentifier(player: Locator): Promise<string | undefined> {
+  return player.evaluate((element) => {
+    const qtiPlayer = element as HTMLElement & {
+      serialize: () => { itemIdentifier?: string } | null;
+    };
+    return qtiPlayer.serialize()?.itemIdentifier;
+  });
+}
 
 test.describe("Basic item player readiness", () => {
   test("renders Basic interaction and item-feature fixtures without axe violations", async ({
@@ -470,6 +479,39 @@ test.describe("manual harness", () => {
 
     await pasteXml(page, "<qti-assessment-item/>");
     await expect(xmlLoader).toHaveAttribute("open", "");
+  });
+
+  test("loads adjacent reference fixtures from the manual harness arrows", async ({ page }) => {
+    await page.goto("/");
+
+    const referenceFixtures = [...interactionFixtures, ...processingFixtures, ...adaptiveFixtures];
+    const firstFixture = referenceFixtures[0];
+    const secondFixture = referenceFixtures[1];
+    const previousLastFixture = referenceFixtures.at(-2);
+    const lastFixture = referenceFixtures.at(-1);
+    if (!firstFixture || !secondFixture || !previousLastFixture || !lastFixture) {
+      throw new Error("Missing reference fixtures.");
+    }
+
+    const player = page.locator("qti-assessment-item-player");
+    const previousFixture = page.getByRole("button", { name: "Load previous fixture" });
+    const nextFixture = page.getByRole("button", { name: "Load next fixture" });
+
+    await expect(page.locator("#fixture")).toHaveValue(firstFixture.id);
+    await expect(previousFixture).toBeDisabled();
+
+    await nextFixture.click();
+    await expect(page.locator("#fixture")).toHaveValue(secondFixture.id);
+    await expect.poll(() => loadedItemIdentifier(player)).toBe(secondFixture.id);
+    await expect(previousFixture).toBeEnabled();
+
+    await page.locator("#fixture").selectOption(lastFixture.id);
+    await expect(nextFixture).toBeDisabled();
+
+    await previousFixture.click();
+    await expect(page.locator("#fixture")).toHaveValue(previousLastFixture.id);
+    await expect.poll(() => loadedItemIdentifier(player)).toBe(previousLastFixture.id);
+    await expect(nextFixture).toBeEnabled();
   });
 
   test("scores advanced processing fixtures through the manual debugger", async ({ page }) => {
