@@ -4,6 +4,20 @@ import { parseQtiXml } from "./parser.js";
 import { parseXmlTree } from "./xml.js";
 
 describe("parseXmlTree source ranges", () => {
+  it("preserves boundary whitespace around inline child elements", () => {
+    const xml = "<p>Note: The <em>orientation</em> of the layout.</p>";
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    const paragraph = parsed.root;
+    expect(paragraph?.content).toEqual([
+      "Note: The ",
+      expect.objectContaining({ localName: "em" }),
+      " of the layout.",
+    ]);
+  });
+
   it("records exact ranges for nested same-name elements", () => {
     const xml = `<root><item id="outer"><item id="inner">inner</item></item></root>`;
 

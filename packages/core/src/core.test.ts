@@ -174,7 +174,7 @@ describe("@longsightgroup/qti3-core", () => {
 
     expect(result.ok).toBe(true);
     expect(result.document?.item.interactions[0]?.gapMatchSegments).toEqual([
-      { kind: "text", text: "An interaction writes to a" },
+      { kind: "text", text: "An interaction writes to a " },
       expect.objectContaining({ kind: "gap", identifier: "G1" }),
       { kind: "text", text: "." },
       { kind: "text", text: " " },
@@ -567,6 +567,33 @@ describe("@longsightgroup/qti3-core", () => {
     expect(() => assertQtiAttemptStateV1(badDiagnostics)).toThrow(
       "QTI attempt state validationMessages must be an array of diagnostics.",
     );
+  });
+
+  it("preserves whitespace around inline emphasis in item body", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-em" title="inline-em" time-dependent="false">
+        <qti-item-body>
+          <p>Note: The <em>orientation</em> of the layout of the drivers should be vertical.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const paragraph = result.document?.item.body.find(
+      (node): node is Extract<typeof node, { kind: "element" }> =>
+        node.kind === "element" && node.qtiName === "p",
+    );
+    expect(paragraph).toBeDefined();
+    if (paragraph?.kind !== "element") return;
+    expect(paragraph.children).toEqual([
+      expect.objectContaining({ kind: "text", text: "Note: The " }),
+      expect.objectContaining({
+        kind: "element",
+        qtiName: "em",
+        children: [expect.objectContaining({ kind: "text", text: "orientation" })],
+      }),
+      expect.objectContaining({ kind: "text", text: " of the layout of the drivers should be vertical." }),
+    ]);
   });
 
   it("preserves item body mixed-content order with embedded interactions", () => {

@@ -120,7 +120,114 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
     errors.push(new Error(`Unexpected end of document. Missing closing tag for <${node.name}>.`));
   }
 
+  if (root) restoreMixedContentFromSource(xml, root);
+
   return { root, errors };
+}
+
+/**
+ * stax-xml trims boundary whitespace around child elements. Re-slice mixed content from the
+ * original XML so authored spacing around inline markup (for example `<em>`) is preserved.
+ */
+const inlineMixedContentChildNames = new Set([
+  "a",
+  "abbr",
+  "b",
+  "bdi",
+  "bdo",
+  "cite",
+  "code",
+  "dfn",
+  "em",
+  "i",
+  "kbd",
+  "mark",
+  "q",
+  "rp",
+  "rt",
+  "ruby",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "var",
+  "qti-feedback-inline",
+  "qti-gap",
+  "qti-hottext",
+  "qti-inline-choice-interaction",
+  "qti-printed-variable",
+  "qti-template-inline",
+  "qti-text-entry-interaction",
+]);
+
+function shouldRestoreMixedContentWhitespace(node: XmlNode): boolean {
+  return node.content.some(
+    (entry) => typeof entry !== "string" && inlineMixedContentChildNames.has(entry.localName),
+  );
+}
+
+function restoreMixedContentFromSource(xml: string, node: XmlNode): void {
+  for (const entry of node.content) {
+    if (typeof entry !== "string") restoreMixedContentFromSource(xml, entry);
+  }
+
+  if (!shouldRestoreMixedContentWhitespace(node)) return;
+
+  const contentEndOffset = node.endSource?.offset ?? node.sourceRange.endOffset;
+  if (node.sourceRange.startTagEndOffset < 0 || contentEndOffset === undefined) return;
+
+  const restored: Array<string | XmlNode> = [];
+  let cursor = node.sourceRange.startTagEndOffset + 1;
+
+  for (const entry of node.content) {
+    if (typeof entry === "string") continue;
+    const childStart = entry.sourceRange.startOffset;
+    if (childStart < 0) continue;
+    if (childStart > cursor) {
+      appendDecodedTextSegment(restored, xml.slice(cursor, childStart));
+    }
+    restored.push(entry);
+    const childEnd = entry.sourceRange.endOffset;
+    if (childEnd === undefined || childEnd < cursor) continue;
+    cursor = childEnd;
+  }
+
+  if (contentEndOffset > cursor) {
+    appendDecodedTextSegment(restored, xml.slice(cursor, contentEndOffset));
+  }
+
+  node.content = restored;
+  node.text = restored.filter((entry): entry is string => typeof entry === "string").join("");
+}
+
+function appendDecodedTextSegment(content: Array<string | XmlNode>, raw: string): void {
+  const decoded = decodeXmlCharacterData(raw);
+  if (decoded.length > 0) content.push(decoded);
+}
+
+const predefinedXmlEntities: Record<string, string> = {
+  amp: "&",
+  apos: "'",
+  gt: ">",
+  lt: "<",
+  quot: '"',
+};
+
+function decodeXmlCharacterData(value: string): string {
+  return value.replace(/&(#x?[0-9a-fA-F]+|[A-Za-z]+);/g, (entity, body: string) => {
+    if (body.startsWith("#x") || body.startsWith("#X")) {
+      const codePoint = Number.parseInt(body.slice(2), 16);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
+    }
+    if (body.startsWith("#")) {
+      const codePoint = Number.parseInt(body.slice(1), 10);
+      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
+    }
+    return predefinedXmlEntities[body] ?? entity;
+  });
 }
 
 export function childElements(node: XmlNode, localName?: string): XmlNode[] {
