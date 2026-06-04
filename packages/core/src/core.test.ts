@@ -982,6 +982,43 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("diagnoses invalid item-body shared-vocabulary layout classes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="layout-shared-vocab-invalid" title="layout-shared-vocab-invalid" time-dependent="false">
+        <qti-item-body>
+          <div class="qti-layout-row">
+            <div class="qti-layout-col8 qti-layout-offset2">Stimulus</div>
+            <div class="qti-layout-col4">Interaction</div>
+          </div>
+          <div class="qti-layout-row">
+            <div class="qti-layout-col-13 qti-layout-offset-12">Invalid span and offset</div>
+          </div>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "item.sharedVocabulary.layoutRowOverflow",
+          severity: "warning",
+          message: expect.stringContaining("14"),
+        }),
+        expect.objectContaining({
+          code: "item.sharedVocabulary.layoutColumnInvalid",
+          severity: "warning",
+          message: expect.stringContaining("qti-layout-col-13"),
+        }),
+        expect.objectContaining({
+          code: "item.sharedVocabulary.layoutOffsetInvalid",
+          severity: "warning",
+          message: expect.stringContaining("qti-layout-offset-12"),
+        }),
+      ]),
+    );
+  });
+
   it("attaches source locations and paths to parsed model nodes and validation diagnostics", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="located" title="located" time-dependent="false">

@@ -271,6 +271,12 @@ product theme classes. Classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-selections-light`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
+The browser player also ships reference CSS for the general-purpose item-body vocabulary,
+including the twelve-column `qti-layout-row`, `qti-layout-col1` through
+`qti-layout-col12`, dashed `qti-layout-col-1` through `qti-layout-col-12`, and
+`qti-layout-offset*` grid classes; horizontal/vertical alignment, full-width,
+text indentation, vertical writing, float/clear, appearance, list-style, underline,
+italic, and inline-block classes.
 For choice interactions, the browser player also applies the current shared-vocabulary
 layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`, and
 `qti-choices-stacking-1` through `qti-choices-stacking-5`. Deprecated

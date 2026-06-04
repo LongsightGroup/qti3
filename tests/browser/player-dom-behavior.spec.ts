@@ -71,6 +71,28 @@ const HORIZONTAL_CHOICE_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const ITEM_LAYOUT_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="item-layout-shared-vocabulary" title="item-layout-shared-vocabulary" time-dependent="false">
+  <qti-item-body>
+    <div id="layout-row" class="qti-layout-row">
+      <div id="layout-left" class="qti-layout-col6 qti-bordered">
+        <p id="aligned" class="qti-align-center qti-text-indent-2">Left layout column.</p>
+      </div>
+      <div id="layout-right" class="qti-layout-col-6 qti-well">
+        <p><span id="underlined" class="qti-underline">Right layout column.</span></p>
+        <ul id="styled-list" class="qti-list-style-type-square">
+          <li><span id="inline" class="qti-italic qti-display-inline-block qti-valign-middle">Inline utility.</span></li>
+        </ul>
+        <p id="vertical" class="qti-writing-mode-vertical-rl"><span id="combined" class="qti-text-combine-upright-all">2026</span></p>
+      </div>
+    </div>
+    <div id="offset-row" class="qti-layout-row">
+      <div id="offset-column" class="qti-layout-col-3 qti-layout-offset-3">Offset column.</div>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const EMPTY_CHOICE_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="empty-choice" title="empty-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -326,6 +348,46 @@ test.describe("player DOM behavior", () => {
     expect(Math.abs(verticalRects[2].y - verticalRects[0].y)).toBeLessThanOrEqual(2);
     expect(verticalRects[3].y).toBeGreaterThan(verticalRects[2].y + verticalRects[2].height - 1);
     expect(Math.abs(verticalRects[3].x - verticalRects[2].x)).toBeLessThanOrEqual(2);
+  });
+
+  test("applies item-body shared vocabulary layout and presentation classes", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, ITEM_LAYOUT_SHARED_VOCABULARY_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const row = player.locator("#layout-row");
+    const left = player.locator("#layout-left");
+    const right = player.locator("#layout-right");
+    await expect(row).toHaveCSS("display", "flex");
+    const rowBox = await row.boundingBox();
+    const leftBox = await left.boundingBox();
+    const rightBox = await right.boundingBox();
+    if (!rowBox || !leftBox || !rightBox) throw new Error("Missing shared layout boxes.");
+    expect(rightBox.x).toBeGreaterThan(leftBox.x);
+    expect(Math.abs(leftBox.width - rowBox.width / 2)).toBeLessThanOrEqual(2);
+    expect(Math.abs(rightBox.width - rowBox.width / 2)).toBeLessThanOrEqual(2);
+
+    const offsetBox = await player.locator("#offset-column").boundingBox();
+    const offsetRowBox = await player.locator("#offset-row").boundingBox();
+    if (!offsetBox || !offsetRowBox) throw new Error("Missing shared offset layout boxes.");
+    expect(offsetBox.x - offsetRowBox.x).toBeGreaterThan(offsetRowBox.width * 0.2);
+
+    await expect(left).toHaveCSS("border-top-style", "solid");
+    await expect(player.locator("#aligned")).toHaveCSS("text-align", "center");
+    await expect(player.locator("#styled-list")).toHaveCSS("list-style-type", "square");
+    await expect(player.locator("#underlined")).toHaveCSS("text-decoration-line", /underline/);
+    await expect(player.locator("#inline")).toHaveCSS("font-style", "italic");
+    await expect(player.locator("#inline")).toHaveCSS("display", "inline-block");
+    await expect(player.locator("#vertical")).toHaveCSS("writing-mode", "vertical-rl");
+    await expect(player.locator("#combined")).toHaveCSS("text-combine-upright", "all");
+
+    await page.setViewportSize({ width: 390, height: 720 });
+    await pasteXml(page, ITEM_LAYOUT_SHARED_VOCABULARY_ITEM);
+    const narrowLeftBox = await player.locator("#layout-left").boundingBox();
+    const narrowRightBox = await player.locator("#layout-right").boundingBox();
+    if (!narrowLeftBox || !narrowRightBox) throw new Error("Missing narrow shared layout boxes.");
+    expect(Math.abs(narrowRightBox.x - narrowLeftBox.x)).toBeLessThanOrEqual(2);
+    expect(narrowRightBox.y).toBeGreaterThan(narrowLeftBox.y + narrowLeftBox.height - 1);
   });
 
   test("keeps stacked choice layouts inside narrow viewports", async ({ page }) => {

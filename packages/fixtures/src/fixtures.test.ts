@@ -54,6 +54,11 @@ describe("@longsightgroup/qti3-fixtures", () => {
   it("keeps shared-vocabulary evidence broader than label classes", () => {
     const fixture = basicItemPlayerFixtures.find((item) => item.id === "basic-shared-vocabulary");
     expect(fixture?.xml).toContain("qti-labels-decimal");
+    expect(fixture?.xml).toContain("qti-layout-row");
+    expect(fixture?.xml).toContain("qti-layout-col6");
+    expect(fixture?.xml).toContain("qti-align-center qti-text-indent-2");
+    expect(fixture?.xml).toContain("qti-list-style-type-square");
+    expect(fixture?.xml).toContain("qti-writing-mode-vertical-rl");
     expect(fixture?.xml).toContain("qti-orientation-horizontal");
     expect(fixture?.xml).toContain("qti-choices-stacking-3 qti-orientation-vertical");
     expect(fixture?.xml).toContain("qti-order-interaction");

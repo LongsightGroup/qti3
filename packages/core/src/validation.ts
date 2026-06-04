@@ -5,6 +5,7 @@ import type {
   QtiCatalogCardEntry,
   QtiCardinality,
   QtiChoice,
+  QtiElementContent,
   QtiContentNode,
   QtiDiagnostic,
   QtiDocument,
@@ -32,6 +33,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   requireIdentifier("qti-assessment-item", item.identifier, diagnostics, item.source);
   validateAssessmentItemRoot(item, diagnostics);
   validateItemBody(item, diagnostics);
+  validateItemBodySharedVocabulary(item, diagnostics);
   validateDeclarationIdentifiers(item, diagnostics);
   validateOutcomeLookupTables(item, diagnostics);
   validateInteractions(item, diagnostics);
@@ -191,6 +193,73 @@ function validateItemBody(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[])
     message: "qti-assessment-item requires a qti-item-body.",
     path: item.source?.path,
     source: item.source,
+  });
+}
+
+function validateItemBodySharedVocabulary(
+  item: QtiAssessmentItem,
+  diagnostics: QtiDiagnostic[],
+): void {
+  validateContentSharedVocabulary(item.body, diagnostics);
+}
+
+function validateContentSharedVocabulary(
+  nodes: QtiContentNode[],
+  diagnostics: QtiDiagnostic[],
+): void {
+  for (const node of nodes) {
+    if (node.kind !== "element") continue;
+    validateLayoutVocabularyClasses(node, diagnostics);
+    if (sharedClassNames(node.attributes).includes("qti-layout-row")) {
+      validateLayoutRow(node, diagnostics);
+    }
+    validateContentSharedVocabulary(node.children, diagnostics);
+  }
+}
+
+function validateLayoutVocabularyClasses(
+  node: QtiElementContent,
+  diagnostics: QtiDiagnostic[],
+): void {
+  const classNames = sharedClassNames(node.attributes);
+  for (const className of classNames) {
+    if (isLayoutColumnClassName(className) && layoutColumnValue(className) === undefined) {
+      diagnostics.push({
+        code: "item.sharedVocabulary.layoutColumnInvalid",
+        severity: "warning",
+        message: `Shared vocabulary class ${className} is not supported; expected qti-layout-col1 through qti-layout-col12, or dashed qti-layout-col-1 through qti-layout-col-12.`,
+        path: node.source?.path,
+        source: node.source,
+      });
+    }
+    if (isLayoutOffsetClassName(className) && layoutOffsetValue(className) === undefined) {
+      diagnostics.push({
+        code: "item.sharedVocabulary.layoutOffsetInvalid",
+        severity: "warning",
+        message: `Shared vocabulary class ${className} is not supported; expected qti-layout-offset1 through qti-layout-offset11, or dashed qti-layout-offset-1 through qti-layout-offset-11.`,
+        path: node.source?.path,
+        source: node.source,
+      });
+    }
+  }
+}
+
+function validateLayoutRow(node: QtiElementContent, diagnostics: QtiDiagnostic[]): void {
+  let totalColumns = 0;
+  for (const child of node.children) {
+    if (child.kind !== "element") continue;
+    const classNames = sharedClassNames(child.attributes);
+    const column = firstLayoutColumnValue(classNames);
+    if (column === undefined) continue;
+    totalColumns += (firstLayoutOffsetValue(classNames) ?? 0) + column;
+  }
+  if (totalColumns <= 12) return;
+  diagnostics.push({
+    code: "item.sharedVocabulary.layoutRowOverflow",
+    severity: "warning",
+    message: `qti-layout-row column groupings plus offsets total ${totalColumns}; the QTI shared vocabulary grid allows at most twelve columns per row.`,
+    path: node.source?.path,
+    source: node.source,
   });
 }
 
@@ -1629,7 +1698,7 @@ function validateInteractionSharedVocabulary(
   ) {
     return;
   }
-  const classNames = (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
+  const classNames = sharedClassNames(interaction.attributes);
   const classNameSet = new Set(classNames);
   if (interaction.type === "choice" || interaction.type === "order") {
     validateSharedVocabularyLabelClasses(interaction, classNames, diagnostics);
@@ -1759,6 +1828,50 @@ function validateChoicesContainerWidthSharedVocabulary(
       source: interaction.source,
     });
   }
+}
+
+function sharedClassNames(attributes: Record<string, string>): string[] {
+  return (attributes.class ?? "").split(/\s+/).filter(Boolean);
+}
+
+function isLayoutColumnClassName(className: string): boolean {
+  return /^qti-layout-col-?\w+$/.test(className);
+}
+
+function layoutColumnValue(className: string): number | undefined {
+  const rawValue = /^qti-layout-col-?(\d+)$/.exec(className)?.[1];
+  if (rawValue === undefined) return undefined;
+  const value = Number(rawValue);
+  if (value < 1 || value > 12) return undefined;
+  return value;
+}
+
+function firstLayoutColumnValue(classNames: string[]): number | undefined {
+  for (const className of classNames) {
+    const value = layoutColumnValue(className);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
+function isLayoutOffsetClassName(className: string): boolean {
+  return /^qti-layout-offset-?\w+$/.test(className);
+}
+
+function layoutOffsetValue(className: string): number | undefined {
+  const rawValue = /^qti-layout-offset-?(\d+)$/.exec(className)?.[1];
+  if (rawValue === undefined) return undefined;
+  const value = Number(rawValue);
+  if (value < 1 || value > 11) return undefined;
+  return value;
+}
+
+function firstLayoutOffsetValue(classNames: string[]): number | undefined {
+  for (const className of classNames) {
+    const value = layoutOffsetValue(className);
+    if (value !== undefined) return value;
+  }
+  return undefined;
 }
 
 function validateInteractionResponseReference(

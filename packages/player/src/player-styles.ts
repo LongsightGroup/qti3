@@ -5,10 +5,12 @@ import { DRAWING_PLAYER_STYLES } from "./styles/drawing-styles.js";
 import { GAP_MATCH_PLAYER_STYLES } from "./styles/gap-match-styles.js";
 import { GRAPHIC_PLAYER_STYLES } from "./styles/graphic-styles.js";
 import { MATCH_PAIR_PLAYER_STYLES } from "./styles/match-pair-styles.js";
+import { SHARED_VOCABULARY_PLAYER_STYLES } from "./styles/shared-vocabulary-styles.js";
 import { TEXT_SLIDER_PLAYER_STYLES } from "./styles/text-slider-styles.js";
 
 export const PLAYER_STYLES = [
   BASE_PLAYER_STYLES,
+  SHARED_VOCABULARY_PLAYER_STYLES,
   CONTROL_PLAYER_STYLES,
   MATCH_PAIR_PLAYER_STYLES,
   GAP_MATCH_PLAYER_STYLES,

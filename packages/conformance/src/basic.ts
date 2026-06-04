@@ -125,7 +125,7 @@ export const basicItemPlayerProfile: QtiBasicItemPlayerProfile = {
     feature("I-9b", "Response Processing Template", ["basic-template-response-processing"]),
     feature("I-17", "Composite Items", ["basic-composite-item"]),
     feature("I-18", "MathML", ["basic-mathml"]),
-    feature("I-19", "QTI Shared Interaction Vocabulary Subset", ["basic-shared-vocabulary"]),
+    feature("I-19", "QTI Shared Vocabulary Subset", ["basic-shared-vocabulary"]),
     feature("A-1", "Alt Text for Graphics", ["basic-alt-text"]),
     {
       featureId: "P-4",

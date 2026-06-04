@@ -760,6 +760,18 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <p data-qti-suppress-tts="computer-read-aloud">Shared QTI vocabulary remains authored content metadata.</p>
+    <div class="qti-layout-row">
+      <div class="qti-layout-col6 qti-bordered">
+        <p class="qti-align-center qti-text-indent-2">Stimulus content may use the QTI twelve-column layout grid.</p>
+      </div>
+      <div class="qti-layout-col6 qti-well">
+        <p><span class="qti-underline">Presentation vocabulary</span> includes inline, alignment, and appearance classes.</p>
+        <ul class="qti-list-style-type-square">
+          <li><span class="qti-italic qti-display-inline-block qti-valign-middle">List styles are rendered by the player.</span></li>
+        </ul>
+        <p class="qti-writing-mode-vertical-rl"><span class="qti-text-combine-upright-all">2026</span></p>
+      </div>
+    </div>
     <qti-choice-interaction response-identifier="LABEL_RESPONSE" max-choices="1" class="qti-labels-decimal qti-labels-suffix-parenthesis">
       <qti-simple-choice identifier="A">Shared vocabulary is preserved.</qti-simple-choice>
       <qti-simple-choice identifier="B">Shared vocabulary is removed.</qti-simple-choice>
