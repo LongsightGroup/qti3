@@ -739,22 +739,55 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
     title: "Basic shared interaction vocabulary fixture",
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+  <qti-response-declaration identifier="LABEL_RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="HORIZONTAL_RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="STACKING_RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <p data-qti-suppress-tts="computer-read-aloud">Shared QTI vocabulary remains authored content metadata.</p>
-    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1" class="qti-labels-decimal qti-labels-suffix-parenthesis">
+    <qti-choice-interaction response-identifier="LABEL_RESPONSE" max-choices="1" class="qti-labels-decimal qti-labels-suffix-parenthesis">
       <qti-simple-choice identifier="A">Shared vocabulary is preserved.</qti-simple-choice>
       <qti-simple-choice identifier="B">Shared vocabulary is removed.</qti-simple-choice>
     </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="HORIZONTAL_RESPONSE" max-choices="1" class="qti-orientation-horizontal">
+      <qti-simple-choice identifier="A">Horizontal orientation is represented as shared vocabulary.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Horizontal orientation is represented as a deprecated attribute.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Horizontal orientation is ignored.</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="STACKING_RESPONSE" max-choices="1" class="qti-choices-stacking-3 qti-orientation-vertical">
+      <qti-simple-choice identifier="A">Stacked vertical choices preserve authored order.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Stacked vertical choices require framework templates.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Stacked vertical choices change scoring.</qti-simple-choice>
+    </qti-choice-interaction>
   </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="LABEL_RESPONSE"/><qti-correct identifier="LABEL_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="HORIZONTAL_RESPONSE"/><qti-correct identifier="HORIZONTAL_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="STACKING_RESPONSE"/><qti-correct identifier="STACKING_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
 </qti-assessment-item>`,
     expectedParseDiagnostics: [],
     expectedValidationDiagnostics: [],
-    attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1 }, id)],
+    attempts: [
+      basicCorrectAttempt(
+        { LABEL_RESPONSE: "A", HORIZONTAL_RESPONSE: "A", STACKING_RESPONSE: "A" },
+        { SCORE: 3 },
+        id,
+      ),
+    ],
   };
 }
 

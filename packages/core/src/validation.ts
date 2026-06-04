@@ -1592,6 +1592,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
   for (const interaction of item.interactions) {
     validateInteractionResponseReference(interaction, responseIdentifiers, diagnostics);
     validateInteractionResponseShape(interaction, diagnostics);
+    validateInteractionSharedVocabulary(interaction, diagnostics);
     validateInteractionChoices(interaction, diagnostics);
     validateInteractionChildren(interaction, diagnostics);
     validateInteractionRequiredAttributes(interaction, diagnostics);
@@ -1612,6 +1613,59 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
         : undefined,
       diagnostics,
     );
+  }
+}
+
+function validateInteractionSharedVocabulary(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.type !== "choice") return;
+  const classNames = (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
+  const classNameSet = new Set(classNames);
+
+  if (
+    classNameSet.has("qti-orientation-horizontal") &&
+    classNameSet.has("qti-orientation-vertical")
+  ) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.orientationConflict",
+      severity: "warning",
+      message:
+        "qti-choice-interaction should not include both qti-orientation-horizontal and qti-orientation-vertical; qti-orientation-horizontal takes precedence at runtime.",
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+
+  const validStackingClasses = new Set<string>();
+  const invalidStackingClasses = new Set<string>();
+  for (const className of classNames) {
+    const stacking = /^qti-choices-stacking-(\d+)$/.exec(className)?.[1];
+    if (stacking === undefined) continue;
+    const count = Number(stacking);
+    if (count >= 1 && count <= 5) validStackingClasses.add(className);
+    else invalidStackingClasses.add(className);
+  }
+
+  if (validStackingClasses.size > 1) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.stackingConflict",
+      severity: "warning",
+      message: `qti-choice-interaction should not include multiple qti-choices-stacking-* classes: ${[...validStackingClasses].join(", ")}. The first valid stacking class in class attribute order takes precedence at runtime.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+
+  for (const className of invalidStackingClasses) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.stackingInvalid",
+      severity: "warning",
+      message: `qti-choice-interaction shared vocabulary class ${className} is not supported; expected qti-choices-stacking-1 through qti-choices-stacking-5.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
   }
 }
 

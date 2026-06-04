@@ -51,6 +51,15 @@ describe("@longsightgroup/qti3-fixtures", () => {
     );
   });
 
+  it("keeps shared-vocabulary evidence broader than label classes", () => {
+    const fixture = basicItemPlayerFixtures.find((item) => item.id === "basic-shared-vocabulary");
+    expect(fixture?.xml).toContain("qti-labels-decimal");
+    expect(fixture?.xml).toContain("qti-orientation-horizontal");
+    expect(fixture?.xml).toContain("qti-choices-stacking-3 qti-orientation-vertical");
+    expect(fixture?.xml).not.toContain('orientation="horizontal"');
+    expect(fixture?.xml).not.toContain('orientation="vertical"');
+  });
+
   it("parses, validates, scores, and serializes Basic item-player fixture attempts", () => {
     for (const fixture of [...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures]) {
       const parsed = parseQtiXml(fixture.xml);

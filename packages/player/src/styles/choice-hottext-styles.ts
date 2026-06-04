@@ -1,8 +1,34 @@
 export const CHOICE_HOTTEXT_PLAYER_STYLES = `
+.qti3-choice-group {
+  container-type: inline-size;
+}
+
 .qti3-choice-list {
   display: grid;
   gap: 0.5rem;
+  inline-size: 100%;
   grid-template-columns: minmax(0, 42rem);
+}
+
+.qti3-choice-list[data-qti-orientation="horizontal"],
+.qti3-choice-list[data-qti-stacking] {
+  max-inline-size: 100%;
+  grid-template-columns: repeat(var(--qti3-choice-columns), minmax(0, 1fr));
+}
+
+.qti3-choice-list[data-qti-orientation="vertical"][data-qti-stacking] {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(var(--qti3-choice-rows), auto);
+}
+
+/* Collapse multi-column choice layouts when the choice group is narrower than ~544px. */
+@container (inline-size < 34rem) {
+  .qti3-choice-list[data-qti-orientation="horizontal"],
+  .qti3-choice-list[data-qti-stacking] {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
 }
 
 .qti3-choice-option {

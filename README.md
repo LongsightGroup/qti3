@@ -271,6 +271,11 @@ product theme classes. Classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-selections-light`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
+For choice interactions, the browser player also applies the current shared-vocabulary
+layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`, and
+`qti-choices-stacking-1` through `qti-choices-stacking-5`. Deprecated
+`orientation="horizontal"` authoring is tolerated as a compatibility fallback, but new
+fixtures and examples use the current shared-vocabulary classes.
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.

@@ -863,6 +863,41 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("diagnoses conflicting choice shared-vocabulary layout classes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="shared-vocab-conflict" title="shared-vocab-conflict" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE" class="qti-orientation-horizontal qti-orientation-vertical qti-choices-stacking-2 qti-choices-stacking-4 qti-choices-stacking-6">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orientationConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-orientation-horizontal takes precedence"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.stackingConflict",
+          severity: "warning",
+          message: expect.stringContaining("first valid stacking class"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.stackingInvalid",
+          severity: "warning",
+          message: expect.stringContaining("qti-choices-stacking-6"),
+        }),
+      ]),
+    );
+  });
+
   it("attaches source locations and paths to parsed model nodes and validation diagnostics", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="located" title="located" time-dependent="false">

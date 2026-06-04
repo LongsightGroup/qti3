@@ -6,9 +6,10 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { choiceLayout, interactionClassNames } from "./choice-layout.js";
 
 function choicePresentationLabel(interaction: QtiInteraction, index: number): string {
-  const classNames = new Set((interaction.attributes.class ?? "").split(/\s+/).filter(Boolean));
+  const classNames = new Set(interactionClassNames(interaction));
   if (classNames.has("qti-labels-none")) return "";
 
   const labels = classNames.has("qti-labels-decimal")
@@ -52,6 +53,13 @@ export function renderChoice(
   if (choices.length === 0) {
     group.append(missingChoicesMessage(interaction));
     return group;
+  }
+  const layout = choiceLayout(interaction, choices.length);
+  list.dataset.qtiOrientation = layout.orientation;
+  list.style.setProperty("--qti3-choice-columns", String(layout.columns));
+  list.style.setProperty("--qti3-choice-rows", String(layout.rows));
+  if (layout.stacking !== undefined) {
+    list.dataset.qtiStacking = String(layout.stacking);
   }
   for (const [index, choice] of choices.entries()) {
     const label = document.createElement("label");
