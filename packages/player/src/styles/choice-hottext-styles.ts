@@ -106,6 +106,23 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   color: HighlightText;
 }
 
+.qti3-choice.qti-selections-light .qti3-choice-option:not([data-selected="true"]) {
+  border-color: color-mix(in srgb, Highlight 35%, CanvasText);
+  background: color-mix(in srgb, Highlight 12%, Canvas);
+}
+
+.qti3-choice.qti-selections-dark .qti3-choice-option:not([data-selected="true"]) {
+  border-color: Highlight;
+  background: color-mix(in srgb, Highlight 28%, Canvas);
+}
+
+.qti3-choice.qti-unselected-hidden
+  .qti3-choice-option:not([data-selected="true"]):not(:has(input:focus-visible)) {
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+}
+
 .qti3-hottext-group {
   max-inline-size: 58rem;
 }
@@ -150,17 +167,36 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 }
 
 @media (forced-colors: active) {
+  .qti3-choice.qti-selections-light .qti3-choice-option:not([data-selected="true"]),
+  .qti3-choice.qti-selections-dark .qti3-choice-option:not([data-selected="true"]),
+  .qti3-choice.qti-unselected-hidden
+    .qti3-choice-option:not([data-selected="true"]):not(:has(input:focus-visible)),
   .qti3-hottext.qti-input-control-hidden .qti3-hottext-token,
   .qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
     border-color: CanvasText;
     background: Canvas;
+  }
+
+  .qti3-choice.qti-selections-light .qti3-choice-option:not([data-selected="true"]),
+  .qti3-choice.qti-selections-dark .qti3-choice-option:not([data-selected="true"]),
+  .qti3-choice.qti-unselected-hidden
+    .qti3-choice-option:not([data-selected="true"]):not(:has(input:focus-visible)) {
+    color: CanvasText;
+  }
+
+  .qti3-hottext.qti-input-control-hidden .qti3-hottext-token,
+  .qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
     color: LinkText;
     text-decoration-color: LinkText;
   }
 
+  .qti3-choice-option[data-selected="true"],
   .qti3-hottext-token[data-selected="true"] {
     background: Highlight;
     color: HighlightText;
+  }
+
+  .qti3-hottext-token[data-selected="true"] {
     text-decoration-color: HighlightText;
   }
 }

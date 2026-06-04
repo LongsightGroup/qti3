@@ -281,9 +281,11 @@ For choice interactions, the browser player also applies the current shared-voca
 layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`,
 `qti-writing-orientation-vertical-rl`, `qti-writing-orientation-vertical-lr`, and
 `qti-choices-stacking-1` through `qti-choices-stacking-5`, plus label style/suffix
-classes including `qti-labels-cjk-ideographic` and hidden input controls. Deprecated
-`orientation="horizontal"` authoring is tolerated as a compatibility fallback, but new
-fixtures and examples use the current shared-vocabulary classes.
+classes including `qti-labels-cjk-ideographic`, hidden input controls, and selection
+presentation classes `qti-selections-light`, `qti-selections-dark`, and
+`qti-unselected-hidden`. Deprecated `orientation="horizontal"` authoring is tolerated as
+a compatibility fallback, but new fixtures and examples use the current shared-vocabulary
+classes.
 For hot text interactions, the browser player applies `qti-input-control-hidden` and
 `qti-unselected-hidden`. For hotspot interactions, it applies `qti-selections-light`,
 `qti-selections-dark`, and `qti-unselected-hidden`.

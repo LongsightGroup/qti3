@@ -110,6 +110,19 @@ const CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const CHOICE_SELECTION_PRESENTATION_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-selection-presentation-shared-vocabulary" title="choice-selection-presentation-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="0" class="qti-selections-dark qti-unselected-hidden">
+      <qti-simple-choice identifier="A">First selection presentation choice</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second selection presentation choice</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third selection presentation choice</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const EMPTY_CHOICE_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="empty-choice" title="empty-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -489,6 +502,50 @@ test.describe("player DOM behavior", () => {
         return state.responses.HOTTEXT_RESPONSE;
       })
       .toBe("A");
+  });
+
+  test("applies choice selection shared vocabulary classes without blocking keyboard selection", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, CHOICE_SELECTION_PRESENTATION_SHARED_VOCABULARY_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const choice = player.locator(".qti3-choice");
+    await expect(choice).toHaveClass(/qti-selections-dark/);
+    await expect(choice).toHaveClass(/qti-unselected-hidden/);
+
+    const firstOption = choice.locator('.qti3-choice-option[data-choice-identifier="A"]');
+    const secondOption = choice.locator('.qti3-choice-option[data-choice-identifier="B"]');
+    const firstHiddenStyles = await firstOption.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        borderTopColor: style.borderTopColor,
+        backgroundColor: style.backgroundColor,
+      };
+    });
+    expect(firstHiddenStyles.borderTopColor).toBe("rgba(0, 0, 0, 0)");
+    expect(firstHiddenStyles.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+
+    await choice.locator('input[value="A"]').focus();
+    await page.keyboard.press("Tab");
+    await expect(choice.locator('input[value="B"]')).toBeFocused();
+    await page.keyboard.press("Space");
+    await expect(choice.locator('input[value="B"]')).toBeChecked();
+    await expect(secondOption).toHaveAttribute("data-selected", "true");
+
+    const selectedStyles = await secondOption.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        borderTopColor: style.borderTopColor,
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+      };
+    });
+    expect(selectedStyles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(selectedStyles.color).not.toBe(selectedStyles.backgroundColor);
+    await expect(firstOption).toHaveAttribute("data-selected", "false");
+    await expect(firstOption).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   });
 
   test("keeps hottext shared vocabulary indicators visible in forced colors", async ({ page }) => {

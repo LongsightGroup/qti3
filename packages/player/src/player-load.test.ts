@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { interactionFixtures } from "@longsightgroup/qti3-fixtures";
+import type { QtiAttemptStateV1 } from "@longsightgroup/qti3-core";
 import { describe, expect, it, vi } from "vitest";
 import { defineQtiAssessmentItemPlayer, QtiAssessmentItemPlayer } from "./index.js";
 
@@ -73,6 +74,126 @@ describe("QtiAssessmentItemPlayer load lifecycle", () => {
     await firstLoad;
 
     expect(player.textContent).not.toContain("Unable to parse QTI item.");
+    player.remove();
+  });
+
+  it("reports loadUrl fetch failures as diagnostics instead of rejecting", async () => {
+    defineQtiAssessmentItemPlayer();
+    const player = new QtiAssessmentItemPlayer();
+    document.body.append(player);
+
+    const diagnostics = vi.fn();
+    player.addEventListener("qti-diagnostics", diagnostics);
+
+    await expect(
+      player.loadUrl("missing.xml", {
+        fetchXml: async () => {
+          throw new Error("network unavailable");
+        },
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(diagnostics).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: {
+          diagnostics: [
+            expect.objectContaining({
+              code: "player.loadUrl",
+              severity: "error",
+              message: "network unavailable",
+            }),
+          ],
+        },
+      }),
+    );
+    expect(player.textContent).toContain("Unable to load QTI item.");
+    player.remove();
+  });
+
+  it("reports restore misuse as diagnostics instead of throwing", async () => {
+    defineQtiAssessmentItemPlayer();
+    const player = new QtiAssessmentItemPlayer();
+    document.body.append(player);
+
+    const diagnostics = vi.fn();
+    player.addEventListener("qti-diagnostics", diagnostics);
+    const emptyState: QtiAttemptStateV1 = {
+      schema: "qti3.attempt-state.v1",
+      itemIdentifier: "choice-reference",
+      status: "initialized",
+      responses: {},
+      outcomes: {},
+      validationMessages: [],
+    };
+
+    expect(() => player.restore(emptyState)).not.toThrow();
+    expect(diagnostics).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        detail: {
+          diagnostics: [
+            expect.objectContaining({
+              code: "player.restoreState",
+              severity: "error",
+              message: "Cannot restore QTI state before loading an item.",
+            }),
+          ],
+        },
+      }),
+    );
+
+    await player.loadXml(choiceXml);
+    const state = player.serialize();
+    if (!state) throw new Error("Expected loaded player state.");
+    const restored = vi.fn();
+    player.addEventListener("qti-restore", restored);
+
+    expect(() => player.restore({ ...state, itemIdentifier: "other-item" })).not.toThrow();
+    expect(restored).not.toHaveBeenCalled();
+    expect(diagnostics).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        detail: {
+          diagnostics: [
+            expect.objectContaining({
+              code: "player.restoreState",
+              severity: "error",
+              message: "Cannot restore state for other-item into choice-reference.",
+            }),
+          ],
+        },
+      }),
+    );
+    player.remove();
+  });
+
+  it("reports incompatible loadXml restored state as diagnostics instead of rejecting", async () => {
+    defineQtiAssessmentItemPlayer();
+    const player = new QtiAssessmentItemPlayer();
+    document.body.append(player);
+
+    await player.loadXml(choiceXml);
+    const state = player.serialize();
+    if (!state) throw new Error("Expected loaded player state.");
+
+    const diagnostics = vi.fn();
+    player.addEventListener("qti-diagnostics", diagnostics);
+    await expect(
+      player.loadXml(choiceXml, { state: { ...state, itemIdentifier: "other-item" } }),
+    ).resolves.toBeUndefined();
+
+    expect(diagnostics).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        detail: {
+          diagnostics: [
+            expect.objectContaining({
+              code: "player.restoreState",
+              severity: "error",
+              message: "Cannot restore state for other-item into choice-reference.",
+            }),
+          ],
+        },
+      }),
+    );
+    expect(player.textContent).toContain("Unable to restore QTI state.");
     player.remove();
   });
 });

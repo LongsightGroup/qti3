@@ -166,7 +166,15 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   async loadUrl(url: string, options: QtiPlayerLoadOptions = {}): Promise<void> {
     const generation = this.beginLoad();
     const fetchXml = options.fetchXml ?? defaultFetchXml;
-    const xml = await fetchXml(url);
+    let xml: string;
+    try {
+      xml = await fetchXml(url);
+    } catch (error) {
+      if (!this.isCurrentLoad(generation)) return;
+      this.emitDiagnostics([playerErrorDiagnostic("player.loadUrl", error)]);
+      this.replaceChildren(errorView("Unable to load QTI item."));
+      return;
+    }
     if (!this.isCurrentLoad(generation)) return;
     await this.applyLoadedXml(generation, xml, options);
   }
@@ -219,7 +227,14 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!this.isCurrentLoad(generation)) return;
 
     this.documentModel = result.document;
-    this.session = createItemSession(result.document, options.state);
+    try {
+      this.session = createItemSession(result.document, options.state);
+    } catch (error) {
+      if (!this.isCurrentLoad(generation)) return;
+      this.emitDiagnostics([playerErrorDiagnostic("player.restoreState", error)]);
+      this.replaceChildren(errorView("Unable to restore QTI state."));
+      return;
+    }
     this.validationMessages = cloneDiagnostics(
       responseValidationMessages(options.state?.validationMessages ?? []),
     );
@@ -273,15 +288,27 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   restore(state: QtiAttemptStateV1): void {
     if (!this.documentModel) {
-      throw new Error("Cannot restore QTI state before loading an item.");
+      this.emitDiagnostics([
+        {
+          code: "player.restoreState",
+          severity: "error",
+          message: "Cannot restore QTI state before loading an item.",
+        },
+      ]);
+      return;
     }
-    assertQtiAttemptStateV1(state);
-    if (state.itemIdentifier !== this.documentModel.item.identifier) {
-      throw new Error(
-        `Cannot restore state for ${state.itemIdentifier} into ${this.documentModel.item.identifier}.`,
-      );
+    try {
+      assertQtiAttemptStateV1(state);
+      if (state.itemIdentifier !== this.documentModel.item.identifier) {
+        throw new Error(
+          `Cannot restore state for ${state.itemIdentifier} into ${this.documentModel.item.identifier}.`,
+        );
+      }
+      this.session = createItemSession(this.documentModel, state);
+    } catch (error) {
+      this.emitDiagnostics([playerErrorDiagnostic("player.restoreState", error)]);
+      return;
     }
-    this.session = createItemSession(this.documentModel, state);
     this.validationMessages = cloneDiagnostics(
       responseValidationMessages(state.validationMessages),
     );
@@ -342,6 +369,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private emitStateChange(state = this.serialize()): void {
     if (!state) return;
     this.dispatchPlayerEvent("qti-statechange", { state });
+  }
+
+  private emitDiagnostics(diagnostics: QtiDiagnostic[]): void {
+    this.dispatchPlayerEvent("qti-diagnostics", { diagnostics });
   }
 
   private dispatchPlayerEvent<T extends QtiAssessmentItemPlayerEventName>(
@@ -548,6 +579,14 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       outcomes,
     );
   }
+}
+
+function playerErrorDiagnostic(code: string, error: unknown): QtiDiagnostic {
+  return {
+    code,
+    severity: "error",
+    message: error instanceof Error ? error.message : String(error),
+  };
 }
 
 export function defineQtiAssessmentItemPlayer(): void {
