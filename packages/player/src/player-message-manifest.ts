@@ -20,6 +20,7 @@ export interface PlayerMessageManifestEntry {
 export const PLAYER_MESSAGE_MANIFEST = [
   { key: "remove", resolver: "plain" },
   { key: "removePair", resolver: "template", params: ["label"] },
+  { key: "removeOrderedChoice", resolver: "template", params: ["label"] },
   { key: "clearDrawing", resolver: "plain" },
   { key: "clearPoints", resolver: "plain" },
   { key: "endAttempt", resolver: "plain" },
@@ -89,6 +90,14 @@ export const PLAYER_MESSAGE_MANIFEST = [
     resolver: "template",
     params: ["label", "position", "total"],
   },
+  {
+    key: "orderedItemAddedToPosition",
+    resolver: "template",
+    params: ["label", "position", "total"],
+  },
+  { key: "orderedItemRemoved", resolver: "template", params: ["label"] },
+  { key: "orderTargetLabel", resolver: "template", params: ["index"] },
+  { key: "orderTargetEmpty", resolver: "template", params: ["label"] },
   { key: "graphicOrderRegionsSelected", resolver: "plural", params: ["count"] },
   { key: "graphicOrderNoRegionsSelected", resolver: "plain" },
   { key: "objectNotPlaced", resolver: "plain" },

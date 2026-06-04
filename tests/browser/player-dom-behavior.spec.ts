@@ -1,5 +1,11 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { loadFixture, pasteXml, visibleValidationAlertCount } from "./player-helpers.js";
+import {
+  currentResponse,
+  loadFixture,
+  pasteXml,
+  provideResponse,
+  visibleValidationAlertCount,
+} from "./player-helpers.js";
 
 const CHOICE_ORIENTATION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0_v1p0.xsd" identifier="q2-choice-interaction-single-sv-4b" title="Choice Interaction - Single (SV 4b)- orientation options" adaptive="false" time-dependent="false">
@@ -89,6 +95,32 @@ const DEPRECATED_CHOICE_ORIENTATION_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const ORDER_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-shared-vocabulary" title="order-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-top qti-labels-decimal qti-labels-suffix-parenthesis">
+      <qti-simple-choice identifier="A">First step</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second step</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third step</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
+const ORDER_SHARED_VOCABULARY_LEFT_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-shared-vocabulary-left" title="order-shared-vocabulary-left" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-left qti-labels-upper-alpha" orientation="vertical" data-choices-container-width="180">
+      <qti-simple-choice identifier="A">North</qti-simple-choice>
+      <qti-simple-choice identifier="B">Center</qti-simple-choice>
+      <qti-simple-choice identifier="C">South</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const UNSUPPORTED_INTERACTION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-interaction" title="unsupported-interaction" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -112,6 +144,29 @@ async function choiceOptionRects(
         height: rect.height,
       };
     }),
+  );
+}
+
+async function dropOrderChoiceOnTarget(
+  layout: Locator,
+  identifier: string,
+  targetIndex: number,
+): Promise<void> {
+  await layout.evaluate(
+    (element, payload) => {
+      const target =
+        element.querySelectorAll<HTMLElement>(".qti3-order-target-slot")[payload.targetIndex];
+      if (!target) throw new Error(`Missing order target slot ${payload.targetIndex}.`);
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("text/plain", payload.identifier);
+      target.dispatchEvent(
+        new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer }),
+      );
+      target.dispatchEvent(
+        new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }),
+      );
+    },
+    { identifier, targetIndex },
   );
 }
 
@@ -280,6 +335,91 @@ test.describe("player DOM behavior", () => {
     expect(Math.abs(rects[2].y - rects[0].y)).toBeLessThanOrEqual(2);
     expect(rects[1].x).toBeGreaterThan(rects[0].x);
     expect(rects[2].x).toBeGreaterThan(rects[1].x);
+  });
+
+  test("renders order shared vocabulary as choices bank and target slots", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, ORDER_SHARED_VOCABULARY_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    await expect(layout).toHaveAttribute("data-qti-choices-position", "top");
+    const bank = layout.locator(".qti3-order-choices-bank");
+    await expect(bank.getByRole("button")).toHaveCount(3);
+    const targets = layout.locator(".qti3-order-target-slot");
+    await expect(targets).toHaveCount(3);
+    await expect(targets.nth(0)).toContainText("1)");
+    await expect(targets.nth(0)).toContainText("empty");
+
+    await bank.getByRole("button", { name: "Second step" }).click();
+    await expect.poll(() => currentResponse(page)).toEqual(["B"]);
+    await bank.getByRole("button", { name: "First step" }).click();
+    await expect.poll(() => currentResponse(page)).toEqual(["B", "A"]);
+    await expect(bank.getByRole("button")).toHaveCount(1);
+
+    await layout
+      .locator('.qti3-order-target-item[data-choice-identifier="B"] [data-move-direction="down"]')
+      .click();
+    await expect.poll(() => currentResponse(page)).toEqual(["A", "B"]);
+    await layout.getByRole("button", { name: "Remove Second step from order" }).click();
+    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
+    await expect(bank.getByRole("button", { name: "Second step" })).toBeVisible();
+  });
+
+  test("does not misplace order shared vocabulary drops onto non-adjacent empty targets", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, ORDER_SHARED_VOCABULARY_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    const bank = layout.locator(".qti3-order-choices-bank");
+    const targets = layout.locator(".qti3-order-target-slot");
+
+    await bank.getByRole("button", { name: "First step" }).click();
+    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
+
+    await dropOrderChoiceOnTarget(layout, "C", 2);
+    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
+    await expect(bank.getByRole("button", { name: "Third step" })).toBeVisible();
+    await expect(targets.nth(1)).toContainText("empty");
+    await expect(targets.nth(2)).toContainText("empty");
+
+    await dropOrderChoiceOnTarget(layout, "C", 1);
+    await expect.poll(() => currentResponse(page)).toEqual(["A", "C"]);
+  });
+
+  test("provides order shared vocabulary responses through the browser helper", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, ORDER_SHARED_VOCABULARY_ITEM);
+
+    await provideResponse(page, "order", ["C", "A"]);
+    await expect.poll(() => currentResponse(page)).toEqual(["C", "A"]);
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    await expect(layout.locator(".qti3-order-choices-bank").getByRole("button")).toHaveCount(1);
+    await expect(layout.locator('.qti3-order-target-item[data-choice-identifier="C"]')).toHaveCount(
+      1,
+    );
+    await expect(layout.locator('.qti3-order-target-item[data-choice-identifier="A"]')).toHaveCount(
+      1,
+    );
+  });
+
+  test("positions order shared vocabulary choices beside vertical targets", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, ORDER_SHARED_VOCABULARY_LEFT_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    await expect(layout).toHaveAttribute("data-qti-choices-position", "left");
+    await expect(layout).toHaveAttribute("data-qti-order-orientation", "vertical");
+    const bank = layout.locator(".qti3-order-choices-bank");
+    await expect(bank).toHaveCSS("flex-direction", "column");
+    const bankBox = await bank.boundingBox();
+    const targetBox = await layout.locator(".qti3-order-target-list").boundingBox();
+    if (!bankBox || !targetBox) throw new Error("Missing order shared vocabulary layout boxes.");
+    expect(bankBox.x).toBeLessThan(targetBox.x);
+    await expect(layout.locator(".qti3-order-target-label").first()).toHaveText("A.");
   });
 
   test("embeds text entry interactions inside paragraph flow", async ({ page }) => {

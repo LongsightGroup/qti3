@@ -1,4 +1,5 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
+import { interactionClassNames } from "./shared-vocabulary.js";
 
 export type ChoiceOrientation = "horizontal" | "vertical";
 
@@ -7,10 +8,6 @@ export interface ChoiceLayout {
   columns: number;
   rows: number;
   stacking?: number;
-}
-
-export function interactionClassNames(interaction: QtiInteraction): string[] {
-  return (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
 }
 
 export function choiceLayout(interaction: QtiInteraction, choiceCount: number): ChoiceLayout {

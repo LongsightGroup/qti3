@@ -153,9 +153,13 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       ...base,
       primaryRole: "group",
       keyboardModel: [
-        "Tab moves through each item handle and its move buttons.",
-        "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
-        "Arrow icon buttons provide an explicit move-button fallback.",
+        "Default order layout: Tab moves through each item handle and its move buttons.",
+        "Default order layout: Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
+        "Shared-vocabulary split layout: Tab moves through choices-bank buttons, placed item handles, move buttons, and remove buttons.",
+        "Shared-vocabulary split layout: Enter or Space on a choices-bank button adds the choice to the next available order target.",
+        "Shared-vocabulary split layout: Remove buttons return placed choices to the choices bank.",
+        "Shared-vocabulary split layout: empty target slots expose target label and empty state text for assistive technology.",
+        "Arrow icon buttons provide an explicit move-button fallback in both layouts.",
         "Adjacent moves are announced directionally in a polite live region; larger jumps announce the new position.",
       ],
       requiredStates: [

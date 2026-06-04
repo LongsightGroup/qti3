@@ -1620,9 +1620,15 @@ function validateInteractionSharedVocabulary(
   interaction: QtiInteraction,
   diagnostics: QtiDiagnostic[],
 ): void {
-  if (interaction.type !== "choice") return;
+  if (interaction.type !== "choice" && interaction.type !== "order") return;
   const classNames = (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
   const classNameSet = new Set(classNames);
+  validateSharedVocabularyLabelClasses(interaction, classNames, diagnostics);
+
+  if (interaction.type === "order") {
+    validateOrderInteractionSharedVocabulary(interaction, classNames, diagnostics);
+    return;
+  }
 
   if (
     classNameSet.has("qti-orientation-horizontal") &&
@@ -1663,6 +1669,59 @@ function validateInteractionSharedVocabulary(
       code: "interaction.sharedVocabulary.stackingInvalid",
       severity: "warning",
       message: `qti-choice-interaction shared vocabulary class ${className} is not supported; expected qti-choices-stacking-1 through qti-choices-stacking-5.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+}
+
+function validateSharedVocabularyLabelClasses(
+  interaction: QtiInteraction,
+  classNames: string[],
+  diagnostics: QtiDiagnostic[],
+): void {
+  const labelClasses = classNames.filter((className) =>
+    ["qti-labels-decimal", "qti-labels-lower-alpha", "qti-labels-upper-alpha"].includes(className),
+  );
+  if (new Set(labelClasses).size <= 1) return;
+  diagnostics.push({
+    code: "interaction.sharedVocabulary.labelsConflict",
+    severity: "warning",
+    message: `${interaction.qtiName} should not include multiple qti-labels-* style classes: ${[...new Set(labelClasses)].join(", ")}. qti-labels-decimal takes precedence over qti-labels-lower-alpha, then qti-labels-upper-alpha at runtime.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
+function validateOrderInteractionSharedVocabulary(
+  interaction: QtiInteraction,
+  classNames: string[],
+  diagnostics: QtiDiagnostic[],
+): void {
+  const choicesPositionClasses = classNames.filter((className) =>
+    ["qti-choices-top", "qti-choices-bottom", "qti-choices-left", "qti-choices-right"].includes(
+      className,
+    ),
+  );
+  if (new Set(choicesPositionClasses).size > 1) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.orderChoicesPositionConflict",
+      severity: "warning",
+      message: `qti-order-interaction should not include multiple qti-choices-* position classes: ${[...new Set(choicesPositionClasses)].join(", ")}. The first position class in class attribute order takes precedence at runtime.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+
+  const width = interaction.attributes["data-choices-container-width"];
+  if (width === undefined) return;
+  const parsed = Number(width);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
+      severity: "warning",
+      message:
+        "qti-order-interaction data-choices-container-width must be a positive pixel value; the invalid value is ignored at runtime.",
       path: interaction.source?.path,
       source: interaction.source,
     });

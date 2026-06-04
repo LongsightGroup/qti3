@@ -16,6 +16,99 @@ export const CONTROL_PLAYER_STYLES = `
   padding-inline-start: 1.5rem;
 }
 
+.qti3-order-sv-group {
+  container-type: inline-size;
+}
+
+.qti3-order-sv-layout {
+  --qti3-order-choices-container-width: 14rem;
+  display: grid;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.qti3-order-sv-layout[data-qti-choices-position="top"],
+.qti3-order-sv-layout[data-qti-choices-position="bottom"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.qti3-order-sv-layout[data-qti-choices-position="left"] {
+  grid-template-columns: minmax(0, var(--qti3-order-choices-container-width)) minmax(0, 1fr);
+}
+
+.qti3-order-sv-layout[data-qti-choices-position="right"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--qti3-order-choices-container-width));
+}
+
+.qti3-order-choices-bank {
+  align-content: start;
+  inline-size: 100%;
+  max-inline-size: var(--qti3-order-choices-container-width);
+}
+
+.qti3-order-sv-layout[data-qti-choices-position="top"] .qti3-order-choices-bank,
+.qti3-order-sv-layout[data-qti-choices-position="bottom"] .qti3-order-choices-bank {
+  max-inline-size: none;
+}
+
+.qti3-order-target-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qti3-order-target-slot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-block-size: 3rem;
+  padding: 0.5rem;
+  border: 1px dashed CanvasText;
+  background: Canvas;
+  color: CanvasText;
+}
+
+.qti3-order-target-slot[data-empty="false"] {
+  border-style: solid;
+}
+
+.qti3-order-target-label {
+  min-inline-size: 1.75rem;
+  font-weight: 700;
+}
+
+.qti3-order-target-empty {
+  color: color-mix(in srgb, CanvasText 70%, Canvas);
+}
+
+.qti3-order-target-item {
+  margin: 0;
+}
+
+.qti3-order-sv-layout[data-qti-order-orientation="vertical"] .qti3-order-choices-bank,
+.qti3-order-sv-layout[data-qti-order-orientation="vertical"] .qti3-order-target-list {
+  align-content: start;
+}
+
+.qti3-order-sv-layout[data-qti-order-orientation="vertical"] .qti3-order-choices-bank {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+@container (inline-size < 34rem) {
+  .qti3-order-sv-layout[data-qti-choices-position="left"],
+  .qti3-order-sv-layout[data-qti-choices-position="right"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qti3-order-choices-bank {
+    max-inline-size: none;
+  }
+}
+
 .qti3-reorder-item {
   padding: 0.5rem;
   border: 1px solid CanvasText;

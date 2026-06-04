@@ -36,6 +36,7 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
   strings: {
     remove: "Remove",
     removePair: "Remove {label}",
+    removeOrderedChoice: "Remove {label} from order",
     clearDrawing: "Clear drawing",
     clearPoints: "Clear points",
     endAttempt: "End attempt",
@@ -104,6 +105,10 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
     orderedItemAtPosition: "{label}, position {position} of {total}",
     orderedItemMovedOneStep: "{label} moved {direction}.",
     orderedItemMovedToPosition: "{label} moved to position {position} of {total}.",
+    orderedItemAddedToPosition: "{label} added to position {position} of {total}.",
+    orderedItemRemoved: "{label} removed from order.",
+    orderTargetLabel: "Target {index}",
+    orderTargetEmpty: "{label}, empty",
     "graphicOrderRegionsSelected.one": "{count} region ordered.",
     "graphicOrderRegionsSelected.other": "{count} regions ordered.",
     graphicOrderNoRegionsSelected: "No regions ordered.",

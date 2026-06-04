@@ -66,7 +66,10 @@ describe("@longsightgroup/qti3-a11y", () => {
   it("matches rich interaction keyboard contracts to rendered controls", () => {
     const byType = new Map(a11yContracts.map((contract) => [contract.interactionType, contract]));
     expect(byType.get("order")?.keyboardModel).toContain(
-      "Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
+      "Default order layout: Arrow Up, Arrow Down, Arrow Left, or Arrow Right reorders the focused item handle.",
+    );
+    expect(byType.get("order")?.keyboardModel).toContain(
+      "Shared-vocabulary split layout: Enter or Space on a choices-bank button adds the choice to the next available order target.",
     );
     expect(byType.get("order")?.keyboardModel).toContain(
       "Adjacent moves are announced directionally in a polite live region; larger jumps announce the new position.",

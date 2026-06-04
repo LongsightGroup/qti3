@@ -748,6 +748,9 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
   <qti-response-declaration identifier="STACKING_RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
+  <qti-response-declaration identifier="ORDER_RESPONSE" cardinality="ordered" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response>
+  </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <p data-qti-suppress-tts="computer-read-aloud">Shared QTI vocabulary remains authored content metadata.</p>
@@ -765,6 +768,11 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
       <qti-simple-choice identifier="B">Stacked vertical choices require framework templates.</qti-simple-choice>
       <qti-simple-choice identifier="C">Stacked vertical choices change scoring.</qti-simple-choice>
     </qti-choice-interaction>
+    <qti-order-interaction response-identifier="ORDER_RESPONSE" class="qti-choices-top qti-labels-decimal qti-labels-suffix-parenthesis">
+      <qti-simple-choice identifier="A">Parse item XML.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Capture ordered response.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Score the attempt.</qti-simple-choice>
+    </qti-order-interaction>
   </qti-item-body>
   <qti-response-processing>
     <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
@@ -777,14 +785,22 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
     <qti-response-condition>
       <qti-response-if><qti-match><qti-variable identifier="STACKING_RESPONSE"/><qti-correct identifier="STACKING_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
     </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="ORDER_RESPONSE"/><qti-correct identifier="ORDER_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
   </qti-response-processing>
 </qti-assessment-item>`,
     expectedParseDiagnostics: [],
     expectedValidationDiagnostics: [],
     attempts: [
       basicCorrectAttempt(
-        { LABEL_RESPONSE: "A", HORIZONTAL_RESPONSE: "A", STACKING_RESPONSE: "A" },
-        { SCORE: 3 },
+        {
+          LABEL_RESPONSE: "A",
+          HORIZONTAL_RESPONSE: "A",
+          STACKING_RESPONSE: "A",
+          ORDER_RESPONSE: ["A", "B", "C"],
+        },
+        { SCORE: 4 },
         id,
       ),
     ],

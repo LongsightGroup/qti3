@@ -6,24 +6,8 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { choiceLayout, interactionClassNames } from "./choice-layout.js";
-
-function choicePresentationLabel(interaction: QtiInteraction, index: number): string {
-  const classNames = new Set(interactionClassNames(interaction));
-  if (classNames.has("qti-labels-none")) return "";
-
-  const labels = classNames.has("qti-labels-decimal")
-    ? Array.from({ length: 26 }, (_, item) => `${item + 1}`)
-    : classNames.has("qti-labels-lower-alpha")
-      ? "abcdefghijklmnopqrstuvwxyz".split("")
-      : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const suffix = classNames.has("qti-labels-suffix-none")
-    ? ""
-    : classNames.has("qti-labels-suffix-parenthesis")
-      ? ")"
-      : ".";
-  return `${labels[index] ?? `${index + 1}`}${suffix}`;
-}
+import { choiceLayout } from "./choice-layout.js";
+import { sharedVocabularyLabel } from "./shared-vocabulary.js";
 
 export function renderChoice(
   interaction: QtiInteraction,
@@ -83,7 +67,7 @@ export function renderChoice(
       }
       syncSelected();
     });
-    const visibleLabel = choicePresentationLabel(interaction, index);
+    const visibleLabel = sharedVocabularyLabel(interaction, index);
     const optionParts: HTMLElement[] = [input];
     if (visibleLabel) {
       const labelText = document.createElement("span");

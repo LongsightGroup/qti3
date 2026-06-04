@@ -200,6 +200,49 @@ export async function clickAuthoredCoordinate(
   );
 }
 
+async function reorderOrderItems(page: Page, response: string[]): Promise<void> {
+  const current = await page.locator("qti-assessment-item-player").evaluate(() => {
+    return [...document.querySelectorAll(".qti3-reorder-item")]
+      .map((item) => (item as HTMLElement).dataset.choiceIdentifier)
+      .filter((identifier): identifier is string => Boolean(identifier));
+  });
+  let moved = false;
+  for (const [targetIndex, value] of response.entries()) {
+    let currentIndex = current.indexOf(value);
+    while (currentIndex > targetIndex) {
+      await page
+        .locator(
+          `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="up"]`,
+        )
+        .click();
+      moved = true;
+      current.splice(currentIndex, 1);
+      current.splice(currentIndex - 1, 0, value);
+      currentIndex -= 1;
+    }
+    while (currentIndex >= 0 && currentIndex < targetIndex) {
+      await page
+        .locator(
+          `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="down"]`,
+        )
+        .click();
+      moved = true;
+      current.splice(currentIndex, 1);
+      current.splice(currentIndex + 1, 0, value);
+      currentIndex += 1;
+    }
+  }
+  if (!moved && current.length > 1) {
+    const first = current[0];
+    if (!first) return;
+    const firstItem = page.locator(
+      `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${first}"]`,
+    );
+    await firstItem.locator('[data-move-direction="down"]').click();
+    await firstItem.locator('[data-move-direction="up"]').click();
+  }
+}
+
 export async function expectImageLoaded(locator: Locator): Promise<void> {
   await expect
     .poll(async () => {
@@ -428,46 +471,17 @@ export async function provideResponse(
   }
 
   if (Array.isArray(response) && interactionType === "order") {
-    const current = await page.locator("qti-assessment-item-player").evaluate(() => {
-      return [...document.querySelectorAll(".qti3-reorder-item")].map(
-        (item) => (item as HTMLElement).dataset.choiceIdentifier,
-      );
-    });
-    let moved = false;
-    for (const [targetIndex, value] of response.map(String).entries()) {
-      let currentIndex = current.indexOf(value);
-      while (currentIndex > targetIndex) {
-        await page
-          .locator(
-            `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="up"]`,
-          )
-          .click();
-        moved = true;
-        current.splice(currentIndex, 1);
-        current.splice(currentIndex - 1, 0, value);
-        currentIndex -= 1;
-      }
-      while (currentIndex < targetIndex) {
-        await page
-          .locator(
-            `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="down"]`,
-          )
-          .click();
-        moved = true;
-        current.splice(currentIndex, 1);
-        current.splice(currentIndex + 1, 0, value);
-        currentIndex += 1;
+    const identifiers = response.map(String);
+    const bank = page.locator("qti-assessment-item-player .qti3-order-choices-bank");
+    if ((await bank.count()) > 0) {
+      for (const identifier of identifiers) {
+        const bankChoice = bank.locator(`[data-choice-identifier="${identifier}"]`).first();
+        if (await bankChoice.isVisible().catch(() => false)) {
+          await bankChoice.click();
+        }
       }
     }
-    if (!moved && current.length > 1) {
-      const first = current[0];
-      if (!first) return;
-      const firstItem = page.locator(
-        `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${first}"]`,
-      );
-      await firstItem.locator('[data-move-direction="down"]').click();
-      await firstItem.locator('[data-move-direction="up"]').click();
-    }
+    await reorderOrderItems(page, identifiers);
     return;
   }
 

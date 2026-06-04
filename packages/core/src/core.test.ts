@@ -868,7 +868,7 @@ describe("@longsightgroup/qti3-core", () => {
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="shared-vocab-conflict" title="shared-vocab-conflict" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
-          <qti-choice-interaction response-identifier="RESPONSE" class="qti-orientation-horizontal qti-orientation-vertical qti-choices-stacking-2 qti-choices-stacking-4 qti-choices-stacking-6">
+          <qti-choice-interaction response-identifier="RESPONSE" class="qti-labels-decimal qti-labels-lower-alpha qti-orientation-horizontal qti-orientation-vertical qti-choices-stacking-2 qti-choices-stacking-4 qti-choices-stacking-6">
             <qti-simple-choice identifier="A">A</qti-simple-choice>
             <qti-simple-choice identifier="B">B</qti-simple-choice>
           </qti-choice-interaction>
@@ -879,6 +879,11 @@ describe("@longsightgroup/qti3-core", () => {
     expect(result.ok).toBe(true);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.labelsConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-labels-decimal takes precedence"),
+        }),
         expect.objectContaining({
           code: "interaction.sharedVocabulary.orientationConflict",
           severity: "warning",
@@ -893,6 +898,41 @@ describe("@longsightgroup/qti3-core", () => {
           code: "interaction.sharedVocabulary.stackingInvalid",
           severity: "warning",
           message: expect.stringContaining("qti-choices-stacking-6"),
+        }),
+      ]),
+    );
+  });
+
+  it("diagnoses order shared-vocabulary layout conflicts", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-shared-vocab-conflict" title="order-shared-vocab-conflict" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+        <qti-item-body>
+          <qti-order-interaction response-identifier="RESPONSE" class="qti-labels-upper-alpha qti-labels-decimal qti-choices-left qti-choices-top" data-choices-container-width="wide">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+            <qti-simple-choice identifier="B">B</qti-simple-choice>
+          </qti-order-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.labelsConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-labels-decimal takes precedence"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orderChoicesPositionConflict",
+          severity: "warning",
+          message: expect.stringContaining("first position class"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
+          severity: "warning",
+          message: expect.stringContaining("positive pixel value"),
         }),
       ]),
     );

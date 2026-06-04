@@ -6,7 +6,21 @@ import {
   expectStringResponse,
   loadFixture,
   operableControlSelector,
+  pasteXml,
 } from "./player-helpers.js";
+
+const ORDER_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-order-shared-vocabulary" title="keyboard-order-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-top qti-labels-decimal qti-labels-suffix-parenthesis">
+      <qti-simple-choice identifier="A">First step</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second step</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third step</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
 
 test.describe("player keyboard and accessibility", () => {
   test("supports keyboard-only response entry for representative native controls", async ({
@@ -243,6 +257,47 @@ test.describe("player keyboard and accessibility", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
       /moved down\.$/,
     );
+  });
+
+  test("operates shared vocabulary order layout with keyboard controls", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, ORDER_SHARED_VOCABULARY_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    const summary = page.locator("qti-assessment-item-player .qti3-selection-summary");
+    await expect(summary).toHaveAttribute("aria-live", "polite");
+    const bank = layout.locator(".qti3-order-choices-bank");
+    const firstTarget = layout.locator(".qti3-order-target-slot").first();
+    await expect(firstTarget).toContainText("1)");
+    await expect(firstTarget).toContainText("empty");
+
+    await bank.getByRole("button", { name: "Second step" }).focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["B"]);
+    await expect(summary).toHaveText("Second step added to position 1 of 3.");
+    await expect(layout.locator('.qti3-reorder-handle[data-choice-identifier="B"]')).toBeVisible();
+    await expect(bank.getByRole("button", { name: "Second step" })).toHaveCount(0);
+
+    await bank.getByRole("button", { name: "First step" }).focus();
+    await page.keyboard.press("Space");
+    await expectResponse(page, ["B", "A"]);
+    await expect(summary).toHaveText("First step added to position 2 of 3.");
+
+    await layout.locator('.qti3-reorder-handle[data-choice-identifier="A"]').focus();
+    await page.keyboard.press("ArrowUp");
+    await expectResponse(page, ["A", "B"]);
+    await expect(summary).toHaveText(/First step moved up\.$/);
+    await expect(layout.locator('.qti3-reorder-handle[data-choice-identifier="A"]')).toBeFocused();
+
+    await expectMoveButtons(
+      layout.locator('.qti3-order-target-item[data-choice-identifier="A"] .qti3-move-button'),
+      ["up", "down"],
+    );
+    await layout.getByRole("button", { name: "Remove First step from order" }).click();
+    await expectResponse(page, ["B"]);
+    await expect(summary).toHaveText("First step removed from order.");
+    await expect(layout.locator(".qti3-order-target-slot").nth(1)).toContainText("empty");
+    await expect(bank.getByRole("button", { name: "First step" })).toBeVisible();
   });
 
   test("renders point movement controls as arrow icon buttons", async ({ page }) => {
