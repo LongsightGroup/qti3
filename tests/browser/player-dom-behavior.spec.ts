@@ -671,6 +671,15 @@ test.describe("player DOM behavior", () => {
     await expect(player.locator(".qti3-pair-chip span")).toContainText(
       "Capulet to Romeo and Juliet",
     );
+
+    await capuletRomeo.click();
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
+    await expect.poll(() => currentResponse(page)).toEqual([]);
+
+    await capuletRomeo.click();
+    await player.getByRole("button", { name: "Remove Capulet to Romeo and Juliet" }).click();
+    await expect.poll(() => currentResponse(page)).toEqual([]);
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
   });
 
   test("renders match shared vocabulary tabular matrix with hidden column headers", async ({

@@ -1816,6 +1816,13 @@ function validateOrderInteractionSharedVocabulary(
   validateChoicesContainerWidthSharedVocabulary(interaction, diagnostics);
 }
 
+const SHARED_VOCABULARY_CHOICES_POSITION_CLASSES = [
+  "qti-choices-top",
+  "qti-choices-bottom",
+  "qti-choices-left",
+  "qti-choices-right",
+] as const;
+
 function validateMatchInteractionSharedVocabulary(
   interaction: QtiInteraction,
   classNames: string[],
@@ -1844,6 +1851,36 @@ function validateMatchInteractionSharedVocabulary(
       source: interaction.source,
     });
   }
+  if (!hasTabular) return;
+
+  const choicesPositionClasses = classNames.filter((className) =>
+    SHARED_VOCABULARY_CHOICES_POSITION_CLASSES.includes(
+      className as (typeof SHARED_VOCABULARY_CHOICES_POSITION_CLASSES)[number],
+    ),
+  );
+  if (
+    choicesPositionClasses.length > 0 ||
+    interaction.attributes["data-choices-container-width"] !== undefined
+  ) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.matchTabularChoicesConflict",
+      severity: "warning",
+      message:
+        "qti-match-interaction qti-match-tabular uses a matrix layout; qti-choices-* position classes and data-choices-container-width are ignored at runtime.",
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+  if (!hasHeaderHidden && (firstColumnHeader === undefined || firstColumnHeader === "")) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.matchTabularFirstColumnHeader",
+      severity: "warning",
+      message:
+        "qti-match-interaction with qti-match-tabular should specify data-first-column-header for the top-left table header when the tabular header row is shown.",
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
 }
 
 function validateChoicesPositionSharedVocabulary(
@@ -1852,8 +1889,8 @@ function validateChoicesPositionSharedVocabulary(
   diagnostics: QtiDiagnostic[],
 ): void {
   const choicesPositionClasses = classNames.filter((className) =>
-    ["qti-choices-top", "qti-choices-bottom", "qti-choices-left", "qti-choices-right"].includes(
-      className,
+    SHARED_VOCABULARY_CHOICES_POSITION_CLASSES.includes(
+      className as (typeof SHARED_VOCABULARY_CHOICES_POSITION_CLASSES)[number],
     ),
   );
   if (new Set(choicesPositionClasses).size > 1) {

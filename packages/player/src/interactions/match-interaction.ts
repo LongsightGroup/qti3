@@ -1,16 +1,14 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { removeButton } from "../controls/remove-button.js";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { parseUnlimitedMaximum } from "../response-limits.js";
 import {
   appendChoiceVisual,
-  choiceText,
   sourceChoices,
   targetChoices,
   tokenButton,
   tokenRegion,
 } from "./shared.js";
+import { createMatchDirectedPairSelection } from "./match-directed-pairs.js";
 import {
   appendSharedVocabularyChoicesLayout,
   interactionClassNames,
@@ -23,14 +21,14 @@ export function renderMatchResponse(
   currentValue: QtiValue,
   messages: PlayerMessageResolver,
 ): HTMLElement {
-  const group = responseGroup();
-
   const sources = sourceChoices(interaction);
   const targets = targetChoices(interaction);
   if (sources.length === 0 || targets.length === 0) {
+    const group = responseGroup();
     group.append(missingChoicesMessage(interaction));
     return group;
   }
+
   const selectedPairs: string[] = valueToStrings(currentValue);
   if (interactionClassNames(interaction).includes("qti-match-tabular")) {
     return renderTabularMatchResponse(
@@ -43,6 +41,25 @@ export function renderMatchResponse(
     );
   }
 
+  return renderTokenBankMatchResponse(
+    interaction,
+    update,
+    selectedPairs,
+    messages,
+    sources,
+    targets,
+  );
+}
+
+function renderTokenBankMatchResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  selectedPairs: string[],
+  messages: PlayerMessageResolver,
+  sources: QtiChoice[],
+  targets: QtiChoice[],
+): HTMLElement {
+  const group = responseGroup();
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   let draggedSource: string | undefined;
@@ -54,18 +71,7 @@ export function renderMatchResponse(
   sourceRegion.classList.add("qti3-match-source-bank");
   const targetRegion = tokenRegion(messages.message("matchTargetsBank"));
   targetRegion.classList.add("qti3-match-target-bank");
-  const pairList = document.createElement("ul");
-  pairList.className = "qti3-pair-list";
-  pairList.setAttribute("aria-label", messages.message("matchSelectedPairsList"));
 
-  const commit = () => {
-    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
-    else update([...selectedPairs]);
-  };
-  const removePair = (pair: string) => {
-    const index = selectedPairs.indexOf(pair);
-    if (index >= 0) selectedPairs.splice(index, 1);
-  };
   const syncPressed = () => {
     for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
       const identifier = button.dataset.choiceIdentifier ?? "";
@@ -88,74 +94,35 @@ export function renderMatchResponse(
       );
     }
   };
-  const renderPairs = () => {
-    pairList.replaceChildren(
-      ...selectedPairs.map((pair) => {
-        const [source, target] = pair.split(" ");
-        const label = messages.message("associationPairLabel", {
-          source: choiceText(sources, source),
-          target: choiceText(targets, target),
-        });
-        const item = document.createElement("li");
-        item.className = "qti3-pair-chip";
-        const text = document.createElement("span");
-        text.textContent = label;
-        const remove = removeButton(label, messages);
-        remove.addEventListener("click", () => {
-          removePair(pair);
-          syncPressed();
-          renderPairs();
-          commit();
-        });
-        item.append(text, remove);
-        return item;
-      }),
-    );
-  };
+
   const clearSelection = () => {
     selectedSource = undefined;
     selectedTarget = undefined;
   };
-  const removePairsForSource = (source: QtiChoice) => {
-    for (const existing of selectedPairs.filter((pair) =>
-      pair.startsWith(`${source.identifier} `),
-    )) {
-      removePair(existing);
-    }
-  };
-  const removePairsForTarget = (target: QtiChoice) => {
-    for (const existing of selectedPairs.filter((pair) => pair.endsWith(` ${target.identifier}`))) {
-      removePair(existing);
-    }
-  };
-  const togglePair = (source: QtiChoice, target: QtiChoice) => {
-    const pair = `${source.identifier} ${target.identifier}`;
-    if (selectedPairs.includes(pair)) {
-      removePair(pair);
-    } else {
-      if (interaction.responseCardinality === "single") selectedPairs.splice(0);
-      if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
-        removePairsForSource(source);
-      }
-      if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
-        removePairsForTarget(target);
-      }
-      selectedPairs.push(pair);
-    }
-    clearSelection();
-    syncPressed();
-    renderPairs();
-    commit();
-  };
+
+  const pairs = createMatchDirectedPairSelection(
+    interaction,
+    update,
+    selectedPairs,
+    sources,
+    targets,
+    messages,
+    messages.message("matchSelectedPairsList"),
+    () => {
+      clearSelection();
+      syncPressed();
+    },
+  );
+
   const addSelectedPair = () => {
     if (!selectedSource || !selectedTarget) return;
-    togglePair(selectedSource, selectedTarget);
+    pairs.togglePair(selectedSource, selectedTarget);
   };
   const addPair = (sourceIdentifier: string | undefined, targetIdentifier: string): void => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
     const target = targets.find((choice) => choice.identifier === targetIdentifier);
     if (!source || !target) return;
-    togglePair(source, target);
+    pairs.togglePair(source, target);
   };
 
   for (const source of sources) {
@@ -179,11 +146,11 @@ export function renderMatchResponse(
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
       event.preventDefault();
-      removePairsForSource(source);
+      pairs.removePairsForSource(source);
       clearSelection();
       syncPressed();
-      renderPairs();
-      commit();
+      pairs.renderPairs();
+      pairs.commit();
     });
     sourceRegion.append(button);
   }
@@ -209,19 +176,19 @@ export function renderMatchResponse(
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
       event.preventDefault();
-      removePairsForTarget(target);
+      pairs.removePairsForTarget(target);
       clearSelection();
       syncPressed();
-      renderPairs();
-      commit();
+      pairs.renderPairs();
+      pairs.commit();
     });
     targetRegion.append(button);
   }
 
   appendSharedVocabularyChoicesLayout(selector, sourceRegion, targetRegion, sharedVocabularyLayout);
   syncPressed();
-  renderPairs();
-  group.append(selector, pairList);
+  pairs.renderPairs();
+  group.append(selector, pairs.pairList);
   return group;
 }
 
@@ -243,32 +210,6 @@ function renderTabularMatchResponse(
   table.className = "qti3-match-table";
   if (headerHidden) table.classList.add("qti-header-hidden");
 
-  const pairList = document.createElement("ul");
-  pairList.className = "qti3-pair-list";
-  pairList.setAttribute("aria-label", messages.message("matchSelectedPairsList"));
-
-  const commit = () => {
-    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
-    else update([...selectedPairs]);
-  };
-  const pairFor = (source: QtiChoice, target: QtiChoice) =>
-    `${source.identifier} ${target.identifier}`;
-  const removePair = (pair: string) => {
-    const index = selectedPairs.indexOf(pair);
-    if (index >= 0) selectedPairs.splice(index, 1);
-  };
-  const removePairsForSource = (source: QtiChoice) => {
-    for (const existing of selectedPairs.filter((pair) =>
-      pair.startsWith(`${source.identifier} `),
-    )) {
-      removePair(existing);
-    }
-  };
-  const removePairsForTarget = (target: QtiChoice) => {
-    for (const existing of selectedPairs.filter((pair) => pair.endsWith(` ${target.identifier}`))) {
-      removePair(existing);
-    }
-  };
   const syncPressed = () => {
     for (const button of table.querySelectorAll<HTMLButtonElement>(".qti3-match-table-cell")) {
       const sourceIdentifier = button.dataset.sourceIdentifier ?? "";
@@ -279,48 +220,17 @@ function renderTabularMatchResponse(
       );
     }
   };
-  const renderPairs = () => {
-    pairList.replaceChildren(
-      ...selectedPairs.map((pair) => {
-        const [source, target] = pair.split(" ");
-        const label = messages.message("associationPairLabel", {
-          source: choiceText(sources, source),
-          target: choiceText(targets, target),
-        });
-        const item = document.createElement("li");
-        item.className = "qti3-pair-chip";
-        const text = document.createElement("span");
-        text.textContent = label;
-        const remove = removeButton(label, messages);
-        remove.addEventListener("click", () => {
-          removePair(pair);
-          syncPressed();
-          renderPairs();
-          commit();
-        });
-        item.append(text, remove);
-        return item;
-      }),
-    );
-  };
-  const togglePair = (source: QtiChoice, target: QtiChoice) => {
-    const pair = pairFor(source, target);
-    if (selectedPairs.includes(pair)) {
-      removePair(pair);
-    } else {
-      if (interaction.responseCardinality === "single") selectedPairs.splice(0);
-      if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
-        removePairsForSource(source);
-      }
-      if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
-        removePairsForTarget(target);
-      }
-      selectedPairs.push(pair);
-    }
-    syncPressed();
-    renderPairs();
-    commit();
-  };
+
+  const pairs = createMatchDirectedPairSelection(
+    interaction,
+    update,
+    selectedPairs,
+    sources,
+    targets,
+    messages,
+    messages.message("matchSelectedPairsList"),
+    syncPressed,
+  );
 
   if (!headerHidden) {
     const thead = document.createElement("thead");
@@ -369,14 +279,14 @@ function renderTabularMatchResponse(
           target: target.text,
         }),
       );
-      button.addEventListener("click", () => togglePair(source, target));
+      button.addEventListener("click", () => pairs.togglePair(source, target));
       button.addEventListener("keydown", (event) => {
         if (event.key !== "Delete" && event.key !== "Backspace") return;
         event.preventDefault();
-        removePair(pairFor(source, target));
+        pairs.removePair(pairs.pairFor(source, target));
         syncPressed();
-        renderPairs();
-        commit();
+        pairs.renderPairs();
+        pairs.commit();
       });
       cell.append(button);
       row.append(cell);
@@ -386,8 +296,8 @@ function renderTabularMatchResponse(
   table.append(tbody);
 
   syncPressed();
-  renderPairs();
-  group.append(table, pairList);
+  pairs.renderPairs();
+  group.append(table, pairs.pairList);
   return group;
 }
 

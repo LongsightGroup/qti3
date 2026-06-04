@@ -1019,6 +1019,8 @@ describe("@longsightgroup/qti3-core", () => {
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-shared-vocab" title="match-tabular-shared-vocab" time-dependent="false">
         <qti-response-declaration identifier="FIRST" cardinality="multiple" base-type="directedPair"/>
         <qti-response-declaration identifier="SECOND" cardinality="multiple" base-type="directedPair"/>
+        <qti-response-declaration identifier="THIRD" cardinality="multiple" base-type="directedPair"/>
+        <qti-response-declaration identifier="FOURTH" cardinality="multiple" base-type="directedPair"/>
         <qti-item-body>
           <qti-match-interaction response-identifier="FIRST" class="qti-header-hidden" data-first-column-header="Rows">
             <qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice></qti-simple-match-set>
@@ -1027,6 +1029,14 @@ describe("@longsightgroup/qti3-core", () => {
           <qti-match-interaction response-identifier="SECOND" class="qti-match-tabular qti-header-hidden" data-first-column-header="Rows">
             <qti-simple-match-set><qti-simple-associable-choice identifier="C" match-max="1">C</qti-simple-associable-choice></qti-simple-match-set>
             <qti-simple-match-set><qti-simple-associable-choice identifier="D" match-max="1">D</qti-simple-associable-choice></qti-simple-match-set>
+          </qti-match-interaction>
+          <qti-match-interaction response-identifier="THIRD" class="qti-match-tabular qti-choices-right" data-choices-container-width="160" data-first-column-header="Rows">
+            <qti-simple-match-set><qti-simple-associable-choice identifier="E" match-max="1">E</qti-simple-associable-choice></qti-simple-match-set>
+            <qti-simple-match-set><qti-simple-associable-choice identifier="F" match-max="1">F</qti-simple-associable-choice></qti-simple-match-set>
+          </qti-match-interaction>
+          <qti-match-interaction response-identifier="FOURTH" class="qti-match-tabular">
+            <qti-simple-match-set><qti-simple-associable-choice identifier="G" match-max="1">G</qti-simple-associable-choice></qti-simple-match-set>
+            <qti-simple-match-set><qti-simple-associable-choice identifier="H" match-max="1">H</qti-simple-associable-choice></qti-simple-match-set>
           </qti-match-interaction>
         </qti-item-body>
       </qti-assessment-item>
@@ -1041,6 +1051,14 @@ describe("@longsightgroup/qti3-core", () => {
         }),
         expect.objectContaining({
           code: "interaction.sharedVocabulary.matchTabularHeaderHidden",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.matchTabularChoicesConflict",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.matchTabularFirstColumnHeader",
           severity: "warning",
         }),
       ]),

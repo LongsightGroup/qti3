@@ -9,6 +9,24 @@ import {
   pasteXml,
 } from "./player-helpers.js";
 
+const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-match-tabular-shared-vocabulary" title="keyboard-match-tabular-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-match-interaction response-identifier="RESPONSE" class="qti-match-tabular" data-first-column-header="Characters">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="C" match-max="1">Capulet</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="D" match-max="1">Demetrius</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="M" match-max="1">A Midsummer Night's Dream</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="R" match-max="1">Romeo and Juliet</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const ORDER_SHARED_VOCABULARY_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-order-shared-vocabulary" title="keyboard-order-shared-vocabulary" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
@@ -288,6 +306,50 @@ test.describe("player keyboard and accessibility", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
       /moved down\.$/,
     );
+  });
+
+  test("operates match tabular shared vocabulary with keyboard controls", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, MATCH_TABULAR_SHARED_VOCABULARY_ITEM);
+
+    const table = page.locator("qti-assessment-item-player .qti3-match-table");
+    const capuletRomeo = table.locator(
+      '.qti3-match-table-cell[data-source-identifier="C"][data-target-identifier="R"]',
+    );
+    const capuletMidsummer = table.locator(
+      '.qti3-match-table-cell[data-source-identifier="C"][data-target-identifier="M"]',
+    );
+
+    await capuletRomeo.focus();
+    await page.keyboard.press("Space");
+    await expectResponse(page, ["C R"]);
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "true");
+
+    await page.keyboard.press("Enter");
+    await expectResponse(page, []);
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
+
+    await capuletRomeo.focus();
+    await page.keyboard.press("Space");
+    await expectResponse(page, ["C R"]);
+    await capuletRomeo.focus();
+    await page.keyboard.press("Delete");
+    await expectResponse(page, []);
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
+
+    await capuletRomeo.focus();
+    await page.keyboard.press("Tab");
+    await expect(capuletMidsummer).toBeFocused();
+    await page.keyboard.press("Space");
+    await expectResponse(page, ["C M"]);
+
+    const removePair = page.getByRole("button", {
+      name: "Remove Capulet to A Midsummer Night's Dream",
+    });
+    await removePair.focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, []);
+    await expect(capuletMidsummer).toHaveAttribute("aria-pressed", "false");
   });
 
   test("operates shared vocabulary order layout with keyboard controls", async ({ page }) => {
