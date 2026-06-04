@@ -1,6 +1,10 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
-import { orderSharedVocabularyLayout, sharedVocabularyLabel } from "./shared-vocabulary.js";
+import {
+  orderSharedVocabularyLayout,
+  sharedVocabularyChoicesLayout,
+  sharedVocabularyLabel,
+} from "./shared-vocabulary.js";
 
 function interaction(attributes: Record<string, string> = {}): QtiInteraction {
   return {
@@ -39,6 +43,20 @@ describe("shared vocabulary", () => {
     ).toEqual({
       choicesPosition: "right",
       orientation: "horizontal",
+    });
+  });
+
+  it("parses shared choices-bank positioning for non-order interactions", () => {
+    expect(
+      sharedVocabularyChoicesLayout(
+        interaction({
+          class: "qti-choices-bottom",
+          "data-choices-container-width": "180",
+        }),
+      ),
+    ).toEqual({
+      choicesPosition: "bottom",
+      choicesContainerWidth: 180,
     });
   });
 

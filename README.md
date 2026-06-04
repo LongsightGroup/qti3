@@ -276,9 +276,10 @@ layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`, and
 `qti-choices-stacking-1` through `qti-choices-stacking-5`. Deprecated
 `orientation="horizontal"` authoring is tolerated as a compatibility fallback, but new
 fixtures and examples use the current shared-vocabulary classes.
-For order interactions, the browser player applies `qti-choices-top`,
-`qti-choices-bottom`, `qti-choices-left`, and `qti-choices-right` as an opt-in split
-choices-bank and order-target layout, with shared-vocabulary target labels and suffixes.
+For match, gap match, graphic gap match, and order interactions, the browser player
+applies `qti-choices-top`, `qti-choices-bottom`, `qti-choices-left`, and
+`qti-choices-right` as opt-in choices-bank positioning classes. Order interactions also
+apply shared-vocabulary target labels and suffixes.
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.

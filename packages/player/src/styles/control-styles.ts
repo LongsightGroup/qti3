@@ -16,6 +16,55 @@ export const CONTROL_PLAYER_STYLES = `
   padding-inline-start: 1.5rem;
 }
 
+.qti3-choices-layout {
+  --qti3-choices-container-width: 14rem;
+  display: grid;
+  gap: 0.75rem;
+  align-items: start;
+  inline-size: 100%;
+  max-inline-size: 100%;
+}
+
+.qti3-choices-layout[data-qti-choices-position="top"],
+.qti3-choices-layout[data-qti-choices-position="bottom"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.qti3-choices-layout[data-qti-choices-position="left"] {
+  grid-template-columns: minmax(0, var(--qti3-choices-container-width)) minmax(0, 1fr);
+}
+
+.qti3-choices-layout[data-qti-choices-position="right"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--qti3-choices-container-width));
+}
+
+.qti3-choices-layout .qti3-choices-bank {
+  inline-size: 100%;
+  max-inline-size: var(--qti3-choices-container-width);
+}
+
+.qti3-choices-layout[data-qti-choices-position="top"]
+  .qti3-choices-bank:not([data-qti-choices-container-width]),
+.qti3-choices-layout[data-qti-choices-position="bottom"]
+  .qti3-choices-bank:not([data-qti-choices-container-width]) {
+  max-inline-size: none;
+}
+
+.qti3-choices-main {
+  min-inline-size: 0;
+}
+
+@container (inline-size < 34rem) {
+  .qti3-choices-layout[data-qti-choices-position="left"],
+  .qti3-choices-layout[data-qti-choices-position="right"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qti3-choices-layout .qti3-choices-bank {
+    max-inline-size: none;
+  }
+}
+
 .qti3-order-sv-group {
   container-type: inline-size;
 }
@@ -46,8 +95,10 @@ export const CONTROL_PLAYER_STYLES = `
   max-inline-size: var(--qti3-order-choices-container-width);
 }
 
-.qti3-order-sv-layout[data-qti-choices-position="top"] .qti3-order-choices-bank,
-.qti3-order-sv-layout[data-qti-choices-position="bottom"] .qti3-order-choices-bank {
+.qti3-order-sv-layout[data-qti-choices-position="top"]
+  .qti3-order-choices-bank:not([data-qti-choices-container-width]),
+.qti3-order-sv-layout[data-qti-choices-position="bottom"]
+  .qti3-order-choices-bank:not([data-qti-choices-container-width]) {
   max-inline-size: none;
 }
 

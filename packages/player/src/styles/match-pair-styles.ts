@@ -7,6 +7,7 @@ export const MATCH_PAIR_PLAYER_STYLES = `
 }
 
 .qti3-match-selector {
+  container-type: inline-size;
   display: grid;
   gap: 1.5rem;
   inline-size: 100%;

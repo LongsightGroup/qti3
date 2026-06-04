@@ -128,6 +128,9 @@ function renderSharedVocabularyOrderResponse(
 
   const choicesBank = document.createElement("div");
   choicesBank.className = "qti3-token-region qti3-order-choices-bank";
+  if (layout.choicesContainerWidth !== undefined) {
+    choicesBank.dataset.qtiChoicesContainerWidth = String(layout.choicesContainerWidth);
+  }
   choicesBank.role = "group";
   choicesBank.setAttribute(
     "aria-label",

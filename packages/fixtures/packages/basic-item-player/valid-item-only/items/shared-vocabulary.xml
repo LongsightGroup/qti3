@@ -12,6 +12,12 @@
   <qti-response-declaration identifier="ORDER_RESPONSE" cardinality="ordered" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response>
   </qti-response-declaration>
+  <qti-response-declaration identifier="MATCH_RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>A B</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="GAP_RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value></qti-correct-response>
+  </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <p data-qti-suppress-tts="computer-read-aloud">Shared QTI vocabulary remains authored content metadata.</p>
@@ -34,6 +40,19 @@
       <qti-simple-choice identifier="B">Capture ordered response.</qti-simple-choice>
       <qti-simple-choice identifier="C">Score the attempt.</qti-simple-choice>
     </qti-order-interaction>
+    <qti-match-interaction response-identifier="MATCH_RESPONSE" class="qti-choices-right">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="1">Shared vocabulary class</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="B" match-max="1">Portable layout hint</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+    <qti-gap-match-interaction response-identifier="GAP_RESPONSE" class="qti-choices-left" data-choices-container-width="160">
+      <qti-gap-text identifier="A" match-max="1">choice bank</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">target passage</qti-gap-text>
+      <p>Shared vocabulary positions the <qti-gap identifier="G1"/> beside the <qti-gap identifier="G2"/>.</p>
+    </qti-gap-match-interaction>
   </qti-item-body>
   <qti-response-processing>
     <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
@@ -48,6 +67,12 @@
     </qti-response-condition>
     <qti-response-condition>
       <qti-response-if><qti-match><qti-variable identifier="ORDER_RESPONSE"/><qti-correct identifier="ORDER_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="MATCH_RESPONSE"/><qti-correct identifier="MATCH_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="GAP_RESPONSE"/><qti-correct identifier="GAP_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
     </qti-response-condition>
   </qti-response-processing>
 </qti-assessment-item>

@@ -121,6 +121,52 @@ const ORDER_SHARED_VOCABULARY_LEFT_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const MATCH_CHOICES_POSITION_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-choices-position" title="match-choices-position" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-match-interaction response-identifier="RESPONSE" class="qti-choices-right">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="1">Source A</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="B" match-max="1">Source B</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="T1" match-max="1">Target 1</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="T2" match-max="1">Target 2</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
+const GAP_CHOICES_POSITION_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-choices-position" title="gap-choices-position" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-choices-left" data-choices-container-width="120">
+      <qti-gap-text identifier="A" match-max="1">alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
+      <p>Place <qti-gap identifier="G1"/> before <qti-gap identifier="G2"/>.</p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
+const GRAPHIC_GAP_CHOICES_POSITION_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-choices-position" title="graphic-gap-choices-position" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" class="qti-choices-bottom" data-choices-container-width="160">
+      <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='140'%20viewBox='0%200%20240%20140'%3E%3Crect%20width='240'%20height='140'%20fill='white'/%3E%3Ccircle%20cx='80'%20cy='70'%20r='18'%20fill='black'/%3E%3Ccircle%20cx='160'%20cy='70'%20r='18'%20fill='black'/%3E%3C/svg%3E" type="image/svg+xml" width="240" height="140"/>
+      <qti-gap-text identifier="A" match-max="1">left label</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">right label</qti-gap-text>
+      <qti-associable-hotspot identifier="G1" shape="circle" coords="80,70,20" match-max="1"/>
+      <qti-associable-hotspot identifier="G2" shape="circle" coords="160,70,20" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const UNSUPPORTED_INTERACTION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-interaction" title="unsupported-interaction" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -404,6 +450,46 @@ test.describe("player DOM behavior", () => {
     await expect(layout.locator('.qti3-order-target-item[data-choice-identifier="A"]')).toHaveCount(
       1,
     );
+  });
+
+  test("positions match shared vocabulary choices beside targets", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, MATCH_CHOICES_POSITION_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-match-selector");
+    await expect(layout).toHaveAttribute("data-qti-choices-position", "right");
+    const targetBox = await layout.locator(".qti3-match-target-bank").boundingBox();
+    const bankBox = await layout.locator(".qti3-match-source-bank").boundingBox();
+    if (!targetBox || !bankBox) throw new Error("Missing match shared vocabulary boxes.");
+    expect(bankBox.x).toBeGreaterThan(targetBox.x);
+  });
+
+  test("positions gap match shared vocabulary choices beside the passage", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, GAP_CHOICES_POSITION_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-gap-match-layout");
+    await expect(layout).toHaveAttribute("data-qti-choices-position", "left");
+    const bankBox = await layout.locator(".qti3-gap-source-region").boundingBox();
+    const passageBox = await layout.locator(".qti3-gap-passage").boundingBox();
+    if (!bankBox || !passageBox) throw new Error("Missing gap match shared vocabulary boxes.");
+    expect(bankBox.x).toBeLessThan(passageBox.x);
+    expect(bankBox.width).toBeLessThanOrEqual(122);
+  });
+
+  test("positions graphic gap match shared vocabulary choices below the image", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, GRAPHIC_GAP_CHOICES_POSITION_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-graphic-gap-layout");
+    await expect(layout).toHaveAttribute("data-qti-choices-position", "bottom");
+    const surfaceBox = await layout.locator(".qti3-graphic-gap-match-surface").boundingBox();
+    const bankBox = await layout.locator(".qti3-graphic-gap-source-region").boundingBox();
+    if (!surfaceBox || !bankBox) throw new Error("Missing graphic gap shared vocabulary boxes.");
+    expect(bankBox.y).toBeGreaterThan(surfaceBox.y);
+    expect(bankBox.width).toBeLessThanOrEqual(162);
   });
 
   test("positions order shared vocabulary choices beside vertical targets", async ({ page }) => {

@@ -1620,10 +1620,30 @@ function validateInteractionSharedVocabulary(
   interaction: QtiInteraction,
   diagnostics: QtiDiagnostic[],
 ): void {
-  if (interaction.type !== "choice" && interaction.type !== "order") return;
+  if (
+    interaction.type !== "choice" &&
+    interaction.type !== "match" &&
+    interaction.type !== "gapMatch" &&
+    interaction.type !== "graphicGapMatch" &&
+    interaction.type !== "order"
+  ) {
+    return;
+  }
   const classNames = (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
   const classNameSet = new Set(classNames);
-  validateSharedVocabularyLabelClasses(interaction, classNames, diagnostics);
+  if (interaction.type === "choice" || interaction.type === "order") {
+    validateSharedVocabularyLabelClasses(interaction, classNames, diagnostics);
+  }
+
+  if (
+    interaction.type === "match" ||
+    interaction.type === "gapMatch" ||
+    interaction.type === "graphicGapMatch"
+  ) {
+    validateChoicesPositionSharedVocabulary(interaction, classNames, diagnostics);
+    validateChoicesContainerWidthSharedVocabulary(interaction, diagnostics);
+    return;
+  }
 
   if (interaction.type === "order") {
     validateOrderInteractionSharedVocabulary(interaction, classNames, diagnostics);
@@ -1698,6 +1718,15 @@ function validateOrderInteractionSharedVocabulary(
   classNames: string[],
   diagnostics: QtiDiagnostic[],
 ): void {
+  validateChoicesPositionSharedVocabulary(interaction, classNames, diagnostics);
+  validateChoicesContainerWidthSharedVocabulary(interaction, diagnostics);
+}
+
+function validateChoicesPositionSharedVocabulary(
+  interaction: QtiInteraction,
+  classNames: string[],
+  diagnostics: QtiDiagnostic[],
+): void {
   const choicesPositionClasses = classNames.filter((className) =>
     ["qti-choices-top", "qti-choices-bottom", "qti-choices-left", "qti-choices-right"].includes(
       className,
@@ -1707,12 +1736,17 @@ function validateOrderInteractionSharedVocabulary(
     diagnostics.push({
       code: "interaction.sharedVocabulary.orderChoicesPositionConflict",
       severity: "warning",
-      message: `qti-order-interaction should not include multiple qti-choices-* position classes: ${[...new Set(choicesPositionClasses)].join(", ")}. The first position class in class attribute order takes precedence at runtime.`,
+      message: `${interaction.qtiName} should not include multiple qti-choices-* position classes: ${[...new Set(choicesPositionClasses)].join(", ")}. The first position class in class attribute order takes precedence at runtime.`,
       path: interaction.source?.path,
       source: interaction.source,
     });
   }
+}
 
+function validateChoicesContainerWidthSharedVocabulary(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
   const width = interaction.attributes["data-choices-container-width"];
   if (width === undefined) return;
   const parsed = Number(width);
@@ -1720,8 +1754,7 @@ function validateOrderInteractionSharedVocabulary(
     diagnostics.push({
       code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
       severity: "warning",
-      message:
-        "qti-order-interaction data-choices-container-width must be a positive pixel value; the invalid value is ignored at runtime.",
+      message: `${interaction.qtiName} data-choices-container-width must be a positive pixel value; the invalid value is ignored at runtime.`,
       path: interaction.source?.path,
       source: interaction.source,
     });

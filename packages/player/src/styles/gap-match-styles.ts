@@ -1,4 +1,10 @@
 export const GAP_MATCH_PLAYER_STYLES = `
+.qti3-gap-match-layout,
+.qti3-graphic-gap-layout {
+  container-type: inline-size;
+  max-inline-size: 100%;
+}
+
 .qti3-gap-target {
   min-block-size: 2.75rem;
   padding: 0.5rem;
@@ -28,5 +34,10 @@ export const GAP_MATCH_PLAYER_STYLES = `
   min-inline-size: 8rem;
   min-block-size: 2.25rem;
   text-align: start;
+}
+
+.qti3-gap-source-region.qti3-choices-bank,
+.qti3-graphic-gap-source-region.qti3-choices-bank {
+  align-content: start;
 }
 `.trim();

@@ -20,6 +20,10 @@ import {
   tokenButton,
   tokenRegion,
 } from "./shared.js";
+import {
+  appendSharedVocabularyChoicesLayout,
+  sharedVocabularyChoicesLayout,
+} from "./shared-vocabulary.js";
 
 function positivePixelValue(value: string | undefined): number | undefined {
   const parsed = Number(value);
@@ -68,10 +72,12 @@ export function renderGapMatchResponse(
   const assignments = new Map<string, QtiChoice>();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
+  const sharedVocabularyLayout = sharedVocabularyChoicesLayout(interaction);
 
   const sourceRegion = tokenRegion(
     messages.message("interactionChoicesBank", { type: interaction.type }),
   );
+  sourceRegion.classList.add("qti3-gap-source-region");
   const gapRegion = document.createElement("div");
   gapRegion.className = "qti3-gap-region qti3-gap-passage";
   gapRegion.role = "group";
@@ -186,8 +192,11 @@ export function renderGapMatchResponse(
     sourceRegion.append(button);
   }
 
+  const layout = document.createElement("div");
+  layout.className = "qti3-gap-match-layout";
   renderGaps();
-  group.append(sourceRegion, gapRegion);
+  appendSharedVocabularyChoicesLayout(layout, sourceRegion, gapRegion, sharedVocabularyLayout);
+  group.append(layout);
   return group;
 }
 
@@ -248,8 +257,7 @@ function renderGraphicGapMatchResponse(
     messages.message("interactionChoicesBank", { type: interaction.type }),
   );
   sourceRegion.classList.add("qti3-graphic-gap-source-region");
-  const choicesWidth = positivePixelValue(interaction.attributes["data-choices-container-width"]);
-  if (choicesWidth !== undefined) sourceRegion.style.maxInlineSize = `${choicesWidth}px`;
+  const sharedVocabularyLayout = sharedVocabularyChoicesLayout(interaction);
 
   const summary = document.createElement("p");
   summary.className = "qti3-selection-summary";
@@ -364,7 +372,14 @@ function renderGraphicGapMatchResponse(
     sourceRegion.append(button);
   }
 
+  const layout = document.createElement("div");
+  layout.className = "qti3-graphic-gap-layout";
   renderTargets();
-  group.append(surface, sourceRegion, summary);
+  if (sharedVocabularyLayout === undefined) {
+    layout.append(surface, sourceRegion);
+  } else {
+    appendSharedVocabularyChoicesLayout(layout, sourceRegion, surface, sharedVocabularyLayout);
+  }
+  group.append(layout, summary);
   return group;
 }

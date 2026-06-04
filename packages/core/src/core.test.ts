@@ -938,6 +938,50 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("diagnoses match and gap shared-vocabulary choices positioning conflicts", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="position-shared-vocab-conflict" title="position-shared-vocab-conflict" time-dependent="false">
+        <qti-response-declaration identifier="MATCH_RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-response-declaration identifier="GAP_RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-match-interaction response-identifier="MATCH_RESPONSE" class="qti-choices-right qti-choices-bottom">
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice>
+            </qti-simple-match-set>
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice>
+            </qti-simple-match-set>
+          </qti-match-interaction>
+          <qti-gap-match-interaction response-identifier="GAP_RESPONSE" class="qti-choices-left qti-choices-top" data-choices-container-width="wide">
+            <qti-gap-text identifier="A" match-max="1">A</qti-gap-text>
+            <p><qti-gap identifier="G1"/></p>
+          </qti-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orderChoicesPositionConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-match-interaction"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orderChoicesPositionConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-gap-match-interaction"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
+          severity: "warning",
+          message: expect.stringContaining("qti-gap-match-interaction"),
+        }),
+      ]),
+    );
+  });
+
   it("attaches source locations and paths to parsed model nodes and validation diagnostics", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="located" title="located" time-dependent="false">

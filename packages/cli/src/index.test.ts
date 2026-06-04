@@ -8,7 +8,11 @@ import {
   parseQtiXml,
   processingSupport,
 } from "@longsightgroup/qti3-core";
-import { canonicalFixtures, interactionFixtures } from "@longsightgroup/qti3-fixtures";
+import {
+  basicItemPlayerFixtures,
+  canonicalFixtures,
+  interactionFixtures,
+} from "@longsightgroup/qti3-fixtures";
 import { describe, expect, it, vi } from "vitest";
 import { main } from "./index.js";
 
@@ -93,6 +97,18 @@ describe("@longsightgroup/qti3-cli", () => {
       const xml = await readFile(join(fixtureDirectory, `${fixture.id}.xml`), "utf8");
       expect(xml).toBe(`${fixture.xml}\n`);
     }
+  });
+
+  it("keeps checked-in shared-vocabulary Basic item-player XML aligned with fixture metadata", async () => {
+    const fixture = basicItemPlayerFixtures.find((item) => item.id === "basic-shared-vocabulary");
+    if (!fixture) throw new Error("Missing basic-shared-vocabulary fixture.");
+    const path = join(
+      process.cwd(),
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items",
+      "shared-vocabulary.xml",
+    );
+    const xml = await readFile(path, "utf8");
+    expect(xml).toBe(`${fixture.xml}\n`);
   });
 
   it("exposes evidence metadata in support entries", async () => {

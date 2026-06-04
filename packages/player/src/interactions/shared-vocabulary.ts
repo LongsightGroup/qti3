@@ -2,8 +2,14 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
 export type SharedVocabularyLabelStyle = "decimal" | "lower-alpha" | "upper-alpha";
 export type SharedVocabularyLabelSuffix = "none" | "period" | "parenthesis";
-export type OrderChoicesPosition = "top" | "bottom" | "left" | "right";
+export type SharedVocabularyChoicesPosition = "top" | "bottom" | "left" | "right";
+export type OrderChoicesPosition = SharedVocabularyChoicesPosition;
 export type OrderOrientation = "horizontal" | "vertical";
+
+export interface SharedVocabularyChoicesLayout {
+  choicesPosition: SharedVocabularyChoicesPosition;
+  choicesContainerWidth?: number;
+}
 
 export interface OrderSharedVocabularyLayout {
   choicesPosition: OrderChoicesPosition;
@@ -37,9 +43,27 @@ export function orderSharedVocabularyLayout(
 ): OrderSharedVocabularyLayout | undefined {
   // QTI shared vocabulary order choices positioning, target labels, and suffixes:
   // https://www.imsglobal.org/node/218713
-  let choicesPosition: OrderChoicesPosition | undefined;
+  const choicesLayout = sharedVocabularyChoicesLayout(interaction);
+  if (choicesLayout === undefined) return undefined;
+
+  const layout: OrderSharedVocabularyLayout = {
+    choicesPosition: choicesLayout.choicesPosition,
+    orientation: interaction.attributes.orientation === "vertical" ? "vertical" : "horizontal",
+  };
+  if (choicesLayout.choicesContainerWidth !== undefined) {
+    layout.choicesContainerWidth = choicesLayout.choicesContainerWidth;
+  }
+  return layout;
+}
+
+export function sharedVocabularyChoicesLayout(
+  interaction: QtiInteraction,
+): SharedVocabularyChoicesLayout | undefined {
+  // QTI shared vocabulary choices-bank positioning for match, gap match, graphic gap match, and order:
+  // https://www.imsglobal.org/node/218713
+  let choicesPosition: SharedVocabularyChoicesPosition | undefined;
   for (const className of interactionClassNames(interaction)) {
-    const position = orderChoicesPosition(className);
+    const position = sharedVocabularyChoicesPosition(className);
     if (position !== undefined) {
       choicesPosition = position;
       break;
@@ -47,20 +71,53 @@ export function orderSharedVocabularyLayout(
   }
   if (choicesPosition === undefined) return undefined;
 
-  const layout: OrderSharedVocabularyLayout = {
-    choicesPosition,
-    orientation: interaction.attributes.orientation === "vertical" ? "vertical" : "horizontal",
-  };
+  const layout: SharedVocabularyChoicesLayout = { choicesPosition };
   const width = positivePixelValue(interaction.attributes["data-choices-container-width"]);
   if (width !== undefined) layout.choicesContainerWidth = width;
   return layout;
+}
+
+export function applySharedVocabularyChoicesLayout(
+  container: HTMLElement,
+  choicesBank: HTMLElement,
+  mainRegion: HTMLElement,
+  layout: SharedVocabularyChoicesLayout | undefined,
+): void {
+  if (layout === undefined) return;
+  container.classList.add("qti3-choices-layout");
+  container.dataset.qtiChoicesPosition = layout.choicesPosition;
+  choicesBank.classList.add("qti3-choices-bank");
+  mainRegion.classList.add("qti3-choices-main");
+  if (layout.choicesContainerWidth !== undefined) {
+    choicesBank.dataset.qtiChoicesContainerWidth = String(layout.choicesContainerWidth);
+    choicesBank.style.setProperty(
+      "--qti3-choices-container-width",
+      `${layout.choicesContainerWidth}px`,
+    );
+  }
+}
+
+export function appendSharedVocabularyChoicesLayout(
+  container: HTMLElement,
+  choicesBank: HTMLElement,
+  mainRegion: HTMLElement,
+  layout: SharedVocabularyChoicesLayout | undefined,
+): void {
+  applySharedVocabularyChoicesLayout(container, choicesBank, mainRegion, layout);
+  if (layout?.choicesPosition === "bottom" || layout?.choicesPosition === "right") {
+    container.append(mainRegion, choicesBank);
+    return;
+  }
+  container.append(choicesBank, mainRegion);
 }
 
 function numericLabels(): string[] {
   return Array.from({ length: 26 }, (_, item) => `${item + 1}`);
 }
 
-function orderChoicesPosition(className: string): OrderChoicesPosition | undefined {
+function sharedVocabularyChoicesPosition(
+  className: string,
+): SharedVocabularyChoicesPosition | undefined {
   switch (className) {
     case "qti-choices-top":
       return "top";

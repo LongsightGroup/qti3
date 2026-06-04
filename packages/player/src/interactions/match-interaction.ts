@@ -4,6 +4,10 @@ import { missingChoicesMessage, responseGroup, valueToStrings } from "../interac
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { parseUnlimitedMaximum } from "../response-limits.js";
 import { choiceText, sourceChoices, targetChoices, tokenButton, tokenRegion } from "./shared.js";
+import {
+  appendSharedVocabularyChoicesLayout,
+  sharedVocabularyChoicesLayout,
+} from "./shared-vocabulary.js";
 
 export function renderMatchResponse(
   interaction: QtiInteraction,
@@ -26,6 +30,7 @@ export function renderMatchResponse(
 
   const selector = document.createElement("div");
   selector.className = "qti3-match-selector";
+  const sharedVocabularyLayout = sharedVocabularyChoicesLayout(interaction);
   const sourceRegion = tokenRegion(messages.message("matchSourcesBank"));
   sourceRegion.classList.add("qti3-match-source-bank");
   const targetRegion = tokenRegion(messages.message("matchTargetsBank"));
@@ -194,7 +199,7 @@ export function renderMatchResponse(
     targetRegion.append(button);
   }
 
-  selector.append(sourceRegion, targetRegion);
+  appendSharedVocabularyChoicesLayout(selector, sourceRegion, targetRegion, sharedVocabularyLayout);
   syncPressed();
   renderPairs();
   group.append(selector, pairList);
