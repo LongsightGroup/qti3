@@ -2383,6 +2383,71 @@ describe("@longsightgroup/qti3-core", () => {
     });
   });
 
+  it("preserves qti-gap-img child image assets for graphic gap match choices", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-img-choice" title="gap-img-choice" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+            <object data="timeline.png" type="image/png" width="160" height="120"/>
+            <qti-gap-img identifier="DraggerA" match-max="1">
+              <img src="a-cw.png" alt="Civil War" width="78" height="63"/>
+            </qti-gap-img>
+            <qti-associable-hotspot identifier="A" shape="rect" coords="10,20,88,83" match-max="1"/>
+          </qti-graphic-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const choice = result.document?.item.interactions[0]?.choices.find(
+      (item) => item.identifier === "DraggerA",
+    );
+    expect(choice).toMatchObject({
+      qtiName: "qti-gap-img",
+      text: "Civil War",
+      asset: {
+        data: "a-cw.png",
+        type: "image/*",
+        width: "78",
+        height: "63",
+        text: "Civil War",
+      },
+    });
+  });
+
+  it("validates qti-gap-img choices require usable child media", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-gap-img-choice" title="bad-gap-img-choice" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+            <object data="timeline.png" type="image/png" width="160" height="120"/>
+            <qti-gap-img identifier="MissingMedia" match-max="1"/>
+            <qti-gap-img identifier="MissingSrc" match-max="1"><img alt="Missing source"/></qti-gap-img>
+            <qti-associable-hotspot identifier="A" shape="rect" coords="10,20,88,83" match-max="1"/>
+          </qti-graphic-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "choice.gapImg.media.required",
+          severity: "error",
+          path: expect.stringContaining("qti-gap-img[1]"),
+        }),
+        expect.objectContaining({
+          code: "choice.gapImg.media.required",
+          severity: "error",
+          path: expect.stringContaining("qti-gap-img[2]"),
+        }),
+      ]),
+    );
+  });
+
   it("infers inline SVG dimensions for graphical interaction objects", () => {
     const image =
       "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0ODAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNDgwIDI2MCI+PC9zdmc+";

@@ -270,6 +270,140 @@ test.describe("player graphic interactions", () => {
     await expect(target).toContainText("Abraham Lincoln");
   });
 
+  test("renders qti-gap-img choices as graphic gap match drag images", async ({ page }) => {
+    await page.goto("/");
+    const timelineSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120" viewBox="0 0 180 120"><rect width="180" height="120" fill="#f4f2ea"/><rect x="54" y="34" width="72" height="52" fill="#2f4858"/></svg>`;
+    const choiceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff"/><path d="M12 42h54" stroke="#2f4858" stroke-width="6"/><text x="39" y="29" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">A</text></svg>`;
+    const timelineImage = `data:image/svg+xml;base64,${Buffer.from(timelineSvg).toString("base64")}`;
+    const choiceImage = `data:image/svg+xml;base64,${Buffer.from(choiceSvg).toString("base64")}`;
+
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-img-graphic-gap-match" title="gap-img-graphic-gap-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${timelineImage}" alt="Timeline target." type="image/png"/>
+      <qti-gap-img identifier="DraggerA" match-max="1">
+        <img alt="Civil War marker" height="63" src="${choiceImage}" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="A" shape="rect" coords="54,34,126,86" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const source = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Civil War marker" });
+    await expect(source.locator("img")).toHaveAttribute("src", /^data:image\/svg\+xml;base64,/);
+    await expectImageLoaded(source.locator("img"));
+
+    const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
+    const sourceBox = await source.boundingBox();
+    const targetBox = await target.boundingBox();
+    if (!sourceBox || !targetBox) throw new Error("Missing qti-gap-img drag boxes.");
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+    await page.mouse.up();
+
+    await expectResponse(page, ["DraggerA A"]);
+    await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+    await expect(target.locator(".qti3-graphic-gap-label img")).toHaveAttribute(
+      "src",
+      /^data:image\/svg\+xml;base64,/,
+    );
+  });
+
+  test("supports keyboard assignment and clearing for qti-gap-img choices", async ({ page }) => {
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120" viewBox="0 0 180 120"><rect width="180" height="120" fill="#f4f2ea"/><rect x="54" y="34" width="72" height="52" fill="#2f4858"/></svg>`;
+    const choiceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff"/><text x="39" y="37" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">A</text></svg>`;
+    const targetImage = `data:image/svg+xml;base64,${Buffer.from(targetSvg).toString("base64")}`;
+    const choiceImage = `data:image/svg+xml;base64,${Buffer.from(choiceSvg).toString("base64")}`;
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-gap-img-graphic-gap-match" title="keyboard-gap-img-graphic-gap-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${targetImage}" alt="Timeline target." type="image/png"/>
+      <qti-gap-img identifier="DraggerA" match-max="1">
+        <img alt="Civil War marker" height="63" src="${choiceImage}" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="A" shape="rect" coords="54,34,126,86" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const source = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Civil War marker" });
+    const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
+
+    await source.focus();
+    await page.keyboard.press("Enter");
+    await expect(source).toHaveAttribute("aria-pressed", "true");
+    await target.focus();
+    await page.keyboard.press("Enter");
+    await expectResponse(page, ["DraggerA A"]);
+    await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+
+    await target.focus();
+    await page.keyboard.press("Delete");
+    await expectResponse(page, []);
+    await expect(target).toHaveAccessibleName("Target 1, empty");
+  });
+
+  test("keeps qti-gap-img choices visible in forced colors and narrow reflow", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.emulateMedia({ forcedColors: "active" });
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120" viewBox="0 0 180 120"><rect width="180" height="120" fill="#f4f2ea"/><rect x="54" y="34" width="72" height="52" fill="#2f4858"/></svg>`;
+    const choiceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff"/><text x="39" y="37" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">A</text></svg>`;
+    const targetImage = `data:image/svg+xml;base64,${Buffer.from(targetSvg).toString("base64")}`;
+    const choiceImage = `data:image/svg+xml;base64,${Buffer.from(choiceSvg).toString("base64")}`;
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="forced-colors-gap-img-graphic-gap-match" title="forced-colors-gap-img-graphic-gap-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${targetImage}" alt="Timeline target." type="image/png"/>
+      <qti-gap-img identifier="DraggerA" match-max="1">
+        <img alt="Civil War marker" height="63" src="${choiceImage}" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="A" shape="rect" coords="54,34,126,86" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const sourceRegion = page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region");
+    const source = sourceRegion.getByRole("button", { name: "Civil War marker" });
+    const image = source.locator(".qti3-gap-choice-image");
+    await expectImageLoaded(image);
+    await expect(image).toBeVisible();
+    await expect(source).toHaveCSS("border-top-style", "solid");
+    await expect(page.evaluate(() => matchMedia("(forced-colors: active)").matches)).resolves.toBe(
+      true,
+    );
+
+    const sourceBox = await source.boundingBox();
+    const imageBox = await image.boundingBox();
+    const regionBox = await sourceRegion.boundingBox();
+    if (!sourceBox || !imageBox || !regionBox) {
+      throw new Error("Missing forced-colors qti-gap-img layout boxes.");
+    }
+    expect(imageBox.width).toBeLessThanOrEqual(sourceBox.width);
+    expect(sourceBox.x + sourceBox.width).toBeLessThanOrEqual(regionBox.x + regionBox.width + 1);
+  });
+
   test("reserves layout space for bottom-edge graphic gap labels", async ({ page }) => {
     await page.goto("/");
     const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120"><rect width="240" height="120" fill="#f4f2ea"/><circle cx="120" cy="108" r="10" fill="#2f4858"/></svg>`;
@@ -307,6 +441,44 @@ test.describe("player graphic interactions", () => {
     const labelBox = await surface.locator(".qti3-graphic-gap-label").boundingBox();
     const regionBox = await sourceRegion.boundingBox();
     if (!labelBox || !regionBox) throw new Error("Missing bottom label layout boxes.");
+    expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(regionBox.y);
+  });
+
+  test("reserves layout space for bottom-edge graphic gap image labels", async ({ page }) => {
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120"><rect width="240" height="120" fill="#f4f2ea"/><circle cx="120" cy="108" r="10" fill="#2f4858"/></svg>`;
+    const choiceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff"/><path d="M12 42h54" stroke="#2f4858" stroke-width="6"/><text x="39" y="29" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">A</text></svg>`;
+    const targetImage = `data:image/svg+xml;base64,${Buffer.from(targetSvg).toString("base64")}`;
+    const choiceImage = `data:image/svg+xml;base64,${Buffer.from(choiceSvg).toString("base64")}`;
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bottom-image-label-graphic-gap-match" title="bottom-image-label-graphic-gap-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${targetImage}" alt="Bottom target graphic." type="image/png"/>
+      <qti-gap-img identifier="A" match-max="1">
+        <img alt="A" height="63" src="${choiceImage}" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="T1" shape="circle" coords="120,108,10" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-gap-match-surface");
+    const sourceRegion = page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region");
+    const source = sourceRegion.getByRole("button", { name: "A" });
+    const target = surface.locator('[data-gap-identifier="T1"]');
+    await expectImageLoaded(source.locator("img"));
+
+    await source.click();
+    await target.click();
+
+    const labelBox = await surface.locator(".qti3-graphic-gap-label").boundingBox();
+    const regionBox = await sourceRegion.boundingBox();
+    if (!labelBox || !regionBox) throw new Error("Missing bottom image label layout boxes.");
     expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(regionBox.y);
   });
 

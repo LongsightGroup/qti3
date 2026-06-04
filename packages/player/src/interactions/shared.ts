@@ -2,6 +2,11 @@ import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionChoices } from "../interaction-support.js";
 
+function positivePixelValue(value: string | undefined): number | undefined {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
   const region = document.createElement("div");
   region.className = "qti3-token-region";
@@ -22,8 +27,31 @@ export function tokenButton(choice: QtiChoice): HTMLButtonElement {
   button.className = "qti3-token";
   button.dataset.choiceIdentifier = choice.identifier;
   button.setAttribute("aria-pressed", "false");
-  button.textContent = choice.text;
+  setChoiceAccessibleName(button, choice);
+  appendChoiceVisual(button, choice);
   return button;
+}
+
+export function setChoiceAccessibleName(element: HTMLElement, choice: QtiChoice): void {
+  if (choice.asset?.data) element.setAttribute("aria-label", choice.text);
+}
+
+export function appendChoiceVisual(parent: HTMLElement, choice: QtiChoice): void {
+  if (choice.asset?.data) {
+    const image = document.createElement("img");
+    image.className = "qti3-gap-choice-image";
+    image.src = choice.asset.data;
+    image.alt = "";
+    image.draggable = false;
+    const width = positivePixelValue(choice.asset.width);
+    const height = positivePixelValue(choice.asset.height);
+    if (width !== undefined) image.width = width;
+    if (height !== undefined) image.height = height;
+    parent.append(image);
+    return;
+  }
+
+  parent.textContent = choice.text;
 }
 
 export function choiceText(choices: QtiChoice[], identifier: string | undefined): string {

@@ -86,12 +86,25 @@ describe("@longsightgroup/qti3-a11y", () => {
     expect(byType.get("gapMatch")?.keyboardModel).toContain(
       "Enter or Space on a target gap assigns the selected source.",
     );
+    expect(byType.get("graphicGapMatch")?.keyboardModel).toContain(
+      "Pointer drag from a source token to a target gap is a progressive enhancement.",
+    );
     expect(byType.get("drawing")?.keyboardModel).toContain("Pointer input draws freehand strokes.");
     expect(byType.get("drawing")?.keyboardModel).toContain(
       "The live drawing surface uses a light canvas and dark pen so strokes stay visible when the page is in dark mode.",
     );
     expect(byType.get("drawing")?.focusStrategy).toContain(
       "the live canvas renders as a light surface independent of page color scheme",
+    );
+  });
+
+  it("documents image-backed graphic gap match accessibility proof", () => {
+    const proof = accessibilityProofMatrix.find(
+      (entry) => entry.interactionType === "graphicGapMatch",
+    )?.proof.automated;
+
+    expect(proof).toContain(
+      "image-backed gap choice keyboard, pointer, forced-colors, and narrow reflow browser coverage",
     );
   });
 

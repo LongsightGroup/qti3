@@ -11,6 +11,7 @@ import {
 import {
   assignGap,
   assignMatch,
+  expectImageLoaded,
   expectResponse,
   loadFixture,
   pasteXml,
@@ -399,6 +400,24 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-at-scripts ol li").first()).toContainText(
       "Navigate from the item body",
     );
+  });
+
+  test("loads the manual qti-gap-img graphic gap match example", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#fixture").selectOption("graphicGapMatch-gap-img-example");
+    await page.locator("#load-fixture").click();
+
+    const source = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Civil War marker" });
+    const target = page.locator('qti-assessment-item-player [data-gap-identifier="TargetA"]');
+    await expectImageLoaded(source.locator("img"));
+
+    await source.click();
+    await target.click();
+
+    await expectResponse(page, ["DraggerA TargetA"]);
+    await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
   });
 
   test("does not render qti-assessment-item title metadata as candidate content", async ({

@@ -38,12 +38,22 @@ export const CONTROL_PLAYER_STYLES = `
 }
 
 .qti3-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-inline-size: 2.5rem;
   padding: 0.35rem 0.65rem;
   border: 1px solid CanvasText;
   background: Canvas;
   color: CanvasText;
   cursor: grab;
+}
+
+.qti3-gap-choice-image {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  pointer-events: none;
 }
 
 .qti3-icon-button {

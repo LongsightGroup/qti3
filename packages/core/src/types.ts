@@ -139,6 +139,7 @@ export interface QtiTemplateDeclaration extends QtiVariableDeclaration {
 export interface QtiChoice {
   identifier: string;
   text: string;
+  asset?: QtiObjectAsset | undefined;
   role: QtiChoiceRole;
   qtiName: string;
   attributes: Record<string, string>;

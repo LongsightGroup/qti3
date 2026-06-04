@@ -980,15 +980,31 @@ function parseChoices(node: XmlNode): QtiChoice[] {
 
   return descendants(node, (child) => choiceNames.has(child.localName)).map((choice, index) => {
     const identifier = choice.attributes.identifier ?? "";
+    const asset = parseChoiceAsset(choice);
     return {
       identifier,
-      text: textContent(choice) || identifier || `Choice ${index + 1}`,
+      text:
+        textContent(choice) ||
+        choice.attributes["object-label"] ||
+        asset?.text ||
+        identifier ||
+        `Choice ${index + 1}`,
+      asset,
       role: choiceRole(choice),
       qtiName: choice.localName,
       attributes: choice.attributes,
       source: choice.source,
     };
   });
+}
+
+function parseChoiceAsset(choice: XmlNode): QtiObjectAsset | undefined {
+  if (choice.localName !== "qti-gap-img") return undefined;
+  const assetNode = childElements(choice).find(
+    (child) =>
+      child.localName === "img" || child.localName === "object" || child.localName === "picture",
+  );
+  return parseObjectAsset(assetNode);
 }
 
 function choiceRole(node: XmlNode): QtiChoiceRole {

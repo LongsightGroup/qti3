@@ -13,7 +13,13 @@ import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { parseUnlimitedMaximum } from "../response-limits.js";
 import { appendGraphicContext } from "./graphic-context.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
-import { sourceChoices, targetChoices, tokenButton, tokenRegion } from "./shared.js";
+import {
+  appendChoiceVisual,
+  sourceChoices,
+  targetChoices,
+  tokenButton,
+  tokenRegion,
+} from "./shared.js";
 
 function positivePixelValue(value: string | undefined): number | undefined {
   const parsed = Number(value);
@@ -26,7 +32,15 @@ function graphicGapLabelBlockSize(sources: QtiChoice[]): number {
     ...sources.map((source) => (source.text || source.identifier).trim().length),
   );
   const estimatedLines = Math.max(1, Math.ceil(maxLength / 22));
-  return Number((estimatedLines * 0.95 + 0.9).toFixed(2));
+  const textBlockSize = estimatedLines * 0.95 + 0.9;
+  const imageBlockSize = Math.max(
+    0,
+    ...sources.map((source) => {
+      const height = positivePixelValue(source.asset?.height);
+      return height === undefined ? 0 : height / 16 + 0.9;
+    }),
+  );
+  return Number(Math.max(textBlockSize, imageBlockSize).toFixed(2));
 }
 
 export function renderGapMatchResponse(
@@ -315,7 +329,7 @@ function renderGraphicGapMatchResponse(
     if (assigned) {
       const assignedLabel = document.createElement("span");
       assignedLabel.className = "qti3-graphic-gap-label";
-      assignedLabel.textContent = assigned.text;
+      appendChoiceVisual(assignedLabel, assigned);
       button.append(assignedLabel);
     }
     return button;

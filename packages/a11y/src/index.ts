@@ -413,6 +413,11 @@ function automatedProofFor(contract: InteractionA11yContract): string[] {
   if (contract.requiresValidationMessageAssociation) {
     proof.push("validation message association contract");
   }
+  if (contract.interactionType === "graphicGapMatch") {
+    proof.push(
+      "image-backed gap choice keyboard, pointer, forced-colors, and narrow reflow browser coverage",
+    );
+  }
   proof.push("forced-colors, reduced-motion, and narrow viewport browser checks");
   return proof;
 }

@@ -2108,7 +2108,19 @@ function validateChoiceLimitAttributes(choice: QtiChoice, diagnostics: QtiDiagno
   validateChoiceNonNegativeIntegerAttribute(choice, "match-max", diagnostics);
   validateChoiceNonNegativeIntegerAttribute(choice, "match-min", diagnostics);
   validateChoiceMinMaxPair(choice, "match-min", "match-max", diagnostics);
+  validateGapImageAsset(choice, diagnostics);
   validateHotspotGeometry(choice, diagnostics);
+}
+
+function validateGapImageAsset(choice: QtiChoice, diagnostics: QtiDiagnostic[]): void {
+  if (choice.qtiName !== "qti-gap-img" || choice.asset?.data) return;
+  diagnostics.push({
+    code: "choice.gapImg.media.required",
+    severity: "error",
+    message: `qti-gap-img ${choice.identifier} requires an img, object, or picture child with a usable src or data attribute.`,
+    path: choice.source?.path,
+    source: choice.source,
+  });
 }
 
 function requiresMatchMax(choice: QtiChoice): boolean {
