@@ -61,6 +61,10 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(fixture?.xml).toContain("qti-writing-mode-vertical-rl");
     expect(fixture?.xml).toContain("qti-orientation-horizontal");
     expect(fixture?.xml).toContain("qti-choices-stacking-3 qti-orientation-vertical");
+    expect(fixture?.xml).toContain("qti-input-control-hidden qti-labels-cjk-ideographic");
+    expect(fixture?.xml).toContain("qti-writing-orientation-vertical-rl");
+    expect(fixture?.xml).toContain("qti-hottext-interaction");
+    expect(fixture?.xml).toContain("qti-input-control-hidden qti-unselected-hidden");
     expect(fixture?.xml).toContain("qti-order-interaction");
     expect(fixture?.xml).toContain("qti-choices-top qti-labels-decimal");
     expect(fixture?.xml).toContain("qti-match-interaction");

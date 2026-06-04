@@ -32,6 +32,7 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 }
 
 .qti3-choice-option {
+  position: relative;
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);
   gap: 0.65rem;
@@ -47,6 +48,28 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   cursor: pointer;
 }
 
+.qti3-choice.qti-input-control-hidden .qti3-choice-option {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.qti3-choice.qti-input-control-hidden .qti3-choice-option input {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+.qti3-choice.qti-input-control-hidden .qti3-choice-option:has(input:focus) {
+  outline: 3px solid Highlight;
+  outline-offset: 2px;
+}
+
 .qti3-choice-option input {
   margin: 0;
   inline-size: 1rem;
@@ -56,6 +79,21 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 .qti3-choice-label {
   min-inline-size: 1.75rem;
   font-weight: 700;
+}
+
+.qti3-choice.qti-writing-orientation-vertical-rl .qti3-choice-list,
+.qti3-choice.qti-writing-orientation-vertical-lr .qti3-choice-list {
+  writing-mode: vertical-rl;
+  align-items: start;
+}
+
+.qti3-choice.qti-writing-orientation-vertical-lr .qti3-choice-list {
+  writing-mode: vertical-lr;
+}
+
+.qti3-choice.qti-writing-orientation-vertical-rl .qti3-choice-label,
+.qti3-choice.qti-writing-orientation-vertical-lr .qti3-choice-label {
+  text-orientation: upright;
 }
 
 .qti3-choice-text {
@@ -97,5 +135,33 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   background: Highlight;
   color: HighlightText;
   text-decoration-color: HighlightText;
+}
+
+.qti3-hottext.qti-input-control-hidden .qti3-hottext-token {
+  border-color: currentColor;
+  background: transparent;
+}
+
+.qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+  text-decoration-color: transparent;
+}
+
+@media (forced-colors: active) {
+  .qti3-hottext.qti-input-control-hidden .qti3-hottext-token,
+  .qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
+    border-color: CanvasText;
+    background: Canvas;
+    color: LinkText;
+    text-decoration-color: LinkText;
+  }
+
+  .qti3-hottext-token[data-selected="true"] {
+    background: Highlight;
+    color: HighlightText;
+    text-decoration-color: HighlightText;
+  }
 }
 `.trim();

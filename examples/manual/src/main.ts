@@ -127,16 +127,20 @@ const graphicGapImageChoiceExample = {
   xml: `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-img-example" title="Graphic gap match image draggers" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
-    <qti-correct-response><qti-value>DraggerA TargetA</qti-value></qti-correct-response>
+    <qti-correct-response><qti-value>DraggerA TargetA</qti-value><qti-value>DraggerB TargetB</qti-value></qti-correct-response>
   </qti-response-declaration>
   <qti-item-body>
     <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
-      <qti-prompt>Place the image-backed dragger onto the highlighted target.</qti-prompt>
-      <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='140'%20viewBox='0%200%20240%20140'%3E%3Crect%20width='240'%20height='140'%20fill='%23f4f2ea'/%3E%3Crect%20x='74'%20y='48'%20width='92'%20height='64'%20rx='6'%20fill='%232f4858'/%3E%3Ctext%20x='120'%20y='86'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%3C/text%3E%3C/svg%3E" alt="Diagram with one highlighted target." type="image/svg+xml"/>
+      <qti-prompt>Place the image-backed draggers onto the matching highlighted targets.</qti-prompt>
+      <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='160'%20viewBox='0%200%20300%20160'%3E%3Crect%20width='300'%20height='160'%20fill='%23f4f2ea'/%3E%3Crect%20x='36'%20y='44'%20width='92'%20height='64'%20rx='6'%20fill='%232f4858'/%3E%3Crect%20x='172'%20y='44'%20width='92'%20height='64'%20rx='6'%20fill='%238b5d33'/%3E%3Ctext%20x='82'%20y='82'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%20A%3C/text%3E%3Ctext%20x='218'%20y='82'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%20B%3C/text%3E%3C/svg%3E" alt="Diagram with two highlighted targets." type="image/svg+xml"/>
       <qti-gap-img identifier="DraggerA" match-max="1">
         <img alt="Civil War marker" height="63" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='78'%20height='63'%20viewBox='0%200%2078%2063'%3E%3Crect%20width='78'%20height='63'%20rx='4'%20fill='white'%20stroke='%232f4858'%20stroke-width='3'/%3E%3Ctext%20x='39'%20y='38'%20text-anchor='middle'%20font-size='18'%20font-family='sans-serif'%20fill='%232f4858'%3EA%3C/text%3E%3C/svg%3E" width="78"/>
       </qti-gap-img>
-      <qti-associable-hotspot identifier="TargetA" shape="rect" coords="74,48,166,112" match-max="1"/>
+      <qti-gap-img identifier="DraggerB" match-max="1">
+        <img alt="Reconstruction marker" height="63" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='78'%20height='63'%20viewBox='0%200%2078%2063'%3E%3Crect%20width='78'%20height='63'%20rx='4'%20fill='white'%20stroke='%238b5d33'%20stroke-width='3'/%3E%3Ctext%20x='39'%20y='38'%20text-anchor='middle'%20font-size='18'%20font-family='sans-serif'%20fill='%238b5d33'%3EB%3C/text%3E%3C/svg%3E" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="TargetA" shape="rect" coords="36,44,128,108" match-max="1"/>
+      <qti-associable-hotspot identifier="TargetB" shape="rect" coords="172,44,264,108" match-max="1"/>
     </qti-graphic-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>`,

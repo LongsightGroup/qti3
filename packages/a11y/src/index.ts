@@ -143,6 +143,7 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       keyboardModel: [
         "Tab moves into each radio or checkbox.",
         "Space toggles the focused option.",
+        "Shared-vocabulary hidden input-control presentation keeps controls keyboard focusable and projects focus indication onto the visible option.",
       ],
       requiredStates: ["checked", "aria-invalid", "aria-describedby"],
     };

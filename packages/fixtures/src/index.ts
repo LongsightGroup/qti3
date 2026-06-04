@@ -748,6 +748,12 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
   <qti-response-declaration identifier="STACKING_RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
+  <qti-response-declaration identifier="HIDDEN_CONTROL_RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="HOTTEXT_RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
   <qti-response-declaration identifier="ORDER_RESPONSE" cardinality="ordered" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -786,6 +792,13 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
       <qti-simple-choice identifier="B">Stacked vertical choices require framework templates.</qti-simple-choice>
       <qti-simple-choice identifier="C">Stacked vertical choices change scoring.</qti-simple-choice>
     </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="HIDDEN_CONTROL_RESPONSE" max-choices="1" class="qti-input-control-hidden qti-labels-cjk-ideographic qti-labels-suffix-period qti-writing-orientation-vertical-rl">
+      <qti-simple-choice identifier="A">Hidden input controls remain programmatically available.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Hidden input controls remove keyboard access.</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-hottext-interaction response-identifier="HOTTEXT_RESPONSE" max-choices="1" class="qti-input-control-hidden qti-unselected-hidden">
+      <p>Hot text can <qti-hottext identifier="A">hide unselected indicators</qti-hottext> without hiding choices from assistive technology.</p>
+    </qti-hottext-interaction>
     <qti-order-interaction response-identifier="ORDER_RESPONSE" class="qti-choices-top qti-labels-decimal qti-labels-suffix-parenthesis">
       <qti-simple-choice identifier="A">Parse item XML.</qti-simple-choice>
       <qti-simple-choice identifier="B">Capture ordered response.</qti-simple-choice>
@@ -817,6 +830,12 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
       <qti-response-if><qti-match><qti-variable identifier="STACKING_RESPONSE"/><qti-correct identifier="STACKING_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
     </qti-response-condition>
     <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="HIDDEN_CONTROL_RESPONSE"/><qti-correct identifier="HIDDEN_CONTROL_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="HOTTEXT_RESPONSE"/><qti-correct identifier="HOTTEXT_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
       <qti-response-if><qti-match><qti-variable identifier="ORDER_RESPONSE"/><qti-correct identifier="ORDER_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
     </qti-response-condition>
     <qti-response-condition>
@@ -835,11 +854,13 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
           LABEL_RESPONSE: "A",
           HORIZONTAL_RESPONSE: "A",
           STACKING_RESPONSE: "A",
+          HIDDEN_CONTROL_RESPONSE: "A",
+          HOTTEXT_RESPONSE: "A",
           ORDER_RESPONSE: ["A", "B", "C"],
           MATCH_RESPONSE: ["A B"],
           GAP_RESPONSE: ["A G1", "B G2"],
         },
-        { SCORE: 6 },
+        { SCORE: 8 },
         id,
       ),
     ],

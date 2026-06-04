@@ -268,7 +268,7 @@ classes that start with `qti-` are preserved on rendered interactions where appl
 
 QTI shared vocabulary classes are authoring hints defined by the specification, not
 product theme classes. Classes such as `qti-labels-none`,
-`qti-labels-decimal`, `qti-selections-light`, and `qti-unselected-hidden` describe
+`qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
 The browser player also ships reference CSS for the general-purpose item-body vocabulary,
@@ -278,10 +278,15 @@ including the twelve-column `qti-layout-row`, `qti-layout-col1` through
 text indentation, vertical writing, float/clear, appearance, list-style, underline,
 italic, and inline-block classes.
 For choice interactions, the browser player also applies the current shared-vocabulary
-layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`, and
-`qti-choices-stacking-1` through `qti-choices-stacking-5`. Deprecated
+layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`,
+`qti-writing-orientation-vertical-rl`, `qti-writing-orientation-vertical-lr`, and
+`qti-choices-stacking-1` through `qti-choices-stacking-5`, plus label style/suffix
+classes including `qti-labels-cjk-ideographic` and hidden input controls. Deprecated
 `orientation="horizontal"` authoring is tolerated as a compatibility fallback, but new
 fixtures and examples use the current shared-vocabulary classes.
+For hot text interactions, the browser player applies `qti-input-control-hidden` and
+`qti-unselected-hidden`. For hotspot interactions, it applies `qti-selections-light`,
+`qti-selections-dark`, and `qti-unselected-hidden`.
 For match, gap match, graphic gap match, and order interactions, the browser player
 applies `qti-choices-top`, `qti-choices-bottom`, `qti-choices-left`, and
 `qti-choices-right` as opt-in choices-bank positioning classes. Order interactions also

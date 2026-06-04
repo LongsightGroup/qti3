@@ -22,6 +22,18 @@ const ORDER_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const HIDDEN_INPUT_CONTROL_CHOICE_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-hidden-choice-control" title="keyboard-hidden-choice-control" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1" class="qti-input-control-hidden">
+      <qti-simple-choice identifier="A">First hidden-control choice</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second hidden-control choice</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 test.describe("player keyboard and accessibility", () => {
   test("supports keyboard-only response entry for representative native controls", async ({
     page,
@@ -216,6 +228,25 @@ test.describe("player keyboard and accessibility", () => {
       expect(result.active, interactionType).toBe(true);
       expect(result.hasIndicator, `${interactionType} focus indicator`).toBe(true);
     }
+  });
+
+  test("projects hidden choice input focus onto the visible option", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, HIDDEN_INPUT_CONTROL_CHOICE_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const input = player.locator('input[value="A"]');
+    const option = player.locator('.qti3-choice-option[data-choice-identifier="A"]');
+
+    await input.focus();
+    await expect(input).toBeFocused();
+    await expect(input).toHaveCSS("clip-path", "inset(50%)");
+    await expect(option).toHaveCSS("outline-style", "solid");
+    await expect(option).toHaveCSS("outline-width", "3px");
+
+    await page.keyboard.press("Space");
+    await expectResponse(page, "A");
+    await expect(option).toHaveAttribute("data-selected", "true");
   });
 
   test("reorders order interactions with keyboard controls", async ({ page }) => {

@@ -410,14 +410,28 @@ test.describe("manual harness", () => {
     const source = page
       .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
       .getByRole("button", { name: "Civil War marker" });
+    const sourceB = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Reconstruction marker" });
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="TargetA"]');
+    const targetB = page.locator('qti-assessment-item-player [data-gap-identifier="TargetB"]');
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region button"),
+    ).toHaveCount(2);
+    await expect(page.locator("qti-assessment-item-player .qti3-graphic-gap-hotspot")).toHaveCount(
+      2,
+    );
     await expectImageLoaded(source.locator("img"));
+    await expectImageLoaded(sourceB.locator("img"));
 
     await source.click();
     await target.click();
+    await sourceB.click();
+    await targetB.click();
 
-    await expectResponse(page, ["DraggerA TargetA"]);
+    await expectResponse(page, ["DraggerA TargetA", "DraggerB TargetB"]);
     await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+    await expect(targetB).toHaveAccessibleName("Target 2, assigned Reconstruction marker");
   });
 
   test("does not render qti-assessment-item title metadata as candidate content", async ({

@@ -1,6 +1,10 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
-export type SharedVocabularyLabelStyle = "decimal" | "lower-alpha" | "upper-alpha";
+export type SharedVocabularyLabelStyle =
+  | "decimal"
+  | "lower-alpha"
+  | "upper-alpha"
+  | "cjk-ideographic";
 export type SharedVocabularyLabelSuffix = "none" | "period" | "parenthesis";
 export type SharedVocabularyChoicesPosition = "top" | "bottom" | "left" | "right";
 export type OrderChoicesPosition = SharedVocabularyChoicesPosition;
@@ -27,14 +31,18 @@ export function sharedVocabularyLabel(interaction: QtiInteraction, index: number
 
   const labels = classNames.has("qti-labels-decimal")
     ? numericLabels()
-    : classNames.has("qti-labels-lower-alpha")
-      ? "abcdefghijklmnopqrstuvwxyz".split("")
-      : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    : classNames.has("qti-labels-cjk-ideographic")
+      ? cjkIdeographicLabels()
+      : classNames.has("qti-labels-lower-alpha")
+        ? "abcdefghijklmnopqrstuvwxyz".split("")
+        : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   const suffix = classNames.has("qti-labels-suffix-none")
     ? ""
-    : classNames.has("qti-labels-suffix-parenthesis")
-      ? ")"
-      : ".";
+    : classNames.has("qti-labels-suffix-period")
+      ? "."
+      : classNames.has("qti-labels-suffix-parenthesis")
+        ? ")"
+        : ".";
   return `${labels[index] ?? `${index + 1}`}${suffix}`;
 }
 
@@ -113,6 +121,19 @@ export function appendSharedVocabularyChoicesLayout(
 
 function numericLabels(): string[] {
   return Array.from({ length: 26 }, (_, item) => `${item + 1}`);
+}
+
+function cjkIdeographicLabels(): string[] {
+  const digits = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  return Array.from({ length: 26 }, (_, item) => {
+    const value = item + 1;
+    if (value < 10) return digits[value] ?? `${value}`;
+    if (value === 10) return "十";
+    if (value < 20) return `十${digits[value - 10]}`;
+    const tens = Math.floor(value / 10);
+    const ones = value % 10;
+    return `${digits[tens]}十${digits[ones]}`;
+  });
 }
 
 function sharedVocabularyChoicesPosition(

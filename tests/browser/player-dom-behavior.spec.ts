@@ -93,6 +93,22 @@ const ITEM_LAYOUT_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-presentation-shared-vocabulary" title="choice-presentation-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="CHOICE_RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="HOTTEXT_RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="CHOICE_RESPONSE" max-choices="1" class="qti-input-control-hidden qti-labels-cjk-ideographic qti-labels-suffix-period qti-writing-orientation-vertical-rl">
+      <qti-simple-choice identifier="A">First hidden-control choice</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second hidden-control choice</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-hottext-interaction response-identifier="HOTTEXT_RESPONSE" max-choices="1" class="qti-input-control-hidden qti-unselected-hidden">
+      <p>Select the <qti-hottext identifier="A">hidden indicator</qti-hottext> phrase.</p>
+    </qti-hottext-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const EMPTY_CHOICE_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="empty-choice" title="empty-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -388,6 +404,76 @@ test.describe("player DOM behavior", () => {
     if (!narrowLeftBox || !narrowRightBox) throw new Error("Missing narrow shared layout boxes.");
     expect(Math.abs(narrowRightBox.x - narrowLeftBox.x)).toBeLessThanOrEqual(2);
     expect(narrowRightBox.y).toBeGreaterThan(narrowLeftBox.y + narrowLeftBox.height - 1);
+  });
+
+  test("applies choice and hottext presentation shared vocabulary classes", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const choice = player.locator(".qti3-choice");
+    await expect(choice).toHaveClass(/qti-input-control-hidden/);
+    await expect(choice).toHaveClass(/qti-writing-orientation-vertical-rl/);
+    await expect(choice.locator(".qti3-choice-list")).toHaveCSS("writing-mode", "vertical-rl");
+    await expect(choice.locator(".qti3-choice-label").first()).toHaveText("一.");
+    await expect(choice.locator(".qti3-choice-label").nth(1)).toHaveText("二.");
+
+    const input = choice.locator('input[value="A"]');
+    await expect(input).toHaveCSS("position", "absolute");
+    await choice.locator('.qti3-choice-option[data-choice-identifier="A"]').click();
+    await expect(input).toBeChecked();
+    await expect
+      .poll(async () => {
+        const state = await player.evaluate((element) => element.serialize());
+        return state.responses.CHOICE_RESPONSE;
+      })
+      .toBe("A");
+
+    const hottext = player.locator(".qti3-hottext");
+    await expect(hottext).toHaveClass(/qti-unselected-hidden/);
+    const token = hottext.locator(".qti3-hottext-token");
+    await expect(token).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    await token.click();
+    await expect(token).toHaveAttribute("data-selected", "true");
+    await expect
+      .poll(async () => {
+        const state = await player.evaluate((element) => element.serialize());
+        return state.responses.HOTTEXT_RESPONSE;
+      })
+      .toBe("A");
+  });
+
+  test("keeps hottext shared vocabulary indicators visible in forced colors", async ({ page }) => {
+    await page.emulateMedia({ forcedColors: "active" });
+    await page.goto("/");
+    await pasteXml(page, CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM);
+
+    await expect
+      .poll(() => page.evaluate(() => window.matchMedia("(forced-colors: active)").matches))
+      .toBe(true);
+
+    const token = page.locator("qti-assessment-item-player .qti3-hottext-token");
+    const hiddenStyles = await token.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        borderTopColor: style.borderTopColor,
+        color: style.color,
+      };
+    });
+    expect(hiddenStyles.borderTopColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(hiddenStyles.color).not.toBe("rgba(0, 0, 0, 0)");
+
+    await token.click();
+    await expect(token).toHaveAttribute("data-selected", "true");
+    const selectedStyles = await token.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+      };
+    });
+    expect(selectedStyles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(selectedStyles.color).not.toBe(selectedStyles.backgroundColor);
   });
 
   test("keeps stacked choice layouts inside narrow viewports", async ({ page }) => {

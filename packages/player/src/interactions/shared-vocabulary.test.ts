@@ -75,6 +75,22 @@ describe("shared vocabulary", () => {
     ).toBe("b)");
     expect(sharedVocabularyLabel(interaction({ class: "qti-labels-none" }), 0)).toBe("");
     expect(sharedVocabularyLabel(interaction({ class: "qti-labels-decimal" }), 2)).toBe("3.");
+    for (const [index, expected] of [
+      [0, "一."],
+      [9, "十."],
+      [10, "十一."],
+      [11, "十二."],
+      [19, "二十."],
+      [20, "二十一."],
+      [26, "27."],
+    ] as const) {
+      expect(
+        sharedVocabularyLabel(
+          interaction({ class: "qti-labels-cjk-ideographic qti-labels-suffix-period" }),
+          index,
+        ),
+      ).toBe(expected);
+    }
   });
 
   it("ignores invalid order choices container widths", () => {

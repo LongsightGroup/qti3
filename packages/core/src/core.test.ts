@@ -868,7 +868,7 @@ describe("@longsightgroup/qti3-core", () => {
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="shared-vocab-conflict" title="shared-vocab-conflict" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-item-body>
-          <qti-choice-interaction response-identifier="RESPONSE" class="qti-labels-decimal qti-labels-lower-alpha qti-orientation-horizontal qti-orientation-vertical qti-choices-stacking-2 qti-choices-stacking-4 qti-choices-stacking-6">
+          <qti-choice-interaction response-identifier="RESPONSE" class="qti-labels-decimal qti-labels-cjk-ideographic qti-labels-lower-alpha qti-labels-suffix-period qti-labels-suffix-parenthesis qti-orientation-horizontal qti-orientation-vertical qti-choices-stacking-2 qti-choices-stacking-4 qti-choices-stacking-6">
             <qti-simple-choice identifier="A">A</qti-simple-choice>
             <qti-simple-choice identifier="B">B</qti-simple-choice>
           </qti-choice-interaction>
@@ -883,6 +883,11 @@ describe("@longsightgroup/qti3-core", () => {
           code: "interaction.sharedVocabulary.labelsConflict",
           severity: "warning",
           message: expect.stringContaining("qti-labels-decimal takes precedence"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.labelSuffixConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-labels-suffix-period"),
         }),
         expect.objectContaining({
           code: "interaction.sharedVocabulary.orientationConflict",

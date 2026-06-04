@@ -1770,13 +1770,35 @@ function validateSharedVocabularyLabelClasses(
   diagnostics: QtiDiagnostic[],
 ): void {
   const labelClasses = classNames.filter((className) =>
-    ["qti-labels-decimal", "qti-labels-lower-alpha", "qti-labels-upper-alpha"].includes(className),
+    [
+      "qti-labels-decimal",
+      "qti-labels-cjk-ideographic",
+      "qti-labels-lower-alpha",
+      "qti-labels-upper-alpha",
+    ].includes(className),
   );
-  if (new Set(labelClasses).size <= 1) return;
+  if (new Set(labelClasses).size > 1) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.labelsConflict",
+      severity: "warning",
+      message: `${interaction.qtiName} should not include multiple qti-labels-* style classes: ${[...new Set(labelClasses)].join(", ")}. qti-labels-decimal takes precedence over qti-labels-cjk-ideographic, then qti-labels-lower-alpha, then qti-labels-upper-alpha at runtime.`,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+
+  const suffixClasses = classNames.filter((className) =>
+    [
+      "qti-labels-suffix-none",
+      "qti-labels-suffix-period",
+      "qti-labels-suffix-parenthesis",
+    ].includes(className),
+  );
+  if (new Set(suffixClasses).size <= 1) return;
   diagnostics.push({
-    code: "interaction.sharedVocabulary.labelsConflict",
+    code: "interaction.sharedVocabulary.labelSuffixConflict",
     severity: "warning",
-    message: `${interaction.qtiName} should not include multiple qti-labels-* style classes: ${[...new Set(labelClasses)].join(", ")}. qti-labels-decimal takes precedence over qti-labels-lower-alpha, then qti-labels-upper-alpha at runtime.`,
+    message: `${interaction.qtiName} should not include multiple qti-labels-suffix-* classes: ${[...new Set(suffixClasses)].join(", ")}. qti-labels-suffix-none takes precedence over qti-labels-suffix-period, then qti-labels-suffix-parenthesis at runtime.`,
     path: interaction.source?.path,
     source: interaction.source,
   });
