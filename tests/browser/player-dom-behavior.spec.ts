@@ -1,5 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test";
 import {
+  assignGap,
   currentResponse,
   loadFixture,
   pasteXml,
@@ -219,6 +220,19 @@ const GAP_CHOICES_POSITION_ITEM = `
       <qti-gap-text identifier="A" match-max="1">alpha</qti-gap-text>
       <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
       <p>Place <qti-gap identifier="G1"/> before <qti-gap identifier="G2"/>.</p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
+const GAP_PLACEMENT_WIDTH_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-placement-width" title="gap-placement-width" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-gap-placement qti-choices-left" data-choices-container-width="120">
+      <qti-gap-text identifier="A" match-max="1">alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
+      <p>Place <qti-gap identifier="G1" class="qti-input-width-3"/> before <qti-gap identifier="G2" class="qti-input-width-10"/>.</p>
     </qti-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>
@@ -701,12 +715,50 @@ test.describe("player DOM behavior", () => {
     await pasteXml(page, GAP_CHOICES_POSITION_ITEM);
 
     const layout = page.locator("qti-assessment-item-player .qti3-gap-match-layout");
+    await expect(layout).not.toHaveClass(/qti3-gap-placement/);
     await expect(layout).toHaveAttribute("data-qti-choices-position", "left");
     const bankBox = await layout.locator(".qti3-gap-source-region").boundingBox();
     const passageBox = await layout.locator(".qti3-gap-passage").boundingBox();
     if (!bankBox || !passageBox) throw new Error("Missing gap match shared vocabulary boxes.");
     expect(bankBox.x).toBeLessThan(passageBox.x);
     expect(bankBox.width).toBeLessThanOrEqual(122);
+  });
+
+  test("preserves gap placement vocabulary and applies gap input widths", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, GAP_PLACEMENT_WIDTH_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const section = player.locator(".qti3-gapMatch");
+    const layout = player.locator(".qti3-gap-match-layout");
+    const passage = player.locator(".qti3-gap-passage");
+    await expect(section).toHaveClass(/qti-gap-placement/);
+    await expect(layout).toHaveClass(/qti3-gap-placement/);
+    await expect(passage).toHaveClass(/qti3-gap-placement/);
+
+    const narrowGap = player.locator('[data-gap-identifier="G1"]');
+    const wideGap = player.locator('[data-gap-identifier="G2"]');
+    await expect(narrowGap).toHaveAttribute("data-qti-gap-input-width", "3");
+    await expect(wideGap).toHaveAttribute("data-qti-gap-input-width", "10");
+    const narrowBox = await narrowGap.locator("button").boundingBox();
+    const wideBox = await wideGap.locator("button").boundingBox();
+    if (!narrowBox || !wideBox) throw new Error("Missing gap width boxes.");
+    expect(wideBox.width).toBeGreaterThan(narrowBox.width);
+
+    const placementUnderline = await narrowGap
+      .locator("button")
+      .evaluate((button) => Number.parseFloat(getComputedStyle(button).borderBottomWidth));
+    expect(placementUnderline).toBeGreaterThan(0);
+
+    await assignGap(page, "Gap match", "A", "G2");
+    await expect(currentResponse(page)).resolves.toEqual(["A G2"]);
+    await wideGap.locator("button").focus();
+    await page.keyboard.press("Delete");
+    await expect(currentResponse(page)).resolves.toEqual([]);
+
+    await page.setViewportSize({ width: 360, height: 640 });
+    const overflow = await player.evaluate((element) => element.scrollWidth > element.clientWidth);
+    expect(overflow).toBe(false);
   });
 
   test("positions graphic gap match shared vocabulary choices below the image", async ({

@@ -1,6 +1,8 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import {
+  gapInputWidth,
+  gapMatchUsesPlacement,
   orderSharedVocabularyLayout,
   sharedVocabularyChoicesLayout,
   sharedVocabularyLabel,
@@ -105,5 +107,18 @@ describe("shared vocabulary", () => {
       choicesPosition: "top",
       orientation: "horizontal",
     });
+  });
+
+  it("parses supported gap input width classes", () => {
+    expect(gapInputWidth({ class: "qti-input-width-10 qti-input-width-3" })).toBe(10);
+    expect(gapInputWidth({ class: "qti-input-width-8" })).toBe(undefined);
+    expect(gapInputWidth({ class: "qti-gap-placement" })).toBe(undefined);
+  });
+
+  it("detects gap match placement shared vocabulary", () => {
+    expect(
+      gapMatchUsesPlacement(interaction({ class: "qti-gap-placement qti-choices-left" })),
+    ).toBe(true);
+    expect(gapMatchUsesPlacement(interaction({ class: "qti-choices-left" }))).toBe(false);
   });
 });

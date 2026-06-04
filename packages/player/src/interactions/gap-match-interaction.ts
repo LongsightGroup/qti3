@@ -22,6 +22,8 @@ import {
 } from "./shared.js";
 import {
   appendSharedVocabularyChoicesLayout,
+  gapInputWidth,
+  gapMatchUsesPlacement,
   sharedVocabularyChoicesLayout,
 } from "./shared-vocabulary.js";
 
@@ -73,13 +75,20 @@ export function renderGapMatchResponse(
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
   const sharedVocabularyLayout = sharedVocabularyChoicesLayout(interaction);
+  const usesGapPlacement = gapMatchUsesPlacement(interaction);
+  const gapSegmentAttributes = new Map(
+    (interaction.gapMatchSegments ?? [])
+      .filter((segment) => segment.kind === "gap")
+      .map((segment) => [segment.identifier, segment.attributes]),
+  );
 
   const sourceRegion = tokenRegion(
     messages.message("interactionChoicesBank", { type: interaction.type }),
   );
   sourceRegion.classList.add("qti3-gap-source-region");
   const gapRegion = document.createElement("div");
-  gapRegion.className = "qti3-gap-region qti3-gap-passage";
+  gapRegion.className = "qti3-gap-region";
+  if (usesGapPlacement) gapRegion.classList.add("qti3-gap-placement");
   gapRegion.role = "group";
   gapRegion.setAttribute(
     "aria-label",
@@ -121,6 +130,14 @@ export function renderGapMatchResponse(
     const target = document.createElement("span");
     target.className = "qti3-gap-target";
     target.dataset.gapIdentifier = gap.identifier;
+    const inputWidth = gapInputWidth({
+      ...gap.attributes,
+      ...gapSegmentAttributes.get(gap.identifier),
+    });
+    if (inputWidth !== undefined) {
+      target.dataset.qtiGapInputWidth = String(inputWidth);
+      target.style.setProperty("--qti3-gap-input-width", `${inputWidth}ch`);
+    }
     target.addEventListener("dragover", (event) => {
       event.preventDefault();
       target.classList.add("qti3-drop-target");
@@ -157,6 +174,7 @@ export function renderGapMatchResponse(
   const renderGaps = () => {
     const segments = interaction.gapMatchSegments ?? [];
     const hasInlineGaps = segments.some((segment) => segment.kind === "gap");
+    gapRegion.classList.toggle("qti3-gap-passage", hasInlineGaps);
     if (!hasInlineGaps) {
       gapRegion.replaceChildren(...gaps.map((gap, index) => gapControl(gap, index)));
       return;
@@ -194,6 +212,7 @@ export function renderGapMatchResponse(
 
   const layout = document.createElement("div");
   layout.className = "qti3-gap-match-layout";
+  if (usesGapPlacement) layout.classList.add("qti3-gap-placement");
   renderGaps();
   appendSharedVocabularyChoicesLayout(layout, sourceRegion, gapRegion, sharedVocabularyLayout);
   group.append(layout);

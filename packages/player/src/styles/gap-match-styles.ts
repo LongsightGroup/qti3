@@ -5,14 +5,14 @@ export const GAP_MATCH_PLAYER_STYLES = `
   max-inline-size: 100%;
 }
 
-.qti3-gap-target {
+.qti3-gap-region {
+  margin-block-start: 0.5rem;
+}
+
+.qti3-gapMatch:not(.qti-gap-placement) .qti3-gap-region:not(.qti3-gap-passage) .qti3-gap-target {
   min-block-size: 2.75rem;
   padding: 0.5rem;
   border: 1px dashed CanvasText;
-}
-
-.qti3-gap-region {
-  margin-block-start: 0.5rem;
 }
 
 .qti3-gap-passage {
@@ -30,8 +30,36 @@ export const GAP_MATCH_PLAYER_STYLES = `
   vertical-align: middle;
 }
 
+.qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) {
+  display: block;
+  line-height: 2.3;
+  max-inline-size: 62rem;
+}
+
+.qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) .qti3-gap-target {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  margin-inline: 0.15rem;
+  margin-block: 0.2rem;
+  vertical-align: baseline;
+}
+
+.qti3-gapMatch.qti-gap-placement .qti3-gap-passage .qti3-gap-button,
+.qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) .qti3-gap-button {
+  border: 0;
+  border-block-end: 2px solid CanvasText;
+  border-radius: 0;
+  background: transparent;
+  min-block-size: 1.75rem;
+  padding-inline: 0.15em;
+  min-inline-size: var(--qti3-gap-input-width, 6ch);
+  text-align: start;
+}
+
+/* Custom widths use ch (character boxes); default fallback uses rem for un-sized gaps. */
 .qti3-gap-button {
-  min-inline-size: 8rem;
+  min-inline-size: var(--qti3-gap-input-width, 8rem);
   min-block-size: 2.25rem;
   text-align: start;
 }

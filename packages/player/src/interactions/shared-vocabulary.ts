@@ -1,4 +1,4 @@
-import type { QtiInteraction } from "@longsightgroup/qti3-core";
+import { gapInputWidthFromAttributes, type QtiInteraction } from "@longsightgroup/qti3-core";
 
 export type SharedVocabularyLabelStyle =
   | "decimal"
@@ -23,6 +23,14 @@ export interface OrderSharedVocabularyLayout {
 
 export function interactionClassNames(interaction: QtiInteraction): string[] {
   return (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
+}
+
+export function gapInputWidth(attributes: Record<string, string>): number | undefined {
+  return gapInputWidthFromAttributes(attributes);
+}
+
+export function gapMatchUsesPlacement(interaction: QtiInteraction): boolean {
+  return interactionClassNames(interaction).includes("qti-gap-placement");
 }
 
 export function sharedVocabularyLabel(interaction: QtiInteraction, index: number): string {

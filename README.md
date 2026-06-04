@@ -293,6 +293,14 @@ applies `qti-choices-top`, `qti-choices-bottom`, `qti-choices-left`, and
 apply `qti-match-tabular`, `qti-header-hidden`, and `data-first-column-header` as
 shared-vocabulary tabular matrix presentation. Order interactions also apply
 shared-vocabulary target labels and suffixes.
+Gap match interactions also preserve `qti-gap-placement` as authored shared vocabulary.
+When that class is present, the browser player renders underline-style inline gap slots in
+the passage (and block-mode fallbacks that still read as in-flow placement) instead of
+dashed block drop zones. The player applies the same supported `qti-input-width-*` token
+set used by text-entry and inline-choice interactions on `qti-gap` elements as target
+sizing hints. The 1EdTech vocabulary table lists those width classes for text-entry
+interactions, not gap targets, so hosts may override `.qti-gap-placement` presentation
+with their own CSS when they do not want the built-in placement or width mapping.
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.

@@ -166,7 +166,7 @@ describe("@longsightgroup/qti3-core", () => {
           <qti-gap-match-interaction response-identifier="RESPONSE">
             <qti-prompt>Complete the sentence.</qti-prompt>
             <qti-gap-text identifier="A" match-max="1">response declaration</qti-gap-text>
-            <p>An interaction writes to a <qti-gap identifier="G1"/>.</p>
+            <p>An interaction writes to a <qti-gap identifier="G1" class="qti-input-width-10"/>.</p>
           </qti-gap-match-interaction>
         </qti-item-body>
       </qti-assessment-item>
@@ -175,7 +175,11 @@ describe("@longsightgroup/qti3-core", () => {
     expect(result.ok).toBe(true);
     expect(result.document?.item.interactions[0]?.gapMatchSegments).toEqual([
       { kind: "text", text: "An interaction writes to a " },
-      expect.objectContaining({ kind: "gap", identifier: "G1" }),
+      expect.objectContaining({
+        kind: "gap",
+        identifier: "G1",
+        attributes: expect.objectContaining({ class: "qti-input-width-10" }),
+      }),
       { kind: "text", text: "." },
       { kind: "text", text: " " },
     ]);
@@ -592,7 +596,10 @@ describe("@longsightgroup/qti3-core", () => {
         qtiName: "em",
         children: [expect.objectContaining({ kind: "text", text: "orientation" })],
       }),
-      expect.objectContaining({ kind: "text", text: " of the layout of the drivers should be vertical." }),
+      expect.objectContaining({
+        kind: "text",
+        text: " of the layout of the drivers should be vertical.",
+      }),
     ]);
   });
 
@@ -1009,6 +1016,56 @@ describe("@longsightgroup/qti3-core", () => {
           code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
           severity: "warning",
           message: expect.stringContaining("qti-gap-match-interaction"),
+        }),
+      ]),
+    );
+  });
+
+  it("diagnoses invalid gap match input width shared vocabulary", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-input-width" title="gap-input-width" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-gap-placement">
+            <qti-gap-text identifier="A" match-max="1">A</qti-gap-text>
+            <p><qti-gap identifier="G1" class="qti-input-width-8"/></p>
+          </qti-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.gapInputWidthInvalid",
+          severity: "warning",
+          message: expect.stringContaining("qti-input-width-8"),
+        }),
+      ]),
+    );
+  });
+
+  it("diagnoses conflicting gap match input width shared vocabulary", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-input-width-conflict" title="gap-input-width-conflict" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-gap-match-interaction response-identifier="RESPONSE">
+            <qti-gap-text identifier="A" match-max="1">A</qti-gap-text>
+            <p><qti-gap identifier="G1" class="qti-input-width-10 qti-input-width-3"/></p>
+          </qti-gap-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.gapInputWidthConflict",
+          severity: "warning",
+          message: expect.stringMatching(/qti-input-width-10.*qti-input-width-3/),
         }),
       ]),
     );

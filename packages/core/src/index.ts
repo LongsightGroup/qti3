@@ -55,6 +55,13 @@ export {
   interactionSupport,
   processingSupport,
 } from "./support.js";
+export {
+  formatSupportedGapInputWidthClasses,
+  gapInputWidthFromAttributes,
+  SHARED_VOCABULARY_GAP_INPUT_WIDTHS,
+  sharedVocabularyClassNames,
+  supportedGapInputWidthClassNames,
+} from "./shared-vocabulary.js";
 export { validateAssessmentItem } from "./validation.js";
 export type {
   QtiAssessmentItem,
