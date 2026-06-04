@@ -947,7 +947,7 @@ describe("@longsightgroup/qti3-core", () => {
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-shared-vocab-conflict" title="order-shared-vocab-conflict" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
         <qti-item-body>
-          <qti-order-interaction response-identifier="RESPONSE" class="qti-labels-upper-alpha qti-labels-decimal qti-choices-left qti-choices-top" data-choices-container-width="wide">
+          <qti-order-interaction response-identifier="RESPONSE" class="qti-labels-upper-alpha qti-labels-decimal qti-choices-left qti-choices-top qti-orientation-horizontal qti-orientation-vertical" data-choices-container-width="wide">
             <qti-simple-choice identifier="A">A</qti-simple-choice>
             <qti-simple-choice identifier="B">B</qti-simple-choice>
           </qti-order-interaction>
@@ -967,6 +967,11 @@ describe("@longsightgroup/qti3-core", () => {
           code: "interaction.sharedVocabulary.orderChoicesPositionConflict",
           severity: "warning",
           message: expect.stringContaining("first position class"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.orientationConflict",
+          severity: "warning",
+          message: expect.stringContaining("qti-order-interaction"),
         }),
         expect.objectContaining({
           code: "interaction.sharedVocabulary.orderChoicesContainerWidth",

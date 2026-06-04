@@ -64,12 +64,20 @@ export function orderSharedVocabularyLayout(
 
   const layout: OrderSharedVocabularyLayout = {
     choicesPosition: choicesLayout.choicesPosition,
-    orientation: interaction.attributes.orientation === "vertical" ? "vertical" : "horizontal",
+    orientation: orderOrientation(interaction),
   };
   if (choicesLayout.choicesContainerWidth !== undefined) {
     layout.choicesContainerWidth = choicesLayout.choicesContainerWidth;
   }
   return layout;
+}
+
+function orderOrientation(interaction: QtiInteraction): OrderOrientation {
+  const classNames = new Set(interactionClassNames(interaction));
+  if (classNames.has("qti-orientation-horizontal")) return "horizontal";
+  if (classNames.has("qti-orientation-vertical")) return "vertical";
+  if (interaction.attributes.orientation === "vertical") return "vertical";
+  return "horizontal";
 }
 
 export function sharedVocabularyChoicesLayout(

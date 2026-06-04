@@ -44,6 +44,8 @@ export function renderOrderedResponse(
       messages,
     );
   }
+  // qti-orientation-* affects the shared-vocabulary split bank/target layout. The default
+  // order renderer is a single ordered list, so there is no separate bank layout to orient.
   const ordered = orderChoicesFromValue(choices, currentValue);
   const list = document.createElement("ol");
   list.className = "qti3-reorder-list";

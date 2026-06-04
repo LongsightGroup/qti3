@@ -1726,23 +1726,11 @@ function validateInteractionSharedVocabulary(
   }
 
   if (interaction.type === "order") {
-    validateOrderInteractionSharedVocabulary(interaction, classNames, diagnostics);
+    validateOrderInteractionSharedVocabulary(interaction, classNames, classNameSet, diagnostics);
     return;
   }
 
-  if (
-    classNameSet.has("qti-orientation-horizontal") &&
-    classNameSet.has("qti-orientation-vertical")
-  ) {
-    diagnostics.push({
-      code: "interaction.sharedVocabulary.orientationConflict",
-      severity: "warning",
-      message:
-        "qti-choice-interaction should not include both qti-orientation-horizontal and qti-orientation-vertical; qti-orientation-horizontal takes precedence at runtime.",
-      path: interaction.source?.path,
-      source: interaction.source,
-    });
-  }
+  validateOrientationSharedVocabulary(interaction, classNameSet, diagnostics);
 
   const validStackingClasses = new Set<string>();
   const invalidStackingClasses = new Set<string>();
@@ -1815,11 +1803,33 @@ function validateSharedVocabularyLabelClasses(
   });
 }
 
+function validateOrientationSharedVocabulary(
+  interaction: QtiInteraction,
+  classNameSet: Set<string>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (
+    !classNameSet.has("qti-orientation-horizontal") ||
+    !classNameSet.has("qti-orientation-vertical")
+  ) {
+    return;
+  }
+  diagnostics.push({
+    code: "interaction.sharedVocabulary.orientationConflict",
+    severity: "warning",
+    message: `${interaction.qtiName} should not include both qti-orientation-horizontal and qti-orientation-vertical; qti-orientation-horizontal takes precedence at runtime.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
 function validateOrderInteractionSharedVocabulary(
   interaction: QtiInteraction,
   classNames: string[],
+  classNameSet: Set<string>,
   diagnostics: QtiDiagnostic[],
 ): void {
+  validateOrientationSharedVocabulary(interaction, classNameSet, diagnostics);
   validateChoicesPositionSharedVocabulary(interaction, classNames, diagnostics);
   validateChoicesContainerWidthSharedVocabulary(interaction, diagnostics);
 }

@@ -151,7 +151,7 @@ const ORDER_SHARED_VOCABULARY_LEFT_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-shared-vocabulary-left" title="order-shared-vocabulary-left" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
   <qti-item-body>
-    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-left qti-labels-upper-alpha" orientation="vertical" data-choices-container-width="180">
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-left qti-orientation-vertical qti-labels-upper-alpha" data-choices-container-width="180">
       <qti-simple-choice identifier="A">North</qti-simple-choice>
       <qti-simple-choice identifier="B">Center</qti-simple-choice>
       <qti-simple-choice identifier="C">South</qti-simple-choice>

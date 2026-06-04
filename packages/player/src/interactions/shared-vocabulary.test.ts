@@ -23,7 +23,7 @@ function interaction(attributes: Record<string, string> = {}): QtiInteraction {
 }
 
 describe("shared vocabulary", () => {
-  it("parses order choices positioning and orientation", () => {
+  it("falls back to deprecated orientation attribute when no orientation class is present", () => {
     expect(
       orderSharedVocabularyLayout(
         interaction({
@@ -44,6 +44,41 @@ describe("shared vocabulary", () => {
       orderSharedVocabularyLayout(interaction({ class: "qti-choices-right qti-choices-top" })),
     ).toEqual({
       choicesPosition: "right",
+      orientation: "horizontal",
+    });
+  });
+
+  it("uses order orientation classes before deprecated orientation attributes", () => {
+    expect(
+      orderSharedVocabularyLayout(
+        interaction({
+          class: "qti-choices-left qti-orientation-horizontal",
+          orientation: "vertical",
+        }),
+      ),
+    ).toEqual({
+      choicesPosition: "left",
+      orientation: "horizontal",
+    });
+    expect(
+      orderSharedVocabularyLayout(
+        interaction({ class: "qti-choices-left qti-orientation-vertical" }),
+      ),
+    ).toEqual({
+      choicesPosition: "left",
+      orientation: "vertical",
+    });
+  });
+
+  it("uses horizontal orientation when both orientation classes are authored", () => {
+    expect(
+      orderSharedVocabularyLayout(
+        interaction({
+          class: "qti-choices-left qti-orientation-vertical qti-orientation-horizontal",
+        }),
+      ),
+    ).toEqual({
+      choicesPosition: "left",
       orientation: "horizontal",
     });
   });
