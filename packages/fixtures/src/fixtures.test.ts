@@ -69,6 +69,7 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(fixture?.xml).toContain("qti-choices-top qti-labels-decimal");
     expect(fixture?.xml).toContain("qti-match-interaction");
     expect(fixture?.xml).toContain('class="qti-choices-right"');
+    expect(fixture?.xml).toContain('class="qti-match-tabular" data-first-column-header="Source"');
     expect(fixture?.xml).toContain("qti-gap-match-interaction");
     expect(fixture?.xml).toContain('class="qti-choices-left" data-choices-container-width="160"');
     expect(fixture?.xml).not.toContain('orientation="horizontal"');

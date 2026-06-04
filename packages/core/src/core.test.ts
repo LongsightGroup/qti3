@@ -987,6 +987,39 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("diagnoses match tabular shared-vocabulary context mistakes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-shared-vocab" title="match-tabular-shared-vocab" time-dependent="false">
+        <qti-response-declaration identifier="FIRST" cardinality="multiple" base-type="directedPair"/>
+        <qti-response-declaration identifier="SECOND" cardinality="multiple" base-type="directedPair"/>
+        <qti-item-body>
+          <qti-match-interaction response-identifier="FIRST" class="qti-header-hidden" data-first-column-header="Rows">
+            <qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice></qti-simple-match-set>
+            <qti-simple-match-set><qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice></qti-simple-match-set>
+          </qti-match-interaction>
+          <qti-match-interaction response-identifier="SECOND" class="qti-match-tabular qti-header-hidden" data-first-column-header="Rows">
+            <qti-simple-match-set><qti-simple-associable-choice identifier="C" match-max="1">C</qti-simple-associable-choice></qti-simple-match-set>
+            <qti-simple-match-set><qti-simple-associable-choice identifier="D" match-max="1">D</qti-simple-associable-choice></qti-simple-match-set>
+          </qti-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.matchTabularContext",
+          severity: "warning",
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.matchTabularHeaderHidden",
+          severity: "warning",
+        }),
+      ]),
+    );
+  });
+
   it("diagnoses invalid item-body shared-vocabulary layout classes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="layout-shared-vocab-invalid" title="layout-shared-vocab-invalid" time-dependent="false">

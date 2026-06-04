@@ -21,6 +21,9 @@
   <qti-response-declaration identifier="MATCH_RESPONSE" cardinality="multiple" base-type="directedPair">
     <qti-correct-response><qti-value>A B</qti-value></qti-correct-response>
   </qti-response-declaration>
+  <qti-response-declaration identifier="TABULAR_MATCH_RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>MS1 MT1</qti-value></qti-correct-response>
+  </qti-response-declaration>
   <qti-response-declaration identifier="GAP_RESPONSE" cardinality="multiple" base-type="directedPair">
     <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -73,6 +76,14 @@
         <qti-simple-associable-choice identifier="B" match-max="1">Portable layout hint</qti-simple-associable-choice>
       </qti-simple-match-set>
     </qti-match-interaction>
+    <qti-match-interaction response-identifier="TABULAR_MATCH_RESPONSE" class="qti-match-tabular" data-first-column-header="Source">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="MS1" match-max="1">Tabular row header</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="MT1" match-max="1">Tabular column header</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
     <qti-gap-match-interaction response-identifier="GAP_RESPONSE" class="qti-choices-left" data-choices-container-width="160">
       <qti-gap-text identifier="A" match-max="1">choice bank</qti-gap-text>
       <qti-gap-text identifier="B" match-max="1">target passage</qti-gap-text>
@@ -101,6 +112,9 @@
     </qti-response-condition>
     <qti-response-condition>
       <qti-response-if><qti-match><qti-variable identifier="MATCH_RESPONSE"/><qti-correct identifier="MATCH_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="TABULAR_MATCH_RESPONSE"/><qti-correct identifier="TABULAR_MATCH_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
     </qti-response-condition>
     <qti-response-condition>
       <qti-response-if><qti-match><qti-variable identifier="GAP_RESPONSE"/><qti-correct identifier="GAP_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>

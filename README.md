@@ -289,8 +289,10 @@ For hot text interactions, the browser player applies `qti-input-control-hidden`
 `qti-selections-dark`, and `qti-unselected-hidden`.
 For match, gap match, graphic gap match, and order interactions, the browser player
 applies `qti-choices-top`, `qti-choices-bottom`, `qti-choices-left`, and
-`qti-choices-right` as opt-in choices-bank positioning classes. Order interactions also
-apply shared-vocabulary target labels and suffixes.
+`qti-choices-right` as opt-in choices-bank positioning classes. Match interactions also
+apply `qti-match-tabular`, `qti-header-hidden`, and `data-first-column-header` as
+shared-vocabulary tabular matrix presentation. Order interactions also apply
+shared-vocabulary target labels and suffixes.
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.

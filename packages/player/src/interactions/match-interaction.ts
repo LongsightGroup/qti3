@@ -3,9 +3,17 @@ import { removeButton } from "../controls/remove-button.js";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { parseUnlimitedMaximum } from "../response-limits.js";
-import { choiceText, sourceChoices, targetChoices, tokenButton, tokenRegion } from "./shared.js";
+import {
+  appendChoiceVisual,
+  choiceText,
+  sourceChoices,
+  targetChoices,
+  tokenButton,
+  tokenRegion,
+} from "./shared.js";
 import {
   appendSharedVocabularyChoicesLayout,
+  interactionClassNames,
   sharedVocabularyChoicesLayout,
 } from "./shared-vocabulary.js";
 
@@ -24,6 +32,17 @@ export function renderMatchResponse(
     return group;
   }
   const selectedPairs: string[] = valueToStrings(currentValue);
+  if (interactionClassNames(interaction).includes("qti-match-tabular")) {
+    return renderTabularMatchResponse(
+      interaction,
+      update,
+      selectedPairs,
+      messages,
+      sources,
+      targets,
+    );
+  }
+
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   let draggedSource: string | undefined;
@@ -204,4 +223,174 @@ export function renderMatchResponse(
   renderPairs();
   group.append(selector, pairList);
   return group;
+}
+
+function renderTabularMatchResponse(
+  interaction: QtiInteraction,
+  update: (value: QtiValue) => void,
+  selectedPairs: string[],
+  messages: PlayerMessageResolver,
+  sources: QtiChoice[],
+  targets: QtiChoice[],
+): HTMLElement {
+  const group = responseGroup();
+  const classNames = new Set(interactionClassNames(interaction));
+  const headerHidden = classNames.has("qti-header-hidden");
+  const firstColumnHeader = interaction.attributes["data-first-column-header"] ?? "";
+  const tableId = stableDomId(interaction.responseIdentifier ?? "match");
+
+  const table = document.createElement("table");
+  table.className = "qti3-match-table";
+  if (headerHidden) table.classList.add("qti-header-hidden");
+
+  const pairList = document.createElement("ul");
+  pairList.className = "qti3-pair-list";
+  pairList.setAttribute("aria-label", messages.message("matchSelectedPairsList"));
+
+  const commit = () => {
+    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
+    else update([...selectedPairs]);
+  };
+  const pairFor = (source: QtiChoice, target: QtiChoice) =>
+    `${source.identifier} ${target.identifier}`;
+  const removePair = (pair: string) => {
+    const index = selectedPairs.indexOf(pair);
+    if (index >= 0) selectedPairs.splice(index, 1);
+  };
+  const removePairsForSource = (source: QtiChoice) => {
+    for (const existing of selectedPairs.filter((pair) =>
+      pair.startsWith(`${source.identifier} `),
+    )) {
+      removePair(existing);
+    }
+  };
+  const removePairsForTarget = (target: QtiChoice) => {
+    for (const existing of selectedPairs.filter((pair) => pair.endsWith(` ${target.identifier}`))) {
+      removePair(existing);
+    }
+  };
+  const syncPressed = () => {
+    for (const button of table.querySelectorAll<HTMLButtonElement>(".qti3-match-table-cell")) {
+      const sourceIdentifier = button.dataset.sourceIdentifier ?? "";
+      const targetIdentifier = button.dataset.targetIdentifier ?? "";
+      button.setAttribute(
+        "aria-pressed",
+        selectedPairs.includes(`${sourceIdentifier} ${targetIdentifier}`) ? "true" : "false",
+      );
+    }
+  };
+  const renderPairs = () => {
+    pairList.replaceChildren(
+      ...selectedPairs.map((pair) => {
+        const [source, target] = pair.split(" ");
+        const label = messages.message("associationPairLabel", {
+          source: choiceText(sources, source),
+          target: choiceText(targets, target),
+        });
+        const item = document.createElement("li");
+        item.className = "qti3-pair-chip";
+        const text = document.createElement("span");
+        text.textContent = label;
+        const remove = removeButton(label, messages);
+        remove.addEventListener("click", () => {
+          removePair(pair);
+          syncPressed();
+          renderPairs();
+          commit();
+        });
+        item.append(text, remove);
+        return item;
+      }),
+    );
+  };
+  const togglePair = (source: QtiChoice, target: QtiChoice) => {
+    const pair = pairFor(source, target);
+    if (selectedPairs.includes(pair)) {
+      removePair(pair);
+    } else {
+      if (interaction.responseCardinality === "single") selectedPairs.splice(0);
+      if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
+        removePairsForSource(source);
+      }
+      if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
+        removePairsForTarget(target);
+      }
+      selectedPairs.push(pair);
+    }
+    syncPressed();
+    renderPairs();
+    commit();
+  };
+
+  if (!headerHidden) {
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const corner = document.createElement("th");
+    corner.scope = "col";
+    corner.textContent = firstColumnHeader;
+    headerRow.append(corner);
+    targets.forEach((target, index) => {
+      const header = document.createElement("th");
+      header.scope = "col";
+      header.id = `${tableId}-target-${index}`;
+      header.setAttribute("aria-label", target.text);
+      appendChoiceVisual(header, target);
+      headerRow.append(header);
+    });
+    thead.append(headerRow);
+    table.append(thead);
+  }
+
+  const tbody = document.createElement("tbody");
+  sources.forEach((source, sourceIndex) => {
+    const row = document.createElement("tr");
+    const rowHeader = document.createElement("th");
+    rowHeader.scope = "row";
+    rowHeader.id = `${tableId}-source-${sourceIndex}`;
+    rowHeader.setAttribute("aria-label", source.text);
+    appendChoiceVisual(rowHeader, source);
+    row.append(rowHeader);
+
+    targets.forEach((target, targetIndex) => {
+      const cell = document.createElement("td");
+      cell.setAttribute(
+        "headers",
+        headerHidden ? rowHeader.id : `${rowHeader.id} ${tableId}-target-${targetIndex}`,
+      );
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "qti3-token qti3-match-table-cell";
+      button.dataset.sourceIdentifier = source.identifier;
+      button.dataset.targetIdentifier = target.identifier;
+      button.setAttribute(
+        "aria-label",
+        messages.message("associationPairLabel", {
+          source: source.text,
+          target: target.text,
+        }),
+      );
+      button.addEventListener("click", () => togglePair(source, target));
+      button.addEventListener("keydown", (event) => {
+        if (event.key !== "Delete" && event.key !== "Backspace") return;
+        event.preventDefault();
+        removePair(pairFor(source, target));
+        syncPressed();
+        renderPairs();
+        commit();
+      });
+      cell.append(button);
+      row.append(cell);
+    });
+    tbody.append(row);
+  });
+  table.append(tbody);
+
+  syncPressed();
+  renderPairs();
+  group.append(table, pairList);
+  return group;
+}
+
+function stableDomId(value: string): string {
+  return `qti3-match-${value.replace(/[^A-Za-z0-9_-]/g, "-")}`;
 }

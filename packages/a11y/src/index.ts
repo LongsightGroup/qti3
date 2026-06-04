@@ -200,11 +200,23 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     };
   }
 
-  if (
-    interactionType === "associate" ||
-    interactionType === "graphicAssociate" ||
-    interactionType === "match"
-  ) {
+  if (interactionType === "match") {
+    return {
+      ...base,
+      primaryRole: "group or table",
+      keyboardModel: [
+        "Token-bank layout: Tab moves through source tokens, target tokens, selected pair chips, and remove controls.",
+        "Token-bank layout: Enter or Space selects one source token and one target token to create a pair.",
+        "Tabular layout: Tab moves through matrix cell buttons in row-major order.",
+        "Tabular layout: Enter or Space toggles the focused source-target cell.",
+        "Remove buttons delete selected pairs.",
+        "Pointer drag from a source token to a target token is a progressive enhancement in token-bank layout.",
+      ],
+      requiredStates: ["aria-pressed", "selected pair text", "aria-invalid", "aria-describedby"],
+    };
+  }
+
+  if (interactionType === "associate" || interactionType === "graphicAssociate") {
     return {
       ...base,
       primaryRole: "group",

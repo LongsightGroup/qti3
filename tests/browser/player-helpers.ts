@@ -281,6 +281,14 @@ export async function assignMatch(
   sourceIdentifier: string,
   targetIdentifier: string,
 ): Promise<void> {
+  const matrixCell = page.locator(
+    `qti-assessment-item-player .qti3-match-table-cell[data-source-identifier="${sourceIdentifier}"][data-target-identifier="${targetIdentifier}"]`,
+  );
+  if (await matrixCell.isVisible().catch(() => false)) {
+    await matrixCell.click();
+    return;
+  }
+
   await page
     .locator("qti-assessment-item-player .qti3-match-source-bank")
     .locator(`[data-choice-identifier="${sourceIdentifier}"]`)

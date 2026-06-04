@@ -177,6 +177,40 @@ const MATCH_CHOICES_POSITION_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-shared-vocabulary" title="match-tabular-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-match-interaction response-identifier="RESPONSE" class="qti-match-tabular" data-first-column-header="Characters">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="C" match-max="1">Capulet</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="D" match-max="1">Demetrius</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="M" match-max="1">A Midsummer Night's Dream</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="R" match-max="1">Romeo and Juliet</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
+const MATCH_TABULAR_HEADER_HIDDEN_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-header-hidden" title="match-tabular-header-hidden" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-match-interaction response-identifier="RESPONSE" class="qti-match-tabular qti-header-hidden">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="C" match-max="1">Capulet</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="R" match-max="1">Romeo and Juliet</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const GAP_CHOICES_POSITION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-choices-position" title="gap-choices-position" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -610,6 +644,47 @@ test.describe("player DOM behavior", () => {
     const bankBox = await layout.locator(".qti3-match-source-bank").boundingBox();
     if (!targetBox || !bankBox) throw new Error("Missing match shared vocabulary boxes.");
     expect(bankBox.x).toBeGreaterThan(targetBox.x);
+  });
+
+  test("renders match shared vocabulary tabular matrix", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, MATCH_TABULAR_SHARED_VOCABULARY_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const table = player.locator(".qti3-match-table");
+    await expect(table).toBeVisible();
+    await expect(table.locator("thead th").first()).toHaveText("Characters");
+    await expect(table.locator("thead th")).toContainText([
+      "Characters",
+      "A Midsummer Night's Dream",
+      "Romeo and Juliet",
+    ]);
+    await expect(table.locator("tbody th")).toContainText(["Capulet", "Demetrius"]);
+    await expect(table.locator(".qti3-match-table-cell")).toHaveCount(4);
+
+    const capuletRomeo = table.locator(
+      '.qti3-match-table-cell[data-source-identifier="C"][data-target-identifier="R"]',
+    );
+    await capuletRomeo.click();
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => currentResponse(page)).toEqual(["C R"]);
+    await expect(player.locator(".qti3-pair-chip span")).toContainText(
+      "Capulet to Romeo and Juliet",
+    );
+  });
+
+  test("renders match shared vocabulary tabular matrix with hidden column headers", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, MATCH_TABULAR_HEADER_HIDDEN_ITEM);
+
+    const table = page.locator("qti-assessment-item-player .qti3-match-table");
+    await expect(table).toHaveClass(/qti-header-hidden/);
+    await expect(table.locator("thead")).toHaveCount(0);
+    await expect(table.locator("tbody th")).toHaveText("Capulet");
+    const cell = table.locator(".qti3-match-table-cell");
+    await expect(cell).toHaveAttribute("aria-label", "Capulet to Romeo and Juliet");
   });
 
   test("positions gap match shared vocabulary choices beside the passage", async ({ page }) => {

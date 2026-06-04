@@ -59,4 +59,48 @@ export const MATCH_PAIR_PLAYER_STYLES = `
   font-size: 0.9rem;
   font-weight: 700;
 }
+
+.qti3-match-table {
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  border-collapse: collapse;
+  border: 1px solid CanvasText;
+}
+
+.qti3-match-table th,
+.qti3-match-table td {
+  padding: 0.45rem;
+  border: 1px solid CanvasText;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.qti3-match-table th {
+  background: ButtonFace;
+  color: ButtonText;
+  font-weight: 700;
+}
+
+.qti3-match-table tbody th {
+  text-align: start;
+}
+
+.qti3-match-table-cell {
+  inline-size: 100%;
+  min-block-size: 2.5rem;
+  cursor: pointer;
+}
+
+@media (forced-colors: active) {
+  .qti3-match-table,
+  .qti3-match-table th,
+  .qti3-match-table td {
+    border-color: CanvasText;
+  }
+
+  .qti3-match-table th {
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}
 `.trim();

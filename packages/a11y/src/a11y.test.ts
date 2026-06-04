@@ -86,6 +86,9 @@ describe("@longsightgroup/qti3-a11y", () => {
     expect(byType.get("associate")?.keyboardModel).toContain(
       "Remove buttons delete selected pairs.",
     );
+    expect(byType.get("match")?.keyboardModel).toContain(
+      "Tabular layout: Enter or Space toggles the focused source-target cell.",
+    );
     expect(byType.get("choice")?.keyboardModel).toContain(
       "Shared-vocabulary hidden input-control presentation keeps controls keyboard focusable and projects focus indication onto the visible option.",
     );

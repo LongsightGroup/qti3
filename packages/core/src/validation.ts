@@ -1709,6 +1709,9 @@ function validateInteractionSharedVocabulary(
     interaction.type === "gapMatch" ||
     interaction.type === "graphicGapMatch"
   ) {
+    if (interaction.type === "match") {
+      validateMatchInteractionSharedVocabulary(interaction, classNames, diagnostics);
+    }
     validateChoicesPositionSharedVocabulary(interaction, classNames, diagnostics);
     validateChoicesContainerWidthSharedVocabulary(interaction, diagnostics);
     return;
@@ -1811,6 +1814,36 @@ function validateOrderInteractionSharedVocabulary(
 ): void {
   validateChoicesPositionSharedVocabulary(interaction, classNames, diagnostics);
   validateChoicesContainerWidthSharedVocabulary(interaction, diagnostics);
+}
+
+function validateMatchInteractionSharedVocabulary(
+  interaction: QtiInteraction,
+  classNames: string[],
+  diagnostics: QtiDiagnostic[],
+): void {
+  const hasTabular = classNames.includes("qti-match-tabular");
+  const hasHeaderHidden = classNames.includes("qti-header-hidden");
+  const firstColumnHeader = interaction.attributes["data-first-column-header"];
+  if (!hasTabular && (hasHeaderHidden || firstColumnHeader !== undefined)) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.matchTabularContext",
+      severity: "warning",
+      message:
+        "qti-match-interaction shared vocabulary class qti-header-hidden and data-first-column-header are only relevant when qti-match-tabular is specified; they are ignored at runtime.",
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
+  if (hasTabular && hasHeaderHidden && firstColumnHeader !== undefined) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.matchTabularHeaderHidden",
+      severity: "warning",
+      message:
+        "qti-match-interaction data-first-column-header is ignored when qti-header-hidden suppresses the tabular header row.",
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  }
 }
 
 function validateChoicesPositionSharedVocabulary(
