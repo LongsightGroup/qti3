@@ -517,33 +517,37 @@ test.describe("manual harness", () => {
   test("loads adjacent reference fixtures from the manual harness arrows", async ({ page }) => {
     await page.goto("/");
 
-    const referenceFixtures = [...interactionFixtures, ...processingFixtures, ...adaptiveFixtures];
-    const firstFixture = referenceFixtures[0];
-    const secondFixture = referenceFixtures[1];
-    const previousLastFixture = referenceFixtures.at(-2);
-    const lastFixture = referenceFixtures.at(-1);
-    if (!firstFixture || !secondFixture || !previousLastFixture || !lastFixture) {
-      throw new Error("Missing reference fixtures.");
+    const fixtureIds = await page
+      .locator("#fixture option")
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value).filter(Boolean),
+      );
+    const firstFixtureId = fixtureIds[0];
+    const secondFixtureId = fixtureIds[1];
+    const previousLastFixtureId = fixtureIds.at(-2);
+    const lastFixtureId = fixtureIds.at(-1);
+    if (!firstFixtureId || !secondFixtureId || !previousLastFixtureId || !lastFixtureId) {
+      throw new Error("Missing selectable fixtures.");
     }
 
     const player = page.locator("qti-assessment-item-player");
     const previousFixture = page.getByRole("button", { name: "Load previous fixture" });
     const nextFixture = page.getByRole("button", { name: "Load next fixture" });
 
-    await expect(page.locator("#fixture")).toHaveValue(firstFixture.id);
+    await expect(page.locator("#fixture")).toHaveValue(firstFixtureId);
     await expect(previousFixture).toBeDisabled();
 
     await nextFixture.click();
-    await expect(page.locator("#fixture")).toHaveValue(secondFixture.id);
-    await expect.poll(() => loadedItemIdentifier(player)).toBe(secondFixture.id);
+    await expect(page.locator("#fixture")).toHaveValue(secondFixtureId);
+    await expect.poll(() => loadedItemIdentifier(player)).toBe(secondFixtureId);
     await expect(previousFixture).toBeEnabled();
 
-    await page.locator("#fixture").selectOption(lastFixture.id);
+    await page.locator("#fixture").selectOption(lastFixtureId);
     await expect(nextFixture).toBeDisabled();
 
     await previousFixture.click();
-    await expect(page.locator("#fixture")).toHaveValue(previousLastFixture.id);
-    await expect.poll(() => loadedItemIdentifier(player)).toBe(previousLastFixture.id);
+    await expect(page.locator("#fixture")).toHaveValue(previousLastFixtureId);
+    await expect.poll(() => loadedItemIdentifier(player)).toBe(previousLastFixtureId);
     await expect(nextFixture).toBeEnabled();
   });
 

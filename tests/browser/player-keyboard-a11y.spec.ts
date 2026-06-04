@@ -337,8 +337,10 @@ test.describe("player keyboard and accessibility", () => {
     await expectResponse(page, []);
     await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
 
-    await capuletRomeo.focus();
+    await capuletMidsummer.focus();
     await page.keyboard.press("Tab");
+    await expect(capuletRomeo).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
     await expect(capuletMidsummer).toBeFocused();
     await page.keyboard.press("Space");
     await expectResponse(page, ["C M"]);
