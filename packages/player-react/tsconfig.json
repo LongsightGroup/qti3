@@ -7,5 +7,5 @@
     "jsx": "react-jsx"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{ "path": "../player" }, { "path": "../player-adapter-test-utils" }]
+  "references": [{ "path": "../player" }]
 }

@@ -4,11 +4,13 @@
     "@longsightgroup/qti3-a11y": "workspace:*",
     "@longsightgroup/qti3-fixtures": "workspace:*",
     "@longsightgroup/qti3-player": "workspace:*",
+    "@longsightgroup/qti3-player-preact": "workspace:*",
     "@longsightgroup/qti3-player-react": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "preact": "10.29.2",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "vite": "8.0.12"

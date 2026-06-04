@@ -3,6 +3,240 @@ import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { loadFixture, pasteXml } from "./player-helpers.js";
 
 test.describe("player lifecycle", () => {
+  test("ignores stale loadUrl completions after a newer load starts", async ({ page }) => {
+    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async (xml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+
+      let resolveFirstFetch: ((xml: string) => void) | undefined;
+      const firstFetch = new Promise<string>((resolve) => {
+        resolveFirstFetch = resolve;
+      });
+      let fetchCount = 0;
+      const readyEvents: string[] = [];
+      player.addEventListener("qti-ready", () => readyEvents.push("qti-ready"));
+
+      const fetchXml = async () => {
+        fetchCount += 1;
+        return fetchCount === 1 ? firstFetch : xml;
+      };
+
+      const firstLoad = player.loadUrl("first.xml", { fetchXml });
+      const secondLoad = player.loadUrl("second.xml", { fetchXml });
+      await secondLoad;
+      const readyAfterSecondLoad = readyEvents.length;
+      resolveFirstFetch?.("<not-valid-qti/>");
+      await firstLoad;
+
+      const snapshot = {
+        childElementCount: player.childElementCount,
+        readyAfterSecondLoad,
+        readyTotal: readyEvents.length,
+        textContent: player.textContent ?? "",
+      };
+      player.remove();
+      return snapshot;
+    }, choiceXml);
+
+    expect(result.readyAfterSecondLoad).toBe(1);
+    expect(result.readyTotal).toBe(1);
+    expect(result.childElementCount).toBeGreaterThan(0);
+    expect(result.textContent).not.toContain("Unable to parse QTI item.");
+  });
+
+  test("clears rendered content when clearItem is called", async ({ page }) => {
+    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async (xml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+
+      await player.loadXml(xml);
+      const childCountAfterLoad = player.childElementCount;
+      player.clearItem();
+      const snapshot = {
+        childCountAfterClear: player.childElementCount,
+        childCountAfterLoad,
+        serializedAfterClear: player.serialize(),
+      };
+      player.remove();
+      return snapshot;
+    }, choiceXml);
+
+    expect(result.childCountAfterLoad).toBeGreaterThan(0);
+    expect(result.childCountAfterClear).toBe(0);
+    expect(result.serializedAfterClear).toBeUndefined();
+  });
+
+  test("reports loadUrl fetch failures as diagnostics instead of rejecting", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async () => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+      const diagnostics: Array<{
+        diagnostics: Array<{ code: string; message: string; severity: string }>;
+      }> = [];
+      player.addEventListener("qti-diagnostics", (event) => {
+        diagnostics.push(
+          (
+            event as CustomEvent<{
+              diagnostics: Array<{ code: string; message: string; severity: string }>;
+            }>
+          ).detail,
+        );
+      });
+
+      await player.loadUrl("missing.xml", {
+        fetchXml: async () => {
+          throw new Error("network unavailable");
+        },
+      });
+
+      const snapshot = {
+        diagnostics,
+        textContent: player.textContent ?? "",
+      };
+      player.remove();
+      return snapshot;
+    });
+
+    expect(result.diagnostics.at(-1)).toEqual({
+      diagnostics: [
+        expect.objectContaining({
+          code: "player.loadUrl",
+          message: "network unavailable",
+          severity: "error",
+        }),
+      ],
+    });
+    expect(result.textContent).toContain("Unable to load QTI item.");
+  });
+
+  test("reports restore misuse as diagnostics instead of throwing", async ({ page }) => {
+    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async (xml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+      const diagnostics: Array<{
+        diagnostics: Array<{ code: string; message: string; severity: string }>;
+      }> = [];
+      let restoreEvents = 0;
+      player.addEventListener("qti-diagnostics", (event) => {
+        diagnostics.push(
+          (
+            event as CustomEvent<{
+              diagnostics: Array<{ code: string; message: string; severity: string }>;
+            }>
+          ).detail,
+        );
+      });
+      player.addEventListener("qti-restore", () => {
+        restoreEvents += 1;
+      });
+
+      player.restore({
+        itemIdentifier: "choice-reference",
+        outcomes: {},
+        responses: {},
+        schema: "qti3.attempt-state.v1",
+        status: "initialized",
+        validationMessages: [],
+      });
+      const beforeLoadDiagnostic = diagnostics.at(-1);
+
+      await player.loadXml(xml);
+      const state = player.serialize();
+      if (!state) throw new Error("Expected loaded player state.");
+      player.restore({ ...state, itemIdentifier: "other-item" });
+
+      const snapshot = {
+        beforeLoadDiagnostic,
+        incompatibleStateDiagnostic: diagnostics.at(-1),
+        restoreEvents,
+      };
+      player.remove();
+      return snapshot;
+    }, choiceXml);
+
+    expect(result.beforeLoadDiagnostic).toEqual({
+      diagnostics: [
+        expect.objectContaining({
+          code: "player.restoreState",
+          message: "Cannot restore QTI state before loading an item.",
+          severity: "error",
+        }),
+      ],
+    });
+    expect(result.incompatibleStateDiagnostic).toEqual({
+      diagnostics: [
+        expect.objectContaining({
+          code: "player.restoreState",
+          message: "Cannot restore state for other-item into choice-reference.",
+          severity: "error",
+        }),
+      ],
+    });
+    expect(result.restoreEvents).toBe(0);
+  });
+
+  test("reports incompatible loadXml restored state as diagnostics instead of rejecting", async ({
+    page,
+  }) => {
+    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async (xml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+      await player.loadXml(xml);
+      const state = player.serialize();
+      if (!state) throw new Error("Expected loaded player state.");
+
+      const diagnostics: Array<{
+        diagnostics: Array<{ code: string; message: string; severity: string }>;
+      }> = [];
+      player.addEventListener("qti-diagnostics", (event) => {
+        diagnostics.push(
+          (
+            event as CustomEvent<{
+              diagnostics: Array<{ code: string; message: string; severity: string }>;
+            }>
+          ).detail,
+        );
+      });
+      await player.loadXml(xml, { state: { ...state, itemIdentifier: "other-item" } });
+
+      const snapshot = {
+        diagnostic: diagnostics.at(-1),
+        textContent: player.textContent ?? "",
+      };
+      player.remove();
+      return snapshot;
+    }, choiceXml);
+
+    expect(result.diagnostic).toEqual({
+      diagnostics: [
+        expect.objectContaining({
+          code: "player.restoreState",
+          message: "Cannot restore state for other-item into choice-reference.",
+          severity: "error",
+        }),
+      ],
+    });
+    expect(result.textContent).toContain("Unable to restore QTI state.");
+  });
+
   test("supports host lifecycle methods for state restore and attempt control", async ({
     page,
   }) => {
