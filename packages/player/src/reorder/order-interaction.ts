@@ -251,8 +251,6 @@ function renderSharedVocabularyOrderResponse(
     });
 
     const visibleLabel = sharedVocabularyLabel(interaction, index);
-    const accessibleLabel =
-      visibleLabel || messages.message("orderTargetLabel", { index: index + 1 });
     if (visibleLabel) {
       const label = document.createElement("span");
       label.className = "qti3-order-target-label";
@@ -263,7 +261,11 @@ function renderSharedVocabularyOrderResponse(
     if (!choice) {
       const empty = document.createElement("span");
       empty.className = "qti3-order-target-empty";
-      empty.textContent = messages.message("orderTargetEmpty", { label: accessibleLabel });
+      empty.textContent = visibleLabel
+        ? messages.message("orderTargetEmptyState")
+        : messages.message("orderTargetEmpty", {
+            label: messages.message("orderTargetLabel", { index: index + 1 }),
+          });
       slot.append(empty);
       return slot;
     }

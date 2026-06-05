@@ -97,6 +97,7 @@ export const PLAYER_MESSAGE_MANIFEST = [
   },
   { key: "orderedItemRemoved", resolver: "template", params: ["label"] },
   { key: "orderTargetLabel", resolver: "template", params: ["index"] },
+  { key: "orderTargetEmptyState", resolver: "plain" },
   { key: "orderTargetEmpty", resolver: "template", params: ["label"] },
   { key: "graphicOrderRegionsSelected", resolver: "plural", params: ["count"] },
   { key: "graphicOrderNoRegionsSelected", resolver: "plain" },

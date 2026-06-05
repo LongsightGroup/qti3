@@ -108,6 +108,7 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
     orderedItemAddedToPosition: "{label} added to position {position} of {total}.",
     orderedItemRemoved: "{label} removed from order.",
     orderTargetLabel: "Target {index}",
+    orderTargetEmptyState: "empty",
     orderTargetEmpty: "{label}, empty",
     "graphicOrderRegionsSelected.one": "{count} region ordered.",
     "graphicOrderRegionsSelected.other": "{count} regions ordered.",

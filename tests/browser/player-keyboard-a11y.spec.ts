@@ -8,6 +8,8 @@ import {
   operableControlSelector,
   pasteXml,
 } from "./player-helpers.js";
+import { loadSvMatrixItem } from "./shared-vocabulary-matrix/load.js";
+import { sharedVocabularyManifest } from "./shared-vocabulary-matrix/manifest.js";
 
 const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-match-tabular-shared-vocabulary" title="keyboard-match-tabular-shared-vocabulary" time-dependent="false">
@@ -363,8 +365,8 @@ test.describe("player keyboard and accessibility", () => {
     await expect(summary).toHaveAttribute("aria-live", "polite");
     const bank = layout.locator(".qti3-order-choices-bank");
     const firstTarget = layout.locator(".qti3-order-target-slot").first();
-    await expect(firstTarget).toContainText("1)");
-    await expect(firstTarget).toContainText("empty");
+    await expect(firstTarget.locator(".qti3-order-target-label")).toHaveText("1)");
+    await expect(firstTarget.locator(".qti3-order-target-empty")).toHaveText("empty");
 
     await bank.getByRole("button", { name: "Second step" }).focus();
     await page.keyboard.press("Enter");
@@ -391,8 +393,20 @@ test.describe("player keyboard and accessibility", () => {
     await layout.getByRole("button", { name: "Remove First step from order" }).click();
     await expectResponse(page, ["B"]);
     await expect(summary).toHaveText("First step removed from order.");
-    await expect(layout.locator(".qti3-order-target-slot").nth(1)).toContainText("empty");
+    await expect(
+      layout.locator(".qti3-order-target-slot").nth(1).locator(".qti3-order-target-empty"),
+    ).toHaveText("empty");
     await expect(bank.getByRole("button", { name: "First step" })).toBeVisible();
+  });
+
+  test("keeps fallback context for unlabeled shared vocabulary order targets", async ({ page }) => {
+    const fixture = sharedVocabularyManifest.find((entry) => entry.id === "order-labels-none");
+    if (!fixture) throw new Error("Missing order-labels-none shared vocabulary fixture.");
+    await loadSvMatrixItem(page, fixture);
+
+    const firstTarget = page.locator("qti-assessment-item-player .qti3-order-target-slot").first();
+    await expect(firstTarget.locator(".qti3-order-target-label")).toHaveCount(0);
+    await expect(firstTarget.locator(".qti3-order-target-empty")).toHaveText("Target 1, empty");
   });
 
   test("renders point movement controls as arrow icon buttons", async ({ page }) => {
