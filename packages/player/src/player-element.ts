@@ -138,10 +138,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   get keywordEmphasisEnabled(): boolean {
-    return (
-      this.keywordEmphasisOverride ??
-      this.getAttribute?.("data-keyword-emphasis") === "true"
-    );
+    return this.keywordEmphasisOverride ?? this.getAttribute?.("data-keyword-emphasis") === "true";
   }
 
   set keywordEmphasisEnabled(value: boolean | undefined) {

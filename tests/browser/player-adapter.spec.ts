@@ -135,7 +135,9 @@ for (const adapter of adapterPages) {
       await expectSnapshot(page, { instanceOfPlayer: true, messageCatalog });
     });
 
-    test("preserves host data-keyword-emphasis after rerender without the prop", async ({ page }) => {
+    test("preserves host data-keyword-emphasis after rerender without the prop", async ({
+      page,
+    }) => {
       await callHarness(page, "render", { xml: keywordEmphasisItemXml });
       await page.locator("qti-assessment-item-player").evaluate((element) => {
         element.setAttribute("data-keyword-emphasis", "true");
