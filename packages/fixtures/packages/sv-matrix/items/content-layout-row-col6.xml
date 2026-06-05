@@ -5,5 +5,8 @@
       <div id="sv-layout-left" class="qti-layout-col6">Left content column.</div>
       <div id="sv-layout-right" class="qti-layout-col6">Right content column.</div>
     </div>
+    <div id="sv-offset-row" class="qti-layout-row">
+      <div id="sv-offset-column" class="qti-layout-col-3 qti-layout-offset-3">Offset content column.</div>
+    </div>
   </qti-item-body>
 </qti-assessment-item>

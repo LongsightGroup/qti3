@@ -7,6 +7,7 @@ import {
   interactionSupport,
   parseQtiXml,
   processingSupport,
+  isEnforcedSharedVocabularyLevel,
   sharedVocabularyClassSupport,
 } from "@longsightgroup/qti3-core";
 import {
@@ -242,7 +243,7 @@ describe("@longsightgroup/qti3-cli", () => {
     );
 
     for (const support of sharedVocabularyClassSupport) {
-      if (support.level === "full") {
+      if (isEnforcedSharedVocabularyLevel(support.level)) {
         expect(support.tests?.length, support.className).toBeGreaterThan(0);
       }
     }

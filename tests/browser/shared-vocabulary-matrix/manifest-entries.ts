@@ -6,6 +6,7 @@ import {
   choiceA,
   choiceB,
   choiceLabels,
+  choiceList,
   extendedText,
   gapBank,
   gapLayout,
@@ -52,8 +53,9 @@ import {
   labelSuffixCases,
   selectionAssertions,
 } from "./manifest-helpers.js";
+import { contentManifestEntries } from "./manifest-entries-content.js";
 
-export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
+const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
   entry("choice-selections-dark", "choice", "qti-selections-dark", "stylesheet", [
     { type: "class-preserved", selector: choice, className: "qti-selections-dark" },
     {
@@ -221,6 +223,31 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
     { type: "class-preserved", selector: choice, className: "qti-input-control-hidden" },
     { type: "hidden-focusable-input", selector: `${choiceA} input` },
   ]),
+  entry(
+    "choice-writing-orientation-vertical-rl",
+    "choice",
+    "qti-writing-orientation-vertical-rl",
+    "stylesheet",
+    [
+      {
+        type: "class-preserved",
+        selector: choice,
+        className: "qti-writing-orientation-vertical-rl",
+      },
+      {
+        type: "computed-style",
+        selector: choiceList,
+        property: "writing-mode",
+        value: "vertical-rl",
+      },
+      {
+        type: "computed-style",
+        selector: `${choice} .qti3-choice-label`,
+        property: "text-orientation",
+        value: "upright",
+      },
+    ],
+  ),
   ...[...labelStyleCases, ...labelSuffixCases].map((item) =>
     entry(
       `choice-${item.id}`,
@@ -534,6 +561,32 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
     },
   ]),
   entry(
+    "match-tabular-header-hidden",
+    "match",
+    ["qti-match-tabular", "qti-header-hidden"],
+    "conditional",
+    [
+      { type: "class-preserved", selector: matchRoot, className: "qti-match-tabular" },
+      {
+        type: "class-preserved",
+        selector: `${player} .qti3-match-table`,
+        className: "qti-header-hidden",
+      },
+      { type: "element-count", selector: `${player} .qti3-match-table thead`, count: 0 },
+      {
+        type: "text",
+        selector: `${player} .qti3-match-table tbody tr:first-child th`,
+        value: "Capulet",
+      },
+      {
+        type: "attribute",
+        selector: `${player} .qti3-match-table-cell`,
+        name: "aria-label",
+        value: "Capulet to Romeo and Juliet",
+      },
+    ],
+  ),
+  entry(
     "gap-choices-top",
     "gapMatch",
     "qti-choices-top",
@@ -640,115 +693,9 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       },
     ],
   ),
-  entry("content-layout-row-col6", "content", ["qti-layout-row", "qti-layout-col6"], "stylesheet", [
-    {
-      type: "layout-width-ratio",
-      firstSelector: `${player} #sv-layout-left`,
-      secondSelector: `${player} #sv-layout-row`,
-      ratio: 0.5,
-      tolerance: 0.03,
-    },
-    {
-      type: "layout-width-ratio",
-      firstSelector: `${player} #sv-layout-right`,
-      secondSelector: `${player} #sv-layout-row`,
-      ratio: 0.5,
-      tolerance: 0.03,
-    },
-    {
-      type: "layout-same-row",
-      firstSelector: `${player} #sv-layout-left`,
-      secondSelector: `${player} #sv-layout-right`,
-      tolerance: 2,
-    },
-  ]),
-  entry("content-visually-hidden", "content", "qti-visually-hidden", "stylesheet", [
-    {
-      type: "class-preserved",
-      selector: `${player} #sv-visually-hidden`,
-      className: "qti-visually-hidden",
-    },
-    {
-      type: "computed-style",
-      selector: `${player} #sv-visually-hidden`,
-      property: "position",
-      value: "absolute",
-    },
-    {
-      type: "computed-style",
-      selector: `${player} #sv-visually-hidden`,
-      property: "clip-path",
-      value: "inset(50%)",
-    },
-    {
-      type: "computed-style-number",
-      selector: `${player} #sv-visually-hidden`,
-      property: "width",
-      comparison: "less-than-or-equal",
-      value: 1,
-    },
-    {
-      type: "computed-style-number",
-      selector: `${player} #sv-visually-hidden`,
-      property: "height",
-      comparison: "less-than-or-equal",
-      value: 1,
-    },
-    {
-      type: "aria-snapshot-contains",
-      selector: `${player} .qti3-item-body`,
-      text: "Screen reader vocabulary note",
-    },
-  ]),
-  entry("content-keyword-emphasis", "content", "qti-keyword-emphasis", "conditional", [
-    {
-      type: "class-preserved",
-      selector: `${player} #sv-keyword`,
-      className: "qti-keyword-emphasis",
-    },
-    {
-      type: "computed-style-same",
-      firstSelector: `${player} #sv-keyword`,
-      secondSelector: `${player} #sv-keyword-control`,
-      property: "font-weight",
-    },
-    {
-      type: "computed-style-same",
-      firstSelector: `${player} #sv-keyword`,
-      secondSelector: `${player} #sv-keyword-control`,
-      property: "text-decoration-line",
-    },
-    {
-      type: "set-attribute",
-      selector: player,
-      name: "data-keyword-emphasis",
-      value: "true",
-    },
-    {
-      type: "attribute",
-      selector: `${player} .qti3-player`,
-      name: "data-keyword-emphasis",
-      value: "true",
-    },
-    {
-      type: "computed-style-differs",
-      firstSelector: `${player} #sv-keyword`,
-      secondSelector: `${player} #sv-keyword-control`,
-      property: "font-weight",
-    },
-    {
-      type: "computed-style",
-      selector: `${player} #sv-keyword`,
-      property: "text-decoration-line",
-      value: "underline",
-    },
-  ]),
-  entry("content-suppress-tts", "content", "data-qti-suppress-tts", "stylesheet", [
-    {
-      type: "attribute",
-      selector: `${player} #sv-suppress-tts`,
-      name: "data-qti-suppress-tts",
-      value: "computer-read-aloud",
-    },
-  ]),
+];
+
+export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
+  ...interactionManifestEntries,
+  ...contentManifestEntries,
 ];

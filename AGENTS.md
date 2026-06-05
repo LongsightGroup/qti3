@@ -67,6 +67,7 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 - Add Playwright and axe-core coverage for browser-facing behavior.
 - Enforce accessibility with semantic assertions, not only screenshot comparison or axe-core scans.
 - Do not add dependencies to `qti3-core` without documented rationale.
+- Shared vocabulary classes with an enforced support level (`isEnforcedSharedVocabularyLevel` in `packages/core`) must be validated by `tests/browser/shared-vocabulary-matrix/coverage-policy.ts` and `tests/browser/player-shared-vocabulary.spec.ts`. Prefer a direct matrix fixture for each supported class. Generated stylesheet families may use representative matrix cases only when `sharedVocabularyMatrixCoverageFamilies` in `packages/core/src/shared-vocabulary-generated-families.ts` names the family, lists representative covered classes, and explains the rationale. Conditional classes should have direct matrix coverage unless they are explicitly documented as a generated family exception.
 
 ## Testing Rules
 

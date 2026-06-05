@@ -1,8 +1,9 @@
 import type { QtiInteractionType } from "../../../packages/core/src/types.js";
 
-export type SharedVocabularyInteractionType = QtiInteractionType | "content";
+export type { SharedVocabularySupportLevel } from "../../../packages/core/src/shared-vocabulary-levels.js";
+export { isEnforcedSharedVocabularyLevel } from "../../../packages/core/src/shared-vocabulary-levels.js";
 
-export type SharedVocabularySupportLevel = "full" | "stylesheet" | "conditional" | "pass-through";
+export type SharedVocabularyInteractionType = QtiInteractionType | "content";
 
 export type NumericComparison =
   | "less-than"

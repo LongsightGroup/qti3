@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-stylesheet-typography" title="content-stylesheet-typography" time-dependent="false" xml:lang="en">
+  <qti-item-body>
+    <p><span id="sv-underlined" class="qti-underline">Underlined vocabulary text.</span></p>
+    <p>
+      <span id="sv-inline" class="qti-italic qti-display-inline-block qti-valign-middle">Inline utility.</span>
+    </p>
+    <p id="sv-writing" class="qti-writing-mode-vertical-rl">
+      <span id="sv-orientation" class="qti-text-orientation-upright">A</span>
+      <span id="sv-combine" class="qti-text-combine-upright-all">2026</span>
+    </p>
+  </qti-item-body>
+</qti-assessment-item>

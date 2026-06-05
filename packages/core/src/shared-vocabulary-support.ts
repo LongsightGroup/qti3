@@ -1,4 +1,8 @@
 import {
+  SHARED_VOCABULARY_CONTENT_LIST_STYLE_TYPES,
+  SHARED_VOCABULARY_CONTENT_TEXT_INDENT_SUFFIXES,
+} from "./shared-vocabulary-generated-families.js";
+import {
   SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES,
   SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES,
   SHARED_VOCABULARY_INPUT_WIDTHS,
@@ -38,88 +42,6 @@ const interactionInputWidthFixtures = [
 ];
 const orderMinMaxMessagesFixture =
   "packages/fixtures/packages/sv-matrix/items/order-min-max-messages.xml";
-
-const contentListStyleTypes = [
-  "none",
-  "arabic-indic",
-  "armenian",
-  "bengali",
-  "cambodian",
-  "circle",
-  "cjk-earthly-branch",
-  "cjk-heavenly-stem",
-  "cjk-ideographic",
-  "decimal",
-  "decimal-leading-zero",
-  "devanagari",
-  "disc",
-  "ethiopic-halehame",
-  "ethiopic-halehame-am",
-  "ethiopic-halehame-ti-er",
-  "ethiopic-halehame-ti-et",
-  "georgian",
-  "gujarati",
-  "gurmukhi",
-  "hangul",
-  "hangul-consonant",
-  "hebrew",
-  "hiragana",
-  "hiragana-iroha",
-  "kannada",
-  "katakana",
-  "katakana-iroha",
-  "khmer",
-  "korean-hangul-formal",
-  "korean-hanja-formal",
-  "korean-hanja-informal",
-  "lao",
-  "lower-alpha",
-  "lower-armenian",
-  "lower-greek",
-  "lower-latin",
-  "lower-roman",
-  "malayalam",
-  "mongolian",
-  "myanmar",
-  "oriya",
-  "persian",
-  "simp-chinese-formal",
-  "simp-chinese-informal",
-  "square",
-  "telugu",
-  "thai",
-  "tibetan",
-  "trad-chinese-formal",
-  "trad-chinese-informal",
-  "upper-alpha",
-  "upper-armenian",
-  "upper-latin",
-  "upper-roman",
-  "urdu",
-] as const;
-
-const contentTextIndentSuffixes = [
-  "0",
-  "px",
-  "0p5",
-  "1",
-  "1p5",
-  "2",
-  "2p5",
-  "3",
-  "3p5",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "12",
-  "16",
-  "20",
-  "24",
-  "28",
-  "32",
-] as const;
 
 const choiceAndOrder: QtiInteractionType[] = ["choice", "order"];
 const choicesLayoutInteractions: QtiInteractionType[] = [
@@ -230,7 +152,9 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
     notes:
       "Rendered with additional emphasis only when candidate PNP keyword-emphasis support is enabled by the host.",
   }),
-  ...contentTextIndentSuffixes.map((suffix) => contentStylesheetEntry(`qti-text-indent-${suffix}`)),
+  ...SHARED_VOCABULARY_CONTENT_TEXT_INDENT_SUFFIXES.map((suffix) =>
+    contentStylesheetEntry(`qti-text-indent-${suffix}`),
+  ),
   ...["vertical-rl", "vertical-lr", "vertical-tb", "horizontal-tb"].map((mode) =>
     contentStylesheetEntry(`qti-writing-mode-${mode}`),
   ),
@@ -241,7 +165,7 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
   ),
   contentStylesheetEntry("qti-bordered"),
   contentStylesheetEntry("qti-well"),
-  ...contentListStyleTypes.map((styleType) =>
+  ...SHARED_VOCABULARY_CONTENT_LIST_STYLE_TYPES.map((styleType) =>
     contentStylesheetEntry(`qti-list-style-type-${styleType}`),
   ),
   contentStylesheetEntry("qti-underline"),

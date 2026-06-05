@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-stylesheet-generated-reps" title="content-stylesheet-generated-reps" time-dependent="false" xml:lang="en">
+  <qti-item-body>
+    <div id="sv-fullwidth" class="qti-width-full">Full-width utility text.</div>
+    <p id="sv-centered" class="qti-align-center qti-text-indent-2">Centered indented utility text.</p>
+    <ul id="sv-list" class="qti-list-style-type-square">
+      <li>Generated list-style vocabulary.</li>
+    </ul>
+    <p id="sv-writing" class="qti-writing-mode-vertical-rl">Vertical writing-mode vocabulary.</p>
+    <p id="sv-float" class="qti-float-left">Floating utility text.</p>
+  </qti-item-body>
+</qti-assessment-item>

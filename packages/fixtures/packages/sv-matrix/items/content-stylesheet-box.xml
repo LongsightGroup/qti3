@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-stylesheet-box" title="content-stylesheet-box" time-dependent="false" xml:lang="en">
+  <qti-item-body>
+    <div id="sv-utility-box" class="qti-bordered qti-well">
+      <p>Bordered well utility box.</p>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>

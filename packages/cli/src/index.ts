@@ -19,6 +19,7 @@ import {
   interactionSupport,
   parseQtiXml,
   processingSupport,
+  isEnforcedSharedVocabularyLevel,
   sharedVocabularyClassSupport,
   validateAssessmentItem,
   type QtiDiagnostic,
@@ -221,7 +222,7 @@ function assertSupportMatrix(): {
   }
 
   for (const support of sharedVocabularyClassSupport) {
-    if (support.level === "full" && (support.tests?.length ?? 0) === 0) {
+    if (isEnforcedSharedVocabularyLevel(support.level) && (support.tests?.length ?? 0) === 0) {
       failures.push(`${support.className} shared vocabulary entry must have test evidence.`);
     }
   }

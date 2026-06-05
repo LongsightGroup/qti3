@@ -57,6 +57,16 @@ export {
 } from "./support.js";
 export { sharedVocabularyClassSupport } from "./shared-vocabulary-support.js";
 export {
+  matrixCoverageFamilyForClass,
+  SHARED_VOCABULARY_CONTENT_LIST_STYLE_TYPES,
+  SHARED_VOCABULARY_CONTENT_TEXT_INDENT_SUFFIXES,
+  sharedVocabularyMatrixCoverageFamilies,
+} from "./shared-vocabulary-generated-families.js";
+export {
+  isEnforcedSharedVocabularyLevel,
+  type SharedVocabularySupportLevel,
+} from "./shared-vocabulary-levels.js";
+export {
   extendedTextCounterPosition,
   extendedTextCounterPositionFromAttributes,
   extendedTextHeightLines,

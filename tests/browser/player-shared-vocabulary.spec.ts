@@ -2,15 +2,17 @@ import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { sharedVocabularyClassSupport } from "../../packages/core/src/shared-vocabulary-support.js";
+import { isEnforcedSharedVocabularyLevel } from "../../packages/core/src/shared-vocabulary-levels.js";
 import { assertSvCase } from "./shared-vocabulary-matrix/assertions.js";
+import { findSharedVocabularyCoverageViolations } from "./shared-vocabulary-matrix/coverage-policy.js";
 import { loadSvMatrixItem } from "./shared-vocabulary-matrix/load.js";
 import {
   sharedVocabularyManifest,
   SV_MATRIX_FIXTURE_ROOT,
 } from "./shared-vocabulary-matrix/manifest.js";
 
-const matrixEntries = sharedVocabularyManifest.filter(
-  (entry) => entry.supportLevel !== "pass-through",
+const matrixEntries = sharedVocabularyManifest.filter((entry) =>
+  isEnforcedSharedVocabularyLevel(entry.supportLevel),
 );
 const matrixTestPath = "tests/browser/player-shared-vocabulary.spec.ts";
 
@@ -19,26 +21,14 @@ function classNames(className: string | string[]): string[] {
 }
 
 test.describe("shared vocabulary matrix", () => {
-  test("covers every full shared vocabulary support class", () => {
+  test("covers every gated shared vocabulary support class", () => {
     const matrixClasses = new Set(matrixEntries.flatMap((entry) => classNames(entry.className)));
-    const fullSupportClasses = [
-      ...new Set(
-        sharedVocabularyClassSupport
-          .filter((support) => support.level === "full")
-          .map((support) => support.className),
-      ),
-    ].sort();
-
-    expect(fullSupportClasses.length).toBeGreaterThan(0);
-    for (const className of fullSupportClasses) {
-      expect(matrixClasses.has(className), className).toBe(true);
-      const supportEntries = sharedVocabularyClassSupport.filter(
-        (support) => support.level === "full" && support.className === className,
-      );
-      for (const support of supportEntries) {
-        expect(support.tests ?? [], className).toContain(matrixTestPath);
-      }
-    }
+    const violations = findSharedVocabularyCoverageViolations({
+      matrixClasses,
+      support: sharedVocabularyClassSupport,
+      matrixTestPath,
+    });
+    expect(violations.map((violation) => violation.message)).toEqual([]);
   });
 
   test("has executable coverage for every non-pass-through manifest entry", async () => {
