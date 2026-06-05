@@ -225,6 +225,13 @@ references.
 Two response-bearing interactions have format-specific contracts worth calling out:
 
 - `qti-media-interaction` records play experiences as a `single` / `integer` response.
+  The player supports the QTI shared vocabulary
+  `data-qti-media-player-controls` tokens `none`, `default`, `play`, `rewind`, `captions`,
+  and `audioDescription`. `none` suppresses native media controls; all other recognized
+  tokens render native browser controls and are preserved on the rendered `<audio>` or
+  `<video>` element for host styling or custom enhancement. The player also supports
+  `data-qti-media-player-pause-delay` and `data-qti-media-player-pause-duration` as
+  second-based timers around playback start and user-initiated pauses.
 - `qti-drawing-interaction` requires a `single` / `file` response and serializes candidate
   drawings as image file data URLs.
 - `qti-portable-custom-interaction` supports the Portable Custom Interaction (PCI) host

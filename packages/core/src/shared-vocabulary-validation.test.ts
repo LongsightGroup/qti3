@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { parseQtiXml } from "./parser.js";
-import { validateSharedVocabularyExtendedText } from "./shared-vocabulary-validation.js";
+import {
+  validateSharedVocabularyExtendedText,
+  validateSharedVocabularyMediaPlayerControls,
+} from "./shared-vocabulary-validation.js";
 
 describe("shared vocabulary validation", () => {
   it("diagnoses invalid extended text height shared vocabulary", () => {
@@ -64,6 +67,47 @@ describe("shared vocabulary validation", () => {
           code: "interaction.sharedVocabulary.extendedTextCounterConflict",
           severity: "warning",
           message: expect.stringMatching(/qti-counter-up.*qti-counter-down/),
+        }),
+      ]),
+    );
+  });
+
+  it("diagnoses invalid media player controls tokens", () => {
+    const diagnostics = validateSharedVocabularyMediaPlayerControls({
+      value: "play speed captions",
+      subjectQtiName: "qti-media-interaction",
+    });
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "interaction.sharedVocabulary.mediaPlayerControlsInvalid",
+        severity: "warning",
+        message: expect.stringContaining("speed"),
+      }),
+    ]);
+  });
+
+  it("diagnoses invalid media player controls when parsing items", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-invalid" title="media-controls-invalid" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE">
+            <audio data-qti-media-player-controls="default speed">
+              <source src="audio.wav" type="audio/wav"/>
+            </audio>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.mediaPlayerControlsInvalid",
+          severity: "warning",
+          message: expect.stringContaining("speed"),
         }),
       ]),
     );

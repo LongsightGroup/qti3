@@ -1,4 +1,9 @@
-import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
+import {
+  mediaPlayerControlsTokens,
+  type QtiInteraction,
+  type QtiObjectAsset,
+  type QtiValue,
+} from "@longsightgroup/qti3-core";
 import { objectIsImage } from "../interaction-support.js";
 import { maximumMediaPlays, mediaPlayCount } from "../response-limits.js";
 
@@ -100,6 +105,7 @@ function configureMediaElement(
     media.append(trackElement);
   }
 
+  bindMediaPauseTiming(media, interaction, object);
   bindMediaPlayCount(media, interaction, mediaResponse);
 }
 
@@ -146,11 +152,151 @@ function mediaElementType(object: QtiObjectAsset): "audio" | "video" | undefined
 function mediaControlsMode(
   interaction: QtiInteraction,
   object: QtiObjectAsset,
-): string | undefined {
-  return (
+): "none" | "native" | undefined {
+  const value =
     interaction.attributes["data-qti-media-player-controls"] ??
-    object.attributes["data-qti-media-player-controls"]
+    object.attributes["data-qti-media-player-controls"];
+  const tokens = mediaPlayerControlsTokens(value);
+  if (tokens.length === 1 && tokens[0] === "none") return "none";
+  if (tokens.length > 0) return "native";
+  return undefined;
+}
+
+function mediaTimingSeconds(
+  attributeName: "data-qti-media-player-pause-delay" | "data-qti-media-player-pause-duration",
+  interaction: QtiInteraction,
+  object: QtiObjectAsset,
+): number | undefined {
+  const value = interaction.attributes[attributeName] ?? object.attributes[attributeName];
+  if (value === undefined) return undefined;
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds < 0) return undefined;
+  return seconds;
+}
+
+function bindMediaPauseTiming(
+  media: HTMLAudioElement | HTMLVideoElement,
+  interaction: QtiInteraction,
+  object: QtiObjectAsset,
+): void {
+  const pauseDelaySeconds = mediaTimingSeconds(
+    "data-qti-media-player-pause-delay",
+    interaction,
+    object,
   );
+  const pauseDurationSeconds = mediaTimingSeconds(
+    "data-qti-media-player-pause-duration",
+    interaction,
+    object,
+  );
+  if (pauseDelaySeconds === undefined && pauseDurationSeconds === undefined) return;
+
+  let internalPause = false;
+  let qtiTimerResume = false;
+  let delayTimer: number | undefined;
+  let durationTimer: number | undefined;
+  let pauseWindowActive = false;
+  let resumeAfterPauseWindow = false;
+  let playbackHasStarted = false;
+
+  const clearDelayTimer = () => {
+    if (delayTimer === undefined) return;
+    window.clearTimeout(delayTimer);
+    delayTimer = undefined;
+  };
+
+  const clearDurationTimer = () => {
+    if (durationTimer === undefined) return;
+    window.clearTimeout(durationTimer);
+    durationTimer = undefined;
+  };
+
+  const resumePlayback = () => {
+    qtiTimerResume = true;
+    delete media.dataset.qtiMediaPlayerPauseState;
+    try {
+      void media.play().catch(() => {
+        qtiTimerResume = false;
+      });
+    } catch {
+      qtiTimerResume = false;
+    }
+  };
+
+  const resumeAfterDelay = () => {
+    if (pauseDelaySeconds === undefined || pauseDelaySeconds === 0) {
+      resumePlayback();
+      return;
+    }
+    media.dataset.qtiMediaPlayerPauseState = "delay";
+    delayTimer = window.setTimeout(() => {
+      delayTimer = undefined;
+      resumePlayback();
+    }, pauseDelaySeconds * 1000);
+  };
+
+  const pauseForDelay = () => {
+    internalPause = true;
+    media.pause();
+    internalPause = false;
+    resumeAfterDelay();
+  };
+
+  media.addEventListener(
+    "play",
+    () => {
+      if (qtiTimerResume) {
+        qtiTimerResume = false;
+        playbackHasStarted = true;
+        return;
+      }
+
+      if (pauseWindowActive) {
+        resumeAfterPauseWindow = true;
+        internalPause = true;
+        media.pause();
+        internalPause = false;
+        return;
+      }
+
+      if (pauseDelaySeconds === undefined || pauseDelaySeconds === 0) {
+        playbackHasStarted = true;
+        return;
+      }
+
+      clearDelayTimer();
+      pauseForDelay();
+    },
+    { capture: true },
+  );
+
+  media.addEventListener("pause", () => {
+    if (internalPause || !playbackHasStarted || pauseDurationSeconds === undefined) return;
+    if (media.ended) return;
+    clearDurationTimer();
+    pauseWindowActive = true;
+    resumeAfterPauseWindow = true;
+    media.dataset.qtiMediaPlayerPauseState = "pause";
+    durationTimer = window.setTimeout(() => {
+      durationTimer = undefined;
+      pauseWindowActive = false;
+      if (!resumeAfterPauseWindow) {
+        delete media.dataset.qtiMediaPlayerPauseState;
+        return;
+      }
+      resumeAfterPauseWindow = false;
+      resumeAfterDelay();
+    }, pauseDurationSeconds * 1000);
+  });
+
+  media.addEventListener("ended", () => {
+    playbackHasStarted = false;
+    pauseWindowActive = false;
+    resumeAfterPauseWindow = false;
+    clearDelayTimer();
+    clearDurationTimer();
+    delete media.dataset.qtiMediaPlayerPauseState;
+  });
 }
 
 function bindMediaPlayCount(
@@ -174,6 +320,7 @@ function bindMediaPlayCount(
   };
 
   media.addEventListener("play", () => {
+    if (media.dataset.qtiMediaPlayerPauseState === "delay") return;
     if (mediaResponse.isCompleted?.()) {
       return;
     }

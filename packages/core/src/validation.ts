@@ -24,6 +24,7 @@ import type {
 import {
   validateSharedVocabularyExtendedText,
   validateSharedVocabularyInputWidth,
+  validateSharedVocabularyMediaPlayerControls,
 } from "./shared-vocabulary-validation.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
 import { qtiValueToStringList } from "./value-format.js";
@@ -1701,12 +1702,18 @@ function validateInteractionSharedVocabulary(
     interaction.type !== "inlineChoice" &&
     interaction.type !== "textEntry" &&
     interaction.type !== "extendedText" &&
+    interaction.type !== "media" &&
     interaction.type !== "order"
   ) {
     return;
   }
   const classNames = sharedClassNames(interaction.attributes);
   const classNameSet = new Set(classNames);
+  if (interaction.type === "media") {
+    validateMediaInteractionSharedVocabulary(interaction, diagnostics);
+    return;
+  }
+
   if (interaction.type === "inlineChoice" || interaction.type === "textEntry") {
     validateInteractionInputWidthSharedVocabulary(interaction, classNames, diagnostics);
     return;
@@ -1990,6 +1997,30 @@ function validateInteractionInputWidthSharedVocabulary(
       source: interaction.source,
       conflictCode: "interaction.sharedVocabulary.inputWidthConflict",
       invalidCode: "interaction.sharedVocabulary.inputWidthInvalid",
+    }),
+  );
+}
+
+function validateMediaInteractionSharedVocabulary(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  diagnostics.push(
+    ...validateSharedVocabularyMediaPlayerControls({
+      value: interaction.attributes["data-qti-media-player-controls"],
+      subjectQtiName: interaction.qtiName,
+      path: interaction.source?.path,
+      source: interaction.source,
+    }),
+  );
+
+  if (!interaction.object) return;
+  diagnostics.push(
+    ...validateSharedVocabularyMediaPlayerControls({
+      value: interaction.object.attributes["data-qti-media-player-controls"],
+      subjectQtiName: `${interaction.qtiName} media object`,
+      path: interaction.object.source?.path ?? interaction.source?.path,
+      source: interaction.object.source ?? interaction.source,
     }),
   );
 }

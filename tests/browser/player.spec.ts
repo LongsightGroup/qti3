@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { expect, type Locator, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
   adaptiveFixtures,
   basicItemPlayerFixtures,
@@ -29,6 +29,34 @@ async function loadedItemIdentifier(player: Locator): Promise<string | undefined
     };
     return qtiPlayer.serialize()?.itemIdentifier;
   });
+}
+
+async function videoBottomStripLuma(page: Page, video: Locator): Promise<number> {
+  const image = await video.screenshot();
+  return page.evaluate(
+    async (dataUrl) => {
+      const image = new Image();
+      image.src = dataUrl;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas 2D context unavailable.");
+      context.drawImage(image, 0, 0);
+      const height = Math.min(36, canvas.height);
+      const data = context.getImageData(0, canvas.height - height, canvas.width, height).data;
+      let total = 0;
+      for (let index = 0; index < data.length; index += 4) {
+        const red = data[index] ?? 0;
+        const green = data[index + 1] ?? 0;
+        const blue = data[index + 2] ?? 0;
+        total += 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+      }
+      return total / (data.length / 4);
+    },
+    `data:image/png;base64,${image.toString("base64")}`,
+  );
 }
 
 test.describe("Basic item player readiness", () => {
@@ -1204,6 +1232,157 @@ test.describe("manual harness", () => {
     await expect(audio).toHaveAttribute("autoplay", "");
     await expect(audio).toHaveAttribute("data-qti-media-player-controls", "none");
     await expect(page.locator("qti-assessment-item-player .qti3-actions")).toHaveCount(0);
+  });
+
+  test("maps supported media player control tokens to native controls", async ({ page }) => {
+    await page.goto("/");
+
+    for (const token of ["default", "play", "rewind", "captions", "audioDescription"] as const) {
+      await pasteXml(
+        page,
+        `
+        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-${token}" title="media-controls-${token}" time-dependent="false">
+          <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+          <qti-item-body>
+            <qti-media-interaction response-identifier="RESPONSE">
+              <audio data-qti-media-player-controls="${token}">
+                <source src="audio-${token}.wav" type="audio/wav"/>
+              </audio>
+            </qti-media-interaction>
+          </qti-item-body>
+        </qti-assessment-item>
+      `,
+      );
+
+      const audio = page.locator("qti-assessment-item-player audio");
+      await expect(audio).toHaveAttribute("controls", "");
+      await expect(audio).toHaveAttribute("data-qti-media-player-controls", token);
+    }
+
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-combined" title="media-controls-combined" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" data-qti-media-player-controls="play captions">
+            <audio>
+              <source src="combined.wav" type="audio/wav"/>
+            </audio>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    await expect(audio).toHaveAttribute("controls", "");
+    await expect(audio).toHaveAttribute("data-qti-media-player-controls", "play captions");
+  });
+
+  test("renders visible native video controls for default but not none", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="video-control-visibility" title="video-control-visibility" time-dependent="false">
+        <qti-response-declaration identifier="DEFAULT_RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-response-declaration identifier="NONE_RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="DEFAULT_RESPONSE">
+            <qti-prompt>Default controls video.</qti-prompt>
+            <video width="320" height="180" data-qti-media-player-controls="default">
+              <source src="default-controls.mp4" type="video/mp4"/>
+            </video>
+          </qti-media-interaction>
+          <qti-media-interaction response-identifier="NONE_RESPONSE">
+            <qti-prompt>No controls video.</qti-prompt>
+            <video width="320" height="180" data-qti-media-player-controls="none">
+              <source src="no-controls.mp4" type="video/mp4"/>
+            </video>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const defaultVideo = page.locator("qti-assessment-item-player video").first();
+    const noneVideo = page.locator("qti-assessment-item-player video").nth(1);
+    await expect(defaultVideo).toHaveAttribute("controls", "");
+    await expect(noneVideo).not.toHaveAttribute("controls", "");
+
+    await defaultVideo.hover();
+    const defaultBottom = await videoBottomStripLuma(page, defaultVideo);
+    await noneVideo.hover();
+    const noneBottom = await videoBottomStripLuma(page, noneVideo);
+    expect(
+      Math.abs(defaultBottom - noneBottom),
+      `default native controls bottom luminance ${defaultBottom}, none ${noneBottom}`,
+    ).toBeGreaterThan(4);
+  });
+
+  test("applies media pause delay and pause duration timers", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-pause-timing" title="media-pause-timing" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE">
+            <audio data-qti-media-player-pause-delay="0.02" data-qti-media-player-pause-duration="0.03">
+              <source src="timed.wav" type="audio/wav"/>
+            </audio>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    const result = await audio.evaluate(async (element) => {
+      const media = element as HTMLMediaElement & { __qtiCalls?: string[] };
+      const calls: string[] = [];
+      media.__qtiCalls = calls;
+      media.pause = () => {
+        calls.push("pause");
+        media.dispatchEvent(new Event("pause"));
+      };
+      media.play = () => {
+        calls.push("play");
+        window.setTimeout(() => media.dispatchEvent(new Event("play")), 0);
+        return Promise.resolve();
+      };
+
+      media.dispatchEvent(new Event("play"));
+      const delayState = media.dataset.qtiMediaPlayerPauseState;
+      await new Promise((resolve) => window.setTimeout(resolve, 40));
+      const playCountAfterDelay = media.dataset.playCount;
+
+      media.dispatchEvent(new Event("pause"));
+      const pauseState = media.dataset.qtiMediaPlayerPauseState;
+      const callsBeforeDuration = calls.length;
+      await new Promise((resolve) => window.setTimeout(resolve, 20));
+      const callsDuringDuration = calls.length;
+      await new Promise((resolve) => window.setTimeout(resolve, 60));
+
+      return {
+        calls,
+        delayState,
+        pauseState,
+        callsBeforeDuration,
+        callsDuringDuration,
+        finalState: media.dataset.qtiMediaPlayerPauseState,
+        playCountAfterDelay,
+      };
+    });
+
+    expect(result.delayState).toBe("delay");
+    expect(result.playCountAfterDelay).toBe("1");
+    expect(result.pauseState).toBe("pause");
+    expect(result.callsDuringDuration).toBe(result.callsBeforeDuration);
+    expect(result.calls).toEqual(["pause", "play", "play"]);
+    expect(result.finalState).toBeUndefined();
   });
 
   test("counts media play experiences without counting pause resume", async ({ page }) => {

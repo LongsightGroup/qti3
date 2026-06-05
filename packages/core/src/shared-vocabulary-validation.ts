@@ -2,12 +2,14 @@ import {
   formatSupportedExtendedTextCounterClasses,
   formatSupportedExtendedTextHeightLinesClasses,
   formatSupportedInputWidthClasses,
+  formatSupportedMediaPlayerControlsTokens,
   isSupportedExtendedTextCounterClassName,
   isSupportedExtendedTextHeightLinesClassName,
   isSupportedInputWidthClassName,
   supportedExtendedTextCounterClassNames,
   supportedExtendedTextHeightLinesClassNames,
   supportedInputWidthClassNames,
+  unsupportedMediaPlayerControlsTokens,
 } from "./shared-vocabulary.js";
 import type { QtiDiagnostic, QtiSourceLocation } from "./types.js";
 
@@ -153,5 +155,28 @@ export function validateSharedVocabularyExtendedText(
   return [
     ...validateSharedVocabularyExtendedTextHeightLines(options),
     ...validateSharedVocabularyExtendedTextCounter(options),
+  ];
+}
+
+export interface SharedVocabularyMediaPlayerControlsValidationOptions {
+  value: string | undefined;
+  subjectQtiName: string;
+  path?: string | undefined;
+  source?: QtiSourceLocation | undefined;
+}
+
+export function validateSharedVocabularyMediaPlayerControls(
+  options: SharedVocabularyMediaPlayerControlsValidationOptions,
+): QtiDiagnostic[] {
+  const unsupported = unsupportedMediaPlayerControlsTokens(options.value);
+  if (unsupported.length === 0) return [];
+  return [
+    {
+      code: "interaction.sharedVocabulary.mediaPlayerControlsInvalid",
+      severity: "warning",
+      message: `${options.subjectQtiName} data-qti-media-player-controls token ${[...new Set(unsupported)].join(", ")} is not supported; expected ${formatSupportedMediaPlayerControlsTokens()}.`,
+      path: options.path,
+      source: options.source,
+    },
   ];
 }

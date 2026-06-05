@@ -17,11 +17,24 @@ export const SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES = [
 
 export type SharedVocabularyExtendedTextCounterPosition = "up" | "down";
 
+export const SHARED_VOCABULARY_MEDIA_PLAYER_CONTROLS = [
+  "none",
+  "default",
+  "play",
+  "rewind",
+  "captions",
+  "audioDescription",
+] as const;
+
+export type SharedVocabularyMediaPlayerControls =
+  (typeof SHARED_VOCABULARY_MEDIA_PLAYER_CONTROLS)[number];
+
 const inputWidthSet = new Set<number>(SHARED_VOCABULARY_INPUT_WIDTHS);
 const extendedTextHeightLinesSet = new Set<number>(SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES);
 const extendedTextCounterClassSet = new Set<string>(
   SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES,
 );
+const mediaPlayerControlsSet = new Set<string>(SHARED_VOCABULARY_MEDIA_PLAYER_CONTROLS);
 
 const inputWidthClassPattern = /^qti-input-width-(\d+)$/;
 const extendedTextHeightLinesClassPattern = /^qti-height-lines-(\d+)$/;
@@ -111,6 +124,22 @@ export function supportedExtendedTextHeightLinesClassNames(classNames: string[])
 
 export function supportedExtendedTextCounterClassNames(classNames: string[]): string[] {
   return classNames.filter((className) => extendedTextCounterClassSet.has(className));
+}
+
+export function mediaPlayerControlsTokens(value: string | undefined): string[] {
+  return (value ?? "").split(/\s+/).filter(Boolean);
+}
+
+export function unsupportedMediaPlayerControlsTokens(value: string | undefined): string[] {
+  return mediaPlayerControlsTokens(value).filter((token) => !mediaPlayerControlsSet.has(token));
+}
+
+export function isSupportedMediaPlayerControlsToken(token: string): boolean {
+  return mediaPlayerControlsSet.has(token);
+}
+
+export function formatSupportedMediaPlayerControlsTokens(): string {
+  return SHARED_VOCABULARY_MEDIA_PLAYER_CONTROLS.join(", ");
 }
 
 export function isSupportedInputWidthClassName(className: string): boolean {

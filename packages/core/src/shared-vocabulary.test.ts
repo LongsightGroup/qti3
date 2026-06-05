@@ -8,19 +8,24 @@ import {
   formatSupportedExtendedTextHeightLinesClasses,
   formatSupportedGapInputWidthClasses,
   formatSupportedInputWidthClasses,
+  formatSupportedMediaPlayerControlsTokens,
   gapInputWidthFromAttributes,
   isSupportedExtendedTextCounterClassName,
   isSupportedExtendedTextHeightLinesClassName,
   inputWidthFromAttributes,
   isSupportedInputWidthClassName,
+  isSupportedMediaPlayerControlsToken,
+  mediaPlayerControlsTokens,
   SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES,
   SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES,
   SHARED_VOCABULARY_GAP_INPUT_WIDTHS,
   SHARED_VOCABULARY_INPUT_WIDTHS,
+  SHARED_VOCABULARY_MEDIA_PLAYER_CONTROLS,
   supportedExtendedTextCounterClassNames,
   supportedExtendedTextHeightLinesClassNames,
   supportedGapInputWidthClassNames,
   supportedInputWidthClassNames,
+  unsupportedMediaPlayerControlsTokens,
 } from "./shared-vocabulary.js";
 import type { QtiInteraction } from "./types.js";
 
@@ -135,5 +140,25 @@ describe("shared vocabulary", () => {
     expect(isSupportedExtendedTextCounterClassName("qti-counter-up")).toBe(true);
     expect(isSupportedExtendedTextCounterClassName("qti-counter-x")).toBe(false);
     expect(formatSupportedExtendedTextCounterClasses()).toBe("qti-counter-up, qti-counter-down");
+  });
+
+  it("lists and validates media player control tokens", () => {
+    expect(SHARED_VOCABULARY_MEDIA_PLAYER_CONTROLS).toEqual([
+      "none",
+      "default",
+      "play",
+      "rewind",
+      "captions",
+      "audioDescription",
+    ]);
+    expect(mediaPlayerControlsTokens("play captions audioDescription")).toEqual([
+      "play",
+      "captions",
+      "audioDescription",
+    ]);
+    expect(unsupportedMediaPlayerControlsTokens("play speed captions")).toEqual(["speed"]);
+    expect(isSupportedMediaPlayerControlsToken("rewind")).toBe(true);
+    expect(isSupportedMediaPlayerControlsToken("speed")).toBe(false);
+    expect(formatSupportedMediaPlayerControlsTokens()).toContain("audioDescription");
   });
 });
