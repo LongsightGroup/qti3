@@ -1,11 +1,12 @@
-import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { cp, readFile } from "node:fs/promises";
+import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { type ResolvedConfig, defineConfig } from "vite";
 
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
-const galleryHtmlPath = resolve(repoRoot, "tests/browser/fixtures/sv-gallery.html");
-const galleryBase = `/@fs${dirname(galleryHtmlPath)}/`;
+const galleryHtmlPath = resolve(repoRoot, "examples/manual/sv-gallery/index.html");
+const svMatrixItemsPath = resolve(repoRoot, "packages/fixtures/packages/sv-matrix/items");
+let buildOutDir = "";
 
 export default defineConfig({
   resolve: {
@@ -16,6 +17,14 @@ export default defineConfig({
   esbuild: {
     jsx: "automatic",
     jsxImportSource: "react",
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        index: resolve(repoRoot, "examples/manual/index.html"),
+        "sv-gallery/index": galleryHtmlPath,
+      },
+    },
   },
   plugins: [
     {
@@ -31,6 +40,11 @@ export default defineConfig({
     },
     {
       name: "qti3-sv-gallery",
+      configResolved(config: ResolvedConfig) {
+        buildOutDir = isAbsolute(config.build.outDir)
+          ? config.build.outDir
+          : resolve(config.root, config.build.outDir);
+      },
       configureServer(server) {
         server.middlewares.use(async (request, response, next) => {
           const pathname = request.url?.split("?")[0];
@@ -41,13 +55,9 @@ export default defineConfig({
 
           try {
             const html = await readFile(galleryHtmlPath, "utf8");
-            const htmlForAlias = html.replace(
-              `src="./sv-gallery.ts"`,
-              `src="${galleryBase}sv-gallery.ts"`,
-            );
             const transformedHtml = await server.transformIndexHtml(
               request.url ?? "/sv-gallery",
-              htmlForAlias,
+              html.replace(`src="../src/sv-gallery.ts"`, `src="/src/sv-gallery.ts"`),
             );
             response.statusCode = 200;
             response.setHeader("Content-Type", "text/html");
@@ -56,6 +66,13 @@ export default defineConfig({
             next(error);
           }
         });
+      },
+      async writeBundle() {
+        await cp(
+          svMatrixItemsPath,
+          resolve(buildOutDir, "packages/fixtures/packages/sv-matrix/items"),
+          { recursive: true },
+        );
       },
     },
   ],

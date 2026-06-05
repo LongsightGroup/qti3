@@ -30,6 +30,7 @@ const entries: GalleryCase[] = sharedVocabularyManifest
 
 const moduleUrl = new URL(import.meta.url);
 const repoRootUrl = new URL("../../../", moduleUrl);
+const fixtureRootUrl = moduleUrl.pathname.includes("/@fs/") ? repoRootUrl : staticSiteRootUrl();
 const player = requiredElement<QtiGalleryPlayer>("#player");
 const interactionFilter = requiredElement<HTMLSelectElement>("#interaction-filter");
 const familyFilter = requiredElement<HTMLSelectElement>("#family-filter");
@@ -237,9 +238,18 @@ function classPreservationAssertions(
 }
 
 async function fetchXml(entry: SharedVocabularyManifestEntry): Promise<string> {
-  const response = await fetch(new URL(entry.fixturePath, repoRootUrl));
+  const response = await fetch(new URL(entry.fixturePath, fixtureRootUrl));
   if (!response.ok) throw new Error(`Unable to load ${entry.fixturePath}.`);
   return response.text();
+}
+
+function staticSiteRootUrl(): URL {
+  const pageUrl = new URL(location.href);
+  const galleryIndex = pageUrl.pathname.indexOf("/sv-gallery");
+  if (galleryIndex >= 0) {
+    return new URL(`${pageUrl.pathname.slice(0, galleryIndex + 1)}`, pageUrl.origin);
+  }
+  return new URL("./", pageUrl);
 }
 
 async function copyText(text: string, successMessage: string): Promise<void> {
