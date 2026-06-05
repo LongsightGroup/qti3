@@ -1,6 +1,13 @@
 import {
+  SHARED_VOCABULARY_CHOICE_WRITING_ORIENTATIONS,
+  SHARED_VOCABULARY_CONTENT_ALIGNMENTS,
+  SHARED_VOCABULARY_CONTENT_FLOAT_SUFFIXES,
   SHARED_VOCABULARY_CONTENT_LIST_STYLE_TYPES,
   SHARED_VOCABULARY_CONTENT_TEXT_INDENT_SUFFIXES,
+  SHARED_VOCABULARY_CONTENT_VALIGNS,
+  SHARED_VOCABULARY_CONTENT_WRITING_MODES,
+  SHARED_VOCABULARY_LAYOUT_COLUMN_SPAN_COUNT,
+  SHARED_VOCABULARY_LAYOUT_OFFSET_COUNT,
 } from "./shared-vocabulary-generated-families.js";
 import {
   SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES,
@@ -125,18 +132,23 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
     "qti-layout-row",
     "Twelve-column content layout row; validated for supported child column spans and offsets.",
   ),
-  ...Array.from({ length: 12 }, (_, index) => index + 1).flatMap((span) => [
+  ...Array.from(
+    { length: SHARED_VOCABULARY_LAYOUT_COLUMN_SPAN_COUNT },
+    (_, index) => index + 1,
+  ).flatMap((span) => [
     contentStylesheetEntry(`qti-layout-col${span}`),
     contentStylesheetEntry(`qti-layout-col-${span}`),
   ]),
-  ...Array.from({ length: 11 }, (_, index) => index + 1).flatMap((offset) => [
-    contentStylesheetEntry(`qti-layout-offset${offset}`),
-    contentStylesheetEntry(`qti-layout-offset-${offset}`),
-  ]),
-  ...["left", "center", "right"].map((alignment) =>
+  ...Array.from({ length: SHARED_VOCABULARY_LAYOUT_OFFSET_COUNT }, (_, index) => index + 1).flatMap(
+    (offset) => [
+      contentStylesheetEntry(`qti-layout-offset${offset}`),
+      contentStylesheetEntry(`qti-layout-offset-${offset}`),
+    ],
+  ),
+  ...SHARED_VOCABULARY_CONTENT_ALIGNMENTS.map((alignment) =>
     contentStylesheetEntry(`qti-align-${alignment}`),
   ),
-  ...["top", "middle", "baseline", "bottom"].map((alignment) =>
+  ...SHARED_VOCABULARY_CONTENT_VALIGNS.map((alignment) =>
     contentStylesheetEntry(`qti-valign-${alignment}`),
   ),
   contentStylesheetEntry("qti-fullwidth"),
@@ -155,13 +167,13 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
   ...SHARED_VOCABULARY_CONTENT_TEXT_INDENT_SUFFIXES.map((suffix) =>
     contentStylesheetEntry(`qti-text-indent-${suffix}`),
   ),
-  ...["vertical-rl", "vertical-lr", "vertical-tb", "horizontal-tb"].map((mode) =>
+  ...SHARED_VOCABULARY_CONTENT_WRITING_MODES.map((mode) =>
     contentStylesheetEntry(`qti-writing-mode-${mode}`),
   ),
   contentStylesheetEntry("qti-text-orientation-upright"),
   contentStylesheetEntry("qti-text-combine-upright-all"),
-  ...["left", "right", "none", "clearfix", "clear-left", "clear-right", "clear-both"].map(
-    (floatClass) => contentStylesheetEntry(`qti-float-${floatClass}`),
+  ...SHARED_VOCABULARY_CONTENT_FLOAT_SUFFIXES.map((floatClass) =>
+    contentStylesheetEntry(`qti-float-${floatClass}`),
   ),
   contentStylesheetEntry("qti-bordered"),
   contentStylesheetEntry("qti-well"),
@@ -211,7 +223,7 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
     ["choice", "hottext"],
     [...browserBehaviorTests, "tests/browser/player-keyboard-a11y.spec.ts"],
   ),
-  ...["vertical-rl", "vertical-lr"].map((orientation) =>
+  ...SHARED_VOCABULARY_CHOICE_WRITING_ORIENTATIONS.map((orientation) =>
     interactionStylesheetEntry(
       `qti-writing-orientation-${orientation}`,
       ["choice"],

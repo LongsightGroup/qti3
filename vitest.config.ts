@@ -20,6 +20,10 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: false,
-    include: ["packages/**/*.test.ts", "packages/**/*.test.tsx"],
+    include: [
+      "packages/**/*.test.ts",
+      "packages/**/*.test.tsx",
+      "tests/browser/shared-vocabulary-matrix/coverage-policy.test.ts",
+    ],
   },
 });

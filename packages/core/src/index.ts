@@ -57,9 +57,21 @@ export {
 } from "./support.js";
 export { sharedVocabularyClassSupport } from "./shared-vocabulary-support.js";
 export {
+  findSharedVocabularyCoverageViolations,
+  type SharedVocabularyCoverageViolation,
+} from "./shared-vocabulary-coverage-policy.js";
+export {
   matrixCoverageFamilyForClass,
+  SHARED_VOCABULARY_CHOICE_WRITING_ORIENTATIONS,
+  SHARED_VOCABULARY_CONTENT_ALIGNMENTS,
+  SHARED_VOCABULARY_CONTENT_FLOAT_SUFFIXES,
   SHARED_VOCABULARY_CONTENT_LIST_STYLE_TYPES,
   SHARED_VOCABULARY_CONTENT_TEXT_INDENT_SUFFIXES,
+  SHARED_VOCABULARY_CONTENT_VALIGNS,
+  SHARED_VOCABULARY_CONTENT_WIDTH_ALIASES,
+  SHARED_VOCABULARY_CONTENT_WRITING_MODES,
+  SHARED_VOCABULARY_LAYOUT_COLUMN_SPAN_COUNT,
+  SHARED_VOCABULARY_LAYOUT_OFFSET_COUNT,
   sharedVocabularyMatrixCoverageFamilies,
 } from "./shared-vocabulary-generated-families.js";
 export {
