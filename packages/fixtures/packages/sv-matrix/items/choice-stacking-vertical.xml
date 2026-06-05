@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-stacking-vertical" title="choice-stacking-vertical" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1" class="qti-choices-stacking-3 qti-orientation-vertical">
+      <qti-simple-choice identifier="A">First stacked vertical choice.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second stacked vertical choice.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third stacked vertical choice.</qti-simple-choice>
+      <qti-simple-choice identifier="D">Fourth stacked vertical choice.</qti-simple-choice>
+      <qti-simple-choice identifier="E">Fifth stacked vertical choice.</qti-simple-choice>
+      <qti-simple-choice identifier="F">Sixth stacked vertical choice.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>

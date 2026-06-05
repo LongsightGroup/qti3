@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-layout-row-col6" title="content-layout-row-col6" time-dependent="false" xml:lang="en">
+  <qti-item-body>
+    <div id="sv-layout-row" class="qti-layout-row">
+      <div id="sv-layout-left" class="qti-layout-col6">Left content column.</div>
+      <div id="sv-layout-right" class="qti-layout-col6">Right content column.</div>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>

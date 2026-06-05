@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-suppress-tts" title="content-suppress-tts" time-dependent="false" xml:lang="en">
+  <qti-item-body>
+    <p id="sv-suppress-tts" data-qti-suppress-tts="computer-read-aloud">This visual-only passage metadata is preserved.</p>
+  </qti-item-body>
+</qti-assessment-item>

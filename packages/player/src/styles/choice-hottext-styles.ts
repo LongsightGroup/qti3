@@ -114,6 +114,8 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 .qti3-choice.qti-selections-dark .qti3-choice-option:not([data-selected="true"]) {
   border-color: Highlight;
   background: color-mix(in srgb, Highlight 28%, Canvas);
+  color: color-mix(in srgb, CanvasText 72%, Highlight);
+  opacity: 0.86;
 }
 
 .qti3-choice.qti-unselected-hidden
@@ -121,6 +123,7 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   border-color: transparent;
   background: transparent;
   color: inherit;
+  opacity: 0.58;
 }
 
 .qti3-hottext-group {

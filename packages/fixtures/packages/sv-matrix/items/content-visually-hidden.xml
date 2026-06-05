@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-visually-hidden" title="content-visually-hidden" time-dependent="false" xml:lang="en">
+  <qti-item-body>
+    <p>Visible lead text <span id="sv-visually-hidden" class="qti-visually-hidden">Screen reader vocabulary note</span>.</p>
+  </qti-item-body>
+</qti-assessment-item>

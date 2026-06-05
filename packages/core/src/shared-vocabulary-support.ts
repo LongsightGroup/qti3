@@ -9,10 +9,12 @@ const sharedVocabularyFixture = [
   "packages/fixtures/packages/basic-item-player/valid-item-only/items/shared-vocabulary.xml",
 ];
 const fixtureTests = ["packages/fixtures/src/fixtures.test.ts", "packages/cli/src/index.test.ts"];
+const sharedVocabularyMatrixTests = ["tests/browser/player-shared-vocabulary.spec.ts"];
 const contentTests = [
   ...fixtureTests,
   "packages/core/src/core.test.ts",
   "tests/browser/player-dom-behavior.spec.ts",
+  ...sharedVocabularyMatrixTests,
 ];
 const sharedVocabularyUnitTests = [
   "packages/core/src/shared-vocabulary.test.ts",
@@ -22,7 +24,10 @@ const sharedVocabularyValidationTests = [
   "packages/core/src/core.test.ts",
   "packages/core/src/shared-vocabulary-validation.test.ts",
 ];
-const browserBehaviorTests = ["tests/browser/player-dom-behavior.spec.ts"];
+const browserBehaviorTests = [
+  "tests/browser/player-dom-behavior.spec.ts",
+  ...sharedVocabularyMatrixTests,
+];
 const graphicBrowserTests = ["tests/browser/player-graphic.spec.ts"];
 
 const contentListStyleTypes = [

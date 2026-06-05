@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-selections-dark" title="choice-selections-dark" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="0" class="qti-selections-dark">
+      <qti-simple-choice identifier="A">Selected dark choice.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Unselected dark choice.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-orientation-vertical" title="order-orientation-vertical" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-top qti-orientation-vertical">
+      <qti-simple-choice identifier="A">First.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third.</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-placement-input-width" title="gap-placement-input-width" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-gap-placement qti-choices-left" data-choices-container-width="120">
+      <qti-gap-text identifier="A" match-max="1">alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
+      <p>Place <qti-gap identifier="G1" class="qti-input-width-3"/> before <qti-gap identifier="G2" class="qti-input-width-10"/>.</p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
