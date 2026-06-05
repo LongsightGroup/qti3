@@ -394,7 +394,7 @@ test.describe("player keyboard and accessibility", () => {
     await expectResponse(page, ["B"]);
     await expect(summary).toHaveText("First step removed from order.");
     await expect(
-      layout.locator(".qti3-order-target-slot").nth(1).locator(".qti3-order-target-empty"),
+      layout.locator(".qti3-order-target-slot").nth(0).locator(".qti3-order-target-empty"),
     ).toHaveText("empty");
     await expect(bank.getByRole("button", { name: "First step" })).toBeVisible();
   });

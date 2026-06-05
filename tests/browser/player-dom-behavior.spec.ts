@@ -223,14 +223,47 @@ async function dropOrderChoiceOnTarget(
   layout: Locator,
   identifier: string,
   targetIndex: number,
-): Promise<void> {
-  await layout.evaluate(
+): Promise<{ dragoverDefaultPrevented: boolean; dropDefaultPrevented: boolean }> {
+  return await layout.evaluate(
     (element, payload) => {
       const target =
         element.querySelectorAll<HTMLElement>(".qti3-order-target-slot")[payload.targetIndex];
       if (!target) throw new Error(`Missing order target slot ${payload.targetIndex}.`);
       const dataTransfer = new DataTransfer();
       dataTransfer.setData("text/plain", payload.identifier);
+      const dragover = new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer });
+      const drop = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer });
+      target.dispatchEvent(dragover);
+      target.dispatchEvent(drop);
+      return {
+        dragoverDefaultPrevented: dragover.defaultPrevented,
+        dropDefaultPrevented: drop.defaultPrevented,
+      };
+    },
+    { identifier, targetIndex },
+  );
+}
+
+async function moveOrderSlotChoiceToTarget(
+  layout: Locator,
+  identifier: string,
+  targetIndex: number,
+): Promise<void> {
+  await layout.evaluate(
+    (element, payload) => {
+      const source = element.querySelector<HTMLElement>(
+        `.qti3-order-target-item[data-choice-identifier="${payload.identifier}"]`,
+      );
+      const target =
+        element.querySelectorAll<HTMLElement>(".qti3-order-target-slot")[payload.targetIndex];
+      if (!source || !target) {
+        throw new Error(`Missing order drag source or target for ${payload.identifier}.`);
+      }
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("text/plain", payload.identifier);
+      source.dispatchEvent(
+        new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer }),
+      );
       target.dispatchEvent(
         new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer }),
       );
@@ -473,7 +506,68 @@ test.describe("player DOM behavior", () => {
     await expect.poll(() => currentResponse(page)).toEqual(["DriverC", "DriverA", "DriverB"]);
   });
 
-  test("does not misplace order shared vocabulary drops onto non-adjacent empty targets", async ({
+  test("places order shared vocabulary choices into any target slot", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, ORDER_SHARED_VOCABULARY_ITEM);
+
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    const bank = layout.locator(".qti3-order-choices-bank");
+    const targets = layout.locator(".qti3-order-target-slot");
+
+    await expect(targets.nth(0)).toHaveAttribute("data-empty", "true");
+    await expect(targets.nth(1)).toHaveAttribute("data-empty", "true");
+    await expect(targets.nth(2)).toHaveAttribute("data-empty", "true");
+
+    await expect(await dropOrderChoiceOnTarget(layout, "A", 2)).toEqual({
+      dragoverDefaultPrevented: true,
+      dropDefaultPrevented: true,
+    });
+    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
+    await expect(targets.nth(2).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "A",
+    );
+    await expect(bank.getByRole("button", { name: "First step" })).toHaveCount(0);
+    await expect(targets.nth(0)).toContainText("empty");
+    await expect(targets.nth(1)).toContainText("empty");
+
+    await expect(await dropOrderChoiceOnTarget(layout, "B", 1)).toEqual({
+      dragoverDefaultPrevented: true,
+      dropDefaultPrevented: true,
+    });
+    await expect.poll(() => currentResponse(page)).toEqual(["B", "A"]);
+
+    await expect(await dropOrderChoiceOnTarget(layout, "C", 0)).toEqual({
+      dragoverDefaultPrevented: true,
+      dropDefaultPrevented: true,
+    });
+    await expect.poll(() => currentResponse(page)).toEqual(["C", "B", "A"]);
+    await expect(targets.nth(0).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "C",
+    );
+    await expect(targets.nth(1).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "B",
+    );
+    await expect(targets.nth(2).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "A",
+    );
+
+    await moveOrderSlotChoiceToTarget(layout, "A", 0);
+    await expect.poll(() => currentResponse(page)).toEqual(["A", "B", "C"]);
+    await expect(targets.nth(0).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "A",
+    );
+    await expect(targets.nth(2).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "C",
+    );
+  });
+
+  test("returns displaced order shared vocabulary choices to the bank on occupied drops", async ({
     page,
   }) => {
     await page.goto("/");
@@ -483,17 +577,19 @@ test.describe("player DOM behavior", () => {
     const bank = layout.locator(".qti3-order-choices-bank");
     const targets = layout.locator(".qti3-order-target-slot");
 
-    await bank.getByRole("button", { name: "First step" }).click();
-    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
+    await dropOrderChoiceOnTarget(layout, "A", 0);
+    await expect(targets.nth(0).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "A",
+    );
 
-    await dropOrderChoiceOnTarget(layout, "C", 2);
-    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
-    await expect(bank.getByRole("button", { name: "Third step" })).toBeVisible();
-    await expect(targets.nth(1)).toContainText("empty");
-    await expect(targets.nth(2)).toContainText("empty");
-
-    await dropOrderChoiceOnTarget(layout, "C", 1);
-    await expect.poll(() => currentResponse(page)).toEqual(["A", "C"]);
+    await dropOrderChoiceOnTarget(layout, "B", 0);
+    await expect.poll(() => currentResponse(page)).toEqual(["B"]);
+    await expect(targets.nth(0).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "B",
+    );
+    await expect(bank.getByRole("button", { name: "First step" })).toBeVisible();
   });
 
   test("provides order shared vocabulary responses through the browser helper", async ({
@@ -505,13 +601,17 @@ test.describe("player DOM behavior", () => {
     await provideResponse(page, "order", ["C", "A"]);
     await expect.poll(() => currentResponse(page)).toEqual(["C", "A"]);
     const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    const targets = layout.locator(".qti3-order-target-slot");
     await expect(layout.locator(".qti3-order-choices-bank").getByRole("button")).toHaveCount(1);
-    await expect(layout.locator('.qti3-order-target-item[data-choice-identifier="C"]')).toHaveCount(
-      1,
+    await expect(targets.nth(0).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "C",
     );
-    await expect(layout.locator('.qti3-order-target-item[data-choice-identifier="A"]')).toHaveCount(
-      1,
+    await expect(targets.nth(1).locator(".qti3-order-target-item")).toHaveAttribute(
+      "data-choice-identifier",
+      "A",
     );
+    await expect(targets.nth(2)).toHaveAttribute("data-empty", "true");
   });
 
   test("toggles match shared vocabulary tabular matrix choices", async ({ page }) => {

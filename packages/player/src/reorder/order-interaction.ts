@@ -6,7 +6,6 @@ import {
   missingChoicesMessage,
   orderChoicesFromValue,
   responseGroup,
-  valueToStrings,
 } from "../interaction-support.js";
 import { appendChoiceVisual, setChoiceAccessibleName } from "../interactions/shared.js";
 import {
@@ -21,6 +20,16 @@ import {
   createReorderHandleControls,
   type OrderDragState,
 } from "./list-controls.js";
+import {
+  firstEmptyOrderSlot,
+  orderSlotChoiceIdentifiers,
+  placeChoiceInOrderSlot,
+  removeChoiceFromOrderSlot,
+  restoreOrderSlotsFromValue,
+  serializeOrderSlots,
+  swapOrderSlots,
+  type OrderSlotState,
+} from "./order-slots.js";
 
 export function renderOrderedResponse(
   interaction: QtiInteraction,
@@ -110,15 +119,8 @@ function renderSharedVocabularyOrderResponse(
 ): HTMLElement {
   const group = responseGroup("qti3-order-sv-group");
   const byIdentifier = new Map(choices.map((choice) => [choice.identifier, choice]));
-  const ordered: QtiChoice[] = [];
-  const restoredIdentifiers = new Set<string>();
-  for (const identifier of valueToStrings(currentValue)) {
-    const choice = byIdentifier.get(identifier);
-    if (!choice || restoredIdentifiers.has(choice.identifier)) continue;
-    restoredIdentifiers.add(choice.identifier);
-    ordered.push(choice);
-  }
-  const orderedIdentifiers = new Set(ordered.map((choice) => choice.identifier));
+  const orderedSlots: OrderSlotState = restoreOrderSlotsFromValue(choices, currentValue);
+  let orderedIdentifiers = orderSlotChoiceIdentifiers(orderedSlots);
   const summary = createSelectionSummary();
   const layoutElement = document.createElement("div");
   layoutElement.className = "qti3-order-sv-layout";
@@ -149,29 +151,18 @@ function renderSharedVocabularyOrderResponse(
   );
 
   let draggedIdentifier: string | undefined;
-  const commit = () => update(ordered.map((choice) => choice.identifier));
+  const commit = () => update(serializeOrderSlots(orderedSlots));
   const choiceByIdentifier = (identifier: string | undefined) =>
     identifier === undefined ? undefined : byIdentifier.get(identifier);
-  const firstEmptyTarget = () => ordered.length;
-  // QTI ordered responses are dense identifier arrays, while this UI renders fixed visual slots.
-  // Non-adjacent empty-slot drops are ignored because holes cannot survive serialize/restore.
   const placeChoice = (identifier: string | undefined, targetIndex: number) => {
     const choice = choiceByIdentifier(identifier);
     if (!choice) return;
-    const from = ordered.findIndex((entry) => entry.identifier === choice.identifier);
-    if (targetIndex > ordered.length) return;
-    const boundedTarget = Math.max(0, targetIndex);
-    if (from >= 0) {
-      if (from === boundedTarget) return;
-      const adjustedTarget = from < boundedTarget ? boundedTarget - 1 : boundedTarget;
-      if (from === adjustedTarget) return;
-      ordered.splice(from, 1);
-      ordered.splice(adjustedTarget, 0, choice);
-    } else if (ordered.length < choices.length) {
-      ordered.splice(boundedTarget, 0, choice);
+    const placement = placeChoiceInOrderSlot(orderedSlots, choice, targetIndex);
+    if (placement === "noop") return;
+    if (placement === "from-bank") {
       summary.textContent = messages.message("orderedItemAddedToPosition", {
         label: choice.text,
-        position: boundedTarget + 1,
+        position: targetIndex + 1,
         total: choices.length,
       });
     }
@@ -179,25 +170,22 @@ function renderSharedVocabularyOrderResponse(
     commit();
   };
   const removeChoice = (identifier: string) => {
-    const index = ordered.findIndex((entry) => entry.identifier === identifier);
-    const [choice] = index >= 0 ? ordered.splice(index, 1) : [];
+    const choice = removeChoiceFromOrderSlot(orderedSlots, identifier);
     if (!choice) return;
     render();
     summary.textContent = messages.message("orderedItemRemoved", { label: choice.text });
     commit();
   };
   const moveChoice = (from: number, to: number) => {
-    if (from === to || from < 0 || from >= ordered.length || to < 0 || to >= ordered.length) return;
-    const [choice] = ordered.splice(from, 1);
-    if (!choice) return;
-    ordered.splice(to, 0, choice);
+    const choice = orderedSlots[from];
+    if (!swapOrderSlots(orderedSlots, from, to) || !choice) return;
     render();
     announceOrderedItemMove(
       summary,
       messages,
       choice.text,
       to,
-      ordered.length,
+      choices.length,
       from,
       layout.orientation,
     );
@@ -205,8 +193,7 @@ function renderSharedVocabularyOrderResponse(
     focusReorderControl(targetList, choice.identifier);
   };
   const render = () => {
-    orderedIdentifiers.clear();
-    for (const choice of ordered) orderedIdentifiers.add(choice.identifier);
+    orderedIdentifiers = orderSlotChoiceIdentifiers(orderedSlots);
     choicesBank.replaceChildren(
       ...choices
         .filter((choice) => !orderedIdentifiers.has(choice.identifier))
@@ -219,7 +206,7 @@ function renderSharedVocabularyOrderResponse(
           setChoiceAccessibleName(button, choice);
           appendChoiceVisual(button, choice);
           button.addEventListener("click", () =>
-            placeChoice(choice.identifier, firstEmptyTarget()),
+            placeChoice(choice.identifier, firstEmptyOrderSlot(orderedSlots)),
           );
           button.addEventListener("dragstart", (event) => {
             draggedIdentifier = choice.identifier;
@@ -233,7 +220,7 @@ function renderSharedVocabularyOrderResponse(
     );
   };
   const renderTargetSlot = (index: number) => {
-    const choice = ordered[index];
+    const choice = orderedSlots[index];
     const slot = document.createElement("li");
     slot.className = "qti3-order-target-slot";
     slot.dataset.targetIndex = String(index);
@@ -282,7 +269,7 @@ function renderSharedVocabularyOrderResponse(
       identifier: choice.identifier,
       label: choice.text,
       index,
-      total: ordered.length,
+      total: choices.length,
       handleClassName: "qti3-token qti3-reorder-handle",
       visibleText: choice.text,
       orientation: layout.orientation,
