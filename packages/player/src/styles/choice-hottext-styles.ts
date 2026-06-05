@@ -159,7 +159,8 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   background: transparent;
 }
 
-.qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
+.qti3-hottext.qti-unselected-hidden
+  .qti3-hottext-token:not([data-selected="true"]):not(:focus):not(:focus-visible) {
   border-color: transparent;
   background: transparent;
   color: inherit;
@@ -172,7 +173,8 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   .qti3-choice.qti-unselected-hidden
     .qti3-choice-option:not([data-selected="true"]):not(:has(input:focus-visible)),
   .qti3-hottext.qti-input-control-hidden .qti3-hottext-token,
-  .qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
+  .qti3-hottext.qti-unselected-hidden
+    .qti3-hottext-token:not([data-selected="true"]):not(:focus):not(:focus-visible) {
     border-color: CanvasText;
     background: Canvas;
   }
@@ -185,7 +187,8 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   }
 
   .qti3-hottext.qti-input-control-hidden .qti3-hottext-token,
-  .qti3-hottext.qti-unselected-hidden .qti3-hottext-token:not([data-selected="true"]):not(:focus-visible) {
+  .qti3-hottext.qti-unselected-hidden
+    .qti3-hottext-token:not([data-selected="true"]):not(:focus):not(:focus-visible) {
     color: LinkText;
     text-decoration-color: LinkText;
   }

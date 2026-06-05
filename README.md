@@ -289,6 +289,8 @@ classes.
 For hot text interactions, the browser player applies `qti-input-control-hidden` and
 `qti-unselected-hidden`. For hotspot interactions, it applies `qti-selections-light`,
 `qti-selections-dark`, and `qti-unselected-hidden`.
+Graphic gap match interactions apply the same selection presentation classes to authored
+associable hotspot targets while preserving keyboard assignment and source-bank controls.
 For match, gap match, graphic gap match, and order interactions, the browser player
 applies `qti-choices-top`, `qti-choices-bottom`, `qti-choices-left`, and
 `qti-choices-right` as opt-in choices-bank positioning classes. Match interactions also

@@ -766,6 +766,9 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
   <qti-response-declaration identifier="GAP_RESPONSE" cardinality="multiple" base-type="directedPair">
     <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value></qti-correct-response>
   </qti-response-declaration>
+  <qti-response-declaration identifier="GRAPHIC_GAP_RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>GA GT1</qti-value></qti-correct-response>
+  </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <p data-qti-suppress-tts="computer-read-aloud">Shared QTI vocabulary remains authored content metadata.</p>
@@ -828,6 +831,13 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
       <qti-gap-text identifier="B" match-max="1">target passage</qti-gap-text>
       <p>Shared vocabulary positions the <qti-gap identifier="G1" class="qti-input-width-10"/> beside the <qti-gap identifier="G2" class="qti-input-width-20"/>.</p>
     </qti-gap-match-interaction>
+    <qti-graphic-gap-match-interaction response-identifier="GRAPHIC_GAP_RESPONSE" class="qti-selections-dark qti-unselected-hidden qti-choices-bottom" data-choices-container-width="180">
+      <object data="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='120'%3E%3Crect width='180' height='120' fill='%23777'/%3E%3C/svg%3E" alt="Shared vocabulary graphic gap target." type="image/svg+xml" width="180" height="120"/>
+      <qti-gap-text identifier="GA" match-max="1">graphic source</qti-gap-text>
+      <qti-gap-text identifier="GB" match-max="1">spare source</qti-gap-text>
+      <qti-associable-hotspot identifier="GT1" shape="rect" coords="24,24,84,76" match-max="1"/>
+      <qti-associable-hotspot identifier="GT2" shape="rect" coords="100,24,160,76" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
   </qti-item-body>
   <qti-response-processing>
     <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
@@ -858,6 +868,9 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
     <qti-response-condition>
       <qti-response-if><qti-match><qti-variable identifier="GAP_RESPONSE"/><qti-correct identifier="GAP_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
     </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if><qti-match><qti-variable identifier="GRAPHIC_GAP_RESPONSE"/><qti-correct identifier="GRAPHIC_GAP_RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if>
+    </qti-response-condition>
   </qti-response-processing>
 </qti-assessment-item>`,
     expectedParseDiagnostics: [],
@@ -874,8 +887,9 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
           MATCH_RESPONSE: ["A B"],
           TABULAR_MATCH_RESPONSE: ["MS1 MT1"],
           GAP_RESPONSE: ["A G1", "B G2"],
+          GRAPHIC_GAP_RESPONSE: ["GA GT1"],
         },
-        { SCORE: 9 },
+        { SCORE: 10 },
         id,
       ),
     ],

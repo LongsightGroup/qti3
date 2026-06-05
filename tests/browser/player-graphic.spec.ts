@@ -11,6 +11,44 @@ import {
   pasteXml,
 } from "./player-helpers.js";
 
+function graySvgDataUrl(width: number, height: number): string {
+  return `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="#777"/></svg>`,
+  )}`;
+}
+
+const GRAPHIC_GAP_SELECTION_THEMES_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-selection-themes" title="graphic-gap-selection-themes" time-dependent="false">
+  <qti-response-declaration identifier="LIGHT_RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-response-declaration identifier="DARK_RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction class="qti-selections-light" response-identifier="LIGHT_RESPONSE">
+      <object data="${graySvgDataUrl(220, 120)}" alt="Light theme target." type="image/svg+xml" width="220" height="120"/>
+      <qti-gap-text identifier="LA" match-max="1">Light token</qti-gap-text>
+      <qti-associable-hotspot identifier="LT" shape="rect" coords="40,30,100,80" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+    <qti-graphic-gap-match-interaction class="qti-selections-dark" response-identifier="DARK_RESPONSE">
+      <object data="${graySvgDataUrl(220, 120)}" alt="Dark theme target." type="image/svg+xml" width="220" height="120"/>
+      <qti-gap-text identifier="DA" match-max="1">Dark token</qti-gap-text>
+      <qti-associable-hotspot identifier="DT" shape="rect" coords="40,30,100,80" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+const GRAPHIC_GAP_UNSELECTED_HIDDEN_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-unselected-hidden" title="graphic-gap-unselected-hidden" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction class="qti-selections-dark qti-unselected-hidden" response-identifier="RESPONSE">
+      <object data="${graySvgDataUrl(240, 140)}" alt="Graphic gap shared vocabulary target." type="image/svg+xml" width="240" height="140"/>
+      <qti-gap-text identifier="A" match-max="1">Alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Beta</qti-gap-text>
+      <qti-associable-hotspot identifier="T1" shape="rect" coords="24,24,84,76" match-max="1"/>
+      <qti-associable-hotspot identifier="T2" shape="rect" coords="132,24,192,76" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
 test.describe("player graphic interactions", () => {
   test("renders graphic interactions with their object context", async ({ page }) => {
     await page.goto("/");
@@ -831,5 +869,60 @@ test.describe("player graphic interactions", () => {
     await page.keyboard.press("Enter");
     await expect(button).toHaveAttribute("aria-pressed", "true");
     await expectResponse(page, "A");
+  });
+
+  test("applies graphic gap match selection themes to unassigned hotspots", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, GRAPHIC_GAP_SELECTION_THEMES_ITEM);
+
+    const light = page.locator(
+      "qti-assessment-item-player .qti3-graphicGapMatch.qti-selections-light",
+    );
+    const dark = page.locator(
+      "qti-assessment-item-player .qti3-graphicGapMatch.qti-selections-dark",
+    );
+    await expect(light).toHaveClass(/qti-selections-light/);
+    await expect(dark).toHaveClass(/qti-selections-dark/);
+
+    const lightTarget = light.locator(".qti3-graphic-gap-hotspot").first();
+    const darkTarget = dark.locator(".qti3-graphic-gap-hotspot").first();
+    await expect(lightTarget).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(lightTarget).toHaveCSS("border-top-color", "rgb(255, 255, 255)");
+    await expect(darkTarget).toHaveCSS("color", "rgb(0, 0, 0)");
+    await expect(darkTarget).toHaveCSS("border-top-color", "rgb(0, 0, 0)");
+  });
+
+  test("hides unassigned graphic gap match hotspots until keyboard focus or assignment", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, GRAPHIC_GAP_UNSELECTED_HIDDEN_ITEM);
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-graphicGapMatch");
+    await expect(interaction).toHaveClass(/qti-selections-dark/);
+    await expect(interaction).toHaveClass(/qti-unselected-hidden/);
+
+    const source = interaction
+      .locator(".qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Alpha" });
+    const target = interaction.locator('[data-gap-identifier="T2"]');
+    await expect(target).toHaveCSS("opacity", "0");
+
+    await target.focus();
+    await expect(target).toBeFocused();
+    await expect(target).not.toHaveCSS("opacity", "0");
+
+    await source.focus();
+    await page.keyboard.press("Enter");
+    await expect(source).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.press("Shift+Tab");
+    await expect(target).toBeFocused();
+    await expect(target).not.toHaveCSS("opacity", "0");
+    await page.keyboard.press("Enter");
+
+    await expectResponse(page, ["A T2"]);
+    await expect(target).toHaveAttribute("data-selected", "true");
+    await expect(target).toHaveAccessibleName("Target 2, assigned Alpha");
+    await expect(target).not.toHaveCSS("opacity", "0");
   });
 });

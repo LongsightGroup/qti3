@@ -494,6 +494,9 @@ test.describe("player DOM behavior", () => {
     await expect(hottext).toHaveClass(/qti-unselected-hidden/);
     const token = hottext.locator(".qti3-hottext-token");
     await expect(token).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    await token.focus();
+    await expect(token).toBeFocused();
+    await expect(token).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
     await token.click();
     await expect(token).toHaveAttribute("data-selected", "true");
     await expect
