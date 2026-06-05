@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-labels-lower-alpha-suffix-parenthesis" title="order-labels-lower-alpha-suffix-parenthesis" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-labels-lower-alpha qti-labels-suffix-parenthesis qti-choices-top">
+      <qti-simple-choice identifier="A">North quadrant.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Center quadrant.</qti-simple-choice>
+      <qti-simple-choice identifier="C">South quadrant.</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>

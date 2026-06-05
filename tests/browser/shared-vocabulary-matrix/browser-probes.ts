@@ -1,8 +1,4 @@
-import {
-  assertionLabel,
-  isGalleryRunnable,
-  runAssertionInRoot,
-} from "./assertion-core.js";
+import { assertionLabel, isGalleryRunnable, runAssertionInRoot } from "./assertion-core.js";
 import type { SharedVocabularyAssertion } from "./types.js";
 
 export { assertionLabel, isGalleryRunnable } from "./assertion-core.js";

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-labels-cjk-ideographic" title="order-labels-cjk-ideographic" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" class="qti-labels-cjk-ideographic qti-choices-top">
+      <qti-simple-choice identifier="A">North quadrant.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Center quadrant.</qti-simple-choice>
+      <qti-simple-choice identifier="C">South quadrant.</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>

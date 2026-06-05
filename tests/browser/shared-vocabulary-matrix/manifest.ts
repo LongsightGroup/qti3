@@ -13,9 +13,12 @@ const player = "qti-assessment-item-player";
 const choice = `${player} .qti3-choice`;
 const choiceA = `${choice} .qti3-choice-option[data-choice-identifier="A"]`;
 const choiceB = `${choice} .qti3-choice-option[data-choice-identifier="B"]`;
+const choiceLabels = `${choice} .qti3-choice-label`;
 const orderLayout = `${player} .qti3-order-sv-layout`;
 const orderBank = `${orderLayout} .qti3-order-choices-bank`;
 const orderTargets = `${orderLayout} .qti3-order-target-list`;
+const orderRoot = `${player} .qti3-order`;
+const orderLabels = `${orderTargets} .qti3-order-target-label`;
 const matchLayout = `${player} .qti3-match-selector`;
 const matchRoot = `${player} .qti3-match`;
 const matchBank = `${matchLayout} .qti3-match-source-bank`;
@@ -62,6 +65,80 @@ function selectionAssertions(className: string): SharedVocabularyAssertion[] {
       property: "color",
     },
   ];
+}
+
+interface LabelCase {
+  id: string;
+  className: string | string[];
+  expected: string[];
+}
+
+const labelStyleCases: LabelCase[] = [
+  { id: "labels-none", className: "qti-labels-none", expected: [] },
+  { id: "labels-decimal", className: "qti-labels-decimal", expected: ["1.", "2.", "3."] },
+  {
+    id: "labels-cjk-ideographic",
+    className: "qti-labels-cjk-ideographic",
+    expected: ["一.", "二.", "三."],
+  },
+  {
+    id: "labels-lower-alpha",
+    className: "qti-labels-lower-alpha",
+    expected: ["a.", "b.", "c."],
+  },
+  {
+    id: "labels-upper-alpha",
+    className: "qti-labels-upper-alpha",
+    expected: ["A.", "B.", "C."],
+  },
+];
+
+const labelSuffixCases: LabelCase[] = [
+  {
+    id: "labels-lower-alpha-suffix-none",
+    className: ["qti-labels-lower-alpha", "qti-labels-suffix-none"],
+    expected: ["a", "b", "c"],
+  },
+  {
+    id: "labels-lower-alpha-suffix-period",
+    className: ["qti-labels-lower-alpha", "qti-labels-suffix-period"],
+    expected: ["a.", "b.", "c."],
+  },
+  {
+    id: "labels-lower-alpha-suffix-parenthesis",
+    className: ["qti-labels-lower-alpha", "qti-labels-suffix-parenthesis"],
+    expected: ["a)", "b)", "c)"],
+  },
+];
+
+function labelAssertions(
+  rootSelector: string,
+  labelSelector: string,
+  labelSelectors: string[],
+  className: string | string[],
+  expected: string[],
+): SharedVocabularyAssertion[] {
+  return [
+    ...classNames(className).map(
+      (name): SharedVocabularyAssertion => ({
+        type: "class-preserved",
+        selector: rootSelector,
+        className: name,
+      }),
+    ),
+    { type: "element-count", selector: labelSelector, count: expected.length },
+    ...expected.map(
+      (value, index): SharedVocabularyAssertion => ({
+        type: "text",
+        selector: labelSelectors[index] ?? labelSelector,
+        value,
+      }),
+    ),
+  ];
+}
+
+function classNames(className: string | string[]): string[] {
+  return Array.isArray(className) ? className : [className];
 }
 
 interface ChoicesPositionOptions {
@@ -205,6 +282,22 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
     { type: "class-preserved", selector: choice, className: "qti-input-control-hidden" },
     { type: "hidden-focusable-input", selector: `${choiceA} input` },
   ]),
+  ...[...labelStyleCases, ...labelSuffixCases].map((item) =>
+    entry(
+      `choice-${item.id}`,
+      item.className,
+      "full",
+      labelAssertions(
+        choice,
+        choiceLabels,
+        [1, 2, 3].map(
+          (index) => `${choice} .qti3-choice-option:nth-child(${index}) .qti3-choice-label`,
+        ),
+        item.className,
+        item.expected,
+      ),
+    ),
+  ),
   entry("order-choices-left-width", "qti-choices-left", "full", [
     { type: "class-preserved", selector: `${player} .qti3-order`, className: "qti-choices-left" },
     { type: "attribute", selector: orderLayout, name: "data-qti-choices-position", value: "left" },
@@ -232,6 +325,24 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
     },
     { type: "computed-style", selector: orderBank, property: "flex-direction", value: "column" },
   ]),
+  ...[...labelStyleCases, ...labelSuffixCases].map((item) => {
+    const orderClasses = [...classNames(item.className), "qti-choices-top"];
+    return entry(
+      `order-${item.id}`,
+      orderClasses,
+      "full",
+      labelAssertions(
+        orderRoot,
+        orderLabels,
+        [1, 2, 3].map(
+          (index) =>
+            `${orderTargets} .qti3-order-target-slot:nth-child(${index}) .qti3-order-target-label`,
+        ),
+        orderClasses,
+        item.expected,
+      ),
+    );
+  }),
   entry(
     "match-choices-top",
     "qti-choices-top",

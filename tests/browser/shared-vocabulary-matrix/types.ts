@@ -30,6 +30,7 @@ export type SharedVocabularyAssertion =
       value: number;
     }
   | { type: "dom-order"; firstSelector: string; secondSelector: string; order: RelativeOrder }
+  | { type: "element-count"; selector: string; count: number }
   | { type: "focus"; selector: string }
   | { type: "forced-colors-active" }
   | { type: "hidden-focusable-input"; selector: string }

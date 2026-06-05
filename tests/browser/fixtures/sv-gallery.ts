@@ -50,10 +50,7 @@ const copyStatus = requiredElement<HTMLElement>("#copy-status");
 let selectedEntry = entryFromUrl() ?? entries[0]?.entry;
 let selectedXml = "";
 
-populateFilter(interactionFilter, [
-  "all",
-  ...unique(entries.map((item) => item.interactionType)),
-]);
+populateFilter(interactionFilter, ["all", ...unique(entries.map((item) => item.interactionType))]);
 populateFilter(familyFilter, ["all", ...unique(entries.map((item) => item.classFamily))]);
 populateFilter(supportFilter, ["all", "full", "stylesheet", "conditional"]);
 

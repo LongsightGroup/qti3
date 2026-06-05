@@ -20,6 +20,8 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return `${assertion.selector} ${assertion.property} ${assertion.comparison} ${assertion.value}`;
     case "dom-order":
       return `${assertion.firstSelector} is ${assertion.order} ${assertion.secondSelector}`;
+    case "element-count":
+      return `${assertion.selector} count is ${assertion.count}`;
     case "focus":
       return `focus ${assertion.selector}`;
     case "forced-colors-active":
@@ -106,6 +108,11 @@ export async function runAssertionInRoot(
       if (!documentOrderMatches(first, second, assertion.order)) {
         throw new Error("document order did not match");
       }
+      return;
+    }
+    case "element-count": {
+      const count = root.querySelectorAll(assertion.selector).length;
+      if (count !== assertion.count) throw new Error(`received ${count}`);
       return;
     }
     case "focus": {
