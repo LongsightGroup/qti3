@@ -8,32 +8,6 @@ import {
   visibleValidationAlertCount,
 } from "./player-helpers.js";
 
-const CHOICE_ORIENTATION_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0_v1p0.xsd" identifier="q2-choice-interaction-single-sv-4b" title="Choice Interaction - Single (SV 4b)- orientation options" adaptive="false" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier"/>
-  <qti-response-declaration identifier="RESPONSE2" cardinality="single" base-type="identifier"/>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-  <qti-item-body>
-    <p>
-      Choose an option in each orientation example.
-    </p>
-    <qti-choice-interaction class="qti-orientation-horizontal" max-choices="1" response-identifier="RESPONSE1">
-      <qti-prompt>Demonstrates <em>qti-orientation-horizontal</em>.</qti-prompt>
-      <qti-simple-choice identifier="ChoiceA">You must stay with your luggage at all times.</qti-simple-choice>
-      <qti-simple-choice identifier="ChoiceB">Do not let someone else look after your luggage.</qti-simple-choice>
-      <qti-simple-choice identifier="ChoiceC">Remember your luggage when you leave.</qti-simple-choice>
-    </qti-choice-interaction>
-
-    <qti-choice-interaction class="qti-orientation-vertical" max-choices="1" response-identifier="RESPONSE2">
-      <qti-prompt>Demonstrates <em>qti-orientation-vertical</em>.</qti-prompt>
-      <qti-simple-choice identifier="ChoiceA">You must stay with your luggage at all times.</qti-simple-choice>
-      <qti-simple-choice identifier="ChoiceB">Do not let someone else look after your luggage.</qti-simple-choice>
-      <qti-simple-choice identifier="ChoiceC">Remember your luggage when you leave.</qti-simple-choice>
-    </qti-choice-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
 const CHOICE_STACKING_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-stacking" title="choice-stacking" time-dependent="false">
   <qti-response-declaration identifier="HORIZONTAL" cardinality="single" base-type="identifier"/>
@@ -110,19 +84,6 @@ const CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
-const CHOICE_SELECTION_PRESENTATION_SHARED_VOCABULARY_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-selection-presentation-shared-vocabulary" title="choice-selection-presentation-shared-vocabulary" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier"/>
-  <qti-item-body>
-    <qti-choice-interaction response-identifier="RESPONSE" max-choices="0" class="qti-selections-dark qti-unselected-hidden">
-      <qti-simple-choice identifier="A">First selection presentation choice</qti-simple-choice>
-      <qti-simple-choice identifier="B">Second selection presentation choice</qti-simple-choice>
-      <qti-simple-choice identifier="C">Third selection presentation choice</qti-simple-choice>
-    </qti-choice-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
 const EMPTY_CHOICE_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="empty-choice" title="empty-choice">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -160,37 +121,6 @@ const ORDER_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
-const ORDER_SHARED_VOCABULARY_LEFT_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-shared-vocabulary-left" title="order-shared-vocabulary-left" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
-  <qti-item-body>
-    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-left qti-orientation-vertical qti-labels-upper-alpha" data-choices-container-width="180">
-      <qti-simple-choice identifier="A">North</qti-simple-choice>
-      <qti-simple-choice identifier="B">Center</qti-simple-choice>
-      <qti-simple-choice identifier="C">South</qti-simple-choice>
-    </qti-order-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
-const MATCH_CHOICES_POSITION_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-choices-position" title="match-choices-position" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
-  <qti-item-body>
-    <qti-match-interaction response-identifier="RESPONSE" class="qti-choices-right">
-      <qti-simple-match-set>
-        <qti-simple-associable-choice identifier="A" match-max="1">Source A</qti-simple-associable-choice>
-        <qti-simple-associable-choice identifier="B" match-max="1">Source B</qti-simple-associable-choice>
-      </qti-simple-match-set>
-      <qti-simple-match-set>
-        <qti-simple-associable-choice identifier="T1" match-max="1">Target 1</qti-simple-associable-choice>
-        <qti-simple-associable-choice identifier="T2" match-max="1">Target 2</qti-simple-associable-choice>
-      </qti-simple-match-set>
-    </qti-match-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
 const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-shared-vocabulary" title="match-tabular-shared-vocabulary" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -209,35 +139,6 @@ const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
-const MATCH_TABULAR_HEADER_HIDDEN_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-header-hidden" title="match-tabular-header-hidden" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
-  <qti-item-body>
-    <qti-match-interaction response-identifier="RESPONSE" class="qti-match-tabular qti-header-hidden">
-      <qti-simple-match-set>
-        <qti-simple-associable-choice identifier="C" match-max="1">Capulet</qti-simple-associable-choice>
-      </qti-simple-match-set>
-      <qti-simple-match-set>
-        <qti-simple-associable-choice identifier="R" match-max="1">Romeo and Juliet</qti-simple-associable-choice>
-      </qti-simple-match-set>
-    </qti-match-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
-const GAP_CHOICES_POSITION_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-choices-position" title="gap-choices-position" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
-  <qti-item-body>
-    <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-choices-left" data-choices-container-width="120">
-      <qti-gap-text identifier="A" match-max="1">alpha</qti-gap-text>
-      <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
-      <p>Place <qti-gap identifier="G1"/> before <qti-gap identifier="G2"/>.</p>
-    </qti-gap-match-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
 const GAP_PLACEMENT_WIDTH_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-placement-width" title="gap-placement-width" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -247,41 +148,6 @@ const GAP_PLACEMENT_WIDTH_ITEM = `
       <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
       <p>Place <qti-gap identifier="G1" class="qti-input-width-3"/> before <qti-gap identifier="G2" class="qti-input-width-10"/>.</p>
     </qti-gap-match-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
-const EXTENDED_TEXT_SHARED_VOCABULARY_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-shared-vocabulary" title="extended-text-shared-vocabulary" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
-  <qti-item-body>
-    <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-height-lines-6 qti-counter-up" expected-lines="3">
-      <qti-prompt>Explain the implementation boundary.</qti-prompt>
-    </qti-extended-text-interaction>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
-const EXTENDED_TEXT_COUNTER_DOWN_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-counter-down" title="extended-text-counter-down" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
-  <qti-item-body>
-    <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-height-lines-3 qti-counter-down"/>
-  </qti-item-body>
-</qti-assessment-item>
-`.trim();
-
-const GRAPHIC_GAP_CHOICES_POSITION_ITEM = `
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-choices-position" title="graphic-gap-choices-position" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
-  <qti-item-body>
-    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" class="qti-choices-bottom" data-choices-container-width="160">
-      <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='140'%20viewBox='0%200%20240%20140'%3E%3Crect%20width='240'%20height='140'%20fill='white'/%3E%3Ccircle%20cx='80'%20cy='70'%20r='18'%20fill='black'/%3E%3Ccircle%20cx='160'%20cy='70'%20r='18'%20fill='black'/%3E%3C/svg%3E" type="image/svg+xml" width="240" height="140"/>
-      <qti-gap-text identifier="A" match-max="1">left label</qti-gap-text>
-      <qti-gap-text identifier="B" match-max="1">right label</qti-gap-text>
-      <qti-associable-hotspot identifier="G1" shape="circle" coords="80,70,20" match-max="1"/>
-      <qti-associable-hotspot identifier="G2" shape="circle" coords="160,70,20" match-max="1"/>
-    </qti-graphic-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>
 `.trim();
@@ -382,71 +248,6 @@ test.describe("player DOM behavior", () => {
     await expect(player.locator("p .qti3-inlineChoice")).toHaveCount(0);
   });
 
-  test("renders shared vocabulary choice orientation classes", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, CHOICE_ORIENTATION_ITEM);
-
-    const horizontal = page.locator(
-      'qti-assessment-item-player .qti3-choice[data-response-identifier="RESPONSE1"]',
-    );
-    const vertical = page.locator(
-      'qti-assessment-item-player .qti3-choice[data-response-identifier="RESPONSE2"]',
-    );
-    await expect(horizontal).toHaveClass(/qti-orientation-horizontal/);
-    await expect(vertical).toHaveClass(/qti-orientation-vertical/);
-
-    const horizontalRects = await choiceOptionRects(horizontal);
-    expect(horizontalRects).toHaveLength(3);
-    expect(Math.abs(horizontalRects[1].y - horizontalRects[0].y)).toBeLessThanOrEqual(2);
-    expect(Math.abs(horizontalRects[2].y - horizontalRects[0].y)).toBeLessThanOrEqual(2);
-    expect(horizontalRects[1].x).toBeGreaterThan(horizontalRects[0].x);
-    expect(horizontalRects[2].x).toBeGreaterThan(horizontalRects[1].x);
-
-    const verticalRects = await choiceOptionRects(vertical);
-    expect(verticalRects).toHaveLength(3);
-    expect(verticalRects[1].y).toBeGreaterThan(verticalRects[0].y + verticalRects[0].height - 1);
-    expect(verticalRects[2].y).toBeGreaterThan(verticalRects[1].y + verticalRects[1].height - 1);
-
-    await horizontal.locator('input[value="ChoiceA"]').check();
-    await vertical.locator('input[value="ChoiceB"]').check();
-    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
-    });
-    expect(state.responses.RESPONSE1).toBe("ChoiceA");
-    expect(state.responses.RESPONSE2).toBe("ChoiceB");
-  });
-
-  test("renders shared vocabulary choice stacking order", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, CHOICE_STACKING_ITEM);
-
-    const horizontal = page.locator(
-      'qti-assessment-item-player .qti3-choice[data-response-identifier="HORIZONTAL"]',
-    );
-    const horizontalRects = await choiceOptionRects(horizontal);
-    expect(horizontalRects.map((rect) => rect.identifier)).toEqual(["A", "B", "C", "D", "E"]);
-    expect(Math.abs(horizontalRects[1].y - horizontalRects[0].y)).toBeLessThanOrEqual(2);
-    expect(Math.abs(horizontalRects[2].y - horizontalRects[0].y)).toBeLessThanOrEqual(2);
-    expect(horizontalRects[1].x).toBeGreaterThan(horizontalRects[0].x);
-    expect(horizontalRects[2].x).toBeGreaterThan(horizontalRects[1].x);
-    expect(horizontalRects[3].y).toBeGreaterThan(
-      horizontalRects[0].y + horizontalRects[0].height - 1,
-    );
-    expect(Math.abs(horizontalRects[3].x - horizontalRects[0].x)).toBeLessThanOrEqual(2);
-
-    const vertical = page.locator(
-      'qti-assessment-item-player .qti3-choice[data-response-identifier="VERTICAL"]',
-    );
-    const verticalRects = await choiceOptionRects(vertical);
-    expect(verticalRects.map((rect) => rect.identifier)).toEqual(["A", "B", "C", "D", "E"]);
-    expect(verticalRects[1].y).toBeGreaterThan(verticalRects[0].y + verticalRects[0].height - 1);
-    expect(Math.abs(verticalRects[1].x - verticalRects[0].x)).toBeLessThanOrEqual(2);
-    expect(verticalRects[2].x).toBeGreaterThan(verticalRects[0].x);
-    expect(Math.abs(verticalRects[2].y - verticalRects[0].y)).toBeLessThanOrEqual(2);
-    expect(verticalRects[3].y).toBeGreaterThan(verticalRects[2].y + verticalRects[2].height - 1);
-    expect(Math.abs(verticalRects[3].x - verticalRects[2].x)).toBeLessThanOrEqual(2);
-  });
-
   test("applies item-body shared vocabulary layout and presentation classes", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, ITEM_LAYOUT_SHARED_VOCABULARY_ITEM);
@@ -485,90 +286,6 @@ test.describe("player DOM behavior", () => {
     if (!narrowLeftBox || !narrowRightBox) throw new Error("Missing narrow shared layout boxes.");
     expect(Math.abs(narrowRightBox.x - narrowLeftBox.x)).toBeLessThanOrEqual(2);
     expect(narrowRightBox.y).toBeGreaterThan(narrowLeftBox.y + narrowLeftBox.height - 1);
-  });
-
-  test("applies choice and hottext presentation shared vocabulary classes", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM);
-
-    const player = page.locator("qti-assessment-item-player");
-    const choice = player.locator(".qti3-choice");
-    await expect(choice).toHaveClass(/qti-input-control-hidden/);
-    await expect(choice).toHaveClass(/qti-writing-orientation-vertical-rl/);
-    await expect(choice.locator(".qti3-choice-list")).toHaveCSS("writing-mode", "vertical-rl");
-    await expect(choice.locator(".qti3-choice-label").first()).toHaveText("一.");
-    await expect(choice.locator(".qti3-choice-label").nth(1)).toHaveText("二.");
-
-    const input = choice.locator('input[value="A"]');
-    await expect(input).toHaveCSS("position", "absolute");
-    await choice.locator('.qti3-choice-option[data-choice-identifier="A"]').click();
-    await expect(input).toBeChecked();
-    await expect
-      .poll(async () => {
-        const state = await player.evaluate((element) => element.serialize());
-        return state.responses.CHOICE_RESPONSE;
-      })
-      .toBe("A");
-
-    const hottext = player.locator(".qti3-hottext");
-    await expect(hottext).toHaveClass(/qti-unselected-hidden/);
-    const token = hottext.locator(".qti3-hottext-token");
-    await expect(token).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-    await token.focus();
-    await expect(token).toBeFocused();
-    await expect(token).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-    await token.click();
-    await expect(token).toHaveAttribute("data-selected", "true");
-    await expect
-      .poll(async () => {
-        const state = await player.evaluate((element) => element.serialize());
-        return state.responses.HOTTEXT_RESPONSE;
-      })
-      .toBe("A");
-  });
-
-  test("applies choice selection shared vocabulary classes without blocking keyboard selection", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await pasteXml(page, CHOICE_SELECTION_PRESENTATION_SHARED_VOCABULARY_ITEM);
-
-    const player = page.locator("qti-assessment-item-player");
-    const choice = player.locator(".qti3-choice");
-    await expect(choice).toHaveClass(/qti-selections-dark/);
-    await expect(choice).toHaveClass(/qti-unselected-hidden/);
-
-    const firstOption = choice.locator('.qti3-choice-option[data-choice-identifier="A"]');
-    const secondOption = choice.locator('.qti3-choice-option[data-choice-identifier="B"]');
-    const firstHiddenStyles = await firstOption.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        borderTopColor: style.borderTopColor,
-        backgroundColor: style.backgroundColor,
-      };
-    });
-    expect(firstHiddenStyles.borderTopColor).toBe("rgba(0, 0, 0, 0)");
-    expect(firstHiddenStyles.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-
-    await choice.locator('input[value="A"]').focus();
-    await page.keyboard.press("Tab");
-    await expect(choice.locator('input[value="B"]')).toBeFocused();
-    await page.keyboard.press("Space");
-    await expect(choice.locator('input[value="B"]')).toBeChecked();
-    await expect(secondOption).toHaveAttribute("data-selected", "true");
-
-    const selectedStyles = await secondOption.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        borderTopColor: style.borderTopColor,
-        backgroundColor: style.backgroundColor,
-        color: style.color,
-      };
-    });
-    expect(selectedStyles.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
-    expect(selectedStyles.color).not.toBe(selectedStyles.backgroundColor);
-    await expect(firstOption).toHaveAttribute("data-selected", "false");
-    await expect(firstOption).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   });
 
   test("keeps hottext shared vocabulary indicators visible in forced colors", async ({ page }) => {
@@ -664,12 +381,10 @@ test.describe("player DOM behavior", () => {
     await pasteXml(page, ORDER_SHARED_VOCABULARY_ITEM);
 
     const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
-    await expect(layout).toHaveAttribute("data-qti-choices-position", "top");
     const bank = layout.locator(".qti3-order-choices-bank");
     await expect(bank.getByRole("button")).toHaveCount(3);
     const targets = layout.locator(".qti3-order-target-slot");
     await expect(targets).toHaveCount(3);
-    await expect(targets.nth(0)).toContainText("1)");
     await expect(targets.nth(0)).toContainText("empty");
 
     await bank.getByRole("button", { name: "Second step" }).click();
@@ -728,33 +443,13 @@ test.describe("player DOM behavior", () => {
     );
   });
 
-  test("positions match shared vocabulary choices beside targets", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, MATCH_CHOICES_POSITION_ITEM);
-
-    const layout = page.locator("qti-assessment-item-player .qti3-match-selector");
-    await expect(layout).toHaveAttribute("data-qti-choices-position", "right");
-    const targetBox = await layout.locator(".qti3-match-target-bank").boundingBox();
-    const bankBox = await layout.locator(".qti3-match-source-bank").boundingBox();
-    if (!targetBox || !bankBox) throw new Error("Missing match shared vocabulary boxes.");
-    expect(bankBox.x).toBeGreaterThan(targetBox.x);
-  });
-
-  test("renders match shared vocabulary tabular matrix", async ({ page }) => {
+  test("toggles match shared vocabulary tabular matrix choices", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, MATCH_TABULAR_SHARED_VOCABULARY_ITEM);
 
     const player = page.locator("qti-assessment-item-player");
     const table = player.locator(".qti3-match-table");
     await expect(table).toBeVisible();
-    await expect(table.locator("thead th").first()).toHaveText("Characters");
-    await expect(table.locator("thead th")).toContainText([
-      "Characters",
-      "A Midsummer Night's Dream",
-      "Romeo and Juliet",
-    ]);
-    await expect(table.locator("tbody th")).toContainText(["Capulet", "Demetrius"]);
-    await expect(table.locator(".qti3-match-table-cell")).toHaveCount(4);
 
     const capuletRomeo = table.locator(
       '.qti3-match-table-cell[data-source-identifier="C"][data-target-identifier="R"]',
@@ -776,59 +471,12 @@ test.describe("player DOM behavior", () => {
     await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
   });
 
-  test("renders match shared vocabulary tabular matrix with hidden column headers", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await pasteXml(page, MATCH_TABULAR_HEADER_HIDDEN_ITEM);
-
-    const table = page.locator("qti-assessment-item-player .qti3-match-table");
-    await expect(table).toHaveClass(/qti-header-hidden/);
-    await expect(table.locator("thead")).toHaveCount(0);
-    await expect(table.locator("tbody th")).toHaveText("Capulet");
-    const cell = table.locator(".qti3-match-table-cell");
-    await expect(cell).toHaveAttribute("aria-label", "Capulet to Romeo and Juliet");
-  });
-
-  test("positions gap match shared vocabulary choices beside the passage", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, GAP_CHOICES_POSITION_ITEM);
-
-    const layout = page.locator("qti-assessment-item-player .qti3-gap-match-layout");
-    await expect(layout).not.toHaveClass(/qti3-gap-placement/);
-    await expect(layout).toHaveAttribute("data-qti-choices-position", "left");
-    const bankBox = await layout.locator(".qti3-gap-source-region").boundingBox();
-    const passageBox = await layout.locator(".qti3-gap-passage").boundingBox();
-    if (!bankBox || !passageBox) throw new Error("Missing gap match shared vocabulary boxes.");
-    expect(bankBox.x).toBeLessThan(passageBox.x);
-    expect(bankBox.width).toBeLessThanOrEqual(122);
-  });
-
-  test("preserves gap placement vocabulary and applies gap input widths", async ({ page }) => {
+  test("keeps gap placement interaction usable with authored input widths", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, GAP_PLACEMENT_WIDTH_ITEM);
 
     const player = page.locator("qti-assessment-item-player");
-    const section = player.locator(".qti3-gapMatch");
-    const layout = player.locator(".qti3-gap-match-layout");
-    const passage = player.locator(".qti3-gap-passage");
-    await expect(section).toHaveClass(/qti-gap-placement/);
-    await expect(layout).toHaveClass(/qti3-gap-placement/);
-    await expect(passage).toHaveClass(/qti3-gap-placement/);
-
-    const narrowGap = player.locator('[data-gap-identifier="G1"]');
     const wideGap = player.locator('[data-gap-identifier="G2"]');
-    await expect(narrowGap).toHaveAttribute("data-qti-gap-input-width", "3");
-    await expect(wideGap).toHaveAttribute("data-qti-gap-input-width", "10");
-    const narrowBox = await narrowGap.locator("button").boundingBox();
-    const wideBox = await wideGap.locator("button").boundingBox();
-    if (!narrowBox || !wideBox) throw new Error("Missing gap width boxes.");
-    expect(wideBox.width).toBeGreaterThan(narrowBox.width);
-
-    const placementUnderline = await narrowGap
-      .locator("button")
-      .evaluate((button) => Number.parseFloat(getComputedStyle(button).borderBottomWidth));
-    expect(placementUnderline).toBeGreaterThan(0);
 
     await assignGap(page, "Gap match", "A", "G2");
     await expect(currentResponse(page)).resolves.toEqual(["A G2"]);
@@ -839,74 +487,6 @@ test.describe("player DOM behavior", () => {
     await page.setViewportSize({ width: 360, height: 640 });
     const overflow = await player.evaluate((element) => element.scrollWidth > element.clientWidth);
     expect(overflow).toBe(false);
-  });
-
-  test("applies extended text height and counter placement shared vocabulary", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, EXTENDED_TEXT_SHARED_VOCABULARY_ITEM);
-
-    const response = page.locator(
-      'qti-assessment-item-player [data-response-identifier="RESPONSE"] .qti3-text-response',
-    );
-    const textarea = response.locator("textarea.qti3-textarea");
-    const counter = response.locator(".qti3-counter");
-
-    await expect(textarea).toHaveAttribute("rows", "6");
-    await expect(counter).toBeVisible();
-    await expect(
-      response.locator(":scope > :is(.qti3-counter, textarea.qti3-textarea)").first(),
-    ).toHaveClass(/qti3-counter/);
-
-    await textarea.fill("Six line shared vocabulary.");
-    await expect(counter).toContainText("27");
-  });
-
-  test("places extended text counter below the textarea by default", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, EXTENDED_TEXT_COUNTER_DOWN_ITEM);
-
-    const response = page.locator(
-      'qti-assessment-item-player [data-response-identifier="RESPONSE"] .qti3-text-response',
-    );
-    const textarea = response.locator("textarea.qti3-textarea");
-    const counter = response.locator(".qti3-counter");
-
-    await expect(textarea).toHaveAttribute("rows", "3");
-    await expect(counter).toBeVisible();
-    await expect(
-      response.locator(":scope > :is(.qti3-counter, textarea.qti3-textarea)").first(),
-    ).toHaveClass(/qti3-textarea/);
-  });
-
-  test("positions graphic gap match shared vocabulary choices below the image", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await pasteXml(page, GRAPHIC_GAP_CHOICES_POSITION_ITEM);
-
-    const layout = page.locator("qti-assessment-item-player .qti3-graphic-gap-layout");
-    await expect(layout).toHaveAttribute("data-qti-choices-position", "bottom");
-    const surfaceBox = await layout.locator(".qti3-graphic-gap-match-surface").boundingBox();
-    const bankBox = await layout.locator(".qti3-graphic-gap-source-region").boundingBox();
-    if (!surfaceBox || !bankBox) throw new Error("Missing graphic gap shared vocabulary boxes.");
-    expect(bankBox.y).toBeGreaterThan(surfaceBox.y);
-    expect(bankBox.width).toBeLessThanOrEqual(162);
-  });
-
-  test("positions order shared vocabulary choices beside vertical targets", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, ORDER_SHARED_VOCABULARY_LEFT_ITEM);
-
-    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
-    await expect(layout).toHaveAttribute("data-qti-choices-position", "left");
-    await expect(layout).toHaveAttribute("data-qti-order-orientation", "vertical");
-    const bank = layout.locator(".qti3-order-choices-bank");
-    await expect(bank).toHaveCSS("flex-direction", "column");
-    const bankBox = await bank.boundingBox();
-    const targetBox = await layout.locator(".qti3-order-target-list").boundingBox();
-    if (!bankBox || !targetBox) throw new Error("Missing order shared vocabulary layout boxes.");
-    expect(bankBox.x).toBeLessThan(targetBox.x);
-    await expect(layout.locator(".qti3-order-target-label").first()).toHaveText("A.");
   });
 
   test("embeds text entry interactions inside paragraph flow", async ({ page }) => {

@@ -5,6 +5,7 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
+import { interactionClassNames } from "./shared-vocabulary.js";
 
 export function renderHottextResponse(
   interaction: QtiInteraction,
@@ -19,6 +20,7 @@ export function renderHottextResponse(
   const selected = new Set(valueToStrings(currentValue));
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
+  const hideInputControl = interactionClassNames(interaction).includes("qti-input-control-hidden");
   const passage = document.createElement("p");
   passage.className = "qti3-hottext-passage";
 
@@ -71,7 +73,18 @@ export function renderHottextResponse(
       }
       syncSelected();
     });
-    appendInlineControl(content, button, segments[segmentIndex + 1]);
+    if (hideInputControl) {
+      const inlineControl = document.createElement("span");
+      inlineControl.className = "qti3-hottext-inline-control";
+      const visibleText = document.createElement("span");
+      visibleText.className = "qti3-hottext-visible-text";
+      visibleText.setAttribute("aria-hidden", "true");
+      visibleText.textContent = segment.text;
+      inlineControl.append(button, visibleText);
+      appendInlineControl(content, inlineControl, segments[segmentIndex + 1]);
+    } else {
+      appendInlineControl(content, button, segments[segmentIndex + 1]);
+    }
   }
 
   passage.append(...content);

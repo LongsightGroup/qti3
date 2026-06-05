@@ -1,3 +1,41 @@
+const VISUALLY_HIDDEN_FOCUSABLE_CLIP = `
+  position: absolute;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  inline-size: 1px;
+  block-size: 1px;
+  width: 1px;
+  height: 1px;
+  min-inline-size: 0;
+  min-block-size: 0;
+  min-width: 0;
+  min-height: 0;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  line-height: 1px;
+  white-space: nowrap;
+`;
+
+const VISUALLY_HIDDEN_FOCUSABLE_OVERLAY = `
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  opacity: 0;
+  overflow: visible;
+  line-height: inherit;
+  white-space: inherit;
+`;
+
 export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 .qti3-choice-group {
   container-type: inline-size;
@@ -53,16 +91,7 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 }
 
 .qti3-choice.qti-input-control-hidden .qti3-choice-option input {
-  position: absolute;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  clip-path: inset(50%);
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  padding: 0;
-  border: 0;
-  white-space: nowrap;
+  ${VISUALLY_HIDDEN_FOCUSABLE_CLIP}
 }
 
 .qti3-choice.qti-input-control-hidden .qti3-choice-option:has(input:focus) {
@@ -157,9 +186,48 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
   text-decoration-color: HighlightText;
 }
 
+.qti3-hottext-inline-control {
+  position: relative;
+  display: inline;
+}
+
+.qti3-hottext.qti-input-control-hidden .qti3-hottext-visible-text {
+  pointer-events: none;
+}
+
 .qti3-hottext.qti-input-control-hidden .qti3-hottext-token {
-  border-color: currentColor;
+  ${VISUALLY_HIDDEN_FOCUSABLE_OVERLAY}
+}
+
+.qti3-hottext.qti-input-control-hidden .qti3-hottext-token:focus + .qti3-hottext-visible-text {
+  outline: 3px solid Highlight;
+  outline-offset: 2px;
+}
+
+.qti3-hottext.qti-input-control-hidden
+  .qti3-hottext-token[data-selected="true"]
+  + .qti3-hottext-visible-text {
+  background: Highlight;
+  color: HighlightText;
+}
+
+.qti3-hottext.qti-input-control-hidden.qti-unselected-hidden
+  .qti3-hottext-token:not([data-selected="true"]):not(:focus):not(:focus-visible)
+  + .qti3-hottext-visible-text {
+  color: inherit;
   background: transparent;
+  text-decoration-color: transparent;
+}
+
+.qti3-hottext.qti-input-control-hidden.qti-unselected-hidden
+  .qti3-hottext-token:not([data-selected="true"]):focus
+  + .qti3-hottext-visible-text,
+.qti3-hottext.qti-input-control-hidden.qti-unselected-hidden
+  .qti3-hottext-token:not([data-selected="true"]):focus-visible
+  + .qti3-hottext-visible-text {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
 }
 
 .qti3-hottext.qti-unselected-hidden
@@ -204,6 +272,34 @@ export const CHOICE_HOTTEXT_PLAYER_STYLES = `
 
   .qti3-hottext-token[data-selected="true"] {
     text-decoration-color: HighlightText;
+  }
+
+  .qti3-hottext.qti-input-control-hidden .qti3-hottext-token {
+    position: static;
+    display: inline;
+    inset: auto;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    inline-size: auto;
+    block-size: auto;
+    width: auto;
+    height: auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+    min-width: 0;
+    min-height: 0;
+    margin-inline: 0.1rem;
+    margin-block: 0;
+    padding: 0.12rem 0.28rem;
+    border: 1px solid CanvasText;
+    opacity: 1;
+    line-height: normal;
+    white-space: normal;
+  }
+
+  .qti3-hottext.qti-input-control-hidden .qti3-hottext-visible-text {
+    display: none;
   }
 }
 `.trim();

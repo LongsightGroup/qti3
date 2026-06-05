@@ -157,11 +157,16 @@ export async function runAssertionInRoot(
       const width = Number.parseFloat(style.width);
       const height = Number.parseFloat(style.height);
       if (style.position !== "absolute") throw new Error(`position is ${style.position}`);
-      if (style.clipPath !== "inset(50%)") throw new Error(`clip-path is ${style.clipPath}`);
-      if (width > 1 || height > 1) throw new Error(`size is ${width}x${height}`);
+      const clippedHidden = style.clipPath === "inset(50%)" && width <= 1 && height <= 1;
+      const overlayHidden = Number.parseFloat(style.opacity) === 0;
+      if (!clippedHidden && !overlayHidden) {
+        throw new Error(
+          `expected clipped or transparent overlay hiding, received clip-path ${style.clipPath}, opacity ${style.opacity}, size ${width}x${height}`,
+        );
+      }
       element.focus();
       await settle();
-      if (document.activeElement !== element) throw new Error("input did not receive focus");
+      if (document.activeElement !== element) throw new Error("control did not receive focus");
       return;
     }
     case "inline-style": {
