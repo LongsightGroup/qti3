@@ -5,11 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>qti3 manual harness</title>
     <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f6f7;
+        --panel: #fff;
+        --panel-alt: #f9fafb;
+        --ink: #111827;
+        --muted: #4b5563;
+        --line: #d7dce2;
+        --accent: #245f9f;
+        --accent-bg: #e7f0fb;
+        --warning: #9d5c00;
+        --warning-bg: #fff6e8;
+        --success: #23643a;
+        --success-bg: #edf7ef;
+      }
+
       body {
-        font-family: system-ui, sans-serif;
         margin: 0;
-        color: #151515;
-        background: #fafafa;
+        color: var(--ink);
+        background: var(--bg);
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
       }
 
       *,
@@ -20,28 +38,62 @@
 
       main {
         display: grid;
-        grid-template-columns: minmax(18rem, 24rem) 1fr;
-        min-height: 100vh;
+        grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+        min-block-size: 100vh;
       }
 
       aside {
+        min-inline-size: 0;
         padding: 1rem;
-        border-right: 1px solid #d8d8d8;
-        background: #fff;
+        border-inline-end: 1px solid var(--line);
+        background: var(--panel);
+        overflow: auto;
       }
 
-      section {
+      main > section {
+        min-inline-size: 0;
         padding: 1rem;
+        overflow: auto;
       }
 
       main > * {
-        min-width: 0;
+        min-inline-size: 0;
+      }
+
+      h1,
+      h2,
+      p {
+        margin-block: 0;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+        line-height: 1.25;
+      }
+
+      h2 {
+        margin-block-start: 1rem;
+        font-size: 1rem;
+      }
+
+      nav {
+        margin-block-start: 0.35rem;
+        color: var(--muted);
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
       }
 
       textarea {
-        width: 100%;
-        min-height: 14rem;
-        font: inherit;
+        min-block-size: 14rem;
       }
 
       select,
@@ -49,18 +101,44 @@
       button,
       textarea,
       pre {
-        max-width: 100%;
+        max-inline-size: 100%;
       }
 
       button {
-        min-height: 2.25rem;
+        min-block-size: 2.25rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: var(--accent);
+      }
+
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      summary:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 2px;
       }
 
       select,
       input,
       textarea,
       pre {
-        width: 100%;
+        inline-size: 100%;
+      }
+
+      select,
+      input,
+      textarea {
+        min-block-size: 2.25rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
       }
 
       textarea,
@@ -69,15 +147,23 @@
       }
 
       pre {
+        margin: 0;
+        padding: 0.65rem;
+        border: 1px solid var(--line);
+        background: var(--panel-alt);
+        color: var(--ink);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.85rem;
         white-space: pre-wrap;
       }
 
       qti-assessment-item-player {
         display: block;
+        min-block-size: 24rem;
         padding: 1rem;
         color: CanvasText;
         background: Canvas;
-        border: 1px solid #d8d8d8;
+        border: 1px solid var(--line);
       }
 
       .qti3-interaction {
@@ -89,8 +175,8 @@
         gap: 0.65rem;
         margin-block: 1rem;
         padding: 0.85rem;
-        border: 1px solid #c9c9c9;
-        background: #f6f6f3;
+        border: 1px solid var(--line);
+        background: var(--panel-alt);
       }
 
       .score-panel h2 {
@@ -98,13 +184,13 @@
       }
 
       .score-panel[data-status="scored"] {
-        border-color: #2f6f3e;
-        background: #edf7ef;
+        border-color: var(--success);
+        background: var(--success-bg);
       }
 
       .score-panel[data-status="blocked"] {
-        border-color: #9d5c00;
-        background: #fff6e8;
+        border-color: var(--warning);
+        background: var(--warning-bg);
       }
 
       .score-kpis {
@@ -118,13 +204,13 @@
         display: grid;
         gap: 0.15rem;
         padding: 0.5rem;
-        border: 1px solid #d8d8d8;
-        background: #fff;
+        border: 1px solid var(--line);
+        background: var(--panel);
       }
 
       .score-kpis dt {
-        color: #555;
-        font-size: 0.85rem;
+        color: var(--muted);
+        font-size: 0.82rem;
       }
 
       .score-kpis dd {
@@ -134,8 +220,10 @@
       }
 
       label {
-        display: block;
+        display: grid;
+        gap: 0.25rem;
         margin-block: 0.35rem;
+        color: var(--muted);
       }
 
       .load-options {
@@ -145,12 +233,12 @@
       }
 
       .load-option {
-        border: 1px solid #c9c9c9;
-        background: #f6f6f3;
+        border: 1px solid var(--line);
+        background: var(--panel-alt);
       }
 
       .load-option[open] {
-        background: #fff;
+        background: var(--panel);
       }
 
       .load-option summary {
@@ -159,17 +247,12 @@
         font-weight: 700;
       }
 
-      .load-option summary:focus-visible {
-        outline: 3px solid Highlight;
-        outline-offset: 2px;
-      }
-
       .load-option-body {
         display: grid;
         gap: 0.65rem;
         padding: 0.75rem 0.85rem 0.85rem;
-        border-top: 1px solid #c9c9c9;
-        background: #fff;
+        border-block-start: 1px solid var(--line);
+        background: var(--panel);
       }
 
       .fixture-controls {
@@ -197,8 +280,8 @@
       }
 
       .debug-panel {
-        border: 1px solid #d8d8d8;
-        background: #fff;
+        border: 1px solid var(--line);
+        background: var(--panel);
       }
 
       .debug-panel summary {
@@ -208,11 +291,8 @@
       }
 
       .debug-panel pre {
-        margin: 0;
-        padding: 0.65rem;
-        border-top: 1px solid #d8d8d8;
-        background: #f7f7f7;
-        font-size: 0.9rem;
+        border: 0;
+        border-block-start: 1px solid var(--line);
       }
 
       .a11y-proof,
@@ -220,8 +300,8 @@
         display: grid;
         gap: 0.75rem;
         padding: 0.65rem;
-        border-top: 1px solid #d8d8d8;
-        background: #f7f7f7;
+        border-block-start: 1px solid var(--line);
+        background: var(--panel-alt);
       }
 
       .a11y-proof h3,
@@ -239,7 +319,7 @@
 
       .at-script {
         padding-block-end: 0.75rem;
-        border-bottom: 1px solid #d8d8d8;
+        border-block-end: 1px solid var(--line);
       }
 
       .at-script:last-child {
@@ -253,8 +333,8 @@
         }
 
         aside {
-          border-right: 0;
-          border-bottom: 1px solid #d8d8d8;
+          border-inline-end: 0;
+          border-block-end: 1px solid var(--line);
         }
       }
     </style>
