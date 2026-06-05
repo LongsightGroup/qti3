@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   clickAuthoredCoordinate,
   createStoredZip,
@@ -15,6 +15,16 @@ function graySvgDataUrl(width: number, height: number): string {
   return `data:image/svg+xml,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="${width}" height="${height}" fill="#777"/></svg>`,
   )}`;
+}
+
+async function dragCenter(page: Page, source: Locator, target: Locator): Promise<void> {
+  const sourceBox = await source.boundingBox();
+  const targetBox = await target.boundingBox();
+  if (!sourceBox || !targetBox) throw new Error("Missing drag boxes.");
+  await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+  await page.mouse.up();
 }
 
 const GRAPHIC_GAP_SELECTION_THEMES_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
@@ -353,6 +363,62 @@ test.describe("player graphic interactions", () => {
       "src",
       /^data:image\/svg\+xml;base64,/,
     );
+  });
+
+  test("lets mouse users clear and overwrite qti-gap-img graphic gap match placements", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="160" viewBox="0 0 300 160"><rect width="300" height="160" fill="#f4f2ea"/><rect x="36" y="44" width="92" height="64" rx="6" fill="#2f4858"/><rect x="172" y="44" width="92" height="64" rx="6" fill="#8b5d33"/></svg>`;
+    const choiceASvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff" stroke="#2f4858" stroke-width="3"/><text x="39" y="38" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">A</text></svg>`;
+    const choiceBSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff" stroke="#8b5d33" stroke-width="3"/><text x="39" y="38" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#8b5d33">B</text></svg>`;
+    const targetImage = `data:image/svg+xml;base64,${Buffer.from(targetSvg).toString("base64")}`;
+    const choiceAImage = `data:image/svg+xml;base64,${Buffer.from(choiceASvg).toString("base64")}`;
+    const choiceBImage = `data:image/svg+xml;base64,${Buffer.from(choiceBSvg).toString("base64")}`;
+
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="clear-overwrite-gap-img-graphic-gap-match" title="clear-overwrite-gap-img-graphic-gap-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${targetImage}" alt="Diagram with two highlighted targets." type="image/svg+xml"/>
+      <qti-gap-img identifier="DraggerA" match-max="1">
+        <img alt="Civil War marker" height="63" src="${choiceAImage}" width="78"/>
+      </qti-gap-img>
+      <qti-gap-img identifier="DraggerB" match-max="1">
+        <img alt="Reconstruction marker" height="63" src="${choiceBImage}" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="TargetA" shape="rect" coords="36,44,128,108" match-max="1"/>
+      <qti-associable-hotspot identifier="TargetB" shape="rect" coords="172,44,264,108" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const bank = page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region");
+    const sourceA = bank.getByRole("button", { name: "Civil War marker" });
+    const sourceB = bank.getByRole("button", { name: "Reconstruction marker" });
+    const targetA = page.locator('qti-assessment-item-player [data-gap-identifier="TargetA"]');
+    const targetB = page.locator('qti-assessment-item-player [data-gap-identifier="TargetB"]');
+
+    await dragCenter(page, sourceA, targetB);
+    await expectResponse(page, ["DraggerA TargetB"]);
+
+    await targetB.click();
+    await expectResponse(page, ["DraggerA TargetB"]);
+
+    await dragCenter(page, targetB.locator(".qti3-graphic-gap-label"), bank);
+    await expectResponse(page, []);
+    await expect(targetB).toHaveAccessibleName("Target 2, empty");
+
+    await dragCenter(page, sourceA, targetA);
+    await expectResponse(page, ["DraggerA TargetA"]);
+
+    await dragCenter(page, sourceB, targetA);
+    await expectResponse(page, ["DraggerB TargetA"]);
+    await expect(targetA).toHaveAccessibleName("Target 1, assigned Reconstruction marker");
   });
 
   test("supports keyboard assignment and clearing for qti-gap-img choices", async ({ page }) => {

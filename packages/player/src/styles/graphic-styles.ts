@@ -260,7 +260,7 @@ export const GRAPHIC_PLAYER_STYLES = `
   font-weight: 700;
   line-height: 1.15;
   overflow-wrap: anywhere;
-  pointer-events: none;
+  cursor: grab;
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
   text-align: center;
   white-space: normal;

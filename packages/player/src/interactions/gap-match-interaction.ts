@@ -237,6 +237,16 @@ function renderGraphicGapMatchResponse(
   const assignments = new Map<string, QtiChoice>();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
+  let pointerDrag:
+    | {
+        sourceIdentifier: string;
+        originGapIdentifier: string;
+        pointerId: number;
+        startX: number;
+        startY: number;
+      }
+    | undefined;
+  let suppressTargetClick = false;
 
   for (const pair of valueToStrings(currentValue)) {
     const [sourceIdentifier, gapIdentifier] = pair.split(/\s+/);
@@ -297,6 +307,11 @@ function renderGraphicGapMatchResponse(
       );
     }
   };
+  const resetDrag = () => {
+    draggedSource = undefined;
+    pointerDrag = undefined;
+    syncSources();
+  };
   const clearSourceIfSingleUse = (source: QtiChoice, keepGapIdentifier: string) => {
     if (parseUnlimitedMaximum(source.attributes["match-max"]) !== 1) return;
     for (const [gapIdentifier, assigned] of assignments.entries()) {
@@ -305,15 +320,35 @@ function renderGraphicGapMatchResponse(
       }
     }
   };
-  const assign = (gap: QtiChoice, sourceIdentifier: string | undefined) => {
+  const assign = (
+    gap: QtiChoice,
+    sourceIdentifier: string | undefined,
+    originGapIdentifier?: string,
+  ) => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
     if (!source) return;
+    if (originGapIdentifier && originGapIdentifier !== gap.identifier) {
+      assignments.delete(originGapIdentifier);
+    }
     clearSourceIfSingleUse(source, gap.identifier);
     assignments.set(gap.identifier, source);
     selectedSource = undefined;
     syncSources();
     renderTargets();
     commit();
+  };
+  const clearAssignment = (gapIdentifier: string) => {
+    if (!assignments.has(gapIdentifier)) return;
+    assignments.delete(gapIdentifier);
+    resetDrag();
+    renderTargets();
+    commit();
+  };
+  const suppressNextTargetClick = () => {
+    suppressTargetClick = true;
+    window.setTimeout(() => {
+      suppressTargetClick = false;
+    }, 0);
   };
   const targetLabel = (gap: QtiChoice, index: number) =>
     gap.attributes["aria-label"] ||
@@ -341,21 +376,70 @@ function renderGraphicGapMatchResponse(
     button.addEventListener("drop", (event) => {
       event.preventDefault();
       button.classList.remove("qti3-drop-target");
-      assign(gap, event.dataTransfer?.getData("text/plain") || draggedSource);
+      const sourceIdentifier = event.dataTransfer?.getData("text/plain") || draggedSource;
+      assign(gap, sourceIdentifier);
+      resetDrag();
     });
-    button.addEventListener("click", () => assign(gap, selectedSource?.identifier));
+    button.addEventListener("click", () => {
+      if (suppressTargetClick) {
+        suppressTargetClick = false;
+        return;
+      }
+      if (selectedSource) {
+        assign(gap, selectedSource.identifier);
+        return;
+      }
+    });
+    button.addEventListener("pointerdown", (event) => {
+      if (!assigned || event.button !== 0) return;
+      pointerDrag = {
+        sourceIdentifier: assigned.identifier,
+        originGapIdentifier: gap.identifier,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+      };
+      button.setPointerCapture(event.pointerId);
+    });
+    button.addEventListener("pointerup", (event) => {
+      const drag = pointerDrag;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      pointerDrag = undefined;
+      if (button.hasPointerCapture(event.pointerId)) {
+        button.releasePointerCapture(event.pointerId);
+      }
+      const moved = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4;
+      if (!moved) return;
+
+      const dropElement = document.elementFromPoint(event.clientX, event.clientY);
+      if (dropElement?.closest(".qti3-graphic-gap-source-region") === sourceRegion) {
+        suppressNextTargetClick();
+        clearAssignment(drag.originGapIdentifier);
+        return;
+      }
+
+      const targetElement = dropElement?.closest<HTMLElement>(".qti3-graphic-gap-hotspot");
+      const targetGap = gaps.find(
+        (candidate) => candidate.identifier === targetElement?.dataset.gapIdentifier,
+      );
+      if (targetGap) {
+        suppressNextTargetClick();
+        assign(targetGap, drag.sourceIdentifier, drag.originGapIdentifier);
+      }
+    });
+    button.addEventListener("pointercancel", resetDrag);
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
       if (!assignments.has(gap.identifier)) return;
       event.preventDefault();
-      assignments.delete(gap.identifier);
-      renderTargets();
-      commit();
+      clearAssignment(gap.identifier);
     });
     placeHotspotButton(button, gap, width, height);
     if (assigned) {
       const assignedLabel = document.createElement("span");
       assignedLabel.className = "qti3-graphic-gap-label";
+      assignedLabel.dataset.choiceIdentifier = assigned.identifier;
+      assignedLabel.dataset.originGapIdentifier = gap.identifier;
       appendChoiceVisual(assignedLabel, assigned);
       button.append(assignedLabel);
     }
@@ -380,10 +464,7 @@ function renderGraphicGapMatchResponse(
       event.dataTransfer?.setData("text/plain", source.identifier);
       event.dataTransfer?.setDragImage(button, 8, 8);
     });
-    button.addEventListener("dragend", () => {
-      draggedSource = undefined;
-      syncSources();
-    });
+    button.addEventListener("dragend", resetDrag);
     button.addEventListener("click", () => {
       selectedSource = source;
       syncSources();
