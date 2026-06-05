@@ -19,6 +19,7 @@ import {
   interactionSupport,
   parseQtiXml,
   processingSupport,
+  sharedVocabularyClassSupport,
   validateAssessmentItem,
   type QtiDiagnostic,
   type QtiValue,
@@ -120,6 +121,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
       JSON.stringify(
         {
           target: "QTI 3.0.1 ASI item profile",
+          sharedVocabularyClasses: sharedVocabularyClassSupport,
           elements: elementSupport,
           interactions: [...interactionSupport, ...deprecatedInteractionSupport],
           processing: processingSupport,
@@ -218,8 +220,14 @@ function assertSupportMatrix(): {
     }
   }
 
+  for (const support of sharedVocabularyClassSupport) {
+    if (support.level === "full" && (support.tests?.length ?? 0) === 0) {
+      failures.push(`${support.className} shared vocabulary entry must have test evidence.`);
+    }
+  }
+
   return {
-    checked: elementSupport.length,
+    checked: elementSupport.length + sharedVocabularyClassSupport.length,
     failed: failures.length,
     failures,
   };

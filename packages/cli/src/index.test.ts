@@ -7,6 +7,7 @@ import {
   interactionSupport,
   parseQtiXml,
   processingSupport,
+  sharedVocabularyClassSupport,
 } from "@longsightgroup/qti3-core";
 import {
   basicItemPlayerFixtures,
@@ -37,7 +38,37 @@ describe("@longsightgroup/qti3-cli", () => {
   });
 
   it("prints the support matrix", async () => {
-    await expect(main(["support-matrix"])).resolves.toBe(0);
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await expect(main(["support-matrix"])).resolves.toBe(0);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      expect(Object.keys(report).slice(0, 2)).toEqual(["target", "sharedVocabularyClasses"]);
+      expect(report.sharedVocabularyClasses).toHaveLength(sharedVocabularyClassSupport.length);
+      expect(report.sharedVocabularyClasses).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            className: "qti-choices-top",
+            scope: "interaction",
+            interactions: expect.arrayContaining(["order", "match", "gapMatch"]),
+            level: "full",
+            tests: expect.arrayContaining(["tests/browser/player-dom-behavior.spec.ts"]),
+          }),
+          expect.objectContaining({
+            className: "qti-layout-row",
+            scope: "content",
+            level: "stylesheet",
+          }),
+          expect.objectContaining({
+            className: "qti-input-width-10",
+            scope: "gap",
+            interactions: ["gapMatch"],
+            level: "full",
+          }),
+        ]),
+      );
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("prints the accessibility proof matrix", async () => {
@@ -76,7 +107,7 @@ describe("@longsightgroup/qti3-cli", () => {
       await expect(main(["assert-support"])).resolves.toBe(0);
       const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
       expect(report).toMatchObject({
-        checked: elementSupport.length,
+        checked: elementSupport.length + sharedVocabularyClassSupport.length,
         failed: 0,
         failures: [],
       });
@@ -163,6 +194,37 @@ describe("@longsightgroup/qti3-cli", () => {
         }),
       ]),
     );
+  });
+
+  it("exposes shared vocabulary class support metadata", () => {
+    expect(sharedVocabularyClassSupport).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          className: "qti-match-tabular",
+          scope: "interaction",
+          interactions: ["match"],
+          level: "full",
+        }),
+        expect.objectContaining({
+          className: "qti-header-hidden",
+          scope: "interaction",
+          interactions: ["match"],
+          level: "conditional",
+        }),
+        expect.objectContaining({
+          className: "qti-counter-up",
+          scope: "interaction",
+          interactions: ["extendedText"],
+          level: "full",
+        }),
+      ]),
+    );
+
+    for (const support of sharedVocabularyClassSupport) {
+      if (support.level === "full") {
+        expect(support.tests?.length, support.className).toBeGreaterThan(0);
+      }
+    }
   });
 
   it("ties processing support evidence to public reference fixtures where available", () => {

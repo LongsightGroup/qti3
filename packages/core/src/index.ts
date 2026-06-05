@@ -55,6 +55,7 @@ export {
   interactionSupport,
   processingSupport,
 } from "./support.js";
+export { sharedVocabularyClassSupport } from "./shared-vocabulary-support.js";
 export {
   extendedTextCounterPosition,
   extendedTextCounterPositionFromAttributes,
@@ -122,6 +123,7 @@ export type {
   QtiTemplateRule,
   QtiValidationResult,
   QtiValue,
+  SharedVocabularyClassSupport,
 } from "./types.js";
 export {
   isQtiPortableCustomStateValue,

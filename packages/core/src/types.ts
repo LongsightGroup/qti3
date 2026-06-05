@@ -705,3 +705,13 @@ export interface QtiInteractionElementSupport extends QtiElementSupportBase {
 export interface QtiProcessingElementSupport extends QtiElementSupportBase {
   category: "processing";
 }
+
+export interface SharedVocabularyClassSupport {
+  className: string;
+  scope: "interaction" | "content" | "gap";
+  interactions?: QtiInteractionType[] | undefined;
+  level: "full" | "stylesheet" | "pass-through" | "conditional";
+  fixtures?: string[] | undefined;
+  tests?: string[] | undefined;
+  notes?: string | undefined;
+}

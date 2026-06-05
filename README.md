@@ -271,40 +271,14 @@ product theme classes. Classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
-The browser player also ships reference CSS for the general-purpose item-body vocabulary,
-including the twelve-column `qti-layout-row`, `qti-layout-col1` through
-`qti-layout-col12`, dashed `qti-layout-col-1` through `qti-layout-col-12`, and
-`qti-layout-offset*` grid classes; horizontal/vertical alignment, full-width,
-text indentation, vertical writing, float/clear, appearance, list-style, underline,
-italic, and inline-block classes.
-For choice interactions, the browser player also applies the current shared-vocabulary
-layout classes `qti-orientation-horizontal`, `qti-orientation-vertical`,
-`qti-writing-orientation-vertical-rl`, `qti-writing-orientation-vertical-lr`, and
-`qti-choices-stacking-1` through `qti-choices-stacking-5`, plus label style/suffix
-classes including `qti-labels-cjk-ideographic`, hidden input controls, and selection
-presentation classes `qti-selections-light`, `qti-selections-dark`, and
-`qti-unselected-hidden`. Deprecated `orientation="horizontal"` authoring is tolerated as
-a compatibility fallback, but new fixtures and examples use the current shared-vocabulary
-classes.
-For hot text interactions, the browser player applies `qti-input-control-hidden` and
-`qti-unselected-hidden`. For hotspot interactions, it applies `qti-selections-light`,
-`qti-selections-dark`, and `qti-unselected-hidden`.
-Graphic gap match interactions apply the same selection presentation classes to authored
-associable hotspot targets while preserving keyboard assignment and source-bank controls.
-For match, gap match, graphic gap match, and order interactions, the browser player
-applies `qti-choices-top`, `qti-choices-bottom`, `qti-choices-left`, and
-`qti-choices-right` as opt-in choices-bank positioning classes. Match interactions also
-apply `qti-match-tabular`, `qti-header-hidden`, and `data-first-column-header` as
-shared-vocabulary tabular matrix presentation. Order interactions also apply
-shared-vocabulary target labels and suffixes.
-Gap match interactions also preserve `qti-gap-placement` as authored shared vocabulary.
-When that class is present, the browser player renders underline-style inline gap slots in
-the passage (and block-mode fallbacks that still read as in-flow placement) instead of
-dashed block drop zones. The player applies the same supported `qti-input-width-*` token
-set used by text-entry and inline-choice interactions on `qti-gap` elements as target
-sizing hints. The 1EdTech vocabulary table lists those width classes for text-entry
-interactions, not gap targets, so hosts may override `.qti-gap-placement` presentation
-with their own CSS when they do not want the built-in placement or width mapping.
+The machine-readable support matrix is the source of truth for shipped shared vocabulary
+coverage. Inspect the `sharedVocabularyClasses` section for each class name, scope,
+interaction surface, support level, fixture evidence, and test evidence:
+
+```sh
+node packages/cli/dist/index.js support-matrix
+```
+
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.
@@ -434,7 +408,7 @@ node packages/cli/dist/index.js write-fixtures packages/fixtures/xml
 ```
 
 The support matrix is machine-readable. It includes evidence for supported interactions,
-deprecated interactions, and processing elements:
+deprecated interactions, processing elements, and shared vocabulary classes:
 
 ```sh
 node packages/cli/dist/index.js support-matrix
