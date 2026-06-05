@@ -12,6 +12,7 @@ type RelativeOrder = "before" | "after";
 export type SharedVocabularyAssertion =
   | { type: "aria-snapshot-contains"; selector: string; text: string }
   | { type: "attribute"; selector: string; name: string; value: string }
+  | { type: "attribute-absent"; selector: string; name: string }
   | { type: "class-preserved"; selector: string; className: string }
   | { type: "click"; selector: string }
   | { type: "computed-style"; selector: string; property: string; value: string }

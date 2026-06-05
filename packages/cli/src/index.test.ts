@@ -64,6 +64,27 @@ describe("@longsightgroup/qti3-cli", () => {
             interactions: ["gapMatch"],
             level: "full",
           }),
+          expect.objectContaining({
+            className: "data-qti-media-player-controls",
+            scope: "interaction",
+            interactions: ["media"],
+            level: "full",
+            tests: expect.arrayContaining(["tests/browser/player.spec.ts"]),
+          }),
+          expect.objectContaining({
+            className: "data-qti-media-player-pause-delay",
+            scope: "interaction",
+            interactions: ["media"],
+            level: "full",
+            tests: expect.arrayContaining(["tests/browser/player.spec.ts"]),
+          }),
+          expect.objectContaining({
+            className: "data-qti-media-player-pause-duration",
+            scope: "interaction",
+            interactions: ["media"],
+            level: "full",
+            tests: expect.arrayContaining(["tests/browser/player.spec.ts"]),
+          }),
         ]),
       );
     } finally {

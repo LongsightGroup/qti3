@@ -6,6 +6,8 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return `${assertion.selector} accessible text contains "${assertion.text}"`;
     case "attribute":
       return `${assertion.selector} has ${assertion.name}="${assertion.value}"`;
+    case "attribute-absent":
+      return `${assertion.selector} does not have ${assertion.name}`;
     case "class-preserved":
       return `${assertion.selector} preserves .${assertion.className}`;
     case "click":
@@ -73,6 +75,11 @@ export async function runAssertionInRoot(
       if (value !== assertion.value) {
         throw new Error(`received ${formatValue(value)}`);
       }
+      return;
+    }
+    case "attribute-absent": {
+      const value = requiredElement(root, assertion.selector).getAttribute(assertion.name);
+      if (value !== null) throw new Error(`received ${formatValue(value)}`);
       return;
     }
     case "class-preserved": {

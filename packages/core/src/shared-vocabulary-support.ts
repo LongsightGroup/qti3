@@ -29,6 +29,9 @@ const browserBehaviorTests = [
   ...sharedVocabularyMatrixTests,
 ];
 const graphicBrowserTests = ["tests/browser/player-graphic.spec.ts"];
+const mediaBrowserTests = ["tests/browser/player.spec.ts", ...sharedVocabularyMatrixTests];
+const mediaPlayerFixture =
+  "packages/fixtures/packages/sv-matrix/items/media-controls-and-pause.xml";
 
 const contentListStyleTypes = [
   "none",
@@ -171,6 +174,19 @@ function interactionStylesheetEntry(
   return svEntry(className, "interaction", "stylesheet", {
     interactions,
     fixtures: sharedVocabularyFixture,
+    tests,
+    notes,
+  });
+}
+
+function mediaPlayerSvEntry(
+  className: string,
+  notes: string,
+  tests: string[] = mediaBrowserTests,
+): SharedVocabularyClassSupport {
+  return svEntry(className, "interaction", "full", {
+    interactions: ["media"],
+    fixtures: [mediaPlayerFixture],
     tests,
     notes,
   });
@@ -353,5 +369,18 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
         ...browserBehaviorTests,
       ],
     ),
+  ),
+  mediaPlayerSvEntry(
+    "data-qti-media-player-controls",
+    "Supports tokens none, default, play, rewind, captions, and audioDescription on media interactions and rendered media assets.",
+    [...mediaBrowserTests, "packages/core/src/shared-vocabulary-validation.test.ts"],
+  ),
+  mediaPlayerSvEntry(
+    "data-qti-media-player-pause-delay",
+    "Reflects authored pause-delay values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
+  ),
+  mediaPlayerSvEntry(
+    "data-qti-media-player-pause-duration",
+    "Reflects authored pause-duration values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
   ),
 ];

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-controls-and-pause" title="media-controls-and-pause" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="NONE_RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-response-declaration identifier="DEFAULT_RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-response-declaration identifier="TIMED_RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-item-body>
+    <qti-media-interaction response-identifier="NONE_RESPONSE">
+      <object id="sv-media-none" data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav" data-qti-media-player-controls="none">Silent audio without controls</object>
+    </qti-media-interaction>
+    <qti-media-interaction response-identifier="DEFAULT_RESPONSE">
+      <object id="sv-media-default" data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav" data-qti-media-player-controls="default">Silent audio with default controls</object>
+    </qti-media-interaction>
+    <qti-media-interaction response-identifier="TIMED_RESPONSE">
+      <object id="sv-media-timed" data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav" data-qti-media-player-pause-delay="0.02" data-qti-media-player-pause-duration="0.03">Silent audio with pause timing</object>
+    </qti-media-interaction>
+  </qti-item-body>
+</qti-assessment-item>

@@ -481,6 +481,52 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
     ],
   ),
   entry(
+    "media-controls-and-pause",
+    [
+      "data-qti-media-player-controls",
+      "data-qti-media-player-pause-delay",
+      "data-qti-media-player-pause-duration",
+    ],
+    "full",
+    [
+      {
+        type: "attribute",
+        selector: `${player} audio[data-qti-media-player-controls="none"]`,
+        name: "data-qti-media-player-controls",
+        value: "none",
+      },
+      {
+        type: "attribute-absent",
+        selector: `${player} audio[data-qti-media-player-controls="none"]`,
+        name: "controls",
+      },
+      {
+        type: "attribute",
+        selector: `${player} audio[data-qti-media-player-controls="default"]`,
+        name: "data-qti-media-player-controls",
+        value: "default",
+      },
+      {
+        type: "attribute",
+        selector: `${player} audio[data-qti-media-player-controls="default"]`,
+        name: "controls",
+        value: "",
+      },
+      {
+        type: "attribute",
+        selector: `${player} audio[data-qti-media-player-pause-delay="0.02"]`,
+        name: "data-qti-media-player-pause-delay",
+        value: "0.02",
+      },
+      {
+        type: "attribute",
+        selector: `${player} audio[data-qti-media-player-pause-duration="0.03"]`,
+        name: "data-qti-media-player-pause-duration",
+        value: "0.03",
+      },
+    ],
+  ),
+  entry(
     "match-choices-top",
     "qti-choices-top",
     "full",

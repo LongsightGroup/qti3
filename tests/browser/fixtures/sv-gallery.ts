@@ -284,6 +284,7 @@ function classFamily(entry: SharedVocabularyManifestEntry): string {
       return "accessibility";
     }
     if (className.startsWith("qti-match-")) return "match";
+    if (className.startsWith("data-qti-media-player-")) return "media";
   }
   if (entry.id.startsWith("content-")) return "content";
   return "other";
