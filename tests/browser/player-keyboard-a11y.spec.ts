@@ -379,14 +379,14 @@ test.describe("player keyboard and accessibility", () => {
     await expect(summary).toHaveText("First step added to position 2 of 3.");
 
     await layout.locator('.qti3-reorder-handle[data-choice-identifier="A"]').focus();
-    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("ArrowLeft");
     await expectResponse(page, ["A", "B"]);
-    await expect(summary).toHaveText(/First step moved up\.$/);
+    await expect(summary).toHaveText(/First step moved left\.$/);
     await expect(layout.locator('.qti3-reorder-handle[data-choice-identifier="A"]')).toBeFocused();
 
     await expectMoveButtons(
       layout.locator('.qti3-order-target-item[data-choice-identifier="A"] .qti3-move-button'),
-      ["up", "down"],
+      ["left", "right"],
     );
     await layout.getByRole("button", { name: "Remove First step from order" }).click();
     await expectResponse(page, ["B"]);

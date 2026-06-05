@@ -1,5 +1,6 @@
-import { movementButton } from "../movement.js";
+import { movementButton, reorderMovementDirections } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import type { OrderOrientation } from "../interactions/shared-vocabulary.js";
 import { orderedItemAccessibleName } from "./a11y.js";
 
 export interface ReorderHandleOptions {
@@ -9,17 +10,29 @@ export interface ReorderHandleOptions {
   total: number;
   handleClassName: string;
   visibleText: string;
+  orientation: OrderOrientation;
   messages: PlayerMessageResolver;
   onMoveBy: (delta: number) => void;
 }
 
 export function createReorderHandleControls(options: ReorderHandleOptions): {
   handle: HTMLButtonElement;
-  up: HTMLButtonElement;
-  down: HTMLButtonElement;
+  movePrevious: HTMLButtonElement;
+  moveNext: HTMLButtonElement;
 } {
-  const { identifier, label, index, total, handleClassName, visibleText, messages, onMoveBy } =
-    options;
+  const {
+    identifier,
+    label,
+    index,
+    total,
+    handleClassName,
+    visibleText,
+    orientation,
+    messages,
+    onMoveBy,
+  } = options;
+  const { previous: previousDirection, next: nextDirection } =
+    reorderMovementDirections(orientation);
 
   const handle = document.createElement("button");
   handle.type = "button";
@@ -27,6 +40,7 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
   handle.dataset.choiceIdentifier = identifier;
   handle.setAttribute("aria-label", orderedItemAccessibleName(messages, label, index, total));
   handle.textContent = visibleText;
+  // Accept both axis pairs on the handle so keyboard users are not locked to one arrow set.
   handle.addEventListener("keydown", (event) => {
     if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
       event.preventDefault();
@@ -37,19 +51,21 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
     }
   });
 
-  const up = movementButton("up", messages.message("moveChoice", { label, direction: "up" }), () =>
-    onMoveBy(-1),
+  const movePrevious = movementButton(
+    previousDirection,
+    messages.message("moveChoice", { label, direction: previousDirection }),
+    () => onMoveBy(-1),
   );
-  up.disabled = index === 0;
+  movePrevious.disabled = index === 0;
 
-  const down = movementButton(
-    "down",
-    messages.message("moveChoice", { label, direction: "down" }),
+  const moveNext = movementButton(
+    nextDirection,
+    messages.message("moveChoice", { label, direction: nextDirection }),
     () => onMoveBy(1),
   );
-  down.disabled = index === total - 1;
+  moveNext.disabled = index === total - 1;
 
-  return { handle, up, down };
+  return { handle, movePrevious, moveNext };
 }
 
 export interface OrderDragState {

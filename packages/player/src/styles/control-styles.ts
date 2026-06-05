@@ -16,6 +16,18 @@ export const CONTROL_PLAYER_STYLES = `
   padding-inline-start: 1.5rem;
 }
 
+.qti3-reorder-list[data-qti-order-orientation="horizontal"],
+.qti3-order-sv-layout[data-qti-order-orientation="horizontal"] .qti3-order-target-list {
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: start;
+  overflow-x: auto;
+}
+
+.qti3-reorder-list[data-qti-order-orientation="horizontal"] .qti3-reorder-item {
+  align-self: start;
+}
+
 .qti3-choices-layout {
   --qti3-choices-container-width: 14rem;
   display: grid;

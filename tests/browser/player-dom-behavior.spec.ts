@@ -2,6 +2,7 @@ import { expect, test, type Locator } from "@playwright/test";
 import {
   assignGap,
   currentResponse,
+  expectMoveButtons,
   loadFixture,
   pasteXml,
   provideResponse,
@@ -121,6 +122,29 @@ const ORDER_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const HORIZONTAL_ORDER_ATTRIBUTE_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="q15-order-example-2" title="Grand Prix of Bahrain (horizontal)" adaptive="false" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>DriverC</qti-value>
+      <qti-value>DriverA</qti-value>
+      <qti-value>DriverB</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" orientation="horizontal">
+      <qti-prompt>The following F1 drivers finished on the podium in the first ever Grand Prix of Bahrain. Can you rearrange them into the correct finishing order from left to right, 1st, 2nd, and 3rd?</qti-prompt>
+      <qti-simple-choice identifier="DriverA">Rubens Barrichello</qti-simple-choice>
+      <qti-simple-choice identifier="DriverB">Jenson Button</qti-simple-choice>
+      <qti-simple-choice identifier="DriverC">Michael Schumacher</qti-simple-choice>
+    </qti-order-interaction>
+    <p>Note: The <em>orientation</em> of the layout of the drivers should be horizontal.</p>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"/>
+</qti-assessment-item>
+`.trim();
+
 const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-shared-vocabulary" title="match-tabular-shared-vocabulary" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -165,6 +189,23 @@ async function choiceOptionRects(
   interaction: Locator,
 ): Promise<Array<{ identifier: string; x: number; y: number; width: number; height: number }>> {
   return interaction.locator(".qti3-choice-option").evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        identifier: (element as HTMLElement).dataset.choiceIdentifier ?? "",
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      };
+    }),
+  );
+}
+
+async function orderItemRects(
+  interaction: Locator,
+): Promise<Array<{ identifier: string; x: number; y: number; width: number; height: number }>> {
+  return interaction.locator(".qti3-reorder-item").evaluateAll((elements) =>
     elements.map((element) => {
       const rect = element.getBoundingClientRect();
       return {
@@ -394,12 +435,42 @@ test.describe("player DOM behavior", () => {
     await expect(bank.getByRole("button")).toHaveCount(1);
 
     await layout
-      .locator('.qti3-order-target-item[data-choice-identifier="B"] [data-move-direction="down"]')
+      .locator('.qti3-order-target-item[data-choice-identifier="B"] [data-move-direction="right"]')
       .click();
     await expect.poll(() => currentResponse(page)).toEqual(["A", "B"]);
     await layout.getByRole("button", { name: "Remove Second step from order" }).click();
     await expect.poll(() => currentResponse(page)).toEqual(["A"]);
     await expect(bank.getByRole("button", { name: "Second step" })).toBeVisible();
+  });
+
+  test("honors horizontal orientation attributes on plain order interactions", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, HORIZONTAL_ORDER_ATTRIBUTE_ITEM);
+
+    const interaction = page.locator(
+      'qti-assessment-item-player .qti3-order[data-response-identifier="RESPONSE"]',
+    );
+    const list = interaction.locator(".qti3-reorder-list");
+    await expect(list).toHaveAttribute("data-qti-order-orientation", "horizontal");
+    await expectMoveButtons(
+      interaction.locator(".qti3-reorder-item").nth(1).locator(".qti3-move-button"),
+      ["left", "right"],
+    );
+
+    const rects = await orderItemRects(interaction);
+    expect(rects.map((rect) => rect.identifier)).toEqual(["DriverA", "DriverB", "DriverC"]);
+    expect(rects).toHaveLength(3);
+    expect(Math.abs(rects[1]!.y - rects[0]!.y)).toBeLessThanOrEqual(2);
+    expect(Math.abs(rects[2]!.y - rects[0]!.y)).toBeLessThanOrEqual(2);
+    expect(rects[1]!.x).toBeGreaterThan(rects[0]!.x);
+    expect(rects[2]!.x).toBeGreaterThan(rects[1]!.x);
+
+    const moveSchumacherLeft = interaction.locator(
+      '.qti3-reorder-item[data-choice-identifier="DriverC"] [data-move-direction="left"]',
+    );
+    await moveSchumacherLeft.click();
+    await moveSchumacherLeft.click();
+    await expect.poll(() => currentResponse(page)).toEqual(["DriverC", "DriverA", "DriverB"]);
   });
 
   test("does not misplace order shared vocabulary drops onto non-adjacent empty targets", async ({

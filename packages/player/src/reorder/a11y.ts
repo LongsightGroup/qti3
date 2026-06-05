@@ -1,4 +1,6 @@
+import type { OrderOrientation } from "../interactions/shared-vocabulary.js";
 import { choiceSelector } from "../interaction-support.js";
+import { reorderStepDirection } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 
 export function createSelectionSummary(): HTMLParagraphElement {
@@ -23,12 +25,13 @@ export function announceOrderedItemMove(
   label: string,
   to: number,
   total: number,
-  from?: number,
+  from: number | undefined,
+  orientation: OrderOrientation,
 ): void {
   if (from !== undefined && Math.abs(to - from) === 1) {
     summary.textContent = messages.message("orderedItemMovedOneStep", {
       label,
-      direction: to < from ? "up" : "down",
+      direction: reorderStepDirection(orientation, from, to),
     });
     return;
   }

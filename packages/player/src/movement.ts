@@ -1,6 +1,25 @@
+import type { OrderOrientation } from "./interactions/shared-vocabulary.js";
 import { inlineIcon } from "./icons.js";
 
 export type MovementDirection = "up" | "down" | "left" | "right";
+
+export function reorderMovementDirections(orientation: OrderOrientation): {
+  previous: MovementDirection;
+  next: MovementDirection;
+} {
+  return orientation === "horizontal"
+    ? { previous: "left", next: "right" }
+    : { previous: "up", next: "down" };
+}
+
+export function reorderStepDirection(
+  orientation: OrderOrientation,
+  from: number,
+  to: number,
+): MovementDirection {
+  const { previous, next } = reorderMovementDirections(orientation);
+  return to < from ? previous : next;
+}
 
 const movementIconPaths: Record<MovementDirection, string[]> = {
   up: ["M12 5l0 14", "M18 11l-6 -6", "M6 11l6 -6"],

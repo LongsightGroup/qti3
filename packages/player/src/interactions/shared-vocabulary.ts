@@ -10,6 +10,12 @@ export type SharedVocabularyChoicesPosition = "top" | "bottom" | "left" | "right
 export type OrderChoicesPosition = SharedVocabularyChoicesPosition;
 export type OrderOrientation = "horizontal" | "vertical";
 
+/** Default when plain order interactions omit orientation classes and attributes. */
+export const PLAIN_ORDER_DEFAULT_ORIENTATION: OrderOrientation = "vertical";
+
+/** Default when shared-vocabulary order layouts omit orientation classes and attributes. */
+export const SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION: OrderOrientation = "horizontal";
+
 export interface SharedVocabularyChoicesLayout {
   choicesPosition: SharedVocabularyChoicesPosition;
   choicesContainerWidth?: number;
@@ -74,7 +80,7 @@ export function orderSharedVocabularyLayout(
 
   const layout: OrderSharedVocabularyLayout = {
     choicesPosition: choicesLayout.choicesPosition,
-    orientation: orderOrientation(interaction),
+    orientation: sharedVocabularyOrderOrientation(interaction),
   };
   if (choicesLayout.choicesContainerWidth !== undefined) {
     layout.choicesContainerWidth = choicesLayout.choicesContainerWidth;
@@ -82,12 +88,25 @@ export function orderSharedVocabularyLayout(
   return layout;
 }
 
-function orderOrientation(interaction: QtiInteraction): OrderOrientation {
+export function resolveOrderOrientationFromInteraction(
+  interaction: QtiInteraction,
+): OrderOrientation | undefined {
   const classNames = new Set(interactionClassNames(interaction));
   if (classNames.has("qti-orientation-horizontal")) return "horizontal";
   if (classNames.has("qti-orientation-vertical")) return "vertical";
   if (interaction.attributes.orientation === "vertical") return "vertical";
-  return "horizontal";
+  if (interaction.attributes.orientation === "horizontal") return "horizontal";
+  return undefined;
+}
+
+export function plainOrderOrientation(interaction: QtiInteraction): OrderOrientation {
+  return resolveOrderOrientationFromInteraction(interaction) ?? PLAIN_ORDER_DEFAULT_ORIENTATION;
+}
+
+export function sharedVocabularyOrderOrientation(interaction: QtiInteraction): OrderOrientation {
+  return (
+    resolveOrderOrientationFromInteraction(interaction) ?? SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION
+  );
 }
 
 export function sharedVocabularyChoicesLayout(

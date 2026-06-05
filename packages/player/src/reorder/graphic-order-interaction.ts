@@ -142,6 +142,7 @@ export function renderGraphicOrderResponse(
       targetIndex,
       orderedIdentifiers.length,
       index,
+      "vertical",
     );
     commit();
     focusReorderControl(list, identifier);

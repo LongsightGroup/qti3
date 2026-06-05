@@ -4,8 +4,13 @@ import {
   gapMatchUsesPlacement,
   inputWidth,
   orderSharedVocabularyLayout,
+  plainOrderOrientation,
+  PLAIN_ORDER_DEFAULT_ORIENTATION,
+  resolveOrderOrientationFromInteraction,
   sharedVocabularyChoicesLayout,
   sharedVocabularyLabel,
+  SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION,
+  sharedVocabularyOrderOrientation,
 } from "./shared-vocabulary.js";
 
 function interaction(attributes: Record<string, string> = {}): QtiInteraction {
@@ -23,6 +28,35 @@ function interaction(attributes: Record<string, string> = {}): QtiInteraction {
 }
 
 describe("shared vocabulary", () => {
+  it("resolves order orientation from classes and attributes", () => {
+    expect(resolveOrderOrientationFromInteraction(interaction())).toBeUndefined();
+    expect(
+      resolveOrderOrientationFromInteraction(interaction({ class: "qti-orientation-horizontal" })),
+    ).toBe("horizontal");
+    expect(resolveOrderOrientationFromInteraction(interaction({ orientation: "vertical" }))).toBe(
+      "vertical",
+    );
+    expect(resolveOrderOrientationFromInteraction(interaction({ orientation: "horizontal" }))).toBe(
+      "horizontal",
+    );
+    expect(
+      resolveOrderOrientationFromInteraction(
+        interaction({ class: "qti-orientation-vertical", orientation: "horizontal" }),
+      ),
+    ).toBe("vertical");
+  });
+
+  it("applies plain and shared-vocabulary default orientation policies", () => {
+    expect(plainOrderOrientation(interaction())).toBe(PLAIN_ORDER_DEFAULT_ORIENTATION);
+    expect(sharedVocabularyOrderOrientation(interaction())).toBe(
+      SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION,
+    );
+    expect(plainOrderOrientation(interaction({ orientation: "horizontal" }))).toBe("horizontal");
+    expect(sharedVocabularyOrderOrientation(interaction({ orientation: "horizontal" }))).toBe(
+      "horizontal",
+    );
+  });
+
   it("falls back to deprecated orientation attribute when no orientation class is present", () => {
     expect(
       orderSharedVocabularyLayout(

@@ -2,6 +2,7 @@ import { deflateRawSync } from "node:zlib";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import type { PlayerMessageCatalog } from "../../packages/player/src/player-message-catalog.js";
+import { reorderMovementDirections } from "../../packages/player/src/movement.js";
 
 export const operableControlSelector = [
   "button",
@@ -201,6 +202,15 @@ export async function clickAuthoredCoordinate(
 }
 
 async function reorderOrderItems(page: Page, response: string[]): Promise<void> {
+  const orientation = await page.locator("qti-assessment-item-player").evaluate((element) => {
+    const container =
+      element.querySelector(".qti3-reorder-list") ?? element.querySelector(".qti3-order-sv-layout");
+    return container?.getAttribute("data-qti-order-orientation") === "horizontal"
+      ? "horizontal"
+      : "vertical";
+  });
+  const { previous: previousDirection, next: nextDirection } =
+    reorderMovementDirections(orientation);
   const current = await page.locator("qti-assessment-item-player").evaluate(() => {
     return [...document.querySelectorAll(".qti3-reorder-item")]
       .map((item) => (item as HTMLElement).dataset.choiceIdentifier)
@@ -212,7 +222,7 @@ async function reorderOrderItems(page: Page, response: string[]): Promise<void> 
     while (currentIndex > targetIndex) {
       await page
         .locator(
-          `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="up"]`,
+          `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="${previousDirection}"]`,
         )
         .click();
       moved = true;
@@ -223,7 +233,7 @@ async function reorderOrderItems(page: Page, response: string[]): Promise<void> 
     while (currentIndex >= 0 && currentIndex < targetIndex) {
       await page
         .locator(
-          `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="down"]`,
+          `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${value}"] [data-move-direction="${nextDirection}"]`,
         )
         .click();
       moved = true;
@@ -238,8 +248,8 @@ async function reorderOrderItems(page: Page, response: string[]): Promise<void> 
     const firstItem = page.locator(
       `qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="${first}"]`,
     );
-    await firstItem.locator('[data-move-direction="down"]').click();
-    await firstItem.locator('[data-move-direction="up"]').click();
+    await firstItem.locator(`[data-move-direction="${nextDirection}"]`).click();
+    await firstItem.locator(`[data-move-direction="${previousDirection}"]`).click();
   }
 }
 

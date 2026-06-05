@@ -11,6 +11,7 @@ import {
 import { appendChoiceVisual, setChoiceAccessibleName } from "../interactions/shared.js";
 import {
   orderSharedVocabularyLayout,
+  plainOrderOrientation,
   sharedVocabularyLabel,
   type OrderSharedVocabularyLayout,
 } from "../interactions/shared-vocabulary.js";
@@ -44,11 +45,12 @@ export function renderOrderedResponse(
       messages,
     );
   }
-  // qti-orientation-* affects the shared-vocabulary split bank/target layout. The default
-  // order renderer is a single ordered list, so there is no separate bank layout to orient.
   const ordered = orderChoicesFromValue(choices, currentValue);
+  // Plain order lists honor orientation with a vertical default when none is authored.
+  const orientation = plainOrderOrientation(interaction);
   const list = document.createElement("ol");
   list.className = "qti3-reorder-list";
+  list.dataset.qtiOrderOrientation = orientation;
   list.setAttribute(
     "aria-label",
     messages.message("interactionCurrentOrderList", { type: interaction.type }),
@@ -65,7 +67,7 @@ export function renderOrderedResponse(
     if (!choice) return;
     ordered.splice(to, 0, choice);
     renderList();
-    announceOrderedItemMove(summary, messages, choice.text, to, ordered.length, from);
+    announceOrderedItemMove(summary, messages, choice.text, to, ordered.length, from, orientation);
     commit();
     focusReorderControl(list, choice.identifier);
   };
@@ -76,18 +78,19 @@ export function renderOrderedResponse(
         item.className = "qti3-reorder-item";
         bindOrderListItemDrag(item, choice.identifier, index, dragState, moveChoice, findIndex);
 
-        const { handle, up, down } = createReorderHandleControls({
+        const { handle, movePrevious, moveNext } = createReorderHandleControls({
           identifier: choice.identifier,
           label: choice.text,
           index,
           total: ordered.length,
           handleClassName: "qti3-token qti3-reorder-handle",
           visibleText: choice.text,
+          orientation,
           messages,
           onMoveBy: (delta) => moveChoice(index, index + delta),
         });
 
-        item.append(handle, up, down);
+        item.append(handle, movePrevious, moveNext);
         return item;
       }),
     );
@@ -189,7 +192,15 @@ function renderSharedVocabularyOrderResponse(
     if (!choice) return;
     ordered.splice(to, 0, choice);
     render();
-    announceOrderedItemMove(summary, messages, choice.text, to, ordered.length, from);
+    announceOrderedItemMove(
+      summary,
+      messages,
+      choice.text,
+      to,
+      ordered.length,
+      from,
+      layout.orientation,
+    );
     commit();
     focusReorderControl(targetList, choice.identifier);
   };
@@ -265,19 +276,20 @@ function renderSharedVocabularyOrderResponse(
       draggedIdentifier = choice.identifier;
       event.dataTransfer?.setData("text/plain", choice.identifier);
     });
-    const { handle, up, down } = createReorderHandleControls({
+    const { handle, movePrevious, moveNext } = createReorderHandleControls({
       identifier: choice.identifier,
       label: choice.text,
       index,
       total: ordered.length,
       handleClassName: "qti3-token qti3-reorder-handle",
       visibleText: choice.text,
+      orientation: layout.orientation,
       messages,
       onMoveBy: (delta) => moveChoice(index, index + delta),
     });
     const remove = removeButton(choice.text, messages, "removeOrderedChoice");
     remove.addEventListener("click", () => removeChoice(choice.identifier));
-    item.append(handle, up, down, remove);
+    item.append(handle, movePrevious, moveNext, remove);
     slot.append(item);
     return slot;
   };
