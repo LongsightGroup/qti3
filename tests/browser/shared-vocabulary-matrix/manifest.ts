@@ -33,6 +33,14 @@ const gapLayout = `${player} .qti3-gap-match-layout`;
 const gapRoot = `${player} .qti3-gapMatch`;
 const gapBank = `${gapLayout} .qti3-gap-source-region`;
 const gapTargets = `${gapLayout} .qti3-gap-region`;
+const standaloneTextWidth4 = `${player} [data-response-identifier="BLOCK_4"] input.qti3-text-input`;
+const standaloneTextWidth20 = `${player} [data-response-identifier="BLOCK_20"] input.qti3-text-input`;
+const bodyTextWidth4 = `${player} [data-response-identifier="BODY_4"] input.qti3-inline-text-input`;
+const bodyTextWidth20 = `${player} [data-response-identifier="BODY_20"] input.qti3-inline-text-input`;
+const inlineTextWidth4 = `${player} [data-response-identifier="INLINE_4"] input.qti3-inline-text-input`;
+const inlineTextWidth20 = `${player} [data-response-identifier="INLINE_20"] input.qti3-inline-text-input`;
+const inlineChoiceWidth4 = `${player} [data-response-identifier="CHOICE_4"] select.qti3-inline-select`;
+const inlineChoiceWidth20 = `${player} [data-response-identifier="CHOICE_20"] select.qti3-inline-select`;
 const graphicGapRoot = `${player} .qti3-graphicGapMatch`;
 const graphicGapLayout = `${player} .qti3-graphic-gap-layout`;
 const graphicGapBank = `${graphicGapLayout} .qti3-graphic-gap-source-region`;
@@ -226,6 +234,44 @@ interface ChoicesPositionOptions {
   targetSelector: string;
   position: "top" | "bottom" | "left" | "right";
   className: string;
+}
+
+function interactionInputWidthPairAssertions(
+  narrowSelector: string,
+  wideSelector: string,
+): SharedVocabularyAssertion[] {
+  const controls = [
+    { selector: narrowSelector, width: "4" },
+    { selector: wideSelector, width: "20" },
+  ] as const;
+  return [
+    ...controls.flatMap(({ selector, width }) => [
+      {
+        type: "attribute",
+        selector,
+        name: "data-qti-input-width",
+        value: width,
+      } satisfies SharedVocabularyAssertion,
+      {
+        type: "inline-style",
+        selector,
+        property: "inline-size",
+        value: "",
+      } satisfies SharedVocabularyAssertion,
+      {
+        type: "inline-style",
+        selector,
+        property: "--qti3-input-width",
+        value: `${width}ch`,
+      } satisfies SharedVocabularyAssertion,
+    ]),
+    {
+      type: "computed-style-differs",
+      firstSelector: narrowSelector,
+      secondSelector: wideSelector,
+      property: "inline-size",
+    },
+  ];
 }
 
 function choicesPositionAssertions(options: ChoicesPositionOptions): SharedVocabularyAssertion[] {
@@ -502,6 +548,24 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
         value: String(width),
       }),
     ),
+  ),
+  entry(
+    "interaction-input-width-standalone",
+    "textEntry",
+    ["qti-input-width-4", "qti-input-width-20"],
+    "full",
+    interactionInputWidthPairAssertions(standaloneTextWidth4, standaloneTextWidth20),
+  ),
+  entry(
+    "interaction-input-width-embedded",
+    "textEntry",
+    ["qti-input-width-4", "qti-input-width-20"],
+    "full",
+    [
+      ...interactionInputWidthPairAssertions(bodyTextWidth4, bodyTextWidth20),
+      ...interactionInputWidthPairAssertions(inlineTextWidth4, inlineTextWidth20),
+      ...interactionInputWidthPairAssertions(inlineChoiceWidth4, inlineChoiceWidth20),
+    ],
   ),
   entry(
     "extendedtext-height-counter-variants",

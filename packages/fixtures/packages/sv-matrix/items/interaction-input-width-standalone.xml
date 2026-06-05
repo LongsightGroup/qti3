@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-input-width-standalone" title="interaction-input-width-standalone" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="BLOCK_4" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="BLOCK_20" cardinality="single" base-type="string"/>
+  <qti-text-entry-interaction response-identifier="BLOCK_4" class="qti-input-width-4" expected-length="40"/>
+  <qti-text-entry-interaction response-identifier="BLOCK_20" class="qti-input-width-20" expected-length="1"/>
+</qti-assessment-item>

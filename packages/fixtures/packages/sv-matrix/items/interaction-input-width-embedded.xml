@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-input-width-embedded" title="interaction-input-width-embedded" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="BODY_4" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="BODY_20" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="INLINE_4" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="INLINE_20" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="CHOICE_4" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="CHOICE_20" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-text-entry-interaction response-identifier="BODY_4" class="qti-input-width-4" expected-length="40"/>
+    <qti-text-entry-interaction response-identifier="BODY_20" class="qti-input-width-20" expected-length="1"/>
+    <p>
+      Inline text inputs:
+      <qti-text-entry-interaction response-identifier="INLINE_4" class="qti-input-width-4" expected-length="40"/>
+      <qti-text-entry-interaction response-identifier="INLINE_20" class="qti-input-width-20" expected-length="1"/>.
+    </p>
+    <p>
+      Inline choices:
+      <qti-inline-choice-interaction response-identifier="CHOICE_4" class="qti-input-width-4">
+        <qti-inline-choice identifier="A">A</qti-inline-choice>
+        <qti-inline-choice identifier="B">B</qti-inline-choice>
+      </qti-inline-choice-interaction>
+      <qti-inline-choice-interaction response-identifier="CHOICE_20" class="qti-input-width-20">
+        <qti-inline-choice identifier="A">A</qti-inline-choice>
+        <qti-inline-choice identifier="B">B</qti-inline-choice>
+      </qti-inline-choice-interaction>.
+    </p>
+  </qti-item-body>
+</qti-assessment-item>

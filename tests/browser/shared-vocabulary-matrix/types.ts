@@ -45,6 +45,7 @@ export type SharedVocabularyAssertion =
   | { type: "focus"; selector: string }
   | { type: "forced-colors-active" }
   | { type: "hidden-focusable-input"; selector: string }
+  | { type: "inline-style"; selector: string; property: string; value: string }
   | { type: "key"; key: string }
   | {
       type: "layout-same-row";

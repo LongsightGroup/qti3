@@ -78,7 +78,8 @@ test.describe("shared vocabulary matrix", () => {
 
   test("gallery exposes every non-pass-through manifest entry", async ({ page }) => {
     await page.goto("/sv-gallery");
-    await expect(page.locator("qti-assessment-item-player .qti3-item-body")).toBeVisible();
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-item-body, .qti3-interaction").first()).toBeVisible();
 
     for (const entry of matrixEntries) {
       await expect(page.locator(`[data-case-id="${entry.id}"]`)).toHaveCount(1);
@@ -87,7 +88,7 @@ test.describe("shared vocabulary matrix", () => {
     for (const entry of matrixEntries.filter((item) => !item.forcedColors)) {
       await page.goto(`/sv-gallery?case=${encodeURIComponent(entry.id)}`);
       await expect(page.locator("#case-title")).toHaveText(entry.id);
-      await expect(page.locator("qti-assessment-item-player .qti3-item-body")).toBeVisible();
+      await expect(player.locator(".qti3-item-body, .qti3-interaction").first()).toBeVisible();
       await expect(page.locator(".assertion-row")).toHaveCount(entry.assertions.length);
       await expect(page.locator(".status").filter({ hasText: "Running" })).toHaveCount(0, {
         timeout: 15_000,

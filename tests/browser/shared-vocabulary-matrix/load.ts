@@ -20,5 +20,7 @@ export async function loadSvMatrixItem(
     );
   });
   await pasteXml(page, xml);
-  await expect(page.locator("qti-assessment-item-player .qti3-item-body")).toBeVisible();
+  const player = page.locator("qti-assessment-item-player");
+  await expect(player).toBeVisible();
+  await expect(player.locator(".qti3-item-body, .qti3-interaction").first()).toBeVisible();
 }

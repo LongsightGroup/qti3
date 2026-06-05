@@ -32,6 +32,10 @@ const graphicBrowserTests = ["tests/browser/player-graphic.spec.ts"];
 const mediaBrowserTests = ["tests/browser/player.spec.ts", ...sharedVocabularyMatrixTests];
 const mediaPlayerFixture =
   "packages/fixtures/packages/sv-matrix/items/media-controls-and-pause.xml";
+const interactionInputWidthFixtures = [
+  "packages/fixtures/packages/sv-matrix/items/interaction-input-width-standalone.xml",
+  "packages/fixtures/packages/sv-matrix/items/interaction-input-width-embedded.xml",
+];
 
 const contentListStyleTypes = [
   "none",
@@ -326,15 +330,15 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
     [...sharedVocabularyUnitTests, "packages/core/src/core.test.ts", ...browserBehaviorTests],
   ),
   ...SHARED_VOCABULARY_INPUT_WIDTHS.map((width) =>
-    interactionFullEntry(
-      `qti-input-width-${width}`,
-      ["textEntry", "inlineChoice"],
-      [
+    svEntry(`qti-input-width-${width}`, "interaction", "full", {
+      interactions: ["textEntry", "inlineChoice"],
+      fixtures: interactionInputWidthFixtures,
+      tests: [
         "packages/core/src/shared-vocabulary.test.ts",
         "packages/core/src/core.test.ts",
-        ...browserBehaviorTests,
+        ...sharedVocabularyMatrixTests,
       ],
-    ),
+    }),
   ),
   ...SHARED_VOCABULARY_INPUT_WIDTHS.map((width) =>
     svEntry(`qti-input-width-${width}`, "gap", "full", {

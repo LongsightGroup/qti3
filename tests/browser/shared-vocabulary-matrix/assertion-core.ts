@@ -32,6 +32,8 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return "forced colors media query is active";
     case "hidden-focusable-input":
       return `${assertion.selector} is visually clipped and focusable`;
+    case "inline-style":
+      return `${assertion.selector} inline style ${assertion.property} is ${assertion.value || "(empty)"}`;
     case "key":
       return `press ${assertion.key}`;
     case "layout-same-row":
@@ -155,6 +157,13 @@ export async function runAssertionInRoot(
       element.focus();
       await settle();
       if (document.activeElement !== element) throw new Error("input did not receive focus");
+      return;
+    }
+    case "inline-style": {
+      const value = requiredHtmlElement(root, assertion.selector).style.getPropertyValue(
+        assertion.property,
+      );
+      if (value !== assertion.value) throw new Error(`received ${formatValue(value)}`);
       return;
     }
     case "key":

@@ -88,7 +88,7 @@ async function loadSelectedCase(): Promise<void> {
   if (!selectedEntry) return;
   selectedXml = await fetchXml(selectedEntry);
   await player.loadXml(selectedXml);
-  await waitForPlayerBody(player);
+  await waitForPlayerContent(player);
   updateHeader(selectedEntry);
   renderClassInspector(selectedEntry);
   renderAssertionSkeleton(selectedEntry.assertions);
@@ -334,11 +334,11 @@ interface QtiGalleryPlayer extends HTMLElement {
   loadXml(xml: string): Promise<void>;
 }
 
-async function waitForPlayerBody(host: QtiGalleryPlayer): Promise<void> {
+async function waitForPlayerContent(host: QtiGalleryPlayer): Promise<void> {
   const deadline = Date.now() + 10_000;
   while (Date.now() < deadline) {
-    if (host.querySelector(".qti3-item-body")) return;
+    if (host.querySelector(".qti3-item-body, .qti3-interaction")) return;
     await new Promise((resolve) => requestAnimationFrame(() => resolve()));
   }
-  throw new Error("Player did not render an item body.");
+  throw new Error("Player did not render item content.");
 }
