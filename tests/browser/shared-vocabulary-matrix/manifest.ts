@@ -19,6 +19,7 @@ const orderBank = `${orderLayout} .qti3-order-choices-bank`;
 const orderTargets = `${orderLayout} .qti3-order-target-list`;
 const orderRoot = `${player} .qti3-order`;
 const orderLabels = `${orderTargets} .qti3-order-target-label`;
+const extendedText = `${player} .qti3-extendedText`;
 const matchLayout = `${player} .qti3-match-selector`;
 const matchRoot = `${player} .qti3-match`;
 const matchBank = `${matchLayout} .qti3-match-source-bank`;
@@ -27,6 +28,7 @@ const gapLayout = `${player} .qti3-gap-match-layout`;
 const gapRoot = `${player} .qti3-gapMatch`;
 const gapBank = `${gapLayout} .qti3-gap-source-region`;
 const gapTargets = `${gapLayout} .qti3-gap-region`;
+const inputWidths = [1, 2, 3, 4, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 72] as const;
 
 function entry(
   id: string,
@@ -63,6 +65,34 @@ function selectionAssertions(className: string): SharedVocabularyAssertion[] {
       firstSelector: choiceA,
       secondSelector: choiceB,
       property: "color",
+    },
+  ];
+}
+
+function choiceStackingAssertions(
+  className: string | string[],
+  stacking: number,
+  orientation = "vertical",
+): SharedVocabularyAssertion[] {
+  return [
+    ...classNames(className).map(
+      (name): SharedVocabularyAssertion => ({
+        type: "class-preserved",
+        selector: choice,
+        className: name,
+      }),
+    ),
+    {
+      type: "attribute",
+      selector: `${choice} .qti3-choice-list`,
+      name: "data-qti-orientation",
+      value: orientation,
+    },
+    {
+      type: "attribute",
+      selector: `${choice} .qti3-choice-list`,
+      name: "data-qti-stacking",
+      value: String(stacking),
     },
   ];
 }
@@ -278,6 +308,34 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       },
     ],
   ),
+  entry(
+    "choice-stacking-1-horizontal",
+    ["qti-choices-stacking-1", "qti-orientation-horizontal"],
+    "full",
+    choiceStackingAssertions(
+      ["qti-choices-stacking-1", "qti-orientation-horizontal"],
+      1,
+      "horizontal",
+    ),
+  ),
+  entry(
+    "choice-stacking-2",
+    "qti-choices-stacking-2",
+    "full",
+    choiceStackingAssertions("qti-choices-stacking-2", 2),
+  ),
+  entry(
+    "choice-stacking-4",
+    "qti-choices-stacking-4",
+    "full",
+    choiceStackingAssertions("qti-choices-stacking-4", 4),
+  ),
+  entry(
+    "choice-stacking-5",
+    "qti-choices-stacking-5",
+    "full",
+    choiceStackingAssertions("qti-choices-stacking-5", 5),
+  ),
   entry("choice-input-control-hidden", "qti-input-control-hidden", "stylesheet", [
     { type: "class-preserved", selector: choice, className: "qti-input-control-hidden" },
     { type: "hidden-focusable-input", selector: `${choiceA} input` },
@@ -343,6 +401,85 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       ),
     );
   }),
+  entry(
+    "gap-input-width-variants",
+    inputWidths.map((width) => `qti-input-width-${width}`),
+    "full",
+    inputWidths.map(
+      (width): SharedVocabularyAssertion => ({
+        type: "attribute",
+        selector: `${player} [data-gap-identifier="G${width}"]`,
+        name: "data-qti-gap-input-width",
+        value: String(width),
+      }),
+    ),
+  ),
+  entry(
+    "extendedtext-height-counter-variants",
+    [
+      "qti-height-lines-3",
+      "qti-height-lines-6",
+      "qti-height-lines-15",
+      "qti-counter-up",
+      "qti-counter-down",
+    ],
+    "full",
+    [
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="LINES3"]`,
+        className: "qti-height-lines-3",
+      },
+      {
+        type: "attribute",
+        selector: `${extendedText}[data-response-identifier="LINES3"] textarea`,
+        name: "rows",
+        value: "3",
+      },
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="LINES6"]`,
+        className: "qti-height-lines-6",
+      },
+      {
+        type: "attribute",
+        selector: `${extendedText}[data-response-identifier="LINES6"] textarea`,
+        name: "rows",
+        value: "6",
+      },
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="LINES15"]`,
+        className: "qti-height-lines-15",
+      },
+      {
+        type: "attribute",
+        selector: `${extendedText}[data-response-identifier="LINES15"] textarea`,
+        name: "rows",
+        value: "15",
+      },
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="COUNTER_UP"]`,
+        className: "qti-counter-up",
+      },
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="COUNTER_UP"] .qti3-text-response > :first-child`,
+        className: "qti3-counter",
+      },
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="COUNTER_DOWN"]`,
+        className: "qti-counter-down",
+      },
+      {
+        type: "class-preserved",
+        selector: `${extendedText}[data-response-identifier="COUNTER_DOWN"] .qti3-text-response > :last-child`,
+        className: "qti3-counter",
+      },
+    ],
+  ),
   entry(
     "match-choices-top",
     "qti-choices-top",

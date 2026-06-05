@@ -1,6 +1,7 @@
-import { readdir } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { sharedVocabularyClassSupport } from "../../packages/core/src/shared-vocabulary-support.js";
 import { assertSvCase } from "./shared-vocabulary-matrix/assertions.js";
 import { loadSvMatrixItem } from "./shared-vocabulary-matrix/load.js";
 import {
@@ -11,8 +12,35 @@ import {
 const matrixEntries = sharedVocabularyManifest.filter(
   (entry) => entry.supportLevel !== "pass-through",
 );
+const matrixTestPath = "tests/browser/player-shared-vocabulary.spec.ts";
+
+function classNames(className: string | string[]): string[] {
+  return Array.isArray(className) ? className : [className];
+}
 
 test.describe("shared vocabulary matrix", () => {
+  test("covers every full shared vocabulary support class", () => {
+    const matrixClasses = new Set(matrixEntries.flatMap((entry) => classNames(entry.className)));
+    const fullSupportClasses = [
+      ...new Set(
+        sharedVocabularyClassSupport
+          .filter((support) => support.level === "full")
+          .map((support) => support.className),
+      ),
+    ].sort();
+
+    expect(fullSupportClasses.length).toBeGreaterThan(0);
+    for (const className of fullSupportClasses) {
+      expect(matrixClasses.has(className), className).toBe(true);
+      const supportEntries = sharedVocabularyClassSupport.filter(
+        (support) => support.level === "full" && support.className === className,
+      );
+      for (const support of supportEntries) {
+        expect(support.tests ?? [], className).toContain(matrixTestPath);
+      }
+    }
+  });
+
   test("has executable coverage for every non-pass-through manifest entry", async () => {
     const ids = matrixEntries.map((entry) => entry.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -28,6 +56,10 @@ test.describe("shared vocabulary matrix", () => {
     for (const entry of matrixEntries) {
       expect(entry.fixturePath, entry.id).toBe(`${SV_MATRIX_FIXTURE_ROOT}/${entry.id}.xml`);
       expect(entry.assertions.length, entry.id).toBeGreaterThan(0);
+      const xml = await readFile(join(process.cwd(), entry.fixturePath), "utf8");
+      for (const className of classNames(entry.className)) {
+        expect(xml, `${entry.id} fixture should author ${className}`).toContain(className);
+      }
       if (entry.forcedColors) {
         expect(
           entry.assertions.some((assertion) => assertion.type === "forced-colors-active"),

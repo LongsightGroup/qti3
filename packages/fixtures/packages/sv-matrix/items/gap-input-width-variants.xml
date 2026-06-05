@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-input-width-variants" title="gap-input-width-variants" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-gap-placement qti-choices-top">
+      <qti-gap-text identifier="T1" match-max="1">one</qti-gap-text>
+      <qti-gap-text identifier="T2" match-max="1">two</qti-gap-text>
+      <qti-gap-text identifier="T3" match-max="1">three</qti-gap-text>
+      <p>
+        <qti-gap identifier="G1" class="qti-input-width-1"/>
+        <qti-gap identifier="G2" class="qti-input-width-2"/>
+        <qti-gap identifier="G3" class="qti-input-width-3"/>
+        <qti-gap identifier="G4" class="qti-input-width-4"/>
+        <qti-gap identifier="G6" class="qti-input-width-6"/>
+        <qti-gap identifier="G10" class="qti-input-width-10"/>
+        <qti-gap identifier="G15" class="qti-input-width-15"/>
+        <qti-gap identifier="G20" class="qti-input-width-20"/>
+        <qti-gap identifier="G25" class="qti-input-width-25"/>
+        <qti-gap identifier="G30" class="qti-input-width-30"/>
+        <qti-gap identifier="G35" class="qti-input-width-35"/>
+        <qti-gap identifier="G40" class="qti-input-width-40"/>
+        <qti-gap identifier="G45" class="qti-input-width-45"/>
+        <qti-gap identifier="G50" class="qti-input-width-50"/>
+        <qti-gap identifier="G72" class="qti-input-width-72"/>
+      </p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>

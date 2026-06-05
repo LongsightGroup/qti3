@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extendedtext-height-counter-variants" title="extendedtext-height-counter-variants" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="LINES3" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="LINES6" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="LINES15" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="COUNTER_UP" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="COUNTER_DOWN" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="LINES3" class="qti-height-lines-3"/>
+    <qti-extended-text-interaction response-identifier="LINES6" class="qti-height-lines-6"/>
+    <qti-extended-text-interaction response-identifier="LINES15" class="qti-height-lines-15"/>
+    <qti-extended-text-interaction response-identifier="COUNTER_UP" class="qti-counter-up"/>
+    <qti-extended-text-interaction response-identifier="COUNTER_DOWN" class="qti-counter-down"/>
+  </qti-item-body>
+</qti-assessment-item>
