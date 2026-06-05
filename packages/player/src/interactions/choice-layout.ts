@@ -1,8 +1,8 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import {
+  DEFAULT_VERTICAL_ORIENTATION,
   interactionClassNames,
-  PLAIN_ORDER_DEFAULT_ORIENTATION,
-  resolveOrderOrientationFromInteraction,
+  resolveOrientationFromInteraction,
 } from "./shared-vocabulary.js";
 
 export type ChoiceOrientation = "horizontal" | "vertical";
@@ -27,7 +27,7 @@ export function choiceLayout(interaction: QtiInteraction, choiceCount: number): 
   }
 
   const orientation =
-    resolveOrderOrientationFromInteraction(interaction) ?? PLAIN_ORDER_DEFAULT_ORIENTATION;
+    resolveOrientationFromInteraction(interaction) ?? DEFAULT_VERTICAL_ORIENTATION;
   const columns =
     stacking !== undefined
       ? stacking

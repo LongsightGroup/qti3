@@ -10,11 +10,11 @@ export type SharedVocabularyChoicesPosition = "top" | "bottom" | "left" | "right
 export type OrderChoicesPosition = SharedVocabularyChoicesPosition;
 export type OrderOrientation = "horizontal" | "vertical";
 
-/** Default when plain order interactions omit orientation classes and attributes. */
-export const PLAIN_ORDER_DEFAULT_ORIENTATION: OrderOrientation = "vertical";
+/** Default orientation when classes and attributes do not specify one (e.g. choice, plain order). */
+export const DEFAULT_VERTICAL_ORIENTATION: OrderOrientation = "vertical";
 
-/** Default when shared-vocabulary order layouts omit orientation classes and attributes. */
-export const SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION: OrderOrientation = "horizontal";
+/** Default orientation for shared-vocabulary order layouts without explicit orientation. */
+export const DEFAULT_HORIZONTAL_ORIENTATION: OrderOrientation = "horizontal";
 
 export interface SharedVocabularyChoicesLayout {
   choicesPosition: SharedVocabularyChoicesPosition;
@@ -88,7 +88,7 @@ export function orderSharedVocabularyLayout(
   return layout;
 }
 
-export function resolveOrderOrientationFromInteraction(
+export function resolveOrientationFromInteraction(
   interaction: QtiInteraction,
 ): OrderOrientation | undefined {
   const classNames = new Set(interactionClassNames(interaction));
@@ -100,13 +100,11 @@ export function resolveOrderOrientationFromInteraction(
 }
 
 export function plainOrderOrientation(interaction: QtiInteraction): OrderOrientation {
-  return resolveOrderOrientationFromInteraction(interaction) ?? PLAIN_ORDER_DEFAULT_ORIENTATION;
+  return resolveOrientationFromInteraction(interaction) ?? DEFAULT_VERTICAL_ORIENTATION;
 }
 
 export function sharedVocabularyOrderOrientation(interaction: QtiInteraction): OrderOrientation {
-  return (
-    resolveOrderOrientationFromInteraction(interaction) ?? SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION
-  );
+  return resolveOrientationFromInteraction(interaction) ?? DEFAULT_HORIZONTAL_ORIENTATION;
 }
 
 export function sharedVocabularyChoicesLayout(

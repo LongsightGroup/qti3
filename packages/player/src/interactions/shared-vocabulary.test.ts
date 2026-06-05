@@ -4,12 +4,12 @@ import {
   gapMatchUsesPlacement,
   inputWidth,
   orderSharedVocabularyLayout,
+  DEFAULT_HORIZONTAL_ORIENTATION,
+  DEFAULT_VERTICAL_ORIENTATION,
   plainOrderOrientation,
-  PLAIN_ORDER_DEFAULT_ORIENTATION,
-  resolveOrderOrientationFromInteraction,
+  resolveOrientationFromInteraction,
   sharedVocabularyChoicesLayout,
   sharedVocabularyLabel,
-  SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION,
   sharedVocabularyOrderOrientation,
 } from "./shared-vocabulary.js";
 
@@ -28,29 +28,27 @@ function interaction(attributes: Record<string, string> = {}): QtiInteraction {
 }
 
 describe("shared vocabulary", () => {
-  it("resolves order orientation from classes and attributes", () => {
-    expect(resolveOrderOrientationFromInteraction(interaction())).toBeUndefined();
+  it("resolves orientation from classes and attributes", () => {
+    expect(resolveOrientationFromInteraction(interaction())).toBeUndefined();
     expect(
-      resolveOrderOrientationFromInteraction(interaction({ class: "qti-orientation-horizontal" })),
+      resolveOrientationFromInteraction(interaction({ class: "qti-orientation-horizontal" })),
     ).toBe("horizontal");
-    expect(resolveOrderOrientationFromInteraction(interaction({ orientation: "vertical" }))).toBe(
+    expect(resolveOrientationFromInteraction(interaction({ orientation: "vertical" }))).toBe(
       "vertical",
     );
-    expect(resolveOrderOrientationFromInteraction(interaction({ orientation: "horizontal" }))).toBe(
+    expect(resolveOrientationFromInteraction(interaction({ orientation: "horizontal" }))).toBe(
       "horizontal",
     );
     expect(
-      resolveOrderOrientationFromInteraction(
+      resolveOrientationFromInteraction(
         interaction({ class: "qti-orientation-vertical", orientation: "horizontal" }),
       ),
     ).toBe("vertical");
   });
 
   it("applies plain and shared-vocabulary default orientation policies", () => {
-    expect(plainOrderOrientation(interaction())).toBe(PLAIN_ORDER_DEFAULT_ORIENTATION);
-    expect(sharedVocabularyOrderOrientation(interaction())).toBe(
-      SHARED_VOCAB_ORDER_DEFAULT_ORIENTATION,
-    );
+    expect(plainOrderOrientation(interaction())).toBe(DEFAULT_VERTICAL_ORIENTATION);
+    expect(sharedVocabularyOrderOrientation(interaction())).toBe(DEFAULT_HORIZONTAL_ORIENTATION);
     expect(plainOrderOrientation(interaction({ orientation: "horizontal" }))).toBe("horizontal");
     expect(sharedVocabularyOrderOrientation(interaction({ orientation: "horizontal" }))).toBe(
       "horizontal",

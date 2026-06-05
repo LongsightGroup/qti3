@@ -15,7 +15,8 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
-import { movementButton } from "../movement.js";
+import { plainOrderOrientation } from "../interactions/shared-vocabulary.js";
+import { movementButton, reorderMovementDirections } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   announceOrderedItemMove,
@@ -82,8 +83,12 @@ export function renderGraphicOrderResponse(
   surface.append(sequenceLines);
 
   const summary = createSelectionSummary();
+  const orientation = plainOrderOrientation(interaction);
+  const { previous: previousDirection, next: nextDirection } =
+    reorderMovementDirections(orientation);
   const list = document.createElement("ol");
   list.className = "qti3-graphic-order-list";
+  list.dataset.qtiOrderOrientation = orientation;
   list.setAttribute(
     "aria-label",
     messages.message("interactionSelectedOrderList", { type: interaction.type }),
@@ -142,7 +147,7 @@ export function renderGraphicOrderResponse(
       targetIndex,
       orderedIdentifiers.length,
       index,
-      "vertical",
+      orientation,
     );
     commit();
     focusReorderControl(list, identifier);
@@ -206,24 +211,24 @@ export function renderGraphicOrderResponse(
           }
         });
 
-        const up = movementButton(
-          "up",
-          messages.message("moveChoice", { label: choiceLabel, direction: "up" }),
+        const movePrevious = movementButton(
+          previousDirection,
+          messages.message("moveChoice", { label: choiceLabel, direction: previousDirection }),
           () => moveHotspot(choice.identifier, -1),
         );
-        up.disabled = index === 0;
+        movePrevious.disabled = index === 0;
 
-        const down = movementButton(
-          "down",
-          messages.message("moveChoice", { label: choiceLabel, direction: "down" }),
+        const moveNext = movementButton(
+          nextDirection,
+          messages.message("moveChoice", { label: choiceLabel, direction: nextDirection }),
           () => moveHotspot(choice.identifier, 1),
         );
-        down.disabled = index === currentChoices.length - 1;
+        moveNext.disabled = index === currentChoices.length - 1;
 
         const remove = removeButton(choiceLabel, messages);
         remove.addEventListener("click", () => removeHotspot(choice.identifier));
 
-        item.append(label, up, down, remove);
+        item.append(label, movePrevious, moveNext, remove);
         return item;
       }),
     );

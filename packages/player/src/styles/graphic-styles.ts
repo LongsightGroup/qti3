@@ -302,6 +302,18 @@ export const GRAPHIC_PLAYER_STYLES = `
   margin-block: 0.5rem 0;
 }
 
+.qti3-graphic-order-list[data-qti-order-orientation="horizontal"] {
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: start;
+  overflow-x: auto;
+  padding-inline-start: 0;
+}
+
+.qti3-graphic-order-list[data-qti-order-orientation="horizontal"] .qti3-graphic-order-item {
+  align-self: start;
+}
+
 .qti3-graphic-order-item {
   display: flex;
   flex-wrap: wrap;
