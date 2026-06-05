@@ -208,6 +208,24 @@ The player uses light DOM and is style-neutral by design. Host applications can 
 the rendered `qti3-*` classes directly while preserving the item author's QTI shared
 vocabulary classes.
 
+### Keyword emphasis
+
+`qti-keyword-emphasis` is candidate-conditional. The player preserves the authored class
+without applying special visual styling by default. After the host delivery system resolves
+the candidate's AfA/PNP and finds `keyword-emphasis`, opt in before or after loading the
+item:
+
+```ts
+player.keywordEmphasisEnabled = true;
+// Equivalent DOM API:
+player.setAttribute("data-keyword-emphasis", "true");
+```
+
+When enabled, the rendered `.qti3-player` root receives `data-keyword-emphasis="true"` and
+the bundled stylesheet visibly emphasizes `.qti-keyword-emphasis`. Set
+`player.keywordEmphasisEnabled = false` or remove `data-keyword-emphasis` to return to the
+default inert presentation.
+
 Screen-reader status lines (`.qti3-selection-summary`, `aria-live="polite"`) are
 visually hidden by default so LMS shells do not show reorder or selection announcements
 to sighted users. They remain available to assistive technology. Set

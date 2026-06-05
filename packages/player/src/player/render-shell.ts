@@ -6,10 +6,13 @@ export function renderPlayerShell(options: {
   documentModel: QtiDocument;
   contentContext: PlayerContentContext;
   renderStandaloneInteraction: (interaction: QtiInteraction) => HTMLElement;
+  keywordEmphasisEnabled?: boolean | undefined;
 }): HTMLElement {
-  const { documentModel, contentContext, renderStandaloneInteraction } = options;
+  const { documentModel, contentContext, renderStandaloneInteraction, keywordEmphasisEnabled } =
+    options;
   const root = document.createElement("article");
   root.className = "qti3-player";
+  if (keywordEmphasisEnabled) root.dataset.keywordEmphasis = "true";
   if (documentModel.item.language) {
     root.lang = documentModel.item.language;
     root.setAttribute("xml:lang", documentModel.item.language);

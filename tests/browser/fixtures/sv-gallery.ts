@@ -262,19 +262,25 @@ function interactionType(entry: SharedVocabularyManifestEntry): string {
 function classFamily(entry: SharedVocabularyManifestEntry): string {
   for (const className of classNames(entry)) {
     if (className.startsWith("qti-selections-")) return "selections";
-    if (className.startsWith("qti-choices-")) return "choices-position";
-    if (className.startsWith("qti-label-")) return "labels";
+    if (className.startsWith("qti-labels-")) return "labels";
     if (
       className.startsWith("qti-layout-") ||
       className.startsWith("qti-orientation-") ||
-      className.startsWith("qti-stacking-")
+      className.startsWith("qti-choices-stacking-")
     ) {
       return "layout";
     }
+    if (className.startsWith("qti-choices-")) return "choices-position";
     if (className.startsWith("qti-input-width-")) return "input-width";
     if (className.startsWith("qti-input-control-")) return "input-control";
-    if (className.startsWith("qti-gap-placement-")) return "gap-placement";
-    if (className === "qti-visually-hidden" || className === "data-qti-suppress-tts") {
+    if (className === "qti-gap-placement" || className.startsWith("qti-gap-placement-")) {
+      return "gap-placement";
+    }
+    if (
+      className === "qti-keyword-emphasis" ||
+      className === "qti-visually-hidden" ||
+      className === "data-qti-suppress-tts"
+    ) {
       return "accessibility";
     }
     if (className.startsWith("qti-match-")) return "match";

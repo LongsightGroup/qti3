@@ -34,6 +34,7 @@ export type QtiAssessmentItemPlayerAdapterPropName =
   | "xml"
   | "loadOptions"
   | "languageOfInterface"
+  | "keywordEmphasisEnabled"
   | "messageCatalog"
   | "messages"
   | "onLoadError"
@@ -54,6 +55,7 @@ export interface QtiAssessmentItemPlayerAdapterProps extends QtiAssessmentItemPl
   xml?: string | undefined;
   loadOptions?: QtiPlayerLoadOptions | undefined;
   languageOfInterface?: string | undefined;
+  keywordEmphasisEnabled?: boolean | undefined;
   messageCatalog?: PlayerMessageCatalog | undefined;
   messages?: QtiPlayerMessageOverrides | undefined;
   onLoadError?: ((error: Error) => void) | undefined;
@@ -97,6 +99,7 @@ export const qtiAssessmentItemPlayerAdapterPropNames = [
   "xml",
   "loadOptions",
   "languageOfInterface",
+  "keywordEmphasisEnabled",
   "messageCatalog",
   "messages",
   "onLoadError",
@@ -166,10 +169,11 @@ export function syncQtiAssessmentItemPlayerAdapterChrome(
   element: QtiAssessmentItemPlayer,
   props: Pick<
     QtiAssessmentItemPlayerAdapterProps,
-    "languageOfInterface" | "messageCatalog" | "messages"
+    "languageOfInterface" | "keywordEmphasisEnabled" | "messageCatalog" | "messages"
   >,
 ): void {
   element.languageOfInterface = props.languageOfInterface;
+  element.keywordEmphasisEnabled = props.keywordEmphasisEnabled;
   element.messageCatalog = props.messageCatalog;
   element.messages = props.messages;
 }

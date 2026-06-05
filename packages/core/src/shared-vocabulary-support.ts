@@ -202,6 +202,12 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
     "qti-visually-hidden",
     "Keeps content available to assistive technology while removing it from visual flow.",
   ),
+  svEntry("qti-keyword-emphasis", "content", "conditional", {
+    fixtures: ["packages/fixtures/packages/sv-matrix/items/content-keyword-emphasis.xml"],
+    tests: sharedVocabularyMatrixTests,
+    notes:
+      "Rendered with additional emphasis only when candidate PNP keyword-emphasis support is enabled by the host.",
+  }),
   ...contentTextIndentSuffixes.map((suffix) => contentStylesheetEntry(`qti-text-indent-${suffix}`)),
   ...["vertical-rl", "vertical-lr", "vertical-tb", "horizontal-tb"].map((mode) =>
     contentStylesheetEntry(`qti-writing-mode-${mode}`),

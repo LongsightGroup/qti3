@@ -55,7 +55,12 @@ export const QtiAssessmentItemPlayer = forwardRef<
     const element = elementRef.current;
     if (!element) return;
     syncQtiAssessmentItemPlayerAdapterChrome(element, props);
-  }, [props.languageOfInterface, props.messageCatalog, props.messages]);
+  }, [
+    props.languageOfInterface,
+    props.keywordEmphasisEnabled,
+    props.messageCatalog,
+    props.messages,
+  ]);
 
   const [loadStateKey, status, validateResponses, showFeedback, fetchXml, resolveAsset] =
     qtiAssessmentItemPlayerLoadDependencies(props.loadOptions);

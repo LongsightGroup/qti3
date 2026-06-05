@@ -145,6 +145,13 @@ ${layoutOffsetStyles}
   }
 }
 
+.qti3-player[data-keyword-emphasis="true"] .qti-keyword-emphasis {
+  font-weight: 700;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.14em;
+}
+
 .qti3-player .qti-align-left {
   text-align: left;
 }

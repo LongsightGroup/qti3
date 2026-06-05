@@ -3,6 +3,18 @@ import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 
 const validItemXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
 
+const keywordEmphasisItemXml = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-keyword-emphasis" title="content-keyword-emphasis" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>
+      Compare the <span id="sv-keyword" class="qti-keyword-emphasis">critical keyword</span>
+      with the <span id="sv-keyword-control">control phrase</span>.
+    </p>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const adapterPages = [
   { name: "React", path: "/adapter-react-contract.html" },
   { name: "Preact", path: "/adapter-preact-contract.html" },
@@ -121,6 +133,28 @@ for (const adapter of adapterPages) {
       await callHarness(page, "render", { messageCatalog, xml: "<item/>" });
 
       await expectSnapshot(page, { instanceOfPlayer: true, messageCatalog });
+    });
+
+    test("preserves host data-keyword-emphasis after rerender without the prop", async ({ page }) => {
+      await callHarness(page, "render", { xml: keywordEmphasisItemXml });
+      await page.locator("qti-assessment-item-player").evaluate((element) => {
+        element.setAttribute("data-keyword-emphasis", "true");
+      });
+
+      const keyword = page.locator("qti-assessment-item-player #sv-keyword");
+      await expect(page.locator("qti-assessment-item-player .qti3-player")).toHaveAttribute(
+        "data-keyword-emphasis",
+        "true",
+      );
+      await expect(keyword).toHaveCSS("text-decoration-line", "underline");
+
+      await callHarness(page, "rerender", { xml: keywordEmphasisItemXml });
+
+      await expect(page.locator("qti-assessment-item-player .qti3-player")).toHaveAttribute(
+        "data-keyword-emphasis",
+        "true",
+      );
+      await expect(keyword).toHaveCSS("text-decoration-line", "underline");
     });
 
     test("uses the latest event callback after rerender", async ({ page }) => {

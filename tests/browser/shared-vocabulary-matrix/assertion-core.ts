@@ -14,6 +14,8 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return `${assertion.selector} ${assertion.property} is ${assertion.value}`;
     case "computed-style-differs":
       return `${assertion.firstSelector} ${assertion.property} differs from ${assertion.secondSelector}`;
+    case "computed-style-same":
+      return `${assertion.firstSelector} ${assertion.property} equals ${assertion.secondSelector}`;
     case "computed-style-not":
       return `${assertion.selector} ${assertion.property} is not ${assertion.value}`;
     case "computed-style-number":
@@ -38,6 +40,8 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return `${assertion.firstSelector} width ratio is ${assertion.ratio}`;
     case "position":
       return `${assertion.firstSelector} ${assertion.axis} is ${assertion.relation} ${assertion.secondSelector}`;
+    case "set-attribute":
+      return `set ${assertion.selector} ${assertion.name}="${assertion.value}"`;
     case "text":
       return `${assertion.selector} text is "${assertion.value}"`;
     default:
@@ -88,6 +92,12 @@ export async function runAssertionInRoot(
       const first = computedStyle(root, assertion.firstSelector, assertion.property);
       const second = computedStyle(root, assertion.secondSelector, assertion.property);
       if (first === second) throw new Error(`both values are ${first}`);
+      return;
+    }
+    case "computed-style-same": {
+      const first = computedStyle(root, assertion.firstSelector, assertion.property);
+      const second = computedStyle(root, assertion.secondSelector, assertion.property);
+      if (first !== second) throw new Error(`${first} differs from ${second}`);
       return;
     }
     case "computed-style-not": {
@@ -176,6 +186,11 @@ export async function runAssertionInRoot(
       if (assertion.relation === "greater-than" && firstValue <= secondValue) {
         throw new Error(`${firstValue} is not greater than ${secondValue}`);
       }
+      return;
+    }
+    case "set-attribute": {
+      requiredElement(root, assertion.selector).setAttribute(assertion.name, assertion.value);
+      await settle();
       return;
     }
     case "text": {

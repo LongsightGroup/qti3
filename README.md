@@ -203,6 +203,11 @@ await player.loadXml(packageItemXml, {
   resolveAsset: (url) => packageAssetUrlFor(url),
 });
 
+// Enable only after candidate AfA/PNP includes keyword-emphasis.
+player.keywordEmphasisEnabled = true;
+// Equivalent DOM API:
+player.setAttribute("data-keyword-emphasis", "true");
+
 player.addEventListener("qti-statechange", (event) => {
   saveState(event.detail.state);
 });

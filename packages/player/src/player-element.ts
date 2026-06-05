@@ -75,7 +75,7 @@ const HTMLElementBase: typeof HTMLElement =
 
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   static get observedAttributes(): string[] {
-    return ["language-of-interface", "locale"];
+    return ["data-keyword-emphasis", "language-of-interface", "locale"];
   }
 
   private documentModel?: QtiDocument;
@@ -84,6 +84,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private validationMessages: QtiDiagnostic[] = [];
   private authoringDiagnostics: QtiDiagnostic[] = [];
   private languageOfInterfaceOverride: string | undefined;
+  private keywordEmphasisOverride: boolean | undefined;
   private messageCatalogOverride: PlayerMessageCatalog | undefined;
   private messageOverrides: QtiPlayerMessageOverrides = {};
   private resolvedMessagesCache: PlayerMessageResolver | undefined;
@@ -136,16 +137,46 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.rerenderIfLoaded();
   }
 
-  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
-    if ((name !== "language-of-interface" && name !== "locale") || oldValue === newValue) {
+  get keywordEmphasisEnabled(): boolean {
+    return (
+      this.keywordEmphasisOverride ??
+      this.getAttribute?.("data-keyword-emphasis") === "true"
+    );
+  }
+
+  set keywordEmphasisEnabled(value: boolean | undefined) {
+    const nextOverride = value === undefined ? undefined : value === true;
+    if (nextOverride === this.keywordEmphasisOverride) {
+      this.syncKeywordEmphasisPresentation();
       return;
     }
+    this.keywordEmphasisOverride = nextOverride;
+    this.syncKeywordEmphasisPresentation();
+  }
+
+  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+    if (oldValue === newValue) return;
+    if (name === "data-keyword-emphasis") {
+      this.syncKeywordEmphasisPresentation();
+      return;
+    }
+    if (name !== "language-of-interface" && name !== "locale") return;
     this.invalidatePlayerMessages();
     this.rerenderIfLoaded();
   }
 
   private invalidatePlayerMessages(): void {
     this.resolvedMessagesCache = undefined;
+  }
+
+  private syncKeywordEmphasisPresentation(): void {
+    const playerRoot = this.querySelector<HTMLElement>(".qti3-player");
+    if (!playerRoot) return;
+    if (this.keywordEmphasisEnabled) {
+      playerRoot.dataset.keywordEmphasis = "true";
+    } else {
+      delete playerRoot.dataset.keywordEmphasis;
+    }
   }
 
   /** Clears the loaded item. Does not emit player events; declarative hosts control this via `xml`. */
@@ -409,6 +440,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       documentModel,
       contentContext: this.contentContext(),
       renderStandaloneInteraction: (interaction) => this.renderInteraction(interaction),
+      keywordEmphasisEnabled: this.keywordEmphasisEnabled,
     });
     if (this.resolveAsset) resolveRenderedAssets(root, this.resolveAsset);
     this.replaceChildren(root);

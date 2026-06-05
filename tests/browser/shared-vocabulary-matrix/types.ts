@@ -1,4 +1,4 @@
-export type SharedVocabularySupportLevel = "full" | "stylesheet" | "pass-through";
+export type SharedVocabularySupportLevel = "full" | "stylesheet" | "conditional" | "pass-through";
 
 export type NumericComparison =
   | "less-than"
@@ -17,6 +17,12 @@ export type SharedVocabularyAssertion =
   | { type: "computed-style"; selector: string; property: string; value: string }
   | {
       type: "computed-style-differs";
+      firstSelector: string;
+      secondSelector: string;
+      property: string;
+    }
+  | {
+      type: "computed-style-same";
       firstSelector: string;
       secondSelector: string;
       property: string;
@@ -61,6 +67,7 @@ export type SharedVocabularyAssertion =
       axis: Axis;
       relation: "less-than" | "greater-than";
     }
+  | { type: "set-attribute"; selector: string; name: string; value: string }
   | { type: "text"; selector: string; value: string };
 
 export interface SharedVocabularyManifestEntry {

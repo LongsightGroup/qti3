@@ -684,6 +684,49 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       text: "Screen reader vocabulary note",
     },
   ]),
+  entry("content-keyword-emphasis", "qti-keyword-emphasis", "conditional", [
+    {
+      type: "class-preserved",
+      selector: `${player} #sv-keyword`,
+      className: "qti-keyword-emphasis",
+    },
+    {
+      type: "computed-style-same",
+      firstSelector: `${player} #sv-keyword`,
+      secondSelector: `${player} #sv-keyword-control`,
+      property: "font-weight",
+    },
+    {
+      type: "computed-style-same",
+      firstSelector: `${player} #sv-keyword`,
+      secondSelector: `${player} #sv-keyword-control`,
+      property: "text-decoration-line",
+    },
+    {
+      type: "set-attribute",
+      selector: player,
+      name: "data-keyword-emphasis",
+      value: "true",
+    },
+    {
+      type: "attribute",
+      selector: `${player} .qti3-player`,
+      name: "data-keyword-emphasis",
+      value: "true",
+    },
+    {
+      type: "computed-style-differs",
+      firstSelector: `${player} #sv-keyword`,
+      secondSelector: `${player} #sv-keyword-control`,
+      property: "font-weight",
+    },
+    {
+      type: "computed-style",
+      selector: `${player} #sv-keyword`,
+      property: "text-decoration-line",
+      value: "underline",
+    },
+  ]),
   entry("content-suppress-tts", "data-qti-suppress-tts", "stylesheet", [
     {
       type: "attribute",
