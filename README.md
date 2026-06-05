@@ -51,18 +51,6 @@ Most interaction support starts from the same parser, normalized `QtiInteraction
 and validation gates. The browser player then routes each interaction to a renderer or
 helper family based on response shape and user interaction model.
 
-```mermaid
-flowchart LR
-  xml["QTI interaction XML"]
-  parser["parseInteraction<br/>parseChoices"]
-  model["QtiInteraction<br/>normalized model"]
-  validation["common validation<br/>response, choice, limits,<br/>mapping checks"]
-  registry["player registry"]
-  renderer["family renderer<br/>or helper layer"]
-
-  xml --> parser --> model --> validation --> registry --> renderer
-```
-
 | Family                     | Interactions                                                             | Shared implementation                                       |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | Identifier choices         | Choice, Inline Choice, Hot Text, Hotspot                                 | Choice parsing, identifier response checks, choice metadata |
@@ -73,23 +61,6 @@ flowchart LR
 | Text responses             | Text Entry, Extended Text                                                | String response contract and text-entry renderer            |
 | File responses             | Upload, Drawing                                                          | File response contract                                      |
 | Scalar and host-controlled | Slider, Media, End Attempt, Portable Custom                              | Small specialized renderers and host event bridges          |
-
-## Release goals
-
-Public releases focus on a clean, auditable QTI 3 item engine: conformance evidence,
-accessibility evidence, dependency-light host integration, and hardening of the
-framework-neutral packages.
-
-See [CHANGELOG.md](CHANGELOG.md) for release-by-release detail about delivered work,
-current release notes, compatibility notes, and follow-up goals.
-
-### Still out of scope
-
-These belong in host products, not in the open-source item engine:
-
-- Full assessment-test runner, reusable LMS controller, or test navigation UI.
-- Shared stimulus delivery (`S-*`), full test delivery (`T-*`), timing policy, proctoring, analytics, rostering, LTI, and gradebook integration.
-- Runtime XSD or schema validation.
 
 ## Question-type support
 
@@ -150,8 +121,12 @@ node packages/cli/dist/index.js support-matrix
 
 - The project does not depend on a heavy UI framework such as React or Vue.
 - The browser player does not use Lit. Native custom elements keep the surface small.
-- The project does not provide a reusable LMS runner or controller. The LMS or harness owns that.
-- The project does not handle attempt policy, proctoring, analytics, rostering, gradebook, or LTI integration.
+- The project does not provide a full assessment-test runner, reusable LMS controller, navigation
+  UI, or delivery shell. The LMS, assessment engine, or harness owns that.
+- The project does not provide shared stimulus delivery (`S-*`), full test delivery (`T-*`), timing
+  policy, proctoring, analytics, rostering, gradebook, or LTI integration.
+- The project does not provide product chrome, branding, candidate navigation, or a host product
+  design system.
 - Production configuration must be explicit. The project should fail fast instead of using hidden fallbacks.
 - QTI XML is not compiled as framework templates.
 - There is no global singleton state store. Multiple players should not share a brain.
@@ -159,19 +134,24 @@ node packages/cli/dist/index.js support-matrix
 
 ## Packages
 
-```text
-packages/
-  core/          # parser, typed model, validation, processing, scoring, state
-  player/        # native custom element browser player
-  conformance/   # fixture runner and support matrix tooling
-  a11y/          # accessibility contracts and automated checks
-  fixtures/      # QTI item fixtures and expected outcomes
-  cli/           # validation, scoring, fixture, and support-matrix CLI
-```
+| Package                              | Path                     | Purpose                                                     |
+| ------------------------------------ | ------------------------ | ----------------------------------------------------------- |
+| `@longsightgroup/qti3-core`          | `packages/core`          | Parser, typed model, validation, processing, scoring, state |
+| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                        |
+| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                  |
+| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                 |
+| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                   |
+| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                |
+| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                     |
+| `@longsightgroup/qti3-cli`           | `packages/cli`           | Validation, scoring, fixture, and support-matrix CLI        |
 
-Assessment-test/package support belongs in tooling and examples, and only when it helps
-discover, load, and verify item references. The player package renders one item at a time
-and exposes state/events for host-owned runners.
+QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
+inspection, validation, and item loading. The browser player intentionally renders one assessment
+item at a time.
+
+Framework adapters should stay thin wrappers around the native web component or core API. React and
+Preact adapters are included; Vue, Svelte, or other adapters can be added when there is host demand
+without moving framework dependencies into `qti3-core`.
 
 The browser player surface is a native web component:
 
@@ -203,7 +183,8 @@ await player.loadXml(packageItemXml, {
   resolveAsset: (url) => packageAssetUrlFor(url),
 });
 
-// Enable only after candidate AfA/PNP includes keyword-emphasis.
+// Host-controlled opt-in. qti3 preserves qti-keyword-emphasis by default, but only
+// applies extra visual emphasis when the host has resolved candidate AfA/PNP support.
 player.keywordEmphasisEnabled = true;
 // Equivalent DOM API:
 player.setAttribute("data-keyword-emphasis", "true");
@@ -222,10 +203,10 @@ player.addEventListener("qti-validation", (event) => {
 ```
 
 `resolveAsset` is a host hook for package or virtual-file environments. The player calls it
-for relative `src`, `href`, and `data` asset URLs after rendering the item. Normal
-web-served items can omit it. Package-backed media, graphic, and drawing assets should use
-this hook so rendered controls and serialized response exports can resolve authored asset
-references.
+for relative `src`, `href`, and `data` asset URLs after rendering the item. Items whose
+assets are already reachable by normal browser URLs can omit it. Package-backed media, graphic, and
+drawing assets should use this hook so rendered controls and serialized response exports can resolve
+authored asset references.
 
 Two response-bearing interactions have format-specific contracts worth calling out:
 
@@ -251,8 +232,8 @@ Two response-bearing interactions have format-specific contracts worth calling o
 
 The browser player is style-neutral by design. It ships only the structural styles needed
 for layout, focus visibility, forced-colors support, and accessible interaction behavior.
-Product typography, spacing, borders, colors, and surrounding chrome belong to the host
-application.
+Host products own product chrome, branding, layout density, typography, colors, page-level
+spacing, candidate navigation, and broader candidate experience styling.
 
 The player renders in light DOM, so host CSS can style it directly:
 
@@ -283,6 +264,8 @@ product theme classes. Classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden` describe
 portable item-level presentation preferences. `qti3` preserves those classes so host
 products can reflect the item author's choices while still applying their own visual system.
+Supported shared vocabulary classes are parsed, validated, preserved, and implemented according to
+the matrix; product-specific CSS belongs in the host application.
 The machine-readable support matrix is the source of truth for shipped shared vocabulary
 coverage. Inspect the `sharedVocabularyClasses` section for each class name, scope,
 interaction surface, support level, fixture evidence, and test evidence:
@@ -294,13 +277,6 @@ node packages/cli/dist/index.js support-matrix
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.
-
-Framework adapters may be added later, but they should wrap the web component or core API.
-They must not own the QTI implementation.
-
-The initial player should use native custom elements directly. Lit is not part of the
-initial stack and should come back into scope only if plain custom element code creates a
-maintenance problem that outweighs the dependency and abstraction cost.
 
 ## Platform
 
@@ -478,25 +454,11 @@ The manual harness exposes debugger panels for responses, outcomes, template val
 diagnostics, validation messages, serialized state, package item navigation, action
 history, and accessibility proof scripts.
 
-Package and assessment-test support is item-focused: discovery, item-reference traversal,
-asset resolution, validation, and item loading. A full runner/controller remains a host
-product concern.
-
 ## Publishing
 
-Packages publish under the `longsightgroup` npm organization:
-
-- `@longsightgroup/qti3-core`
-- `@longsightgroup/qti3-player`
-- `@longsightgroup/qti3-player-preact`
-- `@longsightgroup/qti3-player-react`
-- `@longsightgroup/qti3-fixtures`
-- `@longsightgroup/qti3-conformance`
-- `@longsightgroup/qti3-a11y`
-- `@longsightgroup/qti3-cli`
-
-Releases publish from the `longsightgroup/qti3` repository after `pnpm release:check`
-passes. Package tarballs come from the same checked build output that CI verifies.
+The packages listed above publish under the `longsightgroup` npm organization. Releases publish
+from the `longsightgroup/qti3` repository after `pnpm release:check` passes. Package tarballs come
+from the same checked build output that CI verifies.
 
 ## Certification
 

@@ -1,5 +1,83 @@
 # Changelog
 
+## 0.7.1 - 2026-06-05
+
+### Changed
+
+- Refine order-orientation helpers with domain-neutral names and explicit defaults: plain order
+  interactions default to vertical, while shared-vocabulary split bank/target order layouts default
+  to horizontal.
+
+### Fixed
+
+- Honor authored horizontal order layouts for plain and shared-vocabulary order interactions,
+  including left/right move controls, drag/reorder behavior, focus restoration, and movement
+  announcements.
+- Avoid duplicated visible text in shared-vocabulary order target empty slots by rendering the
+  positional label separately from the empty-state copy while preserving fallback context for
+  `qti-labels-none`.
+
+## 0.7.0 - 2026-06-05
+
+### Added
+
+- Add core QTI shared-vocabulary parsing, validation, generated class families, and
+  machine-readable support metadata exposed through the support matrix.
+- Add player support for shared-vocabulary content classes, including layout rows/columns/offsets,
+  alignment, full-width content, hidden and visually-hidden content, writing modes, floats, bordered
+  and well treatments, list styles, underline, italic, inline-block display, and conditional
+  `qti-keyword-emphasis`.
+- Add host-controlled keyword-emphasis support on the web component and React/Preact adapters via
+  `keywordEmphasisEnabled` / `data-keyword-emphasis`.
+- Add shared-vocabulary choice and order presentation support for label styles and suffixes,
+  orientation, choice stacking, hidden input controls, writing orientation, selection light/dark
+  styling, and unselected-hidden behavior.
+- Add shared-vocabulary choices-bank positioning and `data-choices-container-width` support for
+  match, gap match, graphic gap match, and order interactions.
+- Add shared-vocabulary order layouts with separate choices banks and target slots, removable
+  ordered choices, keyboard movement controls, drag/drop placement, and localized selection
+  summaries.
+- Add match table rendering for `qti-match-tabular`, including first-column/header vocabulary
+  behavior and keyboard pair creation/removal coverage.
+- Add gap match shared-vocabulary placement support, gap/input width handling, and graphic gap match
+  selection presentation.
+- Add shared-vocabulary support for text controls: `qti-input-width-*` on text entry and inline
+  choice, plus extended-text height and counter classes.
+- Add media-interaction shared-vocabulary support for `data-qti-media-player-controls`,
+  `data-qti-media-player-pause-delay`, and `data-qti-media-player-pause-duration`.
+- Add authored order/choice validation message overrides for minimum and maximum selection
+  constraints.
+- Add image-backed graphic gap choices so draggable labels can render authored object images rather
+  than plain text tokens.
+- Add synthetic shared-vocabulary matrix fixtures, browser assertions, coverage policy tests, and a
+  Vite-powered shared-vocabulary gallery linked from the manual harness and Pages build.
+
+### Changed
+
+- Move adapter and player lifecycle DOM coverage out of DOM shims and into browser/Playwright
+  coverage.
+- Improve manual fixture navigation and default harness styling, including shared-vocabulary gallery
+  navigation.
+- Improve match interaction keyboard behavior for selecting sources, choosing targets, and removing
+  selected pairs.
+- Expand Basic item-player shared-vocabulary fixture coverage and support-matrix evidence.
+- Rework README release-goal detail into this changelog and document shared-vocabulary support
+  discovery through the CLI support matrix.
+
+### Fixed
+
+- Preserve whitespace around inline emphasis in parsed item body content.
+- Fix browser fixture navigation regressions in manual and browser test harnesses.
+- Let left-positioned shared-vocabulary choices layouts remain left-positioned in small viewports.
+- Fix graphic gap match drag-back-to-bank behavior and drag image correction against authored target
+  images.
+- Validate and surface custom order selection messages during browser response validation.
+
+### Removed
+
+- Remove the local happy-dom adapter test harness package and related DOM-shim tests; browser-facing
+  adapter behavior is now covered in Playwright.
+
 ## 0.6.0 - 2026-05-25
 
 This release supersedes the attempted `0.5.2` through `0.5.5` release line, which had npm
