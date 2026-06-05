@@ -9,8 +9,8 @@ export default defineConfig({
   },
   webServer: {
     command: "pnpm exec vite --host 127.0.0.1 --port 4179 examples/manual",
-    url: "http://127.0.0.1:4179",
-    reuseExistingServer: false,
+    port: 4179,
+    reuseExistingServer: !process.env.CI,
   },
   projects: [
     {

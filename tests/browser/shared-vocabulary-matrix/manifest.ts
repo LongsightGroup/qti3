@@ -376,33 +376,28 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       },
     ],
   ),
-  entry(
-    "content-layout-row-col6",
-    ["qti-layout-row", "qti-layout-col6"],
-    "stylesheet",
-    [
-      {
-        type: "layout-width-ratio",
-        firstSelector: `${player} #sv-layout-left`,
-        secondSelector: `${player} #sv-layout-row`,
-        ratio: 0.5,
-        tolerance: 0.03,
-      },
-      {
-        type: "layout-width-ratio",
-        firstSelector: `${player} #sv-layout-right`,
-        secondSelector: `${player} #sv-layout-row`,
-        ratio: 0.5,
-        tolerance: 0.03,
-      },
-      {
-        type: "layout-same-row",
-        firstSelector: `${player} #sv-layout-left`,
-        secondSelector: `${player} #sv-layout-right`,
-        tolerance: 2,
-      },
-    ],
-  ),
+  entry("content-layout-row-col6", ["qti-layout-row", "qti-layout-col6"], "stylesheet", [
+    {
+      type: "layout-width-ratio",
+      firstSelector: `${player} #sv-layout-left`,
+      secondSelector: `${player} #sv-layout-row`,
+      ratio: 0.5,
+      tolerance: 0.03,
+    },
+    {
+      type: "layout-width-ratio",
+      firstSelector: `${player} #sv-layout-right`,
+      secondSelector: `${player} #sv-layout-row`,
+      ratio: 0.5,
+      tolerance: 0.03,
+    },
+    {
+      type: "layout-same-row",
+      firstSelector: `${player} #sv-layout-left`,
+      secondSelector: `${player} #sv-layout-right`,
+      tolerance: 2,
+    },
+  ]),
   entry("content-visually-hidden", "qti-visually-hidden", "stylesheet", [
     {
       type: "class-preserved",

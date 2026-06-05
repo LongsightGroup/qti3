@@ -363,6 +363,13 @@ The browser harness is available with:
 pnpm dev
 ```
 
+The shared vocabulary gallery is available from the same Vite dev server for visual QA:
+
+```sh
+pnpm dev
+open "http://127.0.0.1:5173/sv-gallery?case=choice-selections-dark"
+```
+
 From a source checkout, run `pnpm build` before using the built CLI entry point.
 Published packages expose the same commands through the `qti3` binary.
 
