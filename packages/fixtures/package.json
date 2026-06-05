@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-fixtures",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Public synthetic QTI 3 item fixtures and expected scoring outcomes for qti3.",
   "keywords": [
     "assessment",
