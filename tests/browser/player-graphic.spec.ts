@@ -315,7 +315,9 @@ test.describe("player graphic interactions", () => {
 
     await expectResponse(page, ["B T2"]);
     await expect(target).toHaveAccessibleName("Target 2, assigned Abraham Lincoln");
-    await expect(target).toContainText("Abraham Lincoln");
+    await expect(
+      surface.locator('[data-origin-gap-identifier="T2"].qti3-graphic-gap-label'),
+    ).toContainText("Abraham Lincoln");
   });
 
   test("renders qti-gap-img choices as graphic gap match drag images", async ({ page }) => {
@@ -359,10 +361,9 @@ test.describe("player graphic interactions", () => {
 
     await expectResponse(page, ["DraggerA A"]);
     await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
-    await expect(target.locator(".qti3-graphic-gap-label img")).toHaveAttribute(
-      "src",
-      /^data:image\/svg\+xml;base64,/,
-    );
+    await expect(
+      page.locator('[data-origin-gap-identifier="A"].qti3-graphic-gap-label img'),
+    ).toHaveAttribute("src", /^data:image\/svg\+xml;base64,/);
   });
 
   test("lets mouse users clear and overwrite qti-gap-img graphic gap match placements", async ({
@@ -409,7 +410,7 @@ test.describe("player graphic interactions", () => {
     await targetB.click();
     await expectResponse(page, ["DraggerA TargetB"]);
 
-    await dragCenter(page, targetB.locator(".qti3-graphic-gap-label"), bank);
+    await dragCenter(page, page.locator('[data-origin-gap-identifier="TargetB"]'), bank);
     await expectResponse(page, []);
     await expect(targetB).toHaveAccessibleName("Target 2, empty");
 

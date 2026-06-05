@@ -244,10 +244,11 @@ export const GRAPHIC_PLAYER_STYLES = `
 
 .qti3-graphic-gap-label {
   position: absolute;
-  inset-block-start: calc(100% + 0.2rem);
-  inset-inline-start: 50%;
+  inset-block-start: calc(var(--qti3-graphic-gap-label-block-start, 100%) + 0.2rem);
+  inset-inline-start: var(--qti3-graphic-gap-label-inline-start, 50%);
   transform: translateX(-50%);
   box-sizing: border-box;
+  z-index: 3;
   inline-size: max-content;
   max-inline-size: min(12rem, calc(100vw - 2rem));
   min-inline-size: 0;
