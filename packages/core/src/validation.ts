@@ -21,11 +21,7 @@ import type {
   QtiValue,
   QtiValidationResult,
 } from "./types.js";
-import {
-  formatSupportedGapInputWidthClasses,
-  isSupportedGapInputWidthClassName,
-  supportedGapInputWidthClassNames,
-} from "./shared-vocabulary.js";
+import { validateSharedVocabularyInputWidth } from "./shared-vocabulary-validation.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
 import { qtiValueToStringList } from "./value-format.js";
 
@@ -1699,12 +1695,19 @@ function validateInteractionSharedVocabulary(
     interaction.type !== "match" &&
     interaction.type !== "gapMatch" &&
     interaction.type !== "graphicGapMatch" &&
+    interaction.type !== "inlineChoice" &&
+    interaction.type !== "textEntry" &&
     interaction.type !== "order"
   ) {
     return;
   }
   const classNames = sharedClassNames(interaction.attributes);
   const classNameSet = new Set(classNames);
+  if (interaction.type === "inlineChoice" || interaction.type === "textEntry") {
+    validateInteractionInputWidthSharedVocabulary(interaction, classNames, diagnostics);
+    return;
+  }
+
   if (interaction.type === "choice" || interaction.type === "order") {
     validateSharedVocabularyLabelClasses(interaction, classNames, diagnostics);
   }
@@ -1945,30 +1948,34 @@ function validateGapInputWidthSharedVocabulary(
   diagnostics: QtiDiagnostic[],
 ): void {
   for (const gap of interaction.choices.filter((choice) => choice.qtiName === "qti-gap")) {
-    const classNames = sharedClassNames(gap.attributes);
-    const supportedWidths = supportedGapInputWidthClassNames(classNames);
-    if (new Set(supportedWidths).size > 1) {
-      diagnostics.push({
-        code: "interaction.sharedVocabulary.gapInputWidthConflict",
-        severity: "warning",
-        message: `qti-gap should not include multiple supported qti-input-width-* classes: ${[...new Set(supportedWidths)].join(", ")}. The first class in class attribute order takes precedence at runtime.`,
+    diagnostics.push(
+      ...validateSharedVocabularyInputWidth({
+        classNames: sharedClassNames(gap.attributes),
+        subjectQtiName: "qti-gap",
         path: gap.source?.path ?? interaction.source?.path,
         source: gap.source ?? interaction.source,
-      });
-    }
-
-    for (const className of classNames) {
-      if (!className.startsWith("qti-input-width-")) continue;
-      if (isSupportedGapInputWidthClassName(className)) continue;
-      diagnostics.push({
-        code: "interaction.sharedVocabulary.gapInputWidthInvalid",
-        severity: "warning",
-        message: `qti-gap shared vocabulary class ${className} is not supported; expected ${formatSupportedGapInputWidthClasses()}.`,
-        path: gap.source?.path ?? interaction.source?.path,
-        source: gap.source ?? interaction.source,
-      });
-    }
+        conflictCode: "interaction.sharedVocabulary.gapInputWidthConflict",
+        invalidCode: "interaction.sharedVocabulary.gapInputWidthInvalid",
+      }),
+    );
   }
+}
+
+function validateInteractionInputWidthSharedVocabulary(
+  interaction: QtiInteraction,
+  classNames: string[],
+  diagnostics: QtiDiagnostic[],
+): void {
+  diagnostics.push(
+    ...validateSharedVocabularyInputWidth({
+      classNames,
+      subjectQtiName: interaction.qtiName,
+      path: interaction.source?.path,
+      source: interaction.source,
+      conflictCode: "interaction.sharedVocabulary.inputWidthConflict",
+      invalidCode: "interaction.sharedVocabulary.inputWidthInvalid",
+    }),
+  );
 }
 
 function sharedClassNames(attributes: Record<string, string>): string[] {

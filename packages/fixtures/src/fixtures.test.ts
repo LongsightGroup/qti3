@@ -75,6 +75,15 @@ describe("@longsightgroup/qti3-fixtures", () => {
       'class="qti-gap-placement qti-choices-left" data-choices-container-width="160"',
     );
     expect(fixture?.xml).toContain('class="qti-input-width-10"');
+    expect(fixture?.xml).toContain(
+      'response-identifier="BLOCK_TEXT_WIDTH_RESPONSE" class="qti-input-width-20" expected-length="4"',
+    );
+    expect(fixture?.xml).toContain(
+      'response-identifier="INLINE_TEXT_WIDTH_RESPONSE" class="qti-input-width-4" expected-length="30"',
+    );
+    expect(fixture?.xml).toContain(
+      'response-identifier="INLINE_CHOICE_WIDTH_RESPONSE" class="qti-input-width-15"',
+    );
     expect(fixture?.xml).toContain("qti-graphic-gap-match-interaction");
     expect(fixture?.xml).toContain(
       'class="qti-selections-dark qti-unselected-hidden qti-choices-bottom"',

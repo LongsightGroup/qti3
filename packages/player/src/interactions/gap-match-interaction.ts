@@ -22,8 +22,8 @@ import {
 } from "./shared.js";
 import {
   appendSharedVocabularyChoicesLayout,
-  gapInputWidth,
   gapMatchUsesPlacement,
+  inputWidth,
   sharedVocabularyChoicesLayout,
 } from "./shared-vocabulary.js";
 
@@ -130,13 +130,13 @@ export function renderGapMatchResponse(
     const target = document.createElement("span");
     target.className = "qti3-gap-target";
     target.dataset.gapIdentifier = gap.identifier;
-    const inputWidth = gapInputWidth({
+    const width = inputWidth({
       ...gap.attributes,
       ...gapSegmentAttributes.get(gap.identifier),
     });
-    if (inputWidth !== undefined) {
-      target.dataset.qtiGapInputWidth = String(inputWidth);
-      target.style.setProperty("--qti3-gap-input-width", `${inputWidth}ch`);
+    if (width !== undefined) {
+      target.dataset.qtiGapInputWidth = String(width);
+      target.style.setProperty("--qti3-gap-input-width", `${width}ch`);
     }
     target.addEventListener("dragover", (event) => {
       event.preventDefault();

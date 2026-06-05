@@ -1076,6 +1076,60 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("diagnoses invalid interaction input width shared vocabulary", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-input-width" title="interaction-input-width" time-dependent="false">
+        <qti-response-declaration identifier="TEXT" cardinality="single" base-type="string"/>
+        <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <p>Type <qti-text-entry-interaction response-identifier="TEXT" class="qti-input-width-8"/>.</p>
+          <p>Choose <qti-inline-choice-interaction response-identifier="CHOICE" class="qti-input-width-12">
+            <qti-inline-choice identifier="A">A</qti-inline-choice>
+            <qti-inline-choice identifier="B">B</qti-inline-choice>
+          </qti-inline-choice-interaction>.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.inputWidthInvalid",
+          severity: "warning",
+          message: expect.stringContaining("qti-text-entry-interaction"),
+        }),
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.inputWidthInvalid",
+          severity: "warning",
+          message: expect.stringContaining("qti-inline-choice-interaction"),
+        }),
+      ]),
+    );
+  });
+
+  it("diagnoses conflicting interaction input width shared vocabulary", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-input-width-conflict" title="interaction-input-width-conflict" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body>
+          <p>Type <qti-text-entry-interaction response-identifier="RESPONSE" class="qti-input-width-20 qti-input-width-4"/>.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.sharedVocabulary.inputWidthConflict",
+          severity: "warning",
+          message: expect.stringMatching(/qti-input-width-20.*qti-input-width-4/),
+        }),
+      ]),
+    );
+  });
+
   it("diagnoses match tabular shared-vocabulary context mistakes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-tabular-shared-vocab" title="match-tabular-shared-vocab" time-dependent="false">

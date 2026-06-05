@@ -1,4 +1,4 @@
-import { gapInputWidthFromAttributes, type QtiInteraction } from "@longsightgroup/qti3-core";
+import { inputWidthFromAttributes, type QtiInteraction } from "@longsightgroup/qti3-core";
 
 export type SharedVocabularyLabelStyle =
   | "decimal"
@@ -25,8 +25,18 @@ export function interactionClassNames(interaction: QtiInteraction): string[] {
   return (interaction.attributes.class ?? "").split(/\s+/).filter(Boolean);
 }
 
-export function gapInputWidth(attributes: Record<string, string>): number | undefined {
-  return gapInputWidthFromAttributes(attributes);
+export function inputWidth(attributes: Record<string, string>): number | undefined {
+  return inputWidthFromAttributes(attributes);
+}
+
+export function applyInputWidth(
+  control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  width: number | undefined,
+): boolean {
+  if (width === undefined) return false;
+  control.dataset.qtiInputWidth = String(width);
+  control.style.setProperty("--qti3-input-width", `${width}ch`);
+  return true;
 }
 
 export function gapMatchUsesPlacement(interaction: QtiInteraction): boolean {

@@ -57,10 +57,15 @@ export {
 } from "./support.js";
 export {
   formatSupportedGapInputWidthClasses,
+  formatSupportedInputWidthClasses,
   gapInputWidthFromAttributes,
+  inputWidthFromAttributes,
+  isSupportedInputWidthClassName,
   SHARED_VOCABULARY_GAP_INPUT_WIDTHS,
+  SHARED_VOCABULARY_INPUT_WIDTHS,
   sharedVocabularyClassNames,
   supportedGapInputWidthClassNames,
+  supportedInputWidthClassNames,
 } from "./shared-vocabulary.js";
 export { validateAssessmentItem } from "./validation.js";
 export type {

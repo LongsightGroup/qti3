@@ -21,6 +21,13 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
   resize: vertical;
 }
 
+.qti3-text-input[data-qti-input-width],
+.qti3-inline-select[data-qti-input-width] {
+  inline-size: var(--qti3-input-width);
+  min-inline-size: var(--qti3-input-width);
+  max-inline-size: 100%;
+}
+
 .qti3-counter,
 .qti3-slider-output {
   margin: 0;

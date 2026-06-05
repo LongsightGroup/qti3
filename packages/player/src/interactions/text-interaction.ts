@@ -1,5 +1,6 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
 
 function scalarString(value: QtiValue): string {
   if (value === null || Array.isArray(value) || typeof value === "object") return "";
@@ -28,6 +29,17 @@ function applyExpectedTextEntryWidth(
   control.style.inlineSize = `${width}ch`;
 }
 
+function applyTextEntryWidthWithPrecedence(
+  interaction: QtiInteraction,
+  control: HTMLInputElement | HTMLTextAreaElement,
+  expectedLength: number,
+): void {
+  // Authored qti-input-width-* shared vocabulary takes precedence over expected-length hints.
+  if (!applyInputWidth(control, inputWidth(interaction.attributes))) {
+    applyExpectedTextEntryWidth(control, expectedLength);
+  }
+}
+
 export function renderTextResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -54,7 +66,8 @@ export function renderTextResponse(
     (control as HTMLTextAreaElement).rows = expectedLines;
   }
   if (mode === "entry") {
-    applyExpectedTextEntryWidth(control, expectedLength);
+    // qti-input-width-* applies to text-entry controls; extended text keeps textarea sizing.
+    applyTextEntryWidthWithPrecedence(interaction, control, expectedLength);
   }
   const counter = mode === "extended" ? document.createElement("p") : undefined;
   if (counter) {
@@ -96,7 +109,7 @@ export function renderInlineTextEntry(
     interaction.prompt ?? interaction.contextText ?? messages.message("textResponseLabel"),
   );
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
-  applyExpectedTextEntryWidth(input, expectedLength);
+  applyTextEntryWidthWithPrecedence(interaction, input, expectedLength);
   const sync = (emitResponse = true) => {
     if (emitResponse) update(input.value);
   };

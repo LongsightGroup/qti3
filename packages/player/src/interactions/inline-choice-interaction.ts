@@ -6,6 +6,7 @@ import {
 } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionLabel } from "./interaction-label.js";
+import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
 
 function appendOptions(
   select: HTMLSelectElement,
@@ -37,6 +38,7 @@ export function renderSelect(
   select.className = "qti3-inline-select";
   if (interaction.responseIdentifier) select.name = interaction.responseIdentifier;
   select.setAttribute("aria-label", interactionLabel(interaction));
+  applyInputWidth(select, inputWidth(interaction.attributes));
   appendOptions(select, choices, messages);
   const [selected] = valueToStrings(currentValue);
   if (selected) select.value = selected;

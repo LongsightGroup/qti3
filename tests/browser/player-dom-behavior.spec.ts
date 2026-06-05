@@ -251,6 +251,28 @@ const GAP_PLACEMENT_WIDTH_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const STANDALONE_TEXT_ENTRY_INPUT_WIDTH_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="standalone-text-entry-input-width" title="standalone-text-entry-input-width" time-dependent="false">
+  <qti-response-declaration identifier="BLOCK_NARROW" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="BLOCK_WIDE" cardinality="single" base-type="string"/>
+  <qti-text-entry-interaction response-identifier="BLOCK_NARROW" class="qti-input-width-4" expected-length="40"/>
+  <qti-text-entry-interaction response-identifier="BLOCK_WIDE" class="qti-input-width-20" expected-length="1"/>
+</qti-assessment-item>
+`.trim();
+
+const INTERACTION_INPUT_WIDTH_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="interaction-input-width" title="interaction-input-width" time-dependent="false">
+  <qti-response-declaration identifier="INLINE_NARROW" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="INLINE_CHOICE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Inline text <qti-text-entry-interaction response-identifier="INLINE_NARROW" class="qti-input-width-4" expected-length="40"/> and inline choice <qti-inline-choice-interaction response-identifier="INLINE_CHOICE" class="qti-input-width-20">
+      <qti-inline-choice identifier="A">A</qti-inline-choice>
+      <qti-inline-choice identifier="B">B</qti-inline-choice>
+    </qti-inline-choice-interaction>.</p>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const GRAPHIC_GAP_CHOICES_POSITION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-choices-position" title="graphic-gap-choices-position" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -819,6 +841,62 @@ test.describe("player DOM behavior", () => {
     await page.setViewportSize({ width: 360, height: 640 });
     const overflow = await player.evaluate((element) => element.scrollWidth > element.clientWidth);
     expect(overflow).toBe(false);
+  });
+
+  test("applies interaction input width vocabulary to block text entry", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, STANDALONE_TEXT_ENTRY_INPUT_WIDTH_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const blockNarrow = player.locator(
+      '[data-response-identifier="BLOCK_NARROW"] .qti3-text-response input.qti3-text-input',
+    );
+    const blockWide = player.locator(
+      '[data-response-identifier="BLOCK_WIDE"] .qti3-text-response input.qti3-text-input',
+    );
+
+    await expect(blockNarrow).toHaveAttribute("data-qti-input-width", "4");
+    await expect(blockWide).toHaveAttribute("data-qti-input-width", "20");
+    expect(await blockNarrow.evaluate((element) => element.style.inlineSize)).toBe("");
+    expect(
+      await blockNarrow.evaluate((element) => element.style.getPropertyValue("--qti3-input-width")),
+    ).toBe("4ch");
+
+    const narrowBox = await blockNarrow.boundingBox();
+    const wideBox = await blockWide.boundingBox();
+    if (!narrowBox || !wideBox) throw new Error("Missing block text entry width boxes.");
+    expect(wideBox.width).toBeGreaterThan(narrowBox.width);
+  });
+
+  test("applies interaction input width vocabulary to embedded text entry and inline choice", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, INTERACTION_INPUT_WIDTH_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const inlineNarrow = player.locator(
+      '[data-response-identifier="INLINE_NARROW"] input.qti3-inline-text-input',
+    );
+    const inlineChoice = player.locator(
+      '[data-response-identifier="INLINE_CHOICE"] select.qti3-inline-select',
+    );
+
+    await expect(inlineNarrow).toHaveAttribute("data-qti-input-width", "4");
+    await expect(inlineChoice).toHaveAttribute("data-qti-input-width", "20");
+    expect(await inlineChoice.evaluate((element) => element.style.inlineSize)).toBe("");
+    expect(
+      await inlineChoice.evaluate((element) =>
+        element.style.getPropertyValue("--qti3-input-width"),
+      ),
+    ).toBe("20ch");
+
+    const inlineBox = await inlineNarrow.boundingBox();
+    const selectBox = await inlineChoice.boundingBox();
+    if (!inlineBox || !selectBox) {
+      throw new Error("Missing interaction input width boxes.");
+    }
+    expect(selectBox.width).toBeGreaterThan(inlineBox.width);
   });
 
   test("positions graphic gap match shared vocabulary choices below the image", async ({

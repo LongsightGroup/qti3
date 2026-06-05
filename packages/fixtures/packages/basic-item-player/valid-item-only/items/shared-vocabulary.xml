@@ -27,6 +27,9 @@
   <qti-response-declaration identifier="GAP_RESPONSE" cardinality="multiple" base-type="directedPair">
     <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value></qti-correct-response>
   </qti-response-declaration>
+  <qti-response-declaration identifier="BLOCK_TEXT_WIDTH_RESPONSE" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="INLINE_TEXT_WIDTH_RESPONSE" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="INLINE_CHOICE_WIDTH_RESPONSE" cardinality="single" base-type="identifier"/>
   <qti-response-declaration identifier="GRAPHIC_GAP_RESPONSE" cardinality="multiple" base-type="directedPair">
     <qti-correct-response><qti-value>GA GT1</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -92,6 +95,11 @@
       <qti-gap-text identifier="B" match-max="1">target passage</qti-gap-text>
       <p>Shared vocabulary positions the <qti-gap identifier="G1" class="qti-input-width-10"/> beside the <qti-gap identifier="G2" class="qti-input-width-20"/>.</p>
     </qti-gap-match-interaction>
+    <qti-text-entry-interaction response-identifier="BLOCK_TEXT_WIDTH_RESPONSE" class="qti-input-width-20" expected-length="4"/>
+    <p>Shared vocabulary sizes inline text entry <qti-text-entry-interaction response-identifier="INLINE_TEXT_WIDTH_RESPONSE" class="qti-input-width-4" expected-length="30"/> and inline choice <qti-inline-choice-interaction response-identifier="INLINE_CHOICE_WIDTH_RESPONSE" class="qti-input-width-15">
+      <qti-inline-choice identifier="A">narrow</qti-inline-choice>
+      <qti-inline-choice identifier="B">wide</qti-inline-choice>
+    </qti-inline-choice-interaction> controls.</p>
     <qti-graphic-gap-match-interaction response-identifier="GRAPHIC_GAP_RESPONSE" class="qti-selections-dark qti-unselected-hidden qti-choices-bottom" data-choices-container-width="180">
       <object data="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='120'%3E%3Crect width='180' height='120' fill='%23777'/%3E%3C/svg%3E" alt="Shared vocabulary graphic gap target." type="image/svg+xml" width="180" height="120"/>
       <qti-gap-text identifier="GA" match-max="1">graphic source</qti-gap-text>
