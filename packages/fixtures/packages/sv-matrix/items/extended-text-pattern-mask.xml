@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-pattern-mask" title="extended-text-pattern-mask" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>Enter a decimal value using no more than six total digits or decimal points.</p>
+    <qti-extended-text-interaction
+      response-identifier="RESPONSE"
+      class="qti-height-lines-3"
+      expected-length="6"
+      format="plain"
+      placeholder-text="Enter a decimal number..."
+      pattern-mask="([0-9.]{0,6})"
+      data-patternmask-message="Maximum of 6 digits or decimal points permitted"
+    />
+  </qti-item-body>
+</qti-assessment-item>

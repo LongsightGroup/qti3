@@ -10,7 +10,9 @@ export const interactionSupport: QtiInteractionElementSupport[] = [
   entry("qti-choice-interaction", "choice"),
   entry("qti-drawing-interaction", "drawing"),
   entry("qti-end-attempt-interaction", "endAttempt"),
-  entry("qti-extended-text-interaction", "extendedText"),
+  textControlInteractionEntry("qti-extended-text-interaction", "extendedText", [
+    "packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml",
+  ]),
   entry("qti-gap-match-interaction", "gapMatch"),
   entry("qti-graphic-associate-interaction", "graphicAssociate"),
   entry("qti-graphic-gap-match-interaction", "graphicGapMatch"),
@@ -25,7 +27,9 @@ export const interactionSupport: QtiInteractionElementSupport[] = [
   pciEntry(),
   entry("qti-select-point-interaction", "selectPoint"),
   entry("qti-slider-interaction", "slider"),
-  entry("qti-text-entry-interaction", "textEntry"),
+  textControlInteractionEntry("qti-text-entry-interaction", "textEntry", [
+    "packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml",
+  ]),
   entry("qti-upload-interaction", "upload"),
 ];
 
@@ -222,6 +226,26 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
       "packages/a11y/src/a11y.test.ts",
       "tests/browser/player.spec.ts",
     ],
+  };
+}
+
+function textControlInteractionEntry(
+  qtiName: string,
+  interactionType: "extendedText" | "textEntry",
+  extraFixtures: string[],
+): QtiInteractionElementSupport {
+  return {
+    ...entry(qtiName, interactionType),
+    fixtures: [`packages/fixtures/xml/${interactionType}-reference.xml`, ...extraFixtures],
+    tests: [
+      "packages/fixtures/src/fixtures.test.ts",
+      "packages/conformance/src/conformance.test.ts",
+      "packages/a11y/src/a11y.test.ts",
+      "packages/core/src/pattern-mask.test.ts",
+      "tests/browser/player.spec.ts",
+      "tests/browser/player-dom-behavior.spec.ts",
+    ],
+    notes: "Supports placeholder-text and pattern-mask on block and inline text-entry controls.",
   };
 }
 

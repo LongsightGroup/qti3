@@ -18,6 +18,13 @@ describe("validation-messages", () => {
     expect(
       isAuthoringDiagnostic({ code: "response.required", severity: "error", message: "x" }),
     ).toBe(false);
+    expect(
+      isAuthoringDiagnostic({
+        code: "interaction.patternMask.invalid",
+        severity: "error",
+        message: "x",
+      }),
+    ).toBe(true);
   });
 
   it("filters response validation from mixed arrays", () => {

@@ -26,6 +26,7 @@ import {
   validateSharedVocabularyInputWidth,
   validateSharedVocabularyMediaPlayerControls,
 } from "./shared-vocabulary-validation.js";
+import { isValidQtiPatternMask } from "./pattern-mask.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
 import { qtiValueToStringList } from "./value-format.js";
 
@@ -1672,6 +1673,7 @@ function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDiagnosti
     validateInteractionRequiredAttributes(interaction, diagnostics);
     validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
+    validatePatternMaskAttribute(interaction, diagnostics);
     validateGraphicHotspotObjectDimensions(interaction, diagnostics);
     validateCorrectResponseReferences(
       interaction,
@@ -2521,6 +2523,22 @@ function invalidNumber(
     code: "interaction.numericAttribute",
     severity: "error",
     message: `${interaction.qtiName} requires numeric ${attribute}, got ${value}.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
+function validatePatternMaskAttribute(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.type !== "textEntry" && interaction.type !== "extendedText") return;
+  const patternMask = interaction.attributes["pattern-mask"];
+  if (patternMask === undefined || isValidQtiPatternMask(patternMask)) return;
+  diagnostics.push({
+    code: "interaction.patternMask.invalid",
+    severity: "error",
+    message: `${interaction.qtiName} pattern-mask is not a valid regular expression.`,
     path: interaction.source?.path,
     source: interaction.source,
   });

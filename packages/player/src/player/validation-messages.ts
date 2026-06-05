@@ -5,6 +5,7 @@ export const AUTHORING_DIAGNOSTIC_CODES = new Set<string>([
   "interaction.unsupported",
   "interaction.choices.missing",
   "interaction.embed.unsupported",
+  "interaction.patternMask.invalid",
 ]);
 
 export function isAuthoringDiagnostic(diagnostic: QtiDiagnostic): boolean {

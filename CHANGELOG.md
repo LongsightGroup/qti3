@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.2
+
+### Added
+
+- Add text-entry and extended-text `placeholder-text` and `pattern-mask` support, including
+  authored pattern-mask messages, input masking, authoring diagnostics, shared-vocabulary fixtures,
+  and browser coverage.
+
 ## 0.7.1 - 2026-06-05
 
 ### Changed

@@ -120,6 +120,7 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
     "selectedPointsSummary.other": "{count} selected points: {coordinates}",
     extendedTextResponseLabel: "Extended text response",
     textResponseLabel: "Text response",
+    patternMaskMismatch: "Response does not match the required pattern.",
     sliderResponseLabel: "Slider response",
   },
 };

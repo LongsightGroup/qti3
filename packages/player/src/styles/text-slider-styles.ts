@@ -29,9 +29,18 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
 }
 
 .qti3-counter,
-.qti3-slider-output {
+.qti3-slider-output,
+.qti3-pattern-mask-message {
   margin: 0;
   font-size: 0.9rem;
+}
+
+.qti3-pattern-mask-message {
+  color: LinkText;
+}
+
+.qti3-inline-text-response .qti3-pattern-mask-message {
+  display: block;
 }
 
 .qti3-slider-response {

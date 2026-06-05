@@ -107,6 +107,7 @@ export const PLAYER_MESSAGE_MANIFEST = [
   { key: "selectedPointsSummary", resolver: "plural", params: ["count", "coordinates"] },
   { key: "extendedTextResponseLabel", resolver: "plain" },
   { key: "textResponseLabel", resolver: "plain" },
+  { key: "patternMaskMismatch", resolver: "plain" },
   { key: "sliderResponseLabel", resolver: "plain" },
 ] as const satisfies readonly PlayerMessageManifestEntry[];
 

@@ -6,6 +6,7 @@ import {
   type SharedVocabularyExtendedTextCounterPosition,
 } from "@longsightgroup/qti3-core";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { wireTextControlConstraints } from "./text-control-constraints.js";
 import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
 
 function scalarString(value: QtiValue): string {
@@ -54,18 +55,27 @@ function expectedRows(interaction: QtiInteraction): number | undefined {
   return Number.isFinite(expectedLines) && expectedLines > 0 ? expectedLines : undefined;
 }
 
-function appendExtendedTextControl(
+function appendInOrder(group: HTMLElement, ...nodes: Array<HTMLElement | undefined>): void {
+  for (const node of nodes) {
+    if (node) group.append(node);
+  }
+}
+
+function appendTextResponseChildren(
   group: HTMLElement,
-  control: HTMLElement,
-  counter: HTMLElement | undefined,
-  counterPosition: SharedVocabularyExtendedTextCounterPosition | undefined,
+  options: {
+    control: HTMLElement;
+    patternMaskMessage?: HTMLElement | undefined;
+    counter?: HTMLElement | undefined;
+    counterPosition?: SharedVocabularyExtendedTextCounterPosition | undefined;
+  },
 ): void {
+  const { control, patternMaskMessage, counter, counterPosition } = options;
   if (counter && counterPosition === "up") {
-    group.append(counter, control);
+    appendInOrder(group, counter, control, patternMaskMessage);
     return;
   }
-  group.append(control);
-  if (counter) group.append(counter);
+  appendInOrder(group, control, patternMaskMessage, counter);
 }
 
 export function renderTextResponse(
@@ -93,6 +103,7 @@ export function renderTextResponse(
   if (rows !== undefined) {
     (control as HTMLTextAreaElement).rows = rows;
   }
+  const patternMaskMessage = wireTextControlConstraints(control, interaction, messages);
   if (mode === "entry") {
     // qti-input-width-* applies to text-entry controls; extended text keeps textarea sizing.
     applyTextEntryWidthWithPrecedence(interaction, control, expectedLength);
@@ -116,12 +127,12 @@ export function renderTextResponse(
   control.addEventListener("input", () => sync());
   control.addEventListener("change", () => sync());
   sync(false);
-  appendExtendedTextControl(
-    group,
+  appendTextResponseChildren(group, {
     control,
+    patternMaskMessage,
     counter,
-    extendedTextCounterPositionFromAttributes(interaction.attributes),
-  );
+    counterPosition: extendedTextCounterPositionFromAttributes(interaction.attributes),
+  });
   return group;
 }
 
@@ -142,13 +153,16 @@ export function renderInlineTextEntry(
   );
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
   applyTextEntryWidthWithPrecedence(interaction, input, expectedLength);
+  const patternMaskMessage = wireTextControlConstraints(input, interaction, messages, {
+    messageTag: "span",
+  });
   const sync = (emitResponse = true) => {
     if (emitResponse) update(input.value);
   };
   input.addEventListener("input", () => sync());
   input.addEventListener("change", () => sync());
   sync(false);
-  group.append(input);
+  appendInOrder(group, input, patternMaskMessage);
   return group;
 }
 

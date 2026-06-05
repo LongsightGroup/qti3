@@ -518,7 +518,7 @@ test.describe("player DOM behavior", () => {
     await expect(targets.nth(1)).toHaveAttribute("data-empty", "true");
     await expect(targets.nth(2)).toHaveAttribute("data-empty", "true");
 
-    await expect(await dropOrderChoiceOnTarget(layout, "A", 2)).toEqual({
+    expect(await dropOrderChoiceOnTarget(layout, "A", 2)).toEqual({
       dragoverDefaultPrevented: true,
       dropDefaultPrevented: true,
     });
@@ -531,13 +531,13 @@ test.describe("player DOM behavior", () => {
     await expect(targets.nth(0)).toContainText("empty");
     await expect(targets.nth(1)).toContainText("empty");
 
-    await expect(await dropOrderChoiceOnTarget(layout, "B", 1)).toEqual({
+    expect(await dropOrderChoiceOnTarget(layout, "B", 1)).toEqual({
       dragoverDefaultPrevented: true,
       dropDefaultPrevented: true,
     });
     await expect.poll(() => currentResponse(page)).toEqual(["B", "A"]);
 
-    await expect(await dropOrderChoiceOnTarget(layout, "C", 0)).toEqual({
+    expect(await dropOrderChoiceOnTarget(layout, "C", 0)).toEqual({
       dragoverDefaultPrevented: true,
       dropDefaultPrevented: true,
     });
@@ -667,6 +667,107 @@ test.describe("player DOM behavior", () => {
     const player = page.locator("qti-assessment-item-player");
     await expect(player.locator("p input, p textarea").first()).toBeVisible();
     await expect(player.locator('[data-interaction-type="textEntry"]').first()).toBeVisible();
+  });
+
+  test("honors extended text placeholder and pattern mask attributes", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#fixture").selectOption("extendedText-pattern-mask-example");
+    await page.locator("#load-fixture").click();
+
+    const textarea = page.locator("qti-assessment-item-player textarea");
+    const patternMessage = page.locator("qti-assessment-item-player .qti3-pattern-mask-message");
+
+    await expect(textarea).toHaveAttribute("placeholder", "Enter a decimal number...");
+    await textarea.pressSequentially("abc");
+    await expect(textarea).toHaveValue("");
+
+    await textarea.pressSequentially("12.3456");
+    await expect(textarea).toHaveValue("12.345");
+    await expect(currentResponse(page)).resolves.toBe("12.345");
+
+    await textarea.evaluate((control) => {
+      const textareaControl = control as HTMLTextAreaElement;
+      textareaControl.value = "abcdef";
+      textareaControl.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await expect(patternMessage).toBeVisible();
+    await expect(patternMessage).toHaveText("Maximum of 6 digits or decimal points permitted");
+    await expect(textarea).toHaveAttribute("aria-invalid", "true");
+    await expect(
+      textarea.evaluate((control) => (control as HTMLTextAreaElement).validationMessage),
+    ).resolves.toBe("Maximum of 6 digits or decimal points permitted");
+    await expect(currentResponse(page)).resolves.toBe("abcdef");
+
+    await textarea.fill("12.34");
+
+    await expect(patternMessage).toBeHidden();
+    await expect(textarea).not.toHaveAttribute("aria-invalid", "true");
+    await expect(
+      textarea.evaluate((control) => (control as HTMLTextAreaElement).checkValidity()),
+    ).resolves.toBe(true);
+  });
+
+  test("honors inline text entry placeholder and pattern mask attributes", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="text-entry-pattern-mask-inline" title="text-entry-pattern-mask-inline" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <p>
+      Enter up to three digits:
+      <qti-text-entry-interaction
+        response-identifier="RESPONSE"
+        expected-length="3"
+        placeholder-text="000"
+        pattern-mask="([0-9]{0,3})"
+        data-patternmask-message="Maximum of 3 digits permitted"
+      />.
+    </p>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const input = page.locator("qti-assessment-item-player input.qti3-inline-text-input");
+    const patternMessage = page.locator(
+      "qti-assessment-item-player .qti3-inline-text-response .qti3-pattern-mask-message",
+    );
+
+    await expect(input).toHaveAttribute("placeholder", "000");
+    await input.pressSequentially("1234");
+    await expect(input).toHaveValue("123");
+    await input.evaluate((control) => {
+      const textInput = control as HTMLInputElement;
+      textInput.value = "abcd";
+      textInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await expect(patternMessage).toBeVisible();
+    await expect(patternMessage).toHaveText("Maximum of 3 digits permitted");
+  });
+
+  test("reports invalid pattern-mask attributes as authoring diagnostics", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-pattern-mask" title="invalid-pattern-mask" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="RESPONSE" pattern-mask="*"/>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(
+      state.validationMessages.filter(
+        (message) => message.code === "interaction.patternMask.invalid",
+      ),
+    ).toHaveLength(1);
   });
 
   test("shows one authoring validation alert for empty choice items", async ({ page }) => {

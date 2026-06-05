@@ -60,8 +60,10 @@ import type {
 import { cloneDiagnostics, errorView, validateItemResponses } from "./player-validation.js";
 import { syncValidationMessages } from "./player-validation-dom.js";
 import {
+  isAuthoringDiagnostic,
   mergeVisibleValidationMessages,
   responseValidationMessages,
+  splitSerializedValidationMessages,
 } from "./player/validation-messages.js";
 
 const HTMLElementBase: typeof HTMLElement =
@@ -243,8 +245,19 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         detail: { diagnostics: [...result.diagnostics, ...playerDiagnostics] },
       }),
     );
+    const loadTimeAuthoringDiagnostics = [
+      ...result.diagnostics.filter(
+        (diagnostic) => diagnostic.severity === "error" && isAuthoringDiagnostic(diagnostic),
+      ),
+      ...playerDiagnostics.filter((diagnostic) => diagnostic.severity === "error"),
+    ];
+    const serializedValidation = options.state?.validationMessages?.length
+      ? splitSerializedValidationMessages(options.state.validationMessages)
+      : undefined;
     this.authoringDiagnostics = cloneDiagnostics(
-      playerDiagnostics.filter((diagnostic) => diagnostic.severity === "error"),
+      serializedValidation
+        ? [...loadTimeAuthoringDiagnostics, ...serializedValidation.authoringDiagnostics]
+        : loadTimeAuthoringDiagnostics,
     );
     if (!result.document) {
       if (!this.isCurrentLoad(generation)) return;
@@ -264,7 +277,9 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       return;
     }
     this.validationMessages = cloneDiagnostics(
-      responseValidationMessages(options.state?.validationMessages ?? []),
+      serializedValidation
+        ? serializedValidation.validationMessages
+        : responseValidationMessages(options.state?.validationMessages ?? []),
     );
     if (options.status) this.session.setStatus(options.status);
     this.render();

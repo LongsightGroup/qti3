@@ -13,6 +13,7 @@ export {
   type QtiDeliverySecurityFinding,
   type QtiDeliverySecurityFindingKind,
 } from "./delivery-security.js";
+export { compileQtiPatternMask, isValidQtiPatternMask } from "./pattern-mask.js";
 export { parseQtiXml } from "./parser.js";
 export {
   scoreQtiItemServerSide,

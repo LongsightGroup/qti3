@@ -268,4 +268,46 @@ test.describe("player validation", () => {
     expect(state.validationMessages).toEqual([]);
     await expect(page.locator("#events")).not.toContainText("response.required");
   });
+
+  test("keeps pattern mask and response validation aria descriptions in sync", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pattern-mask-validation" title="pattern-mask-validation" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response><qti-value>12</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <qti-extended-text-interaction
+      response-identifier="RESPONSE"
+      pattern-mask="([0-9]+)"
+      data-patternmask-message="Enter at least one digit"
+    />
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    );
+
+    const textarea = page.locator("qti-assessment-item-player textarea");
+    await page.locator("#debug-score").click();
+    await expect(textarea).toHaveAttribute("aria-invalid", "true");
+
+    let describedBy = await textarea.getAttribute("aria-describedby");
+    expect(describedBy).toContain("qti3-validation-RESPONSE");
+
+    await textarea.focus();
+    await textarea.blur();
+    describedBy = await textarea.getAttribute("aria-describedby");
+    expect(describedBy).toContain("qti3-validation-RESPONSE");
+    expect(describedBy).toContain("qti3-pattern-mask-RESPONSE");
+
+    await textarea.fill("12");
+    await page.locator("#debug-score").click();
+    await expect(textarea).not.toHaveAttribute("aria-invalid", "true");
+    await expect(textarea).not.toHaveAttribute("aria-describedby");
+  });
 });
