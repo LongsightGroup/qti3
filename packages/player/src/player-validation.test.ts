@@ -2,6 +2,7 @@ import type { QtiDocument, QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import {
   cloneDiagnostics,
+  minimumRequiredResponses,
   responseCount,
   responseIsEmpty,
   validateItemResponses,
@@ -72,6 +73,30 @@ describe("player-validation", () => {
     });
     expect(diagnostics.some((entry) => entry.code === "response.required")).toBe(true);
   });
+
+  it.each(["order", "graphicOrder"] as const)(
+    "parses authored minimum response counts for %s",
+    (type) => {
+      expect(
+        minimumRequiredResponses({
+          type,
+          attributes: { "min-choices": "0" },
+        } as unknown as QtiInteraction),
+      ).toBe(0);
+      expect(
+        minimumRequiredResponses({
+          type,
+          attributes: { "min-choices": "2" },
+        } as unknown as QtiInteraction),
+      ).toBe(2);
+      expect(
+        minimumRequiredResponses({
+          type,
+          attributes: {},
+        } as unknown as QtiInteraction),
+      ).toBe(1);
+    },
+  );
 });
 
 describe("content-dom url policy", () => {

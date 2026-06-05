@@ -11,6 +11,7 @@ import {
   mediaPlayCount,
   minimumMediaPlays,
   parseUnlimitedMaximum,
+  responseLimitAttribute,
 } from "./response-limits.js";
 
 export function errorView(message: string): HTMLElement {
@@ -60,8 +61,7 @@ export function responseCount(value: QtiValue): number {
 export function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
   if (!interaction) return 1;
   if (interaction.type === "media") return minimumMediaPlays(interaction);
-  const explicit =
-    interaction.attributes["min-choices"] ?? interaction.attributes["min-associations"];
+  const explicit = responseLimitAttribute(interaction, "min-choices", "min-associations");
   if (explicit === undefined) return 1;
   const parsed = Number(explicit);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;

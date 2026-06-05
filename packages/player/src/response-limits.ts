@@ -5,12 +5,22 @@ export function maximumAllowedResponses(
 ): number | undefined {
   if (!interaction) return undefined;
   if (interaction.type === "media") return maximumMediaPlays(interaction);
-  const explicit =
-    interaction.attributes["max-choices"] ?? interaction.attributes["max-associations"];
+  const explicit = responseLimitAttribute(interaction, "max-choices", "max-associations");
   if (explicit === undefined) return undefined;
   const parsed = Number(explicit);
   if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
   return parsed;
+}
+
+export function responseLimitAttribute(
+  interaction: QtiInteraction,
+  choiceKey: "min-choices" | "max-choices",
+  associationKey: "min-associations" | "max-associations",
+): string | undefined {
+  if (interaction.type === "order" || interaction.type === "graphicOrder") {
+    return interaction.attributes[choiceKey];
+  }
+  return interaction.attributes[choiceKey] ?? interaction.attributes[associationKey];
 }
 
 function maximumMediaPlays(interaction: QtiInteraction): number | undefined {
