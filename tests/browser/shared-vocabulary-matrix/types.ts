@@ -1,3 +1,7 @@
+import type { QtiInteractionType } from "../../../packages/core/src/types.js";
+
+export type SharedVocabularyInteractionType = QtiInteractionType | "content";
+
 export type SharedVocabularySupportLevel = "full" | "stylesheet" | "conditional" | "pass-through";
 
 export type NumericComparison =
@@ -74,6 +78,7 @@ export type SharedVocabularyAssertion =
 export interface SharedVocabularyManifestEntry {
   id: string;
   className: string | string[];
+  interactionType: SharedVocabularyInteractionType;
   supportLevel: SharedVocabularySupportLevel;
   fixturePath: string;
   forcedColors?: true;

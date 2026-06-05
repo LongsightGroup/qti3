@@ -16,7 +16,6 @@ type GallerySupportLevel = "full" | "stylesheet" | "conditional";
 
 interface GalleryCase {
   entry: SharedVocabularyManifestEntry;
-  interactionType: string;
   classFamily: string;
   supportLevel: GallerySupportLevel;
 }
@@ -25,7 +24,6 @@ const entries: GalleryCase[] = sharedVocabularyManifest
   .filter((entry) => entry.supportLevel !== "pass-through")
   .map((entry) => ({
     entry,
-    interactionType: interactionType(entry),
     classFamily: classFamily(entry),
     supportLevel: entry.forcedColors ? "conditional" : entry.supportLevel,
   }));
@@ -50,7 +48,10 @@ const copyStatus = requiredElement<HTMLElement>("#copy-status");
 let selectedEntry = entryFromUrl() ?? entries[0]?.entry;
 let selectedXml = "";
 
-populateFilter(interactionFilter, ["all", ...unique(entries.map((item) => item.interactionType))]);
+populateFilter(interactionFilter, [
+  "all",
+  ...unique(entries.map((item) => item.entry.interactionType)),
+]);
 populateFilter(familyFilter, ["all", ...unique(entries.map((item) => item.classFamily))]);
 populateFilter(supportFilter, ["all", "full", "stylesheet", "conditional"]);
 
@@ -117,7 +118,7 @@ function renderCaseList(): void {
         textElement("strong", item.entry.id),
         textElement(
           "span",
-          `${item.interactionType} · ${item.classFamily} · ${item.supportLevel}`,
+          `${item.entry.interactionType} · ${item.classFamily} · ${item.supportLevel}`,
           "case-meta",
         ),
       );
@@ -141,7 +142,10 @@ function renderCaseList(): void {
 function filteredEntries(): GalleryCase[] {
   const query = caseSearch.value.trim().toLowerCase();
   return entries.filter((item) => {
-    if (interactionFilter.value !== "all" && item.interactionType !== interactionFilter.value) {
+    if (
+      interactionFilter.value !== "all" &&
+      item.entry.interactionType !== interactionFilter.value
+    ) {
       return false;
     }
     if (familyFilter.value !== "all" && item.classFamily !== familyFilter.value) return false;
@@ -149,7 +153,7 @@ function filteredEntries(): GalleryCase[] {
     if (!query) return true;
     return [
       item.entry.id,
-      item.interactionType,
+      item.entry.interactionType,
       item.classFamily,
       item.supportLevel,
       ...classNames(item.entry),
@@ -163,7 +167,7 @@ function updateHeader(entry: SharedVocabularyManifestEntry): void {
   description.textContent = entry.fixturePath;
   tags.replaceChildren(
     ...[
-      details?.interactionType ?? "unknown",
+      entry.interactionType,
       details?.classFamily ?? "unknown",
       details?.supportLevel ?? entry.supportLevel,
       ...(entry.forcedColors ? ["forced colors"] : []),
@@ -253,10 +257,6 @@ function updateUrl(caseId: string, push: boolean): void {
   url.searchParams.set("case", caseId);
   if (push) history.pushState(null, "", url);
   else history.replaceState(null, "", url);
-}
-
-function interactionType(entry: SharedVocabularyManifestEntry): string {
-  return entry.id.split("-")[0] ?? "unknown";
 }
 
 function classFamily(entry: SharedVocabularyManifestEntry): string {

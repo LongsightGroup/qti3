@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-selections-dark" title="graphic-gap-selections-dark" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" class="qti-selections-dark">
+      <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='140'%20viewBox='0%200%20240%20140'%3E%3Crect%20width='240'%20height='140'%20fill='%23777'/%3E%3C/svg%3E" type="image/svg+xml" width="240" height="140"/>
+      <qti-gap-text identifier="A" match-max="1">Alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Beta</qti-gap-text>
+      <qti-associable-hotspot identifier="T1" shape="rect" coords="24,24,84,76" match-max="1"/>
+      <qti-associable-hotspot identifier="T2" shape="rect" coords="132,24,192,76" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>

@@ -1,7 +1,12 @@
-import type { SharedVocabularyAssertion, SharedVocabularyManifestEntry } from "./types.js";
+import type {
+  SharedVocabularyAssertion,
+  SharedVocabularyInteractionType,
+  SharedVocabularyManifestEntry,
+} from "./types.js";
 
 export type {
   SharedVocabularyAssertion,
+  SharedVocabularyInteractionType,
   SharedVocabularyManifestEntry,
   SharedVocabularySupportLevel,
 } from "./types.js";
@@ -28,26 +33,69 @@ const gapLayout = `${player} .qti3-gap-match-layout`;
 const gapRoot = `${player} .qti3-gapMatch`;
 const gapBank = `${gapLayout} .qti3-gap-source-region`;
 const gapTargets = `${gapLayout} .qti3-gap-region`;
+const graphicGapRoot = `${player} .qti3-graphicGapMatch`;
+const graphicGapLayout = `${player} .qti3-graphic-gap-layout`;
+const graphicGapBank = `${graphicGapLayout} .qti3-graphic-gap-source-region`;
+const graphicGapSurface = `${graphicGapLayout} .qti3-graphic-gap-match-surface`;
+const graphicGapHotspotT1 = `${graphicGapRoot} .qti3-graphic-gap-hotspot[data-gap-identifier="T1"]`;
+const graphicGapHotspotT2 = `${graphicGapRoot} .qti3-graphic-gap-hotspot[data-gap-identifier="T2"]`;
+const graphicGapSourceA = `${graphicGapBank} button[data-choice-identifier="A"]`;
+const hottextRoot = `${player} .qti3-hottext`;
+const hottextA = `${hottextRoot} .qti3-hottext-token[data-choice-identifier="A"]`;
+const hottextB = `${hottextRoot} .qti3-hottext-token[data-choice-identifier="B"]`;
 const inputWidths = [1, 2, 3, 4, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 72] as const;
+
+interface EntryOptions {
+  forcedColors?: true;
+}
 
 function entry(
   id: string,
+  interactionType: SharedVocabularyInteractionType,
   className: string | string[],
   supportLevel: SharedVocabularyManifestEntry["supportLevel"],
   assertions: SharedVocabularyAssertion[],
-  options: { forcedColors?: true } = {},
+  options: EntryOptions = {},
 ): SharedVocabularyManifestEntry {
-  const forcedColorsAssertions: SharedVocabularyAssertion[] = options.forcedColors
+  const { forcedColors } = options;
+  const forcedColorsAssertions: SharedVocabularyAssertion[] = forcedColors
     ? [{ type: "forced-colors-active" }]
     : [];
   return {
     id,
     className,
+    interactionType,
     supportLevel,
     fixturePath: itemPath(id),
+    ...(forcedColors ? { forcedColors } : {}),
     assertions: [...forcedColorsAssertions, ...assertions],
-    ...options,
   };
+}
+
+function graphicGapSelectionAssertions(className: string): SharedVocabularyAssertion[] {
+  return [
+    { type: "class-preserved", selector: graphicGapRoot, className },
+    {
+      type: "computed-style-not",
+      selector: graphicGapHotspotT2,
+      property: "background-color",
+      value: "rgba(0, 0, 0, 0)",
+    },
+    { type: "click", selector: graphicGapSourceA },
+    { type: "click", selector: graphicGapHotspotT1 },
+    {
+      type: "computed-style-differs",
+      firstSelector: graphicGapHotspotT1,
+      secondSelector: graphicGapHotspotT2,
+      property: "background-color",
+    },
+    {
+      type: "computed-style-differs",
+      firstSelector: graphicGapHotspotT1,
+      secondSelector: graphicGapHotspotT2,
+      property: "border-top-style",
+    },
+  ];
 }
 
 function selectionAssertions(className: string): SharedVocabularyAssertion[] {
@@ -211,7 +259,7 @@ function choicesPositionAssertions(options: ChoicesPositionOptions): SharedVocab
 }
 
 export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
-  entry("choice-selections-dark", "qti-selections-dark", "stylesheet", [
+  entry("choice-selections-dark", "choice", "qti-selections-dark", "stylesheet", [
     { type: "class-preserved", selector: choice, className: "qti-selections-dark" },
     {
       type: "computed-style-not",
@@ -241,6 +289,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ]),
   entry(
     "choice-selections-light-forced-colors",
+    "choice",
     "qti-selections-light",
     "stylesheet",
     selectionAssertions("qti-selections-light"),
@@ -248,12 +297,13 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "choice-selections-dark-forced-colors",
+    "choice",
     "qti-selections-dark",
     "stylesheet",
     selectionAssertions("qti-selections-dark"),
     { forcedColors: true },
   ),
-  entry("choice-unselected-hidden", "qti-unselected-hidden", "stylesheet", [
+  entry("choice-unselected-hidden", "choice", "qti-unselected-hidden", "stylesheet", [
     { type: "class-preserved", selector: choice, className: "qti-unselected-hidden" },
     {
       type: "computed-style-number",
@@ -281,8 +331,40 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       value: 1,
     },
   ]),
+  entry("hottext-unselected-hidden", "hottext", "qti-unselected-hidden", "stylesheet", [
+    { type: "class-preserved", selector: hottextRoot, className: "qti-unselected-hidden" },
+    {
+      type: "computed-style",
+      selector: hottextA,
+      property: "border-top-color",
+      value: "rgba(0, 0, 0, 0)",
+    },
+    {
+      type: "computed-style",
+      selector: hottextA,
+      property: "text-decoration-color",
+      value: "rgba(0, 0, 0, 0)",
+    },
+    { type: "focus", selector: hottextA },
+    {
+      type: "computed-style-not",
+      selector: hottextA,
+      property: "border-top-color",
+      value: "rgba(0, 0, 0, 0)",
+    },
+    { type: "key", key: "Tab" },
+    {
+      type: "computed-style-not",
+      selector: hottextB,
+      property: "border-top-color",
+      value: "rgba(0, 0, 0, 0)",
+    },
+    { type: "key", key: "Space" },
+    { type: "attribute", selector: hottextB, name: "data-selected", value: "true" },
+  ]),
   entry(
     "choice-stacking-vertical",
+    "choice",
     ["qti-choices-stacking-3", "qti-orientation-vertical"],
     "full",
     [
@@ -310,6 +392,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "choice-stacking-1-horizontal",
+    "choice",
     ["qti-choices-stacking-1", "qti-orientation-horizontal"],
     "full",
     choiceStackingAssertions(
@@ -320,29 +403,33 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "choice-stacking-2",
+    "choice",
     "qti-choices-stacking-2",
     "full",
     choiceStackingAssertions("qti-choices-stacking-2", 2),
   ),
   entry(
     "choice-stacking-4",
+    "choice",
     "qti-choices-stacking-4",
     "full",
     choiceStackingAssertions("qti-choices-stacking-4", 4),
   ),
   entry(
     "choice-stacking-5",
+    "choice",
     "qti-choices-stacking-5",
     "full",
     choiceStackingAssertions("qti-choices-stacking-5", 5),
   ),
-  entry("choice-input-control-hidden", "qti-input-control-hidden", "stylesheet", [
+  entry("choice-input-control-hidden", "choice", "qti-input-control-hidden", "stylesheet", [
     { type: "class-preserved", selector: choice, className: "qti-input-control-hidden" },
     { type: "hidden-focusable-input", selector: `${choiceA} input` },
   ]),
   ...[...labelStyleCases, ...labelSuffixCases].map((item) =>
     entry(
       `choice-${item.id}`,
+      "choice",
       item.className,
       "full",
       labelAssertions(
@@ -356,7 +443,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       ),
     ),
   ),
-  entry("order-choices-left-width", "qti-choices-left", "full", [
+  entry("order-choices-left-width", "order", "qti-choices-left", "full", [
     { type: "class-preserved", selector: `${player} .qti3-order`, className: "qti-choices-left" },
     { type: "attribute", selector: orderLayout, name: "data-qti-choices-position", value: "left" },
     { type: "dom-order", firstSelector: orderBank, secondSelector: orderTargets, order: "before" },
@@ -369,7 +456,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       relation: "less-than",
     },
   ]),
-  entry("order-orientation-vertical", "qti-orientation-vertical", "full", [
+  entry("order-orientation-vertical", "order", "qti-orientation-vertical", "full", [
     {
       type: "class-preserved",
       selector: `${player} .qti3-order`,
@@ -387,6 +474,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
     const orderClasses = [...classNames(item.className), "qti-choices-top"];
     return entry(
       `order-${item.id}`,
+      "order",
       orderClasses,
       "full",
       labelAssertions(
@@ -403,6 +491,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   }),
   entry(
     "gap-input-width-variants",
+    "gapMatch",
     inputWidths.map((width) => `qti-input-width-${width}`),
     "full",
     inputWidths.map(
@@ -416,6 +505,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "extendedtext-height-counter-variants",
+    "extendedText",
     [
       "qti-height-lines-3",
       "qti-height-lines-6",
@@ -482,6 +572,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "media-controls-and-pause",
+    "media",
     [
       "data-qti-media-player-controls",
       "data-qti-media-player-pause-delay",
@@ -528,6 +619,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "match-choices-top",
+    "match",
     "qti-choices-top",
     "full",
     choicesPositionAssertions({
@@ -541,6 +633,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "match-choices-bottom",
+    "match",
     "qti-choices-bottom",
     "full",
     choicesPositionAssertions({
@@ -554,6 +647,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "match-choices-left",
+    "match",
     "qti-choices-left",
     "full",
     choicesPositionAssertions({
@@ -567,6 +661,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "match-choices-right",
+    "match",
     "qti-choices-right",
     "full",
     choicesPositionAssertions({
@@ -578,7 +673,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       className: "qti-choices-right",
     }),
   ),
-  entry("match-tabular-first-column-header", "qti-match-tabular", "full", [
+  entry("match-tabular-first-column-header", "match", "qti-match-tabular", "full", [
     { type: "class-preserved", selector: matchRoot, className: "qti-match-tabular" },
     {
       type: "text",
@@ -593,6 +688,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ]),
   entry(
     "gap-choices-top",
+    "gapMatch",
     "qti-choices-top",
     "full",
     choicesPositionAssertions({
@@ -606,6 +702,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "gap-choices-bottom",
+    "gapMatch",
     "qti-choices-bottom",
     "full",
     choicesPositionAssertions({
@@ -619,6 +716,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "gap-choices-left",
+    "gapMatch",
     "qti-choices-left",
     "full",
     choicesPositionAssertions({
@@ -632,6 +730,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
   ),
   entry(
     "gap-choices-right",
+    "gapMatch",
     "qti-choices-right",
     "full",
     choicesPositionAssertions({
@@ -643,8 +742,32 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       className: "qti-choices-right",
     }),
   ),
+  // Graphic gap matrix entries cover interaction-specific deltas; gap/match already
+  // exercise all four qti-choices-* positions with the shared layout helper.
+  entry(
+    "graphic-gap-selections-dark",
+    "graphicGapMatch",
+    "qti-selections-dark",
+    "stylesheet",
+    graphicGapSelectionAssertions("qti-selections-dark"),
+  ),
+  entry(
+    "graphic-gap-choices-bottom",
+    "graphicGapMatch",
+    "qti-choices-bottom",
+    "full",
+    choicesPositionAssertions({
+      interactionRoot: graphicGapRoot,
+      layoutSelector: graphicGapLayout,
+      bankSelector: graphicGapBank,
+      targetSelector: graphicGapSurface,
+      position: "bottom",
+      className: "qti-choices-bottom",
+    }),
+  ),
   entry(
     "gap-placement-input-width",
+    "gapMatch",
     ["qti-gap-placement", "qti-choices-left", "qti-input-width-10"],
     "full",
     [
@@ -670,7 +793,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       },
     ],
   ),
-  entry("content-layout-row-col6", ["qti-layout-row", "qti-layout-col6"], "stylesheet", [
+  entry("content-layout-row-col6", "content", ["qti-layout-row", "qti-layout-col6"], "stylesheet", [
     {
       type: "layout-width-ratio",
       firstSelector: `${player} #sv-layout-left`,
@@ -692,7 +815,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       tolerance: 2,
     },
   ]),
-  entry("content-visually-hidden", "qti-visually-hidden", "stylesheet", [
+  entry("content-visually-hidden", "content", "qti-visually-hidden", "stylesheet", [
     {
       type: "class-preserved",
       selector: `${player} #sv-visually-hidden`,
@@ -730,7 +853,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       text: "Screen reader vocabulary note",
     },
   ]),
-  entry("content-keyword-emphasis", "qti-keyword-emphasis", "conditional", [
+  entry("content-keyword-emphasis", "content", "qti-keyword-emphasis", "conditional", [
     {
       type: "class-preserved",
       selector: `${player} #sv-keyword`,
@@ -773,7 +896,7 @@ export const sharedVocabularyManifest: SharedVocabularyManifestEntry[] = [
       value: "underline",
     },
   ]),
-  entry("content-suppress-tts", "data-qti-suppress-tts", "stylesheet", [
+  entry("content-suppress-tts", "content", "data-qti-suppress-tts", "stylesheet", [
     {
       type: "attribute",
       selector: `${player} #sv-suppress-tts`,
