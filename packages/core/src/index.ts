@@ -56,16 +56,30 @@ export {
   processingSupport,
 } from "./support.js";
 export {
+  extendedTextCounterPosition,
+  extendedTextCounterPositionFromAttributes,
+  extendedTextHeightLines,
+  extendedTextHeightLinesFromAttributes,
+  firstMatchingSharedVocabularyClass,
+  formatSupportedExtendedTextCounterClasses,
+  formatSupportedExtendedTextHeightLinesClasses,
   formatSupportedGapInputWidthClasses,
   formatSupportedInputWidthClasses,
   gapInputWidthFromAttributes,
+  isSupportedExtendedTextCounterClassName,
+  isSupportedExtendedTextHeightLinesClassName,
   inputWidthFromAttributes,
   isSupportedInputWidthClassName,
+  SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES,
+  SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES,
   SHARED_VOCABULARY_GAP_INPUT_WIDTHS,
   SHARED_VOCABULARY_INPUT_WIDTHS,
   sharedVocabularyClassNames,
+  supportedExtendedTextCounterClassNames,
+  supportedExtendedTextHeightLinesClassNames,
   supportedGapInputWidthClassNames,
   supportedInputWidthClassNames,
+  type SharedVocabularyExtendedTextCounterPosition,
 } from "./shared-vocabulary.js";
 export { validateAssessmentItem } from "./validation.js";
 export type {

@@ -1,4 +1,10 @@
-import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import {
+  extendedTextCounterPositionFromAttributes,
+  extendedTextHeightLinesFromAttributes,
+  type QtiInteraction,
+  type QtiValue,
+  type SharedVocabularyExtendedTextCounterPosition,
+} from "@longsightgroup/qti3-core";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
 
@@ -40,6 +46,28 @@ function applyTextEntryWidthWithPrecedence(
   }
 }
 
+function expectedRows(interaction: QtiInteraction): number | undefined {
+  const sharedVocabularyRows = extendedTextHeightLinesFromAttributes(interaction.attributes);
+  if (sharedVocabularyRows !== undefined) return sharedVocabularyRows;
+
+  const expectedLines = Number(interaction.attributes["expected-lines"] ?? 0);
+  return Number.isFinite(expectedLines) && expectedLines > 0 ? expectedLines : undefined;
+}
+
+function appendExtendedTextControl(
+  group: HTMLElement,
+  control: HTMLElement,
+  counter: HTMLElement | undefined,
+  counterPosition: SharedVocabularyExtendedTextCounterPosition | undefined,
+): void {
+  if (counter && counterPosition === "up") {
+    group.append(counter, control);
+    return;
+  }
+  group.append(control);
+  if (counter) group.append(counter);
+}
+
 export function renderTextResponse(
   interaction: QtiInteraction,
   update: (value: QtiValue) => void,
@@ -50,7 +78,6 @@ export function renderTextResponse(
   const group = document.createElement("div");
   group.className = "qti3-text-response";
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
-  const expectedLines = Number(interaction.attributes["expected-lines"] ?? 0);
   const control =
     mode === "extended" ? document.createElement("textarea") : document.createElement("input");
   control.className = mode === "extended" ? "qti3-textarea" : "qti3-text-input";
@@ -62,8 +89,9 @@ export function renderTextResponse(
         ? messages.message("extendedTextResponseLabel")
         : messages.message("textResponseLabel")),
   );
-  if (mode === "extended" && expectedLines > 0) {
-    (control as HTMLTextAreaElement).rows = expectedLines;
+  const rows = mode === "extended" ? expectedRows(interaction) : undefined;
+  if (rows !== undefined) {
+    (control as HTMLTextAreaElement).rows = rows;
   }
   if (mode === "entry") {
     // qti-input-width-* applies to text-entry controls; extended text keeps textarea sizing.
@@ -88,8 +116,12 @@ export function renderTextResponse(
   control.addEventListener("input", () => sync());
   control.addEventListener("change", () => sync());
   sync(false);
-  group.append(control);
-  if (counter) group.append(counter);
+  appendExtendedTextControl(
+    group,
+    control,
+    counter,
+    extendedTextCounterPositionFromAttributes(interaction.attributes),
+  );
   return group;
 }
 

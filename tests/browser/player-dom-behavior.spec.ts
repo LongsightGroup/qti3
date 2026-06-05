@@ -273,6 +273,26 @@ const INTERACTION_INPUT_WIDTH_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const EXTENDED_TEXT_SHARED_VOCABULARY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-shared-vocabulary" title="extended-text-shared-vocabulary" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-height-lines-6 qti-counter-up" expected-lines="3">
+      <qti-prompt>Explain the implementation boundary.</qti-prompt>
+    </qti-extended-text-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
+const EXTENDED_TEXT_COUNTER_DOWN_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-counter-down" title="extended-text-counter-down" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-height-lines-3 qti-counter-down"/>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const GRAPHIC_GAP_CHOICES_POSITION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-choices-position" title="graphic-gap-choices-position" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -897,6 +917,43 @@ test.describe("player DOM behavior", () => {
       throw new Error("Missing interaction input width boxes.");
     }
     expect(selectBox.width).toBeGreaterThan(inlineBox.width);
+  });
+
+  test("applies extended text height and counter placement shared vocabulary", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, EXTENDED_TEXT_SHARED_VOCABULARY_ITEM);
+
+    const response = page.locator(
+      'qti-assessment-item-player [data-response-identifier="RESPONSE"] .qti3-text-response',
+    );
+    const textarea = response.locator("textarea.qti3-textarea");
+    const counter = response.locator(".qti3-counter");
+
+    await expect(textarea).toHaveAttribute("rows", "6");
+    await expect(counter).toBeVisible();
+    await expect(
+      response.locator(":scope > :is(.qti3-counter, textarea.qti3-textarea)").first(),
+    ).toHaveClass(/qti3-counter/);
+
+    await textarea.fill("Six line shared vocabulary.");
+    await expect(counter).toContainText("27");
+  });
+
+  test("places extended text counter below the textarea by default", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, EXTENDED_TEXT_COUNTER_DOWN_ITEM);
+
+    const response = page.locator(
+      'qti-assessment-item-player [data-response-identifier="RESPONSE"] .qti3-text-response',
+    );
+    const textarea = response.locator("textarea.qti3-textarea");
+    const counter = response.locator(".qti3-counter");
+
+    await expect(textarea).toHaveAttribute("rows", "3");
+    await expect(counter).toBeVisible();
+    await expect(
+      response.locator(":scope > :is(.qti3-counter, textarea.qti3-textarea)").first(),
+    ).toHaveClass(/qti3-textarea/);
   });
 
   test("positions graphic gap match shared vocabulary choices below the image", async ({

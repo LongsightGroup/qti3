@@ -21,7 +21,10 @@ import type {
   QtiValue,
   QtiValidationResult,
 } from "./types.js";
-import { validateSharedVocabularyInputWidth } from "./shared-vocabulary-validation.js";
+import {
+  validateSharedVocabularyExtendedText,
+  validateSharedVocabularyInputWidth,
+} from "./shared-vocabulary-validation.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
 import { qtiValueToStringList } from "./value-format.js";
 
@@ -1697,6 +1700,7 @@ function validateInteractionSharedVocabulary(
     interaction.type !== "graphicGapMatch" &&
     interaction.type !== "inlineChoice" &&
     interaction.type !== "textEntry" &&
+    interaction.type !== "extendedText" &&
     interaction.type !== "order"
   ) {
     return;
@@ -1705,6 +1709,18 @@ function validateInteractionSharedVocabulary(
   const classNameSet = new Set(classNames);
   if (interaction.type === "inlineChoice" || interaction.type === "textEntry") {
     validateInteractionInputWidthSharedVocabulary(interaction, classNames, diagnostics);
+    return;
+  }
+
+  if (interaction.type === "extendedText") {
+    diagnostics.push(
+      ...validateSharedVocabularyExtendedText({
+        classNames,
+        subjectQtiName: interaction.qtiName,
+        path: interaction.source?.path,
+        source: interaction.source,
+      }),
+    );
     return;
   }
 
