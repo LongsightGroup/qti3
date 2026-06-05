@@ -1,4 +1,5 @@
 import type { NumericComparison, SharedVocabularyAssertion } from "./types.js";
+import { assertValidationMessageInRoot } from "./validation-message-assertions.js";
 
 export function assertionLabel(assertion: SharedVocabularyAssertion): string {
   switch (assertion.type) {
@@ -48,6 +49,10 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return `set ${assertion.selector} ${assertion.name}="${assertion.value}"`;
     case "text":
       return `${assertion.selector} text is "${assertion.value}"`;
+    case "validation-message":
+      return assertion.expectInvalid === false
+        ? `${assertion.responseIdentifier} validation is cleared on ${assertion.controlSelector}`
+        : `${assertion.responseIdentifier} validation message is "${assertion.message}"`;
     default:
       return assertNever(assertion);
   }
@@ -214,6 +219,18 @@ export async function runAssertionInRoot(
       if (text !== assertion.value) throw new Error(`received "${text}"`);
       return;
     }
+    case "validation-message":
+      await assertValidationMessageInRoot(
+        root,
+        {
+          responseIdentifier: assertion.responseIdentifier,
+          controlSelector: assertion.controlSelector,
+          message: assertion.message,
+          expectInvalid: assertion.expectInvalid,
+        },
+        settle,
+      );
+      return;
     default:
       return assertNever(assertion);
   }

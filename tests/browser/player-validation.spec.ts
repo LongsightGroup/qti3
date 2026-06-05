@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
-import { currentResponse, pasteXml, visibleValidationAlertCount } from "./player-helpers.js";
+import { pasteXml } from "./player-helpers.js";
 
 test.describe("player validation", () => {
   test("associates validation messages with unanswered controls", async ({ page }) => {
@@ -185,112 +185,6 @@ test.describe("player validation", () => {
     await expect(page.locator("#events")).toContainText("response.maximum");
     await expect(page.locator("#events")).toContainText("Select no more than one option.");
     await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
-  });
-
-  test("honors order shared vocabulary custom maximum selection messages", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(
-      page,
-      `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-order-sv" title="maximum-order-sv" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
-    <qti-correct-response>
-      <qti-value>A</qti-value>
-      <qti-value>B</qti-value>
-    </qti-correct-response>
-  </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-  <qti-item-body>
-    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-top qti-labels-decimal qti-labels-suffix-parenthesis" min-choices="0" max-choices="2" data-max-selections-message="Place no more than two steps">
-      <qti-simple-choice identifier="A">First step</qti-simple-choice>
-      <qti-simple-choice identifier="B">Second step</qti-simple-choice>
-      <qti-simple-choice identifier="C">Third step</qti-simple-choice>
-    </qti-order-interaction>
-  </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
-</qti-assessment-item>`,
-    );
-
-    const player = page.locator("qti-assessment-item-player");
-    const bank = player.locator(".qti3-order-choices-bank");
-
-    await bank.getByRole("button", { name: "First step" }).click();
-    await bank.getByRole("button", { name: "Second step" }).click();
-    await expect.poll(() => currentResponse(page)).toEqual(["A", "B"]);
-    await page.locator("#debug-score").click();
-
-    expect(await visibleValidationAlertCount(page)).toBe(0);
-    await expect(page.locator("#events")).not.toContainText("response.maximum");
-
-    await bank.getByRole("button", { name: "Third step" }).click();
-    await expect.poll(() => currentResponse(page)).toEqual(["A", "B", "C"]);
-    await page.locator("#debug-score").click();
-
-    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
-    await expect(page.locator("#events")).toContainText("response.maximum");
-    await expect(page.locator("#events")).toContainText("Place no more than two steps");
-    expect(await visibleValidationAlertCount(page)).toBe(1);
-
-    const handle = player.locator(
-      '.qti3-order-target-item[data-choice-identifier="A"] .qti3-reorder-handle',
-    );
-    await expect(handle).toHaveAttribute("aria-invalid", "true");
-    const describedBy = await handle.getAttribute("aria-describedby");
-    expect(describedBy).toBeTruthy();
-    await expect(page.locator(`#${describedBy}`)).toContainText("Place no more than two steps");
-  });
-
-  test("honors order shared vocabulary custom minimum selection messages", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(
-      page,
-      `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="minimum-order-sv" title="minimum-order-sv" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
-    <qti-correct-response>
-      <qti-value>A</qti-value>
-      <qti-value>B</qti-value>
-    </qti-correct-response>
-  </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-  <qti-item-body>
-    <qti-order-interaction response-identifier="RESPONSE" class="qti-choices-left qti-orientation-vertical qti-labels-upper-alpha" min-choices="2" max-choices="3" data-min-selections-message="Place at least two steps">
-      <qti-simple-choice identifier="A">First step</qti-simple-choice>
-      <qti-simple-choice identifier="B">Second step</qti-simple-choice>
-      <qti-simple-choice identifier="C">Third step</qti-simple-choice>
-    </qti-order-interaction>
-  </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
-</qti-assessment-item>`,
-    );
-
-    const player = page.locator("qti-assessment-item-player");
-    const bank = player.locator(".qti3-order-choices-bank");
-
-    await bank.getByRole("button", { name: "First step" }).click();
-    await expect.poll(() => currentResponse(page)).toEqual(["A"]);
-    await page.locator("#debug-score").click();
-
-    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
-    await expect(page.locator("#events")).toContainText("response.required");
-    await expect(page.locator("#events")).toContainText("Place at least two steps");
-    expect(await visibleValidationAlertCount(page)).toBe(1);
-
-    const handle = player.locator(
-      '.qti3-order-target-item[data-choice-identifier="A"] .qti3-reorder-handle',
-    );
-    await expect(handle).toHaveAttribute("aria-invalid", "true");
-    const describedBy = await handle.getAttribute("aria-describedby");
-    expect(describedBy).toBeTruthy();
-    await expect(page.locator(`#${describedBy}`)).toContainText("Place at least two steps");
-
-    await bank.getByRole("button", { name: "Second step" }).click();
-    await expect.poll(() => currentResponse(page)).toEqual(["A", "B"]);
-    await expect(handle).not.toHaveAttribute("aria-invalid", "true");
-    await page.locator("#debug-score").click();
-
-    const state = await player.evaluate((element) => element.serialize());
-    expect(state.validationMessages).toEqual([]);
   });
 
   test("honors authored match-max counts during validation", async ({ page }) => {

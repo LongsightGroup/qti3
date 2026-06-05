@@ -36,6 +36,8 @@ const interactionInputWidthFixtures = [
   "packages/fixtures/packages/sv-matrix/items/interaction-input-width-standalone.xml",
   "packages/fixtures/packages/sv-matrix/items/interaction-input-width-embedded.xml",
 ];
+const orderMinMaxMessagesFixture =
+  "packages/fixtures/packages/sv-matrix/items/order-min-max-messages.xml";
 
 const contentListStyleTypes = [
   "none",
@@ -309,6 +311,18 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
       ...graphicBrowserTests,
     ]),
   ),
+  svEntry("data-min-selections-message", "interaction", "full", {
+    interactions: ["order"],
+    fixtures: [orderMinMaxMessagesFixture],
+    tests: sharedVocabularyMatrixTests,
+    notes: "Overrides minimum response validation text for order interactions.",
+  }),
+  svEntry("data-max-selections-message", "interaction", "full", {
+    interactions: ["choice", "order"],
+    fixtures: [orderMinMaxMessagesFixture],
+    tests: ["tests/browser/player-validation.spec.ts", ...sharedVocabularyMatrixTests],
+    notes: "Overrides maximum response validation text for choice and order interactions.",
+  }),
   interactionFullEntry(
     "qti-match-tabular",
     ["match"],

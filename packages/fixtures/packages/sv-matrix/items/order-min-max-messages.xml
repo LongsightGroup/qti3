@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-min-max-messages" title="order-min-max-messages" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="MIN_RESPONSE" cardinality="ordered" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+      <qti-value>B</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="MAX_RESPONSE" cardinality="ordered" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+      <qti-value>B</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="MIN_RESPONSE" class="qti-choices-left qti-orientation-vertical qti-labels-upper-alpha" min-choices="2" max-choices="3" data-min-selections-message="Place at least two steps">
+      <qti-simple-choice identifier="A">First minimum step</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second minimum step</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third minimum step</qti-simple-choice>
+    </qti-order-interaction>
+    <qti-order-interaction response-identifier="MAX_RESPONSE" class="qti-choices-top qti-labels-decimal qti-labels-suffix-parenthesis" min-choices="0" max-choices="2" data-max-selections-message="Place no more than two steps">
+      <qti-simple-choice identifier="A">First maximum step</qti-simple-choice>
+      <qti-simple-choice identifier="B">Second maximum step</qti-simple-choice>
+      <qti-simple-choice identifier="C">Third maximum step</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

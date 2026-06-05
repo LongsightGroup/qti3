@@ -74,7 +74,16 @@ export type SharedVocabularyAssertion =
       relation: "less-than" | "greater-than";
     }
   | { type: "set-attribute"; selector: string; name: string; value: string }
-  | { type: "text"; selector: string; value: string };
+  | { type: "text"; selector: string; value: string }
+  | {
+      /** Triggers scoreAttempt() on the player; run only after the response is in an invalid state. */
+      type: "validation-message";
+      responseIdentifier: string;
+      controlSelector: string;
+      message: string;
+      /** Defaults to true. Set false when the control should no longer be invalid. */
+      expectInvalid?: boolean;
+    };
 
 export interface SharedVocabularyManifestEntry {
   id: string;
