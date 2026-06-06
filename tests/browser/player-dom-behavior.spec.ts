@@ -313,6 +313,42 @@ test.describe("player DOM behavior", () => {
     await expect(player.locator('[data-interaction-type="inlineChoice"]').first()).toBeVisible();
   });
 
+  test("applies readable prose spacing inside nested item body content", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="nested-prose" title="nested-prose" time-dependent="false">
+  <qti-item-body>
+    <div class="qti-shared-stimulus">
+      <div class="qti-stimulus-body-element">
+        <p>Read the following passage and answer the questions.</p>
+        <section aria-labelledby="h_1">
+          <h2 id="h_1">Down the Rabbit-Hole</h2>
+          <p>Alice was beginning to get very tired of sitting by her sister on the bank.</p>
+          <p>There was nothing so <em>very</em> remarkable in that; nor did Alice think it so <em>very</em> much out of the way.</p>
+        </section>
+      </div>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const player = page.locator("qti-assessment-item-player");
+    const firstParagraph = player.locator(".qti3-item-body .qti-stimulus-body-element > p");
+    const heading = player.locator(".qti3-item-body h2");
+    const paragraphAfterHeading = player.locator(".qti3-item-body section p").first();
+
+    await expect(firstParagraph).toHaveCSS("margin-top", "0px");
+    await expect(firstParagraph).toHaveCSS("margin-bottom", "16px");
+    await expect(firstParagraph).toHaveCSS("font-size", "16px");
+    await expect(firstParagraph).toHaveCSS("line-height", "23.2px");
+    await expect(heading).toHaveCSS("margin-bottom", "16px");
+    await expect(paragraphAfterHeading).toHaveCSS("margin-bottom", "16px");
+    await expect(player.locator(".qti3-item-body section p").nth(1)).toContainText(
+      "There was nothing so very remarkable in that; nor did Alice think it so very much",
+    );
+  });
+
   test("renders block choice interactions as top-level sections", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "choice");

@@ -36,12 +36,30 @@ export const BASE_PLAYER_STYLES = `
 }
 
 .qti3-item-body {
-  display: grid;
-  gap: 1rem;
+  display: block;
 }
 
 .qti3-item-body > * {
-  margin-block: 0;
+  margin-block: 0 1rem;
+}
+
+.qti3-item-body > :last-child,
+.qti3-item-body :where(div, section, article) > :last-child {
+  margin-block-end: 0;
+}
+
+.qti3-item-body :where(p, ul, ol, dl, blockquote, figure, table, pre) {
+  margin-block-start: 0;
+  margin-block-end: 1rem;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.qti3-item-body :where(h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+  margin-block-end: 1rem;
+  line-height: 1.2;
+  text-wrap: balance;
 }
 
 .qti3-player .qti-hidden {

@@ -3,6 +3,7 @@ import type { QtiContentNode, QtiValue } from "@longsightgroup/qti3-core";
 const htmlContentElements = new Set([
   "a",
   "abbr",
+  "article",
   "b",
   "bdi",
   "bdo",
@@ -41,6 +42,7 @@ const htmlContentElements = new Set([
   "rtc",
   "ruby",
   "samp",
+  "section",
   "small",
   "span",
   "strong",
