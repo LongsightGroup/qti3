@@ -62,7 +62,7 @@ describe("validatePlayerMessageCatalog", () => {
       strings: {
         "hotspotSelectionSummary.one": "Valt {selection}",
         "hotspotSelectionSummary.other": "Valda {selection}",
-        extendedTextCounter: "{characters} tecken, {words} ord",
+        extendedTextCounter: "{count} av {expectedLength}",
       },
     };
     const german: PlayerMessageCatalog = {

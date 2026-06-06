@@ -1,5 +1,6 @@
 import {
-  extendedTextCounterPositionFromAttributes,
+  extendedTextCounterStateFromAttributes,
+  extendedTextCounterValues,
   extendedTextHeightLinesFromAttributes,
   type QtiInteraction,
   type QtiValue,
@@ -108,19 +109,22 @@ export function renderTextResponse(
     // qti-input-width-* applies to text-entry controls; extended text keeps textarea sizing.
     applyTextEntryWidthWithPrecedence(interaction, control, expectedLength);
   }
-  const counter = mode === "extended" ? document.createElement("p") : undefined;
+  const counterState =
+    mode === "extended"
+      ? extendedTextCounterStateFromAttributes(interaction.attributes)
+      : undefined;
+  const counter = counterState ? document.createElement("p") : undefined;
   if (counter) {
     counter.className = "qti3-counter";
     counter.setAttribute("aria-live", "polite");
   }
   const sync = (emitResponse = true) => {
     const value = control.value;
-    if (counter) {
-      const words = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
-      counter.textContent = messages.message("extendedTextCounter", {
-        characters: value.length,
-        words,
-      });
+    if (counter && counterState) {
+      counter.textContent = messages.message(
+        "extendedTextCounter",
+        extendedTextCounterValues(counterState.position, value.length, counterState.expectedLength),
+      );
     }
     if (emitResponse) update(value);
   };
@@ -131,7 +135,7 @@ export function renderTextResponse(
     control,
     patternMaskMessage,
     counter,
-    counterPosition: extendedTextCounterPositionFromAttributes(interaction.attributes),
+    counterPosition: counterState?.position,
   });
   return group;
 }

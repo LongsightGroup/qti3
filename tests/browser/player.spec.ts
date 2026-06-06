@@ -1618,15 +1618,55 @@ test.describe("manual harness", () => {
     await expectResponse(page, []);
   });
 
-  test("shows extended text word and character feedback", async ({ page }) => {
+  test("does not show an extended text counter unless authored", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "extendedText");
 
     await page.locator("qti-assessment-item-player textarea").fill("A concise answer");
     await expectResponse(page, "A concise answer");
-    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText(
-      "16 characters, 3 words",
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveCount(0);
+  });
+
+  test("does not show an extended text counter without expected-length", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-counter-missing-length" title="extended-text-counter-missing-length" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-counter-up"/>
+  </qti-item-body>
+</qti-assessment-item>`,
     );
+
+    await page.locator("qti-assessment-item-player textarea").fill("A concise answer");
+    await expectResponse(page, "A concise answer");
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveCount(0);
+  });
+
+  test("shows authored extended text character counters", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-counter" title="extended-text-counter" time-dependent="false">
+  <qti-response-declaration identifier="UP" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="DOWN" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="UP" class="qti-counter-up" expected-length="20"/>
+    <qti-extended-text-interaction response-identifier="DOWN" class="qti-counter-down" expected-length="20"/>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const textareas = page.locator("qti-assessment-item-player textarea");
+    await textareas.nth(0).fill("A concise answer");
+    await textareas.nth(1).fill("A concise answer");
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toContainText([
+      "16 / 20",
+      "4 / 20",
+    ]);
   });
 
   test("creates match pairs", async ({ page }) => {

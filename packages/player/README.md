@@ -81,7 +81,7 @@ Example entries:
     "remove": "Ta bort",
     "removePair": "Ta bort {label}",
     "associationPairLabel": "{source} med {target}",
-    "extendedTextCounter": "{characters} tecken, {words} ord",
+    "extendedTextCounter": "{count} av {expectedLength}",
     "associationsMade.one": "{count} koppling skapad.",
     "associationsMade.other": "{count} kopplingar skapade."
   },
@@ -94,8 +94,7 @@ Example entries:
 
 Templates use `{placeholder}` names. For English-style singular/plural, use
 `messageKey.one` and `messageKey.other` (for example `associationsMade.one`). Languages
-that do not inflect by count can use a single key (for example one `extendedTextCounter`
-string for all counts).
+that do not inflect by count can use a single key for plural message ids.
 
 Validate locale files in CI with `validatePlayerMessageCatalog()` — pass `JSON.parse` output
 directly (`unknown`). Shape errors (non-object root, missing `strings`, numeric templates, bad
@@ -129,15 +128,14 @@ Reference exports:
 
 Resolver kinds in the manifest (hosts only edit `strings`; behavior is fixed):
 
-| Resolver              | Meaning                                              |
-| --------------------- | ---------------------------------------------------- |
-| `plain`               | Static string                                        |
-| `template`            | `{placeholder}` interpolation from params            |
-| `plural`              | Uses `key.one` / `key.other` when `count` is present |
-| `typeLabel`           | Interaction type short name from `interactionTypes`  |
-| `typeTemplate`        | Template with `{typeName}` derived from `type`       |
-| `directionTemplate`   | Template with localized `{direction}`                |
-| `extendedTextCounter` | `{characters}`, `{words}`, and unit plural helpers   |
+| Resolver            | Meaning                                              |
+| ------------------- | ---------------------------------------------------- |
+| `plain`             | Static string                                        |
+| `template`          | `{placeholder}` interpolation from params            |
+| `plural`            | Uses `key.one` / `key.other` when `count` is present |
+| `typeLabel`         | Interaction type short name from `interactionTypes`  |
+| `typeTemplate`      | Template with `{typeName}` derived from `type`       |
+| `directionTemplate` | Template with localized `{direction}`                |
 
 ### Runtime API
 

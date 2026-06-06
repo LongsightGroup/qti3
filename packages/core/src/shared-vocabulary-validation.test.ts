@@ -32,6 +32,7 @@ describe("shared vocabulary validation", () => {
     const diagnostics = validateSharedVocabularyExtendedText({
       classNames: ["qti-counter-up", "qti-counter-down", "qti-counter-left"],
       subjectQtiName: "qti-extended-text-interaction",
+      expectedLength: "200",
     });
 
     expect(diagnostics).toEqual(
@@ -50,12 +51,27 @@ describe("shared vocabulary validation", () => {
     );
   });
 
+  it("diagnoses extended text counters without expected-length", () => {
+    const diagnostics = validateSharedVocabularyExtendedText({
+      classNames: ["qti-counter-up"],
+      subjectQtiName: "qti-extended-text-interaction",
+    });
+
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "interaction.sharedVocabulary.extendedTextCounterExpectedLength",
+        severity: "warning",
+        message: expect.stringContaining("expected-length"),
+      }),
+    );
+  });
+
   it("diagnoses extended text counter conflict when parsing items", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-counter-conflict" title="extended-text-counter-conflict" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-item-body>
-          <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-counter-up qti-counter-down"/>
+          <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-counter-up qti-counter-down" expected-length="200"/>
         </qti-item-body>
       </qti-assessment-item>
     `);

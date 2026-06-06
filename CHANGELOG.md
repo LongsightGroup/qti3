@@ -8,6 +8,12 @@
   authored pattern-mask messages, input masking, authoring diagnostics, shared-vocabulary fixtures,
   and browser coverage.
 
+### Changed
+
+- Align extended-text shared-vocabulary counters with QTI 3: counters are opt-in via
+  `qti-counter-up` / `qti-counter-down`, use `expected-length`, and display character counts rather
+  than word counts.
+
 ## 0.7.1 - 2026-06-05
 
 ### Changed

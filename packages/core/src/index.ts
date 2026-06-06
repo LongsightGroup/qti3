@@ -82,6 +82,10 @@ export {
 export {
   extendedTextCounterPosition,
   extendedTextCounterPositionFromAttributes,
+  extendedTextCounterState,
+  extendedTextCounterStateFromAttributes,
+  extendedTextCounterValues,
+  extendedTextExpectedLengthFromAttributes,
   extendedTextHeightLines,
   extendedTextHeightLinesFromAttributes,
   firstMatchingSharedVocabularyClass,
@@ -108,6 +112,7 @@ export {
   supportedGapInputWidthClassNames,
   supportedInputWidthClassNames,
   unsupportedMediaPlayerControlsTokens,
+  type ExtendedTextCounterState,
   type SharedVocabularyExtendedTextCounterPosition,
   type SharedVocabularyMediaPlayerControls,
 } from "./shared-vocabulary.js";

@@ -1726,6 +1726,7 @@ function validateInteractionSharedVocabulary(
       ...validateSharedVocabularyExtendedText({
         classNames,
         subjectQtiName: interaction.qtiName,
+        expectedLength: interaction.attributes["expected-length"],
         path: interaction.source?.path,
         source: interaction.source,
       }),

@@ -44,12 +44,7 @@ export interface PlayerMessageCatalogValidationResult {
 const MANIFEST_KEYS = new Set(PLAYER_MESSAGE_MANIFEST.map((entry) => entry.key));
 const MANIFEST_BY_KEY = new Map(PLAYER_MESSAGE_MANIFEST.map((entry) => [entry.key, entry]));
 
-const AUXILIARY_STRING_KEYS = new Set([
-  "characterUnit.one",
-  "characterUnit.other",
-  "wordUnit.one",
-  "wordUnit.other",
-]);
+const AUXILIARY_STRING_KEYS = new Set<string>();
 
 const VALID_DIRECTION_KEYS = new Set<QtiPlayerMovementDirection>(["up", "down", "left", "right"]);
 
@@ -97,8 +92,6 @@ export function allowedCatalogPlaceholders(entry: PlayerMessageManifestEntry): r
       return entry.params ?? [];
     case "typeTemplate":
       return [...(entry.params?.filter((name) => name !== "type") ?? []), "typeName"];
-    case "extendedTextCounter":
-      return ["characters", "words", "characterUnit", "wordUnit"];
     default:
       return [];
   }
@@ -107,8 +100,7 @@ export function allowedCatalogPlaceholders(entry: PlayerMessageManifestEntry): r
 /**
  * Placeholders a host template must include for a catalog string key.
  * Uses the English default for that key when present; otherwise no placeholders are required.
- * Manifest `params` bound required fields for resolvers that inject extra values at runtime
- * (e.g. `extendedTextCounter` supplies `{characterUnit}` / `{wordUnit}` even when omitted).
+ * Manifest `params` bound required fields for resolvers that inject extra values at runtime.
  */
 export function requiredCatalogPlaceholders(
   catalogKey: string,
@@ -124,10 +116,6 @@ export function requiredCatalogPlaceholders(
   const fromDefault = defaultTemplate
     ? extractMessagePlaceholders(defaultTemplate).filter((name) => allowed.has(name))
     : [];
-
-  if (manifestEntry.resolver === "extendedTextCounter") {
-    return (manifestEntry.params ?? []).filter((name) => allowed.has(name));
-  }
 
   if (fromDefault.length > 0) {
     return fromDefault;

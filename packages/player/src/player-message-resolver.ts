@@ -17,7 +17,7 @@ type ManifestEntry = (typeof PLAYER_MESSAGE_MANIFEST)[number];
 
 const MANIFEST_BY_KEY = new Map(PLAYER_MESSAGE_MANIFEST.map((entry) => [entry.key, entry]));
 
-type NumericParamName = "count" | "characters" | "words" | "index" | "position" | "total";
+type NumericParamName = "count" | "expectedLength" | "index" | "position" | "total";
 
 type ParamValue<Name extends string> = Name extends NumericParamName
   ? number
@@ -98,19 +98,6 @@ function catalogString(
   return formatPlayerMessage(template, values);
 }
 
-function resolveUnit(
-  strings: Record<string, string>,
-  prefix: "character" | "word",
-  count: number,
-): string {
-  const one = strings[`${prefix}Unit.one`];
-  const other = strings[`${prefix}Unit.other`];
-  if (one && other) {
-    return count === 1 ? one : other;
-  }
-  return prefix;
-}
-
 type ResolverContext = {
   strings: Record<string, string>;
   typeName: (type: string) => string;
@@ -146,20 +133,6 @@ function resolveManifestEntry(
         ...params,
         direction: directionLabel(params.direction as QtiPlayerMovementDirection),
       });
-    case "extendedTextCounter": {
-      const characters = Number(params.characters);
-      const words = Number(params.words);
-      const template =
-        resolveCatalogTemplate(strings, key) ??
-        defaultPlayerMessageCatalog.strings.extendedTextCounter ??
-        key;
-      return formatPlayerMessage(template, {
-        characters,
-        words,
-        characterUnit: resolveUnit(strings, "character", characters),
-        wordUnit: resolveUnit(strings, "word", words),
-      });
-    }
     default:
       return key;
   }

@@ -8,8 +8,7 @@ export type PlayerMessageResolverKind =
   | "plural"
   | "typeLabel"
   | "typeTemplate"
-  | "directionTemplate"
-  | "extendedTextCounter";
+  | "directionTemplate";
 
 export interface PlayerMessageManifestEntry {
   readonly key: string;
@@ -28,7 +27,7 @@ export const PLAYER_MESSAGE_MANIFEST = [
   { key: "movableObject", resolver: "plain" },
   { key: "placeObject", resolver: "plain" },
   { key: "inlineChoicePrompt", resolver: "plain" },
-  { key: "extendedTextCounter", resolver: "extendedTextCounter", params: ["characters", "words"] },
+  { key: "extendedTextCounter", resolver: "template", params: ["count", "expectedLength"] },
   { key: "hotspotSelectionSummary", resolver: "plural", params: ["selection", "count"] },
   { key: "noPointSelected", resolver: "plain" },
   { key: "noRegionSelected", resolver: "plain" },

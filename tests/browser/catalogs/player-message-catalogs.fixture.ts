@@ -5,7 +5,7 @@ export const swedishPlayerMessageCatalog: PlayerMessageCatalog = {
   strings: {
     movableObject: "Flyttbart objekt",
     objectPositionedAt: "Objekt placerat vid {coordinates}",
-    extendedTextCounter: "{characters} tecken, {words} ord",
+    extendedTextCounter: "{count} av {expectedLength}",
     associationPairLabel: "{source} med {target}",
     "hotspotSelectionSummary.one": "Valt {selection}",
     "hotspotSelectionSummary.other": "Valda {selection}",

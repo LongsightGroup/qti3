@@ -3,6 +3,7 @@ import {
   assignMatch,
   expectResponse,
   loadFixture,
+  pasteXml,
   setPlayerMessageCatalog,
 } from "./player-helpers.js";
 import {
@@ -14,12 +15,19 @@ test.describe("player chrome locale", () => {
   test("localizes extended text counter from host catalog", async ({ page }) => {
     await page.goto("/");
     await setPlayerMessageCatalog(page, swedishPlayerMessageCatalog);
-    await loadFixture(page, "extendedText");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-counter-locale" title="extended-text-counter-locale" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-item-body>
+    <qti-extended-text-interaction response-identifier="RESPONSE" class="qti-counter-up" expected-length="10"/>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
 
     await page.locator("qti-assessment-item-player textarea").fill("Hej");
-    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveText(
-      "3 tecken, 1 ord",
-    );
+    await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveText("3 av 10");
   });
 
   test("localizes match pair labels from host catalog", async ({ page }) => {

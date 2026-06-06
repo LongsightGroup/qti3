@@ -97,6 +97,7 @@ export function validateSharedVocabularyInputWidth(
 export interface SharedVocabularyExtendedTextValidationOptions {
   classNames: string[];
   subjectQtiName: string;
+  expectedLength?: string | undefined;
   path?: string | undefined;
   source?: QtiSourceLocation | undefined;
 }
@@ -122,7 +123,7 @@ export function validateSharedVocabularyExtendedTextHeightLines(
 export function validateSharedVocabularyExtendedTextCounter(
   options: SharedVocabularyExtendedTextValidationOptions,
 ): QtiDiagnostic[] {
-  const { classNames, subjectQtiName, path, source } = options;
+  const { classNames, subjectQtiName, expectedLength, path, source } = options;
   const diagnostics: QtiDiagnostic[] = [];
   const counterClasses = supportedExtendedTextCounterClassNames(classNames);
   if (new Set(counterClasses).size > 1) {
@@ -130,6 +131,16 @@ export function validateSharedVocabularyExtendedTextCounter(
       code: "interaction.sharedVocabulary.extendedTextCounterConflict",
       severity: "warning",
       message: `${subjectQtiName} should not include multiple qti-counter-* classes: ${[...new Set(counterClasses)].join(", ")}. The first class in class attribute order takes precedence at runtime.`,
+      path,
+      source,
+    });
+  }
+
+  if (counterClasses.length > 0 && !expectedLength) {
+    diagnostics.push({
+      code: "interaction.sharedVocabulary.extendedTextCounterExpectedLength",
+      severity: "warning",
+      message: `${subjectQtiName} uses ${[...new Set(counterClasses)].join(", ")} but does not define expected-length; qti-counter-* shared vocabulary depends on expected-length.`,
       path,
       source,
     });

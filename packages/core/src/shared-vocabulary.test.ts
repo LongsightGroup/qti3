@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   extendedTextCounterPosition,
   extendedTextCounterPositionFromAttributes,
+  extendedTextCounterState,
+  extendedTextCounterStateFromAttributes,
+  extendedTextCounterValues,
+  extendedTextExpectedLengthFromAttributes,
   extendedTextHeightLines,
   extendedTextHeightLinesFromAttributes,
   formatSupportedExtendedTextCounterClasses,
@@ -140,6 +144,48 @@ describe("shared vocabulary", () => {
     expect(isSupportedExtendedTextCounterClassName("qti-counter-up")).toBe(true);
     expect(isSupportedExtendedTextCounterClassName("qti-counter-x")).toBe(false);
     expect(formatSupportedExtendedTextCounterClasses()).toBe("qti-counter-up, qti-counter-down");
+  });
+
+  it("parses extended text expected-length for counter authorship", () => {
+    expect(extendedTextExpectedLengthFromAttributes({ "expected-length": "20" })).toBe(20);
+    expect(extendedTextExpectedLengthFromAttributes({ "expected-length": "0" })).toBe(0);
+    expect(extendedTextExpectedLengthFromAttributes({})).toBe(undefined);
+    expect(extendedTextExpectedLengthFromAttributes({ "expected-length": "-1" })).toBe(undefined);
+    expect(extendedTextExpectedLengthFromAttributes({ "expected-length": "nope" })).toBe(undefined);
+  });
+
+  it("requires both counter class and expected-length for counter state", () => {
+    expect(
+      extendedTextCounterStateFromAttributes({
+        class: "qti-counter-up",
+        "expected-length": "20",
+      }),
+    ).toEqual({ position: "up", expectedLength: 20 });
+    expect(
+      extendedTextCounterStateFromAttributes({
+        class: "qti-counter-down",
+      }),
+    ).toBe(undefined);
+    expect(
+      extendedTextCounterStateFromAttributes({
+        class: "qti-height-lines-6",
+        "expected-length": "20",
+      }),
+    ).toBe(undefined);
+    expect(
+      extendedTextCounterState(
+        extendedTextInteraction({
+          class: "qti-counter-down",
+          "expected-length": "10",
+        }),
+      ),
+    ).toEqual({ position: "down", expectedLength: 10 });
+  });
+
+  it("computes extended text counter values for up and down positions", () => {
+    expect(extendedTextCounterValues("up", 16, 20)).toEqual({ count: 16, expectedLength: 20 });
+    expect(extendedTextCounterValues("down", 16, 20)).toEqual({ count: 4, expectedLength: 20 });
+    expect(extendedTextCounterValues("down", 25, 20)).toEqual({ count: 0, expectedLength: 20 });
   });
 
   it("lists and validates media player control tokens", () => {

@@ -29,9 +29,6 @@ describe("PLAYER_MESSAGE_MANIFEST", () => {
         case "plural":
           satisfied = hasBase || hasPluralForms;
           break;
-        case "extendedTextCounter":
-          satisfied = hasBase;
-          break;
       }
       expect(satisfied, entry.key).toBe(true);
     }

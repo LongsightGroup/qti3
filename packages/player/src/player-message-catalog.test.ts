@@ -10,8 +10,8 @@ describe("createPlayerMessageResolver", () => {
     expect(fromCatalog.message("associationPairLabel", { source: "A", target: "B" })).toBe(
       defaultPlayerMessageResolver.message("associationPairLabel", { source: "A", target: "B" }),
     );
-    expect(fromCatalog.message("extendedTextCounter", { characters: 1, words: 2 })).toBe(
-      defaultPlayerMessageResolver.message("extendedTextCounter", { characters: 1, words: 2 }),
+    expect(fromCatalog.message("extendedTextCounter", { count: 1, expectedLength: 20 })).toBe(
+      defaultPlayerMessageResolver.message("extendedTextCounter", { count: 1, expectedLength: 20 }),
     );
     expect(fromCatalog.message("associationsMade", { count: 2 })).toBe(
       defaultPlayerMessageResolver.message("associationsMade", { count: 2 }),
@@ -30,13 +30,13 @@ describe("createPlayerMessageResolver", () => {
       strings: {
         remove: "Ta bort",
         graphicOrderNoRegionsSelected: "Inga regioner ordnade.",
-        extendedTextCounter: "{characters} tecken, {words} ord",
+        extendedTextCounter: "{count} av {expectedLength}",
       },
     });
     expect(messages.message("remove")).toBe("Ta bort");
     expect(messages.message("graphicOrderNoRegionsSelected")).toBe("Inga regioner ordnade.");
-    expect(messages.message("extendedTextCounter", { characters: 3, words: 1 })).toBe(
-      "3 tecken, 1 ord",
+    expect(messages.message("extendedTextCounter", { count: 3, expectedLength: 10 })).toBe(
+      "3 av 10",
     );
     expect(messages.message("noPointSelected")).toBe(
       defaultPlayerMessageResolver.message("noPointSelected"),

@@ -9,7 +9,7 @@
     <qti-extended-text-interaction response-identifier="LINES3" class="qti-height-lines-3"/>
     <qti-extended-text-interaction response-identifier="LINES6" class="qti-height-lines-6"/>
     <qti-extended-text-interaction response-identifier="LINES15" class="qti-height-lines-15"/>
-    <qti-extended-text-interaction response-identifier="COUNTER_UP" class="qti-counter-up"/>
-    <qti-extended-text-interaction response-identifier="COUNTER_DOWN" class="qti-counter-down"/>
+    <qti-extended-text-interaction response-identifier="COUNTER_UP" class="qti-counter-up" expected-length="200"/>
+    <qti-extended-text-interaction response-identifier="COUNTER_DOWN" class="qti-counter-down" expected-length="200"/>
   </qti-item-body>
 </qti-assessment-item>

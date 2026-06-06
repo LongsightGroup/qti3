@@ -106,6 +106,47 @@ export function extendedTextCounterPosition(
   return extendedTextCounterPositionFromAttributes(interaction.attributes);
 }
 
+export function extendedTextExpectedLengthFromAttributes(
+  attributes: Record<string, string>,
+): number | undefined {
+  const raw = attributes["expected-length"];
+  if (raw === undefined) return undefined;
+  const length = Number(raw);
+  if (!Number.isFinite(length) || length < 0) return undefined;
+  return length;
+}
+
+export interface ExtendedTextCounterState {
+  position: SharedVocabularyExtendedTextCounterPosition;
+  expectedLength: number;
+}
+
+/** Counter chrome is authored only when both qti-counter-* and a valid expected-length are present. */
+export function extendedTextCounterStateFromAttributes(
+  attributes: Record<string, string>,
+): ExtendedTextCounterState | undefined {
+  const position = extendedTextCounterPositionFromAttributes(attributes);
+  if (position === undefined) return undefined;
+  const expectedLength = extendedTextExpectedLengthFromAttributes(attributes);
+  if (expectedLength === undefined) return undefined;
+  return { position, expectedLength };
+}
+
+export function extendedTextCounterState(
+  interaction: QtiInteraction,
+): ExtendedTextCounterState | undefined {
+  return extendedTextCounterStateFromAttributes(interaction.attributes);
+}
+
+export function extendedTextCounterValues(
+  position: SharedVocabularyExtendedTextCounterPosition,
+  valueLength: number,
+  expectedLength: number,
+): { count: number; expectedLength: number } {
+  const count = position === "down" ? Math.max(0, expectedLength - valueLength) : valueLength;
+  return { count, expectedLength };
+}
+
 export function supportedInputWidthClassNames(classNames: string[]): string[] {
   return classNames.filter((className) => {
     const value = inputWidthClassPattern.exec(className)?.[1];
