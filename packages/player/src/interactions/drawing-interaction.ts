@@ -1,4 +1,5 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
+import { bindActivateOnEnterOrSpace } from "../dom/keyboard-activation.js";
 import { applyResponsiveGraphicSize, objectIsImage } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 
@@ -117,9 +118,7 @@ export function renderDrawingResponse(
   surface.addEventListener("pointercancel", () => {
     activeStroke = undefined;
   });
-  surface.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
+  bindActivateOnEnterOrSpace(surface, () => {
     const points = [
       { x: 10, y: 10 },
       { x: 90, y: 90 },

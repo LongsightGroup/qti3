@@ -73,6 +73,8 @@ test.describe("player graphic interactions", () => {
           /hotspot-flow-unlabeled\.svg$/,
         );
         await expectImageLoaded(surface.locator("img"));
+        const hotspot = surface.locator("button.qti3-hotspot-button").first();
+        await expect(hotspot, interactionType).toHaveCSS("border-top-width", "2px");
         continue;
       }
       if (interactionType === "graphicAssociate") {
@@ -111,11 +113,13 @@ test.describe("player graphic interactions", () => {
     );
     await expectImageLoaded(surface.locator("img"));
 
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await expect(surface.getByRole("button", { name: "Item XML" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    const itemXmlButton = surface.getByRole("button", { name: "Item XML" });
+    await expect(itemXmlButton).toHaveCSS("border-top-width", "2px");
+    await itemXmlButton.focus();
+    await expect(itemXmlButton).toHaveCSS("outline-width", "3px");
+    await itemXmlButton.click();
+    await expect(itemXmlButton).toHaveAttribute("aria-pressed", "true");
+    await expect(itemXmlButton).toHaveAttribute("data-selected", "true");
     await surface.getByRole("button", { name: "Response capture" }).click();
     await expectResponse(page, ["A B"]);
     await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(1);
@@ -859,7 +863,7 @@ test.describe("player graphic interactions", () => {
     expect(svg).not.toContain("assets/canvas.svg");
   });
 
-  test("renders object-backed hotspot choices as positioned buttons", async ({ page }) => {
+  test("renders object-backed hotspot choices as SVG shapes", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "hotspot");
 
@@ -867,8 +871,15 @@ test.describe("player graphic interactions", () => {
     await expect(surface).toBeVisible();
     await expect(surface.locator("img")).toHaveAttribute("src", "hotspot-flow.svg");
     await expectImageLoaded(surface.locator("img"));
+    await expect(surface.locator("button.qti3-hotspot-button")).toHaveCount(0);
+    await expect(surface.locator(".qti3-hotspot-overlay")).toHaveAttribute(
+      "viewBox",
+      "0 0 480 300",
+    );
+    await expect(surface.locator("rect.qti3-hotspot-button")).toHaveCount(3);
+
     const hotspot = surface.getByRole("button", { name: "A" });
-    await expect(hotspot).toHaveCSS("position", "absolute");
+    await expect(hotspot).toHaveAttribute("data-shape", "rect");
     const box = await surface.boundingBox();
     expect(box?.width).toBeGreaterThan(300);
     expect(box?.height).toBeGreaterThan(180);
@@ -878,6 +889,93 @@ test.describe("player graphic interactions", () => {
     await expect(hotspot).toHaveAttribute("data-selected", "true");
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toContainText(
       "Selected A",
+    );
+
+    await page.locator("#debug-score").click();
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.outcomes.SCORE).toBe(1);
+  });
+
+  test("reports invalid hotspot geometry instead of silently omitting choices", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-hotspot-geometry" title="invalid-hotspot-geometry" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <img src="${graySvgDataUrl(100, 100)}" alt="Invalid hotspot target." width="100" height="100"/>
+            <qti-hotspot-choice identifier="GOOD" shape="rect" coords="10,10,40,40">Good</qti-hotspot-choice>
+            <qti-hotspot-choice identifier="BAD" shape="rect" coords=""/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-hotspot-surface");
+    await expect(surface.locator("rect.qti3-hotspot-button")).toHaveCount(1);
+    await expect(
+      page.getByText('Hotspot choice "BAD" has invalid or unsupported geometry'),
+    ).toBeVisible();
+  });
+
+  test("matches hotspot hit areas to authored circle and polygon geometry", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mixed-hotspot-shapes" title="mixed-hotspot-shapes" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>P</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body>
+          <qti-hotspot-interaction response-identifier="RESPONSE">
+            <img src="${graySvgDataUrl(100, 100)}" alt="Mixed hotspot target." width="100" height="100"/>
+            <qti-hotspot-choice identifier="R" shape="rect" coords="10,10,40,40"/>
+            <qti-hotspot-choice identifier="C" shape="circle" coords="70,25,15"/>
+            <qti-hotspot-choice identifier="P" shape="poly" coords="10,80,50,50,90,80"/>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      </qti-assessment-item>
+    `,
+    );
+
+    const surface = page.locator("qti-assessment-item-player .qti3-hotspot-surface");
+    await expect(surface.locator("rect.qti3-hotspot-button")).toHaveCount(1);
+    await expect(surface.locator("circle.qti3-hotspot-button")).toHaveCount(1);
+    await expect(surface.locator("path.qti3-hotspot-button")).toHaveCount(1);
+    await expect(surface.locator("path[data-choice-identifier='P']")).toHaveAttribute(
+      "d",
+      "M 10 80 L 50 50 L 90 80 Z",
+    );
+
+    const box = await surface.boundingBox();
+    if (!box) throw new Error("Missing hotspot surface box.");
+    const clickAuthoredPoint = async (x: number, y: number) => {
+      await page.mouse.click(box.x + (x / 100) * box.width, box.y + (y / 100) * box.height);
+    };
+
+    await clickAuthoredPoint(15, 55);
+    await expectResponse(page, undefined);
+
+    await clickAuthoredPoint(70, 25);
+    await expectResponse(page, "C");
+
+    await clickAuthoredPoint(50, 70);
+    await expectResponse(page, "P");
+    await expect(surface.locator("path[data-choice-identifier='P']")).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
 
     await page.locator("#debug-score").click();

@@ -8,6 +8,7 @@ import {
   percent,
   responseGroup,
 } from "../interaction-support.js";
+import { handleKeyboardActivation } from "../dom/keyboard-activation.js";
 import { movementButton } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
@@ -147,10 +148,14 @@ export function renderPositionObjectResponse(
     else if (event.key === "ArrowRight") moveBy(step, 0, false);
     else if (event.key === "ArrowUp") moveBy(0, -step, false);
     else if (event.key === "ArrowDown") moveBy(0, step, false);
-    else if (event.key === "Enter" || event.key === " ") {
-      ensureKeyboardPoint();
-      syncMarker();
-      commit();
+    else if (
+      handleKeyboardActivation(event, () => {
+        ensureKeyboardPoint();
+        syncMarker();
+        commit();
+      })
+    ) {
+      return;
     } else return;
     event.preventDefault();
   };

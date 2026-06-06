@@ -1,12 +1,21 @@
 export const GRAPHIC_PLAYER_STYLES = `
-.qti3-hotspot-button[data-selected="true"] {
+.qti3-hotspot-overlay {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+button.qti3-hotspot-button[data-selected="true"] {
   background: Highlight !important;
   color: HighlightText !important;
   outline: 3px solid Highlight;
   outline-offset: 2px;
 }
 
-.qti3-hotspot-button {
+button.qti3-hotspot-button {
   position: absolute;
   inset-inline-start: var(--qti3-graphic-region-inline-start, 0);
   inset-block-start: var(--qti3-graphic-region-block-start, 0);
@@ -24,8 +33,34 @@ export const GRAPHIC_PLAYER_STYLES = `
   cursor: pointer;
 }
 
-.qti3-hotspot-button[data-shape="circle"] {
+button.qti3-hotspot-button[data-shape="circle"] {
   border-radius: 50%;
+}
+
+.qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button {
+  cursor: pointer;
+  fill: transparent;
+  stroke: CanvasText;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: all;
+  touch-action: manipulation;
+}
+
+.qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button[data-selected="true"] {
+  fill: color-mix(in srgb, Highlight 18%, transparent);
+  stroke: Highlight;
+  stroke-width: 4;
+}
+
+.qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button:focus {
+  outline: none;
+}
+
+.qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button:focus-visible {
+  stroke: Highlight;
+  stroke-dasharray: 6 3;
+  stroke-width: 4;
 }
 
 .qti3-graphic-associate-hotspot,
@@ -45,19 +80,23 @@ export const GRAPHIC_PLAYER_STYLES = `
   border-radius: 50%;
 }
 
-.qti3-hotspot.qti-selections-light .qti3-hotspot-button {
-  border-color: white;
-  color: white;
-  background: rgb(0 0 0 / 0.45);
+.qti3-hotspot.qti-selections-light
+  .qti3-hotspot-surface
+  .qti3-hotspot-overlay
+  .qti3-hotspot-button:not([data-selected="true"]) {
+  stroke: white;
 }
 
-.qti3-hotspot.qti-selections-dark .qti3-hotspot-button {
-  border-color: black;
-  color: black;
-  background: rgb(255 255 255 / 0.65);
+.qti3-hotspot.qti-selections-dark
+  .qti3-hotspot-surface
+  .qti3-hotspot-overlay
+  .qti3-hotspot-button:not([data-selected="true"]) {
+  stroke: black;
 }
 
 .qti3-hotspot.qti-unselected-hidden
+  .qti3-hotspot-surface
+  .qti3-hotspot-overlay
   .qti3-hotspot-button:not([data-selected="true"]):not(:focus):not(:focus-visible) {
   opacity: 0;
 }
@@ -81,14 +120,29 @@ export const GRAPHIC_PLAYER_STYLES = `
 }
 
 @supports not (background: color-mix(in srgb, Canvas 65%, transparent)) {
-  .qti3-hotspot-button {
+  button.qti3-hotspot-button {
     background: Canvas;
   }
 }
 
+@supports not (fill: color-mix(in srgb, Highlight 18%, transparent)) {
+  .qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button[data-selected="true"] {
+    fill: transparent;
+  }
+}
+
 @media (forced-colors: active) {
-  .qti3-hotspot.qti-selections-light .qti3-hotspot-button,
-  .qti3-hotspot.qti-selections-dark .qti3-hotspot-button,
+  .qti3-hotspot.qti-selections-light
+    .qti3-hotspot-surface
+    .qti3-hotspot-overlay
+    .qti3-hotspot-button,
+  .qti3-hotspot.qti-selections-dark
+    .qti3-hotspot-surface
+    .qti3-hotspot-overlay
+    .qti3-hotspot-button {
+    stroke: CanvasText;
+  }
+
   .qti3-graphicGapMatch.qti-selections-light
     .qti3-graphic-gap-hotspot:not([data-selected="true"]),
   .qti3-graphicGapMatch.qti-selections-dark
@@ -96,6 +150,12 @@ export const GRAPHIC_PLAYER_STYLES = `
     border-color: CanvasText;
     color: CanvasText;
     background: Canvas;
+  }
+
+  .qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button[data-selected="true"],
+  .qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button:focus-visible {
+    stroke: Highlight;
+    fill: Canvas;
   }
 }
 

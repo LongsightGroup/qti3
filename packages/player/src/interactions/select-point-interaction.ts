@@ -7,6 +7,7 @@ import {
   objectWidth,
   responseGroup,
 } from "../interaction-support.js";
+import { handleKeyboardActivation } from "../dom/keyboard-activation.js";
 import { movementButton } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
@@ -149,9 +150,7 @@ export function renderSelectPointResponse(
     else if (event.key === "ArrowRight") point.x += step;
     else if (event.key === "ArrowUp") point.y -= step;
     else if (event.key === "ArrowDown") point.y += step;
-    else if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      commit();
+    else if (handleKeyboardActivation(event, () => commit())) {
       return;
     } else return;
 

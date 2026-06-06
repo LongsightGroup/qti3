@@ -110,11 +110,64 @@ function percent(value: number, total: number): number {
 
 export { percent };
 
-function hotspotCoords(choice: QtiChoice): number[] {
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+
+export type HotspotSvgShapeElement = SVGCircleElement | SVGRectElement | SVGPathElement;
+
+export function parseHotspotCoords(choice: QtiChoice): number[] {
   return (choice.attributes.coords ?? "")
     .split(",")
     .map((value) => Number(value.trim()))
     .filter((value) => Number.isFinite(value));
+}
+
+export function invalidHotspotGeometryMessage(choice: QtiChoice): HTMLElement {
+  const shape = choice.attributes.shape ?? "unknown";
+  return errorView(
+    `Hotspot choice "${choice.identifier}" has invalid or unsupported geometry (shape="${shape}").`,
+  );
+}
+
+export function createHotspotSvgElement(choice: QtiChoice): HotspotSvgShapeElement | undefined {
+  const coords = parseHotspotCoords(choice);
+  const shape = choice.attributes.shape;
+
+  if (shape === "circle" && coords.length >= 3) {
+    const [cx, cy, radius] = coords as [number, number, number];
+    const circle = document.createElementNS(SVG_NAMESPACE, "circle");
+    circle.setAttribute("cx", String(cx));
+    circle.setAttribute("cy", String(cy));
+    circle.setAttribute("r", String(radius));
+    return circle;
+  }
+
+  if (shape === "rect" && coords.length >= 4) {
+    const [left, top, right, bottom] = coords as [number, number, number, number];
+    const rect = document.createElementNS(SVG_NAMESPACE, "rect");
+    rect.setAttribute("x", String(left));
+    rect.setAttribute("y", String(top));
+    rect.setAttribute("width", String(Math.max(1, right - left)));
+    rect.setAttribute("height", String(Math.max(1, bottom - top)));
+    return rect;
+  }
+
+  if (shape === "poly" && coords.length >= 6) {
+    const path = document.createElementNS(SVG_NAMESPACE, "path");
+    path.setAttribute("d", hotspotPolygonPathData(coords));
+    return path;
+  }
+
+  return undefined;
+}
+
+function hotspotPolygonPathData(coords: number[]): string {
+  const [startX, startY] = coords as [number, number, ...number[]];
+  const commands = [`M ${startX} ${startY}`];
+  for (let index = 2; index < coords.length; index += 2) {
+    commands.push(`L ${coords[index]} ${coords[index + 1]}`);
+  }
+  commands.push("Z");
+  return commands.join(" ");
 }
 
 export function applyGraphicRegionPlacement(
@@ -176,7 +229,7 @@ export function placeHotspotButton(
   width: number,
   height: number,
 ): void {
-  const coords = hotspotCoords(choice);
+  const coords = parseHotspotCoords(choice);
   const shape = choice.attributes.shape;
 
   if (shape === "circle" && coords.length >= 3) {
@@ -231,7 +284,7 @@ export function hotspotCenter(
   width: number,
   height: number,
 ): { x: number; y: number } {
-  const coords = hotspotCoords(choice);
+  const coords = parseHotspotCoords(choice);
   const shape = choice.attributes.shape;
   if ((shape === "circle" || shape === "ellipse") && coords.length >= 2) {
     const [x, y] = coords as [number, number];
@@ -259,5 +312,14 @@ export function hotspotDisplayLabel(choice: QtiChoice, choices: QtiChoice[]): st
 export function hotspotAccessibleLabel(choice: QtiChoice, index: number): string {
   return (
     choice.attributes["aria-label"] || choice.attributes["hotspot-label"] || `Region ${index + 1}`
+  );
+}
+
+export function hotspotSelectionAccessibleLabel(choice: QtiChoice, index: number): string {
+  return (
+    choice.attributes["aria-label"] ||
+    choice.attributes["hotspot-label"] ||
+    choice.text ||
+    `Region ${index + 1}`
   );
 }
