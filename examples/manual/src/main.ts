@@ -122,7 +122,7 @@ let currentInteractionTypes: string[] = [];
 const fixtureIds: string[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
 const graphicGapImageChoiceExample = {
-  id: "graphicGapMatch-gap-img-example",
+  id: "graphic-gap-img-example",
   title: "Graphic gap match image draggers",
   xml: `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-img-example" title="Graphic gap match image draggers" time-dependent="false">
@@ -146,7 +146,7 @@ const graphicGapImageChoiceExample = {
 </qti-assessment-item>`,
 };
 const extendedTextPatternMaskExample = {
-  id: "extendedText-pattern-mask-example",
+  id: "extended-text-pattern-mask",
   title: "Extended text pattern mask",
   xml: `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-pattern-mask" title="Extended text pattern mask" time-dependent="false" xml:lang="en">

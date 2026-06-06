@@ -454,6 +454,25 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
     ],
   ),
   entry(
+    "text-entry-pattern-mask-inline",
+    "textEntry",
+    ["pattern-mask", "data-patternmask-message"],
+    "full",
+    [
+      {
+        type: "attribute",
+        selector: `${player} [data-response-identifier="RESPONSE"] input.qti3-inline-text-input`,
+        name: "placeholder",
+        value: "000",
+      },
+      {
+        type: "text",
+        selector: `${player} .qti3-inline-text-response .qti3-pattern-mask-message`,
+        value: "Maximum of 3 digits permitted",
+      },
+    ],
+  ),
+  entry(
     "extendedtext-height-counter-variants",
     "extendedText",
     [
@@ -517,6 +536,25 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
         type: "class-preserved",
         selector: `${extendedText}[data-response-identifier="COUNTER_DOWN"] .qti3-text-response > :last-child`,
         className: "qti3-counter",
+      },
+    ],
+  ),
+  entry(
+    "extended-text-pattern-mask",
+    "extendedText",
+    ["pattern-mask", "data-patternmask-message"],
+    "full",
+    [
+      {
+        type: "attribute",
+        selector: `${extendedText}[data-response-identifier="RESPONSE"] textarea`,
+        name: "placeholder",
+        value: "Enter a decimal number...",
+      },
+      {
+        type: "text",
+        selector: `${extendedText}[data-response-identifier="RESPONSE"] .qti3-pattern-mask-message`,
+        value: "Maximum of 6 digits or decimal points permitted",
       },
     ],
   ),

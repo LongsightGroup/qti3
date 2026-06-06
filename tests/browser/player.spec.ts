@@ -432,7 +432,7 @@ test.describe("manual harness", () => {
 
   test("loads the manual qti-gap-img graphic gap match example", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#fixture").selectOption("graphicGapMatch-gap-img-example");
+    await page.locator("#fixture").selectOption("graphic-gap-img-example");
     await page.locator("#load-fixture").click();
 
     const source = page

@@ -671,7 +671,7 @@ test.describe("player DOM behavior", () => {
 
   test("honors extended text placeholder and pattern mask attributes", async ({ page }) => {
     await page.goto("/");
-    await page.locator("#fixture").selectOption("extendedText-pattern-mask-example");
+    await page.locator("#fixture").selectOption("extended-text-pattern-mask");
     await page.locator("#load-fixture").click();
 
     const textarea = page.locator("qti-assessment-item-player textarea");
