@@ -276,7 +276,8 @@ function classFamily(entry: SharedVocabularyManifestEntry): string {
     if (
       className.startsWith("qti-layout-") ||
       className.startsWith("qti-orientation-") ||
-      className.startsWith("qti-choices-stacking-")
+      className.startsWith("qti-choices-stacking-") ||
+      className.startsWith("qti-writing-orientation-")
     ) {
       return "layout";
     }

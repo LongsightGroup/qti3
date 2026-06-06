@@ -73,6 +73,7 @@ export function renderEmbeddedInteractionSection(
 
   const wrapper = document.createElement("span");
   wrapper.className = `qti3-interaction qti3-${interaction.type} qti3-embedded-interaction`;
+  wrapper.classList.add(...qtiSharedClassNames(interaction.attributes.class));
   wrapper.dataset.interactionType = interaction.type;
   if (interaction.responseIdentifier)
     wrapper.dataset.responseIdentifier = interaction.responseIdentifier;

@@ -226,7 +226,7 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
   ...SHARED_VOCABULARY_CHOICE_WRITING_ORIENTATIONS.map((orientation) =>
     interactionStylesheetEntry(
       `qti-writing-orientation-${orientation}`,
-      ["choice"],
+      ["choice", "inlineChoice"],
       [...browserBehaviorTests],
     ),
   ),

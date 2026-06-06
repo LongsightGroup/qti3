@@ -43,6 +43,16 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
   display: block;
 }
 
+.qti3-inlineChoice.qti-writing-orientation-vertical-rl .qti3-inline-select,
+.qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-select {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-select {
+  writing-mode: vertical-lr;
+}
+
 .qti3-slider-response {
   grid-template-columns: minmax(8rem, 1fr) auto;
   align-items: center;

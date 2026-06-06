@@ -237,7 +237,7 @@ export const sharedVocabularyMatrixCoverageFamilies: SharedVocabularyMatrixCover
     levels: ["stylesheet"],
     coveredBy: ["qti-writing-orientation-vertical-rl"],
     rationale:
-      "Choice writing-orientation classes share the vertical choice layout path; vertical-rl covers the orientation rule and upright labels.",
+      "Choice and inline-choice writing-orientation classes share vertical rendering paths; vertical-rl covers the representative orientation rule.",
     matches: (className) => choiceWritingOrientationPattern.test(className),
   },
 ];

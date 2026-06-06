@@ -16,9 +16,10 @@ describe("isKeyboardActivationKey", () => {
 describe("handleKeyboardActivation", () => {
   it("runs the callback and prevents default for activation keys", () => {
     let activated = false;
+    const preventDefault = vi.fn();
     const event = {
       key: "Enter",
-      preventDefault: vi.fn(),
+      preventDefault,
     } as unknown as KeyboardEvent;
 
     expect(
@@ -28,14 +29,15 @@ describe("handleKeyboardActivation", () => {
     ).toBe(true);
 
     expect(activated).toBe(true);
-    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(preventDefault).toHaveBeenCalledOnce();
   });
 
   it("ignores non-activation keys", () => {
     let activated = false;
+    const preventDefault = vi.fn();
     const event = {
       key: "ArrowDown",
-      preventDefault: vi.fn(),
+      preventDefault,
     } as unknown as KeyboardEvent;
 
     expect(
@@ -45,6 +47,6 @@ describe("handleKeyboardActivation", () => {
     ).toBe(false);
 
     expect(activated).toBe(false);
-    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(preventDefault).not.toHaveBeenCalled();
   });
 });
