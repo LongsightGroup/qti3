@@ -2,9 +2,11 @@ import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-c
 import {
   applyGraphicSurfaceLayout,
   appendGraphicObjectImage,
+  hotspotRectBounds,
   missingChoicesMessage,
   objectHeight,
   objectWidth,
+  parseHotspotCoords,
   placeHotspotButton,
   percent,
   responseGroup,
@@ -50,15 +52,30 @@ function graphicGapLabelBlockSize(sources: QtiChoice[]): number {
   return Number(Math.max(textBlockSize, imageBlockSize).toFixed(2));
 }
 
-function choiceCoords(choice: QtiChoice): number[] {
-  return (choice.attributes.coords ?? "")
-    .split(",")
-    .map((value) => Number(value.trim()))
-    .filter((value) => Number.isFinite(value));
+function isGraphicGapImageChoice(choice: QtiChoice): boolean {
+  return Boolean(choice.asset?.data);
 }
 
-function placeGraphicGapLabel(label: HTMLElement, gap: QtiChoice, width: number, height: number) {
-  const coords = choiceCoords(gap);
+function graphicGapImageFitsRectHotspot(assigned: QtiChoice, gap: QtiChoice): boolean {
+  const bounds = hotspotRectBounds(gap);
+  if (!bounds || !isGraphicGapImageChoice(assigned)) return false;
+  const imageWidth = positivePixelValue(assigned.asset?.width);
+  const imageHeight = positivePixelValue(assigned.asset?.height);
+  return (
+    imageWidth !== undefined &&
+    imageHeight !== undefined &&
+    imageWidth <= bounds.inlineSize &&
+    imageHeight <= bounds.blockSize
+  );
+}
+
+function placeGraphicGapLabelBelow(
+  label: HTMLElement,
+  gap: QtiChoice,
+  width: number,
+  height: number,
+) {
+  const coords = parseHotspotCoords(gap);
   const shape = gap.attributes.shape;
   let x = width / 2;
   let y = height;
@@ -80,6 +97,60 @@ function placeGraphicGapLabel(label: HTMLElement, gap: QtiChoice, width: number,
 
   label.style.setProperty("--qti3-graphic-gap-label-inline-start", `${percent(x, width)}%`);
   label.style.setProperty("--qti3-graphic-gap-label-block-start", `${percent(y, height)}%`);
+  label.style.removeProperty("--qti3-graphic-gap-label-inline-size");
+  label.style.removeProperty("--qti3-graphic-gap-label-block-size");
+}
+
+function placeGraphicGapAssignedLabel(
+  label: HTMLElement,
+  assigned: QtiChoice,
+  gap: QtiChoice,
+  width: number,
+  height: number,
+) {
+  const inSlot = graphicGapImageFitsRectHotspot(assigned, gap);
+  label.classList.toggle("qti3-graphic-gap-label-in-slot", inSlot);
+  if (inSlot) {
+    const bounds = hotspotRectBounds(gap);
+    if (!bounds) return;
+    label.style.setProperty(
+      "--qti3-graphic-gap-label-inline-start",
+      `${percent(bounds.left, width)}%`,
+    );
+    label.style.setProperty(
+      "--qti3-graphic-gap-label-block-start",
+      `${percent(bounds.top, height)}%`,
+    );
+    label.style.setProperty(
+      "--qti3-graphic-gap-label-inline-size",
+      `${percent(bounds.inlineSize, width)}%`,
+    );
+    label.style.setProperty(
+      "--qti3-graphic-gap-label-block-size",
+      `${percent(bounds.blockSize, height)}%`,
+    );
+    return;
+  }
+  placeGraphicGapLabelBelow(label, gap, width, height);
+}
+
+type GraphicGapDragPayload = {
+  sourceId: string;
+  originGapId?: string;
+};
+
+function startGraphicGapDrag(
+  event: DragEvent,
+  payload: GraphicGapDragPayload,
+  dragImage: HTMLElement,
+  onBegin: (sourceId: string, originGapId?: string) => void,
+): void {
+  onBegin(payload.sourceId, payload.originGapId);
+  event.dataTransfer?.setData("text/plain", payload.sourceId);
+  if (payload.originGapId !== undefined) {
+    event.dataTransfer?.setData("application/x-qti3-origin-gap", payload.originGapId);
+  }
+  event.dataTransfer?.setDragImage(dragImage, 8, 8);
 }
 
 export function renderGapMatchResponse(
@@ -336,6 +407,10 @@ function renderGraphicGapMatchResponse(
     draggedOriginGap = undefined;
     syncSources();
   };
+  const beginDrag = (sourceId: string, originGapId?: string) => {
+    draggedSource = sourceId;
+    draggedOriginGap = originGapId;
+  };
   const clearSourceIfSingleUse = (source: QtiChoice, keepGapIdentifier: string) => {
     if (parseUnlimitedMaximum(source.attributes["match-max"]) !== 1) return;
     for (const [gapIdentifier, assigned] of assignments.entries()) {
@@ -403,6 +478,18 @@ function renderGraphicGapMatchResponse(
         ? messages.message("gapAssignedState", { label, assigned: assigned.text })
         : messages.message("gapEmptyState", { label }),
     );
+    if (assigned) {
+      button.draggable = true;
+      button.addEventListener("dragstart", (event) => {
+        startGraphicGapDrag(
+          event,
+          { sourceId: assigned.identifier, originGapId: gap.identifier },
+          button,
+          beginDrag,
+        );
+      });
+      button.addEventListener("dragend", resetDrag);
+    }
     button.addEventListener("dragover", (event) => {
       event.preventDefault();
       button.classList.add("qti3-drop-target");
@@ -440,14 +527,15 @@ function renderGraphicGapMatchResponse(
     assignedLabel.draggable = true;
     assignedLabel.setAttribute("aria-hidden", "true");
     assignedLabel.addEventListener("dragstart", (event) => {
-      draggedSource = assigned.identifier;
-      draggedOriginGap = gap.identifier;
-      event.dataTransfer?.setData("text/plain", assigned.identifier);
-      event.dataTransfer?.setData("application/x-qti3-origin-gap", gap.identifier);
-      event.dataTransfer?.setDragImage(assignedLabel, 8, 8);
+      startGraphicGapDrag(
+        event,
+        { sourceId: assigned.identifier, originGapId: gap.identifier },
+        assignedLabel,
+        beginDrag,
+      );
     });
     assignedLabel.addEventListener("dragend", resetDrag);
-    placeGraphicGapLabel(assignedLabel, gap, width, height);
+    placeGraphicGapAssignedLabel(assignedLabel, assigned, gap, width, height);
     appendChoiceVisual(assignedLabel, assigned);
     return assignedLabel;
   };
@@ -476,9 +564,7 @@ function renderGraphicGapMatchResponse(
     const button = tokenButton(source);
     button.draggable = true;
     button.addEventListener("dragstart", (event) => {
-      draggedSource = source.identifier;
-      event.dataTransfer?.setData("text/plain", source.identifier);
-      event.dataTransfer?.setDragImage(button, 8, 8);
+      startGraphicGapDrag(event, { sourceId: source.identifier }, button, beginDrag);
     });
     button.addEventListener("dragend", resetDrag);
     button.addEventListener("click", () => {

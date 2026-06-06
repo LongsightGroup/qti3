@@ -327,6 +327,28 @@ button.qti3-hotspot-button[data-shape="circle"] {
   white-space: normal;
 }
 
+.qti3-graphic-gap-label.qti3-graphic-gap-label-in-slot {
+  inset-block-start: var(--qti3-graphic-gap-label-block-start, 0);
+  inset-inline-start: var(--qti3-graphic-gap-label-inline-start, 0);
+  inline-size: var(--qti3-graphic-gap-label-inline-size, auto);
+  block-size: var(--qti3-graphic-gap-label-block-size, auto);
+  max-inline-size: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  transform: none;
+}
+
+.qti3-graphic-gap-label-in-slot .qti3-gap-choice-image {
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  object-fit: contain;
+}
+
 @supports not (background: color-mix(in srgb, Highlight 18%, Canvas)) {
   .qti3-graphic-gap-hotspot[data-selected="true"] {
     background: Canvas;

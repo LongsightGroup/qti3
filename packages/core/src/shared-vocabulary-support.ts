@@ -39,7 +39,10 @@ const browserBehaviorTests = [
   "tests/browser/player-dom-behavior.spec.ts",
   ...sharedVocabularyMatrixTests,
 ];
-const graphicBrowserTests = ["tests/browser/player-graphic.spec.ts"];
+const graphicBrowserTests = [
+  "tests/browser/player-graphic.spec.ts",
+  "tests/browser/player-graphic-gap-match.spec.ts",
+];
 const mediaBrowserTests = ["tests/browser/player.spec.ts", ...sharedVocabularyMatrixTests];
 const mediaPlayerFixture =
   "packages/fixtures/packages/sv-matrix/items/media-controls-and-pause.xml";

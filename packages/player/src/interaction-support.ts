@@ -121,6 +121,24 @@ export function parseHotspotCoords(choice: QtiChoice): number[] {
     .filter((value) => Number.isFinite(value));
 }
 
+export type HotspotRectBounds = {
+  left: number;
+  top: number;
+  inlineSize: number;
+  blockSize: number;
+};
+
+export function hotspotRectBounds(choice: QtiChoice): HotspotRectBounds | undefined {
+  if (choice.attributes.shape !== "rect") return undefined;
+  const coords = parseHotspotCoords(choice);
+  if (coords.length < 4) return undefined;
+  const [left, top, right, bottom] = coords as [number, number, number, number];
+  const inlineSize = right - left;
+  const blockSize = bottom - top;
+  if (inlineSize <= 0 || blockSize <= 0) return undefined;
+  return { left, top, inlineSize, blockSize };
+}
+
 export function invalidHotspotGeometryMessage(choice: QtiChoice): HTMLElement {
   const shape = choice.attributes.shape ?? "unknown";
   return errorView(
@@ -240,6 +258,18 @@ export function placeHotspotButton(
       inlineSize: `${percent(radius * 2, width)}%`,
       blockSize: `${percent(radius * 2, height)}%`,
       shape: "circle",
+    });
+    return;
+  }
+
+  const rectBounds = hotspotRectBounds(choice);
+  if (rectBounds) {
+    applyGraphicRegionPlacement(button, {
+      insetInlineStart: `${percent(rectBounds.left, width)}%`,
+      insetBlockStart: `${percent(rectBounds.top, height)}%`,
+      inlineSize: `${percent(rectBounds.inlineSize, width)}%`,
+      blockSize: `${percent(rectBounds.blockSize, height)}%`,
+      shape: "rect",
     });
     return;
   }
