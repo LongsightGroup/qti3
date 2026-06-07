@@ -130,7 +130,7 @@ const graphicGapImageChoiceExample = {
     <qti-correct-response><qti-value>DraggerA TargetA</qti-value><qti-value>DraggerB TargetB</qti-value></qti-correct-response>
   </qti-response-declaration>
   <qti-item-body>
-    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" max-associations="2">
       <qti-prompt>Place the image-backed draggers onto the matching highlighted targets.</qti-prompt>
       <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='160'%20viewBox='0%200%20300%20160'%3E%3Crect%20width='300'%20height='160'%20fill='%23f4f2ea'/%3E%3Crect%20x='36'%20y='44'%20width='92'%20height='64'%20rx='6'%20fill='%232f4858'/%3E%3Crect%20x='172'%20y='44'%20width='92'%20height='64'%20rx='6'%20fill='%238b5d33'/%3E%3Ctext%20x='82'%20y='82'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%20A%3C/text%3E%3Ctext%20x='218'%20y='82'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%20B%3C/text%3E%3C/svg%3E" alt="Diagram with two highlighted targets." type="image/svg+xml"/>
       <qti-gap-img identifier="DraggerA" match-max="1">

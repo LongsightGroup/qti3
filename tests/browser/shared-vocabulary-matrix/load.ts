@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { expect, type Page } from "@playwright/test";
-import { pasteXml } from "../player-helpers.js";
 import type { SharedVocabularyManifestEntry } from "./types.js";
 
 export async function loadSvMatrixItem(
@@ -19,8 +18,10 @@ export async function loadSvMatrixItem(
       `Missing shared vocabulary fixture for ${entry.id}: ${entry.fixturePath}. ${message}`,
     );
   });
-  await pasteXml(page, xml);
   const player = page.locator("qti-assessment-item-player");
   await expect(player).toBeVisible();
+  await player.evaluate(async (element, itemXml) => {
+    await (element as HTMLElement & { loadXml(xml: string): Promise<void> }).loadXml(itemXml);
+  }, xml);
   await expect(player.locator(".qti3-item-body, .qti3-interaction").first()).toBeVisible();
 }
