@@ -1,11 +1,25 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { implicitMaximumResponses } from "./response-limit-defaults.js";
 
+/** Order and graphic order ignore max-choices unless min-choices is authored. */
+export function orderSubsetLimitsActive(interaction: QtiInteraction): boolean {
+  return (
+    (interaction.type === "order" || interaction.type === "graphicOrder") &&
+    interaction.attributes["min-choices"] !== undefined
+  );
+}
+
 export function maximumAllowedResponses(
   interaction: QtiInteraction | undefined,
 ): number | undefined {
   if (!interaction) return undefined;
   if (interaction.type === "media") return maximumMediaPlays(interaction);
+  if (
+    (interaction.type === "order" || interaction.type === "graphicOrder") &&
+    !orderSubsetLimitsActive(interaction)
+  ) {
+    return undefined;
+  }
   const explicit = responseLimitAttribute(interaction, "max-choices", "max-associations");
   if (explicit === undefined) return implicitMaximumResponses(interaction);
   const parsed = Number(explicit);

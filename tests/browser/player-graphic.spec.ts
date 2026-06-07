@@ -211,7 +211,7 @@ test.describe("player graphic interactions", () => {
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-order-authored-max" title="graphic-order-authored-max" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
   <qti-item-body>
-    <qti-graphic-order-interaction response-identifier="RESPONSE" max-choices="1" data-max-selections-message="Only one ordered region.">
+    <qti-graphic-order-interaction response-identifier="RESPONSE" min-choices="1" max-choices="1" data-max-selections-message="Only one ordered region.">
       <object data="${graySvgDataUrl(220, 120)}" alt="Two ordered regions." type="image/svg+xml" width="220" height="120"/>
       <qti-hotspot-choice identifier="A" shape="rect" coords="20,20,90,90"/>
       <qti-hotspot-choice identifier="B" shape="rect" coords="130,20,200,90"/>

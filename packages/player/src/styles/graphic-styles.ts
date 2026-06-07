@@ -54,7 +54,8 @@ button.qti3-hotspot-button[data-shape="circle"] {
 }
 
 .qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button:focus {
-  outline: none;
+  outline: 3px solid Highlight;
+  outline-offset: 2px;
 }
 
 .qti3-hotspot-surface .qti3-hotspot-overlay .qti3-hotspot-button:focus-visible {

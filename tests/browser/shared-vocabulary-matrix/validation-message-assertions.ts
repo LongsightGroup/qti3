@@ -31,13 +31,15 @@ export async function assertValidationMessageInRoot(
   if (!(playerElement instanceof QtiAssessmentItemPlayer)) {
     throw new Error("qti-assessment-item-player is not a QtiAssessmentItemPlayer");
   }
-  playerElement.scoreAttempt();
-  await settle();
 
   const messageElement = requiredHtmlElement(
     root,
     validationMessageSelector(expectation.responseIdentifier),
   );
+  if (messageElement.hidden || elementText(messageElement) !== expectation.message) {
+    playerElement.scoreAttempt();
+    await settle();
+  }
   if (messageElement.hidden) throw new Error("validation message is hidden");
   const text = elementText(messageElement);
   if (text !== expectation.message) throw new Error(`received "${text}"`);

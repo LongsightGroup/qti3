@@ -62,7 +62,7 @@ export function graphicGapSelectionAssertions(className: string): SharedVocabula
       type: "computed-style-differs",
       firstSelector: graphicGapHotspotT1,
       secondSelector: graphicGapHotspotT2,
-      property: "border-top-style",
+      property: "outline-style",
     },
   ];
 }

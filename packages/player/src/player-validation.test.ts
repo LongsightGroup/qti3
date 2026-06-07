@@ -146,6 +146,54 @@ describe("player-validation", () => {
     });
   });
 
+  it.each(["order", "graphicOrder"] as const)(
+    "ignores max-choices without min-choices for %s interactions",
+    (type) => {
+      expect(
+        responseValidationPolicy({ correctResponse: null }, {
+          type,
+          attributes: { "max-choices": "1" },
+        } as unknown as QtiInteraction),
+      ).toEqual({
+        checkMinimum: false,
+        checkMaximum: false,
+        checkMatchMax: false,
+      });
+
+      const document = {
+        item: {
+          interactions: [
+            {
+              type,
+              responseIdentifier: "RESPONSE",
+              choices: [],
+              attributes: { "max-choices": "1", "data-max-selections-message": "Too many." },
+            } as unknown as QtiInteraction,
+          ],
+          responseDeclarations: [
+            {
+              identifier: "RESPONSE",
+              correctResponse: null,
+              cardinality: "ordered",
+              baseType: "identifier",
+            },
+          ],
+        },
+      } as unknown as QtiDocument;
+
+      const diagnostics = validateItemResponses(document, {
+        schema: "qti3.attempt-state.v1",
+        itemIdentifier: "item",
+        status: "interacting",
+        responses: { RESPONSE: ["A", "B"] },
+        outcomes: {},
+        validationMessages: [],
+      });
+
+      expect(diagnostics.some((entry) => entry.code === "response.maximum")).toBe(false);
+    },
+  );
+
   it("validates maximum response counts for unscored graphic gap match responses", () => {
     const document = {
       item: {

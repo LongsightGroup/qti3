@@ -237,7 +237,7 @@ test.describe("player validation", () => {
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-order" title="maximum-order" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
   <qti-item-body>
-    <qti-order-interaction response-identifier="RESPONSE" max-choices="1" class="qti-choices-top" data-max-selections-message="Only one ordered choice.">
+    <qti-order-interaction response-identifier="RESPONSE" min-choices="1" max-choices="1" class="qti-choices-top" data-max-selections-message="Only one ordered choice.">
       <qti-simple-choice identifier="A">Alpha</qti-simple-choice>
       <qti-simple-choice identifier="B">Beta</qti-simple-choice>
       <qti-simple-choice identifier="C">Gamma</qti-simple-choice>

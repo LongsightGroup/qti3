@@ -6,6 +6,7 @@ import {
   maximumAllowedResponses,
   mediaPlayCount,
   minimumMediaPlays,
+  orderSubsetLimitsActive,
   parseUnlimitedMaximum,
   responseLimitAttribute,
 } from "./response-limits.js";
@@ -53,15 +54,33 @@ describe("response-limits", () => {
       expect(
         maximumAllowedResponses({
           type,
-          attributes: { "max-associations": "1", "max-choices": "2" },
+          attributes: { "min-choices": "1", "max-associations": "1", "max-choices": "2" },
         } as unknown as QtiInteraction),
       ).toBe(2);
+      expect(
+        maximumAllowedResponses({
+          type,
+          attributes: { "max-associations": "1", "max-choices": "2" },
+        } as unknown as QtiInteraction),
+      ).toBeUndefined();
       expect(
         maximumAllowedResponses({
           type,
           attributes: { "max-associations": "1" },
         } as unknown as QtiInteraction),
       ).toBeUndefined();
+      expect(
+        orderSubsetLimitsActive({
+          type,
+          attributes: { "min-choices": "2" },
+        } as unknown as QtiInteraction),
+      ).toBe(true);
+      expect(
+        orderSubsetLimitsActive({
+          type,
+          attributes: { "max-choices": "2" },
+        } as unknown as QtiInteraction),
+      ).toBe(false);
     },
   );
 
