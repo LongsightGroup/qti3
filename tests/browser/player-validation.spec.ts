@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
-import { pasteXml } from "./player-helpers.js";
+import { expectResponse, pasteXml } from "./player-helpers.js";
 
 test.describe("player validation", () => {
   test("associates validation messages with unanswered controls", async ({ page }) => {
@@ -155,7 +155,7 @@ test.describe("player validation", () => {
     expect(state.validationMessages).toEqual([]);
   });
 
-  test("honors authored maximum response counts during validation", async ({ page }) => {
+  test("rejects authored maximum choice counts during selection", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
       page,
@@ -178,13 +178,192 @@ test.describe("player validation", () => {
     );
 
     await page.getByRole("checkbox", { name: "A" }).check();
-    await page.getByRole("checkbox", { name: "B" }).check();
+    await page.getByRole("checkbox", { name: "B" }).click();
+
+    await expect(page.getByRole("checkbox", { name: "B" })).not.toBeChecked();
+    await expectResponse(page, ["A"]);
+    await expect(page.locator("#events")).toContainText("response.maximum");
+    await expect(page.locator("#events")).toContainText("Select no more than one option.");
+    const validationMessage = page.locator('[data-validation-for="RESPONSE"]');
+    await expect(validationMessage).toHaveClass(/qti3-validation-message/);
+    await expect(validationMessage).toHaveCSS("border-left-width", "4px");
+    await expect(validationMessage).toHaveCSS("border-left-style", "solid");
+    await expect(validationMessage).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
+
+    await page.locator("#debug-score").click();
+    await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "scored");
+  });
+
+  test("honors restored maximum response counts during validation", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-choice-restore" title="maximum-choice-restore" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" min-choices="0" max-choices="1" data-max-selections-message="Select no more than one option.">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`,
+    );
+
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const state = element.serialize();
+      state.responses.RESPONSE = ["A", "B"];
+      element.restore(state);
+    });
     await page.locator("#debug-score").click();
 
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
     await expect(page.locator("#events")).toContainText("response.maximum");
     await expect(page.locator("#events")).toContainText("Select no more than one option.");
-    await expect(page.getByRole("checkbox", { name: "A" })).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("rejects authored maximum order counts during selection", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-order" title="maximum-order" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" max-choices="1" class="qti-choices-top" data-max-selections-message="Only one ordered choice.">
+      <qti-simple-choice identifier="A">Alpha</qti-simple-choice>
+      <qti-simple-choice identifier="B">Beta</qti-simple-choice>
+      <qti-simple-choice identifier="C">Gamma</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const layout = page.locator("qti-assessment-item-player .qti3-order-sv-layout");
+    const bank = layout.locator(".qti3-order-choices-bank");
+    await bank.locator('[data-choice-identifier="A"]').click();
+    await bank.locator('[data-choice-identifier="B"]').click();
+
+    await expectResponse(page, ["A"]);
+    await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText(
+      "Only one ordered choice.",
+    );
+    await expect(layout.locator(".qti3-order-target-item")).toHaveCount(1);
+  });
+
+  test("rejects authored maximum hottext counts during selection", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-hottext" title="maximum-hottext" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier"/>
+  <qti-item-body>
+    <qti-hottext-interaction response-identifier="RESPONSE" max-choices="1" data-max-selections-message="Only one phrase.">
+      <p>Choose <qti-hottext identifier="A">Alpha</qti-hottext> or <qti-hottext identifier="B">Beta</qti-hottext>.</p>
+    </qti-hottext-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    await page.getByRole("button", { name: "Alpha" }).click();
+    await page.getByRole("button", { name: "Beta" }).click();
+
+    await expectResponse(page, ["A"]);
+    await expect(page.getByRole("button", { name: "Beta" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText(
+      "Only one phrase.",
+    );
+  });
+
+  test("rejects authored maximum associate pair counts during selection", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-associate" title="maximum-associate" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
+  <qti-item-body>
+    <qti-associate-interaction response-identifier="RESPONSE" min-associations="0" max-associations="1" data-max-selections-message="Only one pair.">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="2">Alpha</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="B" match-max="2">Beta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="C" match-max="2">Gamma</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="D" match-max="2">Delta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-associate-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="A"]',
+      )
+      .click();
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="C"]',
+      )
+      .click();
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="B"]',
+      )
+      .click();
+    await page
+      .locator(
+        '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="D"]',
+      )
+      .click();
+
+    await expectResponse(page, ["A C"]);
+    await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText("Only one pair.");
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-chip")).toHaveCount(1);
+  });
+
+  test("rejects authored maximum match pair counts during selection", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-match" title="maximum-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-match-interaction response-identifier="RESPONSE" max-associations="1" data-max-selections-message="Only one match.">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="2">Alpha</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="B" match-max="2">Beta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="C" match-max="2">Gamma</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="D" match-max="2">Delta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    await page.locator(".qti3-match-source-bank [data-choice-identifier='A']").click();
+    await page.locator(".qti3-match-target-bank [data-choice-identifier='C']").click();
+    await page.locator(".qti3-match-source-bank [data-choice-identifier='B']").click();
+    await page.locator(".qti3-match-target-bank [data-choice-identifier='D']").click();
+
+    await expectResponse(page, ["A C"]);
+    await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText("Only one match.");
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-chip")).toHaveCount(1);
   });
 
   test("honors authored match-max counts during validation", async ({ page }) => {

@@ -5,6 +5,7 @@ import {
   minimumRequiredResponses,
   responseCount,
   responseIsEmpty,
+  responseValidationPolicy,
   validateItemResponses,
 } from "./player-validation.js";
 import { isResolvableAssetUrl, isSafeUrl as contentIsSafeUrl } from "./content/content-dom.js";
@@ -97,6 +98,93 @@ describe("player-validation", () => {
       ).toBe(1);
     },
   );
+
+  it("does not require unscored responses without an authored minimum", () => {
+    const document = {
+      item: {
+        interactions: [
+          {
+            type: "choice",
+            responseIdentifier: "RESPONSE",
+            choices: [],
+            attributes: {},
+          } as unknown as QtiInteraction,
+        ],
+        responseDeclarations: [
+          {
+            identifier: "RESPONSE",
+            correctResponse: null,
+            cardinality: "single",
+            baseType: "identifier",
+          },
+        ],
+      },
+    } as unknown as QtiDocument;
+
+    const diagnostics = validateItemResponses(document, {
+      schema: "qti3.attempt-state.v1",
+      itemIdentifier: "item",
+      status: "interacting",
+      responses: { RESPONSE: null },
+      outcomes: {},
+      validationMessages: [],
+    });
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  it("skips validation policy for unscored responses without authored limits", () => {
+    expect(
+      responseValidationPolicy({ correctResponse: null }, {
+        type: "choice",
+        attributes: {},
+      } as unknown as QtiInteraction),
+    ).toEqual({
+      checkMinimum: false,
+      checkMaximum: false,
+      checkMatchMax: false,
+    });
+  });
+
+  it("validates maximum response counts for unscored graphic gap match responses", () => {
+    const document = {
+      item: {
+        interactions: [
+          {
+            type: "graphicGapMatch",
+            responseIdentifier: "RESPONSE",
+            choices: [],
+            attributes: { "data-max-selections-message": "Too many placements." },
+          } as unknown as QtiInteraction,
+        ],
+        responseDeclarations: [
+          {
+            identifier: "RESPONSE",
+            correctResponse: null,
+            cardinality: "multiple",
+            baseType: "directedPair",
+          },
+        ],
+      },
+    } as unknown as QtiDocument;
+
+    const diagnostics = validateItemResponses(document, {
+      schema: "qti3.attempt-state.v1",
+      itemIdentifier: "item",
+      status: "interacting",
+      responses: { RESPONSE: ["A T1", "B T2"] },
+      outcomes: {},
+      validationMessages: [],
+    });
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "response.maximum",
+        message: "Too many placements.",
+        path: "RESPONSE",
+      }),
+    ]);
+  });
 });
 
 describe("content-dom url policy", () => {

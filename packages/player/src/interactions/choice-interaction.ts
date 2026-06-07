@@ -5,7 +5,9 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { maximumAllowedResponses } from "../response-limits.js";
 import { choiceLayout } from "./choice-layout.js";
 import { sharedVocabularyLabel } from "./shared-vocabulary.js";
 
@@ -20,6 +22,7 @@ export function renderChoice(
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
   const selected = new Set(valueToStrings(currentValue));
+  const maximum = maximumAllowedResponses(interaction);
   const list = document.createElement("div");
   list.className = "qti3-choice-list";
   list.role = "group";
@@ -56,8 +59,19 @@ export function renderChoice(
     input.checked = selected.has(choice.identifier);
     input.addEventListener("change", () => {
       if (multiple) {
-        if (input.checked) selected.add(choice.identifier);
-        else selected.delete(choice.identifier);
+        if (input.checked) {
+          if (
+            maximum !== undefined &&
+            !selected.has(choice.identifier) &&
+            selected.size >= maximum
+          ) {
+            input.checked = false;
+            reportMaximumResponseExceeded(group, interaction, maximum);
+            syncSelected();
+            return;
+          }
+          selected.add(choice.identifier);
+        } else selected.delete(choice.identifier);
         update([...selected]);
       } else {
         selected.clear();

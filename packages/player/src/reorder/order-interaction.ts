@@ -1,6 +1,8 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { maximumAllowedResponses } from "../response-limits.js";
 import {
   interactionChoices,
   missingChoicesMessage,
@@ -151,12 +153,21 @@ function renderSharedVocabularyOrderResponse(
   );
 
   let draggedIdentifier: string | undefined;
+  const maximum = maximumAllowedResponses(interaction);
   const commit = () => update(serializeOrderSlots(orderedSlots));
   const choiceByIdentifier = (identifier: string | undefined) =>
     identifier === undefined ? undefined : byIdentifier.get(identifier);
   const placeChoice = (identifier: string | undefined, targetIndex: number) => {
     const choice = choiceByIdentifier(identifier);
     if (!choice) return;
+    const alreadyPlaced = orderedIdentifiers.has(choice.identifier);
+    const targetOccupied = Boolean(orderedSlots[targetIndex]);
+    const nextCount =
+      alreadyPlaced || targetOccupied ? orderedIdentifiers.size : orderedIdentifiers.size + 1;
+    if (maximum !== undefined && nextCount > maximum) {
+      reportMaximumResponseExceeded(group, interaction, maximum);
+      return;
+    }
     const placement = placeChoiceInOrderSlot(orderedSlots, choice, targetIndex);
     if (placement === "noop") return;
     if (placement === "from-bank") {

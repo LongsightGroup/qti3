@@ -4,6 +4,8 @@ import {
   missingChoicesMessage,
   valueToStrings,
 } from "../interaction-support.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { maximumAllowedResponses } from "../response-limits.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 import { interactionClassNames } from "./shared-vocabulary.js";
 
@@ -20,6 +22,7 @@ export function renderHottextResponse(
   const selected = new Set(valueToStrings(currentValue));
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
+  const maximum = maximumAllowedResponses(interaction);
   const hideInputControl = interactionClassNames(interaction).includes("qti-input-control-hidden");
   const passage = document.createElement("p");
   passage.className = "qti3-hottext-passage";
@@ -64,7 +67,14 @@ export function renderHottextResponse(
     button.addEventListener("click", () => {
       if (multiple) {
         if (selected.has(segment.identifier)) selected.delete(segment.identifier);
-        else selected.add(segment.identifier);
+        else {
+          if (maximum !== undefined && selected.size >= maximum) {
+            reportMaximumResponseExceeded(group, interaction, maximum);
+            syncSelected();
+            return;
+          }
+          selected.add(segment.identifier);
+        }
         update([...selected]);
       } else {
         selected.clear();

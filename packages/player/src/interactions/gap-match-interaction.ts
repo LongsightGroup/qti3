@@ -12,12 +12,16 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { maximumAllowedResponses } from "../response-limits.js";
 import { appendGraphicContext } from "./graphic-context.js";
 import {
-  clearSingleUseSourceAssignments,
-  syncGapMatchSourceBank,
-} from "./gap-match-source-bank.js";
+  applyGapMatchAssignments,
+  gapMatchResponseValue,
+  tryGapMatchAssignment,
+} from "./gap-match-assignment.js";
+import { syncGapMatchSourceBank } from "./gap-match-source-bank.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 import {
   appendChoiceVisual,
@@ -181,6 +185,7 @@ export function renderGapMatchResponse(
   const assignments = new Map<string, QtiChoice>();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
+  const maximumAssignments = maximumAllowedResponses(interaction);
   const sharedVocabularyLayout = sharedVocabularyChoicesLayout(interaction);
   const usesGapPlacement = gapMatchUsesPlacement(interaction);
   const gapSegmentAttributes = new Map(
@@ -208,11 +213,7 @@ export function renderGapMatchResponse(
   }
 
   const commit = () => {
-    update(
-      [...assignments.entries()].map(
-        ([gapIdentifier, source]) => `${source.identifier} ${gapIdentifier}`,
-      ),
-    );
+    update(gapMatchResponseValue(assignments));
   };
   const syncSources = () => {
     syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
@@ -220,8 +221,20 @@ export function renderGapMatchResponse(
   const assign = (gap: QtiChoice, sourceIdentifier: string | undefined) => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
     if (!source) return;
-    clearSingleUseSourceAssignments(assignments, source, gap.identifier);
-    assignments.set(gap.identifier, source);
+    const result = tryGapMatchAssignment(
+      assignments,
+      gap.identifier,
+      source,
+      maximumAssignments === undefined ? {} : { maximumAssignments },
+    );
+    if (!result.accepted) {
+      if (maximumAssignments !== undefined) {
+        reportMaximumResponseExceeded(group, interaction, maximumAssignments);
+      }
+      syncSources();
+      return;
+    }
+    applyGapMatchAssignments(assignments, result.next);
     selectedSource = undefined;
     syncSources();
     renderGaps();
@@ -334,6 +347,7 @@ function renderGraphicGapMatchResponse(
   const height = objectHeight(interaction);
   const sources = sourceChoices(interaction);
   const gaps = targetChoices(interaction).filter((choice) => choice.role === "hotspot");
+  const maximumAssignments = maximumAllowedResponses(interaction);
   if (sources.length === 0 || gaps.length === 0) {
     group.append(missingChoicesMessage(interaction));
     return group;
@@ -388,11 +402,7 @@ function renderGraphicGapMatchResponse(
   summary.setAttribute("aria-live", "polite");
 
   const commit = () => {
-    update(
-      [...assignments.entries()].map(
-        ([gapIdentifier, source]) => `${source.identifier} ${gapIdentifier}`,
-      ),
-    );
+    update(gapMatchResponseValue(assignments));
   };
   const syncSources = () => {
     syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
@@ -413,12 +423,19 @@ function renderGraphicGapMatchResponse(
   ) => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
     if (!source) return;
-    if (originGapIdentifier && originGapIdentifier !== gap.identifier) {
-      assignments.delete(originGapIdentifier);
-    }
-    clearSingleUseSourceAssignments(assignments, source, gap.identifier);
-    assignments.set(gap.identifier, source);
+    const result = tryGapMatchAssignment(assignments, gap.identifier, source, {
+      ...(originGapIdentifier === undefined ? {} : { originGapIdentifier }),
+      ...(maximumAssignments === undefined ? {} : { maximumAssignments }),
+    });
     selectedSource = undefined;
+    if (!result.accepted) {
+      if (maximumAssignments !== undefined) {
+        reportMaximumResponseExceeded(group, interaction, maximumAssignments);
+      }
+      syncSources();
+      return;
+    }
+    applyGapMatchAssignments(assignments, result.next);
     syncSources();
     renderTargets();
     commit();

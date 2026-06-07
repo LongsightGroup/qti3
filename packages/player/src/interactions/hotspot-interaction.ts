@@ -13,7 +13,9 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import { bindActivateOnEnterOrSpace } from "../dom/keyboard-activation.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { maximumAllowedResponses } from "../response-limits.js";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
@@ -47,6 +49,7 @@ export function renderHotspotResponse(
 
   const selected = new Set(valueToStrings(currentValue));
   const multiple = interaction.responseCardinality === "multiple";
+  const maximum = maximumAllowedResponses(interaction);
   const selectedSummary = document.createElement("p");
   selectedSummary.className = "qti3-selection-summary";
   selectedSummary.setAttribute("aria-live", "polite");
@@ -75,7 +78,14 @@ export function renderHotspotResponse(
   const choose = (choice: (typeof choices)[number]) => {
     if (multiple) {
       if (selected.has(choice.identifier)) selected.delete(choice.identifier);
-      else selected.add(choice.identifier);
+      else {
+        if (maximum !== undefined && selected.size >= maximum) {
+          reportMaximumResponseExceeded(group, interaction, maximum);
+          syncSelected();
+          return;
+        }
+        selected.add(choice.identifier);
+      }
       syncSelected();
       update([...selected]);
     } else {

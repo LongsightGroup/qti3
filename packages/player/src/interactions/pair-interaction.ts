@@ -1,7 +1,9 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { associationMaximumResponses } from "../response-limits.js";
 import {
   choiceText,
   pairRegionLabels,
@@ -26,6 +28,7 @@ export function renderPairResponse(
     return group;
   }
   const selectedPairs: string[] = valueToStrings(currentValue);
+  const maximum = associationMaximumResponses(interaction);
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   const labels = pairRegionLabels(interaction, messages);
@@ -69,7 +72,20 @@ export function renderPairResponse(
   const addSelectedPair = () => {
     if (!selectedSource || !selectedTarget) return;
     const pair = `${selectedSource.identifier} ${selectedTarget.identifier}`;
-    if (!selectedPairs.includes(pair)) selectedPairs.push(pair);
+    if (!selectedPairs.includes(pair)) {
+      if (
+        maximum !== undefined &&
+        selectedPairs.length >= maximum &&
+        interaction.responseCardinality !== "single"
+      ) {
+        selectedSource = undefined;
+        selectedTarget = undefined;
+        reportMaximumResponseExceeded(group, interaction, maximum);
+        syncPressed();
+        return;
+      }
+      selectedPairs.push(pair);
+    }
     selectedSource = undefined;
     selectedTarget = undefined;
     syncPressed();

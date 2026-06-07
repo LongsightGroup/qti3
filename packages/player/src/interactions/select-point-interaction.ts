@@ -115,6 +115,8 @@ export function renderSelectPointResponse(
       return;
     }
     if (maxPoints !== undefined && points.length >= maxPoints) {
+      // Select point keeps the point count fixed and repositions the active marker
+      // instead of rejecting with an inline validation message like choice/hotspot.
       points[points.length - 1] = point;
       activeIndex = points.length - 1;
       return;

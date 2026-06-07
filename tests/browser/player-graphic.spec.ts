@@ -149,6 +149,44 @@ test.describe("player graphic interactions", () => {
     await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(1);
   });
 
+  test("rejects graphic associate pairings beyond authored max-associations", async ({ page }) => {
+    await page.goto("/");
+    const timelineSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="260" viewBox="0 0 480 260"><rect width="480" height="260" fill="#f4f2ea"/><circle cx="120" cy="90" r="18" fill="#2f4858"/><circle cx="120" cy="170" r="18" fill="#2f4858"/><circle cx="360" cy="90" r="18" fill="#8b5d33"/><circle cx="360" cy="170" r="18" fill="#496b42"/></svg>`;
+    const image = `data:image/svg+xml,${encodeURIComponent(timelineSvg)}`;
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-associate-authored-max" title="graphic-associate-authored-max" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
+  <qti-item-body>
+    <qti-graphic-associate-interaction response-identifier="RESPONSE" max-associations="2" data-max-selections-message="Too many pairings.">
+      <object data="${image}" type="image/png">Timeline graphic with paired era markers.</object>
+      <qti-associable-hotspot identifier="A" shape="circle" coords="120,90,18" match-max="1"/>
+      <qti-associable-hotspot identifier="B" shape="circle" coords="120,170,18" match-max="1"/>
+      <qti-associable-hotspot identifier="C" shape="circle" coords="360,90,18" match-max="1"/>
+      <qti-associable-hotspot identifier="D" shape="circle" coords="360,170,18" match-max="1"/>
+    </qti-graphic-associate-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-graphicAssociate");
+    const surface = interaction.locator(".qti3-graphic-associate-surface");
+    const validation = interaction.locator('[data-validation-for="RESPONSE"]');
+
+    await surface.getByRole("button", { name: "Region 1" }).click();
+    await surface.getByRole("button", { name: "Region 2" }).click();
+    await surface.getByRole("button", { name: "Region 3" }).click();
+    await surface.getByRole("button", { name: "Region 4" }).click();
+    await expectResponse(page, ["A B", "C D"]);
+
+    await surface.getByRole("button", { name: "Region 1" }).click();
+    await surface.getByRole("button", { name: "Region 3" }).click();
+    await expectResponse(page, ["A B", "C D"]);
+    await expect(validation).toBeVisible();
+    await expect(validation).toContainText("Too many pairings.");
+  });
+
   test("supports keyboard graphic associate pairing and deletion", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "graphicAssociate");
@@ -163,6 +201,70 @@ test.describe("player graphic interactions", () => {
 
     await page.keyboard.press("Delete");
     await expectResponse(page, []);
+  });
+
+  test("rejects graphic order selections beyond authored max-choices", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-order-authored-max" title="graphic-order-authored-max" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+  <qti-item-body>
+    <qti-graphic-order-interaction response-identifier="RESPONSE" max-choices="1" data-max-selections-message="Only one ordered region.">
+      <object data="${graySvgDataUrl(220, 120)}" alt="Two ordered regions." type="image/svg+xml" width="220" height="120"/>
+      <qti-hotspot-choice identifier="A" shape="rect" coords="20,20,90,90"/>
+      <qti-hotspot-choice identifier="B" shape="rect" coords="130,20,200,90"/>
+    </qti-graphic-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-graphicOrder");
+    const first = interaction.locator(".qti3-graphic-order-hotspot[data-choice-identifier='A']");
+    const second = interaction.locator(".qti3-graphic-order-hotspot[data-choice-identifier='B']");
+
+    await first.click();
+    await second.click();
+
+    await expectResponse(page, ["A"]);
+    await expect(first).toHaveAttribute("aria-pressed", "true");
+    await expect(second).toHaveAttribute("aria-pressed", "false");
+    await expect(interaction.locator('[data-validation-for="RESPONSE"]')).toContainText(
+      "Only one ordered region.",
+    );
+  });
+
+  test("rejects hotspot selections beyond authored max-choices", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-authored-max" title="hotspot-authored-max" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier"/>
+  <qti-item-body>
+    <qti-hotspot-interaction response-identifier="RESPONSE" max-choices="1" data-max-selections-message="Only one region.">
+      <object data="${graySvgDataUrl(220, 120)}" alt="Two target regions." type="image/svg+xml" width="220" height="120"/>
+      <qti-hotspot-choice identifier="A" shape="rect" coords="20,20,90,90"/>
+      <qti-hotspot-choice identifier="B" shape="rect" coords="130,20,200,90"/>
+    </qti-hotspot-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-hotspot");
+    const first = interaction.locator(".qti3-hotspot-button[data-choice-identifier='A']");
+    const second = interaction.locator(".qti3-hotspot-button[data-choice-identifier='B']");
+
+    await first.click();
+    await second.click();
+
+    await expectResponse(page, ["A"]);
+    await expect(first).toHaveAttribute("aria-pressed", "true");
+    await expect(second).toHaveAttribute("aria-pressed", "false");
+    await expect(interaction.locator('[data-validation-for="RESPONSE"]')).toContainText(
+      "Only one region.",
+    );
   });
 
   test("captures pointer coordinate responses for point interactions", async ({ page }) => {

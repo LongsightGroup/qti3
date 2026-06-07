@@ -66,6 +66,85 @@ export const BASE_PLAYER_STYLES = `
   display: none !important;
 }
 
+.qti3-player .qti3-validation-message[hidden] {
+  display: none !important;
+}
+
+.qti3-player .qti3-validation-message {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-inline-size: min(100%, 42rem);
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #b42318;
+  border-inline-start-width: 4px;
+  border-radius: 0.375rem;
+  background: #fff3f0;
+  color: #7a271a;
+  font-weight: 650;
+}
+
+.qti3-player .qti3-validation-message::before {
+  content: "!";
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin-block-start: 0.05rem;
+  border-radius: 999px;
+  background: #b42318;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.qti3-player .qti3-validation-message-inline {
+  display: inline-flex;
+  max-inline-size: 24rem;
+  margin-inline: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-inline-start-width: 3px;
+  vertical-align: baseline;
+  font-size: 0.9375rem;
+}
+
+.qti3-player .qti3-validation-message-inline::before {
+  inline-size: 1rem;
+  block-size: 1rem;
+  font-size: 0.75rem;
+}
+
+@supports (color: light-dark(#000, #fff)) {
+  .qti3-player .qti3-validation-message {
+    border-color: light-dark(#b42318, #ffb4a8);
+    background: light-dark(#fff3f0, #3a1410);
+    color: light-dark(#7a271a, #ffd8d2);
+  }
+
+  .qti3-player .qti3-validation-message::before {
+    background: light-dark(#b42318, #ffb4a8);
+    color: light-dark(#fff, #2b0b07);
+  }
+}
+
+@media (forced-colors: active) {
+  .qti3-player .qti3-validation-message {
+    border-color: Highlight;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .qti3-player .qti3-validation-message::before {
+    border: 1px solid CanvasText;
+    background: CanvasText;
+    color: Canvas;
+  }
+}
+
 .qti3-player .qti-visually-hidden,
 .qti3-player .qti3-selection-summary,
 .qti3-player .qti3-coordinate-output {

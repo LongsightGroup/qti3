@@ -57,7 +57,15 @@ import type {
   QtiPlayerSessionControl,
   QtiScoreAttemptOptions,
 } from "./player-types.js";
-import { cloneDiagnostics, errorView, validateItemResponses } from "./player-validation.js";
+import {
+  cloneDiagnostics,
+  errorView,
+  maximumResponseDiagnostic,
+  responseCount,
+  validateItemResponses,
+} from "./player-validation.js";
+import { maximumAllowedResponses } from "./response-limits.js";
+import { QTI3_INLINE_VALIDATION_EVENT, type InlineValidationDetail } from "./inline-validation.js";
 import { syncValidationMessages } from "./player-validation-dom.js";
 import {
   isAuthoringDiagnostic,
@@ -163,6 +171,21 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.invalidatePlayerMessages();
     this.rerenderIfLoaded();
   }
+
+  connectedCallback(): void {
+    this.addEventListener(QTI3_INLINE_VALIDATION_EVENT, this.handleInlineValidation);
+  }
+
+  disconnectedCallback(): void {
+    this.removeEventListener(QTI3_INLINE_VALIDATION_EVENT, this.handleInlineValidation);
+  }
+
+  private handleInlineValidation = (event: Event): void => {
+    if (!(event instanceof CustomEvent)) return;
+    const detail = event.detail as InlineValidationDetail | undefined;
+    if (!detail?.responseIdentifier) return;
+    this.applyInlineValidation(detail.responseIdentifier, detail.diagnostic, { emitState: true });
+  };
 
   private invalidatePlayerMessages(): void {
     this.resolvedMessagesCache = undefined;
@@ -463,7 +486,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     return renderBlockInteractionSection({
       interaction,
       messages: this.playerMessages(),
-      update: this.bindResponseUpdate(responseIdentifier),
+      update: this.bindResponseUpdate(responseIdentifier, interaction),
       currentValue: responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
       isCompleted: () => this.attemptIsCompleted(),
       endAttempt: () => this.endAttempt(),
@@ -472,12 +495,24 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     });
   }
 
-  private bindResponseUpdate(responseIdentifier: string | undefined): (value: QtiValue) => void {
+  private bindResponseUpdate(
+    responseIdentifier: string | undefined,
+    interaction?: QtiInteraction,
+  ): (value: QtiValue) => void {
     return (value) => {
       if (this.attemptIsCompleted()) return;
       if (!responseIdentifier || !this.session) return;
+      const maximum = maximumAllowedResponses(interaction);
+      if (maximum !== undefined && responseCount(value) > maximum) {
+        this.applyInlineValidation(
+          responseIdentifier,
+          maximumResponseDiagnostic(responseIdentifier, interaction, maximum),
+          { emitState: true },
+        );
+        return;
+      }
       this.session.respond(responseIdentifier, value);
-      this.clearValidationMessage(responseIdentifier);
+      this.applyInlineValidation(responseIdentifier, undefined);
       this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
       this.emitStateChange();
     };
@@ -492,7 +527,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
         const responseIdentifier = embeddedInteraction.responseIdentifier;
         return renderEmbeddedInteractionSection(
           embeddedInteraction,
-          this.bindResponseUpdate(responseIdentifier),
+          this.bindResponseUpdate(responseIdentifier, embeddedInteraction),
           responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
           this.playerMessages(),
         );
@@ -534,8 +569,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       renderMarkup: (nodes) => renderContentNodes(nodes, this.contentContext()),
       setInteractionState: (identifier, state) =>
         this.session?.setInteractionState(identifier, state),
-      setValidity: (identifier, valid, message) =>
-        this.setPortableCustomValidity(identifier, valid, message),
+      setValidity: (identifier, valid, message) => {
+        const diagnostic = portableCustomValidityDiagnostic(identifier, valid, message);
+        this.applyInlineValidation(identifier, diagnostic);
+      },
       emitStateChange: () => this.emitStateChange(),
       onMount: (detail) => this.dispatchPlayerEvent("qti-portable-custom-mount", detail),
     });
@@ -569,21 +606,22 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     return this.session?.serialize().interactionStates?.[identifier];
   }
 
-  private setPortableCustomValidity(
+  private applyInlineValidation(
     responseIdentifier: string,
-    valid: boolean,
-    message: string | undefined,
+    diagnostic: QtiDiagnostic | undefined,
+    options: { emitState?: boolean } = {},
   ): void {
-    const diagnostic = portableCustomValidityDiagnostic(responseIdentifier, valid, message);
     if (!diagnostic) {
       this.clearValidationMessage(responseIdentifier);
+      if (options.emitState) this.emitStateChange();
       return;
     }
     this.validationMessages = [
       ...this.validationMessages.filter((entry) => entry.path !== responseIdentifier),
-      diagnostic,
+      { ...diagnostic, path: responseIdentifier },
     ];
     this.renderValidationMessages();
+    if (options.emitState) this.emitStateChange();
   }
 
   private applyDefaultStyles(): void {

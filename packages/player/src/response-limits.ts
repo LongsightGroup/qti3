@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import { implicitMaximumResponses } from "./response-limit-defaults.js";
 
 export function maximumAllowedResponses(
   interaction: QtiInteraction | undefined,
@@ -6,10 +7,14 @@ export function maximumAllowedResponses(
   if (!interaction) return undefined;
   if (interaction.type === "media") return maximumMediaPlays(interaction);
   const explicit = responseLimitAttribute(interaction, "max-choices", "max-associations");
-  if (explicit === undefined) return undefined;
+  if (explicit === undefined) return implicitMaximumResponses(interaction);
   const parsed = Number(explicit);
   if (!Number.isInteger(parsed) || parsed <= 0) return undefined;
   return parsed;
+}
+
+export function associationMaximumResponses(interaction: QtiInteraction): number | undefined {
+  return interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
 }
 
 export function responseLimitAttribute(

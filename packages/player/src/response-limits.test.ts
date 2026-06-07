@@ -2,6 +2,7 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { interactionChoices } from "./interaction-support.js";
 import {
+  associationMaximumResponses,
   maximumAllowedResponses,
   mediaPlayCount,
   minimumMediaPlays,
@@ -73,5 +74,37 @@ describe("response-limits", () => {
     expect(responseLimitAttribute(interaction, "min-choices", "min-associations")).toBe("1");
     expect(responseLimitAttribute(interaction, "max-choices", "max-associations")).toBe("2");
     expect(maximumAllowedResponses(interaction)).toBe(2);
+  });
+
+  it("defaults graphic gap match maximum associations to one when omitted", () => {
+    expect(
+      maximumAllowedResponses({
+        type: "graphicGapMatch",
+        attributes: {},
+      } as unknown as QtiInteraction),
+    ).toBe(1);
+    expect(
+      maximumAllowedResponses({
+        type: "graphicGapMatch",
+        attributes: { "max-associations": "2" },
+      } as unknown as QtiInteraction),
+    ).toBe(2);
+  });
+
+  it("treats single-cardinality association interactions as one response", () => {
+    expect(
+      associationMaximumResponses({
+        type: "associate",
+        responseCardinality: "single",
+        attributes: { "max-associations": "3" },
+      } as unknown as QtiInteraction),
+    ).toBe(1);
+    expect(
+      associationMaximumResponses({
+        type: "match",
+        responseCardinality: "multiple",
+        attributes: { "max-associations": "3" },
+      } as unknown as QtiInteraction),
+    ).toBe(3);
   });
 });

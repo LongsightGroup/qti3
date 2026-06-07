@@ -10,7 +10,8 @@ function gapSource(id: string, matchMax?: string): QtiChoice {
   return {
     identifier: id,
     text: id,
-    role: "source",
+    role: "gapChoice",
+    qtiName: "qti-gap-text",
     attributes: matchMax === undefined ? {} : { "match-max": matchMax },
   };
 }

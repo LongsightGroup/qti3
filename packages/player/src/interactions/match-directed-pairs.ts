@@ -1,7 +1,8 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { parseUnlimitedMaximum } from "../response-limits.js";
+import { associationMaximumResponses, parseUnlimitedMaximum } from "../response-limits.js";
 import { choiceText } from "./shared.js";
 
 export function directedPairKey(source: QtiChoice, target: QtiChoice): string {
@@ -37,10 +38,14 @@ export function createMatchDirectedPairSelection(
   const pairList = document.createElement("ul");
   pairList.className = "qti3-pair-list";
   pairList.setAttribute("aria-label", pairListAriaLabel);
+  const maximum = associationMaximumResponses(interaction);
 
   const commit = () => {
     if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
     else update([...selectedPairs]);
+  };
+  const replacePairs = (nextPairs: string[]) => {
+    selectedPairs.splice(0, selectedPairs.length, ...nextPairs);
   };
 
   const pairFor = (source: QtiChoice, target: QtiChoice) => directedPairKey(source, target);
@@ -94,14 +99,25 @@ export function createMatchDirectedPairSelection(
     if (selectedPairs.includes(pair)) {
       removePair(pair);
     } else {
-      if (interaction.responseCardinality === "single") selectedPairs.splice(0);
+      let nextPairs = interaction.responseCardinality === "single" ? [] : [...selectedPairs];
       if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
-        removePairsForSource(source);
+        nextPairs = nextPairs.filter((entry) => !entry.startsWith(`${source.identifier} `));
       }
       if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
-        removePairsForTarget(target);
+        nextPairs = nextPairs.filter((entry) => !entry.endsWith(` ${target.identifier}`));
       }
-      selectedPairs.push(pair);
+      if (
+        maximum !== undefined &&
+        nextPairs.length >= maximum &&
+        interaction.responseCardinality !== "single"
+      ) {
+        reportMaximumResponseExceeded(pairList, interaction, maximum);
+        afterPairsChange?.();
+        renderPairs();
+        return;
+      }
+      nextPairs.push(pair);
+      replacePairs(nextPairs);
     }
     afterPairsChange?.();
     renderPairs();

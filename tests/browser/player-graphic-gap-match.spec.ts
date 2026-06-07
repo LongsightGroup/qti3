@@ -286,6 +286,121 @@ test.describe("player graphic gap match interactions", () => {
     await expect(sourceBButton).toBeHidden();
   });
 
+  test("rejects graphic gap match placements beyond authored max-associations", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="330" height="140" viewBox="0 0 330 140"><rect width="330" height="140" fill="#f4f2ea"/><rect x="30" y="42" width="70" height="44" fill="#2f4858"/><rect x="130" y="42" width="70" height="44" fill="#8b5d33"/><rect x="230" y="42" width="70" height="44" fill="#496b42"/></svg>`;
+
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-authored-max" title="graphic-gap-authored-max" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>A T1</qti-value><qti-value>B T2</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" max-associations="2" data-max-selections-message="You've selected too many!">
+      <object data="${svgBase64DataUrl(targetSvg)}" alt="Three target slots." type="image/svg+xml"/>
+      <qti-gap-text identifier="A" match-max="1">Alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Beta</qti-gap-text>
+      <qti-gap-text identifier="C" match-max="1">Gamma</qti-gap-text>
+      <qti-associable-hotspot identifier="T1" shape="rect" coords="30,42,100,86" match-max="1"/>
+      <qti-associable-hotspot identifier="T2" shape="rect" coords="130,42,200,86" match-max="1"/>
+      <qti-associable-hotspot identifier="T3" shape="rect" coords="230,42,300,86" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-graphicGapMatch");
+    const bank = interaction.locator(".qti3-graphic-gap-source-region");
+    const sourceA = bank.getByRole("button", { name: "Alpha" });
+    const sourceB = bank.getByRole("button", { name: "Beta" });
+    const sourceC = bank.getByRole("button", { name: "Gamma" });
+    const sourceBButton = bank.locator('button[data-choice-identifier="B"]');
+    const sourceCButton = bank.locator('button[data-choice-identifier="C"]');
+    const target1 = interaction.locator('[data-gap-identifier="T1"]');
+    const target2 = interaction.locator('[data-gap-identifier="T2"]');
+    const target3 = interaction.locator('[data-gap-identifier="T3"]');
+    const validation = interaction.locator('[data-validation-for="RESPONSE"]');
+
+    await dragCenter(page, sourceA, target1);
+    await dragCenter(page, sourceB, target2);
+    await expectResponse(page, ["A T1", "B T2"]);
+    await expect(sourceBButton).toBeHidden();
+
+    await dragCenter(page, sourceC, target3);
+    await expectResponse(page, ["A T1", "B T2"]);
+    await expect(validation).toBeVisible();
+    await expect(validation).toContainText("You've selected too many!");
+    await expect(target3).toHaveAccessibleName("Target 3, empty");
+    await expect(sourceCButton).toBeVisible();
+
+    const rejectedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(rejectedState.validationMessages).toEqual([
+      expect.objectContaining({
+        code: "response.maximum",
+        message: "You've selected too many!",
+        path: "RESPONSE",
+      }),
+    ]);
+
+    await dragCenter(page, target1, target3);
+    await expectResponse(page, ["B T2", "A T3"]);
+    await expect(validation).toBeHidden();
+    await expect(target1).toHaveAccessibleName("Target 1, empty");
+    await expect(target3).toHaveAccessibleName("Target 3, assigned Alpha");
+
+    await dragCenter(page, sourceC, target2);
+    await expectResponse(page, ["C T2", "A T3"]);
+    await expect(target2).toHaveAccessibleName("Target 2, assigned Gamma");
+    await expect(sourceBButton).toBeVisible();
+    await expect(sourceCButton).toBeHidden();
+  });
+
+  test("defaults graphic gap match max-associations to one when omitted", async ({ page }) => {
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="230" height="120" viewBox="0 0 230 120"><rect width="230" height="120" fill="#f4f2ea"/><rect x="34" y="34" width="60" height="42" fill="#2f4858"/><rect x="136" y="34" width="60" height="42" fill="#8b5d33"/></svg>`;
+
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-default-max" title="graphic-gap-default-max" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${svgBase64DataUrl(targetSvg)}" alt="Two target slots." type="image/svg+xml"/>
+      <qti-gap-text identifier="A" match-max="1">Alpha</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Beta</qti-gap-text>
+      <qti-associable-hotspot identifier="T1" shape="rect" coords="34,34,94,76" match-max="1"/>
+      <qti-associable-hotspot identifier="T2" shape="rect" coords="136,34,196,76" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-graphicGapMatch");
+    const bank = interaction.locator(".qti3-graphic-gap-source-region");
+    const sourceA = bank.getByRole("button", { name: "Alpha" });
+    const sourceB = bank.getByRole("button", { name: "Beta" });
+    const sourceBButton = bank.locator('button[data-choice-identifier="B"]');
+    const target1 = interaction.locator('[data-gap-identifier="T1"]');
+    const target2 = interaction.locator('[data-gap-identifier="T2"]');
+    const validation = interaction.locator('[data-validation-for="RESPONSE"]');
+
+    await dragCenter(page, sourceA, target1);
+    await dragCenter(page, sourceB, target2);
+
+    await expectResponse(page, ["A T1"]);
+    await expect(validation).toBeVisible();
+    await expect(validation).toContainText("RESPONSE allows at most 1 response.");
+    await expect(target2).toHaveAccessibleName("Target 2, empty");
+    await expect(sourceBButton).toBeVisible();
+  });
+
   test("supports keyboard assignment and clearing for qti-gap-img choices", async ({ page }) => {
     await page.goto("/");
     const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120" viewBox="0 0 180 120"><rect width="180" height="120" fill="#f4f2ea"/><rect x="54" y="34" width="72" height="52" fill="#2f4858"/></svg>`;

@@ -15,9 +15,11 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import { plainOrderOrientation } from "../interactions/shared-vocabulary.js";
 import { movementButton, reorderMovementDirections } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { maximumAllowedResponses } from "../response-limits.js";
 import {
   announceOrderedItemMove,
   announceOrderedSelectionCount,
@@ -43,6 +45,7 @@ export function renderGraphicOrderResponse(
   const orderedIdentifiers = valueToStrings(currentValue).filter((identifier) =>
     choices.some((choice) => choice.identifier === identifier),
   );
+  const maximum = maximumAllowedResponses(interaction);
 
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-order-surface");
@@ -115,6 +118,13 @@ export function renderGraphicOrderResponse(
   const chooseHotspot = (choice: QtiChoice) => {
     const existingIndex = orderedIdentifiers.indexOf(choice.identifier);
     if (existingIndex >= 0) orderedIdentifiers.splice(existingIndex, 1);
+    else if (maximum !== undefined && orderedIdentifiers.length >= maximum) {
+      reportMaximumResponseExceeded(group, interaction, maximum);
+      renderState();
+      updateSelectionCountSummary();
+      focusHotspot(choice.identifier);
+      return;
+    }
     orderedIdentifiers.push(choice.identifier);
     renderState();
     updateSelectionCountSummary();

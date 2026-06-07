@@ -14,8 +14,9 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { exceedsHotspotMatchMax, maximumAllowedResponses } from "../response-limits.js";
+import { associationMaximumResponses, exceedsHotspotMatchMax } from "../response-limits.js";
 
 export function renderGraphicAssociateResponse(
   interaction: QtiInteraction,
@@ -33,8 +34,7 @@ export function renderGraphicAssociateResponse(
     return group;
   }
   const selectedPairs = valueToStrings(currentValue);
-  const maximumAssociations =
-    interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
+  const maximumAssociations = associationMaximumResponses(interaction);
   let selectedHotspot: QtiChoice | undefined;
   let draggedHotspot: QtiChoice | undefined;
   let dragPointerId: number | undefined;
@@ -114,6 +114,7 @@ export function renderGraphicAssociateResponse(
         selectedPairs.length >= maximumAssociations &&
         interaction.responseCardinality !== "single"
       ) {
+        reportMaximumResponseExceeded(group, interaction, maximumAssociations);
         selectedHotspot = undefined;
         renderState();
         return;

@@ -23,6 +23,7 @@ export function errorView(message: string): HTMLElement {
 
 export function validationMessageElement(responseIdentifier: string): HTMLElement {
   const element = document.createElement("p");
+  element.className = "qti3-validation-message";
   element.id = validationMessageId(responseIdentifier);
   element.dataset.validationFor = responseIdentifier;
   element.hidden = true;
@@ -32,6 +33,7 @@ export function validationMessageElement(responseIdentifier: string): HTMLElemen
 
 export function inlineValidationMessageElement(responseIdentifier: string): HTMLElement {
   const element = document.createElement("span");
+  element.className = "qti3-validation-message qti3-validation-message-inline";
   element.id = validationMessageId(responseIdentifier);
   element.dataset.validationFor = responseIdentifier;
   element.hidden = true;
@@ -67,6 +69,23 @@ export function minimumRequiredResponses(interaction: QtiInteraction | undefined
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
 }
 
+export function maximumResponseDiagnostic(
+  responseIdentifier: string,
+  interaction: QtiInteraction | undefined,
+  maximum: number,
+): QtiDiagnostic {
+  return {
+    code: "response.maximum",
+    severity: "error",
+    message:
+      interaction?.attributes["data-max-selections-message"] ??
+      (interaction?.type === "media"
+        ? `${responseIdentifier} allows at most ${maximum} play${maximum === 1 ? "" : "s"}.`
+        : `${responseIdentifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`),
+    path: responseIdentifier,
+  };
+}
+
 export function matchMaxDiagnostics(
   responseIdentifier: string,
   interaction: QtiInteraction,
@@ -99,6 +118,40 @@ export function responseChoiceIdentifiers(response: QtiValue): string[] {
   return qtiValueToIdentifierList(response).flatMap((value) => value.split(/\s+/).filter(Boolean));
 }
 
+export interface ResponseValidationPolicy {
+  checkMinimum: boolean;
+  checkMaximum: boolean;
+  checkMatchMax: boolean;
+}
+
+export function responseValidationPolicy(
+  declaration: { correctResponse: QtiValue | null },
+  interaction: QtiInteraction | undefined,
+): ResponseValidationPolicy {
+  const authoredMinimum =
+    interaction === undefined
+      ? undefined
+      : responseLimitAttribute(interaction, "min-choices", "min-associations");
+  const validatesMinimum =
+    declaration.correctResponse !== null ||
+    interaction?.type === "media" ||
+    authoredMinimum !== undefined;
+  const maximum = maximumAllowedResponses(interaction);
+  if (
+    declaration.correctResponse === null &&
+    interaction?.type !== "media" &&
+    !validatesMinimum &&
+    maximum === undefined
+  ) {
+    return { checkMinimum: false, checkMaximum: false, checkMatchMax: false };
+  }
+  return {
+    checkMinimum: validatesMinimum,
+    checkMaximum: maximum !== undefined,
+    checkMatchMax: interaction !== undefined,
+  };
+}
+
 export function validateItemResponses(
   document: QtiDocument,
   state: QtiAttemptStateV1,
@@ -111,14 +164,15 @@ export function validateItemResponses(
   const diagnostics: QtiDiagnostic[] = [];
   for (const declaration of document.item.responseDeclarations) {
     const interaction = interactionsByResponse.get(declaration.identifier);
-    if (declaration.correctResponse === null && interaction?.type !== "media") continue;
+    const policy = responseValidationPolicy(declaration, interaction);
+    if (!policy.checkMinimum && !policy.checkMaximum && !policy.checkMatchMax) continue;
     const minimum = minimumRequiredResponses(interaction);
+    const maximum = maximumAllowedResponses(interaction);
     const count =
       interaction?.type === "media"
         ? mediaPlayCount(state.responses[declaration.identifier] ?? null)
         : responseCount(state.responses[declaration.identifier] ?? null);
-    const maximum = maximumAllowedResponses(interaction);
-    if (count < minimum) {
+    if (policy.checkMinimum && count < minimum) {
       diagnostics.push({
         code: "response.required",
         severity: "error",
@@ -132,19 +186,10 @@ export function validateItemResponses(
         path: declaration.identifier,
       });
     }
-    if (maximum !== undefined && count > maximum) {
-      diagnostics.push({
-        code: "response.maximum",
-        severity: "error",
-        message:
-          interaction?.attributes["data-max-selections-message"] ??
-          (interaction?.type === "media"
-            ? `${declaration.identifier} allows at most ${maximum} play${maximum === 1 ? "" : "s"}.`
-            : `${declaration.identifier} allows at most ${maximum} response${maximum === 1 ? "" : "s"}.`),
-        path: declaration.identifier,
-      });
+    if (policy.checkMaximum && maximum !== undefined && count > maximum) {
+      diagnostics.push(maximumResponseDiagnostic(declaration.identifier, interaction, maximum));
     }
-    if (interaction) {
+    if (policy.checkMatchMax && interaction) {
       diagnostics.push(
         ...matchMaxDiagnostics(
           declaration.identifier,
