@@ -1,4 +1,5 @@
 {
+  "private": true,
   "type": "module",
   "dependencies": {
     "@longsightgroup/qti3-a11y": "workspace:*",
