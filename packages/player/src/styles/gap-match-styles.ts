@@ -68,4 +68,13 @@ export const GAP_MATCH_PLAYER_STYLES = `
 .qti3-graphic-gap-source-region.qti3-choices-bank {
   align-content: start;
 }
+
+.qti3-graphic-gap-source-region {
+  min-block-size: 2.75rem;
+}
+
+.qti3-gap-source-region [hidden],
+.qti3-graphic-gap-source-region [hidden] {
+  display: none !important;
+}
 `.trim();

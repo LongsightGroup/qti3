@@ -128,13 +128,18 @@ test.describe("player graphic gap match interactions", () => {
     const source = page
       .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
       .getByRole("button", { name: "Civil War marker" });
+    const sourceButton = page.locator(
+      'qti-assessment-item-player .qti3-graphic-gap-source-region button[data-choice-identifier="DraggerA"]',
+    );
     await expectImageLoaded(source.locator("img"));
+    await expect(sourceButton).toBeVisible();
 
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
     await dragCenter(page, source, target);
 
     await expectResponse(page, ["DraggerA A"]);
     await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+    await expect(sourceButton).toBeHidden();
 
     const label = page.locator('[data-origin-gap-identifier="A"].qti3-graphic-gap-label');
     await expect(label).toHaveClass(/qti3-graphic-gap-label-in-slot/);
@@ -155,10 +160,14 @@ test.describe("player graphic gap match interactions", () => {
 
     const bank = page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region");
     const source = bank.getByRole("button", { name: "Civil War marker" });
+    const sourceButton = bank.locator('button[data-choice-identifier="DraggerA"]');
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
 
     await dragCenter(page, source, target);
     await expectResponse(page, ["DraggerA A"]);
+    await expect(sourceButton).toBeHidden();
+    const emptyBankBox = await bank.boundingBox();
+    expect(emptyBankBox?.height).toBeGreaterThan(0);
     await expect(
       page.locator('[data-origin-gap-identifier="A"].qti3-graphic-gap-label'),
     ).toHaveClass(/qti3-graphic-gap-label-in-slot/);
@@ -166,6 +175,7 @@ test.describe("player graphic gap match interactions", () => {
     await dragCenter(page, target, bank);
     await expectResponse(page, []);
     await expect(target).toHaveAccessibleName("Target 1, empty");
+    await expect(sourceButton).toBeVisible();
   });
 
   test("renders oversized qti-gap-img choices below graphic gap targets", async ({ page }) => {
@@ -193,14 +203,19 @@ test.describe("player graphic gap match interactions", () => {
     const source = page
       .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
       .getByRole("button", { name: "Civil War marker" });
+    const sourceButton = page.locator(
+      'qti-assessment-item-player .qti3-graphic-gap-source-region button[data-choice-identifier="DraggerA"]',
+    );
     await expect(source.locator("img")).toHaveAttribute("src", /^data:image\/svg\+xml;base64,/);
     await expectImageLoaded(source.locator("img"));
+    await expect(sourceButton).toBeVisible();
 
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
     await dragCenter(page, source, target);
 
     await expectResponse(page, ["DraggerA A"]);
     await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+    await expect(sourceButton).toBeHidden();
     const label = page.locator('[data-origin-gap-identifier="A"].qti3-graphic-gap-label');
     await expect(label).not.toHaveClass(/qti3-graphic-gap-label-in-slot/);
     await expect(label.locator("img")).toHaveAttribute("src", /^data:image\/svg\+xml;base64,/);
@@ -242,11 +257,15 @@ test.describe("player graphic gap match interactions", () => {
     const bank = page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region");
     const sourceA = bank.getByRole("button", { name: "Civil War marker" });
     const sourceB = bank.getByRole("button", { name: "Reconstruction marker" });
+    const sourceAButton = bank.locator('button[data-choice-identifier="DraggerA"]');
+    const sourceBButton = bank.locator('button[data-choice-identifier="DraggerB"]');
     const targetA = page.locator('qti-assessment-item-player [data-gap-identifier="TargetA"]');
     const targetB = page.locator('qti-assessment-item-player [data-gap-identifier="TargetB"]');
 
     await dragCenter(page, sourceA, targetB);
     await expectResponse(page, ["DraggerA TargetB"]);
+    await expect(sourceAButton).toBeHidden();
+    await expect(sourceBButton).toBeVisible();
 
     await targetB.click();
     await expectResponse(page, ["DraggerA TargetB"]);
@@ -254,13 +273,17 @@ test.describe("player graphic gap match interactions", () => {
     await dragCenter(page, page.locator('[data-origin-gap-identifier="TargetB"]'), bank);
     await expectResponse(page, []);
     await expect(targetB).toHaveAccessibleName("Target 2, empty");
+    await expect(sourceAButton).toBeVisible();
 
     await dragCenter(page, sourceA, targetA);
     await expectResponse(page, ["DraggerA TargetA"]);
+    await expect(sourceAButton).toBeHidden();
 
     await dragCenter(page, sourceB, targetA);
     await expectResponse(page, ["DraggerB TargetA"]);
     await expect(targetA).toHaveAccessibleName("Target 1, assigned Reconstruction marker");
+    await expect(sourceAButton).toBeVisible();
+    await expect(sourceBButton).toBeHidden();
   });
 
   test("supports keyboard assignment and clearing for qti-gap-img choices", async ({ page }) => {
@@ -287,6 +310,9 @@ test.describe("player graphic gap match interactions", () => {
     const source = page
       .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
       .getByRole("button", { name: "Civil War marker" });
+    const sourceButton = page.locator(
+      'qti-assessment-item-player .qti3-graphic-gap-source-region button[data-choice-identifier="DraggerA"]',
+    );
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
 
     await source.focus();
@@ -296,11 +322,13 @@ test.describe("player graphic gap match interactions", () => {
     await page.keyboard.press("Enter");
     await expectResponse(page, ["DraggerA A"]);
     await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+    await expect(sourceButton).toBeHidden();
 
     await target.focus();
     await page.keyboard.press("Delete");
     await expectResponse(page, []);
     await expect(target).toHaveAccessibleName("Target 1, empty");
+    await expect(sourceButton).toBeVisible();
   });
 
   test("keeps qti-gap-img choices visible in forced colors and narrow reflow", async ({ page }) => {

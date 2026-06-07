@@ -13,8 +13,11 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { parseUnlimitedMaximum } from "../response-limits.js";
 import { appendGraphicContext } from "./graphic-context.js";
+import {
+  clearSingleUseSourceAssignments,
+  syncGapMatchSourceBank,
+} from "./gap-match-source-bank.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 import {
   appendChoiceVisual,
@@ -212,16 +215,12 @@ export function renderGapMatchResponse(
     );
   };
   const syncSources = () => {
-    for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
-      button.setAttribute(
-        "aria-pressed",
-        button.dataset.choiceIdentifier === selectedSource?.identifier ? "true" : "false",
-      );
-    }
+    syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
   };
   const assign = (gap: QtiChoice, sourceIdentifier: string | undefined) => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
     if (!source) return;
+    clearSingleUseSourceAssignments(assignments, source, gap.identifier);
     assignments.set(gap.identifier, source);
     selectedSource = undefined;
     syncSources();
@@ -269,6 +268,7 @@ export function renderGapMatchResponse(
       if (!assignments.has(gap.identifier)) return;
       event.preventDefault();
       assignments.delete(gap.identifier);
+      syncSources();
       renderGaps();
       commit();
     });
@@ -313,7 +313,7 @@ export function renderGapMatchResponse(
     });
     sourceRegion.append(button);
   }
-
+  syncSources();
   const layout = document.createElement("div");
   layout.className = "qti3-gap-match-layout";
   if (usesGapPlacement) layout.classList.add("qti3-gap-placement");
@@ -395,12 +395,7 @@ function renderGraphicGapMatchResponse(
     );
   };
   const syncSources = () => {
-    for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
-      button.setAttribute(
-        "aria-pressed",
-        button.dataset.choiceIdentifier === selectedSource?.identifier ? "true" : "false",
-      );
-    }
+    syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
   };
   const resetDrag = () => {
     draggedSource = undefined;
@@ -410,14 +405,6 @@ function renderGraphicGapMatchResponse(
   const beginDrag = (sourceId: string, originGapId?: string) => {
     draggedSource = sourceId;
     draggedOriginGap = originGapId;
-  };
-  const clearSourceIfSingleUse = (source: QtiChoice, keepGapIdentifier: string) => {
-    if (parseUnlimitedMaximum(source.attributes["match-max"]) !== 1) return;
-    for (const [gapIdentifier, assigned] of assignments.entries()) {
-      if (gapIdentifier !== keepGapIdentifier && assigned.identifier === source.identifier) {
-        assignments.delete(gapIdentifier);
-      }
-    }
   };
   const assign = (
     gap: QtiChoice,
@@ -429,7 +416,7 @@ function renderGraphicGapMatchResponse(
     if (originGapIdentifier && originGapIdentifier !== gap.identifier) {
       assignments.delete(originGapIdentifier);
     }
-    clearSourceIfSingleUse(source, gap.identifier);
+    clearSingleUseSourceAssignments(assignments, source, gap.identifier);
     assignments.set(gap.identifier, source);
     selectedSource = undefined;
     syncSources();
@@ -573,6 +560,7 @@ function renderGraphicGapMatchResponse(
     });
     sourceRegion.append(button);
   }
+  syncSources();
 
   const layout = document.createElement("div");
   layout.className = "qti3-graphic-gap-layout";
