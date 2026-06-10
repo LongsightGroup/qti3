@@ -202,6 +202,18 @@ qti-assessment-item-player[data-show-live-regions] .qti3-coordinate-output {
   color: CanvasText;
 }
 
+.qti3-feedback {
+  margin-block-start: 1rem;
+  padding: 0.75rem 1rem;
+  border-inline-start: 4px solid Highlight;
+  background: light-dark(#f8fafc, #1f2937);
+  color: CanvasText;
+}
+
+.qti3-feedback > :last-child {
+  margin-block-end: 0;
+}
+
 .qti3-response-group {
   min-inline-size: 0;
 }
