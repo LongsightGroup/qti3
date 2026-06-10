@@ -358,6 +358,177 @@ test.describe("player lifecycle", () => {
     expect(completedState.status).toBe("completed");
   });
 
+  test("endAttempt advances adaptive body branches without validating hidden responses", async ({
+    page,
+  }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive-body-branch" title="adaptive-body-branch" adaptive="true" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE1" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="RESPONSE21" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>OPTION210</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="RESPONSE22" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>OPTION221</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-outcome-declaration identifier="BODY" cardinality="multiple" base-type="identifier">
+    <qti-default-value><qti-value>part1</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <qti-feedback-block identifier="part1" outcome-identifier="BODY" show-hide="show">
+      <qti-content-body>
+        <p>Choose an input method.</p>
+        <qti-choice-interaction response-identifier="RESPONSE1" max-choices="1">
+          <qti-simple-choice identifier="OPTION1">Multiple choice</qti-simple-choice>
+          <qti-simple-choice identifier="OPTION2">Drop-down menu</qti-simple-choice>
+        </qti-choice-interaction>
+      </qti-content-body>
+    </qti-feedback-block>
+    <qti-feedback-block identifier="part2" outcome-identifier="BODY" show-hide="show">
+      <qti-content-body><p>Answer the second part.</p></qti-content-body>
+    </qti-feedback-block>
+    <qti-feedback-block identifier="option1" outcome-identifier="BODY" show-hide="show">
+      <qti-content-body>
+        <p>Choose the correct saying:</p>
+        <qti-choice-interaction response-identifier="RESPONSE21" max-choices="1">
+          <qti-simple-choice identifier="OPTION210">Too many cooks spoil the broth</qti-simple-choice>
+          <qti-simple-choice identifier="OPTION211">Too many cooks burn the dinner</qti-simple-choice>
+        </qti-choice-interaction>
+      </qti-content-body>
+    </qti-feedback-block>
+    <qti-feedback-block identifier="option2" outcome-identifier="BODY" show-hide="show">
+      <qti-content-body>
+        <p>Complete the saying below by selecting from the list:</p>
+        <qti-inline-choice-interaction response-identifier="RESPONSE22">
+          <qti-inline-choice identifier="OPTION221">cooks</qti-inline-choice>
+          <qti-inline-choice identifier="OPTION222">children</qti-inline-choice>
+        </qti-inline-choice-interaction>
+      </qti-content-body>
+    </qti-feedback-block>
+    <qti-feedback-inline identifier="CORRECT" outcome-identifier="FEEDBACK" show-hide="show">Correct.</qti-feedback-inline>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-member>
+          <qti-base-value base-type="identifier">part1</qti-base-value>
+          <qti-variable identifier="BODY"/>
+        </qti-member>
+        <qti-set-outcome-value identifier="BODY">
+          <qti-multiple>
+            <qti-base-value base-type="identifier">part2</qti-base-value>
+          </qti-multiple>
+        </qti-set-outcome-value>
+        <qti-response-condition>
+          <qti-response-if>
+            <qti-match>
+              <qti-variable identifier="RESPONSE1"/>
+              <qti-base-value base-type="identifier">OPTION1</qti-base-value>
+            </qti-match>
+            <qti-set-outcome-value identifier="BODY">
+              <qti-multiple>
+                <qti-variable identifier="BODY"/>
+                <qti-base-value base-type="identifier">option1</qti-base-value>
+              </qti-multiple>
+            </qti-set-outcome-value>
+          </qti-response-if>
+          <qti-response-else-if>
+            <qti-match>
+              <qti-variable identifier="RESPONSE1"/>
+              <qti-base-value base-type="identifier">OPTION2</qti-base-value>
+            </qti-match>
+            <qti-set-outcome-value identifier="BODY">
+              <qti-multiple>
+                <qti-variable identifier="BODY"/>
+                <qti-base-value base-type="identifier">option2</qti-base-value>
+              </qti-multiple>
+            </qti-set-outcome-value>
+          </qti-response-else-if>
+        </qti-response-condition>
+      </qti-response-if>
+      <qti-response-else-if>
+        <qti-member>
+          <qti-base-value base-type="identifier">part2</qti-base-value>
+          <qti-variable identifier="BODY"/>
+        </qti-member>
+        <qti-response-condition>
+          <qti-response-if>
+            <qti-match>
+              <qti-variable identifier="RESPONSE21"/>
+              <qti-correct identifier="RESPONSE21"/>
+            </qti-match>
+            <qti-set-outcome-value identifier="FEEDBACK">
+              <qti-base-value base-type="identifier">CORRECT</qti-base-value>
+            </qti-set-outcome-value>
+            <qti-set-outcome-value identifier="SCORE">
+              <qti-base-value base-type="float">1</qti-base-value>
+            </qti-set-outcome-value>
+            <qti-set-outcome-value identifier="completionStatus">
+              <qti-base-value base-type="identifier">completed</qti-base-value>
+            </qti-set-outcome-value>
+          </qti-response-if>
+        </qti-response-condition>
+      </qti-response-else-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await pasteXml(page, xml);
+    const part1 = page.locator("qti-assessment-item-player .qti3-feedback-block", {
+      hasText: "Choose an input method.",
+    });
+    const part2 = page.locator("qti-assessment-item-player .qti3-feedback-block", {
+      hasText: "Answer the second part.",
+    });
+    const option1 = page.locator("qti-assessment-item-player .qti3-feedback-block", {
+      hasText: "Choose the correct saying:",
+    });
+    const option2 = page.locator("qti-assessment-item-player .qti3-feedback-block", {
+      hasText: "Complete the saying below by selecting from the list:",
+    });
+
+    await expect(part1).toBeVisible();
+    await expect(part1).toContainText("Choose an input method.");
+    await expect(part2).toBeHidden();
+    await expect(option1).toBeHidden();
+    await expect(option2).toBeHidden();
+
+    await page
+      .locator('qti-assessment-item-player [data-response-identifier="RESPONSE1"]')
+      .getByLabel("Multiple choice")
+      .check();
+    await page.locator("#debug-end").click();
+
+    await expect(part1).toBeHidden();
+    await expect(part2).toBeVisible();
+    await expect(option1).toBeVisible();
+    await expect(option2).toBeHidden();
+
+    const branchedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(branchedState.outcomes.BODY).toEqual(["part2", "option1"]);
+    expect(branchedState.status).toBe("interacting");
+    expect(branchedState.validationMessages).toEqual([]);
+
+    await page
+      .locator('qti-assessment-item-player [data-response-identifier="RESPONSE21"]')
+      .getByLabel("Too many cooks spoil the broth")
+      .check();
+    await page.locator("#debug-end").click();
+
+    const completedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(completedState.outcomes.SCORE).toBe(1);
+    expect(completedState.outcomes.completionStatus).toBe("completed");
+    expect(completedState.status).toBe("completed");
+  });
+
   test("end-attempt does not complete an invalid attempt", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="blocked-end" title="blocked-end" time-dependent="false">

@@ -155,7 +155,11 @@ export function responseValidationPolicy(
 export function validateItemResponses(
   document: QtiDocument,
   state: QtiAttemptStateV1,
+  options: { responseIdentifiers?: Iterable<string> } = {},
 ): QtiDiagnostic[] {
+  const scopedResponseIdentifiers = options.responseIdentifiers
+    ? new Set(options.responseIdentifiers)
+    : undefined;
   const interactionsByResponse = new Map(
     document.item.interactions
       .filter((interaction) => interaction.responseIdentifier)
@@ -163,6 +167,9 @@ export function validateItemResponses(
   );
   const diagnostics: QtiDiagnostic[] = [];
   for (const declaration of document.item.responseDeclarations) {
+    if (scopedResponseIdentifiers && !scopedResponseIdentifiers.has(declaration.identifier)) {
+      continue;
+    }
     const interaction = interactionsByResponse.get(declaration.identifier);
     const policy = responseValidationPolicy(declaration, interaction);
     if (!policy.checkMinimum && !policy.checkMaximum && !policy.checkMatchMax) continue;

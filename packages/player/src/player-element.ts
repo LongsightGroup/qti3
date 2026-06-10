@@ -633,7 +633,20 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private validateResponses(): QtiDiagnostic[] {
     const state = this.session?.serialize();
     if (!state || !this.documentModel) return [];
-    return validateItemResponses(this.documentModel, state);
+    return validateItemResponses(this.documentModel, state, {
+      responseIdentifiers: this.visibleInteractionResponseIdentifiers(),
+    });
+  }
+
+  private visibleInteractionResponseIdentifiers(): Set<string> {
+    const identifiers = new Set<string>();
+    for (const interaction of this.querySelectorAll<HTMLElement>(
+      ".qti3-interaction[data-response-identifier]",
+    )) {
+      const identifier = interaction.dataset.responseIdentifier;
+      if (identifier && !interaction.closest("[hidden]")) identifiers.add(identifier);
+    }
+    return identifiers;
   }
 
   private visibleValidationMessages(): QtiDiagnostic[] {
