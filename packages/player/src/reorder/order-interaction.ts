@@ -9,7 +9,11 @@ import {
   orderChoicesFromValue,
   responseGroup,
 } from "../interaction-support.js";
-import { appendChoiceVisual, setChoiceAccessibleName } from "../interactions/shared.js";
+import {
+  appendChoiceVisual,
+  choiceVisualNodes,
+  setChoiceAccessibleName,
+} from "../interactions/shared.js";
 import {
   orderSharedVocabularyLayout,
   plainOrderOrientation,
@@ -95,7 +99,7 @@ export function renderOrderedResponse(
           index,
           total: ordered.length,
           handleClassName: "qti3-token qti3-reorder-handle",
-          visibleText: choice.text,
+          visibleContent: choiceVisualNodes(choice),
           orientation,
           messages,
           onMoveBy: (delta) => moveChoice(index, index + delta),
@@ -282,7 +286,7 @@ function renderSharedVocabularyOrderResponse(
       index,
       total: choices.length,
       handleClassName: "qti3-token qti3-reorder-handle",
-      visibleText: choice.text,
+      visibleContent: choiceVisualNodes(choice),
       orientation: layout.orientation,
       messages,
       onMoveBy: (delta) => moveChoice(index, index + delta),

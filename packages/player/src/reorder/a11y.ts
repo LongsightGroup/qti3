@@ -54,5 +54,7 @@ export function announceOrderedSelectionCount(
 }
 
 export function focusReorderControl(container: ParentNode, identifier: string): void {
-  container.querySelector<HTMLButtonElement>(`button${choiceSelector(identifier)}`)?.focus();
+  container
+    .querySelector<HTMLElement>(`.qti3-reorder-handle${choiceSelector(identifier)}`)
+    ?.focus();
 }

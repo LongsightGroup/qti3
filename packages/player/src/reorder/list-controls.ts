@@ -3,20 +3,22 @@ import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import type { OrderOrientation } from "../interactions/shared-vocabulary.js";
 import { orderedItemAccessibleName } from "./a11y.js";
 
+const orderDragControlSelector = "button, .qti3-reorder-handle";
+
 export interface ReorderHandleOptions {
   identifier: string;
   label: string;
   index: number;
   total: number;
   handleClassName: string;
-  visibleText: string;
+  visibleContent: Node[];
   orientation: OrderOrientation;
   messages: PlayerMessageResolver;
   onMoveBy: (delta: number) => void;
 }
 
 export function createReorderHandleControls(options: ReorderHandleOptions): {
-  handle: HTMLButtonElement;
+  handle: HTMLElement;
   movePrevious: HTMLButtonElement;
   moveNext: HTMLButtonElement;
 } {
@@ -26,7 +28,7 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
     index,
     total,
     handleClassName,
-    visibleText,
+    visibleContent,
     orientation,
     messages,
     onMoveBy,
@@ -34,12 +36,12 @@ export function createReorderHandleControls(options: ReorderHandleOptions): {
   const { previous: previousDirection, next: nextDirection } =
     reorderMovementDirections(orientation);
 
-  const handle = document.createElement("button");
-  handle.type = "button";
+  const handle = document.createElement("div");
+  handle.tabIndex = 0;
   handle.className = handleClassName;
   handle.dataset.choiceIdentifier = identifier;
   handle.setAttribute("aria-label", orderedItemAccessibleName(messages, label, index, total));
-  handle.textContent = visibleText;
+  handle.append(...visibleContent);
   // Accept both axis pairs on the handle so keyboard users are not locked to one arrow set.
   handle.addEventListener("keydown", (event) => {
     if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
@@ -85,7 +87,16 @@ export function bindOrderListItemDrag(
   item.dataset.choiceIdentifier = choiceIdentifier;
 
   item.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || (event.target as Element).closest("button")) return;
+    if (event.button !== 0) return;
+    if ((event.target as Element).closest(orderDragControlSelector)) {
+      item.draggable = false;
+      const restoreDraggable = () => {
+        item.draggable = true;
+      };
+      document.addEventListener("pointerup", restoreDraggable, { once: true });
+      document.addEventListener("pointercancel", restoreDraggable, { once: true });
+      return;
+    }
     dragState.pointerDraggedIdentifier = choiceIdentifier;
     try {
       item.setPointerCapture(event.pointerId);
@@ -110,6 +121,10 @@ export function bindOrderListItemDrag(
   });
 
   item.addEventListener("dragstart", (event) => {
+    if ((event.target as Element).closest(orderDragControlSelector)) {
+      event.preventDefault();
+      return;
+    }
     dragState.draggedIdentifier = choiceIdentifier;
     event.dataTransfer?.setData("text/plain", choiceIdentifier);
     event.dataTransfer?.setDragImage(item, 12, 12);

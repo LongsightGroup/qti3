@@ -41,7 +41,7 @@ export function hasRichChoiceContent(choice: QtiChoice): boolean {
   return choice.content?.some((node) => node.kind !== "text") ?? false;
 }
 
-export function appendChoiceVisual(parent: HTMLElement, choice: QtiChoice): void {
+export function choiceVisualNodes(choice: QtiChoice): Node[] {
   if (choice.asset?.data) {
     const image = document.createElement("img");
     image.className = "qti3-gap-choice-image";
@@ -52,16 +52,32 @@ export function appendChoiceVisual(parent: HTMLElement, choice: QtiChoice): void
     const height = positivePixelValue(choice.asset.height);
     if (width !== undefined) image.width = width;
     if (height !== undefined) image.height = height;
-    parent.append(image);
-    return;
+    return [image];
   }
 
   if (choice.content && choice.content.length > 0) {
-    parent.append(...renderStaticContentNodes(choice.content));
-    return;
+    const nodes = renderStaticContentNodes(choice.content);
+    markEmbeddedChoiceMediaNonDraggable(nodes);
+    return nodes;
   }
 
-  parent.textContent = choice.text;
+  return [document.createTextNode(choice.text)];
+}
+
+export function appendChoiceVisual(parent: HTMLElement, choice: QtiChoice): void {
+  parent.append(...choiceVisualNodes(choice));
+}
+
+function markEmbeddedChoiceMediaNonDraggable(nodes: Node[]): void {
+  for (const node of nodes) {
+    if (!(node instanceof HTMLElement)) continue;
+    for (const element of node.querySelectorAll<HTMLAnchorElement | HTMLImageElement>("a, img")) {
+      element.draggable = false;
+    }
+    if (node instanceof HTMLAnchorElement || node instanceof HTMLImageElement) {
+      node.draggable = false;
+    }
+  }
 }
 
 export function choiceText(choices: QtiChoice[], identifier: string | undefined): string {

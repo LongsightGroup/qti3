@@ -74,6 +74,15 @@ export const canonicalFixtures: QtiFixture[] = [
   ...adaptiveFixtures,
 ];
 
+/** Every packaged assessment-item fixture used for player rendering and accessibility sweeps. */
+export const allQuestionItemFixtures: QtiFixture[] = [
+  ...interactionFixtures,
+  ...processingFixtures,
+  ...adaptiveFixtures,
+  ...basicItemPlayerFixtures,
+  ...basicItemPlayerToleranceFixtures,
+];
+
 export function getFixtureById(id: string): QtiFixture | undefined {
   return canonicalFixtures.find((fixture) => fixture.id === id);
 }

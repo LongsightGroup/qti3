@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildQtiDeliverySafeXml } from "./delivery-security.js";
 import { parseQtiXml } from "./parser.js";
-import { parseXmlTree } from "./xml.js";
+import { parseXmlTree, textContent } from "./xml.js";
 
 describe("parseXmlTree source ranges", () => {
   it("preserves boundary whitespace around inline child elements", () => {
@@ -15,6 +15,19 @@ describe("parseXmlTree source ranges", () => {
       "Note: The ",
       expect.objectContaining({ localName: "em" }),
       " of the layout.",
+    ]);
+  });
+
+  it("does not restore XML comments as mixed-content text", () => {
+    const xml = `<qti-simple-choice><div>Visible</div><!-- <div>hidden</div> --><div>Text</div></qti-simple-choice>`;
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    expect(textContent(parsed.root!)).toBe("Visible Text");
+    expect(parsed.root?.content).toEqual([
+      expect.objectContaining({ localName: "div" }),
+      expect.objectContaining({ localName: "div" }),
     ]);
   });
 

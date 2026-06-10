@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import {
   adaptiveFixtures,
@@ -19,8 +17,7 @@ import {
   scoreCurrentAttempt,
   suspendRestoreCurrentAttempt,
 } from "./player-helpers.js";
-
-const require = createRequire(import.meta.url);
+import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 
 async function loadedItemIdentifier(player: Locator): Promise<string | undefined> {
   return player.evaluate((element) => {
@@ -60,12 +57,8 @@ async function videoBottomStripLuma(page: Page, video: Locator): Promise<number>
 }
 
 test.describe("Basic item player readiness", () => {
-  test("renders Basic interaction and item-feature fixtures without axe violations", async ({
-    page,
-  }) => {
+  test("renders Basic interaction and item-feature fixtures", async ({ page }) => {
     await page.goto("/");
-    const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
-    await page.addScriptTag({ content: axeSource });
 
     const interactionEvidence = interactionFixtures.filter((fixture) =>
       ["choice", "extendedText", "match", "textEntry"].includes(fixture.interactionType ?? ""),
@@ -84,11 +77,6 @@ test.describe("Basic item player readiness", () => {
           fixture.id,
         ).toBeVisible();
       }
-
-      const result = await page.evaluate(async () => {
-        return await window.axe.run(document.querySelector("qti-assessment-item-player"));
-      });
-      expect(result.violations, fixture.id).toEqual([]);
     }
   });
 
@@ -181,25 +169,6 @@ test.describe("Basic item player readiness", () => {
 });
 
 test.describe("manual harness", () => {
-  test("loads every reference interaction fixture without axe violations", async ({ page }) => {
-    await page.goto("/");
-    const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
-
-    for (const fixture of interactionFixtures) {
-      await page.locator("#fixture").selectOption(fixture.id);
-      await page.locator("#load-fixture").click();
-      await expect(
-        page.locator(`[data-interaction-type="${fixture.interactionType}"]`).first(),
-      ).toBeVisible();
-
-      await page.addScriptTag({ content: axeSource });
-      const result = await page.evaluate(async () => {
-        return await window.axe.run(document.querySelector("qti-assessment-item-player"));
-      });
-      expect(result.violations, fixture.id).toEqual([]);
-    }
-  });
-
   test("does not render generic fieldset or legend wrappers around interactions", async ({
     page,
   }) => {
@@ -1723,18 +1692,12 @@ test.describe("manual harness", () => {
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await expectResponse(page, "A");
 
-    const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
-    await page.addScriptTag({ content: axeSource });
-    const result = await page.evaluate(async () => {
-      return await window.axe.run(document.querySelector("qti-assessment-item-player"));
-    });
-    expect(result.violations).toEqual([]);
+    await expectNoAxeViolationsOnPlayer(page);
   });
 
   test("reflows every reference interaction in a narrow viewport", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto("/");
-    const axeSource = await readFile(require.resolve("axe-core/axe.min.js"), "utf8");
 
     for (const fixture of interactionFixtures) {
       await page.locator("#fixture").selectOption(fixture.id);
@@ -1748,11 +1711,7 @@ test.describe("manual harness", () => {
       });
       expect(overflow, fixture.id).toBeLessThanOrEqual(1);
 
-      await page.addScriptTag({ content: axeSource });
-      const result = await page.evaluate(async () => {
-        return await window.axe.run(document.querySelector("qti-assessment-item-player"));
-      });
-      expect(result.violations, fixture.id).toEqual([]);
+      await expectNoAxeViolationsOnPlayer(page, fixture.id);
     }
   });
 });
@@ -1760,8 +1719,5 @@ test.describe("manual harness", () => {
 declare global {
   interface Window {
     qtiUnsafe?: boolean;
-    axe: {
-      run: (context: Element | null) => Promise<{ violations: unknown[] }>;
-    };
   }
 }

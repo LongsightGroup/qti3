@@ -217,14 +217,18 @@ function restoreLeafTextFromSource(xml: string, node: XmlNode): void {
   if (node.sourceRange.startTagEndOffset < 0 || contentEndOffset === undefined) return;
   const raw = xml.slice(node.sourceRange.startTagEndOffset + 1, contentEndOffset);
   if (raw.includes("<![CDATA[")) return;
-  const decoded = decodeXmlCharacterData(raw);
+  const decoded = decodeXmlCharacterData(stripNonCharacterMarkup(raw));
   node.text = decoded;
   node.content = decoded.length > 0 ? [decoded] : [];
 }
 
 function appendDecodedTextSegment(content: Array<string | XmlNode>, raw: string): void {
-  const decoded = decodeXmlCharacterData(raw);
+  const decoded = decodeXmlCharacterData(stripNonCharacterMarkup(raw));
   if (decoded.length > 0) content.push(decoded);
+}
+
+function stripNonCharacterMarkup(value: string): string {
+  return value.replace(/<!--[\s\S]*?-->/g, "").replace(/<\?[\s\S]*?\?>/g, "");
 }
 
 const predefinedXmlEntities: Record<string, string> = {

@@ -215,6 +215,12 @@ export const CONTROL_PLAYER_STYLES = `
   cursor: grab;
 }
 
+.qti3-reorder-handle {
+  inline-size: 100%;
+  justify-content: flex-start;
+  text-align: start;
+}
+
 .qti3-gap-choice-image {
   display: block;
   max-inline-size: 100%;
