@@ -176,6 +176,21 @@ const GAP_PLACEMENT_WIDTH_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+const GAP_CHOICES_CONTAINER_WIDTH_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-choices-container-width" title="gap-choices-container-width" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-choices-top" data-choices-container-width="200">
+      <qti-gap-text identifier="W" match-max="1">winter</qti-gap-text>
+      <qti-gap-text identifier="Sp" match-max="1">spring</qti-gap-text>
+      <qti-gap-text identifier="Su" match-max="1">summer</qti-gap-text>
+      <qti-gap-text identifier="A" match-max="1">autumn</qti-gap-text>
+      <p>Now is the <qti-gap identifier="G1"/> of our discontent made glorious <qti-gap identifier="G2"/>.</p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 const UNSUPPORTED_INTERACTION_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-interaction" title="unsupported-interaction" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
@@ -694,6 +709,25 @@ test.describe("player DOM behavior", () => {
     await page.setViewportSize({ width: 360, height: 640 });
     const overflow = await player.evaluate((element) => element.scrollWidth > element.clientWidth);
     expect(overflow).toBe(false);
+  });
+
+  test("applies gap choices container width without widening inline gap targets", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, GAP_CHOICES_CONTAINER_WIDTH_ITEM);
+
+    const player = page.locator("qti-assessment-item-player");
+    const bank = player.locator(".qti3-gap-source-region");
+    const gapButton = player.locator('[data-gap-identifier="G1"] button');
+
+    await expect(bank).toHaveAttribute("data-qti-choices-container-width", "200");
+
+    const bankBox = await bank.boundingBox();
+    const gapBox = await gapButton.boundingBox();
+    if (!bankBox || !gapBox) throw new Error("Missing gap layout boxes.");
+    expect(Math.abs(bankBox.width - 200)).toBeLessThanOrEqual(2);
+    expect(gapBox.width).toBeLessThan(100);
   });
 
   test("embeds text entry interactions inside paragraph flow", async ({ page }) => {

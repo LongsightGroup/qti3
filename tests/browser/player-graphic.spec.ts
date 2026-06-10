@@ -711,4 +711,37 @@ test.describe("player graphic interactions", () => {
     await expect(button).toHaveAttribute("aria-pressed", "true");
     await expectResponse(page, "A");
   });
+
+  test("applies hotspot selection themes as contrast colors", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="hotspot-selection-themes" title="hotspot-selection-themes" time-dependent="false">
+        <qti-response-declaration identifier="LIGHT_RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-response-declaration identifier="DARK_RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-hotspot-interaction class="qti-selections-light" response-identifier="LIGHT_RESPONSE">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='%23222'/%3E%3C/svg%3E" alt="Dark target" width="200" height="100"/>
+            <qti-hotspot-choice identifier="A" shape="circle" coords="50,50,20">A</qti-hotspot-choice>
+          </qti-hotspot-interaction>
+          <qti-hotspot-interaction class="qti-selections-dark" response-identifier="DARK_RESPONSE">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='200' height='100' fill='white'/%3E%3C/svg%3E" alt="Light target" width="200" height="100"/>
+            <qti-hotspot-choice identifier="B" shape="circle" coords="50,50,20">B</qti-hotspot-choice>
+          </qti-hotspot-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const lightButton = page.locator(
+      "qti-assessment-item-player .qti3-hotspot.qti-selections-light .qti3-hotspot-button",
+    );
+    const darkButton = page.locator(
+      "qti-assessment-item-player .qti3-hotspot.qti-selections-dark .qti3-hotspot-button",
+    );
+
+    await expect(lightButton).toHaveCSS("stroke", "rgb(245, 164, 0)");
+    await expect(darkButton).toHaveCSS("stroke", "rgb(0, 95, 204)");
+  });
 });

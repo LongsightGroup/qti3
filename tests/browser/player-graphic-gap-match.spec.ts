@@ -572,10 +572,10 @@ test.describe("player graphic gap match interactions", () => {
 
     const lightTarget = light.locator(".qti3-graphic-gap-hotspot").first();
     const darkTarget = dark.locator(".qti3-graphic-gap-hotspot").first();
-    await expect(lightTarget).toHaveCSS("color", "rgb(255, 255, 255)");
-    await expect(lightTarget).toHaveCSS("border-top-color", "rgb(255, 255, 255)");
-    await expect(darkTarget).toHaveCSS("color", "rgb(0, 0, 0)");
-    await expect(darkTarget).toHaveCSS("border-top-color", "rgb(0, 0, 0)");
+    await expect(lightTarget).toHaveCSS("color", "rgb(245, 164, 0)");
+    await expect(lightTarget).toHaveCSS("border-top-color", "rgb(245, 164, 0)");
+    await expect(darkTarget).toHaveCSS("color", "rgb(0, 95, 204)");
+    await expect(darkTarget).toHaveCSS("border-top-color", "rgb(0, 95, 204)");
   });
 
   test("hides unassigned graphic gap match hotspots until keyboard focus or assignment", async ({

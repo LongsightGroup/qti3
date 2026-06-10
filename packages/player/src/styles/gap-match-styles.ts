@@ -30,6 +30,10 @@ export const GAP_MATCH_PLAYER_STYLES = `
   vertical-align: middle;
 }
 
+.qti3-gap-passage .qti3-gap-button {
+  min-inline-size: var(--qti3-gap-input-width, 6ch);
+}
+
 .qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) {
   display: block;
   line-height: 2.3;

@@ -85,14 +85,14 @@ button.qti3-hotspot-button[data-shape="circle"] {
   .qti3-hotspot-surface
   .qti3-hotspot-overlay
   .qti3-hotspot-button:not([data-selected="true"]) {
-  stroke: white;
+  stroke: var(--qti3-hotspot-selection-light, #f5a400);
 }
 
 .qti3-hotspot.qti-selections-dark
   .qti3-hotspot-surface
   .qti3-hotspot-overlay
   .qti3-hotspot-button:not([data-selected="true"]) {
-  stroke: black;
+  stroke: var(--qti3-hotspot-selection-dark, #005fcc);
 }
 
 .qti3-hotspot.qti-unselected-hidden
@@ -104,14 +104,14 @@ button.qti3-hotspot-button[data-shape="circle"] {
 
 .qti3-graphicGapMatch.qti-selections-light
   .qti3-graphic-gap-hotspot:not([data-selected="true"]) {
-  border-color: white;
-  color: white;
+  border-color: var(--qti3-hotspot-selection-light, #f5a400);
+  color: var(--qti3-hotspot-selection-light, #f5a400);
   background: rgb(0 0 0 / 0.45);
 }
 
 .qti3-graphicGapMatch.qti-selections-dark .qti3-graphic-gap-hotspot:not([data-selected="true"]) {
-  border-color: black;
-  color: black;
+  border-color: var(--qti3-hotspot-selection-dark, #005fcc);
+  color: var(--qti3-hotspot-selection-dark, #005fcc);
   background: rgb(255 255 255 / 0.65);
 }
 

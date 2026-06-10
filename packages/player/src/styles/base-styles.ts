@@ -43,8 +43,7 @@ export const BASE_PLAYER_STYLES = `
   margin-block: 0 1rem;
 }
 
-.qti3-item-body > :last-child,
-.qti3-item-body :where(div, section, article) > :last-child {
+.qti3-item-body > :last-child {
   margin-block-end: 0;
 }
 
