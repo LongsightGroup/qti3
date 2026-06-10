@@ -21,6 +21,22 @@ export function renderContentNodes(nodes: QtiContentNode[], context: PlayerConte
   return nodes.flatMap((node) => renderContentNode(node, context));
 }
 
+export function renderStaticContentNodes(nodes: QtiContentNode[]): Node[] {
+  return renderContentNodes(nodes, staticMarkupContentContext());
+}
+
+function staticMarkupContentContext(): PlayerContentContext {
+  return {
+    interactionAt: () => undefined,
+    renderBlockInteraction: () => document.createElement("span"),
+    renderEmbeddedInteraction: () => document.createElement("span"),
+    currentVariableValue: () => null,
+    mathTemplateValue: () => undefined,
+    isFeedbackVisible: () => false,
+    isTemplateContentVisible: () => false,
+  };
+}
+
 export function renderContentNode(node: QtiContentNode, context: PlayerContentContext): Node[] {
   if (node.kind === "text") return [document.createTextNode(node.text)];
   if (node.kind === "interaction") {

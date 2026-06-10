@@ -499,7 +499,7 @@ function parseInteraction(
       interactionType === "portableCustom"
         ? parsePortableCustomDefinition(node, diagnostics)
         : undefined,
-    choices: parseChoices(node),
+    choices: parseChoices(node, diagnostics, responseDeclarationMap),
     hottextSegments: interactionType === "hottext" ? parseHottextSegments(node) : undefined,
     gapMatchSegments:
       interactionType === "gapMatch" || interactionType === "graphicGapMatch"
@@ -965,7 +965,11 @@ function assetTypeFromData(data: string | undefined): string | undefined {
   return undefined;
 }
 
-function parseChoices(node: XmlNode): QtiChoice[] {
+function parseChoices(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+  responseDeclarationMap: Map<string, QtiResponseDeclaration>,
+): QtiChoice[] {
   const choiceNames = new Set([
     "qti-simple-choice",
     "qti-simple-associable-choice",
@@ -981,6 +985,7 @@ function parseChoices(node: XmlNode): QtiChoice[] {
   return descendants(node, (child) => choiceNames.has(child.localName)).map((choice, index) => {
     const identifier = choice.attributes.identifier ?? "";
     const asset = parseChoiceAsset(choice);
+    const content = parseContentChildren(choice, diagnostics, responseDeclarationMap, []);
     return {
       identifier,
       text:
@@ -989,6 +994,7 @@ function parseChoices(node: XmlNode): QtiChoice[] {
         asset?.text ||
         identifier ||
         `Choice ${index + 1}`,
+      content: content.length > 0 ? content : undefined,
       asset,
       role: choiceRole(choice),
       qtiName: choice.localName,

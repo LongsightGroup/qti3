@@ -9,6 +9,7 @@ import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 import { choiceLayout } from "./choice-layout.js";
+import { appendChoiceVisual } from "./shared.js";
 import { sharedVocabularyLabel } from "./shared-vocabulary.js";
 
 export function renderChoice(
@@ -57,6 +58,7 @@ export function renderChoice(
     input.name = interaction.responseIdentifier ?? interaction.type;
     input.value = choice.identifier;
     input.checked = selected.has(choice.identifier);
+    if (choice.content && choice.content.length > 0) input.setAttribute("aria-label", choice.text);
     input.addEventListener("change", () => {
       if (multiple) {
         if (input.checked) {
@@ -91,7 +93,7 @@ export function renderChoice(
     }
     const text = document.createElement("span");
     text.className = "qti3-choice-text";
-    text.textContent = choice.text;
+    appendChoiceVisual(text, choice);
     optionParts.push(text);
     label.append(...optionParts);
     list.append(label);

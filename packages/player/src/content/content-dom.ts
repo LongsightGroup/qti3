@@ -63,6 +63,8 @@ export const unsafeContentElements = new Set(["script", "style"]);
 
 const mathMlElements = new Set([
   "math",
+  "annotation",
+  "annotation-xml",
   "maction",
   "maligngroup",
   "malignmark",
@@ -217,6 +219,7 @@ const mathMlAttributeNames = new Set([
   "align",
   "columnalign",
   "display",
+  "encoding",
   "fence",
   "largeop",
   "lspace",

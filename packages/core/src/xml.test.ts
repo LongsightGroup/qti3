@@ -18,6 +18,16 @@ describe("parseXmlTree source ranges", () => {
     ]);
   });
 
+  it("decodes numeric character references in parsed text", () => {
+    const xml = "<math><mrow><mi>&#x398;</mi><mi>&#x03B6;</mi><mi>&amp;#x398;</mi></mrow></math>";
+
+    const parsed = parseXmlTree(xml);
+    expect(parsed.errors).toEqual([]);
+
+    const identifiers = parsed.root?.children[0]?.children ?? [];
+    expect(identifiers.map((node) => node.text)).toEqual(["Θ", "ζ", "&#x398;"]);
+  });
+
   it("records exact ranges for nested same-name elements", () => {
     const xml = `<root><item id="outer"><item id="inner">inner</item></item></root>`;
 

@@ -142,6 +142,12 @@ const inlineMixedContentChildNames = new Set([
   "i",
   "kbd",
   "mark",
+  "math",
+  "mi",
+  "mn",
+  "mo",
+  "mrow",
+  "msup",
   "q",
   "rp",
   "rt",
@@ -174,6 +180,8 @@ function restoreMixedContentFromSource(xml: string, node: XmlNode): void {
     if (typeof entry !== "string") restoreMixedContentFromSource(xml, entry);
   }
 
+  restoreLeafTextFromSource(xml, node);
+
   if (!shouldRestoreMixedContentWhitespace(node)) return;
 
   const contentEndOffset = node.endSource?.offset ?? node.sourceRange.endOffset;
@@ -201,6 +209,17 @@ function restoreMixedContentFromSource(xml: string, node: XmlNode): void {
 
   node.content = restored;
   node.text = restored.filter((entry): entry is string => typeof entry === "string").join("");
+}
+
+function restoreLeafTextFromSource(xml: string, node: XmlNode): void {
+  if (node.children.length > 0) return;
+  const contentEndOffset = node.endSource?.offset ?? node.sourceRange.endOffset;
+  if (node.sourceRange.startTagEndOffset < 0 || contentEndOffset === undefined) return;
+  const raw = xml.slice(node.sourceRange.startTagEndOffset + 1, contentEndOffset);
+  if (raw.includes("<![CDATA[")) return;
+  const decoded = decodeXmlCharacterData(raw);
+  node.text = decoded;
+  node.content = decoded.length > 0 ? [decoded] : [];
 }
 
 function appendDecodedTextSegment(content: Array<string | XmlNode>, raw: string): void {

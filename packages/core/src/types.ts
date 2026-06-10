@@ -138,7 +138,10 @@ export interface QtiTemplateDeclaration extends QtiVariableDeclaration {
 
 export interface QtiChoice {
   identifier: string;
+  /** Plain-text fallback used for speech, TTS, diagnostics, and native controls. */
   text: string;
+  /** Parsed visual content for renderers that can display rich choice markup such as MathML. */
+  content?: QtiContentNode[] | undefined;
   asset?: QtiObjectAsset | undefined;
   role: QtiChoiceRole;
   qtiName: string;

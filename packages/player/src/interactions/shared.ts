@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
+import { renderStaticContentNodes } from "../content/content-renderer.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionChoices } from "../interaction-support.js";
 
@@ -48,6 +49,11 @@ export function appendChoiceVisual(parent: HTMLElement, choice: QtiChoice): void
     if (width !== undefined) image.width = width;
     if (height !== undefined) image.height = height;
     parent.append(image);
+    return;
+  }
+
+  if (choice.content && choice.content.length > 0) {
+    parent.append(...renderStaticContentNodes(choice.content));
     return;
   }
 
