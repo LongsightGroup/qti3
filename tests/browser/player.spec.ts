@@ -818,6 +818,8 @@ test.describe("manual harness", () => {
       page.locator('qti-assessment-item-player .qti3-printed-variable[data-identifier="SCORE"]'),
     ).toHaveText("0.00");
     await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toBeHidden();
+    await expect(page.getByRole("radio", { name: "A. Correct" })).toHaveCount(1);
+    await expect(page.getByRole("radio", { name: "Correct", exact: true })).toHaveCount(0);
 
     await page.getByRole("radio", { name: "A. Correct" }).check();
     await page.locator("#debug-score").click();

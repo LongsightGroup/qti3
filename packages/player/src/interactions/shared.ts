@@ -37,6 +37,10 @@ export function setChoiceAccessibleName(element: HTMLElement, choice: QtiChoice)
   if (choice.asset?.data) element.setAttribute("aria-label", choice.text);
 }
 
+export function hasRichChoiceContent(choice: QtiChoice): boolean {
+  return choice.content?.some((node) => node.kind !== "text") ?? false;
+}
+
 export function appendChoiceVisual(parent: HTMLElement, choice: QtiChoice): void {
   if (choice.asset?.data) {
     const image = document.createElement("img");
