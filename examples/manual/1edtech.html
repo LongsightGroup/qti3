@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>1EdTech QTI examples</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f6f7;
+        --panel: #fff;
+        --panel-alt: #f9fafb;
+        --ink: #111827;
+        --muted: #4b5563;
+        --line: #d7dce2;
+        --accent: #245f9f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--bg);
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: minmax(19rem, 28rem) minmax(0, 1fr);
+        min-block-size: 100vh;
+      }
+
+      aside,
+      section {
+        min-inline-size: 0;
+        padding: 1rem;
+      }
+
+      aside {
+        border-inline-end: 1px solid var(--line);
+        background: var(--panel);
+        overflow: auto;
+      }
+
+      h1,
+      p {
+        margin-block: 0;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+      }
+
+      label,
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      label {
+        display: grid;
+        gap: 0.25rem;
+        margin-block-start: 0.75rem;
+      }
+
+      input,
+      select,
+      textarea,
+      button,
+      pre {
+        inline-size: 100%;
+        max-inline-size: 100%;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        min-block-size: 2.25rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+      }
+
+      textarea {
+        min-block-size: 16rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.82rem;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:hover {
+        border-color: var(--accent);
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-block-start: 0.75rem;
+      }
+
+      .meta,
+      .status {
+        margin-block-start: 0.75rem;
+        color: var(--muted);
+      }
+
+      qti-assessment-item-player {
+        display: block;
+        min-block-size: 24rem;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        background: Canvas;
+        color: CanvasText;
+      }
+
+      pre {
+        margin-block-start: 1rem;
+        padding: 0.75rem;
+        border: 1px solid var(--line);
+        background: var(--panel-alt);
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <aside>
+        <h1>1EdTech QTI examples</h1>
+        <p class="status" id="status">Loading examples...</p>
+
+        <label>
+          Filter
+          <input id="filter" type="search" autocomplete="off" />
+        </label>
+
+        <label>
+          Example
+          <select id="examples" size="16"></select>
+        </label>
+
+        <div class="toolbar">
+          <button id="previous" type="button">Previous</button>
+          <button id="next" type="button">Next</button>
+          <button id="copy-original" type="button">Copy XML</button>
+          <button id="copy-amp" type="button">Copy Amp-up XML</button>
+        </div>
+
+        <p class="meta" id="meta"></p>
+
+        <label>
+          XML
+          <textarea id="xml" spellcheck="false"></textarea>
+        </label>
+
+        <button id="reload" type="button">Reload edited XML</button>
+      </aside>
+
+      <section>
+        <qti-assessment-item-player></qti-assessment-item-player>
+        <pre id="events"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="./src/1edtech.ts"></script>
+  </body>
+</html>

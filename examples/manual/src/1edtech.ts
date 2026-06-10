@@ -1,0 +1,228 @@
+import {
+  defineQtiAssessmentItemPlayer,
+  type QtiAssessmentItemPlayer,
+} from "@longsightgroup/qti3-player";
+
+defineQtiAssessmentItemPlayer();
+
+interface ExampleEntry {
+  path: string;
+  name: string;
+  group: string;
+  kind: "item" | "test" | "xml";
+  identifier?: string;
+  title?: string;
+}
+
+interface ExampleIndexPayload {
+  root: string;
+  examples: ExampleEntry[];
+  error?: string;
+}
+
+const status = requiredElement<HTMLElement>("#status");
+const filter = requiredElement<HTMLInputElement>("#filter");
+const examplesSelect = requiredElement<HTMLSelectElement>("#examples");
+const previous = requiredElement<HTMLButtonElement>("#previous");
+const next = requiredElement<HTMLButtonElement>("#next");
+const copyOriginal = requiredElement<HTMLButtonElement>("#copy-original");
+const copyAmp = requiredElement<HTMLButtonElement>("#copy-amp");
+const meta = requiredElement<HTMLElement>("#meta");
+const xmlInput = requiredElement<HTMLTextAreaElement>("#xml");
+const reload = requiredElement<HTMLButtonElement>("#reload");
+const events = requiredElement<HTMLPreElement>("#events");
+const player = requiredElement<QtiAssessmentItemPlayer>("qti-assessment-item-player");
+
+let allExamples: ExampleEntry[] = [];
+let visibleExamples: ExampleEntry[] = [];
+let selectedIndex = 0;
+let currentXml = "";
+let currentExample: ExampleEntry | undefined;
+
+void initialize();
+
+async function initialize(): Promise<void> {
+  const payload = await fetchJson<ExampleIndexPayload>("/__1edtech/index.json");
+  if (payload.error) {
+    status.textContent = payload.error;
+    meta.textContent = `Configured root: ${payload.root}`;
+    previous.disabled = true;
+    next.disabled = true;
+    return;
+  }
+
+  allExamples = payload.examples;
+  visibleExamples = allExamples.filter((example) => example.kind === "item");
+  renderExamples();
+  status.textContent = `${visibleExamples.length} item examples`;
+  await loadAt(0);
+
+  filter.addEventListener("input", () => {
+    const query = filter.value.trim().toLowerCase();
+    visibleExamples = allExamples.filter((example) => {
+      if (example.kind !== "item") return false;
+      return [example.path, example.identifier, example.title].some((value) =>
+        value?.toLowerCase().includes(query),
+      );
+    });
+    renderExamples();
+    void loadAt(0);
+  });
+
+  examplesSelect.addEventListener("change", () => {
+    void loadAt(Number(examplesSelect.value));
+  });
+
+  previous.addEventListener("click", () => {
+    void loadAt(selectedIndex - 1);
+  });
+
+  next.addEventListener("click", () => {
+    void loadAt(selectedIndex + 1);
+  });
+
+  reload.addEventListener("click", () => {
+    void loadXml(xmlInput.value);
+  });
+
+  copyOriginal.addEventListener("click", () => {
+    void copyXml(currentXml, "Copied original XML");
+  });
+
+  copyAmp.addEventListener("click", () => {
+    void copyAmpXml();
+  });
+
+  player.addEventListener("qti-ready", (event) => {
+    appendEvent("qti-ready", (event as CustomEvent).detail);
+  });
+  player.addEventListener("qti-diagnostics", (event) => {
+    appendEvent("qti-diagnostics", (event as CustomEvent).detail);
+  });
+  player.addEventListener("qti-statechange", (event) => {
+    appendEvent("qti-statechange", (event as CustomEvent).detail);
+  });
+}
+
+async function loadAt(index: number): Promise<void> {
+  if (visibleExamples.length === 0) {
+    examplesSelect.replaceChildren();
+    meta.textContent = "No matching item examples";
+    previous.disabled = true;
+    next.disabled = true;
+    return;
+  }
+
+  selectedIndex = Math.max(0, Math.min(index, visibleExamples.length - 1));
+  currentExample = visibleExamples[selectedIndex];
+  examplesSelect.value = String(selectedIndex);
+  currentXml = await fetchText(fileUrl(currentExample.path));
+  xmlInput.value = currentXml;
+  meta.textContent = JSON.stringify(
+    {
+      selectedIndex,
+      visible: visibleExamples.length,
+      example: currentExample,
+    },
+    null,
+    2,
+  );
+  previous.disabled = selectedIndex <= 0;
+  next.disabled = selectedIndex >= visibleExamples.length - 1;
+  await loadXml(currentXml);
+}
+
+async function loadXml(xml: string): Promise<void> {
+  events.textContent = "";
+  await player.loadXml(xml, {
+    resolveAsset: (url: string) => resolveAssetUrl(currentExample?.path ?? "", url),
+  });
+}
+
+function renderExamples(): void {
+  examplesSelect.replaceChildren(
+    ...visibleExamples.map((example, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = `${index + 1}. ${example.title || example.identifier || example.name}`;
+      return option;
+    }),
+  );
+}
+
+function appendEvent(name: string, detail: unknown): void {
+  events.textContent = `${new Date().toLocaleTimeString()} ${name}\n${JSON.stringify(detail, null, 2)}\n\n${events.textContent}`;
+}
+
+async function copyXml(xml: string, message: string): Promise<void> {
+  await navigator.clipboard.writeText(xml);
+  status.textContent = message;
+}
+
+async function copyAmpXml(): Promise<void> {
+  const xml = await inlineXmlAssets(currentXml, currentExample?.path ?? "");
+  await copyXml(xml, "Copied Amp-up XML");
+}
+
+async function inlineXmlAssets(xml: string, sourcePath: string): Promise<string> {
+  const parser = new DOMParser();
+  const documentModel = parser.parseFromString(xml, "application/xml");
+  for (const element of Array.from(documentModel.querySelectorAll("[src], object[data]"))) {
+    const attr = element.hasAttribute("src") ? "src" : "data";
+    const value = element.getAttribute(attr);
+    if (!value || value.startsWith("data:") || /^[a-z][a-z0-9+.-]*:/i.test(value)) continue;
+    element.setAttribute(attr, await assetDataUrl(sourcePath, value));
+  }
+  return new XMLSerializer().serializeToString(documentModel);
+}
+
+async function assetDataUrl(sourcePath: string, url: string): Promise<string> {
+  const response = await fetch(resolveAssetUrl(sourcePath, url));
+  if (!response.ok) throw new Error(`Failed to fetch asset ${url}: ${response.status}`);
+  return await blobToDataUrl(await response.blob());
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("Unable to read asset as a data URL"));
+    });
+    reader.addEventListener("error", () =>
+      reject(reader.error ?? new Error("Unable to read asset")),
+    );
+    reader.readAsDataURL(blob);
+  });
+}
+
+function resolveAssetUrl(sourcePath: string, url: string): string {
+  if (!sourcePath || url.startsWith("data:") || /^[a-z][a-z0-9+.-]*:/i.test(url)) return url;
+  const base = sourcePath.split("/").slice(0, -1).join("/");
+  return fileUrl(`${base}/${url}`);
+}
+
+function fileUrl(path: string): string {
+  return `/__1edtech/file/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  return (await response.json()) as T;
+}
+
+async function fetchText(url: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`);
+  return await response.text();
+}
+
+function requiredElement<T extends Element = Element>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Missing ${selector}`);
+  return element;
+}
