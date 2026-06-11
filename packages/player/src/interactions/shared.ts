@@ -80,11 +80,6 @@ function markEmbeddedChoiceMediaNonDraggable(nodes: Node[]): void {
   }
 }
 
-export function choiceText(choices: QtiChoice[], identifier: string | undefined): string {
-  if (!identifier) return "";
-  return choices.find((choice) => choice.identifier === identifier)?.text ?? identifier;
-}
-
 export function sourceChoices(interaction: QtiInteraction): QtiChoice[] {
   const choices = interactionChoices(interaction);
   if (interaction.type === "gapMatch" || interaction.type === "graphicGapMatch") {

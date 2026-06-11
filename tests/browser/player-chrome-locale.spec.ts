@@ -30,15 +30,20 @@ test.describe("player chrome locale", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-counter")).toHaveText("3 av 10");
   });
 
-  test("localizes match pair labels from host catalog", async ({ page }) => {
+  test("localizes match pair remove labels from host catalog", async ({ page }) => {
     await page.goto("/");
-    await setPlayerMessageCatalog(page, swedishPlayerMessageCatalog);
+    await setPlayerMessageCatalog(page, spanishPlayerMessageCatalog);
     await loadFixture(page, "match");
 
     await assignMatch(page, "B", "G1");
     await expect(
       page.locator("qti-assessment-item-player .qti3-pair-chip span").first(),
-    ).toHaveText("Outcome declaration med Candidate response value");
+    ).toHaveText("Outcome declaration to Candidate response value");
+    await expect(
+      page.getByRole("button", {
+        name: "Eliminar Outcome declaration con Candidate response value",
+      }),
+    ).toBeVisible();
   });
 
   test("resolves language-of-interface from browser and attribute", async ({ page }) => {

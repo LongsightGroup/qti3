@@ -664,6 +664,31 @@ describe("@longsightgroup/qti3-core", () => {
     expect(result.document?.item.language).toBe("ja");
   });
 
+  it("preserves rich interaction prompt content", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rich-prompt" title="rich-prompt" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"/>
+        <qti-item-body>
+          <qti-order-interaction response-identifier="RESPONSE">
+            <qti-prompt>Order <math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac><mi>a</mi><mi>b</mi></mfrac><annotation encoding="SnuggleTeX">\\[ \\frac{a}{b} \\]</annotation></semantics></math>.</qti-prompt>
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-order-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const interaction = result.document?.item.interactions[0];
+    expect(interaction?.promptContent).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "text", text: expect.stringContaining("Order") }),
+        expect.objectContaining({ kind: "element", qtiName: "math" }),
+      ]),
+    );
+    expect(interaction?.prompt).toContain("Order");
+    expect(interaction?.prompt).not.toContain("\\[");
+  });
+
   it("preserves and validates item catalog metadata", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-item" title="catalog-item" time-dependent="false">

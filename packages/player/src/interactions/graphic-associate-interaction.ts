@@ -1,5 +1,4 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { removeButton } from "../controls/remove-button.js";
 import {
   applyGraphicSurfaceLayout,
   appendGraphicObjectImage,
@@ -14,6 +13,7 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
+import { createAssociationPairChip } from "./pair-chip.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { associationMaximumResponses, exceedsHotspotMatchMax } from "../response-limits.js";
@@ -231,18 +231,18 @@ export function renderGraphicAssociateResponse(
         const [source = "", target = ""] = pair.split(" ");
         const sourceChoice = choices.find((choice) => choice.identifier === source);
         const targetChoice = choices.find((choice) => choice.identifier === target);
-        const pairLabel = messages.message("associationPairLabel", {
-          source: sourceChoice ? hotspotDisplayLabel(sourceChoice, choices) : source,
-          target: targetChoice ? hotspotDisplayLabel(targetChoice, choices) : target,
+        return createAssociationPairChip({
+          source: {
+            choice: sourceChoice,
+            label: sourceChoice ? hotspotDisplayLabel(sourceChoice, choices) : source,
+          },
+          target: {
+            choice: targetChoice,
+            label: targetChoice ? hotspotDisplayLabel(targetChoice, choices) : target,
+          },
+          messages,
+          onRemove: () => removePair(pair),
         });
-        const item = document.createElement("li");
-        item.className = "qti3-pair-chip";
-        const text = document.createElement("span");
-        text.textContent = pairLabel;
-        const remove = removeButton(pairLabel, messages);
-        remove.addEventListener("click", () => removePair(pair));
-        item.append(text, remove);
-        return item;
       }),
     );
   };

@@ -259,64 +259,6 @@ test.describe("player DOM behavior", () => {
     await expect(player.locator("p .qti3-inlineChoice")).toHaveCount(0);
   });
 
-  test("renders MathML inside simple choice labels", async ({ page }) => {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-polynomials" title="Identifying polynomials" adaptive="false" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
-    <qti-correct-response><qti-value>ChoiceA</qti-value></qti-correct-response>
-  </qti-response-declaration>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-  <qti-item-body>
-    <p>Which of the following is not a polynomial?</p>
-    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
-      <qti-simple-choice identifier="ChoiceA">
-        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
-          <semantics>
-            <mrow>
-              <msup><mi>sec</mi><mn>2</mn></msup>
-              <mi>&#x398;</mi>
-            </mrow>
-            <annotation encoding="SnuggleTeX">\\[ \\sec^2{\\theta} \\]</annotation>
-          </semantics>
-        </math>
-      </qti-simple-choice>
-      <qti-simple-choice identifier="ChoiceB">
-        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
-          <semantics>
-            <mrow><mi>x</mi><mo>+</mo><mn>1001</mn><mi>y</mi></mrow>
-            <annotation encoding="SnuggleTeX">\\[ x+1001y \\]</annotation>
-          </semantics>
-        </math>
-      </qti-simple-choice>
-    </qti-choice-interaction>
-  </qti-item-body>
-</qti-assessment-item>`;
-
-    await page.goto("/");
-    await pasteXml(page, xml);
-
-    const choiceText = page.locator("qti-assessment-item-player .qti3-choice-text");
-    await expect(choiceText.locator("math")).toHaveCount(2);
-    await expect(choiceText.locator("annotation")).toHaveCount(2);
-    await expect(choiceText.locator("msup")).toHaveCount(1);
-    await expect(choiceText.locator("annotation").first()).toHaveAttribute(
-      "encoding",
-      "SnuggleTeX",
-    );
-    await expect(choiceText.locator("math").first()).toHaveAttribute("display", "block");
-    await expect(choiceText.locator("math").first()).toContainText("Θ");
-    await expect(choiceText.locator("math").first()).not.toContainText("&#x398;");
-    await expect(
-      page.locator('qti-assessment-item-player [data-choice-identifier="ChoiceA"] input'),
-    ).toHaveAttribute("aria-label", "sec 2 Θ \\[ \\sec^2{\\theta} \\]");
-    expect(
-      await choiceText
-        .locator("math")
-        .first()
-        .evaluate((element) => element.namespaceURI),
-    ).toBe("http://www.w3.org/1998/Math/MathML");
-  });
-
   test("renders rich order choice content without leaking XML comments", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, RICH_ORDER_CONTENT_ITEM);

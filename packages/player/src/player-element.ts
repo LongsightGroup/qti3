@@ -492,6 +492,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       endAttempt: () => this.endAttempt(),
       renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
         this.renderPortableCustomResponse(portableInteraction, portableUpdate, portableValue),
+      renderPromptContent: (nodes) => renderContentNodes(nodes, this.contentContext()),
     });
   }
 

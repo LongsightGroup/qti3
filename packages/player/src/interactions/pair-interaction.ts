@@ -1,11 +1,10 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { removeButton } from "../controls/remove-button.js";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { associationMaximumResponses } from "../response-limits.js";
+import { createAssociationPairChip } from "./pair-chip.js";
 import {
-  choiceText,
   pairRegionLabels,
   sourceChoices,
   targetChoices,
@@ -103,24 +102,26 @@ export function renderPairResponse(
   const renderPairs = () => {
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
-        const [source, target] = pair.split(" ");
-        const label = messages.message("associationPairLabel", {
-          source: choiceText(sources, source),
-          target: choiceText(targets, target),
+        const [source = "", target = ""] = pair.split(" ");
+        const sourceChoice = sources.find((choice) => choice.identifier === source);
+        const targetChoice = targets.find((choice) => choice.identifier === target);
+        return createAssociationPairChip({
+          source: {
+            choice: sourceChoice,
+            label: sourceChoice?.text || source,
+          },
+          target: {
+            choice: targetChoice,
+            label: targetChoice?.text || target,
+          },
+          messages,
+          onRemove: () => {
+            const index = selectedPairs.indexOf(pair);
+            if (index >= 0) selectedPairs.splice(index, 1);
+            renderPairs();
+            commit();
+          },
         });
-        const item = document.createElement("li");
-        item.className = "qti3-pair-chip";
-        const text = document.createElement("span");
-        text.textContent = label;
-        const remove = removeButton(label, messages);
-        remove.addEventListener("click", () => {
-          const index = selectedPairs.indexOf(pair);
-          if (index >= 0) selectedPairs.splice(index, 1);
-          renderPairs();
-          commit();
-        });
-        item.append(text, remove);
-        return item;
       }),
     );
   };

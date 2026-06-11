@@ -1,3 +1,4 @@
+import { flatTextFromContent } from "./content-text.js";
 import { getInteractionSupport, interactionNameToType, processingSupport } from "./support.js";
 import type {
   QtiAssessmentItem,
@@ -480,13 +481,22 @@ function parseInteraction(
               (child) => child.localName === "object" || child.localName === "img",
             )[0];
 
+  const promptContent = prompt
+    ? parseContentChildren(prompt, diagnostics, responseDeclarationMap, [])
+    : undefined;
+
   return {
     type: interactionType ?? "custom",
     qtiName: node.localName,
     responseIdentifier,
     responseCardinality: responseDeclaration?.cardinality,
     responseBaseType: responseDeclaration?.baseType,
-    prompt: prompt ? textContent(prompt) : undefined,
+    prompt: promptContent
+      ? flatTextFromContent(promptContent, { excludeAnnotations: true }) || undefined
+      : prompt
+        ? textContent(prompt)
+        : undefined,
+    promptContent: promptContent && promptContent.length > 0 ? promptContent : undefined,
     promptAttributes: prompt?.attributes,
     promptSource: prompt?.source,
     contextText: inlineInteractionContext(node, interactionType),
@@ -986,10 +996,14 @@ function parseChoices(
     const identifier = choice.attributes.identifier ?? "";
     const asset = parseChoiceAsset(choice);
     const content = parseContentChildren(choice, diagnostics, responseDeclarationMap, []);
+    const flatChoiceText =
+      content.length > 0
+        ? flatTextFromContent(content, { excludeAnnotations: true })
+        : textContent(choice);
     return {
       identifier,
       text:
-        textContent(choice) ||
+        flatChoiceText ||
         choice.attributes["object-label"] ||
         asset?.text ||
         identifier ||

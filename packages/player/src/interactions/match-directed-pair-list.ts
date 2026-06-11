@@ -1,7 +1,6 @@
 import type { QtiChoice } from "@longsightgroup/qti3-core";
-import { removeButton } from "../controls/remove-button.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { choiceText } from "./shared.js";
+import { createAssociationPairChip } from "./pair-chip.js";
 import { parseDirectedPair, type MatchDirectedPairState } from "./match-directed-pair-state.js";
 
 export function createMatchDirectedPairList(
@@ -22,20 +21,22 @@ export function createMatchDirectedPairList(
     pairList.replaceChildren(
       ...selectedPairs.map((pair) => {
         const [source, target] = parseDirectedPair(pair);
-        const label = messages.message("associationPairLabel", {
-          source: choiceText(sources, source),
-          target: choiceText(targets, target),
+        const sourceChoice = sources.find((choice) => choice.identifier === source);
+        const targetChoice = targets.find((choice) => choice.identifier === target);
+        return createAssociationPairChip({
+          source: {
+            choice: sourceChoice,
+            label: sourceChoice?.text || source,
+          },
+          target: {
+            choice: targetChoice,
+            label: targetChoice?.text || target,
+          },
+          messages,
+          onRemove: () => {
+            state.removePair(pair);
+          },
         });
-        const item = document.createElement("li");
-        item.className = "qti3-pair-chip";
-        const text = document.createElement("span");
-        text.textContent = label;
-        const remove = removeButton(label, messages);
-        remove.addEventListener("click", () => {
-          state.removePair(pair);
-        });
-        item.append(text, remove);
-        return item;
       }),
     );
   };

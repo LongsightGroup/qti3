@@ -1,4 +1,4 @@
-import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { copySafeAttributes } from "../content/content-dom.js";
 import {
   inlineEmbeddingDisposition,
@@ -25,6 +25,7 @@ export interface BlockInteractionRenderOptions {
     update: (value: QtiValue) => void,
     currentValue: QtiValue,
   ) => HTMLElement;
+  renderPromptContent: (nodes: QtiContentNode[]) => Node[];
 }
 
 export interface EmbeddedInteractionRenderOptions {
@@ -44,6 +45,7 @@ export function renderBlockInteractionSection(options: BlockInteractionRenderOpt
     isCompleted,
     endAttempt,
     renderPortableCustom,
+    renderPromptContent,
   } = options;
   const field = document.createElement("section");
   field.className = `qti3-interaction qti3-${interaction.type}`;
@@ -54,7 +56,11 @@ export function renderBlockInteractionSection(options: BlockInteractionRenderOpt
 
   const heading = document.createElement("h3");
   copySafeAttributes(heading, interaction.promptAttributes ?? {});
-  heading.textContent = interactionLabel(interaction);
+  if (interaction.promptContent && interaction.promptContent.length > 0) {
+    heading.append(...renderPromptContent(interaction.promptContent));
+  } else {
+    heading.textContent = interactionLabel(interaction);
+  }
   field.append(heading);
   if (interaction.responseIdentifier) {
     field.append(validationMessageElement(interaction.responseIdentifier));

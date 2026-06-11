@@ -16,6 +16,14 @@ export const CONTROL_PLAYER_STYLES = `
   padding-inline-start: 1.5rem;
 }
 
+/* Keep vertical order rows tall enough for block MathML in choice handles. */
+.qti3-reorder-list > .qti3-reorder-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  min-block-size: 4rem;
+}
+
 .qti3-reorder-list[data-qti-order-orientation="horizontal"],
 .qti3-order-sv-layout[data-qti-order-orientation="horizontal"] .qti3-order-target-list {
   grid-auto-flow: column;
@@ -25,7 +33,9 @@ export const CONTROL_PLAYER_STYLES = `
 }
 
 .qti3-reorder-list[data-qti-order-orientation="horizontal"] .qti3-reorder-item {
+  display: flex;
   align-self: start;
+  min-block-size: 0;
 }
 
 .qti3-choices-layout {
@@ -219,6 +229,8 @@ export const CONTROL_PLAYER_STYLES = `
   inline-size: 100%;
   justify-content: flex-start;
   text-align: start;
+  min-inline-size: 0;
+  min-block-size: 4rem;
 }
 
 .qti3-gap-choice-image {
@@ -281,8 +293,18 @@ export const CONTROL_PLAYER_STYLES = `
 }
 
 .qti3-pair-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: fit-content;
   padding: 0.35rem 0.5rem;
+}
+
+.qti3-pair-chip-label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .qti3-point-controls,

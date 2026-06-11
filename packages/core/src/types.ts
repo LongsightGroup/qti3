@@ -195,7 +195,10 @@ export interface QtiInteraction {
   responseIdentifier?: string | undefined;
   responseCardinality?: QtiCardinality | undefined;
   responseBaseType?: QtiBaseType | undefined;
+  /** Flat accessibility/fallback label derived from prompt content with annotations stripped. */
   prompt?: string | undefined;
+  /** Structured prompt content for visual rendering. When present, block headings render this instead of prompt. */
+  promptContent?: QtiContentNode[] | undefined;
   promptAttributes?: Record<string, string> | undefined;
   promptSource?: QtiSourceLocation | undefined;
   contextText?: string | undefined;
