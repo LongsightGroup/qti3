@@ -61,6 +61,12 @@ describe("@longsightgroup/qti3-a11y", () => {
         ]),
       );
     }
+
+    expect(
+      accessibilityProofMatrix
+        .find((entry) => entry.interactionType === "extendedText")
+        ?.variants?.map((variant) => variant.name),
+    ).toContain("format=xhtml");
   });
 
   it("matches rich interaction keyboard contracts to rendered controls", () => {
@@ -111,6 +117,13 @@ describe("@longsightgroup/qti3-a11y", () => {
     expect(byType.get("drawing")?.focusStrategy).toContain(
       "the live canvas renders as a light surface independent of page color scheme",
     );
+    const extendedTextXhtml = byType
+      .get("extendedText")
+      ?.variants?.find((variant) => variant.name === "format=xhtml");
+    expect(extendedTextXhtml?.keyboardModel).toContain(
+      "Toolbar buttons use roving tabindex; Arrow keys move between buttons.",
+    );
+    expect(extendedTextXhtml?.requiredStates).toContain("aria-pressed on toggle commands");
   });
 
   it("documents image-backed graphic gap match accessibility proof", () => {

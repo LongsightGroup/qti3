@@ -10,6 +10,14 @@ export const swedishPlayerMessageCatalog = {
     remove: "Ta bort",
     clearDrawing: "Rensa ritning",
     graphicOrderNoRegionsSelected: "Inga regioner ordnade.",
+    richTextToolbarLabel: "Formatering av rik text",
+    richTextToolbarFormattingGroup: "Textformatering",
+    richTextToolbarListsGroup: "Listor",
+    richTextToolbarHistoryGroup: "Angra och gor om",
+    richTextBold: "Fet",
+    richTextItalic: "Kursiv",
+    richTextUndo: "Angra",
+    richTextRedo: "Gor om",
   },
 };
 export const germanPlayerMessageCatalog = {

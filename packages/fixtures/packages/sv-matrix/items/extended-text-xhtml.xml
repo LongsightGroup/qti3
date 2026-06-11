@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-text-xhtml" title="extended-text-xhtml" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>Compose a short formatted answer using the rich text editor.</p>
+    <qti-extended-text-interaction
+      response-identifier="RESPONSE"
+      format="xhtml"
+      class="qti-height-lines-6"
+      expected-length="120"
+    >
+      <qti-prompt>Explain why a QTI item player should keep response capture separate from scoring and analytics.</qti-prompt>
+    </qti-extended-text-interaction>
+  </qti-item-body>
+</qti-assessment-item>

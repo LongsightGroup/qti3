@@ -277,13 +277,17 @@ describe("@longsightgroup/qti3-cli", () => {
     const fixtureIds = new Set(interactionFixtures.map((fixture) => fixture.id));
 
     const extraInteractionFixtures: Partial<Record<string, string[]>> = {
-      extendedText: ["packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml"],
+      extendedText: [
+        "packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml",
+        "packages/fixtures/packages/sv-matrix/items/extended-text-xhtml.xml",
+      ],
       textEntry: ["packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml"],
     };
     const extraInteractionTests: Partial<Record<string, string[]>> = {
       extendedText: [
         "packages/core/src/pattern-mask.test.ts",
         "tests/browser/player-dom-behavior.spec.ts",
+        "tests/browser/player-extended-text-xhtml.spec.ts",
       ],
       textEntry: [
         "packages/core/src/pattern-mask.test.ts",

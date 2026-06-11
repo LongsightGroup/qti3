@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { isEnforcedSharedVocabularyLevel } from "../../packages/core/src/shared-vocabulary-levels.js";
 import { allQuestionItemFixtures } from "../../packages/fixtures/src/index.js";
@@ -28,6 +30,23 @@ test.describe("player axe accessibility", () => {
         await expectNoAxeViolationsOnPlayer(page, fixture.id);
       });
     }
+  });
+
+  test.describe("extended text XHTML matrix item", () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto("/");
+      await installAxe(page);
+    });
+
+    test("extended-text-xhtml", async ({ page }) => {
+      const xml = await readFile(
+        join(process.cwd(), "packages/fixtures/packages/sv-matrix/items/extended-text-xhtml.xml"),
+        "utf8",
+      );
+      await pasteXml(page, xml);
+      await expectQuestionItemRendered(page);
+      await expectNoAxeViolationsOnPlayer(page, "extended-text-xhtml");
+    });
   });
 
   test.describe("shared vocabulary matrix items", () => {

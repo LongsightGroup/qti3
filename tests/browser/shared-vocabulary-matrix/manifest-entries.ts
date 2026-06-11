@@ -579,6 +579,31 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
       },
     ],
   ),
+  entry("extended-text-xhtml", "extendedText", "qti-height-lines-6", "full", [
+    {
+      type: "class-preserved",
+      selector: `${extendedText}[data-response-identifier="RESPONSE"]`,
+      className: "qti-height-lines-6",
+    },
+    {
+      type: "attribute",
+      selector: `${extendedText}[data-response-identifier="RESPONSE"] .qti3-rich-text-editor`,
+      name: "contenteditable",
+      value: "true",
+    },
+    {
+      type: "attribute",
+      selector: `${extendedText}[data-response-identifier="RESPONSE"] .qti3-rich-text-editor`,
+      name: "role",
+      value: "textbox",
+    },
+    {
+      type: "attribute",
+      selector: `${extendedText}[data-response-identifier="RESPONSE"] .qti3-rich-text-toolbar`,
+      name: "role",
+      value: "toolbar",
+    },
+  ]),
   entry(
     "media-controls-and-pause",
     "media",
