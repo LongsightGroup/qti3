@@ -219,7 +219,8 @@ Two response-bearing interactions have format-specific contracts worth calling o
   `data-qti-media-player-pause-delay` and `data-qti-media-player-pause-duration` as
   second-based timers around playback start and user-initiated pauses.
 - `qti-drawing-interaction` requires a `single` / `file` response and serializes candidate
-  drawings as image file data URLs.
+  drawings as image file data URLs. The player exposes a native pen color input; the
+  `toolbar-palette-none` interaction class hides it and locks the pen to black.
 - `qti-portable-custom-interaction` supports the Portable Custom Interaction (PCI) host
   contract: parsing and validating launch metadata, interaction markup, template/context
   bindings, stylesheets, catalog info, opaque suspend/resume state, and response/state

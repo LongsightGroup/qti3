@@ -339,14 +339,15 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
         "Focus lands on the drawing surface and then on auxiliary commands; the live canvas renders as a light surface independent of page color scheme.",
       keyboardModel: [
         "Pointer input draws freehand strokes.",
+        "A native pen color input selects the active stroke color.",
         "Enter or Space creates a deterministic keyboard stroke.",
         "Clear drawing removes all strokes.",
-        "The live drawing surface uses a light canvas and dark pen so strokes stay visible when the page is in dark mode.",
+        "The live drawing surface uses a light canvas so strokes stay visible when the page is in dark mode.",
       ],
       requiredStates: [
         "accessible name",
         "light canvas rendering",
-        "dark pen on light canvas",
+        "pen color input",
         "aria-invalid",
         "aria-describedby",
       ],

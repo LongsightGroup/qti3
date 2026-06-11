@@ -439,6 +439,82 @@ test.describe("player graphic interactions", () => {
     await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(0, 0, 0)");
   });
 
+  test("draws strokes in the selected pen color", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "drawing");
+
+    const colorInput = page.locator('qti-assessment-item-player input[type="color"]');
+    await expect(colorInput).toBeVisible();
+    await colorInput.fill("#cc0000");
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    const box = await surface.boundingBox();
+    if (!box) throw new Error("Missing drawing surface box.");
+
+    await page.mouse.move(box.x + 10, box.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 90, box.y + 90);
+    await page.mouse.up();
+
+    await expect(surface.locator("polyline")).toHaveCount(1);
+    await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(204, 0, 0)");
+
+    const response = await expectStringResponse(page, /^data:image\/svg\+xml;charset=utf-8,/);
+    const svg = decodeDataUrlText(response);
+    expect(svg).toContain('stroke="#cc0000"');
+    expect(svg).toContain("data-qti3-strokes=");
+    expect(svg).toMatch(/%23cc0000%3A10%2010%2090%2090|#cc0000:10 10 90 90/);
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    await page.locator("qti-assessment-item-player").evaluate((element, attemptState) => {
+      element.reset();
+      element.restore(attemptState);
+    }, state);
+    await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(204, 0, 0)");
+    await expect(colorInput).toHaveValue("#cc0000");
+  });
+
+  test("hides the pen color input when toolbar-palette-none is set", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="drawing-black-only" title="drawing-black-only" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="file"/>
+  <qti-item-body>
+    <qti-drawing-interaction response-identifier="RESPONSE" class="toolbar-palette-none">
+      <qti-prompt>Annotate the diagram.</qti-prompt>
+      <object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/>
+    </qti-drawing-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    await expect(page.locator('qti-assessment-item-player input[type="color"]')).toHaveCount(0);
+
+    const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    await surface.focus();
+    await page.keyboard.press("Enter");
+    await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(0, 0, 0)");
+
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      element.restore({
+        schema: "qti3.attempt-state.v1",
+        itemIdentifier: "drawing-black-only",
+        status: "interacting",
+        responses: {
+          RESPONSE:
+            "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20480%20300%22%3E%3Cmetadata%20data-qti3-strokes%3D%22%2523cc0000%253A10%2010%2090%2090%22%3E%3C%2Fmetadata%3E%3Cpolyline%20points%3D%2210%2C10%2090%2C90%22%20stroke%3D%22%23cc0000%22%2F%3E%3C%2Fsvg%3E",
+        },
+        outcomes: {},
+        validationMessages: [],
+      });
+    });
+    await expect(surface.locator("polyline").first()).toHaveCSS("stroke", "rgb(0, 0, 0)");
+  });
+
   test("honors authored drawing object dimensions", async ({ page }) => {
     await page.goto("/");
     await pasteXml(

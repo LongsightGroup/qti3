@@ -38,6 +38,8 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
     removePair: "Remove {label}",
     removeOrderedChoice: "Remove {label} from order",
     clearDrawing: "Clear drawing",
+    drawingPenColor: "Pen color",
+    drawingPenColorSelected: "Pen color {color}",
     clearPoints: "Clear points",
     endAttempt: "End attempt",
     uploadResponse: "Upload response",

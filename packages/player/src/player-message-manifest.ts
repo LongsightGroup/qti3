@@ -21,6 +21,8 @@ export const PLAYER_MESSAGE_MANIFEST = [
   { key: "removePair", resolver: "template", params: ["label"] },
   { key: "removeOrderedChoice", resolver: "template", params: ["label"] },
   { key: "clearDrawing", resolver: "plain" },
+  { key: "drawingPenColor", resolver: "plain" },
+  { key: "drawingPenColorSelected", resolver: "template", params: ["color"] },
   { key: "clearPoints", resolver: "plain" },
   { key: "endAttempt", resolver: "plain" },
   { key: "uploadResponse", resolver: "plain" },

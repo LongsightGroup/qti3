@@ -2,9 +2,20 @@ import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/q
 import { bindActivateOnEnterOrSpace } from "../dom/keyboard-activation.js";
 import { applyResponsiveGraphicSize, objectIsImage } from "../interaction-support.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import {
+  announceDrawingPenColor,
+  announceDrawingStrokeStatus,
+  createDrawingPenColorAnnouncement,
+  createDrawingStatusOutput,
+} from "./drawing-a11y.js";
 
-export const DRAWING_STROKE_COLOR = "#000";
+export const DRAWING_STROKE_COLOR = "#000000";
 export const DRAWING_STROKE_WIDTH = 3;
+
+export type DrawingPoint = { x: number; y: number };
+export type ParsedDrawingStroke = { points: DrawingPoint[]; color: string };
+
+type DrawingStroke = ParsedDrawingStroke & { element: SVGPolylineElement };
 
 export function renderDrawingResponse(
   interaction: QtiInteraction,
@@ -29,7 +40,11 @@ export function renderDrawingResponse(
   surface.setAttribute("viewBox", `0 0 ${width} ${height}`);
   applyResponsiveGraphicSize(surface, width, height);
   surface.style.touchAction = "none";
-  const restoredStrokes = parseDrawingValue(currentValue);
+  const paletteDisabled = drawingPaletteDisabled(interaction);
+  const restoredStrokes = normalizeRestoredDrawingStrokes(
+    parseDrawingValue(currentValue),
+    paletteDisabled,
+  );
   const authoredBackgroundHref = drawingBackgroundHref(interaction);
   let resolvedAuthoredBackgroundHref = authoredBackgroundHref;
   let activeBackgroundIsAuthored =
@@ -46,11 +61,12 @@ export function renderDrawingResponse(
   };
   resetSurface();
 
-  const summary = document.createElement("output");
-  summary.className = "qti3-coordinate-output qti-visually-hidden";
-  summary.setAttribute("aria-live", "polite");
+  const summary = createDrawingStatusOutput();
+  const penColorAnnouncement = createDrawingPenColorAnnouncement();
   const strokes: DrawingStroke[] = [];
   let activeStroke: DrawingStroke | undefined;
+  let activeColor = DRAWING_STROKE_COLOR;
+  let colorInput: HTMLInputElement | undefined;
   let commitVersion = 0;
   const commit = (emitResponse = true) => {
     const version = ++commitVersion;
@@ -69,23 +85,44 @@ export function renderDrawingResponse(
         });
       }
     }
-    const count = strokes.length;
-    summary.value = serializeDrawingStrokes(strokes);
-    summary.textContent =
-      count === 0
-        ? messages.message("drawingStatusEmpty")
-        : messages.message("drawingStatusStrokeCount", { count });
-    surface.setAttribute(
-      "aria-label",
-      count === 0
-        ? messages.message("drawingSurfaceEmpty")
-        : messages.message("drawingSurfaceStrokeCount", { count }),
+    announceDrawingStrokeStatus(
+      summary,
+      surface,
+      messages,
+      strokes.length,
+      serializeDrawingStrokes(strokes),
     );
   };
-  for (const points of restoredStrokes) {
-    const element = polylineElement(points);
-    strokes.push({ points, element });
+
+  const tools = document.createElement("div");
+  tools.className = "qti3-drawing-tools";
+  if (!paletteDisabled) {
+    const colorLabel = document.createElement("label");
+    colorLabel.className = "qti3-drawing-color";
+    const colorLabelText = document.createElement("span");
+    colorLabelText.className = "qti3-drawing-color-label";
+    colorLabelText.textContent = messages.message("drawingPenColor");
+    colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.className = "qti3-drawing-color-input";
+    colorInput.value = DRAWING_STROKE_COLOR;
+    colorInput.addEventListener("input", () => {
+      activeColor = penColorForInteraction(false, colorInput!.value);
+      announceDrawingPenColor(penColorAnnouncement, messages, activeColor);
+    });
+    colorLabel.append(colorLabelText, colorInput);
+    tools.append(colorLabel);
+  }
+
+  for (const { points, color } of restoredStrokes) {
+    const element = polylineElement(points, color);
+    strokes.push({ points, color, element });
     surface.append(element);
+  }
+  const lastRestoredStroke = strokes.at(-1);
+  if (lastRestoredStroke && !paletteDisabled) {
+    activeColor = lastRestoredStroke.color;
+    if (colorInput) colorInput.value = activeColor;
   }
   const addPoint = (event: PointerEvent) => {
     if (!activeStroke) return;
@@ -107,8 +144,9 @@ export function renderDrawingResponse(
 
   surface.addEventListener("pointerdown", (event) => {
     const point = svgPoint(surface, event);
-    const element = polylineElement([point]);
-    activeStroke = { points: [point], element };
+    const strokeColor = penColorForInteraction(paletteDisabled, activeColor);
+    const element = polylineElement([point], strokeColor);
+    activeStroke = { points: [point], color: strokeColor, element };
     strokes.push(activeStroke);
     surface.append(element);
     surface.setPointerCapture(event.pointerId);
@@ -123,8 +161,9 @@ export function renderDrawingResponse(
       { x: 10, y: 10 },
       { x: 90, y: 90 },
     ];
-    const element = polylineElement(points);
-    strokes.push({ points, element });
+    const strokeColor = penColorForInteraction(paletteDisabled, activeColor);
+    const element = polylineElement(points, strokeColor);
+    strokes.push({ points, color: strokeColor, element });
     surface.append(element);
     commit();
   });
@@ -145,16 +184,11 @@ export function renderDrawingResponse(
     commit();
   });
 
-  const tools = document.createElement("div");
-  tools.className = "qti3-drawing-tools";
   tools.append(clear);
   commit(false);
-  group.append(surface, summary, tools);
+  group.append(tools, surface, summary, penColorAnnouncement);
   return group;
 }
-
-type DrawingPoint = { x: number; y: number };
-type DrawingStroke = { points: DrawingPoint[]; element: SVGPolylineElement };
 
 function dimension(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -166,7 +200,7 @@ function scalarString(value: QtiValue): string {
   return String(value);
 }
 
-function parseDrawingValue(value: QtiValue): DrawingPoint[][] {
+export function parseDrawingValue(value: QtiValue): ParsedDrawingStroke[] {
   const raw = scalarString(value);
   if (!raw) return [];
 
@@ -203,22 +237,74 @@ function drawingResponseImage(value: QtiValue): string | undefined {
   return raw?.startsWith("data:image/") ? raw : undefined;
 }
 
-function parseDrawingStrokePayload(raw: string): DrawingPoint[][] {
+export function parseDrawingStrokePayload(raw: string): ParsedDrawingStroke[] {
   return raw
     .split("|")
-    .map((stroke) => {
-      const numbers = stroke
-        .trim()
-        .split(/\s+/)
-        .map(Number)
-        .filter((item) => Number.isFinite(item));
-      const points: DrawingPoint[] = [];
-      for (let index = 0; index + 1 < numbers.length; index += 2) {
-        points.push({ x: numbers[index]!, y: numbers[index + 1]! });
-      }
-      return points;
-    })
-    .filter((points) => points.length > 0);
+    .map((stroke) => parseDrawingStrokeSegment(stroke))
+    .filter((stroke): stroke is ParsedDrawingStroke => stroke !== undefined);
+}
+
+function parseDrawingStrokeSegment(segment: string): ParsedDrawingStroke | undefined {
+  const trimmed = segment.trim();
+  if (!trimmed) return undefined;
+
+  const { color, coordinateText } = splitStrokeColorPrefix(trimmed);
+
+  const numbers = coordinateText
+    .trim()
+    .split(/\s+/)
+    .map(Number)
+    .filter((item) => Number.isFinite(item));
+  const points: DrawingPoint[] = [];
+  for (let index = 0; index + 1 < numbers.length; index += 2) {
+    points.push({ x: numbers[index]!, y: numbers[index + 1]! });
+  }
+  if (points.length === 0) return undefined;
+  return { points, color };
+}
+
+export function drawingPaletteDisabled(interaction: QtiInteraction): boolean {
+  const className = interaction.attributes.class ?? "";
+  return className.split(/\s+/).includes("toolbar-palette-none");
+}
+
+export function penColorForInteraction(paletteDisabled: boolean, color: string): string {
+  return paletteDisabled ? DRAWING_STROKE_COLOR : normalizeDrawingColor(color);
+}
+
+export function normalizeRestoredDrawingStrokes(
+  strokes: ParsedDrawingStroke[],
+  paletteDisabled: boolean,
+): ParsedDrawingStroke[] {
+  return strokes.map((stroke) => ({
+    ...stroke,
+    color: penColorForInteraction(paletteDisabled, stroke.color),
+  }));
+}
+
+export function isDrawingColor(value: string): boolean {
+  return /^#[0-9a-f]{6}$/.test(value.trim().toLowerCase());
+}
+
+export function normalizeDrawingColor(value: string): string {
+  const normalized = value.trim().toLowerCase();
+  return isDrawingColor(normalized) ? normalized : DRAWING_STROKE_COLOR;
+}
+
+function splitStrokeColorPrefix(segment: string): { color: string; coordinateText: string } {
+  const colonIndex = segment.indexOf(":");
+  if (colonIndex > 0 && segment.startsWith("#")) {
+    const colorCandidate = segment.slice(0, colonIndex);
+    const coordinateText = segment.slice(colonIndex + 1);
+    if (isDrawingColor(colorCandidate)) {
+      return {
+        color: normalizeDrawingColor(colorCandidate),
+        coordinateText,
+      };
+    }
+    return { color: DRAWING_STROKE_COLOR, coordinateText };
+  }
+  return { color: DRAWING_STROKE_COLOR, coordinateText: segment };
 }
 
 function drawingWidth(interaction: QtiInteraction): number {
@@ -315,7 +401,7 @@ function svgDrawingMarkup(
       : "";
   const lines = strokes
     .map((stroke) => {
-      return `<polyline points="${xmlAttribute(serializeSvgPoints(stroke.points))}" fill="none" stroke="${DRAWING_STROKE_COLOR}" stroke-width="${DRAWING_STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      return `<polyline points="${xmlAttribute(serializeSvgPoints(stroke.points))}" fill="none" stroke="${xmlAttribute(stroke.color)}" stroke-width="${DRAWING_STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round"/>`;
     })
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><metadata id="qti3-drawing-response" data-qti3-strokes="${xmlAttribute(encodeURIComponent(strokePayload))}"></metadata>${background}${lines}</svg>`;
@@ -349,13 +435,13 @@ async function rasterDrawingDataUrl(
     }
   }
 
-  context.strokeStyle = DRAWING_STROKE_COLOR;
   context.lineWidth = DRAWING_STROKE_WIDTH;
   context.lineCap = "round";
   context.lineJoin = "round";
   for (const stroke of strokes) {
     const [first, ...rest] = stroke.points;
     if (!first) continue;
+    context.strokeStyle = stroke.color;
     context.beginPath();
     context.moveTo(first.x, first.y);
     for (const point of rest) context.lineTo(point.x, point.y);
@@ -427,12 +513,15 @@ function serializeSvgPoints(points: Array<{ x: number; y: number }>): string {
   return points.map((point) => `${point.x},${point.y}`).join(" ");
 }
 
-function serializeDrawingStrokes(strokes: Pick<DrawingStroke, "points">[]): string {
-  return strokes.map((stroke) => serializeDrawingStroke(stroke.points)).join(" | ");
+export function serializeDrawingStrokes(
+  strokes: Pick<ParsedDrawingStroke, "points" | "color">[],
+): string {
+  return strokes.map((stroke) => serializeDrawingStroke(stroke)).join(" | ");
 }
 
-function serializeDrawingStroke(points: DrawingPoint[]): string {
-  return points.map((point) => `${point.x} ${point.y}`).join(" ");
+function serializeDrawingStroke(stroke: Pick<ParsedDrawingStroke, "points" | "color">): string {
+  const coordinates = stroke.points.map((point) => `${point.x} ${point.y}`).join(" ");
+  return `${normalizeDrawingColor(stroke.color)}:${coordinates}`;
 }
 
 function xmlAttribute(value: string): string {
@@ -443,9 +532,10 @@ function xmlAttribute(value: string): string {
     .replaceAll(">", "&gt;");
 }
 
-function polylineElement(points: DrawingPoint[]): SVGPolylineElement {
+function polylineElement(points: DrawingPoint[], color: string): SVGPolylineElement {
   const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   line.classList.add("qti3-drawing-stroke");
   line.setAttribute("points", serializeSvgPoints(points));
+  line.setAttribute("stroke", normalizeDrawingColor(color));
   return line;
 }
