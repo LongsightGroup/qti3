@@ -26,7 +26,6 @@ const examplesSelect = requiredElement<HTMLSelectElement>("#examples");
 const previous = requiredElement<HTMLButtonElement>("#previous");
 const next = requiredElement<HTMLButtonElement>("#next");
 const copyOriginal = requiredElement<HTMLButtonElement>("#copy-original");
-const copyAmp = requiredElement<HTMLButtonElement>("#copy-amp");
 const meta = requiredElement<HTMLElement>("#meta");
 const xmlInput = requiredElement<HTMLTextAreaElement>("#xml");
 const reload = requiredElement<HTMLButtonElement>("#reload");
@@ -87,10 +86,6 @@ async function initialize(): Promise<void> {
 
   copyOriginal.addEventListener("click", () => {
     void copyXml(currentXml, "Copied original XML");
-  });
-
-  copyAmp.addEventListener("click", () => {
-    void copyAmpXml();
   });
 
   player.addEventListener("qti-ready", (event) => {
@@ -157,46 +152,6 @@ function appendEvent(name: string, detail: unknown): void {
 async function copyXml(xml: string, message: string): Promise<void> {
   await navigator.clipboard.writeText(xml);
   status.textContent = message;
-}
-
-async function copyAmpXml(): Promise<void> {
-  const xml = await inlineXmlAssets(currentXml, currentExample?.path ?? "");
-  await copyXml(xml, "Copied Amp-up XML");
-}
-
-async function inlineXmlAssets(xml: string, sourcePath: string): Promise<string> {
-  const parser = new DOMParser();
-  const documentModel = parser.parseFromString(xml, "application/xml");
-  for (const element of Array.from(documentModel.querySelectorAll("[src], object[data]"))) {
-    const attr = element.hasAttribute("src") ? "src" : "data";
-    const value = element.getAttribute(attr);
-    if (!value || value.startsWith("data:") || /^[a-z][a-z0-9+.-]*:/i.test(value)) continue;
-    element.setAttribute(attr, await assetDataUrl(sourcePath, value));
-  }
-  return new XMLSerializer().serializeToString(documentModel);
-}
-
-async function assetDataUrl(sourcePath: string, url: string): Promise<string> {
-  const response = await fetch(resolveAssetUrl(sourcePath, url));
-  if (!response.ok) throw new Error(`Failed to fetch asset ${url}: ${response.status}`);
-  return await blobToDataUrl(await response.blob());
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-        return;
-      }
-      reject(new Error("Unable to read asset as a data URL"));
-    });
-    reader.addEventListener("error", () =>
-      reject(reader.error ?? new Error("Unable to read asset")),
-    );
-    reader.readAsDataURL(blob);
-  });
 }
 
 function resolveAssetUrl(sourcePath: string, url: string): string {
