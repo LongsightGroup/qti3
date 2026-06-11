@@ -721,6 +721,37 @@ test.describe("player DOM behavior", () => {
     ).resolves.toBe(true);
   });
 
+  test("ignores non-conformant camelCase extended text patternMask attributes", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" adaptive="false" identifier="qti3-extended-text-03" time-dependent="false" title="Writing a Postcard 3 - Extended Text - qti3">
+  <qti-response-declaration base-type="string" cardinality="single" identifier="RESPONSE"/>
+  <qti-outcome-declaration base-type="float" cardinality="single" identifier="SCORE"/>
+  <qti-item-body>
+    <qti-extended-text-interaction
+      class="qti-height-lines-3"
+      patternMask="[0-9\\.]+"
+      data-patternmask-message="Maximum of 6 digits or a decimal point permitted"
+      format="plain"
+      expected-length="6"
+      response-identifier="RESPONSE"
+    />
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const textarea = page.locator("qti-assessment-item-player textarea");
+    const patternMessage = page.locator("qti-assessment-item-player .qti3-pattern-mask-message");
+    await textarea.pressSequentially("abc");
+    await expect(textarea).toHaveValue("abc");
+    await expect(currentResponse(page)).resolves.toBe("abc");
+    await expect(patternMessage).toHaveCount(0);
+  });
+
   test("honors inline text entry placeholder and pattern mask attributes", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
