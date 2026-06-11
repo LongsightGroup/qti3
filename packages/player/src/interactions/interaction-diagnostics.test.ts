@@ -123,4 +123,56 @@ describe("interaction-diagnostics", () => {
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.code).toBe("interaction.embed.unsupported");
   });
+
+  it("allows end-attempt interactions nested in inline flow", () => {
+    const diagnostics = collectEmbeddedInteractionDiagnostics({
+      identifier: "item",
+      body: [
+        {
+          kind: "element",
+          qtiName: "p",
+          attributes: {},
+          children: [{ kind: "interaction", interactionIndex: 0, qtiName: "qti-interaction" }],
+          source: { line: 1, column: 1, offset: 0, path: "p" },
+        },
+      ],
+      interactions: [interaction({ type: "endAttempt", responseBaseType: "boolean" })],
+    } as never);
+    expect(diagnostics).toHaveLength(0);
+  });
+
+  it("does not report deprecated custom interactions as invalid inline embedding", () => {
+    const diagnostics = collectEmbeddedInteractionDiagnostics({
+      identifier: "item",
+      body: [
+        {
+          kind: "element",
+          qtiName: "p",
+          attributes: {},
+          children: [{ kind: "interaction", interactionIndex: 0, qtiName: "qti-interaction" }],
+          source: { line: 1, column: 1, offset: 0, path: "p" },
+        },
+      ],
+      interactions: [interaction({ type: "custom" })],
+    } as never);
+    expect(diagnostics).toHaveLength(0);
+  });
+
+  it("reports portable custom interactions nested in inline flow", () => {
+    const diagnostics = collectEmbeddedInteractionDiagnostics({
+      identifier: "item",
+      body: [
+        {
+          kind: "element",
+          qtiName: "p",
+          attributes: {},
+          children: [{ kind: "interaction", interactionIndex: 0, qtiName: "qti-interaction" }],
+          source: { line: 1, column: 1, offset: 0, path: "p" },
+        },
+      ],
+      interactions: [interaction({ type: "portableCustom" })],
+    } as never);
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]?.code).toBe("interaction.embed.unsupported");
+  });
 });

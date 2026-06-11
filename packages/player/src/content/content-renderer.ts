@@ -1,4 +1,5 @@
 import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import { isInlineEmbeddableInteraction } from "../interactions/interaction-dispatch.js";
 import {
   contentElementName,
   copySafeAttributes,
@@ -42,7 +43,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   if (node.kind === "interaction") {
     const interaction = context.interactionAt(node.interactionIndex);
     if (!interaction) return [];
-    if (interaction.type === "inlineChoice" || interaction.type === "textEntry") {
+    if (isInlineEmbeddableInteraction(interaction)) {
       return [context.renderEmbeddedInteraction(interaction)];
     }
     return [context.renderBlockInteraction(interaction)];

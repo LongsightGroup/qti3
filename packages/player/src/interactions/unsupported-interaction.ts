@@ -23,3 +23,17 @@ export function renderUnsupportedEmbeddedInteraction(interaction: QtiInteraction
   }
   return alert;
 }
+
+export function renderUnsupportedInlineInteraction(interaction: QtiInteraction): HTMLElement {
+  const message = interaction.responseIdentifier
+    ? `Interaction type "${interaction.type}" (${interaction.responseIdentifier}) is not supported.`
+    : `Interaction type "${interaction.type}" is not supported.`;
+  const alert = document.createElement("span");
+  alert.className = "qti3-embedded-interaction qti3-unsupported-interaction";
+  alert.role = "alert";
+  alert.textContent = message;
+  if (interaction.responseIdentifier) {
+    alert.dataset.responseIdentifier = interaction.responseIdentifier;
+  }
+  return alert;
+}

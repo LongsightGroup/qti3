@@ -525,12 +525,13 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       renderBlockInteraction: (interaction) => this.renderInteraction(interaction),
       renderEmbeddedInteraction: (embeddedInteraction) => {
         const responseIdentifier = embeddedInteraction.responseIdentifier;
-        return renderEmbeddedInteractionSection(
-          embeddedInteraction,
-          this.bindResponseUpdate(responseIdentifier, embeddedInteraction),
-          responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
-          this.playerMessages(),
-        );
+        return renderEmbeddedInteractionSection({
+          interaction: embeddedInteraction,
+          update: this.bindResponseUpdate(responseIdentifier, embeddedInteraction),
+          currentValue: responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
+          messages: this.playerMessages(),
+          endAttempt: () => this.endAttempt(),
+        });
       },
       currentVariableValue: (identifier) => currentVariableValue(sessionState(), identifier),
       mathTemplateValue: (node) => {

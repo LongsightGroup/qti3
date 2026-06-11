@@ -1,6 +1,11 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
-import { interactionRegistry, matchInteractionRegistryEntry } from "./interaction-registry.js";
+import {
+  inlineEmbeddingDisposition,
+  interactionRegistry,
+  isInlineEmbeddableInteraction,
+  matchInteractionRegistryEntry,
+} from "./interaction-registry.js";
 
 function interaction(
   overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
@@ -108,5 +113,29 @@ describe("interaction registry ordering", () => {
         }),
       )?.id,
     ).toBe("hotspot");
+  });
+
+  it("allows only inline-flow interaction renderers to embed inside prose", () => {
+    expect(isInlineEmbeddableInteraction(interaction({ type: "inlineChoice" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(interaction({ type: "textEntry" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(interaction({ type: "endAttempt" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(interaction({ type: "custom" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(interaction({ type: "choice" }))).toBe(false);
+    expect(isInlineEmbeddableInteraction(interaction({ type: "portableCustom" }))).toBe(false);
+  });
+
+  it("classifies inline embedding with a single disposition policy", () => {
+    expect(inlineEmbeddingDisposition(interaction({ type: "inlineChoice" }))).toBe("supported");
+    expect(inlineEmbeddingDisposition(interaction({ type: "textEntry" }))).toBe("supported");
+    expect(inlineEmbeddingDisposition(interaction({ type: "endAttempt" }))).toBe("supported");
+    expect(inlineEmbeddingDisposition(interaction({ type: "custom" }))).toBe("unsupported");
+    expect(inlineEmbeddingDisposition(interaction({ type: "choice" }))).toBe("invalid");
+    expect(inlineEmbeddingDisposition(interaction({ type: "portableCustom" }))).toBe("invalid");
+  });
+
+  it("uses a dedicated embedded renderer for textEntry", () => {
+    const entry = matchInteractionRegistryEntry(interaction({ type: "textEntry" }));
+    expect(entry?.renderEmbedded).toBeDefined();
+    expect(entry?.renderEmbedded).not.toBe(entry?.render);
   });
 });

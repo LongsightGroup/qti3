@@ -8,6 +8,7 @@ import { contentElementName } from "../content/content-dom.js";
 import { interactionChoices } from "../interaction-support.js";
 import { sourceChoices, targetChoices } from "./shared.js";
 import { isInteractionSupported } from "./interaction-registry.js";
+import { isInlineEmbeddableInteraction } from "./interaction-dispatch.js";
 
 function diagnosticPath(interaction: QtiInteraction): string | undefined {
   return interaction.responseIdentifier ?? undefined;
@@ -52,10 +53,8 @@ export function collectInteractionRenderDiagnostics(
   ]);
 }
 
-const embeddableInteractionTypes = new Set<QtiInteraction["type"]>(["inlineChoice", "textEntry"]);
-
 export function interactionEmbeddedDiagnostics(interaction: QtiInteraction): QtiDiagnostic[] {
-  if (embeddableInteractionTypes.has(interaction.type)) return [];
+  if (isInlineEmbeddableInteraction(interaction)) return [];
   const path = diagnosticPath(interaction);
   return [
     {

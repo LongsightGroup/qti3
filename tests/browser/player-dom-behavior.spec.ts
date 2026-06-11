@@ -125,6 +125,25 @@ test.describe("player DOM behavior", () => {
     await expect(alert).toContainText("RESPONSE");
   });
 
+  test("renders unsupported inline custom interactions without embed errors", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inline-custom" title="inline-custom" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>Inline custom <qti-custom-interaction response-identifier="RESPONSE"/></p>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-embedded-interaction-unsupported")).toHaveCount(0);
+    const alert = player.locator("p > .qti3-unsupported-interaction");
+    await expect(alert).toHaveAttribute("role", "alert");
+    await expect(alert).toContainText('Interaction type "custom" (RESPONSE) is not supported.');
+  });
+
   test("renders upload interactions as file inputs", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "upload");
@@ -141,6 +160,49 @@ test.describe("player DOM behavior", () => {
     const button = page.locator("qti-assessment-item-player button.qti3-end-attempt-button");
     await expect(button).toBeVisible();
     await expect(button).toHaveText("Show hint");
+  });
+
+  test("renders end-attempt controls embedded in feedback paragraph flow", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-end-attempt" title="feedback-end-attempt" adaptive="true" time-dependent="false">
+  <qti-response-declaration identifier="SOLREQUEST" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="multiple" base-type="identifier"/>
+  <qti-outcome-declaration identifier="ASKSOLUTION" cardinality="single" base-type="identifier">
+    <qti-default-value><qti-value>asksolution</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <qti-feedback-block identifier="asksolution" outcome-identifier="ASKSOLUTION" show-hide="show">
+      <qti-content-body>
+        <p><qti-end-attempt-interaction response-identifier="SOLREQUEST" title="Show Solution"/></p>
+      </qti-content-body>
+    </qti-feedback-block>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-variable identifier="SOLREQUEST"/>
+        <qti-set-outcome-value identifier="FEEDBACK">
+          <qti-multiple><qti-base-value base-type="identifier">SOLUTION</qti-base-value></qti-multiple>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>`,
+    );
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator(".qti3-embedded-interaction-unsupported")).toHaveCount(0);
+    const button = player.locator(
+      '.qti3-feedback-block p > .qti3-embedded-interaction[data-interaction-type="endAttempt"] > button.qti3-end-attempt-button',
+    );
+    await expect(button).toBeVisible();
+    await expect(button).toHaveText("Show Solution");
+
+    await button.click();
+    const state = await player.evaluate((element) => element.serialize());
+    expect(state.responses.SOLREQUEST).toBe(true);
   });
 
   test("embeds inline choice interactions inside paragraph flow", async ({ page }) => {

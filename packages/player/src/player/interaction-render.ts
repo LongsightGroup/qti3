@@ -1,10 +1,15 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { copySafeAttributes } from "../content/content-dom.js";
-import { renderInteractionResponse } from "../interactions/interaction-dispatch.js";
+import {
+  inlineEmbeddingDisposition,
+  renderEmbeddedInteractionContent,
+  renderInteractionResponse,
+} from "../interactions/interaction-dispatch.js";
 import { interactionLabel, qtiSharedClassNames } from "../interactions/interaction-label.js";
-import { renderSelect } from "../interactions/inline-choice-interaction.js";
-import { renderInlineTextEntry } from "../interactions/text-interaction.js";
-import { renderUnsupportedEmbeddedInteraction } from "../interactions/unsupported-interaction.js";
+import {
+  renderUnsupportedEmbeddedInteraction,
+  renderUnsupportedInlineInteraction,
+} from "../interactions/unsupported-interaction.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { inlineValidationMessageElement, validationMessageElement } from "../player-validation.js";
 
@@ -20,6 +25,14 @@ export interface BlockInteractionRenderOptions {
     update: (value: QtiValue) => void,
     currentValue: QtiValue,
   ) => HTMLElement;
+}
+
+export interface EmbeddedInteractionRenderOptions {
+  interaction: QtiInteraction;
+  messages: PlayerMessageResolver;
+  update: (value: QtiValue) => void;
+  currentValue: QtiValue;
+  endAttempt: () => void;
 }
 
 export function renderBlockInteractionSection(options: BlockInteractionRenderOptions): HTMLElement {
@@ -62,13 +75,17 @@ export function renderBlockInteractionSection(options: BlockInteractionRenderOpt
 }
 
 export function renderEmbeddedInteractionSection(
-  interaction: QtiInteraction,
-  update: (value: QtiValue) => void,
-  currentValue: QtiValue,
-  messages: PlayerMessageResolver,
+  options: EmbeddedInteractionRenderOptions,
 ): HTMLElement {
-  if (interaction.type !== "inlineChoice" && interaction.type !== "textEntry") {
-    return renderUnsupportedEmbeddedInteraction(interaction);
+  const { interaction, messages, update, currentValue, endAttempt } = options;
+
+  switch (inlineEmbeddingDisposition(interaction)) {
+    case "invalid":
+      return renderUnsupportedEmbeddedInteraction(interaction);
+    case "unsupported":
+      return renderUnsupportedInlineInteraction(interaction);
+    case "supported":
+      break;
   }
 
   const wrapper = document.createElement("span");
@@ -82,9 +99,13 @@ export function renderEmbeddedInteractionSection(
     wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));
   }
   wrapper.append(
-    interaction.type === "inlineChoice"
-      ? renderSelect(interaction, update, currentValue, messages)
-      : renderInlineTextEntry(interaction, update, currentValue, messages),
+    renderEmbeddedInteractionContent({
+      interaction,
+      update,
+      currentValue,
+      messages,
+      endAttempt,
+    }),
   );
   return wrapper;
 }

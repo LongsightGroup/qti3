@@ -16,7 +16,11 @@ import { renderPairResponse } from "./pair-interaction.js";
 import { renderPositionObjectResponse } from "./position-object-interaction.js";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
 import { renderSelectPointResponse } from "./select-point-interaction.js";
-import { renderSliderResponse, renderTextResponse } from "./text-interaction.js";
+import {
+  renderInlineTextEntry,
+  renderSliderResponse,
+  renderTextResponse,
+} from "./text-interaction.js";
 import { renderUnsupportedInteraction } from "./unsupported-interaction.js";
 import { renderUploadResponse } from "./upload-interaction.js";
 
@@ -32,6 +36,14 @@ export interface InteractionResponseContext {
     update: (value: QtiValue) => void,
     currentValue: QtiValue,
   ) => HTMLElement;
+}
+
+export interface EmbeddedInteractionResponseContext {
+  interaction: QtiInteraction;
+  update: (value: QtiValue) => void;
+  currentValue: QtiValue;
+  messages: PlayerMessageResolver;
+  endAttempt: () => void;
 }
 
 export type InteractionRendererId =
@@ -57,12 +69,18 @@ export type InteractionRendererId =
   | "media";
 
 type InteractionRenderer = (context: InteractionResponseContext) => HTMLElement;
+type EmbeddedInteractionRenderer = (context: EmbeddedInteractionResponseContext) => HTMLElement;
+
+export type InlineEmbeddingDisposition = "supported" | "unsupported" | "invalid";
 
 export interface InteractionRegistryEntry {
   id: InteractionRendererId;
   matches: (interaction: QtiInteraction) => boolean;
   render: InteractionRenderer;
+  renderEmbedded?: EmbeddedInteractionRenderer;
 }
+
+const inlineUnsupportedInteractionTypes = new Set<QtiInteraction["type"]>(["custom"]);
 
 export const interactionRegistry: InteractionRegistryEntry[] = [
   {
@@ -125,6 +143,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     matches: (interaction) => interaction.type === "inlineChoice",
     render: ({ interaction, update, currentValue, messages }) =>
       renderSelect(interaction, update, currentValue, messages),
+    renderEmbedded: ({ interaction, update, currentValue, messages }) =>
+      renderSelect(interaction, update, currentValue, messages),
   },
   {
     id: "extendedText",
@@ -161,6 +181,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     matches: (interaction) => interaction.type === "textEntry",
     render: ({ interaction, update, currentValue, messages }) =>
       renderTextResponse(interaction, update, "entry", currentValue, messages),
+    renderEmbedded: ({ interaction, update, currentValue, messages }) =>
+      renderInlineTextEntry(interaction, update, currentValue, messages),
   },
   {
     id: "slider",
@@ -178,6 +200,8 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     id: "endAttempt",
     matches: (interaction) => interaction.type === "endAttempt",
     render: ({ interaction, update, endAttempt, messages }) =>
+      renderEndAttemptResponse(interaction, update, endAttempt, messages),
+    renderEmbedded: ({ interaction, update, endAttempt, messages }) =>
       renderEndAttemptResponse(interaction, update, endAttempt, messages),
   },
   {
@@ -200,6 +224,30 @@ export function matchInteractionRegistryEntry(
 
 export function isInteractionSupported(interaction: QtiInteraction): boolean {
   return matchInteractionRegistryEntry(interaction) !== undefined;
+}
+
+export function inlineEmbeddingDisposition(
+  interaction: QtiInteraction,
+): InlineEmbeddingDisposition {
+  if (inlineUnsupportedInteractionTypes.has(interaction.type)) return "unsupported";
+  const entry = matchInteractionRegistryEntry(interaction);
+  return entry?.renderEmbedded ? "supported" : "invalid";
+}
+
+export function isInlineEmbeddableInteraction(interaction: QtiInteraction): boolean {
+  return inlineEmbeddingDisposition(interaction) !== "invalid";
+}
+
+export function renderEmbeddedInteractionContent(
+  context: EmbeddedInteractionResponseContext,
+): HTMLElement {
+  const entry = matchInteractionRegistryEntry(context.interaction);
+  if (!entry?.renderEmbedded) {
+    throw new Error(
+      `Interaction type "${context.interaction.type}" is not configured for inline embedding.`,
+    );
+  }
+  return entry.renderEmbedded(context);
 }
 
 export function renderInteractionResponse(context: InteractionResponseContext): HTMLElement {
