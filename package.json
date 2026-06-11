@@ -28,6 +28,7 @@
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
+    "prepare": "node scripts/install-git-hooks.mjs",
     "lint": "pnpm build && pnpm lint:raw",
     "lint:raw": "oxlint --deny-warnings",
     "typecheck": "tsc -b",
