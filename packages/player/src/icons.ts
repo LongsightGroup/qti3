@@ -35,6 +35,29 @@ export function inlineIcon(className: string, paths: IconPath[]): SVGSVGElement 
   return svg;
 }
 
+export function checkboxToggleIcon(className = "qti3-match-table-check-icon"): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  svg.classList.add(className);
+
+  const box = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  box.setAttribute("x", "3");
+  box.setAttribute("y", "3");
+  box.setAttribute("width", "18");
+  box.setAttribute("height", "18");
+  box.setAttribute("rx", "3");
+  box.classList.add("qti3-match-table-check-box");
+
+  const mark = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  mark.setAttribute("d", "M7 12.5l3.2 3.2L17.5 8");
+  mark.classList.add("qti3-match-table-check-mark");
+
+  svg.append(box, mark);
+  return svg;
+}
+
 export function trashIcon(): SVGSVGElement {
   return inlineIcon("qti3-trash-icon", [
     { d: "M0 0h24v24H0z", stroke: "none", fill: "none" },

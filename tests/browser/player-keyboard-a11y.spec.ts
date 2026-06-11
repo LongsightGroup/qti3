@@ -346,14 +346,26 @@ test.describe("player keyboard and accessibility", () => {
     await expect(capuletMidsummer).toBeFocused();
     await page.keyboard.press("Space");
     await expectResponse(page, ["C M"]);
+    await expect(capuletMidsummer.locator(".qti3-match-table-check-icon")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-chip")).toHaveCount(0);
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-selection-summary"),
+    ).toHaveAttribute("aria-live", "polite");
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toContainText(
+      "1 association made.",
+    );
 
-    const removePair = page.getByRole("button", {
-      name: "Remove Capulet to A Midsummer Night's Dream",
-    });
-    await removePair.focus();
-    await page.keyboard.press("Enter");
+    await page.keyboard.press("Backspace");
     await expectResponse(page, []);
     await expect(capuletMidsummer).toHaveAttribute("aria-pressed", "false");
+
+    await capuletRomeo.focus();
+    await page.keyboard.press("Backspace");
+    await expectResponse(page, []);
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
   });
 
   test("operates shared vocabulary order layout with keyboard controls", async ({ page }) => {

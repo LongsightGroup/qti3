@@ -8,7 +8,9 @@ import {
   tokenButton,
   tokenRegion,
 } from "./shared.js";
+import { checkboxToggleIcon } from "../icons.js";
 import { createMatchDirectedPairSelection } from "./match-directed-pairs.js";
+import { createMatchDirectedPairState } from "./match-directed-pair-state.js";
 import {
   appendSharedVocabularyChoicesLayout,
   interactionClassNames,
@@ -140,17 +142,13 @@ function renderTokenBankMatchResponse(
     });
     button.addEventListener("click", () => {
       selectedSource = source;
-      syncPressed();
-      addSelectedPair();
+      if (selectedTarget) addSelectedPair();
+      else syncPressed();
     });
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
       event.preventDefault();
       pairs.removePairsForSource(source);
-      clearSelection();
-      syncPressed();
-      pairs.renderPairs();
-      pairs.commit();
     });
     sourceRegion.append(button);
   }
@@ -170,17 +168,13 @@ function renderTokenBankMatchResponse(
     });
     button.addEventListener("click", () => {
       selectedTarget = target;
-      syncPressed();
-      addSelectedPair();
+      if (selectedSource) addSelectedPair();
+      else syncPressed();
     });
     button.addEventListener("keydown", (event) => {
       if (event.key !== "Delete" && event.key !== "Backspace") return;
       event.preventDefault();
       pairs.removePairsForTarget(target);
-      clearSelection();
-      syncPressed();
-      pairs.renderPairs();
-      pairs.commit();
     });
     targetRegion.append(button);
   }
@@ -206,6 +200,10 @@ function renderTabularMatchResponse(
   const firstColumnHeader = interaction.attributes["data-first-column-header"] ?? "";
   const tableId = stableDomId(interaction.responseIdentifier ?? "match");
 
+  const summary = document.createElement("p");
+  summary.className = "qti3-selection-summary";
+  summary.setAttribute("aria-live", "polite");
+
   const table = document.createElement("table");
   table.className = "qti3-match-table";
   if (headerHidden) table.classList.add("qti-header-hidden");
@@ -221,16 +219,23 @@ function renderTabularMatchResponse(
     }
   };
 
-  const pairs = createMatchDirectedPairSelection(
+  const updateSummary = () => {
+    summary.textContent =
+      selectedPairs.length > 0
+        ? messages.message("associationsMade", { count: selectedPairs.length })
+        : messages.message("noAssociationsMade");
+  };
+
+  const pairs = createMatchDirectedPairState({
     interaction,
     update,
     selectedPairs,
-    sources,
-    targets,
-    messages,
-    messages.message("matchSelectedPairsList"),
-    syncPressed,
-  );
+    validationHost: group,
+    onChanged: () => {
+      syncPressed();
+      updateSummary();
+    },
+  });
 
   if (!headerHidden) {
     const thead = document.createElement("thead");
@@ -279,14 +284,12 @@ function renderTabularMatchResponse(
           target: target.text,
         }),
       );
+      button.append(checkboxToggleIcon());
       button.addEventListener("click", () => pairs.togglePair(source, target));
       button.addEventListener("keydown", (event) => {
         if (event.key !== "Delete" && event.key !== "Backspace") return;
         event.preventDefault();
         pairs.removePair(pairs.pairFor(source, target));
-        syncPressed();
-        pairs.renderPairs();
-        pairs.commit();
       });
       cell.append(button);
       row.append(cell);
@@ -296,8 +299,8 @@ function renderTabularMatchResponse(
   table.append(tbody);
 
   syncPressed();
-  pairs.renderPairs();
-  group.append(table, pairs.pairList);
+  updateSummary();
+  group.append(summary, table);
   return group;
 }
 

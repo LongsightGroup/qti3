@@ -1,28 +1,16 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { removeButton } from "../controls/remove-button.js";
-import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { associationMaximumResponses, parseUnlimitedMaximum } from "../response-limits.js";
-import { choiceText } from "./shared.js";
+import { createMatchDirectedPairList } from "./match-directed-pair-list.js";
+import {
+  createMatchDirectedPairState,
+  type MatchDirectedPairState,
+} from "./match-directed-pair-state.js";
 
-export function directedPairKey(source: QtiChoice, target: QtiChoice): string {
-  return `${source.identifier} ${target.identifier}`;
-}
+export { directedPairKey, parseDirectedPair } from "./match-directed-pair-state.js";
 
-export function parseDirectedPair(pair: string): [string, string] {
-  const [source, target] = pair.split(" ");
-  return [source ?? "", target ?? ""];
-}
-
-export type MatchDirectedPairSelection = {
+export type MatchDirectedPairSelection = MatchDirectedPairState & {
   pairList: HTMLUListElement;
-  commit: () => void;
-  removePair: (pair: string) => void;
-  removePairsForSource: (source: QtiChoice) => void;
-  removePairsForTarget: (target: QtiChoice) => void;
-  togglePair: (source: QtiChoice, target: QtiChoice) => void;
   renderPairs: () => void;
-  pairFor: (source: QtiChoice, target: QtiChoice) => string;
 };
 
 export function createMatchDirectedPairSelection(
@@ -35,103 +23,30 @@ export function createMatchDirectedPairSelection(
   pairListAriaLabel: string,
   afterPairsChange?: () => void,
 ): MatchDirectedPairSelection {
-  const pairList = document.createElement("ul");
-  pairList.className = "qti3-pair-list";
-  pairList.setAttribute("aria-label", pairListAriaLabel);
-  const maximum = associationMaximumResponses(interaction);
+  const list = createMatchDirectedPairList(
+    pairListAriaLabel,
+    messages,
+    sources,
+    targets,
+    selectedPairs,
+  );
 
-  const commit = () => {
-    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
-    else update([...selectedPairs]);
-  };
-  const replacePairs = (nextPairs: string[]) => {
-    selectedPairs.splice(0, selectedPairs.length, ...nextPairs);
-  };
+  const state = createMatchDirectedPairState({
+    interaction,
+    update,
+    selectedPairs,
+    validationHost: list.pairList,
+    onChanged: () => {
+      afterPairsChange?.();
+      list.render(state);
+    },
+  });
 
-  const pairFor = (source: QtiChoice, target: QtiChoice) => directedPairKey(source, target);
-
-  const removePair = (pair: string) => {
-    const index = selectedPairs.indexOf(pair);
-    if (index >= 0) selectedPairs.splice(index, 1);
-  };
-
-  const removePairsForSource = (source: QtiChoice) => {
-    for (const existing of selectedPairs.filter((pair) =>
-      pair.startsWith(`${source.identifier} `),
-    )) {
-      removePair(existing);
-    }
-  };
-
-  const removePairsForTarget = (target: QtiChoice) => {
-    for (const existing of selectedPairs.filter((pair) => pair.endsWith(` ${target.identifier}`))) {
-      removePair(existing);
-    }
-  };
-
-  const renderPairs = () => {
-    pairList.replaceChildren(
-      ...selectedPairs.map((pair) => {
-        const [source, target] = parseDirectedPair(pair);
-        const label = messages.message("associationPairLabel", {
-          source: choiceText(sources, source),
-          target: choiceText(targets, target),
-        });
-        const item = document.createElement("li");
-        item.className = "qti3-pair-chip";
-        const text = document.createElement("span");
-        text.textContent = label;
-        const remove = removeButton(label, messages);
-        remove.addEventListener("click", () => {
-          removePair(pair);
-          afterPairsChange?.();
-          renderPairs();
-          commit();
-        });
-        item.append(text, remove);
-        return item;
-      }),
-    );
-  };
-
-  const togglePair = (source: QtiChoice, target: QtiChoice) => {
-    const pair = pairFor(source, target);
-    if (selectedPairs.includes(pair)) {
-      removePair(pair);
-    } else {
-      let nextPairs = interaction.responseCardinality === "single" ? [] : [...selectedPairs];
-      if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
-        nextPairs = nextPairs.filter((entry) => !entry.startsWith(`${source.identifier} `));
-      }
-      if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
-        nextPairs = nextPairs.filter((entry) => !entry.endsWith(` ${target.identifier}`));
-      }
-      if (
-        maximum !== undefined &&
-        nextPairs.length >= maximum &&
-        interaction.responseCardinality !== "single"
-      ) {
-        reportMaximumResponseExceeded(pairList, interaction, maximum);
-        afterPairsChange?.();
-        renderPairs();
-        return;
-      }
-      nextPairs.push(pair);
-      replacePairs(nextPairs);
-    }
-    afterPairsChange?.();
-    renderPairs();
-    commit();
-  };
+  const renderPairs = () => list.render(state);
 
   return {
-    pairList,
-    commit,
-    removePair,
-    removePairsForSource,
-    removePairsForTarget,
-    togglePair,
+    ...state,
+    pairList: list.pairList,
     renderPairs,
-    pairFor,
   };
 }

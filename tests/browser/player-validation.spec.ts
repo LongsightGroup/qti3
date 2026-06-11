@@ -366,6 +366,48 @@ test.describe("player validation", () => {
     await expect(page.locator("qti-assessment-item-player .qti3-pair-chip")).toHaveCount(1);
   });
 
+  test("rejects authored maximum tabular match pair counts during selection", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="maximum-tabular-match" title="maximum-tabular-match" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-match-interaction response-identifier="RESPONSE" class="qti-match-tabular" data-first-column-header="Sources" max-associations="1" data-max-selections-message="Only one match.">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="2">Alpha</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="B" match-max="2">Beta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="C" match-max="2">Gamma</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="D" match-max="2">Delta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const firstPair = page.locator(
+      '.qti3-match-table-cell[data-source-identifier="A"][data-target-identifier="C"]',
+    );
+    const secondPair = page.locator(
+      '.qti3-match-table-cell[data-source-identifier="B"][data-target-identifier="D"]',
+    );
+
+    await firstPair.click();
+    await secondPair.click();
+
+    await expectResponse(page, ["A C"]);
+    await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText("Only one match.");
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-chip")).toHaveCount(0);
+    await expect(firstPair).toHaveAttribute("aria-pressed", "true");
+    await expect(secondPair).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toContainText(
+      "1 association made.",
+    );
+  });
+
   test("honors authored match-max counts during validation", async ({ page }) => {
     await page.goto("/");
     await pasteXml(

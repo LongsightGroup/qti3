@@ -595,25 +595,41 @@ test.describe("player DOM behavior", () => {
     const player = page.locator("qti-assessment-item-player");
     const table = player.locator(".qti3-match-table");
     await expect(table).toBeVisible();
+    const targetHeaderWidths = await table
+      .locator("thead th:not(:first-child)")
+      .evaluateAll((headers) => headers.map((header) => header.getBoundingClientRect().width));
+    expect(Math.abs((targetHeaderWidths[0] ?? 0) - (targetHeaderWidths[1] ?? 0))).toBeLessThan(1);
 
     const capuletRomeo = table.locator(
       '.qti3-match-table-cell[data-source-identifier="C"][data-target-identifier="R"]',
     );
     await capuletRomeo.click();
     await expect(capuletRomeo).toHaveAttribute("aria-pressed", "true");
+    await expect(capuletRomeo.locator(".qti3-match-table-check-icon")).toHaveCount(1);
     await expect.poll(() => currentResponse(page)).toEqual(["C R"]);
-    await expect(player.locator(".qti3-pair-chip span")).toContainText(
-      "Capulet to Romeo and Juliet",
+    await expect(player.locator(".qti3-pair-chip")).toHaveCount(0);
+    await expect(player.locator(".qti3-selection-summary")).toContainText("1 association made.");
+
+    await capuletRomeo.click();
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
+    await expect.poll(() => currentResponse(page)).toEqual([]);
+
+    await capuletRomeo.click();
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "true");
+    await capuletRomeo.click();
+    await expect.poll(() => currentResponse(page)).toEqual([]);
+    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
+
+    const capuletMidsummer = table.locator(
+      '.qti3-match-table-cell[data-source-identifier="C"][data-target-identifier="M"]',
     );
-
     await capuletRomeo.click();
+    await expect.poll(() => currentResponse(page)).toEqual(["C R"]);
+    await capuletMidsummer.click();
+    await expect.poll(() => currentResponse(page)).toEqual(["C M"]);
     await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
-    await expect.poll(() => currentResponse(page)).toEqual([]);
-
-    await capuletRomeo.click();
-    await player.getByRole("button", { name: "Remove Capulet to Romeo and Juliet" }).click();
-    await expect.poll(() => currentResponse(page)).toEqual([]);
-    await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
+    await expect(capuletMidsummer).toHaveAttribute("aria-pressed", "true");
+    await expect(player.locator(".qti3-selection-summary")).toContainText("1 association made.");
   });
 
   test("keeps gap placement interaction usable with authored input widths", async ({ page }) => {

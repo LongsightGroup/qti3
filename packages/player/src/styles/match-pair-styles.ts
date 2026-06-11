@@ -61,10 +61,16 @@ export const MATCH_PAIR_PLAYER_STYLES = `
 }
 
 .qti3-match-table {
+  --qti3-match-table-source-column-width: clamp(8rem, 24%, 14rem);
   inline-size: 100%;
   max-inline-size: 72rem;
+  table-layout: fixed;
   border-collapse: collapse;
   border: 1px solid CanvasText;
+}
+
+.qti3-match-table th:first-child {
+  inline-size: var(--qti3-match-table-source-column-width);
 }
 
 .qti3-match-table th,
@@ -79,6 +85,7 @@ export const MATCH_PAIR_PLAYER_STYLES = `
   background: ButtonFace;
   color: ButtonText;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .qti3-match-table tbody th {
@@ -86,9 +93,45 @@ export const MATCH_PAIR_PLAYER_STYLES = `
 }
 
 .qti3-match-table-cell {
+  display: inline-grid;
+  place-items: center;
   inline-size: 100%;
   min-block-size: 2.5rem;
+  padding: 0.35rem;
   cursor: pointer;
+}
+
+.qti3-match-table-check-icon {
+  inline-size: 1.35rem;
+  block-size: 1.35rem;
+  color: currentColor;
+}
+
+.qti3-match-table-check-box {
+  fill: Canvas;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.qti3-match-table-check-mark {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  vector-effect: non-scaling-stroke;
+}
+
+.qti3-match-table-cell[aria-pressed="true"] .qti3-match-table-check-box {
+  fill: Highlight;
+  stroke: Highlight;
+}
+
+.qti3-match-table-cell[aria-pressed="true"] .qti3-match-table-check-mark {
+  color: HighlightText;
+  opacity: 1;
 }
 
 @media (forced-colors: active) {
