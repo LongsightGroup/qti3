@@ -334,6 +334,48 @@ describe("@longsightgroup/qti3-core", () => {
     });
   });
 
+  it("preserves rich inline choice content with plain text fallbacks", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rich-inline-choice" title="rich-inline-choice" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <p>Choose <qti-inline-choice-interaction response-identifier="RESPONSE">
+            <qti-inline-choice identifier="A"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></math></qti-inline-choice>
+            <qti-inline-choice identifier="B"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="two plus two"><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math></qti-inline-choice>
+            <qti-inline-choice identifier="C"><img alt="shaded square" src="data:image/svg+xml,%3Csvg/%3E"/></qti-inline-choice>
+          </qti-inline-choice-interaction>.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const choices = result.document?.item.interactions[0]?.choices;
+    expect(choices?.[0]).toMatchObject({
+      identifier: "A",
+      text: "1 + 1",
+      role: "inlineChoice",
+    });
+    expect(
+      choices?.[0]?.content?.some((node) => "qtiName" in node && node.qtiName === "math"),
+    ).toBe(true);
+    expect(choices?.[1]).toMatchObject({
+      identifier: "B",
+      text: "two plus two",
+      role: "inlineChoice",
+    });
+    expect(
+      choices?.[1]?.content?.some((node) => "qtiName" in node && node.qtiName === "math"),
+    ).toBe(true);
+    expect(choices?.[2]).toMatchObject({
+      identifier: "C",
+      text: "shaded square",
+      role: "inlineChoice",
+    });
+    expect(choices?.[2]?.content?.some((node) => "qtiName" in node && node.qtiName === "img")).toBe(
+      true,
+    );
+  });
+
   it("keeps serialized attempt state detached from live session internals", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-contract" title="state-contract" time-dependent="false">

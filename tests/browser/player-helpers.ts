@@ -338,6 +338,18 @@ async function clickTokenInRegion(region: Locator, identifierOrName: string): Pr
   await region.getByRole("button", { name: identifierOrName }).click();
 }
 
+export async function chooseInlineChoice(
+  page: Page,
+  responseIdentifier: string,
+  value: string,
+): Promise<void> {
+  const interaction = page.locator(
+    `qti-assessment-item-player [data-response-identifier="${responseIdentifier}"]`,
+  );
+  await interaction.locator(".qti3-inline-choice-trigger").click();
+  await interaction.locator(`[role="option"][data-choice-identifier="${value}"]`).click();
+}
+
 export async function provideResponse(
   page: Page,
   interactionType: string,
@@ -345,11 +357,7 @@ export async function provideResponse(
   responseIdentifier = "RESPONSE",
 ): Promise<void> {
   if (interactionType === "inlineChoice") {
-    await page
-      .locator(
-        `qti-assessment-item-player [data-response-identifier="${responseIdentifier}"] select`,
-      )
-      .selectOption(String(response));
+    await chooseInlineChoice(page, responseIdentifier, String(response));
     return;
   }
 
@@ -531,12 +539,6 @@ export async function provideResponse(
   const radio = page.getByRole("radio", { name: value }).first();
   if (await radio.isVisible().catch(() => false)) {
     await radio.check();
-    return;
-  }
-
-  const select = page.locator("qti-assessment-item-player select").first();
-  if (await select.isVisible().catch(() => false)) {
-    await select.selectOption(value);
     return;
   }
 

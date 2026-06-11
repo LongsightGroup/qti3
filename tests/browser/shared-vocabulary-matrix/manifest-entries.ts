@@ -23,8 +23,8 @@ import {
   hottextRoot,
   inlineChoiceWidth4,
   inlineChoiceWidth20,
+  inlineChoiceVerticalControl,
   inlineChoiceVerticalRoot,
-  inlineChoiceVerticalSelect,
   inlineTextWidth4,
   inlineTextWidth20,
   inputWidths,
@@ -339,7 +339,7 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
       },
       {
         type: "computed-style",
-        selector: inlineChoiceVerticalSelect,
+        selector: inlineChoiceVerticalControl,
         property: "writing-mode",
         value: "vertical-rl",
       },

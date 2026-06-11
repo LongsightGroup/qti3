@@ -109,4 +109,89 @@ describe("content-text", () => {
     expect(choiceAccessibleLabel(choice)).toBe("cos Θ");
     expect(choiceAccessibleLabel(undefined, "fallback")).toBe("fallback");
   });
+
+  it("uses image alt text for flat content labels", () => {
+    const nodes: QtiContentNode[] = [
+      {
+        kind: "element",
+        qtiName: "img",
+        attributes: { alt: "shaded square", src: "data:image/svg+xml,%3Csvg/%3E" },
+        children: [],
+      },
+    ];
+
+    expect(flatTextFromContent(nodes)).toBe("shaded square");
+    expect(
+      choiceAccessibleLabel({
+        identifier: "A",
+        text: "",
+        content: nodes,
+        role: "inlineChoice",
+        qtiName: "qti-inline-choice",
+        attributes: {},
+      }),
+    ).toBe("shaded square");
+  });
+
+  it("uses math alttext for flat content labels", () => {
+    const nodes: QtiContentNode[] = [
+      {
+        kind: "element",
+        qtiName: "math",
+        attributes: { alttext: "two plus two" },
+        children: [
+          {
+            kind: "element",
+            qtiName: "mrow",
+            attributes: {},
+            children: [
+              {
+                kind: "element",
+                qtiName: "mn",
+                attributes: {},
+                children: [{ kind: "text", text: "2" }],
+              },
+              {
+                kind: "element",
+                qtiName: "mo",
+                attributes: {},
+                children: [{ kind: "text", text: "+" }],
+              },
+              {
+                kind: "element",
+                qtiName: "mn",
+                attributes: {},
+                children: [{ kind: "text", text: "2" }],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    expect(flatTextFromContent(nodes)).toBe("two plus two");
+    expect(
+      choiceAccessibleLabel({
+        identifier: "B",
+        text: "2 + 2",
+        content: nodes,
+        role: "inlineChoice",
+        qtiName: "qti-inline-choice",
+        attributes: {},
+      }),
+    ).toBe("two plus two");
+  });
+
+  it("uses object labels for flat content labels", () => {
+    const nodes: QtiContentNode[] = [
+      {
+        kind: "element",
+        qtiName: "object",
+        attributes: { "object-label": "audio clip", data: "clip.mp3", type: "audio/mpeg" },
+        children: [],
+      },
+    ];
+
+    expect(flatTextFromContent(nodes)).toBe("audio clip");
+  });
 });

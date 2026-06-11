@@ -589,57 +589,6 @@ test.describe("manual harness", () => {
     await expect(player.locator('[data-choice-identifier="A"] input[type="radio"]')).toBeVisible();
   });
 
-  test("renders inline choice parent prose as the interaction label", async ({ page }) => {
-    await page.goto("/");
-    await loadFixture(page, "inlineChoice");
-
-    const player = page.locator("qti-assessment-item-player");
-    await expect(player.locator(".qti3-inlineChoice")).toHaveCount(2);
-    await expect(player.locator(".qti3-item-body p").nth(1)).toContainText(
-      "In QTI 3.0, an interaction writes a candidate answer to a",
-    );
-    await expect(player.locator(".qti3-item-body p").nth(1)).toContainText(
-      "and response processing writes derived values such as SCORE to an",
-    );
-    await expect(
-      player.locator('[data-response-identifier="RESPONSE_DECLARATION"] select'),
-    ).toBeVisible();
-    await expect(
-      player.locator('[data-response-identifier="RESPONSE_OUTCOME"] select'),
-    ).toBeVisible();
-  });
-
-  test("renders inline choice placeholder text and clears to null", async ({ page }) => {
-    await page.goto("/");
-    await loadFixture(page, "inlineChoice");
-
-    const select = page.locator(
-      'qti-assessment-item-player [data-response-identifier="RESPONSE_DECLARATION"] select',
-    );
-    await expect(select).toHaveAttribute("name", "RESPONSE_DECLARATION");
-    await expect(select.locator("option").first()).toHaveText("Choose...");
-    const placeholderValue = await select
-      .locator("option")
-      .first()
-      .evaluate((option) => (option as HTMLOptionElement).value);
-    expect(placeholderValue).toBe("");
-    await expect(select).toHaveValue("");
-
-    await select.selectOption("A");
-    await expect(select).toHaveValue("A");
-    let state = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
-    });
-    expect(state.responses.RESPONSE_DECLARATION).toBe("A");
-
-    await select.selectOption("");
-    await expect(select).toHaveValue("");
-    state = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
-    });
-    expect(state.responses.RESPONSE_DECLARATION).toBeNull();
-  });
-
   test("renders choice options as a vertical list", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "choice");

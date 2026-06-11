@@ -2,24 +2,19 @@ import {
   interactionSupport,
   qtiScalarToString,
   qtiValueToString,
-  type QtiAttemptStateV1,
   type QtiDiagnostic,
   type QtiInteractionType,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
+import { createBasicRichInlineChoiceFixture } from "./basic-rich-inline-choice.fixture.js";
+import { basicCorrectAttempt, type QtiFixtureAttempt } from "./fixture-attempts.js";
+
+export type { QtiFixtureAttempt };
 
 export interface QtiExpectedDiagnostic {
   code: string;
   severity?: QtiDiagnostic["severity"] | undefined;
   path?: string | undefined;
-}
-
-export interface QtiFixtureAttempt {
-  name: string;
-  responses: Record<string, QtiValue>;
-  expectedOutcomes: Record<string, QtiValue>;
-  expectedResponses?: Record<string, QtiValue> | undefined;
-  expectedState?: Partial<QtiAttemptStateV1> | undefined;
 }
 
 export interface QtiFixture {
@@ -59,6 +54,7 @@ export const basicItemPlayerFixtures: QtiFixture[] = [
   createBasicTemplateResponseProcessingFixture(),
   createBasicCompositeItemFixture(),
   createBasicMathMlFixture(),
+  createBasicRichInlineChoiceFixture(),
   createBasicSharedVocabularyFixture(),
   createBasicAltTextFixture(),
 ];
@@ -1040,26 +1036,6 @@ function createBasicModalFeedbackToleranceFixture(): QtiFixture {
     expectedParseDiagnostics: [],
     expectedValidationDiagnostics: [],
     attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1, FEEDBACK: "correct" }, id)],
-  };
-}
-
-function basicCorrectAttempt(
-  responses: Record<string, QtiValue>,
-  expectedOutcomes: Record<string, QtiValue>,
-  itemIdentifier: string,
-): QtiFixtureAttempt {
-  return {
-    name: "correct",
-    responses,
-    expectedResponses: responses,
-    expectedOutcomes,
-    expectedState: {
-      schema: "qti3.attempt-state.v1",
-      itemIdentifier,
-      status: "interacting",
-      responses,
-      outcomes: expectedOutcomes,
-    },
   };
 }
 

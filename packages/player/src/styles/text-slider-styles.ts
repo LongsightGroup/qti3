@@ -21,8 +21,7 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
   resize: vertical;
 }
 
-.qti3-text-input[data-qti-input-width],
-.qti3-inline-select[data-qti-input-width] {
+.qti3-text-input[data-qti-input-width] {
   inline-size: var(--qti3-input-width);
   min-inline-size: var(--qti3-input-width);
   max-inline-size: 100%;
@@ -41,16 +40,6 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
 
 .qti3-inline-text-response .qti3-pattern-mask-message {
   display: block;
-}
-
-.qti3-inlineChoice.qti-writing-orientation-vertical-rl .qti3-inline-select,
-.qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-select {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-}
-
-.qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-select {
-  writing-mode: vertical-lr;
 }
 
 .qti3-slider-response {

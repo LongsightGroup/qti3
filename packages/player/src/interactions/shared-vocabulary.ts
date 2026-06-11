@@ -35,10 +35,7 @@ export function inputWidth(attributes: Record<string, string>): number | undefin
   return inputWidthFromAttributes(attributes);
 }
 
-export function applyInputWidth(
-  control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
-  width: number | undefined,
-): boolean {
+export function applyInputWidth(control: HTMLElement, width: number | undefined): boolean {
   if (width === undefined) return false;
   control.dataset.qtiInputWidth = String(width);
   control.style.setProperty("--qti3-input-width", `${width}ch`);

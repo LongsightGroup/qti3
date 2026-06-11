@@ -9,7 +9,7 @@ import { renderGapMatchResponse } from "./gap-match-interaction.js";
 import { renderGraphicAssociateResponse } from "./graphic-associate-interaction.js";
 import { renderHotspotResponse } from "./hotspot-interaction.js";
 import { renderHottextResponse } from "./hottext-interaction.js";
-import { renderSelect } from "./inline-choice-interaction.js";
+import { renderInlineChoice } from "./inline-choice-interaction.js";
 import { renderMatchResponse } from "./match-interaction.js";
 import { renderObjectAsset } from "./object-asset.js";
 import { renderPairResponse } from "./pair-interaction.js";
@@ -144,9 +144,9 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     id: "inlineChoice",
     matches: (interaction) => interaction.type === "inlineChoice",
     render: ({ interaction, update, currentValue, messages }) =>
-      renderSelect(interaction, update, currentValue, messages),
+      renderInlineChoice(interaction, update, currentValue, messages),
     renderEmbedded: ({ interaction, update, currentValue, messages }) =>
-      renderSelect(interaction, update, currentValue, messages),
+      renderInlineChoice(interaction, update, currentValue, messages),
   },
   {
     id: "extendedText",

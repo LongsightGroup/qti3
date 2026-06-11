@@ -139,6 +139,55 @@ test.describe("player keyboard and accessibility", () => {
       .focus();
     await page.keyboard.press("Enter");
     await expectResponse(page, true);
+
+    await loadFixture(page, "inlineChoice");
+    const inlineChoiceInteraction = page.locator(
+      'qti-assessment-item-player [data-response-identifier="RESPONSE_DECLARATION"]',
+    );
+    const inlineChoiceTrigger = inlineChoiceInteraction.locator(".qti3-inline-choice-trigger");
+    await inlineChoiceTrigger.focus();
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await expect(inlineChoiceTrigger).toHaveAttribute("data-value", "A");
+    const inlineChoiceState = await page
+      .locator("qti-assessment-item-player")
+      .evaluate((element) => element.serialize());
+    expect(inlineChoiceState.responses.RESPONSE_DECLARATION).toBe("A");
+  });
+
+  test("supports inline choice listbox keyboard dismissal and navigation", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "inlineChoice");
+
+    const interaction = page.locator(
+      'qti-assessment-item-player [data-response-identifier="RESPONSE_DECLARATION"]',
+    );
+    const trigger = interaction.locator(".qti3-inline-choice-trigger");
+    const listbox = interaction.locator(".qti3-inline-choice-listbox");
+
+    await trigger.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(listbox).toBeVisible();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+    await page.keyboard.press("End");
+    await expect(interaction.locator('[role="option"][data-choice-identifier="C"]')).toBeFocused();
+
+    await page.keyboard.press("Escape");
+    await expect(listbox).toBeHidden();
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await expect(trigger).toBeFocused();
+
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Home");
+    await expect(interaction.locator('[role="option"][data-choice-identifier=""]')).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(trigger).toHaveAttribute("data-value", "");
+    const clearedState = await page
+      .locator("qti-assessment-item-player")
+      .evaluate((element) => element.serialize());
+    expect(clearedState.responses.RESPONSE_DECLARATION).toBeNull();
   });
 
   test("exposes accessible names for every operable fixture control", async ({ page }) => {

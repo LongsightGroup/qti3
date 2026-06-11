@@ -33,10 +33,10 @@ export const bodyTextWidth4 = `${player} [data-response-identifier="BODY_4"] inp
 export const bodyTextWidth20 = `${player} [data-response-identifier="BODY_20"] input.qti3-inline-text-input`;
 export const inlineTextWidth4 = `${player} [data-response-identifier="INLINE_4"] input.qti3-inline-text-input`;
 export const inlineTextWidth20 = `${player} [data-response-identifier="INLINE_20"] input.qti3-inline-text-input`;
-export const inlineChoiceWidth4 = `${player} [data-response-identifier="CHOICE_4"] select.qti3-inline-select`;
-export const inlineChoiceWidth20 = `${player} [data-response-identifier="CHOICE_20"] select.qti3-inline-select`;
+export const inlineChoiceWidth4 = `${player} [data-response-identifier="CHOICE_4"] .qti3-inline-choice-control`;
+export const inlineChoiceWidth20 = `${player} [data-response-identifier="CHOICE_20"] .qti3-inline-choice-control`;
 export const inlineChoiceVerticalRoot = `${player} [data-response-identifier="RESPONSE"].qti3-inlineChoice`;
-export const inlineChoiceVerticalSelect = `${inlineChoiceVerticalRoot} select.qti3-inline-select`;
+export const inlineChoiceVerticalControl = `${inlineChoiceVerticalRoot} .qti3-inline-choice-control`;
 export const graphicGapRoot = `${player} .qti3-graphicGapMatch`;
 export const graphicGapLayout = `${player} .qti3-graphic-gap-layout`;
 export const graphicGapBank = `${graphicGapLayout} .qti3-graphic-gap-source-region`;

@@ -36,6 +36,7 @@ describe("@longsightgroup/qti3-fixtures", () => {
       "basic-template-response-processing",
       "basic-composite-item",
       "basic-mathml",
+      "basic-rich-inline-choice",
       "basic-shared-vocabulary",
       "basic-alt-text",
     ]);

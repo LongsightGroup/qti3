@@ -29,6 +29,11 @@ function flatTextFromContentNode(node: QtiContentNode, excludeAnnotations: boole
       ) {
         return "";
       }
+      if (node.qtiName === "math" && node.attributes.alttext) return node.attributes.alttext;
+      if (node.qtiName === "img" && node.attributes.alt) return node.attributes.alt;
+      if (node.qtiName === "object" && node.attributes["object-label"]) {
+        return node.attributes["object-label"];
+      }
       return node.children
         .map((child) => flatTextFromContentNode(child, excludeAnnotations))
         .join(" ");

@@ -34,7 +34,7 @@ export function tokenButton(choice: QtiChoice): HTMLButtonElement {
 }
 
 export function setChoiceAccessibleName(element: HTMLElement, choice: QtiChoice): void {
-  if (choice.asset?.data) element.setAttribute("aria-label", choice.text);
+  if (choice.text) element.setAttribute("aria-label", choice.text);
 }
 
 export function hasRichChoiceContent(choice: QtiChoice): boolean {
