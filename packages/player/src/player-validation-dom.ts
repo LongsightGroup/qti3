@@ -3,6 +3,9 @@ import { CONTROL_VALIDATION_INVALID, syncControlAriaInvalid } from "./dom/contro
 import { mergeTokenAttribute, removeTokenAttribute } from "./dom/token-attribute.js";
 import { validationMessageId } from "./player-validation.js";
 
+const VALIDATION_CONTROL_SELECTOR =
+  "input, select, textarea, button, [tabindex]:not([tabindex='-1']), [contenteditable='true']";
+
 export function syncValidationMessages(root: ParentNode, messages: QtiDiagnostic[]): void {
   const messagesByIdentifier = new Map(
     messages.filter((message) => message.path).map((message) => [message.path!, message]),
@@ -14,7 +17,7 @@ export function syncValidationMessages(root: ParentNode, messages: QtiDiagnostic
     const messageElement = section.querySelector<HTMLElement>(
       `[data-validation-for="${responseIdentifier}"]`,
     );
-    const controls = section.querySelectorAll<HTMLElement>("input, select, textarea, button");
+    const controls = section.querySelectorAll<HTMLElement>(VALIDATION_CONTROL_SELECTOR);
     const validationMessageToken = validationMessageId(responseIdentifier);
     if (message && messageElement) {
       messageElement.textContent = message.message;

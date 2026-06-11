@@ -10,9 +10,7 @@ export const interactionSupport: QtiInteractionElementSupport[] = [
   entry("qti-choice-interaction", "choice"),
   entry("qti-drawing-interaction", "drawing"),
   entry("qti-end-attempt-interaction", "endAttempt"),
-  textControlInteractionEntry("qti-extended-text-interaction", "extendedText", [
-    "packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml",
-  ]),
+  extendedTextInteractionEntry(),
   entry("qti-gap-match-interaction", "gapMatch"),
   entry("qti-graphic-associate-interaction", "graphicAssociate"),
   entry("qti-graphic-gap-match-interaction", "graphicGapMatch"),
@@ -27,9 +25,7 @@ export const interactionSupport: QtiInteractionElementSupport[] = [
   pciEntry(),
   entry("qti-select-point-interaction", "selectPoint"),
   entry("qti-slider-interaction", "slider"),
-  textControlInteractionEntry("qti-text-entry-interaction", "textEntry", [
-    "packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml",
-  ]),
+  textEntryInteractionEntry(),
   entry("qti-upload-interaction", "upload"),
 ];
 
@@ -229,14 +225,34 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
   };
 }
 
-function textControlInteractionEntry(
-  qtiName: string,
-  interactionType: "extendedText" | "textEntry",
-  extraFixtures: string[],
-): QtiInteractionElementSupport {
+function extendedTextInteractionEntry(): QtiInteractionElementSupport {
   return {
-    ...entry(qtiName, interactionType),
-    fixtures: [`packages/fixtures/xml/${interactionType}-reference.xml`, ...extraFixtures],
+    ...entry("qti-extended-text-interaction", "extendedText"),
+    fixtures: [
+      "packages/fixtures/xml/extendedText-reference.xml",
+      "packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml",
+      "packages/fixtures/packages/sv-matrix/items/extended-text-xhtml.xml",
+    ],
+    tests: [
+      "packages/fixtures/src/fixtures.test.ts",
+      "packages/conformance/src/conformance.test.ts",
+      "packages/a11y/src/a11y.test.ts",
+      "packages/core/src/pattern-mask.test.ts",
+      "tests/browser/player.spec.ts",
+      "tests/browser/player-dom-behavior.spec.ts",
+      "tests/browser/player-extended-text-xhtml.spec.ts",
+    ],
+    notes: "Supports plain and format=xhtml extended text.",
+  };
+}
+
+function textEntryInteractionEntry(): QtiInteractionElementSupport {
+  return {
+    ...entry("qti-text-entry-interaction", "textEntry"),
+    fixtures: [
+      "packages/fixtures/xml/textEntry-reference.xml",
+      "packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml",
+    ],
     tests: [
       "packages/fixtures/src/fixtures.test.ts",
       "packages/conformance/src/conformance.test.ts",
@@ -245,7 +261,7 @@ function textControlInteractionEntry(
       "tests/browser/player.spec.ts",
       "tests/browser/player-dom-behavior.spec.ts",
     ],
-    notes: "Supports placeholder-text and pattern-mask on block and inline text-entry controls.",
+    notes: "Supports placeholder-text and pattern-mask on text-entry controls.",
   };
 }
 

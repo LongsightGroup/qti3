@@ -9,6 +9,15 @@ export interface InteractionA11yContract {
   focusStrategy: string;
   keyboardModel: string[];
   requiredStates: string[];
+  variants?: InteractionA11yVariant[] | undefined;
+}
+
+export interface InteractionA11yVariant {
+  name: string;
+  primaryRole: string;
+  focusStrategy: string;
+  keyboardModel: string[];
+  requiredStates: string[];
 }
 
 export interface ManualAssistiveTechnologyScript {
@@ -26,6 +35,7 @@ export interface AccessibilityProofEntry {
   primaryRole: string;
   keyboardRequired: boolean;
   keyboardModel: string[];
+  variants?: InteractionA11yVariant[] | undefined;
   proof: {
     automated: string[];
     manual: string[];
@@ -42,6 +52,7 @@ export const accessibilityProofMatrix: AccessibilityProofEntry[] = a11yContracts
     primaryRole: contract.primaryRole,
     keyboardRequired: contract.keyboardRequired,
     keyboardModel: contract.keyboardModel,
+    variants: contract.variants,
     proof: {
       automated: automatedProofFor(contract),
       manual: manualProofFor(contract),
@@ -261,13 +272,37 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
     };
   }
 
-  if (interactionType === "textEntry" || interactionType === "extendedText") {
+  if (interactionType === "textEntry") {
     return {
       ...base,
       primaryRole: "textbox",
       focusStrategy: "Focus lands directly on the text entry field.",
       keyboardModel: ["Typing edits the response.", "Tab leaves the field."],
       requiredStates: ["value", "aria-invalid", "aria-describedby"],
+    };
+  }
+
+  if (interactionType === "extendedText") {
+    return {
+      ...base,
+      primaryRole: "textbox",
+      focusStrategy: "Focus lands directly on the plain extended-text textarea.",
+      keyboardModel: ["Typing edits the response.", "Tab leaves the field."],
+      requiredStates: ["value", "aria-invalid", "aria-describedby"],
+      variants: [
+        {
+          name: "format=xhtml",
+          primaryRole: "toolbar and textbox",
+          focusStrategy: "Focus moves between the rich-text toolbar and editor.",
+          keyboardModel: [
+            "Typing in the editor edits the response.",
+            "Tab moves between the toolbar and editor.",
+            "Toolbar buttons use roving tabindex; Arrow keys move between buttons.",
+            "Enter or Space on a toolbar button applies formatting.",
+          ],
+          requiredStates: ["value", "aria-pressed on toggle commands"],
+        },
+      ],
     };
   }
 

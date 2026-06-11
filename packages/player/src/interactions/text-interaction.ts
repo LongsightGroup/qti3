@@ -1,19 +1,16 @@
-import {
-  extendedTextCounterStateFromAttributes,
-  extendedTextCounterValues,
-  extendedTextHeightLinesFromAttributes,
-  type QtiInteraction,
-  type QtiValue,
-  type SharedVocabularyExtendedTextCounterPosition,
-} from "@longsightgroup/qti3-core";
+import { type QtiInteraction, type QtiValue } from "@longsightgroup/qti3-core";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import {
+  appendExtendedTextResponseChildren,
+  applyExtendedTextRows,
+  createExtendedTextCounter,
+  expectedExtendedTextRows,
+  extendedTextCounterState,
+  syncExtendedTextCounter,
+} from "./extended-text-shared.js";
+import { scalarString } from "./text-value.js";
 import { wireTextControlConstraints } from "./text-control-constraints.js";
 import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
-
-function scalarString(value: QtiValue): string {
-  if (value === null || Array.isArray(value) || typeof value === "object") return "";
-  return String(value);
-}
 
 function coerceResponseInputValue(
   value: string,
@@ -48,35 +45,10 @@ function applyTextEntryWidthWithPrecedence(
   }
 }
 
-function expectedRows(interaction: QtiInteraction): number | undefined {
-  const sharedVocabularyRows = extendedTextHeightLinesFromAttributes(interaction.attributes);
-  if (sharedVocabularyRows !== undefined) return sharedVocabularyRows;
-
-  const expectedLines = Number(interaction.attributes["expected-lines"] ?? 0);
-  return Number.isFinite(expectedLines) && expectedLines > 0 ? expectedLines : undefined;
-}
-
 function appendInOrder(group: HTMLElement, ...nodes: Array<HTMLElement | undefined>): void {
   for (const node of nodes) {
     if (node) group.append(node);
   }
-}
-
-function appendTextResponseChildren(
-  group: HTMLElement,
-  options: {
-    control: HTMLElement;
-    patternMaskMessage?: HTMLElement | undefined;
-    counter?: HTMLElement | undefined;
-    counterPosition?: SharedVocabularyExtendedTextCounterPosition | undefined;
-  },
-): void {
-  const { control, patternMaskMessage, counter, counterPosition } = options;
-  if (counter && counterPosition === "up") {
-    appendInOrder(group, counter, control, patternMaskMessage);
-    return;
-  }
-  appendInOrder(group, control, patternMaskMessage, counter);
 }
 
 export function renderTextResponse(
@@ -100,38 +72,24 @@ export function renderTextResponse(
         ? messages.message("extendedTextResponseLabel")
         : messages.message("textResponseLabel")),
   );
-  const rows = mode === "extended" ? expectedRows(interaction) : undefined;
-  if (rows !== undefined) {
-    (control as HTMLTextAreaElement).rows = rows;
-  }
+  const rows = mode === "extended" ? expectedExtendedTextRows(interaction) : undefined;
+  if (rows !== undefined) applyExtendedTextRows(control, rows);
   const patternMaskMessage = wireTextControlConstraints(control, interaction, messages);
   if (mode === "entry") {
     // qti-input-width-* applies to text-entry controls; extended text keeps textarea sizing.
     applyTextEntryWidthWithPrecedence(interaction, control, expectedLength);
   }
-  const counterState =
-    mode === "extended"
-      ? extendedTextCounterStateFromAttributes(interaction.attributes)
-      : undefined;
-  const counter = counterState ? document.createElement("p") : undefined;
-  if (counter) {
-    counter.className = "qti3-counter";
-    counter.setAttribute("aria-live", "polite");
-  }
+  const counterState = mode === "extended" ? extendedTextCounterState(interaction) : undefined;
+  const counter = createExtendedTextCounter(counterState);
   const sync = (emitResponse = true) => {
     const value = control.value;
-    if (counter && counterState) {
-      counter.textContent = messages.message(
-        "extendedTextCounter",
-        extendedTextCounterValues(counterState.position, value.length, counterState.expectedLength),
-      );
-    }
+    syncExtendedTextCounter(counter, counterState, value.length, messages);
     if (emitResponse) update(value);
   };
   control.addEventListener("input", () => sync());
   control.addEventListener("change", () => sync());
   sync(false);
-  appendTextResponseChildren(group, {
+  appendExtendedTextResponseChildren(group, {
     control,
     patternMaskMessage,
     counter,

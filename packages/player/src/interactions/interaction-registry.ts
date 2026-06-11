@@ -16,6 +16,8 @@ import { renderPairResponse } from "./pair-interaction.js";
 import { renderPositionObjectResponse } from "./position-object-interaction.js";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
 import { renderSelectPointResponse } from "./select-point-interaction.js";
+import { extendedTextFormat } from "./extended-text-shared.js";
+import { renderExtendedTextXhtmlResponse } from "./extended-text-xhtml.js";
 import {
   renderInlineTextEntry,
   renderSliderResponse,
@@ -150,7 +152,9 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     id: "extendedText",
     matches: (interaction) => interaction.type === "extendedText",
     render: ({ interaction, update, currentValue, messages }) =>
-      renderTextResponse(interaction, update, "extended", currentValue, messages),
+      extendedTextFormat(interaction) === "xhtml"
+        ? renderExtendedTextXhtmlResponse(interaction, update, currentValue, messages)
+        : renderTextResponse(interaction, update, "extended", currentValue, messages),
   },
   {
     id: "selectPoint",
