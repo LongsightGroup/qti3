@@ -1,0 +1,174 @@
+import {
+  coerceValue,
+  normalizeValueForCardinality,
+  parseCardinality,
+  parseCoords,
+  parseShape,
+} from "./parser-values.js";
+import type {
+  QtiBaseType,
+  QtiLookupTable,
+  QtiOutcomeDeclaration,
+  QtiResponseDeclaration,
+  QtiScalarValue,
+  QtiTemplateDeclaration,
+  QtiValue,
+} from "./types.js";
+import { childElements, textContent, type XmlNode } from "./xml.js";
+
+export function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
+  const cardinality = parseCardinality(node.attributes.cardinality);
+  const baseType = node.attributes["base-type"] as QtiResponseDeclaration["baseType"];
+  return {
+    kind: "response",
+    identifier: node.attributes.identifier ?? "",
+    cardinality,
+    baseType,
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
+    correctResponse: normalizeValueForCardinality(
+      parseVariableValue(childElements(node, "qti-correct-response")[0], baseType),
+      cardinality,
+    ),
+    mapping: parseMapping(childElements(node, "qti-mapping")[0]),
+    areaMapping: parseAreaMapping(childElements(node, "qti-area-mapping")[0]),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+export function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
+  const baseType = node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"];
+  return {
+    kind: "outcome",
+    identifier: node.attributes.identifier ?? "",
+    cardinality: parseCardinality(node.attributes.cardinality),
+    baseType,
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
+    lookupTable: parseLookupTable(node, baseType),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+export function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
+  const baseType = node.attributes["base-type"] as QtiTemplateDeclaration["baseType"];
+  return {
+    kind: "template",
+    identifier: node.attributes.identifier ?? "",
+    cardinality: parseCardinality(node.attributes.cardinality),
+    baseType,
+    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function parseVariableValue(
+  node: XmlNode | undefined,
+  baseType: QtiBaseType | undefined,
+): QtiValue {
+  if (!node) return null;
+  const valueNodes = childElements(node, "qti-value");
+  const entries = valueNodes.map((valueNode) => ({
+    fieldIdentifier: valueNode.attributes["field-identifier"],
+    value: coerceValue(textContent(valueNode), valueNode.attributes["base-type"] ?? baseType),
+  }));
+  const recordEntries = entries.filter(
+    (entry): entry is { fieldIdentifier: string; value: QtiScalarValue } =>
+      Boolean(entry.fieldIdentifier),
+  );
+  if (recordEntries.length > 0) {
+    return Object.fromEntries(recordEntries.map((entry) => [entry.fieldIdentifier, entry.value]));
+  }
+  if (entries.length === 0) {
+    const text = textContent(node);
+    return text.length > 0 ? coerceValue(text, baseType) : null;
+  }
+  if (entries.length === 1) return entries[0]?.value ?? null;
+  return entries.map((entry) => entry.value);
+}
+
+function parseMapping(node: XmlNode | undefined): QtiResponseDeclaration["mapping"] | undefined {
+  if (!node) return undefined;
+  return {
+    defaultValue: Number(node.attributes["default-value"] ?? 0),
+    attributes: node.attributes,
+    source: node.source,
+    entries: childElements(node, "qti-map-entry").map((entry) => ({
+      mapKey: entry.attributes["map-key"],
+      mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
+}
+
+function parseAreaMapping(
+  node: XmlNode | undefined,
+): QtiResponseDeclaration["areaMapping"] | undefined {
+  if (!node) return undefined;
+  return {
+    defaultValue: Number(node.attributes["default-value"] ?? 0),
+    attributes: node.attributes,
+    source: node.source,
+    entries: childElements(node, "qti-area-map-entry").map((entry) => ({
+      shape: parseShape(entry.attributes.shape),
+      coords: parseCoords(entry.attributes.coords),
+      mappedValue: Number(entry.attributes["mapped-value"] ?? 0),
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
+}
+
+function parseLookupTable(
+  node: XmlNode,
+  baseType: QtiOutcomeDeclaration["baseType"],
+): QtiLookupTable | undefined {
+  const matchTable = childElements(node, "qti-match-table")[0];
+  if (matchTable) return parseMatchTable(matchTable, baseType);
+  const interpolationTable = childElements(node, "qti-interpolation-table")[0];
+  if (interpolationTable) return parseInterpolationTable(interpolationTable, baseType);
+  return undefined;
+}
+
+function parseMatchTable(
+  node: XmlNode,
+  baseType: QtiOutcomeDeclaration["baseType"],
+): QtiLookupTable {
+  return {
+    type: "match",
+    defaultValue: parseLookupValue(node.attributes["default-value"], baseType),
+    attributes: node.attributes,
+    source: node.source,
+    entries: childElements(node, "qti-match-table-entry").map((entry) => ({
+      sourceValue: Number(entry.attributes["source-value"]),
+      targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
+}
+
+function parseInterpolationTable(
+  node: XmlNode,
+  baseType: QtiOutcomeDeclaration["baseType"],
+): QtiLookupTable {
+  return {
+    type: "interpolation",
+    defaultValue: parseLookupValue(node.attributes["default-value"], baseType),
+    attributes: node.attributes,
+    source: node.source,
+    entries: childElements(node, "qti-interpolation-table-entry").map((entry) => ({
+      sourceValue: Number(entry.attributes["source-value"]),
+      targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
+      includeBoundary: entry.attributes["include-boundary"] !== "false",
+      attributes: entry.attributes,
+      source: entry.source,
+    })),
+  };
+}
+
+function parseLookupValue(value: string | undefined, baseType: string | undefined): QtiValue {
+  return value === undefined ? null : coerceValue(value, baseType);
+}
