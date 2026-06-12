@@ -204,6 +204,7 @@ export interface QtiInteraction {
   contextText?: string | undefined;
   object?: QtiObjectAsset | undefined;
   positionObjectStage?: QtiObjectAsset | undefined;
+  customInteraction?: QtiCustomInteractionDefinition | undefined;
   portableCustom?: QtiPortableCustomDefinition | undefined;
   choices: QtiChoice[];
   hottextSegments?: QtiHottextSegment[] | undefined;
@@ -272,20 +273,25 @@ export interface QtiMediaTrack {
   source?: QtiSourceLocation | undefined;
 }
 
-export interface QtiPortableCustomDefinition {
+export interface QtiInteractionMarkupDefinition {
   responseIdentifier?: string | undefined;
+  interactionMarkup: QtiContentNode[];
+  interactionMarkupRaw?: string | undefined;
+  dataAttributes: Record<string, string>;
+  attributes: Record<string, string>;
+  source?: QtiSourceLocation | undefined;
+}
+
+export type QtiCustomInteractionDefinition = QtiInteractionMarkupDefinition;
+
+export interface QtiPortableCustomDefinition extends QtiInteractionMarkupDefinition {
   customInteractionTypeIdentifier?: string | undefined;
   module?: string | undefined;
   interactionModules?: QtiPortableCustomInteractionModules | undefined;
-  interactionMarkup: QtiContentNode[];
-  interactionMarkupRaw?: string | undefined;
   templateVariables: QtiPortableCustomVariableBinding[];
   contextVariables: QtiPortableCustomVariableBinding[];
   stylesheets: QtiStylesheet[];
   catalogInfo?: QtiCatalogInfo | undefined;
-  dataAttributes: Record<string, string>;
-  attributes: Record<string, string>;
-  source?: QtiSourceLocation | undefined;
 }
 
 export interface QtiPortableCustomInteractionModules {

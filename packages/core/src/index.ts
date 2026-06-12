@@ -167,6 +167,8 @@ export type {
   QtiCompanionMaterialsInfo,
   QtiCompanionMaterialsUnparsedChild,
   QtiContentNode,
+  QtiCustomInteractionDefinition,
+  QtiInteractionMarkupDefinition,
   QtiDiagnostic,
   QtiDocument,
   QtiElementSupport,
