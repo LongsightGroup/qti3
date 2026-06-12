@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.7.3 - 2026-06-12
+
+### Added
+
+- Add XHTML extended-text editing support with a browser toolbar, sanitization, shared-vocabulary
+  fixture coverage, localized toolbar messages, and Playwright coverage.
+- Add rich inline-choice rendering so inline choices can preserve authored inline content, including
+  MathML and accessible text.
+- Add pen color support for drawing interactions, including accessibility metadata and browser
+  coverage.
+- Add a 1EdTech manual example harness and fixture navigation entry.
+
+### Changed
+
+- Preserve rich authored content in prompts, choice content, order choices, MathML rendering, and
+  match/pair summaries.
+- Improve tabular match and directed-pair rendering with shared pair-chip/list behavior and stronger
+  keyboard/browser coverage.
+- Expand browser accessibility coverage with axe sweeps across question items and focused MathML,
+  lifecycle, validation, inline-choice, and graphic interaction suites.
+- Install the project formatting pre-commit hook through the existing `prepare` workflow.
+
+### Fixed
+
+- Validate only visible adaptive responses so hidden adaptive controls do not block submission.
+- Preserve text choice accessible names when rendering rich choice content.
+- Render inline end-attempt controls correctly.
+- Fix shared-vocabulary player CSS regressions.
+- Document that non-conformant `patternMask` values are ignored.
+
 ## 0.7.2 - 2026-06-07
 
 ### Added
