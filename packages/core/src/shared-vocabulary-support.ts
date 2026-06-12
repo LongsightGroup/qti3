@@ -1,5 +1,4 @@
 import {
-  SHARED_VOCABULARY_CHOICE_WRITING_ORIENTATIONS,
   SHARED_VOCABULARY_CONTENT_ALIGNMENTS,
   SHARED_VOCABULARY_CONTENT_FLOAT_SUFFIXES,
   SHARED_VOCABULARY_CONTENT_LIST_STYLE_TYPES,
@@ -10,10 +9,16 @@ import {
   SHARED_VOCABULARY_LAYOUT_OFFSET_COUNT,
 } from "./shared-vocabulary-generated-families.js";
 import {
+  sharedVocabularyFixedClassName,
+  sharedVocabularyInteractionFields,
+  type QtiSharedVocabularyField,
+} from "./shared-vocabulary-authoring.js";
+import {
   SHARED_VOCABULARY_EXTENDED_TEXT_COUNTER_CLASSES,
   SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES,
   SHARED_VOCABULARY_INPUT_WIDTHS,
 } from "./shared-vocabulary.js";
+import { SHARED_VOCABULARY_CHOICE_AND_ORDER_INTERACTIONS } from "./shared-vocabulary-interaction-sets.js";
 import type { QtiInteractionType, SharedVocabularyClassSupport } from "./types.js";
 
 const sharedVocabularyFixture = [
@@ -34,7 +39,10 @@ const sharedVocabularyUnitTests = [
 const sharedVocabularyValidationTests = [
   "packages/core/src/core.test.ts",
   "packages/core/src/shared-vocabulary-validation.test.ts",
+  "packages/core/src/shared-vocabulary-registry-validation.test.ts",
+  "packages/core/src/shared-vocabulary-interaction-validation.test.ts",
 ];
+const choiceLayoutTests = ["packages/player/src/interactions/choice-layout.test.ts"];
 const browserBehaviorTests = [
   "tests/browser/player-dom-behavior.spec.ts",
   ...sharedVocabularyMatrixTests,
@@ -53,19 +61,107 @@ const interactionInputWidthFixtures = [
 const orderMinMaxMessagesFixture =
   "packages/fixtures/packages/sv-matrix/items/order-min-max-messages.xml";
 
-const choiceAndOrder: QtiInteractionType[] = ["choice", "order"];
-const choicesLayoutInteractions: QtiInteractionType[] = [
-  "match",
-  "gapMatch",
-  "graphicGapMatch",
-  "order",
-];
-const selectionPresentationInteractions: QtiInteractionType[] = [
-  "choice",
-  "hottext",
-  "hotspot",
-  "graphicGapMatch",
-];
+const choiceAndOrder = SHARED_VOCABULARY_CHOICE_AND_ORDER_INTERACTIONS;
+
+function registryClassValueSupportProfile(fieldId: string): {
+  level: "full" | "stylesheet";
+  tests: string[];
+} {
+  switch (fieldId) {
+    case "labels-style":
+    case "labels-suffix":
+      return { level: "full", tests: [...sharedVocabularyUnitTests, ...browserBehaviorTests] };
+    case "orientation":
+      return {
+        level: "full",
+        tests: [...choiceLayoutTests, ...sharedVocabularyUnitTests, ...browserBehaviorTests],
+      };
+    case "choices-stacking":
+      return {
+        level: "full",
+        tests: [...choiceLayoutTests, "packages/core/src/core.test.ts", ...browserBehaviorTests],
+      };
+    case "choices-position":
+      return {
+        level: "full",
+        tests: [...sharedVocabularyUnitTests, ...browserBehaviorTests, ...graphicBrowserTests],
+      };
+    case "selections-tone":
+      return { level: "stylesheet", tests: [...browserBehaviorTests, ...graphicBrowserTests] };
+    case "writing-orientation":
+      return { level: "stylesheet", tests: [...browserBehaviorTests] };
+    default:
+      return { level: "full", tests: [...sharedVocabularyUnitTests, ...browserBehaviorTests] };
+  }
+}
+
+function registryClassValueSupportEntries(): SharedVocabularyClassSupport[] {
+  return sharedVocabularyInteractionFields.flatMap((field) => {
+    if (field.kind !== "class-value") return [];
+    const profile = registryClassValueSupportProfile(field.id);
+    const createEntry =
+      profile.level === "stylesheet" ? interactionStylesheetEntry : interactionFullEntry;
+    return field.values.map((value) =>
+      createEntry(`${field.classPrefix}${String(value)}`, field.interactions, profile.tests),
+    );
+  });
+}
+
+function registryClassFixedSupportProfile(fieldId: string): {
+  level: "full" | "stylesheet";
+  tests: string[];
+} {
+  switch (fieldId) {
+    case "input-control-hidden":
+      return {
+        level: "stylesheet",
+        tests: [...browserBehaviorTests, "tests/browser/player-keyboard-a11y.spec.ts"],
+      };
+    case "unselected-hidden":
+      return { level: "stylesheet", tests: [...browserBehaviorTests, ...graphicBrowserTests] };
+    case "match-tabular":
+      return {
+        level: "full",
+        tests: [
+          "packages/core/src/core.test.ts",
+          ...browserBehaviorTests,
+          "tests/browser/player-keyboard-a11y.spec.ts",
+        ],
+      };
+    case "gap-placement":
+      return {
+        level: "full",
+        tests: [
+          ...sharedVocabularyUnitTests,
+          "packages/core/src/core.test.ts",
+          ...browserBehaviorTests,
+        ],
+      };
+    default:
+      return { level: "full", tests: [...browserBehaviorTests] };
+  }
+}
+
+const registryClassFixedSupportIds = [
+  "input-control-hidden",
+  "unselected-hidden",
+  "match-tabular",
+  "gap-placement",
+] as const;
+
+function registryClassFixedSupportEntries(): SharedVocabularyClassSupport[] {
+  return registryClassFixedSupportIds.flatMap((fieldId) => {
+    const field = sharedVocabularyInteractionFields.find(
+      (candidate): candidate is Extract<QtiSharedVocabularyField, { kind: "class-fixed" }> =>
+        candidate.kind === "class-fixed" && candidate.id === fieldId,
+    );
+    if (field === undefined) return [];
+    const profile = registryClassFixedSupportProfile(field.id);
+    const createEntry =
+      profile.level === "stylesheet" ? interactionStylesheetEntry : interactionFullEntry;
+    return [createEntry(field.className, field.interactions, profile.tests)];
+  });
+}
 
 function svEntry(
   className: string,
@@ -91,12 +187,12 @@ function contentStylesheetEntry(className: string, notes?: string): SharedVocabu
 
 function interactionFullEntry(
   className: string,
-  interactions: QtiInteractionType[],
+  interactions: readonly QtiInteractionType[],
   tests: string[],
   notes?: string,
 ): SharedVocabularyClassSupport {
   return svEntry(className, "interaction", "full", {
-    interactions,
+    interactions: [...interactions],
     fixtures: sharedVocabularyFixture,
     tests,
     notes,
@@ -105,12 +201,12 @@ function interactionFullEntry(
 
 function interactionStylesheetEntry(
   className: string,
-  interactions: QtiInteractionType[],
+  interactions: readonly QtiInteractionType[],
   tests: string[],
   notes?: string,
 ): SharedVocabularyClassSupport {
   return svEntry(className, "interaction", "stylesheet", {
-    interactions,
+    interactions: [...interactions],
     fixtures: sharedVocabularyFixture,
     tests,
     notes,
@@ -187,69 +283,8 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
   contentStylesheetEntry("qti-italic"),
   contentStylesheetEntry("qti-display-inline-block"),
 
-  ...["none", "decimal", "cjk-ideographic", "lower-alpha", "upper-alpha"].map((labelStyle) =>
-    interactionFullEntry(`qti-labels-${labelStyle}`, choiceAndOrder, [
-      ...sharedVocabularyUnitTests,
-      ...browserBehaviorTests,
-    ]),
-  ),
-  ...["none", "period", "parenthesis"].map((suffix) =>
-    interactionFullEntry(`qti-labels-suffix-${suffix}`, choiceAndOrder, [
-      ...sharedVocabularyUnitTests,
-      ...browserBehaviorTests,
-    ]),
-  ),
-  ...["horizontal", "vertical"].map((orientation) =>
-    interactionFullEntry(
-      `qti-orientation-${orientation}`,
-      ["choice", "order"],
-      [
-        "packages/player/src/interactions/choice-layout.test.ts",
-        ...sharedVocabularyUnitTests,
-        ...browserBehaviorTests,
-      ],
-    ),
-  ),
-  ...Array.from({ length: 5 }, (_, index) => index + 1).map((stacking) =>
-    interactionFullEntry(
-      `qti-choices-stacking-${stacking}`,
-      ["choice"],
-      [
-        "packages/player/src/interactions/choice-layout.test.ts",
-        "packages/core/src/core.test.ts",
-        ...browserBehaviorTests,
-      ],
-    ),
-  ),
-  interactionStylesheetEntry(
-    "qti-input-control-hidden",
-    ["choice", "hottext"],
-    [...browserBehaviorTests, "tests/browser/player-keyboard-a11y.spec.ts"],
-  ),
-  ...SHARED_VOCABULARY_CHOICE_WRITING_ORIENTATIONS.map((orientation) =>
-    interactionStylesheetEntry(
-      `qti-writing-orientation-${orientation}`,
-      ["choice", "inlineChoice"],
-      [...browserBehaviorTests],
-    ),
-  ),
-  ...["light", "dark"].map((tone) =>
-    interactionStylesheetEntry(`qti-selections-${tone}`, selectionPresentationInteractions, [
-      ...browserBehaviorTests,
-      ...graphicBrowserTests,
-    ]),
-  ),
-  interactionStylesheetEntry("qti-unselected-hidden", selectionPresentationInteractions, [
-    ...browserBehaviorTests,
-    ...graphicBrowserTests,
-  ]),
-  ...["top", "bottom", "left", "right"].map((position) =>
-    interactionFullEntry(`qti-choices-${position}`, choicesLayoutInteractions, [
-      ...sharedVocabularyUnitTests,
-      ...browserBehaviorTests,
-      ...graphicBrowserTests,
-    ]),
-  ),
+  ...registryClassValueSupportEntries(),
+  ...registryClassFixedSupportEntries(),
   svEntry("data-min-selections-message", "interaction", "full", {
     interactions: ["order"],
     fixtures: [orderMinMaxMessagesFixture],
@@ -257,30 +292,21 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
     notes: "Overrides minimum response validation text for order interactions.",
   }),
   svEntry("data-max-selections-message", "interaction", "full", {
-    interactions: ["choice", "order"],
+    interactions: [...choiceAndOrder],
     fixtures: [orderMinMaxMessagesFixture],
     tests: ["tests/browser/player-validation.spec.ts", ...sharedVocabularyMatrixTests],
     notes: "Overrides maximum response validation text for choice and order interactions.",
   }),
-  interactionFullEntry(
-    "qti-match-tabular",
-    ["match"],
-    [
-      "packages/core/src/core.test.ts",
-      ...browserBehaviorTests,
-      "tests/browser/player-keyboard-a11y.spec.ts",
-    ],
-  ),
-  svEntry("qti-header-hidden", "interaction", "conditional", {
-    interactions: ["match"],
-    fixtures: sharedVocabularyFixture,
-    tests: ["packages/core/src/core.test.ts", ...browserBehaviorTests],
-    notes: "Applied when qti-match-tabular selects the tabular match renderer.",
-  }),
-  interactionFullEntry(
-    "qti-gap-placement",
-    ["gapMatch"],
-    [...sharedVocabularyUnitTests, "packages/core/src/core.test.ts", ...browserBehaviorTests],
+  svEntry(
+    sharedVocabularyFixedClassName("header-hidden") ?? "qti-header-hidden",
+    "interaction",
+    "conditional",
+    {
+      interactions: ["match"],
+      fixtures: sharedVocabularyFixture,
+      tests: ["packages/core/src/core.test.ts", ...browserBehaviorTests],
+      notes: "Applied when qti-match-tabular selects the tabular match renderer.",
+    },
   ),
   ...SHARED_VOCABULARY_INPUT_WIDTHS.map((width) =>
     svEntry(`qti-input-width-${width}`, "interaction", "full", {

@@ -120,3 +120,34 @@ line yet.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3
+
+### Shared vocabulary authoring
+
+Authoring tools can build QTI shared-vocabulary controls from the core field registry instead of
+maintaining local class-prefix logic:
+
+```ts
+import {
+  parseSharedVocabularyClasses,
+  serializeSharedVocabularyAttributes,
+  serializeSharedVocabularyClassNames,
+  sharedVocabularyFieldsForInteraction,
+} from "@longsightgroup/qti3-core";
+
+const fields = sharedVocabularyFieldsForInteraction("choice");
+const state = parseSharedVocabularyClasses("qti-labels-decimal qti-orientation-horizontal");
+
+const className = serializeSharedVocabularyClassNames({
+  ...state,
+  "input-control-hidden": true,
+}).join(" ");
+
+const attrs = serializeSharedVocabularyAttributes(
+  { "media-player-controls": ["play", "captions"] },
+  "media",
+);
+```
+
+The registry models authoring-level fields such as `labels-style`, `choices-position`, and
+`media-player-controls`; downstream products should keep UI labels, editor layout, and draft
+property names in their own adapter layer.

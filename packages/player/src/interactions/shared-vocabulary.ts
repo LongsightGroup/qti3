@@ -1,12 +1,16 @@
-import { inputWidthFromAttributes, type QtiInteraction } from "@longsightgroup/qti3-core";
+import {
+  inputWidthFromAttributes,
+  parseSharedVocabularyClasses,
+  SHARED_VOCABULARY_CHOICES_POSITIONS,
+  SHARED_VOCABULARY_LABEL_STYLES,
+  SHARED_VOCABULARY_LABEL_SUFFIXES,
+  type QtiInteraction,
+  type QtiSharedVocabularyState,
+} from "@longsightgroup/qti3-core";
 
-export type SharedVocabularyLabelStyle =
-  | "decimal"
-  | "lower-alpha"
-  | "upper-alpha"
-  | "cjk-ideographic";
-export type SharedVocabularyLabelSuffix = "none" | "period" | "parenthesis";
-export type SharedVocabularyChoicesPosition = "top" | "bottom" | "left" | "right";
+export type SharedVocabularyLabelStyle = (typeof SHARED_VOCABULARY_LABEL_STYLES)[number];
+export type SharedVocabularyLabelSuffix = (typeof SHARED_VOCABULARY_LABEL_SUFFIXES)[number];
+export type SharedVocabularyChoicesPosition = (typeof SHARED_VOCABULARY_CHOICES_POSITIONS)[number];
 export type OrderChoicesPosition = SharedVocabularyChoicesPosition;
 export type OrderOrientation = "horizontal" | "vertical";
 
@@ -43,27 +47,35 @@ export function applyInputWidth(control: HTMLElement, width: number | undefined)
 }
 
 export function gapMatchUsesPlacement(interaction: QtiInteraction): boolean {
-  return interactionClassNames(interaction).includes("qti-gap-placement");
+  return (
+    parseSharedVocabularyClasses(interaction.attributes.class ?? "", "gapMatch")[
+      "gap-placement"
+    ] === true
+  );
 }
 
 export function sharedVocabularyLabel(interaction: QtiInteraction, index: number): string {
-  const classNames = new Set(interactionClassNames(interaction));
-  if (classNames.has("qti-labels-none")) return "";
+  const state = interactionSharedVocabularyState(interaction);
+  const labelStyle = state["labels-style"];
+  if (labelStyle === "none") return "";
 
-  const labels = classNames.has("qti-labels-decimal")
-    ? numericLabels()
-    : classNames.has("qti-labels-cjk-ideographic")
-      ? cjkIdeographicLabels()
-      : classNames.has("qti-labels-lower-alpha")
-        ? "abcdefghijklmnopqrstuvwxyz".split("")
-        : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const suffix = classNames.has("qti-labels-suffix-none")
-    ? ""
-    : classNames.has("qti-labels-suffix-period")
-      ? "."
-      : classNames.has("qti-labels-suffix-parenthesis")
-        ? ")"
-        : ".";
+  const labels =
+    labelStyle === "decimal"
+      ? numericLabels()
+      : labelStyle === "cjk-ideographic"
+        ? cjkIdeographicLabels()
+        : labelStyle === "lower-alpha"
+          ? "abcdefghijklmnopqrstuvwxyz".split("")
+          : "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const labelSuffix = state["labels-suffix"];
+  const suffix =
+    labelSuffix === "none"
+      ? ""
+      : labelSuffix === "period"
+        ? "."
+        : labelSuffix === "parenthesis"
+          ? ")"
+          : ".";
   return `${labels[index] ?? `${index + 1}`}${suffix}`;
 }
 
@@ -88,9 +100,8 @@ export function orderSharedVocabularyLayout(
 export function resolveOrientationFromInteraction(
   interaction: QtiInteraction,
 ): OrderOrientation | undefined {
-  const classNames = new Set(interactionClassNames(interaction));
-  if (classNames.has("qti-orientation-horizontal")) return "horizontal";
-  if (classNames.has("qti-orientation-vertical")) return "vertical";
+  const orientation = interactionSharedVocabularyState(interaction).orientation;
+  if (orientation === "horizontal" || orientation === "vertical") return orientation;
   if (interaction.attributes.orientation === "vertical") return "vertical";
   if (interaction.attributes.orientation === "horizontal") return "horizontal";
   return undefined;
@@ -109,14 +120,7 @@ export function sharedVocabularyChoicesLayout(
 ): SharedVocabularyChoicesLayout | undefined {
   // QTI shared vocabulary choices-bank positioning for match, gap match, graphic gap match, and order:
   // https://www.imsglobal.org/node/218713
-  let choicesPosition: SharedVocabularyChoicesPosition | undefined;
-  for (const className of interactionClassNames(interaction)) {
-    const position = sharedVocabularyChoicesPosition(className);
-    if (position !== undefined) {
-      choicesPosition = position;
-      break;
-    }
-  }
+  const choicesPosition = choicesPositionFromState(interactionSharedVocabularyState(interaction));
   if (choicesPosition === undefined) return undefined;
 
   const layout: SharedVocabularyChoicesLayout = { choicesPosition };
@@ -159,6 +163,20 @@ export function appendSharedVocabularyChoicesLayout(
   container.append(choicesBank, mainRegion);
 }
 
+function interactionSharedVocabularyState(interaction: QtiInteraction): QtiSharedVocabularyState {
+  return parseSharedVocabularyClasses(interaction.attributes.class ?? "", interaction.type);
+}
+
+function choicesPositionFromState(
+  state: QtiSharedVocabularyState,
+): SharedVocabularyChoicesPosition | undefined {
+  const value = state["choices-position"];
+  if (typeof value !== "string") return undefined;
+  return (SHARED_VOCABULARY_CHOICES_POSITIONS as readonly string[]).includes(value)
+    ? (value as SharedVocabularyChoicesPosition)
+    : undefined;
+}
+
 function numericLabels(): string[] {
   return Array.from({ length: 26 }, (_, item) => `${item + 1}`);
 }
@@ -174,23 +192,6 @@ function cjkIdeographicLabels(): string[] {
     const ones = value % 10;
     return `${digits[tens]}十${digits[ones]}`;
   });
-}
-
-function sharedVocabularyChoicesPosition(
-  className: string,
-): SharedVocabularyChoicesPosition | undefined {
-  switch (className) {
-    case "qti-choices-top":
-      return "top";
-    case "qti-choices-bottom":
-      return "bottom";
-    case "qti-choices-left":
-      return "left";
-    case "qti-choices-right":
-      return "right";
-    default:
-      return undefined;
-  }
 }
 
 function positivePixelValue(value: string | undefined): number | undefined {

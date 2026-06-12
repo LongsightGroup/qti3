@@ -7,6 +7,24 @@ export const SHARED_VOCABULARY_INPUT_WIDTHS = [
 
 export const SHARED_VOCABULARY_GAP_INPUT_WIDTHS = SHARED_VOCABULARY_INPUT_WIDTHS;
 
+export const SHARED_VOCABULARY_LABEL_STYLES = [
+  "none",
+  "decimal",
+  "cjk-ideographic",
+  "lower-alpha",
+  "upper-alpha",
+] as const;
+
+export const SHARED_VOCABULARY_LABEL_SUFFIXES = ["none", "period", "parenthesis"] as const;
+
+export const SHARED_VOCABULARY_ORIENTATIONS = ["horizontal", "vertical"] as const;
+
+export const SHARED_VOCABULARY_CHOICES_STACKING = [1, 2, 3, 4, 5] as const;
+
+export const SHARED_VOCABULARY_CHOICES_POSITIONS = ["top", "bottom", "left", "right"] as const;
+
+export const SHARED_VOCABULARY_SELECTION_TONES = ["light", "dark"] as const;
+
 /** Normative QTI 3 shared vocabulary extended text height token values (1EdTech vocab). */
 export const SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES = [3, 6, 15] as const;
 

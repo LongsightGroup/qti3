@@ -1,7 +1,6 @@
-import type { QtiInteraction } from "@longsightgroup/qti3-core";
+import { parseSharedVocabularyClasses, type QtiInteraction } from "@longsightgroup/qti3-core";
 import {
   DEFAULT_VERTICAL_ORIENTATION,
-  interactionClassNames,
   resolveOrientationFromInteraction,
 } from "./shared-vocabulary.js";
 
@@ -17,14 +16,9 @@ export interface ChoiceLayout {
 export function choiceLayout(interaction: QtiInteraction, choiceCount: number): ChoiceLayout {
   // QTI shared vocabulary orientation and stacking semantics:
   // https://www.imsglobal.org/node/218713
-  const classNames = interactionClassNames(interaction);
-  let stacking: number | undefined;
-  for (const className of classNames) {
-    if (stacking === undefined) {
-      const value = /^qti-choices-stacking-([1-5])$/.exec(className)?.[1];
-      if (value !== undefined) stacking = Number(value);
-    }
-  }
+  const state = parseSharedVocabularyClasses(interaction.attributes.class ?? "", "choice");
+  const stackingValue = state["choices-stacking"];
+  const stacking = typeof stackingValue === "number" ? stackingValue : undefined;
 
   const orientation =
     resolveOrientationFromInteraction(interaction) ?? DEFAULT_VERTICAL_ORIENTATION;
