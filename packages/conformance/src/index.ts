@@ -140,7 +140,10 @@ function isParseDiagnostic(diagnostic: QtiDiagnostic): boolean {
     diagnostic.code === "processing.unsupported" ||
     diagnostic.code === "processing.response.forbidden" ||
     diagnostic.code === "interaction.unsupported" ||
-    diagnostic.code === "interaction.deprecated"
+    diagnostic.code === "interaction.deprecated" ||
+    diagnostic.code === "companionMaterials.child.unsupported" ||
+    diagnostic.code === "companionMaterials.physicalMaterial.empty" ||
+    diagnostic.code === "item.child.duplicate"
   );
 }
 

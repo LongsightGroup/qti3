@@ -2,6 +2,7 @@ import type {
   QtiElementSupport,
   QtiInteractionElementSupport,
   QtiInteractionType,
+  QtiItemMetadataElementSupport,
   QtiProcessingElementSupport,
 } from "./types.js";
 
@@ -188,10 +189,114 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-custom-operator", "packages/core/src/core.test.ts"),
 ];
 
+export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
+  {
+    qtiName: "qti-catalog-info",
+    category: "itemMetadata",
+    support: "parsed",
+    specReference: "QTI 3.0.1 ASI",
+    parse: true,
+    validate: true,
+    render: false,
+    process: false,
+    fixtures: [
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
+    ],
+    tests: ["packages/core/src/core.test.ts", "packages/core/src/parser-item-metadata.test.ts"],
+    notes:
+      "Parsed by parser-item-metadata.ts and validated by validateCatalogInfo. Duplicate containers emit item.child.duplicate.",
+  },
+  {
+    qtiName: "qti-stylesheet",
+    category: "itemMetadata",
+    support: "parsed",
+    specReference: "QTI 3.0.1 ASI",
+    parse: true,
+    validate: true,
+    render: false,
+    process: false,
+    fixtures: [
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
+    ],
+    tests: ["packages/core/src/core.test.ts", "packages/core/src/parser-item-metadata.test.ts"],
+    notes: "Parsed by parser-item-metadata.ts and validated by validateStylesheets.",
+  },
+  {
+    qtiName: "qti-modal-feedback",
+    category: "itemMetadata",
+    support: "parsed",
+    specReference: "QTI 3.0.1 ASI",
+    parse: true,
+    validate: true,
+    render: false,
+    process: false,
+    fixtures: ["packages/fixtures/src/index.ts"],
+    tests: ["packages/core/src/core.test.ts", "packages/core/src/parser-item-metadata.test.ts"],
+    notes:
+      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Player rendering remains out of scope for this metadata slice.",
+  },
+  {
+    qtiName: "qti-companion-materials-info",
+    category: "itemMetadata",
+    support: "parsed",
+    specReference: "QTI 3.0.1 ASI",
+    parse: true,
+    validate: true,
+    render: false,
+    process: false,
+    fixtures: [
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
+    ],
+    tests: [
+      "packages/core/src/parser-companion-materials.test.ts",
+      "packages/core/src/parser-item-metadata.test.ts",
+    ],
+    notes:
+      "Parses qti-physical-material text only. qti-digital-material is preserved in unparsedChildren and emits companionMaterials.child.unsupported at parse time.",
+  },
+  {
+    qtiName: "qti-physical-material",
+    category: "itemMetadata",
+    support: "parsed",
+    specReference: "QTI 3.0.1 ASI",
+    parse: true,
+    validate: true,
+    render: false,
+    process: false,
+    fixtures: ["packages/core/src/parser-companion-materials.test.ts"],
+    tests: [
+      "packages/core/src/parser-companion-materials.test.ts",
+      "packages/core/src/parser-item-metadata.test.ts",
+    ],
+    notes:
+      "Child of qti-companion-materials-info. Empty XML text emits companionMaterials.physicalMaterial.empty at parse time; invalid model entries emit companionMaterials.physicalMaterial.empty.model at validation time.",
+  },
+  {
+    qtiName: "qti-digital-material",
+    category: "itemMetadata",
+    support: "unsupported",
+    specReference: "QTI 3.0.1 ASI",
+    parse: false,
+    validate: false,
+    render: false,
+    process: false,
+    fixtures: [
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
+    ],
+    tests: [
+      "packages/core/src/parser-companion-materials.test.ts",
+      "packages/core/src/parser-item-metadata.test.ts",
+    ],
+    notes:
+      "Recognized as an unparsed child of qti-companion-materials-info. Full digital material parsing is not implemented yet.",
+  },
+];
+
 export const elementSupport: QtiElementSupport[] = [
   ...interactionSupport,
   ...deprecatedInteractionSupport,
   ...processingSupport,
+  ...itemMetadataSupport,
 ];
 
 const allInteractionSupport = [...interactionSupport, ...deprecatedInteractionSupport];

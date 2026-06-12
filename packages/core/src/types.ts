@@ -435,10 +435,27 @@ export interface QtiAssessmentItem {
   interactions: QtiInteraction[];
   modalFeedback: QtiModalFeedback[];
   catalogInfo?: QtiCatalogInfo | undefined;
+  companionMaterials?: QtiCompanionMaterialsInfo | undefined;
   catalogReferences: QtiCatalogReference[];
   stylesheets: QtiStylesheet[];
   body: QtiContentNode[];
   bodyText: string;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCompanionMaterialsInfo {
+  physicalMaterials: QtiPhysicalMaterial[];
+  unparsedChildren: QtiCompanionMaterialsUnparsedChild[];
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiCompanionMaterialsUnparsedChild {
+  qtiName: string;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiPhysicalMaterial {
+  text: string;
   source?: QtiSourceLocation | undefined;
 }
 
@@ -688,7 +705,10 @@ export interface QtiScoreResult {
   state: QtiAttemptStateV1;
 }
 
-export type QtiElementSupport = QtiInteractionElementSupport | QtiProcessingElementSupport;
+export type QtiElementSupport =
+  | QtiInteractionElementSupport
+  | QtiProcessingElementSupport
+  | QtiItemMetadataElementSupport;
 
 interface QtiElementSupportBase {
   qtiName: string;
@@ -710,6 +730,10 @@ export interface QtiInteractionElementSupport extends QtiElementSupportBase {
 
 export interface QtiProcessingElementSupport extends QtiElementSupportBase {
   category: "processing";
+}
+
+export interface QtiItemMetadataElementSupport extends QtiElementSupportBase {
+  category: "itemMetadata";
 }
 
 export interface SharedVocabularyClassSupport {

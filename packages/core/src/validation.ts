@@ -41,6 +41,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateInteractions(item, diagnostics);
   validateModalFeedback(item, diagnostics);
   validateCatalogInfo(item, diagnostics);
+  validateCompanionMaterials(item, diagnostics);
   validateStylesheets(item, diagnostics);
   diagnostics.push(...validateQtiDataSsmlMetadata(item));
   validateResponseProcessingTemplate(item, diagnostics);
@@ -708,6 +709,37 @@ function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDi
           source: entry.source,
         });
       }
+    }
+  }
+}
+
+function validateCompanionMaterials(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
+  const companionMaterials = item.companionMaterials;
+  if (!companionMaterials) return;
+
+  for (const child of companionMaterials.unparsedChildren) {
+    if (child.qtiName === "qti-physical-material") {
+      diagnostics.push({
+        code: "companionMaterials.model.inconsistent",
+        severity: "error",
+        message:
+          "Empty qti-physical-material must be represented as a parse warning, not an unparsed child.",
+        path: child.source?.path,
+        source: child.source,
+      });
+    }
+  }
+
+  for (const material of companionMaterials.physicalMaterials) {
+    if (material.text.trim().length === 0) {
+      diagnostics.push({
+        code: "companionMaterials.physicalMaterial.empty.model",
+        severity: "error",
+        message:
+          "qti-physical-material requires non-empty text content in the parsed companion materials model.",
+        path: material.source?.path,
+        source: material.source,
+      });
     }
   }
 }

@@ -17,6 +17,7 @@ import {
   deprecatedInteractionSupport,
   elementSupport,
   interactionSupport,
+  itemMetadataSupport,
   parseQtiXml,
   processingSupport,
   isEnforcedSharedVocabularyLevel,
@@ -126,6 +127,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
           elements: elementSupport,
           interactions: [...interactionSupport, ...deprecatedInteractionSupport],
           processing: processingSupport,
+          itemMetadata: itemMetadataSupport,
         },
         null,
         2,
@@ -218,6 +220,26 @@ function assertSupportMatrix(): {
     if (support.render) failures.push(`${support.qtiName} processing entry must not render.`);
     if (support.tests.length === 0) {
       failures.push(`${support.qtiName} processing entry must have test evidence.`);
+    }
+  }
+
+  for (const support of itemMetadataSupport) {
+    if (!support.notes) {
+      failures.push(`${support.qtiName} item metadata entry must document its support scope.`);
+    }
+    if (support.tests.length === 0) {
+      failures.push(`${support.qtiName} item metadata entry must have test evidence.`);
+    }
+    if (support.support === "parsed" && (!support.parse || !support.validate)) {
+      failures.push(`${support.qtiName} parsed item metadata entry must parse and validate.`);
+    }
+    if (support.support === "parsed" && (support.render || support.process)) {
+      failures.push(`${support.qtiName} parsed item metadata entry must not render or process.`);
+    }
+    if (support.support === "unsupported" && support.parse) {
+      failures.push(
+        `${support.qtiName} unsupported item metadata entry must not claim parse support.`,
+      );
     }
   }
 

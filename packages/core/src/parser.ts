@@ -1,14 +1,16 @@
 import { flatTextFromContent } from "./content-text.js";
+import {
+  firstChildElement,
+  parseCatalogInfo,
+  parseCatalogReferences,
+  parseCompanionMaterialsInfo,
+  parseModalFeedback,
+  parseStylesheet,
+} from "./parser-item-metadata.js";
 import { getInteractionSupport, interactionNameToType, processingSupport } from "./support.js";
 import type {
   QtiAssessmentItem,
   QtiBaseType,
-  QtiCatalogCard,
-  QtiCatalogCardEntry,
-  QtiCatalogFileHref,
-  QtiCatalogHtmlContent,
-  QtiCatalogInfo,
-  QtiCatalogReference,
   QtiCardinality,
   QtiChoice,
   QtiChoiceRole,
@@ -20,7 +22,6 @@ import type {
   QtiLookupOutcomeValue,
   QtiLookupTable,
   QtiMediaSource,
-  QtiModalFeedback,
   QtiObjectAsset,
   QtiOutcomeDeclaration,
   QtiParseResult,
@@ -36,7 +37,6 @@ import type {
   QtiResponseRule,
   QtiSetOutcomeValue,
   QtiScalarValue,
-  QtiStylesheet,
   QtiTemplateDeclaration,
   QtiTemplateProcessing,
   QtiTemplateRule,
@@ -148,7 +148,13 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     );
   }
   const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
-  const catalogInfo = parseCatalogInfo(childElements(node, "qti-catalog-info")[0]);
+  const catalogInfo = parseCatalogInfo(
+    firstChildElement(node, "qti-catalog-info", diagnostics, "item.child.duplicate"),
+  );
+  const companionMaterials = parseCompanionMaterialsInfo(
+    firstChildElement(node, "qti-companion-materials-info", diagnostics, "item.child.duplicate"),
+    diagnostics,
+  );
   const catalogReferences = itemBody ? parseCatalogReferences(itemBody) : [];
   const stylesheets = childElements(node, "qti-stylesheet").map(parseStylesheet);
   const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
@@ -170,6 +176,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     interactions,
     modalFeedback,
     catalogInfo,
+    companionMaterials,
     catalogReferences,
     stylesheets,
     body,
@@ -214,41 +221,8 @@ function diagnoseProcessingElements(
   }
 }
 
-function parseStylesheet(node: XmlNode): QtiStylesheet {
-  return {
-    href: node.attributes.href ?? "",
-    type: node.attributes.type,
-    media: node.attributes.media,
-    title: node.attributes.title,
-    attributes: node.attributes,
-    source: node.source,
-  };
-}
-
-function parseCatalogReferences(node: XmlNode): QtiCatalogReference[] {
-  const references = [
-    ...(node.attributes["data-catalog-idref"] ? [node] : []),
-    ...descendants(node, (child) => Boolean(child.attributes["data-catalog-idref"])),
-  ];
-  return references.map((reference) => ({
-    idref: reference.attributes["data-catalog-idref"] ?? "",
-    source: reference.source,
-  }));
-}
-
 function isInteractionElement(node: XmlNode): boolean {
   return interactionNameToType.has(node.localName) || /^qti-.+-interaction$/.test(node.localName);
-}
-
-function parseModalFeedback(node: XmlNode): QtiModalFeedback {
-  const showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
-  return {
-    identifier: node.attributes.identifier ?? "",
-    outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
-    showHide,
-    text: textContent(node),
-    source: node.source,
-  };
 }
 
 function parseContentChildren(
@@ -315,78 +289,6 @@ function parseContentNode(
     qtiName: node.localName,
     attributes: node.attributes,
     children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
-    source: node.source,
-  };
-}
-
-function parseCatalogInfo(node: XmlNode | undefined): QtiCatalogInfo | undefined {
-  if (!node) return undefined;
-  return {
-    catalogs: childElements(node, "qti-catalog").map((catalog) => ({
-      id: catalog.attributes.id ?? "",
-      attributes: catalog.attributes,
-      cards: childElements(catalog, "qti-card").map(parseCatalogCard),
-      source: catalog.source,
-    })),
-    source: node.source,
-  };
-}
-
-function parseCatalogCard(node: XmlNode): QtiCatalogCard {
-  return {
-    support: node.attributes.support ?? "",
-    htmlContent: parseCatalogHtmlContent(childElements(node, "qti-html-content")[0]),
-    fileHrefs: childElements(node, "qti-file-href").map(parseCatalogFileHref),
-    entries: childElements(node, "qti-card-entry").map(parseCatalogCardEntry),
-    attributes: node.attributes,
-    source: node.source,
-  };
-}
-
-function parseCatalogCardEntry(node: XmlNode): QtiCatalogCardEntry {
-  return {
-    language: node.attributes["xml:lang"] ?? node.attributes.lang,
-    default: node.attributes.default === "true",
-    htmlContent: parseCatalogHtmlContent(childElements(node, "qti-html-content")[0]),
-    fileHrefs: childElements(node, "qti-file-href").map(parseCatalogFileHref),
-    attributes: node.attributes,
-    source: node.source,
-  };
-}
-
-function parseCatalogHtmlContent(node: XmlNode | undefined): QtiCatalogHtmlContent | undefined {
-  if (!node) return undefined;
-  return {
-    text: textContent(node),
-    children: parseCatalogHtmlChildren(node),
-    attributes: node.attributes,
-    source: node.source,
-  };
-}
-
-function parseCatalogHtmlChildren(node: XmlNode): QtiContentNode[] {
-  const content: QtiContentNode[] = [];
-  for (const entry of node.content) {
-    if (typeof entry === "string") {
-      if (entry.length > 0) content.push({ kind: "text", text: entry, source: node.source });
-      continue;
-    }
-    content.push({
-      kind: "element",
-      qtiName: entry.localName,
-      attributes: entry.attributes,
-      children: parseCatalogHtmlChildren(entry),
-      source: entry.source,
-    });
-  }
-  return content;
-}
-
-function parseCatalogFileHref(node: XmlNode): QtiCatalogFileHref {
-  return {
-    href: textContent(node).trim(),
-    mimeType: node.attributes["mime-type"],
-    attributes: node.attributes,
     source: node.source,
   };
 }
@@ -529,8 +431,18 @@ function parsePortableCustomDefinition(
   node: XmlNode,
   diagnostics: QtiDiagnostic[],
 ): QtiPortableCustomDefinition {
-  const markup = firstChildElement(node, "qti-interaction-markup", diagnostics);
-  const modules = firstChildElement(node, "qti-interaction-modules", diagnostics);
+  const markup = firstChildElement(
+    node,
+    "qti-interaction-markup",
+    diagnostics,
+    "interaction.portableCustom.child.duplicate",
+  );
+  const modules = firstChildElement(
+    node,
+    "qti-interaction-modules",
+    diagnostics,
+    "interaction.portableCustom.child.duplicate",
+  );
   return {
     responseIdentifier: node.attributes["response-identifier"],
     customInteractionTypeIdentifier: node.attributes["custom-interaction-type-identifier"],
@@ -545,31 +457,20 @@ function parsePortableCustomDefinition(
       parsePortableCustomVariableBinding(variable, "context"),
     ),
     stylesheets: childElements(node, "qti-stylesheet").map(parseStylesheet),
-    catalogInfo: parseCatalogInfo(childElements(node, "qti-catalog-info")[0]),
+    catalogInfo: parseCatalogInfo(
+      firstChildElement(
+        node,
+        "qti-catalog-info",
+        diagnostics,
+        "interaction.portableCustom.child.duplicate",
+      ),
+    ),
     dataAttributes: Object.fromEntries(
       Object.entries(node.attributes).filter(([name]) => name.startsWith("data-")),
     ),
     attributes: node.attributes,
     source: node.source,
   };
-}
-
-function firstChildElement(
-  node: XmlNode,
-  name: string,
-  diagnostics: QtiDiagnostic[],
-): XmlNode | undefined {
-  const matches = childElements(node, name);
-  if (matches.length > 1) {
-    diagnostics.push({
-      code: "interaction.portableCustom.child.duplicate",
-      severity: "error",
-      message: `${node.localName} allows at most one ${name} child.`,
-      path: matches[1]?.source?.path ?? node.source?.path,
-      source: matches[1]?.source ?? node.source,
-    });
-  }
-  return matches[0];
 }
 
 function parsePortableCustomMarkupChildren(
