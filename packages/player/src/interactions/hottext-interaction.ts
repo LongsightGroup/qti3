@@ -5,6 +5,7 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 import { interactionClassNames } from "./shared-vocabulary.js";
@@ -15,6 +16,7 @@ export function renderHottextResponse(
   currentValue: QtiValue,
 ): HTMLElement {
   const group = document.createElement("div");
+  const regions = createQtiInteractionRegionMarkers(interaction);
   group.className = "qti3-hottext-group";
   group.role = "group";
   group.setAttribute("aria-label", "Hottext options");
@@ -63,6 +65,7 @@ export function renderHottextResponse(
     button.type = "button";
     button.className = "qti3-hottext-token";
     button.dataset.choiceIdentifier = segment.identifier;
+    regions.choice(button, segment.identifier);
     button.textContent = segment.text;
     button.addEventListener("click", () => {
       if (multiple) {

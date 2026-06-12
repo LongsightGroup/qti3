@@ -1,6 +1,7 @@
 import type { QtiInteraction, QtiObjectAsset, QtiValue } from "@longsightgroup/qti3-core";
 import { bindActivateOnEnterOrSpace } from "../dom/keyboard-activation.js";
 import { applyResponsiveGraphicSize, objectIsImage } from "../interaction-support.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   announceDrawingPenColor,
@@ -23,6 +24,7 @@ export function renderDrawingResponse(
   currentValue: QtiValue,
   messages: PlayerMessageResolver,
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const group = document.createElement("div");
   group.role = "group";
   group.setAttribute(
@@ -35,6 +37,7 @@ export function renderDrawingResponse(
   surface.setAttribute("role", "img");
   surface.setAttribute("aria-label", messages.message("drawingSurface"));
   surface.setAttribute("tabindex", "0");
+  regions.surface(surface);
   const width = drawingWidth(interaction);
   const height = drawingHeight(interaction);
   surface.setAttribute("viewBox", `0 0 ${width} ${height}`);

@@ -15,6 +15,7 @@ import {
 } from "../interaction-support.js";
 import { createAssociationPairChip } from "./pair-chip.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { associationMaximumResponses, exceedsHotspotMatchMax } from "../response-limits.js";
 
@@ -25,6 +26,7 @@ export function renderGraphicAssociateResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
 
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
@@ -46,6 +48,7 @@ export function renderGraphicAssociateResponse(
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-associate-surface");
   surface.role = "group";
+  regions.surface(surface);
   surface.setAttribute(
     "aria-label",
     messages.message("interactionHotspots", { type: interaction.type }),
@@ -254,6 +257,7 @@ export function renderGraphicAssociateResponse(
     button.dataset.choiceIdentifier = choice.identifier;
     button.textContent = hotspotDisplayLabel(choice, choices);
     button.title = hotspotAccessibleLabel(choice, index);
+    regions.choice(button, choice);
     button.setAttribute("aria-pressed", "false");
     button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
     placeHotspotButton(button, choice, width, height);

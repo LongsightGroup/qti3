@@ -7,6 +7,7 @@ import type {
 } from "@longsightgroup/qti3-core";
 import type { PlayerMessageCatalog } from "./player-message-catalog.js";
 import type { QtiAssessmentItemPlayer } from "./player-element.js";
+import type { QtiInteractionRegion } from "./player/interaction-regions.js";
 import type { QtiPlayerMessageOverrides } from "./player-message-resolver.js";
 import type {
   QtiAssessmentItemPlayerEventDetailMap,
@@ -73,6 +74,7 @@ export interface QtiAssessmentItemPlayerHandle {
   clearItem(): void;
   serialize(): QtiAttemptStateV1 | undefined;
   getTextToSpeechTraversal(): QtiTextToSpeechTraversal | undefined;
+  getInteractionRegions(): QtiInteractionRegion[];
   getCatalogSupportResolution(
     options?: QtiCatalogSupportResolutionOptions,
   ): QtiCatalogSupportResolution | undefined;
@@ -239,6 +241,7 @@ export function createQtiAssessmentItemPlayerHandle(
     clearItem: () => requiredElement(getElement).clearItem(),
     serialize: () => requiredElement(getElement).serialize(),
     getTextToSpeechTraversal: () => requiredElement(getElement).getTextToSpeechTraversal(),
+    getInteractionRegions: () => requiredElement(getElement).getInteractionRegions(),
     getCatalogSupportResolution: (options) =>
       requiredElement(getElement).getCatalogSupportResolution(options),
   };

@@ -47,6 +47,10 @@ import {
   renderBlockInteractionSection,
   renderEmbeddedInteractionSection,
 } from "./player/interaction-render.js";
+import {
+  getQtiInteractionRegions,
+  type QtiInteractionRegion,
+} from "./player/interaction-regions.js";
 import { renderPlayerShell } from "./player/render-shell.js";
 import { resolveRenderedAssets } from "./player/resolve-assets.js";
 import type {
@@ -430,6 +434,10 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   ): QtiCatalogSupportResolution | undefined {
     if (!this.documentModel) return undefined;
     return createCatalogSupportResolution(this.documentModel, options);
+  }
+
+  getInteractionRegions(): QtiInteractionRegion[] {
+    return getQtiInteractionRegions(this);
   }
 
   private emitStateChange(state = this.serialize()): void {

@@ -6,6 +6,7 @@ import type {
   QtiPortableCustomStateValue,
   QtiValue,
 } from "@longsightgroup/qti3-core";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { QtiPortableCustomMountEventDetail } from "../player-types.js";
 import {
   portableCustomDefinitionFromAttributes,
@@ -119,10 +120,12 @@ function createPortableCustomHost(
   responseIdentifier: string,
   currentState: QtiPortableCustomStateValue | undefined,
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction, { responseIdentifier });
   const host = document.createElement("div");
   host.className = "qti3-portable-custom-host";
   host.tabIndex = 0;
   host.dataset.responseIdentifier = responseIdentifier;
+  regions.control(host);
   host.dataset.typeIdentifier = definition.customInteractionTypeIdentifier ?? "";
   host.dataset.module = definition.module ?? "";
   host.dataset.qtiName = interaction.qtiName;

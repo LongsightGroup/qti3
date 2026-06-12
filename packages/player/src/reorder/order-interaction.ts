@@ -1,5 +1,6 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { removeButton } from "../controls/remove-button.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
@@ -60,6 +61,7 @@ export function renderOrderedResponse(
       messages,
     );
   }
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const ordered = orderChoicesFromValue(choices, currentValue);
   // Plain order lists honor orientation with a vertical default when none is authored.
   const orientation = plainOrderOrientation(interaction);
@@ -91,6 +93,7 @@ export function renderOrderedResponse(
       ...ordered.map((choice, index) => {
         const item = document.createElement("li");
         item.className = "qti3-reorder-item";
+        regions.choice(item, choice);
         bindOrderListItemDrag(item, choice.identifier, index, dragState, moveChoice, findIndex);
 
         const { handle, movePrevious, moveNext } = createReorderHandleControls({
@@ -124,6 +127,7 @@ function renderSharedVocabularyOrderResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup("qti3-order-sv-group");
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const byIdentifier = new Map(choices.map((choice) => [choice.identifier, choice]));
   const orderedSlots: OrderSlotState = restoreOrderSlotsFromValue(choices, currentValue);
   let orderedIdentifiers = orderSlotChoiceIdentifiers(orderedSlots);
@@ -217,6 +221,7 @@ function renderSharedVocabularyOrderResponse(
           button.type = "button";
           button.className = "qti3-token qti3-order-choice";
           button.dataset.choiceIdentifier = choice.identifier;
+          regions.source(button, choice);
           button.draggable = true;
           setChoiceAccessibleName(button, choice);
           appendChoiceVisual(button, choice);
@@ -240,6 +245,7 @@ function renderSharedVocabularyOrderResponse(
     slot.className = "qti3-order-target-slot";
     slot.dataset.targetIndex = String(index);
     slot.dataset.empty = choice ? "false" : "true";
+    regions.target(slot);
     slot.addEventListener("dragover", (event) => {
       event.preventDefault();
       slot.classList.add("qti3-drop-target");
@@ -275,6 +281,7 @@ function renderSharedVocabularyOrderResponse(
     const item = document.createElement("div");
     item.className = "qti3-reorder-item qti3-order-target-item";
     item.dataset.choiceIdentifier = choice.identifier;
+    regions.placement(item, choice.identifier);
     item.draggable = true;
     item.addEventListener("dragstart", (event) => {
       draggedIdentifier = choice.identifier;

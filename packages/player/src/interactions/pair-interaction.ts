@@ -1,6 +1,7 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { associationMaximumResponses } from "../response-limits.js";
 import { createAssociationPairChip } from "./pair-chip.js";
@@ -19,6 +20,7 @@ export function renderPairResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
 
   const sources = sourceChoices(interaction);
   const targets = targetChoices(interaction);
@@ -128,6 +130,7 @@ export function renderPairResponse(
 
   for (const choice of sources) {
     const button = tokenButton(choice);
+    regions.source(button, choice);
     button.draggable = true;
     button.addEventListener("dragstart", (event) => {
       draggedSource = choice.identifier;
@@ -147,6 +150,7 @@ export function renderPairResponse(
   }
   for (const choice of targets) {
     const button = tokenButton(choice);
+    regions.target(button, choice.identifier);
     button.addEventListener("dragover", (event) => {
       event.preventDefault();
       button.classList.add("qti3-drop-target");

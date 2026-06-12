@@ -200,6 +200,68 @@ Restored `loadOptions.state` reload keys use JSON serialization: equivalent cont
 object references does not reload, but key order follows construction order and in-place mutation
 without a reload key change is not detected.
 
+## Interaction regions
+
+Hosts that need overlays, accessibility evidence, proctoring, analytics, or support tooling can
+query stable rendered regions without depending on private player classes:
+
+```ts
+const regions = player.getInteractionRegions();
+```
+
+Each region includes `kind`, `interactionType`, optional response/choice identifiers, an optional
+label, a fresh viewport-relative `bounds` snapshot from `getBoundingClientRect()`, and the rendered
+`element`. Every supported interaction exposes at least one `interaction` region. Renderers expose
+additional `choice`, `control`, `source`, `target`, `surface`, or `placement` regions where that
+granularity is meaningful.
+
+The same contract is available as public DOM markers:
+
+```html
+data-qti-player-region data-qti-player-region-kind="choice"
+data-qti-player-interaction-type="choice" data-qti-player-response-identifier="RESPONSE"
+data-qti-player-choice-identifier="A"
+```
+
+Only `data-qti-player-*` markers are stable for host querying. Internal `qti3-*` classes and generic
+renderer attributes such as `data-choice-identifier` may change across releases.
+
+Region bounds are layout snapshots. Re-query after scrolling, resizing, rerendering, font loading,
+opening or closing popups, or response changes that affect layout. Hidden regions are excluded; for
+example, inline-choice options are returned only while the listbox is open.
+
+### Nested regions and hit testing
+
+`getInteractionRegions()` returns every visible marked element. Ancestor `interaction` regions often
+wrap descendant `choice`, `control`, `source`, `target`, `surface`, or `placement` regions. For
+example, inline-choice exposes a `control` wrapper and `choice` options inside it; graphic
+interactions expose a `surface` plus per-hotspot `choice` or `placement` regions.
+
+For overlays, proctoring hit targets, or analytics element counts, prefer the most specific visible
+region for the interaction you care about:
+
+- Use leaf `choice`, `control`, `source`, `target`, `surface`, or `placement` regions for per-option
+  or per-control hit testing.
+- Use the ancestor `interaction` region when you need the full interaction chrome (prompt, response
+  area, and validation messaging) as one box.
+
+Region `label` values come from `aria-label`, `title`, and finally trimmed `textContent`.
+
+### Region kind semantics
+
+| Kind          | Typical use                                                                             |
+| ------------- | --------------------------------------------------------------------------------------- |
+| `interaction` | Full interaction wrapper (block or embedded section)                                    |
+| `choice`      | Selectable option, hotspot, or hottext token                                            |
+| `control`     | Text input, slider, upload, media element, end-attempt button, or other primary control |
+| `source`      | Draggable token in a source bank                                                        |
+| `target`      | Drop target, gap, or match target                                                       |
+| `surface`     | Graphic canvas, drawing surface, or coordinate picking area                             |
+| `placement`   | Placed token or movable marker on a graphic surface                                     |
+
+Tabular match interactions expose one `control` region per matrix cell toggle rather than separate
+`source` and `target` regions.
+
 ## Styling
 
 The player uses light DOM and is style-neutral by design. Host applications can style

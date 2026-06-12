@@ -9,6 +9,7 @@ import {
   tokenRegion,
 } from "./shared.js";
 import { checkboxToggleIcon } from "../icons.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { createMatchDirectedPairSelection } from "./match-directed-pairs.js";
 import { createMatchDirectedPairState } from "./match-directed-pair-state.js";
 import {
@@ -62,6 +63,7 @@ function renderTokenBankMatchResponse(
   targets: QtiChoice[],
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   let draggedSource: string | undefined;
@@ -129,6 +131,7 @@ function renderTokenBankMatchResponse(
 
   for (const source of sources) {
     const button = tokenButton(source);
+    regions.source(button, source);
     button.classList.add("qti3-match-source");
     button.draggable = true;
     button.addEventListener("dragstart", (event) => {
@@ -155,6 +158,7 @@ function renderTokenBankMatchResponse(
 
   for (const target of targets) {
     const button = tokenButton(target);
+    regions.target(button, target.identifier);
     button.classList.add("qti3-match-target");
     button.addEventListener("dragover", (event) => {
       event.preventDefault();
@@ -195,6 +199,7 @@ function renderTabularMatchResponse(
   targets: QtiChoice[],
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const classNames = new Set(interactionClassNames(interaction));
   const headerHidden = classNames.has("qti-header-hidden");
   const firstColumnHeader = interaction.attributes["data-first-column-header"] ?? "";
@@ -277,6 +282,7 @@ function renderTabularMatchResponse(
       button.className = "qti3-token qti3-match-table-cell";
       button.dataset.sourceIdentifier = source.identifier;
       button.dataset.targetIdentifier = target.identifier;
+      regions.control(button);
       button.setAttribute(
         "aria-label",
         messages.message("associationPairLabel", {

@@ -13,6 +13,7 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 import { appendGraphicContext } from "./graphic-context.js";
@@ -175,6 +176,7 @@ export function renderGapMatchResponse(
   }
 
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   appendGraphicContext(group, interaction);
   const sources = sourceChoices(interaction);
   const gaps = targetChoices(interaction);
@@ -246,6 +248,7 @@ export function renderGapMatchResponse(
     const target = document.createElement("span");
     target.className = "qti3-gap-target";
     target.dataset.gapIdentifier = gap.identifier;
+    regions.target(target, gap.identifier);
     const width = inputWidth({
       ...gap.attributes,
       ...gapSegmentAttributes.get(gap.identifier),
@@ -315,6 +318,7 @@ export function renderGapMatchResponse(
 
   for (const source of sources) {
     const button = tokenButton(source);
+    regions.source(button, source);
     button.draggable = true;
     button.addEventListener("dragstart", (event) => {
       draggedSource = source.identifier;
@@ -343,6 +347,7 @@ function renderGraphicGapMatchResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
   const sources = sourceChoices(interaction);
@@ -372,6 +377,7 @@ function renderGraphicGapMatchResponse(
     "qti3-graphic-gap-match-surface",
   );
   surface.role = "group";
+  regions.surface(surface);
   surface.setAttribute(
     "aria-label",
     messages.message("interactionTargetImage", { type: interaction.type }),
@@ -476,6 +482,7 @@ function renderGraphicGapMatchResponse(
     button.className = "qti3-hotspot-button qti3-graphic-gap-hotspot";
     button.dataset.gapIdentifier = gap.identifier;
     button.dataset.selected = assigned ? "true" : "false";
+    regions.target(button, gap.identifier);
     button.setAttribute(
       "aria-label",
       assigned
@@ -528,6 +535,7 @@ function renderGraphicGapMatchResponse(
     assignedLabel.className = "qti3-graphic-gap-label";
     assignedLabel.dataset.choiceIdentifier = assigned.identifier;
     assignedLabel.dataset.originGapIdentifier = gap.identifier;
+    regions.placement(assignedLabel, assigned.identifier);
     assignedLabel.draggable = true;
     assignedLabel.setAttribute("aria-hidden", "true");
     assignedLabel.addEventListener("dragstart", (event) => {
@@ -566,6 +574,7 @@ function renderGraphicGapMatchResponse(
 
   for (const source of sources) {
     const button = tokenButton(source);
+    regions.source(button, source);
     button.draggable = true;
     button.addEventListener("dragstart", (event) => {
       startGraphicGapDrag(event, { sourceId: source.identifier }, button, beginDrag);

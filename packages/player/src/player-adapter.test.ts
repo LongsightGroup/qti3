@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { QtiAttemptStateV1 } from "@longsightgroup/qti3-core";
 import {
+  createQtiAssessmentItemPlayerHandle,
   createQtiAssessmentItemPlayerAdapterLoadSync,
   qtiAssessmentItemPlayerLoadStateKey,
 } from "./player-adapter.js";
@@ -85,5 +86,25 @@ describe("createQtiAssessmentItemPlayerAdapterLoadSync", () => {
     cleanup();
 
     expect(onLoadError).not.toHaveBeenCalled();
+  });
+});
+
+describe("createQtiAssessmentItemPlayerHandle", () => {
+  it("forwards interaction region lookups to the mounted element", () => {
+    const regions = [
+      {
+        kind: "interaction",
+        interactionType: "choice",
+        bounds: {} as DOMRectReadOnly,
+        element: {} as Element,
+      },
+    ];
+    const element = {
+      getInteractionRegions: vi.fn(() => regions),
+    };
+    const handle = createQtiAssessmentItemPlayerHandle(() => element as never);
+
+    expect(handle.getInteractionRegions()).toBe(regions);
+    expect(element.getInteractionRegions).toHaveBeenCalledTimes(1);
   });
 });

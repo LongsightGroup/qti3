@@ -4,6 +4,7 @@ import {
   missingChoicesMessage,
   valueToStrings,
 } from "../interaction-support.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionLabel } from "./interaction-label.js";
 import { appendChoiceVisual, hasRichChoiceContent, setChoiceAccessibleName } from "./shared.js";
@@ -68,6 +69,7 @@ export function renderInlineChoice(
   const controlId = `qti3-inline-choice-${inlineChoiceId++}`;
   const prompt = messages.message("inlineChoicePrompt");
   const label = interactionLabel(interaction);
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const options: InlineChoiceOption[] = [
     { identifier: "", text: prompt },
     ...choices.map((choice) => ({ identifier: choice.identifier, text: choice.text, choice })),
@@ -81,6 +83,7 @@ export function renderInlineChoice(
   const wrapper = document.createElement("span");
   wrapper.className = "qti3-inline-choice-control";
   applyInputWidth(wrapper, inputWidth(interaction.attributes));
+  regions.control(wrapper);
 
   const trigger = document.createElement("button");
   trigger.type = "button";
@@ -116,6 +119,9 @@ export function renderInlineChoice(
     item.role = "option";
     item.tabIndex = -1;
     item.dataset.choiceIdentifier = option.identifier;
+    if (option.identifier) {
+      regions.choice(item, option.identifier);
+    }
     renderOptionContent(item, option);
     return item;
   });

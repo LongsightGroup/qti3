@@ -1,4 +1,5 @@
 import { type QtiInteraction, type QtiValue } from "@longsightgroup/qti3-core";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   appendExtendedTextResponseChildren,
@@ -58,6 +59,7 @@ export function renderTextResponse(
   currentValue: QtiValue,
   messages: PlayerMessageResolver,
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const group = document.createElement("div");
   group.className = "qti3-text-response";
   const expectedLength = Number(interaction.attributes["expected-length"] ?? 0);
@@ -65,6 +67,7 @@ export function renderTextResponse(
     mode === "extended" ? document.createElement("textarea") : document.createElement("input");
   control.className = mode === "extended" ? "qti3-textarea" : "qti3-text-input";
   control.value = scalarString(currentValue);
+  regions.control(control);
   control.setAttribute(
     "aria-label",
     interaction.prompt ??
@@ -104,11 +107,13 @@ export function renderInlineTextEntry(
   currentValue: QtiValue,
   messages: PlayerMessageResolver,
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const group = document.createElement("span");
   group.className = "qti3-inline-text-response";
   const input = document.createElement("input");
   input.className = "qti3-text-input qti3-inline-text-input";
   input.value = scalarString(currentValue);
+  regions.control(input);
   input.setAttribute(
     "aria-label",
     interaction.prompt ?? interaction.contextText ?? messages.message("textResponseLabel"),
@@ -134,6 +139,7 @@ export function renderSliderResponse(
   currentValue: QtiValue,
   messages: PlayerMessageResolver,
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const group = document.createElement("div");
   group.className = "qti3-slider-response";
   const input = document.createElement("input");
@@ -142,6 +148,7 @@ export function renderSliderResponse(
   input.max = interaction.attributes["upper-bound"] ?? "100";
   input.step = interaction.attributes.step ?? "1";
   input.value = scalarString(currentValue) || interaction.attributes["lower-bound"] || "0";
+  regions.control(input);
   input.setAttribute("aria-label", interaction.prompt ?? messages.message("sliderResponseLabel"));
   const output = document.createElement("output");
   output.className = "qti3-slider-output";

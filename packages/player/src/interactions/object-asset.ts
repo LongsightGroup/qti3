@@ -5,6 +5,7 @@ import {
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 import { objectIsImage } from "../interaction-support.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { maximumMediaPlays, mediaPlayCount } from "../response-limits.js";
 
 function parseBooleanAttribute(value: string | undefined): boolean | undefined {
@@ -23,6 +24,7 @@ export function renderObjectAsset(
   interaction: QtiInteraction,
   mediaResponse: MediaResponseBinding = {},
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const object = interaction.object;
   const label = interaction.prompt ?? object?.text ?? "Media interaction";
   const mediaType = object ? mediaElementType(object) : undefined;
@@ -30,6 +32,7 @@ export function renderObjectAsset(
   if (object && mediaType === "audio") {
     const audio = document.createElement("audio");
     configureMediaElement(audio, interaction, object, label, mediaResponse);
+    regions.control(audio);
     audio.style.inlineSize = "100%";
     return audio;
   }
@@ -37,6 +40,7 @@ export function renderObjectAsset(
   if (object && mediaType === "video") {
     const video = document.createElement("video");
     configureMediaElement(video, interaction, object, label, mediaResponse);
+    regions.control(video);
     if (object.width) video.width = Number(object.width);
     if (object.height) video.height = Number(object.height);
     return video;
@@ -48,6 +52,7 @@ export function renderObjectAsset(
     image.alt = label;
     image.style.maxInlineSize = "100%";
     image.style.blockSize = "auto";
+    regions.control(image);
     if (object.width) image.width = Number(object.width);
     if (object.height) image.height = Number(object.height);
     return image;
@@ -56,6 +61,7 @@ export function renderObjectAsset(
   const group = document.createElement("div");
   group.role = "group";
   group.setAttribute("aria-label", label);
+  regions.control(group);
   const fallbackHref = object?.data ?? object?.sources.find((source) => source.src)?.src;
   if (fallbackHref) {
     const link = document.createElement("a");

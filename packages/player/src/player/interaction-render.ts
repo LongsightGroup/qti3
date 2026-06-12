@@ -12,6 +12,7 @@ import {
 } from "../interactions/unsupported-interaction.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { inlineValidationMessageElement, validationMessageElement } from "../player-validation.js";
+import { createQtiInteractionRegionMarkers } from "./interaction-regions.js";
 
 export interface BlockInteractionRenderOptions {
   interaction: QtiInteraction;
@@ -47,12 +48,14 @@ export function renderBlockInteractionSection(options: BlockInteractionRenderOpt
     renderPortableCustom,
     renderPromptContent,
   } = options;
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const field = document.createElement("section");
   field.className = `qti3-interaction qti3-${interaction.type}`;
   field.classList.add(...qtiSharedClassNames(interaction.attributes.class));
   field.dataset.interactionType = interaction.type;
   if (interaction.responseIdentifier)
     field.dataset.responseIdentifier = interaction.responseIdentifier;
+  regions.interaction(field);
 
   const heading = document.createElement("h3");
   copySafeAttributes(heading, interaction.promptAttributes ?? {});
@@ -94,12 +97,14 @@ export function renderEmbeddedInteractionSection(
       break;
   }
 
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const wrapper = document.createElement("span");
   wrapper.className = `qti3-interaction qti3-${interaction.type} qti3-embedded-interaction`;
   wrapper.classList.add(...qtiSharedClassNames(interaction.attributes.class));
   wrapper.dataset.interactionType = interaction.type;
   if (interaction.responseIdentifier)
     wrapper.dataset.responseIdentifier = interaction.responseIdentifier;
+  regions.interaction(wrapper);
 
   if (interaction.responseIdentifier) {
     wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));

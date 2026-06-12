@@ -6,6 +6,7 @@ import {
   valueToStrings,
 } from "../interaction-support.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 import { choiceLayout } from "./choice-layout.js";
@@ -19,6 +20,7 @@ export function renderChoice(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup("qti3-choice-group");
+  const regions = createQtiInteractionRegionMarkers(interaction);
 
   const multiple =
     interaction.responseCardinality === "multiple" || interaction.responseCardinality === "ordered";
@@ -53,6 +55,7 @@ export function renderChoice(
     const label = document.createElement("label");
     label.className = "qti3-choice-option";
     label.dataset.choiceIdentifier = choice.identifier;
+    regions.choice(label, choice);
     const input = document.createElement("input");
     input.type = multiple ? "checkbox" : "radio";
     input.name = interaction.responseIdentifier ?? interaction.type;

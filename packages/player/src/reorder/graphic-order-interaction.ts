@@ -17,6 +17,7 @@ import {
 } from "../interaction-support.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import { plainOrderOrientation } from "../interactions/shared-vocabulary.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { movementButton, reorderMovementDirections } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
@@ -35,6 +36,7 @@ export function renderGraphicOrderResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
   const choices = interactionChoices(interaction).filter((choice) => choice.role === "hotspot");
@@ -50,6 +52,7 @@ export function renderGraphicOrderResponse(
   const surface = document.createElement("div");
   applyGraphicSurfaceLayout(surface, width, height, "qti3-graphic-order-surface");
   surface.role = "group";
+  regions.surface(surface);
   surface.setAttribute(
     "aria-label",
     messages.message("interactionHotspots", { type: interaction.type }),
@@ -197,6 +200,7 @@ export function renderGraphicOrderResponse(
         item.className = "qti3-graphic-order-item";
         item.dataset.choiceIdentifier = choice.identifier;
         const choiceLabel = hotspotDisplayLabel(choice, choices);
+        regions.placement(item, choice.identifier);
 
         const label = document.createElement("button");
         label.type = "button";
@@ -250,6 +254,7 @@ export function renderGraphicOrderResponse(
     button.className = "qti3-hotspot-button qti3-graphic-order-hotspot";
     button.dataset.choiceIdentifier = choice.identifier;
     button.title = hotspotAccessibleLabel(choice, index);
+    regions.choice(button, choice);
     button.setAttribute("aria-label", hotspotAccessibleLabel(choice, index));
     button.setAttribute("aria-pressed", "false");
     placeHotspotButton(button, choice, width, height);

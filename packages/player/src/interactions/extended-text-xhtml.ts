@@ -1,4 +1,5 @@
 import type { QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
   appendExtendedTextResponseChildren,
@@ -35,6 +36,7 @@ export function renderExtendedTextXhtmlResponse(
   currentValue: QtiValue,
   messages: PlayerMessageResolver,
 ): HTMLElement {
+  const regions = createQtiInteractionRegionMarkers(interaction);
   const group = document.createElement("div");
   group.className = "qti3-text-response qti3-rich-text-response";
 
@@ -45,6 +47,7 @@ export function renderExtendedTextXhtmlResponse(
   editor.setAttribute("role", "textbox");
   editor.setAttribute("aria-multiline", "true");
   editor.setAttribute("aria-label", extendedTextAriaLabel(interaction, messages));
+  regions.control(editor);
   editor.innerHTML = sanitizeRichTextXhtml(scalarString(currentValue));
 
   const rows = expectedExtendedTextRows(interaction);

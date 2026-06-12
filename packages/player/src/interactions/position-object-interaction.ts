@@ -17,6 +17,7 @@ import {
   parsePointValue,
   pointToString,
 } from "./point-value.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 
 export function renderPositionObjectResponse(
   interaction: QtiInteraction,
@@ -25,6 +26,7 @@ export function renderPositionObjectResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   group.role = "group";
   group.setAttribute(
     "aria-label",
@@ -43,6 +45,7 @@ export function renderPositionObjectResponse(
 
   const stage = document.createElement("div");
   applyGraphicSurfaceLayout(stage, width, height, "qti3-position-object-stage");
+  regions.surface(stage);
   stage.style.setProperty("--qti3-position-object-marker-block-size", `${movableHeight}px`);
   stage.tabIndex = 0;
   stage.role = "group";
@@ -59,6 +62,7 @@ export function renderPositionObjectResponse(
   marker.type = "button";
   marker.className = "qti3-position-object-marker";
   marker.setAttribute("aria-label", messages.message("movableObject"));
+  regions.placement(marker);
   applyPositionObjectMarkerSize(marker, movableWidth, movableHeight);
   marker.draggable = false;
 

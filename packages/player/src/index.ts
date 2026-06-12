@@ -29,6 +29,10 @@ export type {
   QtiValidationEventDetail,
 } from "./player-types.js";
 export type {
+  QtiInteractionRegion,
+  QtiInteractionRegionKind,
+} from "./player/interaction-regions.js";
+export type {
   QtiAssessmentItemPlayerAdapterEventCallback,
   QtiAssessmentItemPlayerAdapterEventHandlerProps,
   QtiAssessmentItemPlayerAdapterEventPropName,

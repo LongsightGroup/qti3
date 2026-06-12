@@ -14,6 +14,7 @@ import {
 } from "../interaction-support.js";
 import { bindActivateOnEnterOrSpace } from "../dom/keyboard-activation.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
 
@@ -26,11 +27,13 @@ export function renderHotspotResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
 
   const surface = document.createElement("div");
   const width = objectWidth(interaction);
   const height = objectHeight(interaction);
   applyGraphicSurfaceLayout(surface, width, height, "qti3-hotspot-surface");
+  regions.surface(surface);
 
   const choices = interactionChoices(interaction);
   if (choices.length === 0) {
@@ -106,6 +109,7 @@ export function renderHotspotResponse(
     shape.classList.add("qti3-hotspot-button");
     shape.dataset.choiceIdentifier = choice.identifier;
     shape.dataset.shape = choice.attributes.shape ?? "";
+    regions.choice(shape, choice);
     shape.setAttribute("role", "button");
     shape.setAttribute("tabindex", "0");
     shape.setAttribute("aria-pressed", "false");

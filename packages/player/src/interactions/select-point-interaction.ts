@@ -8,6 +8,7 @@ import {
   responseGroup,
 } from "../interaction-support.js";
 import { handleKeyboardActivation } from "../dom/keyboard-activation.js";
+import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { movementButton } from "../movement.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
@@ -20,6 +21,7 @@ export function renderSelectPointResponse(
   messages: PlayerMessageResolver,
 ): HTMLElement {
   const group = responseGroup();
+  const regions = createQtiInteractionRegionMarkers(interaction);
   group.role = "group";
   group.setAttribute(
     "aria-label",
@@ -36,6 +38,7 @@ export function renderSelectPointResponse(
     objectHeight(interaction),
     "qti3-point-surface",
   );
+  regions.surface(surface);
   surface.setAttribute(
     "aria-label",
     messages.message("interactionCoordinateArea", { type: interaction.type }),
