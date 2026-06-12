@@ -1,5 +1,3 @@
-import { StaxXmlParserSync, XmlEventType } from "stax-xml";
-
 export interface XmlNode {
   name: string;
   localName: string;
@@ -31,226 +29,151 @@ export interface XmlSourceRange {
   endOffset?: number | undefined;
 }
 
-export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: Error[] } {
-  const parser = new StaxXmlParserSync(xml, {
-    autoDecodeEntities: true,
-  });
-  const tagTokens = scanXmlTagTokens(xml);
-  const stack: XmlNode[] = [];
-  const errors: Error[] = [];
-  let root: XmlNode | undefined;
-  let tagTokenIndex = 0;
+interface ParserState {
+  xml: string;
+  lineStarts: number[];
+  errors: Error[];
+  root: XmlNode | undefined;
+  stack: XmlNode[];
+  namespaceStack: NamespaceFrame[];
+}
 
-  try {
-    for (const event of parser) {
-      if (event.type === XmlEventType.ERROR) {
-        errors.push(event.error);
-        continue;
-      }
+interface ParsedAttribute {
+  name: string;
+  value: string;
+}
 
-      if (event.type === XmlEventType.START_ELEMENT) {
-        const parent = stack.at(-1);
-        const path = nodePath(parent, event.localName ?? event.name);
-        const sourceRange: XmlSourceRange = { startOffset: -1, startTagEndOffset: -1 };
-        const token = tagTokens[tagTokenIndex];
-        if (token?.kind === "start" && token.name === event.name) {
-          tagTokenIndex += 1;
-          sourceRange.startOffset = token.startOffset;
-          sourceRange.startTagEndOffset = token.startTagEndOffset;
-          if (token.endOffset !== undefined) {
-            sourceRange.endOffset = token.endOffset;
-          }
-        } else {
-          errors.push(new Error(`XML source range alignment failed for <${event.name}>.`));
-        }
-        const node: XmlNode = {
-          name: event.name,
-          localName: event.localName ?? event.name,
-          prefix: event.prefix,
-          uri: event.uri,
-          attributes: event.attributes,
-          children: [],
-          content: [],
-          text: "",
-          source: sourceLocation(xml, sourceRange.startOffset, path),
-          sourceRange,
-        };
-
-        if (parent) {
-          node.parent = parent;
-          parent.children.push(node);
-          parent.content.push(node);
-        } else {
-          root = node;
-        }
-        stack.push(node);
-        continue;
-      }
-
-      if (event.type === XmlEventType.END_ELEMENT) {
-        const node = stack.pop();
-        if (node) {
-          if (node.sourceRange.endOffset === undefined) {
-            const token = tagTokens[tagTokenIndex];
-            if (token?.kind === "end" && token.name === event.name) {
-              tagTokenIndex += 1;
-              node.sourceRange.endOffset = token.endOffset;
-              node.endSource = sourceLocation(xml, token.startOffset, node.source.path);
-            } else {
-              errors.push(new Error(`XML source range alignment failed for </${event.name}>.`));
-            }
-          }
-        }
-        continue;
-      }
-
-      if (event.type === XmlEventType.CHARACTERS || event.type === XmlEventType.CDATA) {
-        const node = stack.at(-1);
-        if (node) {
-          node.text += event.value;
-          node.content.push(event.value);
-        }
-      }
-    }
-  } catch (error) {
-    errors.push(error instanceof Error ? error : new Error(String(error)));
-  }
-
-  for (const node of [...stack].reverse()) {
-    errors.push(new Error(`Unexpected end of document. Missing closing tag for <${node.name}>.`));
-  }
-
-  if (root) restoreMixedContentFromSource(xml, root);
-
-  return { root, errors };
+interface NamespaceFrame {
+  namespaces: Record<string, string>;
 }
 
 /**
- * stax-xml trims boundary whitespace around child elements. Re-slice mixed content from the
- * original XML so authored spacing around inline markup (for example `<em>`) is preserved.
+ * Minimal XML parser for QTI item/package XML.
+ *
+ * The parser intentionally does not process DTD entity declarations, resolve external entities,
+ * read from the network/filesystem, or expand custom entities. That keeps QTI parsing structurally
+ * immune to XXE and billion-laughs style expansion: numeric references decode to at most one code
+ * point, predefined entities decode once, and every other entity reference remains verbatim.
  */
-const inlineMixedContentChildNames = new Set([
-  "a",
-  "abbr",
-  "b",
-  "bdi",
-  "bdo",
-  "cite",
-  "code",
-  "dfn",
-  "em",
-  "i",
-  "kbd",
-  "mark",
-  "math",
-  "mi",
-  "mn",
-  "mo",
-  "mrow",
-  "msup",
-  "q",
-  "rp",
-  "rt",
-  "ruby",
-  "s",
-  "samp",
-  "small",
-  "span",
-  "strong",
-  "sub",
-  "sup",
-  "var",
-  "qti-feedback-inline",
-  "qti-gap",
-  "qti-hottext",
-  "qti-inline-choice-interaction",
-  "qti-printed-variable",
-  "qti-template-inline",
-  "qti-text-entry-interaction",
-]);
+export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: Error[] } {
+  if (xml.charCodeAt(0) === 0xfeff) xml = xml.slice(1);
 
-function shouldRestoreMixedContentWhitespace(node: XmlNode): boolean {
-  return node.content.some(
-    (entry) => typeof entry !== "string" && inlineMixedContentChildNames.has(entry.localName),
-  );
-}
+  const state: ParserState = {
+    xml,
+    lineStarts: buildLineStarts(xml),
+    errors: [],
+    root: undefined,
+    stack: [],
+    namespaceStack: [],
+  };
+  let offset = 0;
 
-function restoreMixedContentFromSource(xml: string, node: XmlNode): void {
-  for (const entry of node.content) {
-    if (typeof entry !== "string") restoreMixedContentFromSource(xml, entry);
+  while (offset < xml.length) {
+    const markupOffset = xml.indexOf("<", offset);
+    if (markupOffset < 0) {
+      appendText(xml.slice(offset), state);
+      break;
+    }
+
+    if (markupOffset > offset) {
+      appendText(xml.slice(offset, markupOffset), state);
+    }
+
+    if (markupOffset + 1 >= xml.length) {
+      state.errors.push(new Error("Malformed XML tag at end of document."));
+      break;
+    }
+
+    if (xml.startsWith("<!--", markupOffset)) {
+      const endOffset = xml.indexOf("-->", markupOffset + 4);
+      if (endOffset < 0) {
+        state.errors.push(new Error("Unterminated XML comment."));
+        break;
+      }
+      offset = endOffset + 3;
+      continue;
+    }
+
+    if (xml.startsWith("<![CDATA[", markupOffset)) {
+      const endOffset = xml.indexOf("]]>", markupOffset + 9);
+      if (endOffset < 0) {
+        state.errors.push(new Error("Unterminated CDATA section."));
+        break;
+      }
+      appendCharacterData(xml.slice(markupOffset + 9, endOffset), state);
+      offset = endOffset + 3;
+      continue;
+    }
+
+    const next = xml.charAt(markupOffset + 1);
+    if (next === "?") {
+      const endOffset = xml.indexOf("?>", markupOffset + 2);
+      if (endOffset < 0) {
+        state.errors.push(new Error("Unterminated XML processing instruction."));
+        break;
+      }
+      offset = endOffset + 2;
+      continue;
+    }
+
+    if (next === "!") {
+      const endOffset = findMarkupDeclarationEndOffset(xml, markupOffset + 2);
+      if (endOffset < 0) {
+        state.errors.push(new Error("Unterminated XML markup declaration."));
+        break;
+      }
+      offset = endOffset + 1;
+      continue;
+    }
+
+    if (next === "/") {
+      const endOffset = findTagEndOffset(xml, markupOffset + 2);
+      if (endOffset < 0) {
+        state.errors.push(new Error("Unterminated XML closing tag."));
+        break;
+      }
+      const name = readTagName(xml, markupOffset + 2, endOffset);
+      if (!name) {
+        state.errors.push(new Error("Malformed XML closing tag."));
+      } else {
+        closeElement(name, markupOffset, endOffset, state);
+      }
+      offset = endOffset + 1;
+      continue;
+    }
+
+    const endOffset = findTagEndOffset(xml, markupOffset + 1);
+    if (endOffset < 0) {
+      state.errors.push(new Error("Unterminated XML start tag."));
+      break;
+    }
+    const name = readTagName(xml, markupOffset + 1, endOffset);
+    if (!name) {
+      state.errors.push(new Error("Malformed XML start tag."));
+      offset = endOffset + 1;
+      continue;
+    }
+
+    const selfClosing = isSelfClosingStartTag(xml, endOffset);
+    const attributes = parseAttributes(
+      xml,
+      markupOffset + 1 + name.length,
+      selfClosing ? trailingSlashOffset(xml, endOffset) : endOffset,
+      state,
+    );
+    openElement(name, attributes, markupOffset, endOffset, selfClosing, state);
+    offset = endOffset + 1;
   }
 
-  restoreLeafTextFromSource(xml, node);
-
-  if (!shouldRestoreMixedContentWhitespace(node)) return;
-
-  const contentEndOffset = node.endSource?.offset ?? node.sourceRange.endOffset;
-  if (node.sourceRange.startTagEndOffset < 0 || contentEndOffset === undefined) return;
-
-  const restored: Array<string | XmlNode> = [];
-  let cursor = node.sourceRange.startTagEndOffset + 1;
-
-  for (const entry of node.content) {
-    if (typeof entry === "string") continue;
-    const childStart = entry.sourceRange.startOffset;
-    if (childStart < 0) continue;
-    if (childStart > cursor) {
-      appendDecodedTextSegment(restored, xml.slice(cursor, childStart));
-    }
-    restored.push(entry);
-    const childEnd = entry.sourceRange.endOffset;
-    if (childEnd === undefined || childEnd < cursor) continue;
-    cursor = childEnd;
+  for (const node of [...state.stack].reverse()) {
+    state.errors.push(
+      new Error(`Unexpected end of document. Missing closing tag for <${node.name}>.`),
+    );
   }
 
-  if (contentEndOffset > cursor) {
-    appendDecodedTextSegment(restored, xml.slice(cursor, contentEndOffset));
-  }
+  if (!state.root) state.errors.push(new Error("XML document does not contain a root element."));
 
-  node.content = restored;
-  node.text = restored.filter((entry): entry is string => typeof entry === "string").join("");
-}
-
-function restoreLeafTextFromSource(xml: string, node: XmlNode): void {
-  if (node.children.length > 0) return;
-  const contentEndOffset = node.endSource?.offset ?? node.sourceRange.endOffset;
-  if (node.sourceRange.startTagEndOffset < 0 || contentEndOffset === undefined) return;
-  const raw = xml.slice(node.sourceRange.startTagEndOffset + 1, contentEndOffset);
-  if (raw.includes("<![CDATA[")) return;
-  const decoded = decodeXmlCharacterData(stripNonCharacterMarkup(raw));
-  node.text = decoded;
-  node.content = decoded.length > 0 ? [decoded] : [];
-}
-
-function appendDecodedTextSegment(content: Array<string | XmlNode>, raw: string): void {
-  const decoded = decodeXmlCharacterData(stripNonCharacterMarkup(raw));
-  if (decoded.length > 0) content.push(decoded);
-}
-
-function stripNonCharacterMarkup(value: string): string {
-  return value.replace(/<!--[\s\S]*?-->/g, "").replace(/<\?[\s\S]*?\?>/g, "");
-}
-
-const predefinedXmlEntities: Record<string, string> = {
-  amp: "&",
-  apos: "'",
-  gt: ">",
-  lt: "<",
-  quot: '"',
-};
-
-function decodeXmlCharacterData(value: string): string {
-  return value.replace(/&(#x?[0-9a-fA-F]+|[A-Za-z]+);/g, (entity, body: string) => {
-    if (body.startsWith("#x") || body.startsWith("#X")) {
-      const codePoint = Number.parseInt(body.slice(2), 16);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
-    }
-    if (body.startsWith("#")) {
-      const codePoint = Number.parseInt(body.slice(1), 10);
-      return Number.isFinite(codePoint) ? String.fromCodePoint(codePoint) : entity;
-    }
-    return predefinedXmlEntities[body] ?? entity;
-  });
+  return { root: state.root, errors: state.errors };
 }
 
 export function childElements(node: XmlNode, localName?: string): XmlNode[] {
@@ -273,86 +196,227 @@ export function textContent(node: XmlNode): string {
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
-interface XmlTagToken {
-  kind: "start" | "end";
-  name: string;
-  startOffset: number;
-  startTagEndOffset: number;
-  endOffset?: number | undefined;
-  selfClosing: boolean;
-}
-
-function scanXmlTagTokens(xml: string): XmlTagToken[] {
-  const tokens: XmlTagToken[] = [];
-  let offset = 0;
-
-  while (offset < xml.length) {
-    const startOffset = xml.indexOf("<", offset);
-    if (startOffset === -1 || startOffset + 1 >= xml.length) return tokens;
-
-    if (xml.startsWith("<!--", startOffset)) {
-      offset = skipPastSequence(xml, "-->", startOffset + 4);
-      continue;
-    }
-
-    if (xml.startsWith("<![CDATA[", startOffset)) {
-      offset = skipPastSequence(xml, "]]>", startOffset + 9);
-      continue;
-    }
-
-    const next = xml.charAt(startOffset + 1);
-    if (next === "?") {
-      offset = skipPastSequence(xml, "?>", startOffset + 2);
-      continue;
-    }
-
-    if (next === "!") {
-      const declarationEndOffset = findMarkupDeclarationEndOffset(xml, startOffset + 2);
-      offset = declarationEndOffset >= 0 ? declarationEndOffset + 1 : xml.length;
-      continue;
-    }
-
-    if (next === "/") {
-      const tagEndOffset = findTagEndOffset(xml, startOffset + 2);
-      if (tagEndOffset < 0) return tokens;
-      const name = readTagName(xml, startOffset + 2, tagEndOffset);
-      if (name) {
-        tokens.push({
-          kind: "end",
-          name,
-          startOffset,
-          startTagEndOffset: tagEndOffset,
-          endOffset: tagEndOffset + 1,
-          selfClosing: false,
-        });
-      }
-      offset = tagEndOffset + 1;
-      continue;
-    }
-
-    const tagEndOffset = findTagEndOffset(xml, startOffset + 1);
-    if (tagEndOffset < 0) return tokens;
-    const name = readTagName(xml, startOffset + 1, tagEndOffset);
-    if (name) {
-      const selfClosing = isSelfClosingStartTag(xml, tagEndOffset);
-      tokens.push({
-        kind: "start",
-        name,
-        startOffset,
-        startTagEndOffset: tagEndOffset,
-        endOffset: selfClosing ? tagEndOffset + 1 : undefined,
-        selfClosing,
-      });
-    }
-    offset = tagEndOffset + 1;
+function openElement(
+  name: string,
+  parsedAttributes: ParsedAttribute[],
+  startOffset: number,
+  startTagEndOffset: number,
+  selfClosing: boolean,
+  state: ParserState,
+): void {
+  const parent = state.stack.at(-1);
+  if (!parent && state.root) {
+    state.errors.push(new Error(`XML document contains multiple root elements; found <${name}>.`));
   }
 
-  return tokens;
+  const attributes: Record<string, string> = {};
+  const inheritedNamespaces = state.namespaceStack.at(-1)?.namespaces ?? {};
+  const namespaces: Record<string, string> = { ...inheritedNamespaces };
+  for (const attribute of parsedAttributes) {
+    attributes[attribute.name] = attribute.value;
+    if (attribute.name === "xmlns") namespaces[""] = attribute.value;
+    else if (attribute.name.startsWith("xmlns:"))
+      namespaces[attribute.name.slice(6)] = attribute.value;
+  }
+
+  const { prefix, localName } = splitQualifiedName(name);
+  const path = nodePath(parent, localName);
+  const sourceRange: XmlSourceRange = {
+    startOffset,
+    startTagEndOffset,
+    endOffset: selfClosing ? startTagEndOffset + 1 : undefined,
+  };
+  const node: XmlNode = {
+    name,
+    localName,
+    prefix,
+    uri: namespaces[prefix ?? ""],
+    attributes,
+    children: [],
+    content: [],
+    text: "",
+    source: sourceLocation(state, startOffset, path),
+    sourceRange,
+  };
+
+  if (parent) {
+    node.parent = parent;
+    parent.children.push(node);
+    parent.content.push(node);
+  } else if (!state.root) {
+    state.root = node;
+  }
+
+  if (!selfClosing) {
+    state.stack.push(node);
+    state.namespaceStack.push({ namespaces });
+  }
 }
 
-function skipPastSequence(xml: string, sequence: string, from: number): number {
-  const endOffset = xml.indexOf(sequence, from);
-  return endOffset >= 0 ? endOffset + sequence.length : xml.length;
+function closeElement(
+  name: string,
+  startOffset: number,
+  tagEndOffset: number,
+  state: ParserState,
+): void {
+  const top = state.stack.at(-1);
+  if (!top) {
+    state.errors.push(new Error(`Unexpected closing tag </${name}>.`));
+    return;
+  }
+
+  let matchIndex = -1;
+  for (let index = state.stack.length - 1; index >= 0; index -= 1) {
+    if (state.stack[index]?.name === name) {
+      matchIndex = index;
+      break;
+    }
+  }
+
+  if (matchIndex < 0) {
+    state.errors.push(new Error(`Unexpected closing tag </${name}>; expected </${top.name}>.`));
+    return;
+  }
+
+  if (matchIndex !== state.stack.length - 1) {
+    state.errors.push(new Error(`Mismatched closing tag </${name}>; expected </${top.name}>.`));
+    while (state.stack.length - 1 > matchIndex) {
+      const unclosed = state.stack.pop();
+      state.namespaceStack.pop();
+      if (unclosed) {
+        state.errors.push(
+          new Error(`Implicitly closed <${unclosed.name}> due to mismatched tag </${name}>.`),
+        );
+      }
+    }
+  }
+
+  const node = state.stack.pop();
+  state.namespaceStack.pop();
+  if (!node) return;
+  node.sourceRange.endOffset = tagEndOffset + 1;
+  node.endSource = sourceLocation(state, startOffset, node.source.path);
+}
+
+function appendText(raw: string, state: ParserState): void {
+  appendCharacterData(decodeXmlCharacterData(raw, state), state);
+}
+
+function appendCharacterData(text: string, state: ParserState): void {
+  if (text.length === 0) return;
+  const parent = state.stack.at(-1);
+  if (parent) {
+    parent.text += text;
+    parent.content.push(text);
+    return;
+  }
+  if (text.trim().length === 0) return;
+  if (state.root)
+    state.errors.push(new Error("XML document contains content after the root element."));
+  else state.errors.push(new Error("XML document contains content before the root element."));
+}
+
+function parseAttributes(
+  xml: string,
+  from: number,
+  to: number,
+  state: ParserState,
+): ParsedAttribute[] {
+  const attributes: ParsedAttribute[] = [];
+  let offset = from;
+
+  while (offset < to) {
+    while (offset < to && /\s/.test(xml.charAt(offset))) offset += 1;
+    if (offset >= to) break;
+
+    const nameStart = offset;
+    while (offset < to) {
+      const char = xml.charAt(offset);
+      if (/\s/.test(char) || char === "=" || char === "/" || char === ">") break;
+      offset += 1;
+    }
+
+    const name = xml.slice(nameStart, offset);
+    if (!name) {
+      state.errors.push(new Error("Malformed XML attribute."));
+      offset += 1;
+      continue;
+    }
+
+    while (offset < to && /\s/.test(xml.charAt(offset))) offset += 1;
+    if (xml.charAt(offset) !== "=") {
+      state.errors.push(new Error(`Malformed XML attribute ${name}; expected =.`));
+      while (offset < to && !/\s/.test(xml.charAt(offset))) offset += 1;
+      continue;
+    }
+    offset += 1;
+    while (offset < to && /\s/.test(xml.charAt(offset))) offset += 1;
+
+    const quote = xml.charAt(offset);
+    if (quote !== '"' && quote !== "'") {
+      state.errors.push(new Error(`Malformed XML attribute ${name}; expected quoted value.`));
+      while (offset < to && !/\s/.test(xml.charAt(offset))) offset += 1;
+      continue;
+    }
+    offset += 1;
+
+    const valueStart = offset;
+    const valueEnd = xml.indexOf(quote, valueStart);
+    if (valueEnd < 0 || valueEnd > to) {
+      state.errors.push(new Error(`Unterminated XML attribute ${name}.`));
+      break;
+    }
+
+    attributes.push({
+      name,
+      value: decodeXmlCharacterData(xml.slice(valueStart, valueEnd), state),
+    });
+    offset = valueEnd + 1;
+  }
+
+  return attributes;
+}
+
+const predefinedXmlEntities: Record<string, string> = {
+  amp: "&",
+  apos: "'",
+  gt: ">",
+  lt: "<",
+  quot: '"',
+};
+
+function decodeXmlCharacterData(value: string, state: ParserState): string {
+  return value.replace(
+    /&(#x[0-9a-fA-F]+|#X[0-9a-fA-F]+|#[0-9]+|[A-Za-z][A-Za-z0-9._:-]*);/g,
+    (entity, body: string) => {
+      if (body.startsWith("#x") || body.startsWith("#X")) {
+        return decodeNumericEntity(entity, Number.parseInt(body.slice(2), 16), state);
+      }
+      if (body.startsWith("#")) {
+        return decodeNumericEntity(entity, Number.parseInt(body.slice(1), 10), state);
+      }
+      return predefinedXmlEntities[body] ?? entity;
+    },
+  );
+}
+
+function decodeNumericEntity(entity: string, codePoint: number, state: ParserState): string {
+  if (!Number.isFinite(codePoint) || !isXmlChar(codePoint)) {
+    state.errors.push(new Error(`Invalid XML character reference ${entity}.`));
+    return entity;
+  }
+  return String.fromCodePoint(codePoint);
+}
+
+function isXmlChar(codePoint: number): boolean {
+  return (
+    codePoint === 0x9 ||
+    codePoint === 0xa ||
+    codePoint === 0xd ||
+    (codePoint >= 0x20 && codePoint <= 0xd7ff) ||
+    (codePoint >= 0xe000 && codePoint <= 0xfffd) ||
+    (codePoint >= 0x10000 && codePoint <= 0x10ffff)
+  );
 }
 
 function findMarkupDeclarationEndOffset(xml: string, from: number): number {
@@ -411,27 +475,55 @@ function findTagEndOffset(xml: string, from: number): number {
 }
 
 function isSelfClosingStartTag(xml: string, tagEndOffset: number): boolean {
-  for (let index = tagEndOffset - 1; index >= 0; index -= 1) {
-    const char = xml.charAt(index);
-    if (/\s/.test(char)) continue;
-    return char === "/";
-  }
-  return false;
+  return xml.charAt(trailingSlashOffset(xml, tagEndOffset)) === "/";
 }
 
-function sourceLocation(xml: string, offset: number, path: string): XmlSourceLocation {
-  if (offset < 0) return { line: 1, column: 1, offset: 0, path };
-  let line = 1;
-  let column = 1;
-  for (let index = 0; index < offset; index += 1) {
-    if (xml.charAt(index) === "\n") {
-      line += 1;
-      column = 1;
-    } else {
-      column += 1;
-    }
+function trailingSlashOffset(xml: string, tagEndOffset: number): number {
+  for (let index = tagEndOffset - 1; index >= 0; index -= 1) {
+    if (/\s/.test(xml.charAt(index))) continue;
+    return index;
   }
-  return { line, column, offset, path };
+  return tagEndOffset;
+}
+
+function splitQualifiedName(name: string): {
+  prefix: string | undefined;
+  localName: string;
+} {
+  const separator = name.indexOf(":");
+  if (separator < 0) return { prefix: undefined, localName: name };
+  return {
+    prefix: name.slice(0, separator),
+    localName: name.slice(separator + 1),
+  };
+}
+
+function buildLineStarts(xml: string): number[] {
+  const lineStarts = [0];
+  for (let index = 0; index < xml.length; index += 1) {
+    if (xml.charAt(index) === "\n") lineStarts.push(index + 1);
+  }
+  return lineStarts;
+}
+
+function sourceLocation(state: ParserState, offset: number, path: string): XmlSourceLocation {
+  const normalizedOffset = Math.max(0, offset);
+  let low = 0;
+  let high = state.lineStarts.length - 1;
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const lineStart = state.lineStarts[middle] ?? 0;
+    if (lineStart <= normalizedOffset) low = middle + 1;
+    else high = middle - 1;
+  }
+  const lineIndex = Math.max(0, high);
+  const lineStart = state.lineStarts[lineIndex] ?? 0;
+  return {
+    line: lineIndex + 1,
+    column: normalizedOffset - lineStart + 1,
+    offset: normalizedOffset,
+    path,
+  };
 }
 
 function nodePath(parent: XmlNode | undefined, localName: string): string {

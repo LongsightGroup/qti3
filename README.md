@@ -1,7 +1,7 @@
 # qti3
 
 `qti3` is a dependency-light, framework-neutral TypeScript reference implementation for
-QTI 3 assessment items.
+QTI 3 assessment items. The core engine and CLI ship with zero third-party runtime dependencies.
 
 The project ships public releases on npm. The target is a clean, auditable item engine for
 parsing, validating, rendering, scoring, serializing, restoring, and testing QTI 3 items
@@ -114,7 +114,8 @@ node packages/cli/dist/index.js support-matrix
 - Provide an accessible, style-neutral web component player that can be embedded in any product.
 - Publish a reusable conformance test suite.
 - Load QTI package zips and assessment-test item references where useful for item-focused testing.
-- Keep dependencies as small as possible.
+- Keep dependencies as small as possible, with `qti3-core` and `qti3-cli` remaining
+  zero-third-party-runtime-dependency packages.
 - Make unsupported or invalid behavior visible through structured diagnostics.
 
 ## Non-goals
@@ -134,16 +135,16 @@ node packages/cli/dist/index.js support-matrix
 
 ## Packages
 
-| Package                              | Path                     | Purpose                                                     |
-| ------------------------------------ | ------------------------ | ----------------------------------------------------------- |
-| `@longsightgroup/qti3-core`          | `packages/core`          | Parser, typed model, validation, processing, scoring, state |
-| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                        |
-| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                  |
-| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                 |
-| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                   |
-| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                |
-| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                     |
-| `@longsightgroup/qti3-cli`           | `packages/cli`           | Validation, scoring, fixture, and support-matrix CLI        |
+| Package                              | Path                     | Purpose                                                                                         |
+| ------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `@longsightgroup/qti3-core`          | `packages/core`          | Zero-third-party-runtime-dependency parser, typed model, validation, processing, scoring, state |
+| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                                                            |
+| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                                                      |
+| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                                                     |
+| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                                                       |
+| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                    |
+| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                         |
+| `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI        |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
 inspection, validation, and item loading. The browser player intentionally renders one assessment

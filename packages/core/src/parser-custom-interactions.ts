@@ -1,3 +1,4 @@
+import { appendContentTextNode } from "./content-text.js";
 import { firstChildElement, parseCatalogInfo, parseStylesheet } from "./parser-item-metadata.js";
 import type {
   QtiContentNode,
@@ -191,7 +192,7 @@ function parseCustomMarkupChildren(
   const content: QtiContentNode[] = [];
   for (const entry of node.content) {
     if (typeof entry === "string") {
-      if (entry.length > 0) content.push({ kind: "text", text: entry, source: node.source });
+      appendContentTextNode(content, entry, node.source);
       continue;
     }
     if (options.skipChild?.(entry)) continue;
@@ -288,7 +289,7 @@ function serializeXmlContentOrUndefined(
   options?: SerializeXmlContentOptions,
 ): string | undefined {
   const content = serializeXmlContent(node, options);
-  return content.length > 0 ? content : undefined;
+  return content.trim().length > 0 ? content : undefined;
 }
 
 function serializeXmlContent(node: XmlNode, options?: SerializeXmlContentOptions): string {

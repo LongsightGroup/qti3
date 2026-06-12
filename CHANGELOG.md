@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.7.3 - 2026-06-12
+## 0.8.0 - 2026-06-12
 
 ### Added
 
@@ -14,6 +14,10 @@
 
 ### Changed
 
+- Replace the `stax-xml` runtime dependency with the dependency-free core XML parser used by
+  both item parsing and CLI package manifest parsing.
+- Document the zero third-party runtime dependency posture for core and CLI in embedded
+  delivery systems.
 - Preserve rich authored content in prompts, choice content, order choices, MathML rendering, and
   match/pair summaries.
 - Improve tabular match and directed-pair rendering with shared pair-chip/list behavior and stronger
@@ -24,11 +28,18 @@
 
 ### Fixed
 
+- Decode decimal, hexadecimal, and astral-plane XML numeric character references without throwing
+  on invalid XML character references.
 - Validate only visible adaptive responses so hidden adaptive controls do not block submission.
 - Preserve text choice accessible names when rendering rich choice content.
 - Render inline end-attempt controls correctly.
 - Fix shared-vocabulary player CSS regressions.
 - Document that non-conformant `patternMask` values are ignored.
+
+### Removed
+
+- Remove the final third-party runtime dependency from `@longsightgroup/qti3-core` and
+  `@longsightgroup/qti3-cli`.
 
 ## 0.7.2 - 2026-06-07
 
@@ -116,8 +127,6 @@
 - Fix graphic gap match drag-back-to-bank behavior and drag image correction against authored target
   images.
 - Validate and surface custom order selection messages during browser response validation.
-
-### Removed
 
 - Remove the local happy-dom adapter test harness package and related DOM-shim tests; browser-facing
   adapter behavior is now covered in Playwright.

@@ -93,9 +93,6 @@ importers:
       '@longsightgroup/qti3-fixtures':
         specifier: workspace:*
         version: link:../fixtures
-      stax-xml:
-        specifier: 0.7.0
-        version: 0.7.0
 
   packages/conformance:
     dependencies:
@@ -106,11 +103,7 @@ importers:
         specifier: workspace:*
         version: link:../fixtures
 
-  packages/core:
-    dependencies:
-      stax-xml:
-        specifier: 0.7.0
-        version: 0.7.0
+  packages/core: {}
 
   packages/fixtures:
     dependencies:
@@ -831,9 +824,6 @@ packages:
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
 
-  stax-xml@0.7.0:
-    resolution: {integrity: sha512-mcxZ+ohf7jdYflfgQtLjedjg4QD88VB2U0T999KOJhwqkuuv5UuuA7tjKPKQbv2YN2d7n8l0U+OPg+FkUwv4YA==}
-
   std-env@4.1.0:
     resolution: {integrity: sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==}
 
@@ -1441,8 +1431,6 @@ snapshots:
   source-map-js@1.2.1: {}
 
   stackback@0.0.2: {}
-
-  stax-xml@0.7.0: {}
 
   std-env@4.1.0: {}
 

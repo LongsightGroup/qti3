@@ -3,6 +3,9 @@
 Command-line tools for QTI 3 item parsing, validation, scoring, package inspection,
 fixture generation, support reporting, and release checks.
 
+The CLI has zero third-party runtime dependencies. Package manifest parsing uses the same
+dependency-free XML parser as `@longsightgroup/qti3-core`.
+
 ## Install
 
 ```sh

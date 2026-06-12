@@ -1,8 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { choiceAccessibleLabel, flatTextFromContent, normalizeFlatText } from "./content-text.js";
+import {
+  appendContentTextNode,
+  choiceAccessibleLabel,
+  flatTextFromContent,
+  normalizeFlatText,
+} from "./content-text.js";
 import type { QtiChoice, QtiContentNode } from "./types.js";
 
 describe("content-text", () => {
+  it("drops block-layout indentation whitespace from QTI content", () => {
+    const content: QtiContentNode[] = [];
+    appendContentTextNode(content, "\n  ");
+    expect(content).toEqual([]);
+  });
+
+  it("keeps inline boundary spaces that do not contain a newline", () => {
+    const content: QtiContentNode[] = [];
+    appendContentTextNode(content, "Note: The ");
+    appendContentTextNode(content, " of the layout.");
+    expect(content).toEqual([
+      { kind: "text", text: "Note: The " },
+      { kind: "text", text: " of the layout." },
+    ]);
+  });
+
+  it("ignores empty text nodes", () => {
+    const content: QtiContentNode[] = [];
+    appendContentTextNode(content, "");
+    expect(content).toEqual([]);
+  });
+
   it("normalizes whitespace in flat text", () => {
     expect(normalizeFlatText("  one   two \n three ")).toBe("one two three");
   });

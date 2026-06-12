@@ -4,7 +4,8 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 
 ## Project Goals
 
-- Build a dependency-light, TypeScript-first QTI 3 reference implementation.
+- Build a dependency-light, TypeScript-first QTI 3 reference implementation, keeping the
+  published core engine and CLI at zero third-party runtime dependencies.
 - Treat conformance, accessibility, testability, and embeddability as product requirements, not polish.
 - Keep framework adapters optional. The core implementation must not depend on Vue, React, Svelte, Angular, Lit, or any app framework.
 - Prefer explicit behavior and structured diagnostics over silent fallback behavior.
@@ -33,6 +34,9 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 ## Dependency Policy
 
 - Add dependencies only when they materially improve conformance, security, accessibility, or maintenance.
+- Keep `qti3-core` and `qti3-cli` zero-third-party-runtime-dependency packages. Treat any
+  third-party runtime dependency addition to either package as an exceptional design decision
+  requiring explicit documented review.
 - Keep `qti3-core` free of UI, browser framework, alert, editor, HTTP, and drag/drop dependencies.
 - Prefer browser-native APIs and small explicit adapters.
 - Make integrations optional packages, not core requirements.
@@ -66,7 +70,8 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 - Keep core tests DOM-free.
 - Add Playwright and axe-core coverage for browser-facing behavior.
 - Enforce accessibility with semantic assertions, not only screenshot comparison or axe-core scans.
-- Do not add dependencies to `qti3-core` without documented rationale.
+- Do not add third-party runtime dependencies to `qti3-core` or `qti3-cli` without documented
+  rationale and explicit dependency-policy review.
 - Shared vocabulary classes with an enforced support level (`isEnforcedSharedVocabularyLevel` in `packages/core`) must be validated by `tests/browser/shared-vocabulary-matrix/coverage-policy.ts` and `tests/browser/player-shared-vocabulary.spec.ts`. Prefer a direct matrix fixture for each supported class. Generated stylesheet families may use representative matrix cases only when `sharedVocabularyMatrixCoverageFamilies` in `packages/core/src/shared-vocabulary-generated-families.ts` names the family, lists representative covered classes, and explains the rationale. Conditional classes should have direct matrix coverage unless they are explicitly documented as a generated family exception.
 
 ## Testing Rules

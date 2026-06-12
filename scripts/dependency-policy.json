@@ -43,8 +43,7 @@
         "@longsightgroup/qti3-a11y": "workspace:*",
         "@longsightgroup/qti3-conformance": "workspace:*",
         "@longsightgroup/qti3-core": "workspace:*",
-        "@longsightgroup/qti3-fixtures": "workspace:*",
-        "stax-xml": "0.7.0"
+        "@longsightgroup/qti3-fixtures": "workspace:*"
       },
       "devDependencies": {}
     },
@@ -56,9 +55,7 @@
       "devDependencies": {}
     },
     "packages/core": {
-      "dependencies": {
-        "stax-xml": "0.7.0"
-      },
+      "dependencies": {},
       "devDependencies": {}
     },
     "packages/fixtures": {
@@ -228,7 +225,6 @@
     "siginfo@2.0.0",
     "source-map-js@1.2.1",
     "stackback@0.0.2",
-    "stax-xml@0.7.0",
     "std-env@4.1.0",
     "tinybench@2.9.0",
     "tinyexec@1.1.2",

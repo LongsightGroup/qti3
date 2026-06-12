@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-cli",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "Command-line tools for parsing, validating, scoring, inspecting, and checking QTI 3 items.",
   "keywords": [
     "assessment",
@@ -54,7 +54,6 @@
     "@longsightgroup/qti3-a11y": "workspace:*",
     "@longsightgroup/qti3-conformance": "workspace:*",
     "@longsightgroup/qti3-core": "workspace:*",
-    "@longsightgroup/qti3-fixtures": "workspace:*",
-    "stax-xml": "0.7.0"
+    "@longsightgroup/qti3-fixtures": "workspace:*"
   }
 }

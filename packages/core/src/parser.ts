@@ -1,4 +1,4 @@
-import { flatTextFromContent } from "./content-text.js";
+import { appendContentTextNode, flatTextFromContent } from "./content-text.js";
 import {
   parseOutcomeDeclaration,
   parseResponseDeclaration,
@@ -222,7 +222,7 @@ function parseContentChildren(
   const content: QtiContentNode[] = [];
   for (const entry of node.content) {
     if (typeof entry === "string") {
-      if (entry.length > 0) content.push({ kind: "text", text: entry, source: node.source });
+      appendContentTextNode(content, entry, node.source);
       continue;
     }
     const parsed = parseContentNode(entry, diagnostics, responseDeclarationMap, interactions);

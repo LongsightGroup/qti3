@@ -18,33 +18,27 @@ import {
   elementSupport,
   interactionSupport,
   itemMetadataSupport,
+  parseQtiPackageXmlTree,
   parseQtiXml,
   processingSupport,
   isEnforcedSharedVocabularyLevel,
   sharedVocabularyClassSupport,
   validateAssessmentItem,
+  type QtiPackageXmlNode,
   type QtiDiagnostic,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
-import { StaxXmlParserSync, XmlEventType } from "stax-xml";
 
 interface ZipEntry {
   name: string;
   bytes: Uint8Array;
 }
 
-interface PackageXmlNode {
-  localName: string;
-  attributes: Record<string, string>;
-  children: PackageXmlNode[];
-  text: string;
-}
-
 interface PackageXmlFile {
   path: string;
   xml: string;
-  root: PackageXmlNode | undefined;
+  root: QtiPackageXmlNode | undefined;
   errors: string[];
 }
 
@@ -881,61 +875,19 @@ function zipEntryBytes(
 
 function parsePackageXml(entry: ZipEntry): PackageXmlFile {
   const xml = new TextDecoder().decode(entry.bytes);
-  const parsed = parsePackageXmlTree(xml);
+  const parsed = parseQtiPackageXmlTree(xml);
   return { path: entry.name, xml, root: parsed.root, errors: parsed.errors };
 }
 
-function parsePackageXmlTree(xml: string): {
-  root: PackageXmlNode | undefined;
-  errors: string[];
-} {
-  const parser = new StaxXmlParserSync(xml, { autoDecodeEntities: true });
-  const stack: PackageXmlNode[] = [];
-  const errors: string[] = [];
-  let root: PackageXmlNode | undefined;
-
-  for (const event of parser) {
-    if (event.type === XmlEventType.ERROR) {
-      errors.push(event.error.message);
-      continue;
-    }
-    if (event.type === XmlEventType.END_ELEMENT) {
-      stack.pop();
-      continue;
-    }
-    if (event.type === XmlEventType.CHARACTERS || event.type === XmlEventType.CDATA) {
-      const parent = stack.at(-1);
-      if (parent) parent.text += event.value;
-      continue;
-    }
-    if (event.type !== XmlEventType.START_ELEMENT) {
-      continue;
-    }
-
-    const node: PackageXmlNode = {
-      localName: event.localName ?? event.name,
-      attributes: event.attributes,
-      children: [],
-      text: "",
-    };
-    const parent = stack.at(-1);
-    if (parent) parent.children.push(node);
-    else root = node;
-    stack.push(node);
-  }
-
-  return { root, errors };
-}
-
 function assessmentItemRefs(xmlFile: PackageXmlFile): string[] {
-  return descendants(xmlFile.root, "qti-assessment-item-ref")
+  return packageDescendants(xmlFile.root, "qti-assessment-item-ref")
     .map((node) => node.attributes.href ?? "")
     .filter(Boolean)
     .map((href) => resolvePackageHref(xmlFile.path, href));
 }
 
 function manifestItemResources(xmlFile: PackageXmlFile): string[] {
-  return descendants(xmlFile.root, "resource")
+  return packageDescendants(xmlFile.root, "resource")
     .filter((node) => isQtiItemResource(node.attributes.type ?? ""))
     .map((node) => resourceHref(node))
     .filter(Boolean)
@@ -943,7 +895,7 @@ function manifestItemResources(xmlFile: PackageXmlFile): string[] {
 }
 
 function manifestFileReferences(xmlFile: PackageXmlFile): string[] {
-  return descendants(xmlFile.root, "file")
+  return packageDescendants(xmlFile.root, "file")
     .map((node) => node.attributes.href ?? "")
     .filter(Boolean)
     .map((href) => resolvePackageHref(xmlFile.path, href));
@@ -970,7 +922,7 @@ function collectPackageRelativeAttributeRefs(
   localName: string,
   attribute: string,
 ): void {
-  for (const node of descendants(xmlFile.root, localName)) {
+  for (const node of packageDescendants(xmlFile.root, localName)) {
     const href = node.attributes[attribute];
     if (isPackageRelativeHref(href)) refs.push(resolvePackageHref(xmlFile.path, href.trim()));
   }
@@ -981,7 +933,7 @@ function collectPackageRelativeTextRefs(
   xmlFile: PackageXmlFile,
   localName: string,
 ): void {
-  for (const node of descendants(xmlFile.root, localName)) {
+  for (const node of packageDescendants(xmlFile.root, localName)) {
     const href = node.text.trim();
     if (isPackageRelativeHref(href)) refs.push(resolvePackageHref(xmlFile.path, href));
   }
@@ -1059,10 +1011,10 @@ function isQtiItemResource(type: string): boolean {
   return type.toLowerCase().startsWith("imsqti_item_xmlv3p0");
 }
 
-function resourceHref(resource: PackageXmlNode): string {
+function resourceHref(resource: QtiPackageXmlNode): string {
   const href = resource.attributes.href;
   if (href) return href;
-  const file = descendants(resource, "file").find((node) => {
+  const file = packageDescendants(resource, "file").find((node) => {
     return (node.attributes.href ?? "").toLowerCase().endsWith(".xml");
   });
   return file?.attributes.href ?? "";
@@ -1073,12 +1025,15 @@ function resolvePackageHref(from: string, href: string): string {
   return resolveRelativePath(from, path);
 }
 
-function descendants(node: PackageXmlNode | undefined, localName: string): PackageXmlNode[] {
+function packageDescendants(
+  node: QtiPackageXmlNode | undefined,
+  localName: string,
+): QtiPackageXmlNode[] {
   if (!node) return [];
-  const found: PackageXmlNode[] = [];
+  const found: QtiPackageXmlNode[] = [];
   for (const child of node.children) {
     if (child.localName === localName) found.push(child);
-    found.push(...descendants(child, localName));
+    found.push(...packageDescendants(child, localName));
   }
   return found;
 }

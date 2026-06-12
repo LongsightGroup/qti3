@@ -376,6 +376,72 @@ describe("@longsightgroup/qti3-core", () => {
     );
   });
 
+  it("decodes numeric entities in MathML while preserving literal entity text fallbacks", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mathml-entities" title="mathml-entities" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+            <qti-simple-choice identifier="A"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>&#937;</mi><mo>+</mo><mi>&#x3A9;</mi></mrow></math></qti-simple-choice>
+            <qti-simple-choice identifier="B"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>&amp;#x398;</mi></mrow></math></qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const choices = result.document?.item.interactions[0]?.choices;
+    expect(choices?.[0]).toMatchObject({
+      identifier: "A",
+      text: "Ω + Ω",
+    });
+    expect(choices?.[1]).toMatchObject({
+      identifier: "B",
+      text: "&#x398;",
+    });
+
+    const firstMath = choices?.[0]?.content?.[0];
+    const secondMath = choices?.[1]?.content?.[0];
+    expect(firstMath).toMatchObject({ kind: "element", qtiName: "math" });
+    expect(secondMath).toMatchObject({ kind: "element", qtiName: "math" });
+    expect(firstMath?.kind === "element" ? firstMath.children : []).toEqual([
+      expect.objectContaining({
+        kind: "element",
+        qtiName: "mrow",
+        children: [
+          expect.objectContaining({
+            kind: "element",
+            qtiName: "mi",
+            children: [expect.objectContaining({ kind: "text", text: "Ω" })],
+          }),
+          expect.objectContaining({
+            kind: "element",
+            qtiName: "mo",
+            children: [expect.objectContaining({ kind: "text", text: "+" })],
+          }),
+          expect.objectContaining({
+            kind: "element",
+            qtiName: "mi",
+            children: [expect.objectContaining({ kind: "text", text: "Ω" })],
+          }),
+        ],
+      }),
+    ]);
+    expect(secondMath?.kind === "element" ? secondMath.children : []).toEqual([
+      expect.objectContaining({
+        kind: "element",
+        qtiName: "mrow",
+        children: [
+          expect.objectContaining({
+            kind: "element",
+            qtiName: "mi",
+            children: [expect.objectContaining({ kind: "text", text: "&#x398;" })],
+          }),
+        ],
+      }),
+    ]);
+  });
+
   it("keeps serialized attempt state detached from live session internals", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-contract" title="state-contract" time-dependent="false">
@@ -642,6 +708,27 @@ describe("@longsightgroup/qti3-core", () => {
         kind: "text",
         text: " of the layout of the drivers should be vertical.",
       }),
+    ]);
+  });
+
+  it("drops inter-block indentation from item body while preserving inline spaces", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="block-indent" title="block-indent" time-dependent="false">
+        <qti-item-body>
+          <p>First paragraph.</p>
+          <p>Second paragraph.</p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const body = result.document?.item.body ?? [];
+
+    expect(body.every((node) => node.kind !== "text")).toBe(true);
+    expect(body).toHaveLength(2);
+    expect(body.map((node) => (node.kind === "element" ? node.qtiName : node.kind))).toEqual([
+      "p",
+      "p",
     ]);
   });
 

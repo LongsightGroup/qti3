@@ -2,9 +2,9 @@
 
 Framework-neutral TypeScript core for QTI 3 assessment items.
 
-This package handles parsing, validation, response processing, scoring, support metadata,
-and serialized attempt state. It does not render UI and does not depend on a browser
-framework.
+This package handles dependency-free XML parsing, validation, response processing, scoring,
+support metadata, and serialized attempt state. It has zero third-party runtime dependencies,
+does not render UI, and does not depend on a browser framework.
 
 ## Install
 
@@ -61,16 +61,16 @@ tables, response/outcome/template declaration default values, response processin
 authored feedback subtrees. It also reports secure-delivery v1 blockers such as
 template processing, set-correct-response, and adaptive response processing.
 
-String-range redaction aligns a private XML tag scan to the same stax parse tree used by
-`parseQtiXml`. Alignment failures are reported as `xml.parse` error diagnostics; hosts
-must treat those diagnostics, `parseQtiXml().ok === false`, and
-`buildQtiDeliverySafeXml().ok === false` as non-deliverable. The redacted output is
+String-range redaction uses the same dependency-free XML parser as `parseQtiXml`, with
+source ranges recorded during parsing. XML parse failures are reported as `xml.parse`
+error diagnostics; hosts must treat those diagnostics, `parseQtiXml().ok === false`,
+and `buildQtiDeliverySafeXml().ok === false` as non-deliverable. The redacted output is
 re-analyzed before `ok` is returned, but hosts should still treat redacted XML as
 untrusted presentation input.
 
-The scanner adds a second full pass over each XML string. That is acceptable for
-item-scale delivery and scoring, but package-level batch redaction should treat XML
-parsing as a hot path if whole packages are processed repeatedly.
+The parser does not resolve external entities, process DTD entity declarations, or access
+the network or filesystem. Unknown named entities are preserved verbatim, and numeric
+character references expand to at most one valid XML character.
 
 Candidate-safe XML is not a full content audit. It does not remove solution text an
 author wrote directly into the item body, and it does not validate Portable Custom

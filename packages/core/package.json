@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-core",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "Framework-neutral TypeScript core for parsing, validating, scoring, and serializing QTI 3 assessment items.",
   "keywords": [
     "assessment",
@@ -46,8 +46,5 @@
   },
   "scripts": {
     "prepublishOnly": "pnpm --dir ../.. release:check"
-  },
-  "dependencies": {
-    "stax-xml": "0.7.0"
   }
 }
