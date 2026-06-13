@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.test.ts", "src/**/*.fixtures.ts", "src/interaction-test-fixtures.ts"],
+  "references": [{ "path": "./tsconfig.json" }]
+}

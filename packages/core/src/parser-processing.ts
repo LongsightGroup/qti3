@@ -1,4 +1,5 @@
 import { coerceValue, parseCoords, parseShape } from "./parser-values.js";
+import { responseConditionsFromRules } from "./processing-rules.js";
 import type {
   QtiLookupOutcomeValue,
   QtiProcessingExpression,
@@ -15,10 +16,11 @@ export function parseResponseProcessing(
   node: XmlNode | undefined,
 ): QtiResponseProcessing | undefined {
   if (!node) return undefined;
+  const rules = parseResponseRules(node);
   return {
     template: node.attributes.template,
-    rules: parseResponseRules(node),
-    conditions: responseConditionsFromChildren(node),
+    rules,
+    conditions: responseConditionsFromRules(rules),
   };
 }
 
@@ -113,16 +115,6 @@ function parseTemplateRule(node: XmlNode): QtiTemplateRule | undefined {
   }
 
   return undefined;
-}
-
-function responseConditionsFromChildren(node: XmlNode): QtiResponseCondition[] {
-  return childElements(node).flatMap((child) => {
-    if (child.localName === "qti-response-condition") return [parseResponseCondition(child)];
-    if (child.localName === "qti-response-processing-fragment") {
-      return responseConditionsFromChildren(child);
-    }
-    return [];
-  });
 }
 
 function parseResponseCondition(node: XmlNode): QtiResponseCondition {

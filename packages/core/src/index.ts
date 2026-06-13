@@ -27,6 +27,10 @@ export {
   type QtiServerScoringResult,
 } from "./server-scoring.js";
 export {
+  serializeResponseProcessing,
+  type QtiSerializeResponseProcessingResult,
+} from "./serializer-processing.js";
+export {
   createTextToSpeechTraversal,
   parseQtiDataSsml,
   validateQtiDataSsmlMetadata,

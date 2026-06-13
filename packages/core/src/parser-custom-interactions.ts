@@ -11,7 +11,7 @@ import type {
   QtiPortableCustomInteractionModules,
   QtiPortableCustomVariableBinding,
 } from "./types.js";
-import { childElements, type XmlNode } from "./xml.js";
+import { childElements, escapeXmlAttribute, escapeXmlText, type XmlNode } from "./xml.js";
 
 export type QtiInteractionElementPredicate = (node: XmlNode) => boolean;
 
@@ -306,12 +306,4 @@ function serializeXmlNode(node: XmlNode): string {
     .join("");
   if (node.content.length === 0) return `<${node.name}${attributes}/>`;
   return `<${node.name}${attributes}>${serializeXmlContent(node)}</${node.name}>`;
-}
-
-function escapeXmlText(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-}
-
-function escapeXmlAttribute(value: string): string {
-  return escapeXmlText(value).replaceAll('"', "&quot;");
 }
