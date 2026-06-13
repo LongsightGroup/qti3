@@ -362,19 +362,35 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
       ),
     ),
   ),
-  entry("order-choices-left-width", "order", "qti-choices-left", "full", [
-    { type: "class-preserved", selector: `${player} .qti3-order`, className: "qti-choices-left" },
-    { type: "attribute", selector: orderLayout, name: "data-qti-choices-position", value: "left" },
-    { type: "dom-order", firstSelector: orderBank, secondSelector: orderTargets, order: "before" },
-    { type: "layout-width", selector: orderBank, expected: 180, tolerance: 4 },
-    {
-      type: "position",
-      firstSelector: orderBank,
-      secondSelector: orderTargets,
-      axis: "x",
-      relation: "less-than",
-    },
-  ]),
+  entry(
+    "order-choices-left-width",
+    "order",
+    ["qti-choices-left", "data-choices-container-width"],
+    "full",
+    [
+      { type: "class-preserved", selector: `${player} .qti3-order`, className: "qti-choices-left" },
+      {
+        type: "attribute",
+        selector: orderLayout,
+        name: "data-qti-choices-position",
+        value: "left",
+      },
+      {
+        type: "dom-order",
+        firstSelector: orderBank,
+        secondSelector: orderTargets,
+        order: "before",
+      },
+      { type: "layout-width", selector: orderBank, expected: 180, tolerance: 4 },
+      {
+        type: "position",
+        firstSelector: orderBank,
+        secondSelector: orderTargets,
+        axis: "x",
+        relation: "less-than",
+      },
+    ],
+  ),
   entry("order-orientation-vertical", "order", "qti-orientation-vertical", "full", [
     {
       type: "class-preserved",
@@ -707,19 +723,25 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
       className: "qti-choices-right",
     }),
   ),
-  entry("match-tabular-first-column-header", "match", "qti-match-tabular", "full", [
-    { type: "class-preserved", selector: matchRoot, className: "qti-match-tabular" },
-    {
-      type: "text",
-      selector: `${player} .qti3-match-table thead th:first-child`,
-      value: "Characters",
-    },
-    {
-      type: "text",
-      selector: `${player} .qti3-match-table tbody tr:first-child th`,
-      value: "Capulet.",
-    },
-  ]),
+  entry(
+    "match-tabular-first-column-header",
+    "match",
+    ["qti-match-tabular", "data-first-column-header"],
+    "full",
+    [
+      { type: "class-preserved", selector: matchRoot, className: "qti-match-tabular" },
+      {
+        type: "text",
+        selector: `${player} .qti3-match-table thead th:first-child`,
+        value: "Characters",
+      },
+      {
+        type: "text",
+        selector: `${player} .qti3-match-table tbody tr:first-child th`,
+        value: "Capulet.",
+      },
+    ],
+  ),
   entry(
     "match-tabular-header-hidden",
     "match",

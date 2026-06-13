@@ -1,5 +1,6 @@
 import {
   inputWidthFromAttributes,
+  parsePositiveNumber,
   parseSharedVocabularyClasses,
   SHARED_VOCABULARY_CHOICES_POSITIONS,
   SHARED_VOCABULARY_LABEL_STYLES,
@@ -124,7 +125,7 @@ export function sharedVocabularyChoicesLayout(
   if (choicesPosition === undefined) return undefined;
 
   const layout: SharedVocabularyChoicesLayout = { choicesPosition };
-  const width = positivePixelValue(interaction.attributes["data-choices-container-width"]);
+  const width = parsePositiveNumber(interaction.attributes["data-choices-container-width"]);
   if (width !== undefined) layout.choicesContainerWidth = width;
   return layout;
 }
@@ -192,10 +193,4 @@ function cjkIdeographicLabels(): string[] {
     const ones = value % 10;
     return `${digits[tens]}十${digits[ones]}`;
   });
-}
-
-function positivePixelValue(value: string | undefined): number | undefined {
-  if (value === undefined) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }

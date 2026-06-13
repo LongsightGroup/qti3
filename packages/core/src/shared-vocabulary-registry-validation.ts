@@ -3,6 +3,7 @@ import {
   formatSharedVocabularyClassValueRange,
   matchedSharedVocabularyClassNames,
   parseClassValue,
+  parseSharedVocabularyAttributes,
   sharedVocabularyFieldById,
   sharedVocabularyFieldsForInteraction,
   sharedVocabularyFixedClassName,
@@ -130,16 +131,18 @@ export function validateChoicesContainerWidthSharedVocabulary(
 ): void {
   const width = interaction.attributes["data-choices-container-width"];
   if (width === undefined) return;
-  const parsed = Number(width);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    diagnostics.push({
-      code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
-      severity: "warning",
-      message: `${interaction.qtiName} data-choices-container-width must be a positive pixel value; the invalid value is ignored at runtime.`,
-      path: interaction.source?.path,
-      source: interaction.source,
-    });
-  }
+  const parsed = parseSharedVocabularyAttributes(
+    { "data-choices-container-width": width },
+    interaction.type,
+  )["choices-container-width"];
+  if (parsed !== undefined) return;
+  diagnostics.push({
+    code: "interaction.sharedVocabulary.orderChoicesContainerWidth",
+    severity: "warning",
+    message: `${interaction.qtiName} data-choices-container-width must be a positive pixel value; the invalid value is ignored at runtime.`,
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
 }
 
 export function validateMatchInteractionSharedVocabulary(

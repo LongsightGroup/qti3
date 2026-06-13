@@ -163,6 +163,78 @@ function registryClassFixedSupportEntries(): SharedVocabularyClassSupport[] {
   });
 }
 
+function registryAttributeSupportProfile(fieldId: string): {
+  fixtures: string[];
+  tests: string[];
+  notes?: string;
+} {
+  switch (fieldId) {
+    case "choices-container-width":
+      return {
+        fixtures: sharedVocabularyFixture,
+        tests: [
+          "packages/core/src/core.test.ts",
+          "packages/player/src/interactions/shared-vocabulary.test.ts",
+          ...browserBehaviorTests,
+          ...graphicBrowserTests,
+        ],
+        notes:
+          "Sets the authored choices-bank width for interactions that support qti-choices-* layout classes.",
+      };
+    case "first-column-header":
+      return {
+        fixtures: sharedVocabularyFixture,
+        tests: [
+          "packages/core/src/core.test.ts",
+          ...browserBehaviorTests,
+          "tests/browser/player-keyboard-a11y.spec.ts",
+        ],
+        notes: "Provides the top-left header text for qti-match-tabular table rendering.",
+      };
+    case "media-player-controls":
+      return {
+        fixtures: [mediaPlayerFixture],
+        tests: [...mediaBrowserTests, "packages/core/src/shared-vocabulary-validation.test.ts"],
+        notes:
+          "Supports tokens none, default, play, rewind, captions, and audioDescription on media interactions and rendered media assets.",
+      };
+    case "media-player-pause-delay":
+      return {
+        fixtures: [mediaPlayerFixture],
+        tests: mediaBrowserTests,
+        notes:
+          "Reflects authored pause-delay values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
+      };
+    case "media-player-pause-duration":
+      return {
+        fixtures: [mediaPlayerFixture],
+        tests: mediaBrowserTests,
+        notes:
+          "Reflects authored pause-duration values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
+      };
+    default:
+      return {
+        fixtures: sharedVocabularyFixture,
+        tests: [...sharedVocabularyUnitTests, ...browserBehaviorTests],
+      };
+  }
+}
+
+function registryAttributeSupportEntries(): SharedVocabularyClassSupport[] {
+  return sharedVocabularyInteractionFields.flatMap((field) => {
+    if (field.kind !== "attribute") return [];
+    const profile = registryAttributeSupportProfile(field.id);
+    return [
+      svEntry(field.attributeName, "interaction", "full", {
+        interactions: [...field.interactions],
+        fixtures: profile.fixtures,
+        tests: profile.tests,
+        ...(profile.notes === undefined ? {} : { notes: profile.notes }),
+      }),
+    ];
+  });
+}
+
 function svEntry(
   className: string,
   scope: SharedVocabularyClassSupport["scope"],
@@ -208,19 +280,6 @@ function interactionStylesheetEntry(
   return svEntry(className, "interaction", "stylesheet", {
     interactions: [...interactions],
     fixtures: sharedVocabularyFixture,
-    tests,
-    notes,
-  });
-}
-
-function mediaPlayerSvEntry(
-  className: string,
-  notes: string,
-  tests: string[] = mediaBrowserTests,
-): SharedVocabularyClassSupport {
-  return svEntry(className, "interaction", "full", {
-    interactions: ["media"],
-    fixtures: [mediaPlayerFixture],
     tests,
     notes,
   });
@@ -285,6 +344,7 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
 
   ...registryClassValueSupportEntries(),
   ...registryClassFixedSupportEntries(),
+  ...registryAttributeSupportEntries(),
   svEntry("data-min-selections-message", "interaction", "full", {
     interactions: ["order"],
     fixtures: [orderMinMaxMessagesFixture],
@@ -352,18 +412,5 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
         ...browserBehaviorTests,
       ],
     ),
-  ),
-  mediaPlayerSvEntry(
-    "data-qti-media-player-controls",
-    "Supports tokens none, default, play, rewind, captions, and audioDescription on media interactions and rendered media assets.",
-    [...mediaBrowserTests, "packages/core/src/shared-vocabulary-validation.test.ts"],
-  ),
-  mediaPlayerSvEntry(
-    "data-qti-media-player-pause-delay",
-    "Reflects authored pause-delay values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
-  ),
-  mediaPlayerSvEntry(
-    "data-qti-media-player-pause-duration",
-    "Reflects authored pause-duration values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
   ),
 ];

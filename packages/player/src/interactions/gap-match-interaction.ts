@@ -1,4 +1,9 @@
-import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import {
+  parsePositiveNumber,
+  type QtiChoice,
+  type QtiInteraction,
+  type QtiValue,
+} from "@longsightgroup/qti3-core";
 import {
   applyGraphicSurfaceLayout,
   appendGraphicObjectImage,
@@ -38,11 +43,6 @@ import {
   sharedVocabularyChoicesLayout,
 } from "./shared-vocabulary.js";
 
-function positivePixelValue(value: string | undefined): number | undefined {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
-
 function graphicGapLabelBlockSize(sources: QtiChoice[]): number {
   const maxLength = Math.max(
     0,
@@ -53,7 +53,7 @@ function graphicGapLabelBlockSize(sources: QtiChoice[]): number {
   const imageBlockSize = Math.max(
     0,
     ...sources.map((source) => {
-      const height = positivePixelValue(source.asset?.height);
+      const height = parsePositiveNumber(source.asset?.height);
       return height === undefined ? 0 : height / 16 + 0.9;
     }),
   );
@@ -67,8 +67,8 @@ function isGraphicGapImageChoice(choice: QtiChoice): boolean {
 function graphicGapImageFitsRectHotspot(assigned: QtiChoice, gap: QtiChoice): boolean {
   const bounds = hotspotRectBounds(gap);
   if (!bounds || !isGraphicGapImageChoice(assigned)) return false;
-  const imageWidth = positivePixelValue(assigned.asset?.width);
-  const imageHeight = positivePixelValue(assigned.asset?.height);
+  const imageWidth = parsePositiveNumber(assigned.asset?.width);
+  const imageHeight = parsePositiveNumber(assigned.asset?.height);
   return (
     imageWidth !== undefined &&
     imageHeight !== undefined &&

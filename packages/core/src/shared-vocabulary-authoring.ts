@@ -28,6 +28,12 @@ export type QtiSharedVocabularyState = Record<string, QtiSharedVocabularyStateVa
 
 export type QtiSharedVocabularyAttributeValueType = "string" | "number" | "token-list";
 
+export function parsePositiveNumber(value: string | undefined): number | undefined {
+  if (value === undefined || value === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export type QtiSharedVocabularyField =
   | {
       kind: "class-value";
@@ -51,6 +57,7 @@ export type QtiSharedVocabularyField =
       values?: readonly string[] | undefined;
       valueType?: QtiSharedVocabularyAttributeValueType | undefined;
       numberMinimum?: number | undefined;
+      numberExclusiveMinimum?: number | undefined;
     };
 
 const choiceAndOrder = SHARED_VOCABULARY_CHOICE_AND_ORDER_INTERACTIONS;
@@ -144,6 +151,20 @@ export const sharedVocabularyInteractionFields: readonly QtiSharedVocabularyFiel
     id: "gap-placement",
     className: "qti-gap-placement",
     interactions: ["gapMatch"],
+  },
+  {
+    kind: "attribute",
+    id: "choices-container-width",
+    attributeName: "data-choices-container-width",
+    valueType: "number",
+    numberExclusiveMinimum: 0,
+    interactions: choicesLayoutInteractions,
+  },
+  {
+    kind: "attribute",
+    id: "first-column-header",
+    attributeName: "data-first-column-header",
+    interactions: ["match"],
   },
   {
     kind: "attribute",
@@ -361,8 +382,7 @@ function parseAttributeValue(
 
   if (field.valueType === "number") {
     const parsed = Number(value);
-    const minimum = field.numberMinimum ?? Number.NEGATIVE_INFINITY;
-    return Number.isFinite(parsed) && parsed >= minimum ? parsed : undefined;
+    return isValidRegistryNumber(field, parsed) ? parsed : undefined;
   }
 
   if (field.values !== undefined && !field.values.includes(value)) return undefined;
@@ -382,14 +402,23 @@ function serializeAttributeValue(
 
   if (field.valueType === "number") {
     if (typeof value !== "number") return undefined;
-    const minimum = field.numberMinimum ?? Number.NEGATIVE_INFINITY;
-    return Number.isFinite(value) && value >= minimum ? String(value) : undefined;
+    return isValidRegistryNumber(field, value) ? String(value) : undefined;
   }
 
   if (typeof value !== "string" && typeof value !== "number") return undefined;
   const serialized = String(value);
   if (field.values !== undefined && !field.values.includes(serialized)) return undefined;
   return serialized;
+}
+
+function isValidRegistryNumber(
+  field: Extract<QtiSharedVocabularyField, { kind: "attribute" }>,
+  value: number,
+): boolean {
+  if (!Number.isFinite(value)) return false;
+  const minimum = field.numberMinimum ?? Number.NEGATIVE_INFINITY;
+  const exclusiveMinimum = field.numberExclusiveMinimum;
+  return value >= minimum && (exclusiveMinimum === undefined || value > exclusiveMinimum);
 }
 
 function isAllowedFieldValue(

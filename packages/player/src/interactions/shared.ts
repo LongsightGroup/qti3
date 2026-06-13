@@ -1,12 +1,11 @@
-import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
+import {
+  parsePositiveNumber,
+  type QtiChoice,
+  type QtiInteraction,
+} from "@longsightgroup/qti3-core";
 import { renderStaticContentNodes } from "../content/content-renderer.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionChoices } from "../interaction-support.js";
-
-function positivePixelValue(value: string | undefined): number | undefined {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
-}
 
 export function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
   const region = document.createElement("div");
@@ -48,8 +47,8 @@ export function choiceVisualNodes(choice: QtiChoice): Node[] {
     image.src = choice.asset.data;
     image.alt = "";
     image.draggable = false;
-    const width = positivePixelValue(choice.asset.width);
-    const height = positivePixelValue(choice.asset.height);
+    const width = parsePositiveNumber(choice.asset.width);
+    const height = parsePositiveNumber(choice.asset.height);
     if (width !== undefined) image.width = width;
     if (height !== undefined) image.height = height;
     return [image];

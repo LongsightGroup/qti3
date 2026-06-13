@@ -77,6 +77,7 @@ export {
   formatSharedVocabularyClassValueRange,
   matchedSharedVocabularyClassNames,
   parseClassValue,
+  parsePositiveNumber,
   parseSharedVocabularyAttributes,
   parseSharedVocabularyClasses,
   serializeSharedVocabularyAttributes,

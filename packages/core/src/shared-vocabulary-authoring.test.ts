@@ -25,6 +25,8 @@ const issueFieldIds = [
   "match-tabular",
   "header-hidden",
   "gap-placement",
+  "choices-container-width",
+  "first-column-header",
   "media-player-controls",
   "media-player-pause-delay",
   "media-player-pause-duration",
@@ -78,6 +80,12 @@ describe("shared vocabulary authoring", () => {
       "unselected-hidden",
     ]);
     expect(choiceFieldIds).not.toContain("match-tabular");
+    expect(sharedVocabularyFieldsForInteraction("match").map((field) => field.id)).toContain(
+      "first-column-header",
+    );
+    expect(sharedVocabularyFieldsForInteraction("choice").map((field) => field.id)).not.toContain(
+      "first-column-header",
+    );
   });
 
   it("round-trips every class value and fixed class field", () => {
@@ -110,6 +118,34 @@ describe("shared vocabulary authoring", () => {
       "data-qti-media-player-pause-duration": "1.5",
     });
     expect(parseSharedVocabularyAttributes(attrs, "media")).toEqual(state);
+  });
+
+  it("round-trips choices layout and tabular match shared vocabulary attributes", () => {
+    expect(
+      serializeSharedVocabularyAttributes(
+        {
+          "choices-container-width": 160,
+          "first-column-header": "Source",
+        },
+        "match",
+      ),
+    ).toEqual({
+      "data-choices-container-width": "160",
+      "data-first-column-header": "Source",
+    });
+
+    expect(
+      parseSharedVocabularyAttributes(
+        {
+          "data-choices-container-width": "160",
+          "data-first-column-header": "Source",
+        },
+        "match",
+      ),
+    ).toEqual({
+      "choices-container-width": 160,
+      "first-column-header": "Source",
+    });
   });
 
   it("describes registry precedence for value-order and class-order fields", () => {
@@ -172,12 +208,56 @@ describe("shared vocabulary authoring", () => {
     expect(
       serializeSharedVocabularyAttributes(
         {
+          "choices-container-width": 0,
+        },
+        "match",
+      ),
+    ).toEqual({});
+
+    expect(
+      serializeSharedVocabularyAttributes(
+        {
           "media-player-controls": ["play", "speed", "captions"],
           "media-player-pause-delay": -1,
         },
         "media",
       ),
     ).toEqual({ "data-qti-media-player-controls": "play captions" });
+  });
+
+  it("rejects invalid choices-container-width attribute values during parse", () => {
+    expect(
+      parseSharedVocabularyAttributes(
+        {
+          "data-choices-container-width": "0",
+        },
+        "match",
+      ),
+    ).toEqual({});
+    expect(
+      parseSharedVocabularyAttributes(
+        {
+          "data-choices-container-width": "-1",
+        },
+        "order",
+      ),
+    ).toEqual({});
+    expect(
+      parseSharedVocabularyAttributes(
+        {
+          "data-choices-container-width": "wide",
+        },
+        "gapMatch",
+      ),
+    ).toEqual({});
+    expect(
+      parseSharedVocabularyAttributes(
+        {
+          "data-choices-container-width": "",
+        },
+        "graphicGapMatch",
+      ),
+    ).toEqual({});
   });
 
   it("parses only supported attributes and tokens", () => {
