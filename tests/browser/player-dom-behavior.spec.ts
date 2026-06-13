@@ -141,7 +141,9 @@ test.describe("player DOM behavior", () => {
     await expect(player.locator(".qti3-embedded-interaction-unsupported")).toHaveCount(0);
     const alert = player.locator("p > .qti3-unsupported-interaction");
     await expect(alert).toHaveAttribute("role", "alert");
-    await expect(alert).toContainText('Interaction type "custom" (RESPONSE) is not supported.');
+    await expect(alert).toContainText(
+      'Interaction "qti-custom-interaction" (RESPONSE) is deprecated and is not supported by this player.',
+    );
   });
 
   test("renders upload interactions as file inputs", async ({ page }) => {
