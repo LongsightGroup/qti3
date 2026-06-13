@@ -1,4 +1,4 @@
-import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 export type XmlAttribute = readonly [name: string, value: string | number | boolean | undefined];
 
@@ -49,10 +49,6 @@ export function sortedBagAttributes(bag: Record<string, string> | undefined): Xm
   return Object.entries(bag ?? {})
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([name, value]) => [name, value] as const);
-}
-
-export function escapeXmlTextContent(value: string): string {
-  return escapeXmlText(value);
 }
 
 export function addSerializerDiagnostic(

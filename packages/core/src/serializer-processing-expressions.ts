@@ -10,9 +10,9 @@ import {
   type NaryExpressionType,
   type UnaryExpressionType,
 } from "./processing-expression-tags.js";
+import { escapeXmlText } from "./xml.js";
 import {
   addSerializerDiagnostic,
-  escapeXmlTextContent,
   knownAttributesWithBagFallback,
   renderElement,
   sortedBagAttributes,
@@ -323,7 +323,7 @@ function serializeBaseValue(
   return renderElement(
     "qti-base-value",
     [["base-type", expression.baseType]],
-    escapeXmlTextContent(text),
+    escapeXmlText(text),
     indent,
   );
 }
