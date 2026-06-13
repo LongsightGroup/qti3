@@ -1,5 +1,6 @@
-import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
+import type { QtiChoice } from "@longsightgroup/qti3-core";
 import { describe, expect, it, vi } from "vitest";
+import { testInteraction } from "../interaction-test-fixtures.js";
 import { QTI3_INLINE_VALIDATION_EVENT } from "../inline-validation.js";
 import { createMatchDirectedPairState } from "./match-directed-pair-state.js";
 
@@ -13,14 +14,12 @@ function choice(identifier: string, matchMax?: string): QtiChoice {
   };
 }
 
-function interaction(overrides: Partial<QtiInteraction> = {}): QtiInteraction {
-  return {
+function interaction(overrides: Partial<Parameters<typeof testInteraction>[0]> = {}) {
+  return testInteraction({
     type: "match",
-    responseIdentifier: "RESPONSE",
     responseCardinality: "multiple",
-    attributes: {},
     ...overrides,
-  } as QtiInteraction;
+  });
 }
 
 function validationHost(): { host: HTMLElement; events: CustomEvent[] } {

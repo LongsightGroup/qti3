@@ -1,9 +1,12 @@
 import type {
+  QtiDiagnostic,
   QtiElementSupport,
   QtiInteractionElementSupport,
+  QtiInteractionRegistryStatus,
   QtiInteractionType,
   QtiItemMetadataElementSupport,
   QtiProcessingElementSupport,
+  QtiSourceLocation,
 } from "./types.js";
 
 export const interactionSupport: QtiInteractionElementSupport[] = [
@@ -307,6 +310,42 @@ export const interactionNameToType = new Map<string, QtiInteractionType>(
 
 export function getInteractionSupport(qtiName: string): QtiElementSupport | undefined {
   return allInteractionSupport.find((item) => item.qtiName === qtiName);
+}
+
+export function interactionRegistryStatus(qtiName: string): QtiInteractionRegistryStatus {
+  const support = getInteractionSupport(qtiName);
+  if (!support) return "unsupported";
+  return support.support === "deprecated" ? "deprecated" : "supported";
+}
+
+export function interactionRegistryDiagnostics(
+  qtiName: string,
+  source: QtiSourceLocation,
+): QtiDiagnostic[] {
+  const support = getInteractionSupport(qtiName);
+  if (!support) {
+    return [
+      {
+        code: "interaction.unsupported",
+        severity: "warning",
+        message: `${qtiName} is not currently in the support registry.`,
+        path: source.path,
+        source,
+      },
+    ];
+  }
+  if (support.support === "deprecated") {
+    return [
+      {
+        code: "interaction.deprecated",
+        severity: "warning",
+        message: `${qtiName} is deprecated. ${support.notes ?? ""}`.trim(),
+        path: source.path,
+        source,
+      },
+    ];
+  }
+  return [];
 }
 
 function entry(qtiName: string, interactionType: QtiInteractionType): QtiInteractionElementSupport {

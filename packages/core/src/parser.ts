@@ -15,7 +15,12 @@ import {
 import { parseXmlBoolean } from "./parser-values.js";
 import { parseInteractionCustomPayload } from "./parser-custom-interactions.js";
 import { parseResponseProcessing, parseTemplateProcessing } from "./parser-processing.js";
-import { getInteractionSupport, interactionNameToType, processingSupport } from "./support.js";
+import {
+  interactionNameToType,
+  interactionRegistryDiagnostics,
+  interactionRegistryStatus,
+  processingSupport,
+} from "./support.js";
 import type {
   QtiAssessmentItem,
   QtiChoice,
@@ -292,25 +297,8 @@ function parseInteraction(
     ? responseDeclarationMap.get(responseIdentifier)
     : undefined;
   const prompt = childElements(node, "qti-prompt")[0];
-  if (!interactionType) {
-    diagnostics.push({
-      code: "interaction.unsupported",
-      severity: "warning",
-      message: `${node.localName} is not currently in the support registry.`,
-      path: node.source.path,
-      source: node.source,
-    });
-  }
-  const support = getInteractionSupport(node.localName);
-  if (support?.support === "deprecated") {
-    diagnostics.push({
-      code: "interaction.deprecated",
-      severity: "warning",
-      message: `${node.localName} is deprecated. ${support.notes ?? ""}`.trim(),
-      path: node.source.path,
-      source: node.source,
-    });
-  }
+  const registryStatus = interactionRegistryStatus(node.localName);
+  diagnostics.push(...interactionRegistryDiagnostics(node.localName, node.source));
 
   const objectNode =
     interactionType === "positionObject"
@@ -330,6 +318,7 @@ function parseInteraction(
 
   return {
     type: interactionType ?? "custom",
+    registryStatus,
     qtiName: node.localName,
     responseIdentifier,
     responseCardinality: responseDeclaration?.cardinality,

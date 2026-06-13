@@ -1,5 +1,5 @@
-import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "./interaction-test-fixtures.js";
 import { interactionChoices } from "./interaction-support.js";
 import {
   associationMaximumResponses,
@@ -19,18 +19,14 @@ describe("response-limits", () => {
   });
 
   it("returns interaction choices without synthetic fallback", () => {
-    const interaction = {
-      type: "choice",
-      choices: [],
-    } as unknown as QtiInteraction;
-    expect(interactionChoices(interaction)).toEqual([]);
+    expect(interactionChoices(testInteraction({ type: "choice", choices: [] }))).toEqual([]);
   });
 
   it("derives media play limits from interaction attributes", () => {
-    const interaction = {
+    const interaction = testInteraction({
       type: "media",
       attributes: { "min-plays": "2", "max-plays": "4" },
-    } as unknown as QtiInteraction;
+    });
     expect(minimumMediaPlays(interaction)).toBe(2);
     expect(maximumAllowedResponses(interaction)).toBe(4);
     expect(mediaPlayCount(3)).toBe(3);
@@ -39,7 +35,7 @@ describe("response-limits", () => {
   it.each(["order", "graphicOrder"] as const)(
     "uses choice limits, not association limits, for %s interactions",
     (type) => {
-      const interaction = {
+      const interaction = testInteraction({
         type,
         attributes: {
           "min-associations": "3",
@@ -47,48 +43,58 @@ describe("response-limits", () => {
           "max-associations": "1",
           "max-choices": "2",
         },
-      } as unknown as QtiInteraction;
+      });
 
       expect(responseLimitAttribute(interaction, "min-choices", "min-associations")).toBe("2");
       expect(responseLimitAttribute(interaction, "max-choices", "max-associations")).toBe("2");
       expect(
-        maximumAllowedResponses({
-          type,
-          attributes: { "min-choices": "1", "max-associations": "1", "max-choices": "2" },
-        } as unknown as QtiInteraction),
+        maximumAllowedResponses(
+          testInteraction({
+            type,
+            attributes: { "min-choices": "1", "max-associations": "1", "max-choices": "2" },
+          }),
+        ),
       ).toBe(2);
       expect(
-        maximumAllowedResponses({
-          type,
-          attributes: { "max-associations": "1", "max-choices": "2" },
-        } as unknown as QtiInteraction),
+        maximumAllowedResponses(
+          testInteraction({
+            type,
+            attributes: { "max-associations": "1", "max-choices": "2" },
+          }),
+        ),
       ).toBeUndefined();
       expect(
-        maximumAllowedResponses({
-          type,
-          attributes: { "max-associations": "1" },
-        } as unknown as QtiInteraction),
+        maximumAllowedResponses(
+          testInteraction({
+            type,
+            attributes: { "max-associations": "1" },
+          }),
+        ),
       ).toBeUndefined();
       expect(
-        orderSubsetLimitsActive({
-          type,
-          attributes: { "min-choices": "2" },
-        } as unknown as QtiInteraction),
+        orderSubsetLimitsActive(
+          testInteraction({
+            type,
+            attributes: { "min-choices": "2" },
+          }),
+        ),
       ).toBe(true);
       expect(
-        orderSubsetLimitsActive({
-          type,
-          attributes: { "max-choices": "2" },
-        } as unknown as QtiInteraction),
+        orderSubsetLimitsActive(
+          testInteraction({
+            type,
+            attributes: { "max-choices": "2" },
+          }),
+        ),
       ).toBe(false);
     },
   );
 
   it("falls back to association limits for association interactions", () => {
-    const interaction = {
+    const interaction = testInteraction({
       type: "associate",
       attributes: { "min-associations": "1", "max-associations": "2" },
-    } as unknown as QtiInteraction;
+    });
 
     expect(responseLimitAttribute(interaction, "min-choices", "min-associations")).toBe("1");
     expect(responseLimitAttribute(interaction, "max-choices", "max-associations")).toBe("2");
@@ -97,33 +103,36 @@ describe("response-limits", () => {
 
   it("defaults graphic gap match maximum associations to one when omitted", () => {
     expect(
-      maximumAllowedResponses({
-        type: "graphicGapMatch",
-        attributes: {},
-      } as unknown as QtiInteraction),
+      maximumAllowedResponses(testInteraction({ type: "graphicGapMatch", attributes: {} })),
     ).toBe(1);
     expect(
-      maximumAllowedResponses({
-        type: "graphicGapMatch",
-        attributes: { "max-associations": "2" },
-      } as unknown as QtiInteraction),
+      maximumAllowedResponses(
+        testInteraction({
+          type: "graphicGapMatch",
+          attributes: { "max-associations": "2" },
+        }),
+      ),
     ).toBe(2);
   });
 
   it("treats single-cardinality association interactions as one response", () => {
     expect(
-      associationMaximumResponses({
-        type: "associate",
-        responseCardinality: "single",
-        attributes: { "max-associations": "3" },
-      } as unknown as QtiInteraction),
+      associationMaximumResponses(
+        testInteraction({
+          type: "associate",
+          responseCardinality: "single",
+          attributes: { "max-associations": "3" },
+        }),
+      ),
     ).toBe(1);
     expect(
-      associationMaximumResponses({
-        type: "match",
-        responseCardinality: "multiple",
-        attributes: { "max-associations": "3" },
-      } as unknown as QtiInteraction),
+      associationMaximumResponses(
+        testInteraction({
+          type: "match",
+          responseCardinality: "multiple",
+          attributes: { "max-associations": "3" },
+        }),
+      ),
     ).toBe(3);
   });
 });

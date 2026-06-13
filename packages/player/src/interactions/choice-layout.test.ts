@@ -1,19 +1,9 @@
-import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "../interaction-test-fixtures.js";
 import { choiceLayout } from "./choice-layout.js";
 
-function interaction(attributes: Record<string, string> = {}): QtiInteraction {
-  return {
-    type: "choice",
-    qtiName: "qti-choice-interaction",
-    responseIdentifier: "RESPONSE",
-    responseCardinality: "single",
-    responseBaseType: "identifier",
-    choices: [],
-    childElements: [],
-    attributes,
-    text: "",
-  };
+function interaction(attributes: Record<string, string> = {}) {
+  return testInteraction({ type: "choice", attributes });
 }
 
 describe("choice layout", () => {

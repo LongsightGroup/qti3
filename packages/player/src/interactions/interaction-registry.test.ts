@@ -1,28 +1,12 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "../interaction-test-fixtures.js";
 import {
   inlineEmbeddingDisposition,
   interactionRegistry,
   isInlineEmbeddableInteraction,
   matchInteractionRegistryEntry,
 } from "./interaction-registry.js";
-
-function interaction(
-  overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
-): QtiInteraction {
-  return {
-    qtiName: "qti-interaction",
-    responseIdentifier: "RESPONSE",
-    responseCardinality: "single",
-    responseBaseType: "identifier",
-    choices: [],
-    attributes: {},
-    childElements: [],
-    text: "",
-    source: { line: 1, column: 1, offset: 0, path: "item" },
-    ...overrides,
-  } as QtiInteraction;
-}
 
 describe("interaction registry ordering", () => {
   it("keeps a stable registry order for every supported renderer id", () => {
@@ -53,7 +37,7 @@ describe("interaction registry ordering", () => {
   it("prefers graphicOrder over ordered cardinality", () => {
     expect(
       matchInteractionRegistryEntry(
-        interaction({ type: "graphicOrder", responseCardinality: "ordered" }),
+        testInteraction({ type: "graphicOrder", responseCardinality: "ordered" }),
       )?.id,
     ).toBe("graphicOrder");
   });
@@ -61,7 +45,7 @@ describe("interaction registry ordering", () => {
   it("prefers match over directedPair pair routing", () => {
     expect(
       matchInteractionRegistryEntry(
-        interaction({ type: "match", responseBaseType: "directedPair" }),
+        testInteraction({ type: "match", responseBaseType: "directedPair" }),
       )?.id,
     ).toBe("match");
   });
@@ -69,7 +53,7 @@ describe("interaction registry ordering", () => {
   it("prefers graphicAssociate over directedPair pair routing", () => {
     expect(
       matchInteractionRegistryEntry(
-        interaction({ type: "graphicAssociate", responseBaseType: "directedPair" }),
+        testInteraction({ type: "graphicAssociate", responseBaseType: "directedPair" }),
       )?.id,
     ).toBe("graphicAssociate");
   });
@@ -77,16 +61,16 @@ describe("interaction registry ordering", () => {
   it("prefers gapMatch over directedPair pair routing", () => {
     expect(
       matchInteractionRegistryEntry(
-        interaction({ type: "gapMatch", responseBaseType: "directedPair" }),
+        testInteraction({ type: "gapMatch", responseBaseType: "directedPair" }),
       )?.id,
     ).toBe("gapMatch");
   });
 
   it("routes associate and custom directedPair interactions to pair", () => {
-    expect(matchInteractionRegistryEntry(interaction({ type: "associate" }))?.id).toBe("pair");
+    expect(matchInteractionRegistryEntry(testInteraction({ type: "associate" }))?.id).toBe("pair");
     expect(
       matchInteractionRegistryEntry(
-        interaction({
+        testInteraction({
           type: "customUnknown" as QtiInteraction["type"],
           responseBaseType: "directedPair",
         }),
@@ -95,10 +79,10 @@ describe("interaction registry ordering", () => {
   });
 
   it("requires an object for hotspot rendering", () => {
-    expect(matchInteractionRegistryEntry(interaction({ type: "hotspot" }))).toBeUndefined();
+    expect(matchInteractionRegistryEntry(testInteraction({ type: "hotspot" }))).toBeUndefined();
     expect(
       matchInteractionRegistryEntry(
-        interaction({
+        testInteraction({
           type: "hotspot",
           object: {
             data: "x",
@@ -116,25 +100,25 @@ describe("interaction registry ordering", () => {
   });
 
   it("allows only inline-flow interaction renderers to embed inside prose", () => {
-    expect(isInlineEmbeddableInteraction(interaction({ type: "inlineChoice" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(interaction({ type: "textEntry" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(interaction({ type: "endAttempt" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(interaction({ type: "custom" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(interaction({ type: "choice" }))).toBe(false);
-    expect(isInlineEmbeddableInteraction(interaction({ type: "portableCustom" }))).toBe(false);
+    expect(isInlineEmbeddableInteraction(testInteraction({ type: "inlineChoice" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(testInteraction({ type: "textEntry" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(testInteraction({ type: "endAttempt" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(testInteraction({ type: "custom" }))).toBe(true);
+    expect(isInlineEmbeddableInteraction(testInteraction({ type: "choice" }))).toBe(false);
+    expect(isInlineEmbeddableInteraction(testInteraction({ type: "portableCustom" }))).toBe(false);
   });
 
   it("classifies inline embedding with a single disposition policy", () => {
-    expect(inlineEmbeddingDisposition(interaction({ type: "inlineChoice" }))).toBe("supported");
-    expect(inlineEmbeddingDisposition(interaction({ type: "textEntry" }))).toBe("supported");
-    expect(inlineEmbeddingDisposition(interaction({ type: "endAttempt" }))).toBe("supported");
-    expect(inlineEmbeddingDisposition(interaction({ type: "custom" }))).toBe("unsupported");
-    expect(inlineEmbeddingDisposition(interaction({ type: "choice" }))).toBe("invalid");
-    expect(inlineEmbeddingDisposition(interaction({ type: "portableCustom" }))).toBe("invalid");
+    expect(inlineEmbeddingDisposition(testInteraction({ type: "inlineChoice" }))).toBe("supported");
+    expect(inlineEmbeddingDisposition(testInteraction({ type: "textEntry" }))).toBe("supported");
+    expect(inlineEmbeddingDisposition(testInteraction({ type: "endAttempt" }))).toBe("supported");
+    expect(inlineEmbeddingDisposition(testInteraction({ type: "custom" }))).toBe("unsupported");
+    expect(inlineEmbeddingDisposition(testInteraction({ type: "choice" }))).toBe("invalid");
+    expect(inlineEmbeddingDisposition(testInteraction({ type: "portableCustom" }))).toBe("invalid");
   });
 
   it("uses a dedicated embedded renderer for textEntry", () => {
-    const entry = matchInteractionRegistryEntry(interaction({ type: "textEntry" }));
+    const entry = matchInteractionRegistryEntry(testInteraction({ type: "textEntry" }));
     expect(entry?.renderEmbedded).toBeDefined();
     expect(entry?.renderEmbedded).not.toBe(entry?.render);
   });

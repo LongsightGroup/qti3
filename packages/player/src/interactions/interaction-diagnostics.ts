@@ -32,13 +32,23 @@ export function interactionMissingChoiceDiagnostics(interaction: QtiInteraction)
 export function interactionUnsupportedDiagnostics(interaction: QtiInteraction): QtiDiagnostic[] {
   if (isInteractionSupported(interaction)) return [];
   const path = diagnosticPath(interaction);
+  const message =
+    interaction.registryStatus === "deprecated"
+      ? path
+        ? `Interaction "${interaction.qtiName}" (${path}) is deprecated and is not supported by this player.`
+        : `Interaction "${interaction.qtiName}" is deprecated and is not supported by this player.`
+      : interaction.registryStatus === "unsupported"
+        ? path
+          ? `Interaction "${interaction.qtiName}" (${path}) is not in the QTI support registry and is not supported by this player.`
+          : `Interaction "${interaction.qtiName}" is not in the QTI support registry and is not supported by this player.`
+        : path
+          ? `Interaction type "${interaction.type}" (${path}) is not supported.`
+          : `Interaction type "${interaction.type}" is not supported.`;
   return [
     {
       code: "interaction.unsupported",
       severity: "error",
-      message: path
-        ? `Interaction type "${interaction.type}" (${path}) is not supported.`
-        : `Interaction type "${interaction.type}" is not supported.`,
+      message,
       path,
     },
   ];

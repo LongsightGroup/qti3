@@ -189,8 +189,13 @@ export type QtiInteractionType =
   | "textEntry"
   | "upload";
 
+/** Parse-time status from the core interaction support registry. */
+export type QtiInteractionRegistryStatus = "supported" | "deprecated" | "unsupported";
+
 export interface QtiInteraction {
   type: QtiInteractionType;
+  /** Parse-time status from the core interaction support registry. */
+  registryStatus: QtiInteractionRegistryStatus;
   qtiName: string;
   responseIdentifier?: string | undefined;
   responseCardinality?: QtiCardinality | undefined;

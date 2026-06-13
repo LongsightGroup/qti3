@@ -63,6 +63,11 @@ describe("@longsightgroup/qti3-core", () => {
     expect(result.diagnostics).toContainEqual(
       expect.objectContaining({ code: "interaction.deprecated", severity: "warning" }),
     );
+    expect(result.document?.item.interactions[0]).toMatchObject({
+      type: "custom",
+      registryStatus: "deprecated",
+      qtiName: "qti-custom-interaction",
+    });
   });
 
   it("diagnoses unknown QTI interaction elements", () => {
@@ -78,6 +83,7 @@ describe("@longsightgroup/qti3-core", () => {
     expect(result.ok).toBe(true);
     expect(result.document?.item.interactions[0]).toMatchObject({
       type: "custom",
+      registryStatus: "unsupported",
       qtiName: "qti-unsupported-interaction",
       responseIdentifier: "RESPONSE",
     });
@@ -88,6 +94,26 @@ describe("@longsightgroup/qti3-core", () => {
         path: "/qti-assessment-item/qti-item-body[1]/qti-unsupported-interaction[1]",
       }),
     );
+  });
+
+  it("marks registered current interactions as supported", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="supported-interaction" title="supported-interaction" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.interactions[0]).toMatchObject({
+      type: "choice",
+      registryStatus: "supported",
+      qtiName: "qti-choice-interaction",
+    });
   });
 
   it("diagnoses incomplete XML instead of materializing a partial tree as valid", () => {

@@ -1,5 +1,6 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "../interaction-test-fixtures.js";
 import { isInteractionSupported } from "./interaction-registry.js";
 import {
   collectEmbeddedInteractionDiagnostics,
@@ -8,28 +9,11 @@ import {
   interactionUnsupportedDiagnostics,
 } from "./interaction-diagnostics.js";
 
-function interaction(
-  overrides: Partial<QtiInteraction> & { type: QtiInteraction["type"] },
-): QtiInteraction {
-  return {
-    qtiName: "qti-interaction",
-    responseIdentifier: "RESPONSE",
-    responseCardinality: "single",
-    responseBaseType: "identifier",
-    choices: [],
-    attributes: {},
-    childElements: [],
-    text: "",
-    source: { line: 1, column: 1, offset: 0, path: "item" },
-    ...overrides,
-  } as QtiInteraction;
-}
-
 describe("interaction-dispatch support", () => {
   it("recognizes supported interaction types", () => {
     expect(
       isInteractionSupported(
-        interaction({
+        testInteraction({
           type: "choice",
           choices: [
             {
@@ -46,7 +30,7 @@ describe("interaction-dispatch support", () => {
     ).toBe(true);
     expect(
       isInteractionSupported(
-        interaction({
+        testInteraction({
           type: "hotspot",
           object: {
             data: "x",
@@ -61,9 +45,9 @@ describe("interaction-dispatch support", () => {
         }),
       ),
     ).toBe(true);
-    expect(isInteractionSupported(interaction({ type: "hotspot" }))).toBe(false);
+    expect(isInteractionSupported(testInteraction({ type: "hotspot" }))).toBe(false);
     expect(
-      isInteractionSupported(interaction({ type: "customUnknown" as QtiInteraction["type"] })),
+      isInteractionSupported(testInteraction({ type: "customUnknown" as QtiInteraction["type"] })),
     ).toBe(false);
   });
 });
@@ -71,27 +55,51 @@ describe("interaction-dispatch support", () => {
 describe("interaction-diagnostics", () => {
   it("reports unsupported interactions", () => {
     const diagnostics = interactionUnsupportedDiagnostics(
-      interaction({ type: "customUnknown" as QtiInteraction["type"] }),
+      testInteraction({
+        type: "customUnknown" as QtiInteraction["type"],
+        qtiName: "qti-unsupported-interaction",
+        registryStatus: "unsupported",
+      }),
     );
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.code).toBe("interaction.unsupported");
+    expect(diagnostics[0]?.message).toContain("not in the QTI support registry");
+  });
+
+  it("reports deprecated unrenderable interactions as unsupported by the player", () => {
+    const diagnostics = interactionUnsupportedDiagnostics(
+      testInteraction({
+        type: "custom",
+        qtiName: "qti-custom-interaction",
+        registryStatus: "deprecated",
+      }),
+    );
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]?.code).toBe("interaction.unsupported");
+    expect(diagnostics[0]?.severity).toBe("error");
+    expect(diagnostics[0]?.message).toContain("deprecated");
+    expect(diagnostics[0]?.message).toContain("not supported by this player");
   });
 
   it("reports missing choices for choice interactions", () => {
-    const diagnostics = interactionMissingChoiceDiagnostics(interaction({ type: "choice" }));
+    const diagnostics = interactionMissingChoiceDiagnostics(testInteraction({ type: "choice" }));
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.code).toBe("interaction.choices.missing");
   });
 
   it("reports missing sources or targets for match interactions", () => {
-    const diagnostics = interactionMissingChoiceDiagnostics(interaction({ type: "match" }));
+    const diagnostics = interactionMissingChoiceDiagnostics(testInteraction({ type: "match" }));
     expect(diagnostics).toHaveLength(1);
   });
 
   it("collects render diagnostics for all interactions", () => {
     const diagnostics = collectInteractionRenderDiagnostics([
-      interaction({ type: "choice" }),
-      interaction({ type: "customUnknown" as QtiInteraction["type"] }),
+      testInteraction({ type: "choice" }),
+      testInteraction({
+        type: "customUnknown" as QtiInteraction["type"],
+        qtiName: "qti-unsupported-interaction",
+        registryStatus: "unsupported",
+      }),
     ]);
     expect(diagnostics.some((entry) => entry.code === "interaction.choices.missing")).toBe(true);
     expect(diagnostics.some((entry) => entry.code === "interaction.unsupported")).toBe(true);
@@ -101,7 +109,7 @@ describe("interaction-diagnostics", () => {
     const diagnostics = collectEmbeddedInteractionDiagnostics({
       identifier: "item",
       body: [{ kind: "interaction", interactionIndex: 0 }],
-      interactions: [interaction({ type: "choice" })],
+      interactions: [testInteraction({ type: "choice" })],
     } as never);
     expect(diagnostics).toHaveLength(0);
   });
@@ -118,7 +126,7 @@ describe("interaction-diagnostics", () => {
           source: { line: 1, column: 1, offset: 0, path: "p" },
         },
       ],
-      interactions: [interaction({ type: "choice" })],
+      interactions: [testInteraction({ type: "choice" })],
     } as never);
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.code).toBe("interaction.embed.unsupported");
@@ -136,7 +144,7 @@ describe("interaction-diagnostics", () => {
           source: { line: 1, column: 1, offset: 0, path: "p" },
         },
       ],
-      interactions: [interaction({ type: "endAttempt", responseBaseType: "boolean" })],
+      interactions: [testInteraction({ type: "endAttempt", responseBaseType: "boolean" })],
     } as never);
     expect(diagnostics).toHaveLength(0);
   });
@@ -153,7 +161,13 @@ describe("interaction-diagnostics", () => {
           source: { line: 1, column: 1, offset: 0, path: "p" },
         },
       ],
-      interactions: [interaction({ type: "custom" })],
+      interactions: [
+        testInteraction({
+          type: "custom",
+          qtiName: "qti-custom-interaction",
+          registryStatus: "deprecated",
+        }),
+      ],
     } as never);
     expect(diagnostics).toHaveLength(0);
   });
@@ -170,7 +184,7 @@ describe("interaction-diagnostics", () => {
           source: { line: 1, column: 1, offset: 0, path: "p" },
         },
       ],
-      interactions: [interaction({ type: "portableCustom" })],
+      interactions: [testInteraction({ type: "portableCustom" })],
     } as never);
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0]?.code).toBe("interaction.embed.unsupported");

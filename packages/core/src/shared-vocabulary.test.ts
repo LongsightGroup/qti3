@@ -31,20 +31,15 @@ import {
   supportedInputWidthClassNames,
   unsupportedMediaPlayerControlsTokens,
 } from "./shared-vocabulary.js";
-import type { QtiInteraction } from "./types.js";
+import { testInteraction } from "./interaction-test-fixtures.js";
 
-function extendedTextInteraction(attributes: Record<string, string> = {}): QtiInteraction {
-  return {
+function extendedTextInteraction(attributes: Record<string, string> = {}) {
+  return testInteraction({
     type: "extendedText",
     qtiName: "qti-extended-text-interaction",
-    responseIdentifier: "RESPONSE",
-    responseCardinality: "single",
     responseBaseType: "string",
-    choices: [],
-    childElements: [],
     attributes,
-    text: "",
-  };
+  });
 }
 
 describe("shared vocabulary", () => {

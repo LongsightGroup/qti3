@@ -1,5 +1,6 @@
-import type { QtiDocument, QtiInteraction } from "@longsightgroup/qti3-core";
+import type { QtiDocument } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "./interaction-test-fixtures.js";
 import {
   cloneDiagnostics,
   minimumRequiredResponses,
@@ -37,9 +38,8 @@ describe("player-validation", () => {
     const document = {
       item: {
         interactions: [
-          {
+          testInteraction({
             type: "choice",
-            responseIdentifier: "RESPONSE",
             choices: [
               {
                 identifier: "A",
@@ -51,7 +51,7 @@ describe("player-validation", () => {
               },
             ],
             attributes: {},
-          } as unknown as QtiInteraction,
+          }),
         ],
         responseDeclarations: [
           {
@@ -79,23 +79,12 @@ describe("player-validation", () => {
     "parses authored minimum response counts for %s",
     (type) => {
       expect(
-        minimumRequiredResponses({
-          type,
-          attributes: { "min-choices": "0" },
-        } as unknown as QtiInteraction),
+        minimumRequiredResponses(testInteraction({ type, attributes: { "min-choices": "0" } })),
       ).toBe(0);
       expect(
-        minimumRequiredResponses({
-          type,
-          attributes: { "min-choices": "2" },
-        } as unknown as QtiInteraction),
+        minimumRequiredResponses(testInteraction({ type, attributes: { "min-choices": "2" } })),
       ).toBe(2);
-      expect(
-        minimumRequiredResponses({
-          type,
-          attributes: {},
-        } as unknown as QtiInteraction),
-      ).toBe(1);
+      expect(minimumRequiredResponses(testInteraction({ type, attributes: {} }))).toBe(1);
     },
   );
 
@@ -103,12 +92,11 @@ describe("player-validation", () => {
     const document = {
       item: {
         interactions: [
-          {
+          testInteraction({
             type: "choice",
-            responseIdentifier: "RESPONSE",
             choices: [],
             attributes: {},
-          } as unknown as QtiInteraction,
+          }),
         ],
         responseDeclarations: [
           {
@@ -135,10 +123,10 @@ describe("player-validation", () => {
 
   it("skips validation policy for unscored responses without authored limits", () => {
     expect(
-      responseValidationPolicy({ correctResponse: null }, {
-        type: "choice",
-        attributes: {},
-      } as unknown as QtiInteraction),
+      responseValidationPolicy(
+        { correctResponse: null },
+        testInteraction({ type: "choice", attributes: {} }),
+      ),
     ).toEqual({
       checkMinimum: false,
       checkMaximum: false,
@@ -150,10 +138,10 @@ describe("player-validation", () => {
     "ignores max-choices without min-choices for %s interactions",
     (type) => {
       expect(
-        responseValidationPolicy({ correctResponse: null }, {
-          type,
-          attributes: { "max-choices": "1" },
-        } as unknown as QtiInteraction),
+        responseValidationPolicy(
+          { correctResponse: null },
+          testInteraction({ type, attributes: { "max-choices": "1" } }),
+        ),
       ).toEqual({
         checkMinimum: false,
         checkMaximum: false,
@@ -163,12 +151,11 @@ describe("player-validation", () => {
       const document = {
         item: {
           interactions: [
-            {
+            testInteraction({
               type,
-              responseIdentifier: "RESPONSE",
               choices: [],
               attributes: { "max-choices": "1", "data-max-selections-message": "Too many." },
-            } as unknown as QtiInteraction,
+            }),
           ],
           responseDeclarations: [
             {
@@ -198,12 +185,11 @@ describe("player-validation", () => {
     const document = {
       item: {
         interactions: [
-          {
+          testInteraction({
             type: "graphicGapMatch",
-            responseIdentifier: "RESPONSE",
             choices: [],
             attributes: { "data-max-selections-message": "Too many placements." },
-          } as unknown as QtiInteraction,
+          }),
         ],
         responseDeclarations: [
           {

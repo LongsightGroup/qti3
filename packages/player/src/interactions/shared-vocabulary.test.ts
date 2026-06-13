@@ -1,5 +1,5 @@
-import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "../interaction-test-fixtures.js";
 import {
   gapMatchUsesPlacement,
   inputWidth,
@@ -13,18 +13,12 @@ import {
   sharedVocabularyOrderOrientation,
 } from "./shared-vocabulary.js";
 
-function interaction(attributes: Record<string, string> = {}): QtiInteraction {
-  return {
+function interaction(attributes: Record<string, string> = {}) {
+  return testInteraction({
     type: "order",
-    qtiName: "qti-order-interaction",
-    responseIdentifier: "RESPONSE",
     responseCardinality: "ordered",
-    responseBaseType: "identifier",
-    choices: [],
-    childElements: [],
     attributes,
-    text: "",
-  };
+  });
 }
 
 describe("shared vocabulary", () => {

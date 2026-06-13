@@ -165,6 +165,7 @@ describe("QTI custom interaction parsing", () => {
     expect(result.ok).toBe(true);
     expect(result.document?.item.interactions[0]).toMatchObject({
       type: "custom",
+      registryStatus: "unsupported",
       qtiName: "qti-position-slider-interaction",
     });
     expect(result.document?.item.interactions[0]?.customInteraction).toBeUndefined();

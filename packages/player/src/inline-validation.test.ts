@@ -1,5 +1,5 @@
-import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
+import { testInteraction } from "./interaction-test-fixtures.js";
 import {
   QTI3_INLINE_VALIDATION_EVENT,
   reportMaximumResponseExceeded,
@@ -17,11 +17,10 @@ describe("inline-validation", () => {
 
     reportMaximumResponseExceeded(
       host,
-      {
-        responseIdentifier: "RESPONSE",
+      testInteraction({
         type: "choice",
         attributes: { "data-max-selections-message": "Too many." },
-      } as unknown as QtiInteraction,
+      }),
       2,
     );
 

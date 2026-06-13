@@ -1,22 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { QtiDiagnostic, QtiInteraction } from "./types.js";
+import { testInteraction } from "./interaction-test-fixtures.js";
+import type { QtiDiagnostic } from "./types.js";
 import { validateRegistrySharedVocabularyClasses } from "./shared-vocabulary-registry-validation.js";
 
 function interaction(
-  type: QtiInteraction["type"],
+  type: Parameters<typeof testInteraction>[0]["type"],
   attributes: Record<string, string> = {},
-): QtiInteraction {
-  return {
-    type,
-    qtiName: `qti-${type}-interaction`,
-    responseIdentifier: "RESPONSE",
-    responseCardinality: "single",
-    responseBaseType: "identifier",
-    choices: [],
-    childElements: [],
-    attributes,
-    text: "",
-  };
+) {
+  return testInteraction({ type, attributes });
 }
 
 describe("shared vocabulary registry validation", () => {
