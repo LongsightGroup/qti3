@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.1 - 2026-06-13
+
+### Changed
+
+- Expose `data-choices-container-width` and `data-first-column-header` through the core
+  shared-vocabulary authoring registry, including support metadata and matrix coverage.
+- Unify positive-number handling for shared-vocabulary attribute parsing, validation, and player
+  runtime behavior.
+
 ## 0.8.0 - 2026-06-12
 
 ### Added
