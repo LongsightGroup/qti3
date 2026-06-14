@@ -9,10 +9,16 @@ import type {
   QtiCompanionMaterialsUnparsedChild,
   QtiContentNode,
   QtiDiagnostic,
+  QtiDigitalMaterial,
   QtiModalFeedback,
   QtiPhysicalMaterial,
   QtiStylesheet,
 } from "./types.js";
+import {
+  PARSED_COMPANION_MATERIAL_CHILD_NAMES,
+  type ParsedCompanionMaterialChildQtiName,
+  pushCompanionMaterialParseWarning,
+} from "./companion-materials.js";
 import { childElements, descendants, textContent, type XmlNode } from "./xml.js";
 
 export function firstChildElement(
@@ -146,12 +152,23 @@ export function parseCompanionMaterialsInfo(
   if (!node) return undefined;
 
   const physicalMaterials: QtiPhysicalMaterial[] = [];
+  const digitalMaterials: QtiDigitalMaterial[] = [];
   const unparsedChildren: QtiCompanionMaterialsUnparsedChild[] = [];
 
-  for (const child of childElements(node)) {
-    if (child.localName === "qti-physical-material") {
+  const companionMaterialHandlers = {
+    "qti-physical-material": (child) => {
       const material = parsePhysicalMaterial(child, diagnostics);
       if (material) physicalMaterials.push(material);
+    },
+    "qti-digital-material": (child) => {
+      const material = parseDigitalMaterial(child, diagnostics);
+      if (material) digitalMaterials.push(material);
+    },
+  } satisfies Record<ParsedCompanionMaterialChildQtiName, (child: XmlNode) => void>;
+
+  for (const child of childElements(node)) {
+    if (isParsedCompanionMaterialChildQtiName(child.localName)) {
+      companionMaterialHandlers[child.localName](child);
       continue;
     }
 
@@ -167,6 +184,7 @@ export function parseCompanionMaterialsInfo(
 
   return {
     physicalMaterials,
+    digitalMaterials,
     unparsedChildren,
     source: node.source,
   };
@@ -178,17 +196,68 @@ function parsePhysicalMaterial(
 ): QtiPhysicalMaterial | undefined {
   const text = textContent(node).trim();
   if (text.length === 0) {
-    diagnostics.push({
-      code: "companionMaterials.physicalMaterial.empty",
-      severity: "warning",
-      message: "qti-physical-material requires non-empty text content.",
-      path: node.source?.path,
-      source: node.source,
-    });
-    return undefined;
+    return pushCompanionMaterialParseWarning(
+      diagnostics,
+      "companionMaterials.physicalMaterial.empty",
+      "qti-physical-material requires non-empty text content.",
+      node.source?.path,
+      node.source,
+    );
   }
   return {
     text,
     source: node.source,
   };
+}
+
+function parseDigitalMaterial(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiDigitalMaterial | undefined {
+  const fileHrefNode = firstChildElement(
+    node,
+    "qti-file-href",
+    diagnostics,
+    "companionMaterials.digitalMaterial.fileHref.duplicate",
+  );
+  if (!fileHrefNode) {
+    return pushCompanionMaterialParseWarning(
+      diagnostics,
+      "companionMaterials.digitalMaterial.fileHref.missing",
+      "qti-digital-material requires a qti-file-href child.",
+      node.source?.path,
+      node.source,
+    );
+  }
+
+  const fileHref = textContent(fileHrefNode).trim();
+  if (fileHref.length === 0) {
+    return pushCompanionMaterialParseWarning(
+      diagnostics,
+      "companionMaterials.digitalMaterial.fileHref.empty",
+      "qti-digital-material qti-file-href requires non-empty text content.",
+      fileHrefNode.source?.path,
+      fileHrefNode.source,
+    );
+  }
+
+  const resourceIconNode = firstChildElement(
+    node,
+    "qti-resource-icon",
+    diagnostics,
+    "companionMaterials.digitalMaterial.resourceIcon.duplicate",
+  );
+  const resourceIcon = resourceIconNode ? textContent(resourceIconNode).trim() : "";
+  return {
+    fileHref,
+    resourceIcon: resourceIcon.length > 0 ? resourceIcon : undefined,
+    attributes: node.attributes,
+    source: node.source,
+  };
+}
+
+function isParsedCompanionMaterialChildQtiName(
+  localName: string,
+): localName is ParsedCompanionMaterialChildQtiName {
+  return PARSED_COMPANION_MATERIAL_CHILD_NAMES.has(localName);
 }

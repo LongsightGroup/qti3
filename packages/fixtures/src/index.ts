@@ -985,13 +985,7 @@ function createBasicExtraItemFeatureToleranceFixture(): QtiFixture {
   </qti-catalog-info>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`,
-    expectedParseDiagnostics: [
-      {
-        code: "companionMaterials.child.unsupported",
-        severity: "warning",
-        path: "/qti-assessment-item/qti-companion-materials-info[1]/qti-digital-material[1]",
-      },
-    ],
+    expectedParseDiagnostics: [],
     expectedValidationDiagnostics: [],
     attempts: [basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 1 }, id)],
   };

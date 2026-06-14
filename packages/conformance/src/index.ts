@@ -1,5 +1,6 @@
 import {
   createItemSession,
+  isConformanceParseDiagnostic,
   parseQtiXml,
   validateAssessmentItem,
   type QtiAttemptStateV1,
@@ -133,18 +134,7 @@ function diagnosticMatches(actual: QtiDiagnostic, expected: QtiExpectedDiagnosti
 }
 
 function isParseDiagnostic(diagnostic: QtiDiagnostic): boolean {
-  return (
-    diagnostic.code === "xml.parse" ||
-    diagnostic.code === "xml.empty" ||
-    diagnostic.code === "qti.root" ||
-    diagnostic.code === "processing.unsupported" ||
-    diagnostic.code === "processing.response.forbidden" ||
-    diagnostic.code === "interaction.unsupported" ||
-    diagnostic.code === "interaction.deprecated" ||
-    diagnostic.code === "companionMaterials.child.unsupported" ||
-    diagnostic.code === "companionMaterials.physicalMaterial.empty" ||
-    diagnostic.code === "item.child.duplicate"
-  );
+  return isConformanceParseDiagnostic(diagnostic.code);
 }
 
 function assertExpectedState(

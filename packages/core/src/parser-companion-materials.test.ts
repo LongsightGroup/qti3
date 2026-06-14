@@ -36,6 +36,7 @@ describe("QTI companion materials parsing", () => {
           }),
         }),
       ],
+      digitalMaterials: [],
       unparsedChildren: [],
       source: expect.objectContaining({
         path: "/qti-assessment-item/qti-companion-materials-info[1]",
@@ -71,7 +72,7 @@ describe("QTI companion materials parsing", () => {
     );
   });
 
-  it("preserves digital-only companion materials with explicit parse diagnostics", () => {
+  it("parses digital-only companion materials with source metadata", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="digital-companion-material" title="digital-companion-material" time-dependent="false">
         <qti-companion-materials-info>
@@ -87,24 +88,173 @@ describe("QTI companion materials parsing", () => {
     expect(result.ok).toBe(true);
     expect(result.document?.item.companionMaterials).toEqual({
       physicalMaterials: [],
-      unparsedChildren: [
+      digitalMaterials: [
         expect.objectContaining({
-          qtiName: "qti-digital-material",
+          fileHref: "../materials/reference.txt",
+          resourceIcon: "../materials/reference.svg",
+          attributes: {
+            label: "Reference card",
+            "mime-type": "text/plain",
+          },
           source: expect.objectContaining({
             path: "/qti-assessment-item/qti-companion-materials-info[1]/qti-digital-material[1]",
           }),
         }),
       ],
+      unparsedChildren: [],
       source: expect.objectContaining({
         path: "/qti-assessment-item/qti-companion-materials-info[1]",
       }),
     });
-    expect(result.diagnostics).toEqual(
+    expect(result.diagnostics).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: "companionMaterials.child.unsupported",
+        }),
+      ]),
+    );
+  });
+
+  it("preserves multiple digital companion materials", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="multiple-digital-companion-materials" title="multiple-digital-companion-materials" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-digital-material label="Formula sheet" mime-type="application/pdf">
+            <qti-file-href>../materials/formulas.pdf</qti-file-href>
+          </qti-digital-material>
+          <qti-digital-material>
+            <qti-file-href>../materials/map.html</qti-file-href>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the digital companion materials.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.companionMaterials?.digitalMaterials).toEqual([
+      expect.objectContaining({
+        fileHref: "../materials/formulas.pdf",
+        attributes: {
+          label: "Formula sheet",
+          "mime-type": "application/pdf",
+        },
+        resourceIcon: undefined,
+      }),
+      expect.objectContaining({
+        fileHref: "../materials/map.html",
+        attributes: {},
+        resourceIcon: undefined,
+      }),
+    ]);
+  });
+
+  it("omits digital companion materials without qti-file-href", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-digital-file-href" title="missing-digital-file-href" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-digital-material label="Reference card" mime-type="text/plain">
+            <qti-resource-icon>../materials/reference.svg</qti-resource-icon>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the digital reference card.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.companionMaterials?.digitalMaterials).toEqual([]);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "companionMaterials.digitalMaterial.fileHref.missing",
           severity: "warning",
           path: "/qti-assessment-item/qti-companion-materials-info[1]/qti-digital-material[1]",
+        }),
+      ]),
+    );
+  });
+
+  it("reports duplicate qti-resource-icon children on digital companion materials", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duplicate-digital-resource-icon" title="duplicate-digital-resource-icon" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-digital-material label="Reference card" mime-type="text/plain">
+            <qti-file-href>../materials/reference.txt</qti-file-href>
+            <qti-resource-icon>../materials/reference-a.svg</qti-resource-icon>
+            <qti-resource-icon>../materials/reference-b.svg</qti-resource-icon>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the digital reference card.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.companionMaterials?.digitalMaterials).toEqual([
+      expect.objectContaining({
+        fileHref: "../materials/reference.txt",
+        resourceIcon: "../materials/reference-a.svg",
+      }),
+    ]);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "companionMaterials.digitalMaterial.resourceIcon.duplicate",
+          severity: "error",
+          path: "/qti-assessment-item/qti-companion-materials-info[1]/qti-digital-material[1]/qti-resource-icon[2]",
+        }),
+      ]),
+    );
+  });
+
+  it("reports duplicate qti-file-href children on digital companion materials", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duplicate-digital-file-href" title="duplicate-digital-file-href" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-digital-material label="Reference card" mime-type="text/plain">
+            <qti-file-href>../materials/reference.txt</qti-file-href>
+            <qti-file-href>../materials/duplicate.txt</qti-file-href>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the digital reference card.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.companionMaterials?.digitalMaterials).toEqual([
+      expect.objectContaining({
+        fileHref: "../materials/reference.txt",
+      }),
+    ]);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "companionMaterials.digitalMaterial.fileHref.duplicate",
+          severity: "error",
+          path: "/qti-assessment-item/qti-companion-materials-info[1]/qti-digital-material[1]/qti-file-href[2]",
+        }),
+      ]),
+    );
+  });
+
+  it("omits digital companion materials with empty qti-file-href", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="empty-digital-file-href" title="empty-digital-file-href" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-digital-material label="Reference card" mime-type="text/plain">
+            <qti-file-href>   </qti-file-href>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the digital reference card.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.companionMaterials?.digitalMaterials).toEqual([]);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "companionMaterials.digitalMaterial.fileHref.empty",
+          severity: "warning",
+          path: "/qti-assessment-item/qti-companion-materials-info[1]/qti-digital-material[1]/qti-file-href[1]",
         }),
       ]),
     );
@@ -153,8 +303,9 @@ describe("QTI companion materials parsing", () => {
         expect.objectContaining({
           qtiName: "qti-digital-material",
           category: "itemMetadata",
-          support: "unsupported",
-          parse: false,
+          support: "parsed",
+          parse: true,
+          validate: true,
         }),
       ]),
     );

@@ -20,6 +20,7 @@ export {
   type QtiPackageXmlTree,
 } from "./package-xml.js";
 export { parseQtiXml } from "./parser.js";
+export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
 export {
   scoreQtiItemServerSide,
   type QtiServerScoringInput,
@@ -179,6 +180,7 @@ export type {
   QtiCompanionMaterialsUnparsedChild,
   QtiContentNode,
   QtiCustomInteractionDefinition,
+  QtiDigitalMaterial,
   QtiInteractionMarkupDefinition,
   QtiDiagnostic,
   QtiDocument,

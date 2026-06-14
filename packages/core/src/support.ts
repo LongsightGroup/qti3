@@ -255,7 +255,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/core/src/parser-item-metadata.test.ts",
     ],
     notes:
-      "Parses qti-physical-material text only. qti-digital-material is preserved in unparsedChildren and emits companionMaterials.child.unsupported at parse time.",
+      "Parses qti-physical-material text and qti-digital-material file references. Digital materials require non-empty qti-file-href text and may include label, mime-type, and qti-resource-icon metadata.",
   },
   {
     qtiName: "qti-physical-material",
@@ -277,10 +277,10 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
   {
     qtiName: "qti-digital-material",
     category: "itemMetadata",
-    support: "unsupported",
+    support: "parsed",
     specReference: "QTI 3.0.1 ASI",
-    parse: false,
-    validate: false,
+    parse: true,
+    validate: true,
     render: false,
     process: false,
     fixtures: [
@@ -291,7 +291,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/core/src/parser-item-metadata.test.ts",
     ],
     notes:
-      "Recognized as an unparsed child of qti-companion-materials-info. Full digital material parsing is not implemented yet.",
+      "Child of qti-companion-materials-info. Parsed from qti-file-href with optional label, mime-type, and qti-resource-icon metadata. Element attributes are preserved on the parsed model. Missing or empty qti-file-href emits companionMaterials.digitalMaterial.fileHref.* diagnostics.",
   },
 ];
 

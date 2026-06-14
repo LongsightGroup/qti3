@@ -32,6 +32,7 @@ describe("QTI item metadata parsing", () => {
     expect(result.ok).toBe(true);
     expect(result.document?.item.companionMaterials).toEqual({
       physicalMaterials: [],
+      digitalMaterials: [],
       unparsedChildren: [],
       source: expect.objectContaining({
         path: "/qti-assessment-item/qti-companion-materials-info[1]",
@@ -142,6 +143,67 @@ describe("QTI item metadata parsing", () => {
     expect(validation.diagnostics).toEqual([
       expect.objectContaining({
         code: "companionMaterials.model.inconsistent",
+        severity: "error",
+      }),
+    ]);
+  });
+
+  it("rejects companion materials models with digital material listed as unparsed", () => {
+    const result = parseQtiXml(`
+      ${assessmentItemOpen}
+        <qti-companion-materials-info>
+          <qti-digital-material>
+            <qti-file-href>../materials/reference.txt</qti-file-href>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+      ${assessmentItemClose}
+    `);
+
+    if (!result.document?.item.companionMaterials) {
+      throw new Error("Expected companion materials on parsed document.");
+    }
+
+    result.document.item.companionMaterials.unparsedChildren.push({
+      qtiName: "qti-digital-material",
+      source: result.document.item.companionMaterials.digitalMaterials[0]?.source,
+    });
+
+    const validation = validateAssessmentItem(result.document);
+    expect(validation.ok).toBe(false);
+    expect(validation.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "companionMaterials.model.inconsistent",
+        severity: "error",
+      }),
+    ]);
+  });
+
+  it("rejects companion materials models that retain empty digital file hrefs", () => {
+    const result = parseQtiXml(`
+      ${assessmentItemOpen}
+        <qti-companion-materials-info>
+          <qti-digital-material>
+            <qti-file-href>../materials/reference.txt</qti-file-href>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+      ${assessmentItemClose}
+    `);
+
+    if (!result.document?.item.companionMaterials) {
+      throw new Error("Expected companion materials on parsed document.");
+    }
+
+    result.document.item.companionMaterials.digitalMaterials.push({
+      fileHref: "   ",
+      attributes: {},
+      source: result.document.item.companionMaterials.digitalMaterials[0]?.source,
+    });
+
+    const validation = validateAssessmentItem(result.document);
+    expect(validation.ok).toBe(false);
+    expect(validation.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "companionMaterials.digitalMaterial.fileHref.empty.model",
         severity: "error",
       }),
     ]);

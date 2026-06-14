@@ -456,6 +456,7 @@ export interface QtiAssessmentItem {
 
 export interface QtiCompanionMaterialsInfo {
   physicalMaterials: QtiPhysicalMaterial[];
+  digitalMaterials: QtiDigitalMaterial[];
   unparsedChildren: QtiCompanionMaterialsUnparsedChild[];
   source?: QtiSourceLocation | undefined;
 }
@@ -467,6 +468,13 @@ export interface QtiCompanionMaterialsUnparsedChild {
 
 export interface QtiPhysicalMaterial {
   text: string;
+  source?: QtiSourceLocation | undefined;
+}
+
+export interface QtiDigitalMaterial {
+  fileHref: string;
+  resourceIcon?: string | undefined;
+  attributes: Record<string, string>;
   source?: QtiSourceLocation | undefined;
 }
 

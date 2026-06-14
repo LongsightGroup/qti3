@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Parse `qti-digital-material` companion materials into the core item metadata model, including
+  structured `qti-file-href`, optional `qti-resource-icon`, preserved attributes, diagnostics,
+  validation, fixture coverage, and support-matrix metadata.
+
 ## 0.8.1 - 2026-06-13
 
 ### Changed
