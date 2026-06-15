@@ -380,6 +380,121 @@ test.describe("manual harness", () => {
     await expect(page.locator("#debug-stylesheets")).toContainText('"media": "screen"');
   });
 
+  test("exposes resolved companion materials for host chrome", async ({ page }) => {
+    await page.goto("/");
+    const xml = `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="companion-materials-host" title="companion-materials-host" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-physical-material>Bring a ruler.</qti-physical-material>
+          <qti-digital-material label="Reference card" mime-type="text/plain">
+            <qti-file-href>materials/reference.txt</qti-file-href>
+            <qti-resource-icon>materials/reference.svg</qti-resource-icon>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the companion materials.</p></qti-item-body>
+      </qti-assessment-item>
+    `;
+
+    await page.locator("qti-assessment-item-player").evaluate(async (element, itemXml) => {
+      await (
+        element as HTMLElement & {
+          loadXml: (
+            xml: string,
+            options?: { resolveAsset?: (url: string) => string },
+          ) => Promise<void>;
+        }
+      ).loadXml(itemXml, {
+        resolveAsset: (url) => `https://package.example/${url}`,
+      });
+    }, xml);
+
+    const resolution = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return (
+        element as HTMLElement & {
+          getCompanionMaterialsResolution: () =>
+            | {
+                physicalMaterials: Array<{ text: string }>;
+                digitalMaterials: Array<{
+                  fileHref: string;
+                  resolvedFileHref?: string;
+                  label?: string;
+                  mimeType?: string;
+                  resourceIcon?: string;
+                  resolvedResourceIcon?: string;
+                }>;
+              }
+            | undefined;
+        }
+      ).getCompanionMaterialsResolution();
+    });
+
+    expect(resolution?.physicalMaterials).toEqual([
+      expect.objectContaining({ text: "Bring a ruler." }),
+    ]);
+    expect(resolution?.digitalMaterials).toEqual([
+      expect.objectContaining({
+        fileHref: "materials/reference.txt",
+        resolvedFileHref: "https://package.example/materials/reference.txt",
+        label: "Reference card",
+        mimeType: "text/plain",
+        resourceIcon: "materials/reference.svg",
+        resolvedResourceIcon: "https://package.example/materials/reference.svg",
+      }),
+    ]);
+    await expect(page.locator("#debug-companion-materials")).toContainText(
+      '"text": "Bring a ruler."',
+    );
+    await expect(page.locator("#debug-companion-materials")).toContainText(
+      '"resolvedFileHref": "https://package.example/materials/reference.txt"',
+    );
+  });
+
+  test("lets hosts override companion material asset resolution per call", async ({ page }) => {
+    await page.goto("/");
+    const xml = `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="companion-materials-override" title="companion-materials-override" time-dependent="false">
+        <qti-companion-materials-info>
+          <qti-digital-material>
+            <qti-file-href>materials/reference.txt</qti-file-href>
+          </qti-digital-material>
+        </qti-companion-materials-info>
+        <qti-item-body><p>Use the companion materials.</p></qti-item-body>
+      </qti-assessment-item>
+    `;
+
+    const resolution = await page
+      .locator("qti-assessment-item-player")
+      .evaluate(async (element, itemXml) => {
+        const player = element as HTMLElement & {
+          loadXml: (
+            xml: string,
+            options?: { resolveAsset?: (url: string) => string },
+          ) => Promise<void>;
+          getCompanionMaterialsResolution: (options?: {
+            resolveAsset?: (url: string) => string;
+          }) =>
+            | {
+                digitalMaterials: Array<{
+                  resolvedFileHref?: string;
+                }>;
+              }
+            | undefined;
+        };
+
+        await player.loadXml(itemXml, {
+          resolveAsset: (url) => `https://load.example/${url}`,
+        });
+
+        return player.getCompanionMaterialsResolution({
+          resolveAsset: (url) => `https://override.example/${url}`,
+        });
+      }, xml);
+
+    expect(resolution?.digitalMaterials[0]?.resolvedFileHref).toBe(
+      "https://override.example/materials/reference.txt",
+    );
+  });
+
   test("shows accessibility proof and manual assistive technology scripts", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "associate");

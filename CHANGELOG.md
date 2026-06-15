@@ -7,6 +7,9 @@
 - Parse `qti-digital-material` companion materials into the core item metadata model, including
   structured `qti-file-href`, optional `qti-resource-icon`, preserved attributes, diagnostics,
   validation, fixture coverage, and support-matrix metadata.
+- Expose host-readable companion materials resolution through `@longsightgroup/qti3-core` and
+  `qti-assessment-item-player.getCompanionMaterialsResolution()`, including optional package asset
+  URL resolution via `resolveAsset`.
 
 ## 0.8.1 - 2026-06-13
 

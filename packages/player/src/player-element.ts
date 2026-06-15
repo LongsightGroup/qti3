@@ -2,6 +2,7 @@ import {
   assertQtiAttemptStateV1,
   createItemSession,
   createCatalogSupportResolution,
+  createCompanionMaterialsResolution,
   createTextToSpeechTraversal,
   parseQtiXml,
   type QtiAttemptStateV1,
@@ -13,6 +14,8 @@ import {
   type QtiScoreResult,
   type QtiCatalogSupportResolution,
   type QtiCatalogSupportResolutionOptions,
+  type QtiCompanionMaterialsResolution,
+  type QtiCompanionMaterialsResolutionOptions,
   type QtiTextToSpeechTraversal,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
@@ -434,6 +437,16 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   ): QtiCatalogSupportResolution | undefined {
     if (!this.documentModel) return undefined;
     return createCatalogSupportResolution(this.documentModel, options);
+  }
+
+  getCompanionMaterialsResolution(
+    options: QtiCompanionMaterialsResolutionOptions = {},
+  ): QtiCompanionMaterialsResolution | undefined {
+    if (!this.documentModel) return undefined;
+    return createCompanionMaterialsResolution(this.documentModel, {
+      ...options,
+      resolveAsset: options.resolveAsset ?? this.resolveAsset,
+    });
   }
 
   getInteractionRegions(): QtiInteractionRegion[] {

@@ -1,4 +1,7 @@
 import type { QtiContentNode, QtiValue } from "@longsightgroup/qti3-core";
+import { isResolvableAssetUrl } from "@longsightgroup/qti3-core";
+
+export { isResolvableAssetUrl };
 
 const htmlContentElements = new Set([
   "a",
@@ -245,16 +248,6 @@ export function isSafeUrl(value: string): boolean {
     value.startsWith("data:image/") ||
     value.startsWith("data:audio/") ||
     value.startsWith("data:video/")
-  );
-}
-
-export function isResolvableAssetUrl(value: string): boolean {
-  return (
-    !value.startsWith("#") &&
-    !value.startsWith("data:") &&
-    !value.startsWith("blob:") &&
-    !value.startsWith("http://") &&
-    !value.startsWith("https://")
   );
 }
 

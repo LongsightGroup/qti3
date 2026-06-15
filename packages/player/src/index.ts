@@ -3,6 +3,9 @@ export type {
   QtiAttemptStateV1,
   QtiCatalogSupportResolution,
   QtiCatalogSupportResolutionOptions,
+  QtiCompanionMaterialsResolution,
+  QtiCompanionMaterialsResolutionOptions,
+  QtiResolvedCompanionMaterialUnparsedChild,
   QtiScoreResult,
   QtiTextToSpeechTraversal,
 } from "@longsightgroup/qti3-core";

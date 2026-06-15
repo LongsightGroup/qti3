@@ -3,7 +3,10 @@ import {
   manualAssistiveTechnologyScripts,
 } from "@longsightgroup/qti3-a11y";
 import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
-import { defineQtiAssessmentItemPlayer } from "@longsightgroup/qti3-player";
+import {
+  defineQtiAssessmentItemPlayer,
+  type QtiAssessmentItemPlayer,
+} from "@longsightgroup/qti3-player";
 
 defineQtiAssessmentItemPlayer();
 
@@ -35,6 +38,9 @@ const debugOutcomes = document.querySelector<HTMLPreElement>("#debug-outcomes");
 const debugTemplateValues = document.querySelector<HTMLPreElement>("#debug-template-values");
 const debugCatalogs = document.querySelector<HTMLPreElement>("#debug-catalogs");
 const debugStylesheets = document.querySelector<HTMLPreElement>("#debug-stylesheets");
+const debugCompanionMaterials = document.querySelector<HTMLPreElement>(
+  "#debug-companion-materials",
+);
 const debugPackage = document.querySelector<HTMLPreElement>("#debug-package");
 const debugValidation = document.querySelector<HTMLPreElement>("#debug-validation");
 const debugDiagnostics = document.querySelector<HTMLPreElement>("#debug-diagnostics");
@@ -43,7 +49,9 @@ const debugActionLog = document.querySelector<HTMLPreElement>("#debug-action-log
 const debugA11yProof = document.querySelector<HTMLElement>("#debug-a11y-proof");
 const debugAtScripts = document.querySelector<HTMLElement>("#debug-at-scripts");
 const events = document.querySelector<HTMLPreElement>("#events");
-const player = document.querySelector("qti-assessment-item-player");
+const player = document.querySelector(
+  "qti-assessment-item-player",
+) as QtiAssessmentItemPlayer | null;
 
 if (
   !fixtureSelect ||
@@ -74,6 +82,7 @@ if (
   !debugTemplateValues ||
   !debugCatalogs ||
   !debugStylesheets ||
+  !debugCompanionMaterials ||
   !debugPackage ||
   !debugValidation ||
   !debugDiagnostics ||
@@ -117,6 +126,7 @@ let latestDiagnostics: unknown[] = [];
 let latestValidationMessages: unknown[] = [];
 let latestCatalogs: unknown[] = [];
 let latestStylesheets: unknown[] = [];
+let latestCompanionMaterials: unknown = null;
 let latestPackage: PackageDebugState = emptyPackageDebugState();
 let currentInteractionTypes: string[] = [];
 const fixtureIds: string[] = [];
@@ -269,6 +279,7 @@ for (const eventName of [
       latestValidationMessages = [];
       latestCatalogs = catalogsFromDetail(detail);
       latestStylesheets = stylesheetsFromDetail(detail);
+      latestCompanionMaterials = player.getCompanionMaterialsResolution() ?? null;
       currentInteractionTypes = interactionTypesFromDetail(detail);
       resetScorePanel();
     } else if (eventName === "qti-responsechange") {
@@ -382,6 +393,7 @@ function renderDebugPanels(): void {
   debugTemplateValues.textContent = stableJson(state?.templateValues ?? {});
   debugCatalogs.textContent = stableJson(latestCatalogs);
   debugStylesheets.textContent = stableJson(latestStylesheets);
+  debugCompanionMaterials.textContent = stableJson(latestCompanionMaterials);
   debugPackage.textContent = stableJson(latestPackage);
   debugValidation.textContent = stableJson(latestValidationMessages);
   debugDiagnostics.textContent = stableJson(latestDiagnostics);

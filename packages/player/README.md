@@ -262,6 +262,38 @@ Region `label` values come from `aria-label`, `title`, and finally trimmed `text
 Tabular match interactions expose one `control` region per matrix cell toggle rather than separate
 `source` and `target` regions.
 
+## Companion materials (host chrome)
+
+`qti-companion-materials-info` is item metadata, not item-body content. The player parses
+physical and digital companion materials into the core model but does not render a materials panel.
+Hosts read them after load and present them in product chrome such as a sidebar, pre-test screen,
+or printable instructions view.
+
+```ts
+const resolution = player.getCompanionMaterialsResolution();
+```
+
+`physicalMaterials` contains non-empty instruction text such as "Bring a printed formula sheet."
+`digitalMaterials` contains authored `fileHref` values plus optional `label`, `mimeType`, and
+`resourceIcon` metadata lifted from element attributes. `unparsedChildren` lists unsupported
+companion material elements that were preserved for tolerance diagnostics.
+
+When items are delivered from a QTI package, pass `resolveAsset` in `loadXml` / `loadUrl` so
+resolved URLs are available for host links:
+
+```ts
+await player.loadXml(xml, {
+  resolveAsset: (url) => packageAssetUrlFor(url),
+});
+
+const materials = player.getCompanionMaterialsResolution();
+const reference = materials?.digitalMaterials[0];
+const href = reference?.resolvedFileHref ?? reference?.fileHref;
+```
+
+You can also call `createCompanionMaterialsResolution()` from `@longsightgroup/qti3-core` in Node
+for inspection or server-side delivery planning.
+
 ## Styling
 
 The player uses light DOM and is style-neutral by design. Host applications can style

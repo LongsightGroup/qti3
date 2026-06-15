@@ -6,6 +6,15 @@ export {
   type QtiResolvedCatalogSupport,
 } from "./catalog.js";
 export {
+  createCompanionMaterialsResolution,
+  type QtiCompanionMaterialsResolution,
+  type QtiCompanionMaterialsResolutionOptions,
+  type QtiResolvedCompanionMaterialUnparsedChild,
+  type QtiResolvedDigitalCompanionMaterial,
+  type QtiResolvedPhysicalCompanionMaterial,
+} from "./companion-materials-resolution.js";
+export { isResolvableAssetUrl } from "./asset-url.js";
+export {
   analyzeQtiDeliverySecurity,
   buildQtiDeliverySafeXml,
   type QtiDeliverySafeXmlResult,

@@ -2,6 +2,8 @@ import type {
   QtiAttemptStateV1,
   QtiCatalogSupportResolution,
   QtiCatalogSupportResolutionOptions,
+  QtiCompanionMaterialsResolution,
+  QtiCompanionMaterialsResolutionOptions,
   QtiScoreResult,
   QtiTextToSpeechTraversal,
 } from "@longsightgroup/qti3-core";
@@ -78,6 +80,9 @@ export interface QtiAssessmentItemPlayerHandle {
   getCatalogSupportResolution(
     options?: QtiCatalogSupportResolutionOptions,
   ): QtiCatalogSupportResolution | undefined;
+  getCompanionMaterialsResolution(
+    options?: QtiCompanionMaterialsResolutionOptions,
+  ): QtiCompanionMaterialsResolution | undefined;
 }
 
 export const qtiAssessmentItemPlayerAdapterEventEntries = [
@@ -244,6 +249,8 @@ export function createQtiAssessmentItemPlayerHandle(
     getInteractionRegions: () => requiredElement(getElement).getInteractionRegions(),
     getCatalogSupportResolution: (options) =>
       requiredElement(getElement).getCatalogSupportResolution(options),
+    getCompanionMaterialsResolution: (options) =>
+      requiredElement(getElement).getCompanionMaterialsResolution(options),
   };
 }
 

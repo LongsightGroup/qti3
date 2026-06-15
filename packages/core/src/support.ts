@@ -255,7 +255,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/core/src/parser-item-metadata.test.ts",
     ],
     notes:
-      "Parses qti-physical-material text and qti-digital-material file references. Digital materials require non-empty qti-file-href text and may include label, mime-type, and qti-resource-icon metadata.",
+      "Parses qti-physical-material text and qti-digital-material file references. Digital materials require non-empty qti-file-href text and may include label, mime-type, and qti-resource-icon metadata. Hosts read resolved materials through createCompanionMaterialsResolution() or player.getCompanionMaterialsResolution().",
   },
   {
     qtiName: "qti-physical-material",
