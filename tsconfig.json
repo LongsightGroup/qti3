@@ -8,6 +8,7 @@
     { "path": "./packages/player-preact" },
     { "path": "./packages/player-react" },
     { "path": "./packages/conformance" },
+    { "path": "./packages/pnp" },
     { "path": "./packages/a11y" },
     { "path": "./packages/cli" }
   ]

@@ -71,6 +71,10 @@
       },
       "devDependencies": {}
     },
+    "packages/pnp": {
+      "dependencies": {},
+      "devDependencies": {}
+    },
     "packages/player-preact": {
       "dependencies": {
         "@longsightgroup/qti3-player": "workspace:*"

@@ -1,0 +1,50 @@
+{
+  "name": "@longsightgroup/qti3-pnp",
+  "version": "0.8.2",
+  "description": "Dependency-free TypeScript resolver for QTI 3 Personal Needs and Preferences records.",
+  "keywords": [
+    "accessibility",
+    "assessment",
+    "pnp",
+    "qti",
+    "qti3",
+    "typescript"
+  ],
+  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/pnp#readme",
+  "bugs": {
+    "url": "https://github.com/LongsightGroup/qti3/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Sam Ottenhoff",
+    "url": "https://github.com/ottenhoff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LongsightGroup/qti3.git",
+    "directory": "packages/pnp"
+  },
+  "files": [
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "!dist/**/*.test.*",
+    "src/**/*.ts",
+    "!src/**/*.test.ts"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm --dir ../.. release:check"
+  }
+}

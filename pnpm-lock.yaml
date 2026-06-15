@@ -149,6 +149,8 @@ importers:
         specifier: 19.2.6
         version: 19.2.6(react@19.2.6)
 
+  packages/pnp: {}
+
 packages:
 
   '@emnapi/core@1.10.0':

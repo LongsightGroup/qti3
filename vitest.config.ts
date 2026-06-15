@@ -24,6 +24,10 @@ export default defineConfig({
         find: "@longsightgroup/qti3-a11y",
         replacement: fileURLToPath(new URL("./packages/a11y/src/index.ts", import.meta.url)),
       },
+      {
+        find: "@longsightgroup/qti3-pnp",
+        replacement: fileURLToPath(new URL("./packages/pnp/src/index.ts", import.meta.url)),
+      },
     ],
   },
   test: {
