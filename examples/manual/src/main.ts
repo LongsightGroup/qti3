@@ -4,6 +4,14 @@ import {
 } from "@longsightgroup/qti3-a11y";
 import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
 import {
+  createDefaultQti3PnpCapabilities,
+  normalizeQti3Pnp,
+  parseQti3PnpXml,
+  resolveQti3Pnp,
+  type Qti3PnpResolution,
+  type QtiCatalogSupportSummary,
+} from "@longsightgroup/qti3-pnp";
+import {
   defineQtiAssessmentItemPlayer,
   type QtiAssessmentItemPlayer,
 } from "@longsightgroup/qti3-player";
@@ -23,6 +31,10 @@ const fileSummary = document.querySelector<HTMLParagraphElement>("#file-summary"
 const xmlInput = document.querySelector<HTMLTextAreaElement>("#xml");
 const packageLoader = document.querySelector<HTMLDetailsElement>("#package-loader");
 const xmlLoader = document.querySelector<HTMLDetailsElement>("#xml-loader");
+const pnpForm = document.querySelector<HTMLFormElement>("#pnp-form");
+const pnpXmlInput = document.querySelector<HTMLTextAreaElement>("#pnp-xml");
+const resetPnp = document.querySelector<HTMLButtonElement>("#reset-pnp");
+const debugPnp = document.querySelector<HTMLPreElement>("#debug-pnp");
 const scorePanel = document.querySelector<HTMLElement>("#score-panel");
 const scoreStatus = document.querySelector<HTMLParagraphElement>("#score-status");
 const scoreValue = document.querySelector<HTMLElement>("#score-value");
@@ -67,6 +79,10 @@ if (
   !xmlInput ||
   !packageLoader ||
   !xmlLoader ||
+  !pnpForm ||
+  !pnpXmlInput ||
+  !resetPnp ||
+  !debugPnp ||
   !scorePanel ||
   !scoreStatus ||
   !scoreValue ||
@@ -128,6 +144,7 @@ let latestCatalogs: unknown[] = [];
 let latestStylesheets: unknown[] = [];
 let latestCompanionMaterials: unknown = null;
 let latestPackage: PackageDebugState = emptyPackageDebugState();
+let latestPnp: unknown = { status: "not-applied" };
 let currentInteractionTypes: string[] = [];
 const fixtureIds: string[] = [];
 const actionLog: Array<{ time: string; action: string; status?: string; detail?: unknown }> = [];
@@ -178,8 +195,49 @@ const extendedTextPatternMaskExample = {
   </qti-item-body>
 </qti-assessment-item>`,
 };
-const manualExampleFixtures = [graphicGapImageChoiceExample, extendedTextPatternMaskExample];
+const pnpKeywordEmphasisExample = {
+  id: "pnp-keyword-emphasis-example",
+  title: "PNP keyword emphasis and catalog",
+  xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pnp-keyword-emphasis-example" title="PNP keyword emphasis and catalog" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE">
+      <qti-prompt>Choose the statement with the <span class="qti-keyword-emphasis" data-catalog-idref="pnp-help">critical keyword</span>.</qti-prompt>
+      <qti-simple-choice identifier="A">The critical keyword is emphasized when host-provided PNP requests it.</qti-simple-choice>
+      <qti-simple-choice identifier="B">The player fetches the candidate's PNP profile on its own.</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="pnp-help">
+      <qti-card support="linguistic-guidance">
+        <qti-card-entry xml:lang="en" default="true">
+          <qti-html-content>Critical means the word should receive extra attention.</qti-html-content>
+        </qti-card-entry>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+</qti-assessment-item>`,
+};
+const manualExampleFixtures = [
+  graphicGapImageChoiceExample,
+  extendedTextPatternMaskExample,
+  pnpKeywordEmphasisExample,
+];
 const selectableFixtures = [...canonicalFixtures, ...manualExampleFixtures];
+const samplePnpXml = `<access-for-all-pnp identifier="synthetic-candidate">
+  <keyword-emphasis/>
+  <linguistic-guidance language="en"/>
+  <note-taking-on-screen/>
+  <ext:longsight-glossary-illustration xmlns:ext="urn:example"/>
+</access-for-all-pnp>`;
+
+pnpXmlInput.value = samplePnpXml;
 
 for (const category of ["interaction", "processing", "adaptive"] as const) {
   const fixtures = canonicalFixtures.filter((fixture) => fixture.category === category);
@@ -226,6 +284,19 @@ nextFixture.addEventListener("click", async () => {
 loadXml.addEventListener("click", async () => {
   xmlLoader.open = true;
   await player.loadXml(xmlInput.value);
+});
+
+pnpForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  applyPnp();
+});
+
+resetPnp.addEventListener("click", () => {
+  pnpXmlInput.value = samplePnpXml;
+  player.keywordEmphasisEnabled = false;
+  latestPnp = { status: "reset" };
+  appendActionLog("pnp-reset", latestPnp);
+  renderDebugPanels();
 });
 
 debugScore.addEventListener("click", () => player.scoreAttempt());
@@ -395,11 +466,79 @@ function renderDebugPanels(): void {
   debugStylesheets.textContent = stableJson(latestStylesheets);
   debugCompanionMaterials.textContent = stableJson(latestCompanionMaterials);
   debugPackage.textContent = stableJson(latestPackage);
+  debugPnp.textContent = stableJson(latestPnp);
   debugValidation.textContent = stableJson(latestValidationMessages);
   debugDiagnostics.textContent = stableJson(latestDiagnostics);
   debugState.textContent = stableJson(state ?? {});
   debugActionLog.textContent = stableJson(actionLog);
   renderAccessibilityProof();
+}
+
+function applyPnp(): void {
+  const parsed = parseQti3PnpXml(pnpXmlInput.value);
+  const normalized = normalizeQti3Pnp(parsed);
+  const resolution = resolveQti3Pnp(normalized.profile, {
+    capabilities: createDefaultQti3PnpCapabilities(),
+    qti: { catalogSupports: pnpCatalogSupports(latestCatalogs) },
+    activity: { language: "en" },
+    policy: { onUnsupportedSupport: "diagnostic" },
+  });
+
+  applyPnpResolution(resolution);
+  latestPnp = {
+    status: normalized.ok ? "applied" : "applied-with-diagnostics",
+    parsed: {
+      ok: parsed.ok,
+      diagnostics: parsed.diagnostics,
+    },
+    normalized: {
+      ok: normalized.ok,
+      preferences: normalized.profile.preferences,
+      diagnostics: normalized.diagnostics,
+    },
+    resolution,
+    appliedPlayerOptions: {
+      keywordEmphasisEnabled: player.keywordEmphasisEnabled,
+    },
+  };
+  appendActionLog("pnp-apply", latestPnp);
+  renderDebugPanels();
+}
+
+function applyPnpResolution(resolution: Qti3PnpResolution): void {
+  player.keywordEmphasisEnabled = resolution.display.keywordEmphasis === true;
+}
+
+function pnpCatalogSupports(catalogs: unknown[]): QtiCatalogSupportSummary[] {
+  const summaries: QtiCatalogSupportSummary[] = [];
+  for (const catalog of catalogs) {
+    if (!isRecord(catalog) || typeof catalog.id !== "string" || !Array.isArray(catalog.cards)) {
+      continue;
+    }
+    for (const card of catalog.cards) {
+      if (!isRecord(card) || typeof card.support !== "string") continue;
+      const entries = Array.isArray(card.entries) ? card.entries : [];
+      if (entries.length === 0) {
+        summaries.push({
+          catalogId: catalog.id,
+          support: card.support,
+          default: true,
+        });
+        continue;
+      }
+      for (const entry of entries) {
+        if (!isRecord(entry)) continue;
+        const summary: QtiCatalogSupportSummary = {
+          catalogId: catalog.id,
+          support: card.support,
+          default: entry.default === true,
+        };
+        if (typeof entry.language === "string") summary.language = entry.language;
+        summaries.push(summary);
+      }
+    }
+  }
+  return summaries;
 }
 
 function appendActionLog(action: string, detail: unknown): void {

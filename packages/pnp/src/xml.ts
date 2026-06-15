@@ -85,11 +85,17 @@ function xmlLike(input: unknown): Qti3PnpElementLike | undefined {
   if (!isRecord(input)) return undefined;
   const documentElement = input.documentElement;
   if (documentElement) return xmlLike(documentElement);
+  const nodeType = input.nodeType;
+  if (typeof nodeType === "number" && nodeType !== 1 && nodeType !== 9) return undefined;
+  const localName = stringProperty(input, "localName");
+  const prefix = stringProperty(input, "prefix");
   const name =
-    stringProperty(input, "localName") ??
-    stringProperty(input, "nodeName") ??
-    stringProperty(input, "tagName") ??
-    stringProperty(input, "name");
+    prefix && localName
+      ? `${prefix}:${localName}`
+      : (localName ??
+        stringProperty(input, "nodeName") ??
+        stringProperty(input, "tagName") ??
+        stringProperty(input, "name"));
   if (!name) return undefined;
   return {
     name,

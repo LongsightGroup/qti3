@@ -62,6 +62,24 @@ describe("@longsightgroup/qti3-pnp", () => {
     );
   });
 
+  it("ignores DOM text nodes and preserves extension prefixes", () => {
+    const parsed = parseQti3PnpXml({
+      documentElement: domElement("access-for-all-pnp", {}, [
+        domText("\n  "),
+        domElement("keyword-emphasis"),
+        domText("\n  "),
+        domElement("longsight-glossary-illustration", { "xmlns:ext": "urn:example" }, [], "ext"),
+        domText("\n"),
+      ]),
+    });
+    const normalized = normalizeQti3Pnp(parsed);
+
+    expect(normalized.profile.preferences.map((preference) => preference.support)).toEqual([
+      "keyword-emphasis",
+      "ext:longsight-glossary-illustration",
+    ]);
+  });
+
   it("requires DOMParser or an XML adapter for XML strings", () => {
     const parsed = parseQti3PnpXml("<access-for-all-pnp/>");
 
@@ -402,4 +420,24 @@ function el(
   text = "",
 ): Qti3PnpElementLike {
   return { name, attributes, children, text };
+}
+
+function domElement(
+  localName: string,
+  attributes: Record<string, string> = {},
+  childNodes: unknown[] = [],
+  prefix?: string,
+): unknown {
+  return {
+    nodeType: 1,
+    localName,
+    prefix,
+    childNodes,
+    getAttributeNames: () => Object.keys(attributes),
+    getAttribute: (name: string) => attributes[name],
+  };
+}
+
+function domText(textContent: string): unknown {
+  return { nodeType: 3, nodeName: "#text", textContent };
 }

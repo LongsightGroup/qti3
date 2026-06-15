@@ -273,6 +273,34 @@
         margin-block: 1rem;
       }
 
+      .pnp-panel {
+        display: grid;
+        gap: 0.65rem;
+        margin-block: 1rem;
+        padding: 0.85rem;
+        border: 1px solid var(--line);
+        background: var(--panel-alt);
+      }
+
+      .pnp-panel h2 {
+        margin: 0;
+      }
+
+      .pnp-panel form {
+        display: grid;
+        gap: 0.65rem;
+      }
+
+      .pnp-panel textarea {
+        min-block-size: 10rem;
+      }
+
+      .pnp-actions {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+      }
+
       .debug-grid {
         display: grid;
         gap: 0.75rem;
@@ -401,6 +429,23 @@
             </div>
           </details>
         </div>
+        <section class="pnp-panel" aria-labelledby="pnp-heading">
+          <h2 id="pnp-heading">PNP resolver</h2>
+          <form id="pnp-form" action="/" method="post">
+            <label for="pnp-xml">
+              Synthetic PNP XML
+              <textarea id="pnp-xml" name="pnp_xml" spellcheck="false"></textarea>
+            </label>
+            <div class="pnp-actions">
+              <button id="apply-pnp" type="submit">Apply PNP</button>
+              <button id="reset-pnp" type="button">Reset PNP</button>
+            </div>
+          </form>
+          <details>
+            <summary>Resolved PNP debug</summary>
+            <pre id="debug-pnp">{}</pre>
+          </details>
+        </section>
         <div id="score-panel" class="score-panel" data-status="idle" aria-live="polite">
           <h2>Score result</h2>
           <p id="score-status">Not scored yet.</p>

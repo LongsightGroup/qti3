@@ -53,6 +53,9 @@ importers:
       '@longsightgroup/qti3-player-react':
         specifier: workspace:*
         version: link:../../packages/player-react
+      '@longsightgroup/qti3-pnp':
+        specifier: workspace:*
+        version: link:../../packages/pnp
     devDependencies:
       '@types/react':
         specifier: 19.2.14
