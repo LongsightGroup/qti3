@@ -20,6 +20,7 @@ export async function loadSvMatrixItem(
   });
   const player = page.locator("qti-assessment-item-player");
   await expect(player).toBeVisible();
+  await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
   await player.evaluate(async (element, itemXml) => {
     await (element as HTMLElement & { loadXml(xml: string): Promise<void> }).loadXml(itemXml);
   }, xml);

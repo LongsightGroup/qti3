@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.0 - 2026-06-15
+
+### Added
+
+- Add `@longsightgroup/qti3-pnp`, a dependency-free QTI 3 Personal Needs and Preferences
+  parser, normalizer, validator, and resolver that accepts host-provided PNP XML or object input
+  and returns player-neutral display, tool, media, session, catalog, unresolved, and diagnostic
+  output.
+- Add QTI 3 PNP support definitions, predefined catalog support metadata, extension preservation,
+  profile-aware diagnostics, capability resolution, catalog matching, conflict handling, and
+  privacy-safe diagnostic defaults.
+- Document the PNP package boundary: qti3 resolves PNP data supplied by the host, while LMS
+  identity, storage, LTI/service access, consent, authorization, and institutional policy remain
+  host responsibilities.
+
 ## 0.8.2 - 2026-06-15
 
 ### Added

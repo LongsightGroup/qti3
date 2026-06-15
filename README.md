@@ -30,17 +30,20 @@ flowchart LR
     conformance["conformance<br/>fixture runner and<br/>support matrix"]
     a11y["a11y<br/>keyboard and accessibility<br/>proof contracts"]
     cli["cli<br/>validate, score, inspect,<br/>write fixtures"]
+    pnp["pnp<br/>normalize and resolve<br/>candidate preferences"]
   end
 
   content --> core
   content --> cli
   core --> player
   core --> cli
+  core --> pnp
   fixtures --> conformance
   fixtures --> cli
   conformance --> review
   a11y --> review
   cli --> review
+  pnp --> host
   player --> host
   core --> host
 ```
@@ -114,6 +117,8 @@ node packages/cli/dist/index.js support-matrix
 - Provide an accessible, style-neutral web component player that can be embedded in any product.
 - Publish a reusable conformance test suite.
 - Load QTI package zips and assessment-test item references where useful for item-focused testing.
+- Resolve host-provided QTI 3 PNP data into player-neutral delivery intents without taking over
+  identity, storage, authorization, or institutional policy.
 - Keep dependencies as small as possible, with `qti3-core` and `qti3-cli` remaining
   zero-third-party-runtime-dependency packages.
 - Make unsupported or invalid behavior visible through structured diagnostics.
@@ -126,6 +131,8 @@ node packages/cli/dist/index.js support-matrix
   UI, or delivery shell. The LMS, assessment engine, or harness owns that.
 - The project does not provide shared stimulus delivery (`S-*`), full test delivery (`T-*`), timing
   policy, proctoring, analytics, rostering, gradebook, or LTI integration.
+- The PNP package does not fetch, store, transmit, or authorize candidate preference records. Hosts
+  provide PNP data and own privacy, consent, policy, and service access.
 - The project does not provide product chrome, branding, candidate navigation, or a host product
   design system.
 - Production configuration must be explicit. The project should fail fast instead of using hidden fallbacks.
@@ -144,6 +151,7 @@ node packages/cli/dist/index.js support-matrix
 | `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                                                       |
 | `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                    |
 | `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                         |
+| `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                         |
 | `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI        |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
