@@ -1,15 +1,29 @@
 # Changelog
 
-## Unreleased
+## 0.8.2 - 2026-06-15
 
 ### Added
 
 - Parse `qti-digital-material` companion materials into the core item metadata model, including
-  structured `qti-file-href`, optional `qti-resource-icon`, preserved attributes, diagnostics,
-  validation, fixture coverage, and support-matrix metadata.
-- Expose host-readable companion materials resolution through `@longsightgroup/qti3-core` and
-  `qti-assessment-item-player.getCompanionMaterialsResolution()`, including optional package asset
-  URL resolution via `resolveAsset`.
+  structured `qti-file-href`, optional `qti-resource-icon`, preserved element attributes,
+  parse/validation diagnostics, fixture coverage, and support-matrix metadata.
+- Add `createCompanionMaterialsResolution()` in `@longsightgroup/qti3-core` and
+  `getCompanionMaterialsResolution()` on the player web component, React/Preact adapters, and
+  adapter handle so hosts can read physical and digital companion materials for LMS or runner
+  chrome without rendering them inside the item body.
+- Resolve packaged relative `fileHref` and `resourceIcon` URLs through the same `resolveAsset`
+  hook used for item assets, with per-call overrides supported on resolution requests.
+- Export `isResolvableAssetUrl` from core for shared relative-asset URL classification.
+
+### Changed
+
+- Document companion-material host integration in the player README and root README, including the
+  trust boundary that the player parses materials as metadata but does not render a materials panel.
+- Add a companion-materials debug panel to the manual harness.
+- Centralize conformance parse-diagnostic classification in `isConformanceParseDiagnostic` so
+  digital companion-material parse warnings are fixture-stable alongside existing metadata
+  diagnostics.
+- Extend Basic item-player tolerance fixture coverage with a digital companion material.
 
 ## 0.8.1 - 2026-06-13
 
