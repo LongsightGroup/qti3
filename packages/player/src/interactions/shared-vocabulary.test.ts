@@ -9,6 +9,7 @@ import {
   plainOrderOrientation,
   resolveOrientationFromInteraction,
   sharedVocabularyChoicesLayout,
+  sharedVocabularyChoiceOrientation,
   sharedVocabularyLabel,
   sharedVocabularyOrderOrientation,
 } from "./shared-vocabulary.js";
@@ -19,6 +20,10 @@ function interaction(attributes: Record<string, string> = {}) {
     responseCardinality: "ordered",
     attributes,
   });
+}
+
+function choiceInteraction(attributes: Record<string, string> = {}) {
+  return testInteraction({ type: "choice", attributes });
 }
 
 describe("shared vocabulary", () => {
@@ -47,6 +52,21 @@ describe("shared vocabulary", () => {
     expect(sharedVocabularyOrderOrientation(interaction({ orientation: "horizontal" }))).toBe(
       "horizontal",
     );
+  });
+
+  it("applies choice default orientation policy", () => {
+    expect(sharedVocabularyChoiceOrientation(choiceInteraction(), undefined)).toBe(
+      DEFAULT_VERTICAL_ORIENTATION,
+    );
+    expect(
+      sharedVocabularyChoiceOrientation(choiceInteraction({ class: "qti-choices-stacking-5" }), 5),
+    ).toBe(DEFAULT_HORIZONTAL_ORIENTATION);
+    expect(
+      sharedVocabularyChoiceOrientation(
+        choiceInteraction({ class: "qti-choices-stacking-3 qti-orientation-vertical" }),
+        3,
+      ),
+    ).toBe("vertical");
   });
 
   it("falls back to deprecated orientation attribute when no orientation class is present", () => {

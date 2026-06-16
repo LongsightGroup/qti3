@@ -89,7 +89,7 @@ export function selectionAssertions(className: string): SharedVocabularyAssertio
 export function choiceStackingAssertions(
   className: string | string[],
   stacking: number,
-  orientation = "vertical",
+  orientation = "horizontal",
 ): SharedVocabularyAssertion[] {
   return [
     ...classNames(className).map(

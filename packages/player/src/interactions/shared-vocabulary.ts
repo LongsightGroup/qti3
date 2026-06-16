@@ -116,6 +116,17 @@ export function sharedVocabularyOrderOrientation(interaction: QtiInteraction): O
   return resolveOrientationFromInteraction(interaction) ?? DEFAULT_HORIZONTAL_ORIENTATION;
 }
 
+/** Default orientation for choice interactions; stacking without explicit orientation is horizontal. */
+export function sharedVocabularyChoiceOrientation(
+  interaction: QtiInteraction,
+  stacking: number | undefined,
+): OrderOrientation {
+  return (
+    resolveOrientationFromInteraction(interaction) ??
+    (stacking !== undefined ? DEFAULT_HORIZONTAL_ORIENTATION : DEFAULT_VERTICAL_ORIENTATION)
+  );
+}
+
 export function sharedVocabularyChoicesLayout(
   interaction: QtiInteraction,
 ): SharedVocabularyChoicesLayout | undefined {

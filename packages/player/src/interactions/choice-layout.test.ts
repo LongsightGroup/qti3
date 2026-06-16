@@ -34,11 +34,20 @@ describe("choice layout", () => {
     });
   });
 
+  it("defaults stacking classes to horizontal orientation", () => {
+    expect(choiceLayout(interaction({ class: "qti-choices-stacking-5" }), 6)).toEqual({
+      orientation: "horizontal",
+      columns: 5,
+      rows: 2,
+      stacking: 5,
+    });
+  });
+
   it("uses the first valid stacking class when multiple are authored", () => {
     expect(
       choiceLayout(interaction({ class: "qti-choices-stacking-2 qti-choices-stacking-4" }), 5),
     ).toEqual({
-      orientation: "vertical",
+      orientation: "horizontal",
       columns: 2,
       rows: 3,
       stacking: 2,

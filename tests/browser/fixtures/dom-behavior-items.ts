@@ -21,6 +21,39 @@ export const CHOICE_STACKING_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+export const CHOICE_STACKING_GEOMETRY_ITEM = `
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-stacking-geometry" title="choice-stacking-geometry" time-dependent="false">
+  <qti-response-declaration identifier="STACKING_FIVE" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="STACKING_FOUR" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="VERTICAL" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="STACKING_FIVE" class="qti-choices-stacking-5" max-choices="1">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+      <qti-simple-choice identifier="C">C</qti-simple-choice>
+      <qti-simple-choice identifier="D">D</qti-simple-choice>
+      <qti-simple-choice identifier="E">E</qti-simple-choice>
+      <qti-simple-choice identifier="F">F</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="STACKING_FOUR" class="qti-choices-stacking-4" max-choices="1">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+      <qti-simple-choice identifier="C">C</qti-simple-choice>
+      <qti-simple-choice identifier="D">D</qti-simple-choice>
+      <qti-simple-choice identifier="E">E</qti-simple-choice>
+      <qti-simple-choice identifier="F">F</qti-simple-choice>
+    </qti-choice-interaction>
+    <qti-choice-interaction response-identifier="VERTICAL" class="qti-choices-stacking-3 qti-orientation-vertical" max-choices="1">
+      <qti-simple-choice identifier="A">A</qti-simple-choice>
+      <qti-simple-choice identifier="B">B</qti-simple-choice>
+      <qti-simple-choice identifier="C">C</qti-simple-choice>
+      <qti-simple-choice identifier="D">D</qti-simple-choice>
+      <qti-simple-choice identifier="E">E</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>
+`.trim();
+
 export const HORIZONTAL_CHOICE_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-horizontal" title="choice-horizontal" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>

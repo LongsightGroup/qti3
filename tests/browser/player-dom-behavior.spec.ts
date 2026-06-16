@@ -10,6 +10,7 @@ import {
 } from "./player-helpers.js";
 import {
   CHOICE_PRESENTATION_SHARED_VOCABULARY_ITEM,
+  CHOICE_STACKING_GEOMETRY_ITEM,
   CHOICE_STACKING_ITEM,
   DEPRECATED_CHOICE_ORIENTATION_ITEM,
   EMPTY_CHOICE_ITEM,
@@ -23,23 +24,12 @@ import {
   UNSUPPORTED_INTERACTION_ITEM,
 } from "./fixtures/dom-behavior-items.js";
 import { RICH_ORDER_CONTENT_ITEM } from "./fixtures/rich-order.js";
-
-async function choiceOptionRects(
-  interaction: Locator,
-): Promise<Array<{ identifier: string; x: number; y: number; width: number; height: number }>> {
-  return interaction.locator(".qti3-choice-option").evaluateAll((elements) =>
-    elements.map((element) => {
-      const rect = element.getBoundingClientRect();
-      return {
-        identifier: (element as HTMLElement).dataset.choiceIdentifier ?? "",
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      };
-    }),
-  );
-}
+import {
+  CHOICE_LAYOUT_TOLERANCE_PX,
+  choiceOptionRects,
+  choiceRectsByIdentifier,
+  expectChoiceGridLayout,
+} from "./choice-layout-helpers.js";
 
 async function orderItemRects(
   interaction: Locator,
@@ -386,6 +376,44 @@ test.describe("player DOM behavior", () => {
     expect(listsFit).toBe(true);
   });
 
+  test("renders N-column choice grid layout for stacking classes", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await pasteXml(page, CHOICE_STACKING_GEOMETRY_ITEM);
+
+    const cases = [
+      {
+        responseIdentifier: "STACKING_FIVE",
+        expectedOrder: ["A", "B", "C", "D", "E", "F"],
+        rows: [["A", "B", "C", "D", "E"], ["F"]],
+      },
+      {
+        responseIdentifier: "STACKING_FOUR",
+        expectedOrder: ["A", "B", "C", "D", "E", "F"],
+        rows: [
+          ["A", "B", "C", "D"],
+          ["E", "F"],
+        ],
+      },
+      {
+        responseIdentifier: "VERTICAL",
+        expectedOrder: ["A", "B", "C", "D", "E"],
+        rows: [
+          ["A", "C", "E"],
+          ["B", "D"],
+        ],
+      },
+    ] as const;
+
+    for (const { responseIdentifier, expectedOrder, rows } of cases) {
+      const interaction = page.locator(
+        `qti-assessment-item-player .qti3-choice[data-response-identifier="${responseIdentifier}"]`,
+      );
+      const byId = choiceRectsByIdentifier(await choiceOptionRects(interaction), expectedOrder);
+      expectChoiceGridLayout(byId, rows);
+    }
+  });
+
   test("keeps pure horizontal choice layouts inside narrow viewports", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto("/");
@@ -402,7 +430,7 @@ test.describe("player DOM behavior", () => {
       expect(rect.width, `choice ${index + 1}`).toBeGreaterThanOrEqual(listBox.width - 1);
       if (index > 0) {
         expect(rect.y).toBeGreaterThan(rects[index - 1]!.y + rects[index - 1]!.height - 1);
-        expect(Math.abs(rect.x - rects[0]!.x)).toBeLessThanOrEqual(2);
+        expect(Math.abs(rect.x - rects[0]!.x)).toBeLessThanOrEqual(CHOICE_LAYOUT_TOLERANCE_PX);
       }
     }
 
@@ -424,8 +452,8 @@ test.describe("player DOM behavior", () => {
     await expect(interaction).not.toHaveClass(/qti-orientation-horizontal/);
     const rects = await choiceOptionRects(interaction);
     expect(rects).toHaveLength(3);
-    expect(Math.abs(rects[1].y - rects[0].y)).toBeLessThanOrEqual(2);
-    expect(Math.abs(rects[2].y - rects[0].y)).toBeLessThanOrEqual(2);
+    expect(Math.abs(rects[1].y - rects[0].y)).toBeLessThanOrEqual(CHOICE_LAYOUT_TOLERANCE_PX);
+    expect(Math.abs(rects[2].y - rects[0].y)).toBeLessThanOrEqual(CHOICE_LAYOUT_TOLERANCE_PX);
     expect(rects[1].x).toBeGreaterThan(rects[0].x);
     expect(rects[2].x).toBeGreaterThan(rects[1].x);
   });
