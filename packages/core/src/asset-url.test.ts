@@ -8,6 +8,7 @@ describe("isResolvableAssetUrl", () => {
   });
 
   it("does not treat absolute or embedded asset URLs as resolvable", () => {
+    expect(isResolvableAssetUrl("/__1edtech/file/items/picture.png")).toBe(false);
     expect(isResolvableAssetUrl("https://example.com/x")).toBe(false);
     expect(isResolvableAssetUrl("http://example.com/x")).toBe(false);
     expect(isResolvableAssetUrl("data:image/png;base64,abc")).toBe(false);

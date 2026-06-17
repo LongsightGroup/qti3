@@ -90,6 +90,32 @@ const HTMLElementBase: typeof HTMLElement =
     }
   } as unknown as typeof HTMLElement);
 
+function observeResolvedAssets(
+  root: ParentNode,
+  resolveAsset: QtiPlayerResolveAsset,
+): MutationObserver | undefined {
+  const Observer = globalThis.MutationObserver;
+  const NodeConstructor = globalThis.Node;
+  const ElementConstructor = globalThis.Element;
+  if (!Observer || !NodeConstructor || !ElementConstructor || !(root instanceof NodeConstructor)) {
+    return undefined;
+  }
+
+  const observer = new Observer((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof ElementConstructor)) continue;
+        resolveRenderedAssets(node, resolveAsset);
+      }
+    }
+  });
+  observer.observe(root, {
+    subtree: true,
+    childList: true,
+  });
+  return observer;
+}
+
 export class QtiAssessmentItemPlayer extends HTMLElementBase {
   static get observedAttributes(): string[] {
     return ["data-keyword-emphasis", "language-of-interface", "locale"];
@@ -98,6 +124,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
   private resolveAsset: QtiPlayerResolveAsset | undefined;
+  private assetObserver: MutationObserver | undefined;
   private validationMessages: QtiDiagnostic[] = [];
   private authoringDiagnostics: QtiDiagnostic[] = [];
   private languageOfInterfaceOverride: string | undefined;
@@ -185,6 +212,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   disconnectedCallback(): void {
     this.removeEventListener(QTI3_INLINE_VALIDATION_EVENT, this.handleInlineValidation);
+    this.disconnectAssetObserver();
   }
 
   private handleInlineValidation = (event: Event): void => {
@@ -196,6 +224,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   private invalidatePlayerMessages(): void {
     this.resolvedMessagesCache = undefined;
+  }
+
+  private disconnectAssetObserver(): void {
+    this.assetObserver?.disconnect();
+    this.assetObserver = undefined;
   }
 
   private syncKeywordEmphasisPresentation(): void {
@@ -211,6 +244,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   /** Clears the loaded item. Does not emit player events; declarative hosts control this via `xml`. */
   clearItem(): void {
     this.loadGeneration += 1;
+    this.disconnectAssetObserver();
     delete this.documentModel;
     delete this.session;
     this.validationMessages = [];
@@ -498,7 +532,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       renderStandaloneInteraction: (interaction) => this.renderInteraction(interaction),
       keywordEmphasisEnabled: this.keywordEmphasisEnabled,
     });
-    if (this.resolveAsset) resolveRenderedAssets(root, this.resolveAsset);
+    this.disconnectAssetObserver();
+    if (this.resolveAsset) {
+      resolveRenderedAssets(root, this.resolveAsset);
+      this.assetObserver = observeResolvedAssets(root, this.resolveAsset);
+    }
     this.replaceChildren(root);
   }
 

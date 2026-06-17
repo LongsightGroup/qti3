@@ -1,7 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
-import { createStoredZip, createDeflatedZip, expectImageLoaded } from "./player-helpers.js";
+import {
+  createStoredZip,
+  createDeflatedZip,
+  dragCenter,
+  expectImageLoaded,
+  expectResponse,
+} from "./player-helpers.js";
 
 test.describe("player package loading", () => {
   test("resolves packaged media sources and tracks from a zip upload", async ({ page }) => {
@@ -327,5 +333,63 @@ test.describe("player package loading", () => {
     const image = page.locator("qti-assessment-item-player .qti3-graphic-order-surface img");
     await expect(image).toHaveAttribute("src", /^blob:/);
     await expectImageLoaded(image);
+  });
+
+  test("resolves packaged graphic gap images created after assignment", async ({ page }) => {
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="326" viewBox="0 0 560 326"><rect width="560" height="326" fill="#f5f1e8"/><rect x="55" y="256" width="78" height="63" fill="#d8cab8" stroke="#3f4d5a" stroke-width="2"/></svg>`;
+    const draggerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff" stroke="#3f4d5a" stroke-width="3"/><path d="M12 44h54" stroke="#b65f2d" stroke-width="5"/><text x="39" y="30" text-anchor="middle" font-size="16" font-family="sans-serif" fill="#3f4d5a">D</text></svg>`;
+
+    const zip = createStoredZip({
+      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="graphic-gap" type="imsqti_item_xmlv3p0" href="items/graphic-gap.xml">
+      <file href="items/graphic-gap.xml"/>
+      <file href="items/images/background.svg"/>
+      <file href="items/images/d-bay.svg"/>
+    </resource>
+  </resources>
+</manifest>`,
+      "items/graphic-gap.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-graphic-gap" title="packaged-graphic-gap" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="images/background.svg" alt="Bay target map." type="image/svg+xml" width="560" height="326"/>
+      <qti-gap-img identifier="DraggerD" match-max="1">
+        <img alt="d-bay" height="63" src="images/d-bay.svg" width="78"/>
+      </qti-gap-img>
+      <qti-associable-hotspot identifier="A" shape="rect" coords="55,256,133,319" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+      "items/images/background.svg": targetSvg,
+      "items/images/d-bay.svg": draggerSvg,
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "graphic-gap-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("items/graphic-gap.xml");
+    const source = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "d-bay" });
+    await expect(source.locator("img")).toHaveAttribute("src", /^blob:/);
+    await expectImageLoaded(source.locator("img"));
+
+    const target = page.locator('qti-assessment-item-player [data-gap-identifier="A"]');
+    await dragCenter(page, source, target);
+    await expectResponse(page, ["DraggerD A"]);
+    await expect(target).toHaveAccessibleName("Target 1, assigned d-bay");
+
+    const assignedImage = page.locator(
+      'qti-assessment-item-player [data-origin-gap-identifier="A"].qti3-graphic-gap-label img',
+    );
+    await expect(assignedImage).toHaveAttribute("src", /^blob:/);
+    await expectImageLoaded(assignedImage);
   });
 });
