@@ -188,7 +188,10 @@ describe("player-validation", () => {
           testInteraction({
             type: "graphicGapMatch",
             choices: [],
-            attributes: { "data-max-selections-message": "Too many placements." },
+            attributes: {
+              "max-associations": "1",
+              "data-max-selections-message": "Too many placements.",
+            },
           }),
         ],
         responseDeclarations: [
