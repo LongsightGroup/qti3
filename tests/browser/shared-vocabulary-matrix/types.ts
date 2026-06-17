@@ -1,4 +1,5 @@
 import type { QtiInteractionType } from "../../../packages/core/src/types.js";
+import type { PlayerMessageCatalog } from "../../../packages/player/src/player-message-catalog.js";
 
 export type { SharedVocabularySupportLevel } from "../../../packages/core/src/shared-vocabulary-levels.js";
 export { isEnforcedSharedVocabularyLevel } from "../../../packages/core/src/shared-vocabulary-levels.js";
@@ -67,6 +68,7 @@ export type SharedVocabularyAssertion =
       ratio: number;
       tolerance: number;
     }
+  | { type: "layout-not-clipped"; selector: string; tolerance: number }
   | {
       type: "position";
       firstSelector: string;
@@ -93,5 +95,6 @@ export interface SharedVocabularyManifestEntry {
   supportLevel: SharedVocabularySupportLevel;
   fixturePath: string;
   forcedColors?: true;
+  messageCatalog?: PlayerMessageCatalog;
   assertions: SharedVocabularyAssertion[];
 }

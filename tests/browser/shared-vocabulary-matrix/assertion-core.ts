@@ -43,6 +43,8 @@ export function assertionLabel(assertion: SharedVocabularyAssertion): string {
       return `${assertion.selector} width is ${assertion.expected}px +/- ${assertion.tolerance}px`;
     case "layout-width-ratio":
       return `${assertion.firstSelector} width ratio is ${assertion.ratio}`;
+    case "layout-not-clipped":
+      return `${assertion.selector} is not clipped`;
     case "position":
       return `${assertion.firstSelector} ${assertion.axis} is ${assertion.relation} ${assertion.secondSelector}`;
     case "set-attribute":
@@ -198,6 +200,17 @@ export async function runAssertionInRoot(
       const ratio = first.width / second.width;
       if (Math.abs(ratio - assertion.ratio) > assertion.tolerance) {
         throw new Error(`ratio is ${ratio.toFixed(3)}`);
+      }
+      return;
+    }
+    case "layout-not-clipped": {
+      const element = requiredHtmlElement(root, assertion.selector);
+      const horizontalOverflow = element.scrollWidth - element.clientWidth;
+      const verticalOverflow = element.scrollHeight - element.clientHeight;
+      if (horizontalOverflow > assertion.tolerance || verticalOverflow > assertion.tolerance) {
+        throw new Error(
+          `overflow is ${horizontalOverflow.toFixed(2)}x${verticalOverflow.toFixed(2)}px`,
+        );
       }
       return;
     }

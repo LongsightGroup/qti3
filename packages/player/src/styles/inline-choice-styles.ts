@@ -118,9 +118,36 @@ export const INLINE_CHOICE_PLAYER_STYLES = `
 .qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-choice-control {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  inline-size: max-content;
+  min-inline-size: max-content;
+  max-inline-size: 34rem;
 }
 
 .qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-choice-control {
   writing-mode: vertical-lr;
+}
+
+.qti3-inlineChoice.qti-writing-orientation-vertical-rl .qti3-inline-choice-trigger,
+.qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-choice-trigger {
+  inline-size: max-content;
+  min-inline-size: max-content;
+  block-size: 100%;
+}
+
+.qti3-inlineChoice.qti-writing-orientation-vertical-rl .qti3-inline-choice-listbox,
+.qti3-inlineChoice.qti-writing-orientation-vertical-lr .qti3-inline-choice-listbox {
+  inset-block-start: auto;
+  inset-inline-start: auto;
+  top: 0;
+  left: calc(100% + 0.2rem);
+}
+
+.qti3-inlineChoice.qti-writing-orientation-vertical-rl
+  .qti3-inline-choice-control[data-qti-input-width],
+.qti3-inlineChoice.qti-writing-orientation-vertical-lr
+  .qti3-inline-choice-control[data-qti-input-width] {
+  block-size: var(--qti3-input-width);
+  min-block-size: var(--qti3-input-width);
+  max-block-size: min(100%, 34rem);
 }
 `.trim();

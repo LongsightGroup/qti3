@@ -27,7 +27,7 @@ export async function loadFixture(page: Page, interactionType: string): Promise<
 /** Applies a host-owned locale catalog in the browser (JSON-serializable). */
 export async function setPlayerMessageCatalog(
   page: Page,
-  catalog: PlayerMessageCatalog,
+  catalog: PlayerMessageCatalog | undefined,
 ): Promise<void> {
   await page.locator("qti-assessment-item-player").evaluate((element, messageCatalog) => {
     const player = element as HTMLElement & { messageCatalog?: PlayerMessageCatalog };

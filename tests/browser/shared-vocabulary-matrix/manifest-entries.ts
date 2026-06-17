@@ -6,7 +6,6 @@ import {
   choiceA,
   choiceB,
   choiceLabels,
-  choiceList,
   extendedText,
   gapBank,
   gapLayout,
@@ -47,6 +46,7 @@ import {
 } from "./manifest-selectors.js";
 import {
   choiceStackingAssertions,
+  choiceVerticalRlStylesheetAssertions,
   choicesPositionAssertions,
   classNames,
   entry,
@@ -58,6 +58,7 @@ import {
   selectionAssertions,
 } from "./manifest-helpers.js";
 import { contentManifestEntries } from "./manifest-entries-content.js";
+import { traditionalChinesePlayerMessageCatalog } from "../catalogs/player-message-catalogs.fixture.js";
 
 const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
   entry("choice-selections-dark", "choice", "qti-selections-dark", "stylesheet", [
@@ -306,30 +307,33 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
     "choice",
     "qti-writing-orientation-vertical-rl",
     "stylesheet",
+    choiceVerticalRlStylesheetAssertions(),
+  ),
+  entry(
+    "japanese-vertical-haiku",
+    "choice",
+    ["qti-writing-orientation-vertical-rl", "qti-labels-cjk-ideographic"],
+    "stylesheet",
     [
-      {
-        type: "class-preserved",
-        selector: choice,
-        className: "qti-writing-orientation-vertical-rl",
-      },
+      ...choiceVerticalRlStylesheetAssertions([
+        "qti-writing-orientation-vertical-rl",
+        "qti-labels-cjk-ideographic",
+      ]),
       {
         type: "computed-style",
-        selector: choiceList,
+        selector: `${player} .qti-writing-mode-vertical-rl`,
         property: "writing-mode",
         value: "vertical-rl",
       },
-      {
-        type: "computed-style",
-        selector: `${choice} .qti3-choice-label`,
-        property: "text-orientation",
-        value: "upright",
-      },
+      { type: "aria-snapshot-contains", selector: player, text: "俳句" },
+      { type: "text", selector: `${choiceA} .qti3-choice-text`, value: "桜" },
+      { type: "text", selector: choiceLabels, value: "一." },
     ],
   ),
   entry(
     "inline-choice-writing-orientation-vertical-rl",
     "inlineChoice",
-    "qti-writing-orientation-vertical-rl",
+    ["qti-writing-orientation-vertical-rl", "qti-input-width-10"],
     "stylesheet",
     [
       {
@@ -338,12 +342,48 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
         className: "qti-writing-orientation-vertical-rl",
       },
       {
+        type: "class-preserved",
+        selector: inlineChoiceVerticalRoot,
+        className: "qti-input-width-10",
+      },
+      {
         type: "computed-style",
         selector: inlineChoiceVerticalControl,
         property: "writing-mode",
         value: "vertical-rl",
       },
+      {
+        type: "computed-style",
+        selector: `${player} .qti-writing-mode-vertical-rl`,
+        property: "writing-mode",
+        value: "vertical-rl",
+      },
+      {
+        type: "layout-not-clipped",
+        selector: `${inlineChoiceVerticalControl} .qti3-inline-choice-trigger`,
+        tolerance: 1,
+      },
+      { type: "click", selector: `${inlineChoiceVerticalControl} .qti3-inline-choice-trigger` },
+      {
+        type: "position",
+        firstSelector: `${inlineChoiceVerticalControl} .qti3-inline-choice-listbox`,
+        secondSelector: `${inlineChoiceVerticalControl} .qti3-inline-choice-trigger`,
+        axis: "x",
+        relation: "greater-than",
+      },
+      {
+        type: "text",
+        selector: `${inlineChoiceVerticalControl} .qti3-inline-choice-selected`,
+        value: "請選擇",
+      },
+      { type: "aria-snapshot-contains", selector: player, text: "漢字書法" },
+      {
+        type: "text",
+        selector: `${inlineChoiceVerticalRoot} .qti3-inline-choice-option[data-choice-identifier="A"]`,
+        value: "風骨",
+      },
     ],
+    { messageCatalog: traditionalChinesePlayerMessageCatalog },
   ),
   ...[...labelStyleCases, ...labelSuffixCases].map((item) =>
     entry(

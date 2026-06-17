@@ -40,4 +40,10 @@ export const spanishPlayerMessageCatalog = {
     associationPairLabel: "{source} con {target}",
   },
 };
+export const traditionalChinesePlayerMessageCatalog = {
+  locale: "zh-Hant",
+  strings: {
+    inlineChoicePrompt: "請選擇",
+  },
+};
 //# sourceMappingURL=player-message-catalogs.fixture.js.map

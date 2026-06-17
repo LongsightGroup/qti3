@@ -44,3 +44,10 @@ export const spanishPlayerMessageCatalog: PlayerMessageCatalog = {
     associationPairLabel: "{source} con {target}",
   },
 };
+
+export const traditionalChinesePlayerMessageCatalog: PlayerMessageCatalog = {
+  locale: "zh-Hant",
+  strings: {
+    inlineChoicePrompt: "請選擇",
+  },
+};

@@ -9,6 +9,7 @@ import {
   type SharedVocabularyManifestEntry,
 } from "../shared-vocabulary-matrix/manifest.js";
 import type { SharedVocabularyAssertion } from "../shared-vocabulary-matrix/types.js";
+import type { PlayerMessageCatalog } from "../../../packages/player/src/player-message-catalog.js";
 
 defineQtiAssessmentItemPlayer();
 
@@ -88,6 +89,7 @@ async function selectCase(caseId: string | undefined, pushUrl: boolean): Promise
 async function loadSelectedCase(): Promise<void> {
   if (!selectedEntry) return;
   selectedXml = await fetchXml(selectedEntry);
+  player.messageCatalog = selectedEntry.messageCatalog;
   await player.loadXml(selectedXml);
   await waitForPlayerContent(player);
   updateHeader(selectedEntry);
@@ -343,6 +345,7 @@ function requiredElement<T extends Element>(selector: string): T {
 
 interface QtiGalleryPlayer extends HTMLElement {
   loadXml(xml: string): Promise<void>;
+  messageCatalog?: PlayerMessageCatalog;
 }
 
 async function waitForPlayerContent(host: QtiGalleryPlayer): Promise<void> {

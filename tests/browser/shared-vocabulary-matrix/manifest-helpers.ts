@@ -1,3 +1,4 @@
+import type { PlayerMessageCatalog } from "../../../packages/player/src/player-message-catalog.js";
 import type {
   SharedVocabularyAssertion,
   SharedVocabularyInteractionType,
@@ -7,6 +8,7 @@ import {
   choice,
   choiceA,
   choiceB,
+  choiceList,
   graphicGapHotspotT1,
   graphicGapHotspotT2,
   graphicGapRoot,
@@ -16,6 +18,7 @@ import {
 
 interface EntryOptions {
   forcedColors?: true;
+  messageCatalog?: PlayerMessageCatalog;
 }
 
 export function entry(
@@ -26,7 +29,7 @@ export function entry(
   assertions: SharedVocabularyAssertion[],
   options: EntryOptions = {},
 ): SharedVocabularyManifestEntry {
-  const { forcedColors } = options;
+  const { forcedColors, messageCatalog } = options;
   const forcedColorsAssertions: SharedVocabularyAssertion[] = forcedColors
     ? [{ type: "forced-colors-active" }]
     : [];
@@ -37,6 +40,7 @@ export function entry(
     supportLevel,
     fixturePath: itemPath(id),
     ...(forcedColors ? { forcedColors } : {}),
+    ...(messageCatalog ? { messageCatalog } : {}),
     assertions: [...forcedColorsAssertions, ...assertions],
   };
 }
@@ -63,6 +67,32 @@ export function graphicGapSelectionAssertions(className: string): SharedVocabula
       firstSelector: graphicGapHotspotT1,
       secondSelector: graphicGapHotspotT2,
       property: "outline-style",
+    },
+  ];
+}
+
+export function choiceVerticalRlStylesheetAssertions(
+  className: string | string[] = "qti-writing-orientation-vertical-rl",
+): SharedVocabularyAssertion[] {
+  return [
+    ...classNames(className).map(
+      (name): SharedVocabularyAssertion => ({
+        type: "class-preserved",
+        selector: choice,
+        className: name,
+      }),
+    ),
+    {
+      type: "computed-style",
+      selector: choiceList,
+      property: "writing-mode",
+      value: "vertical-rl",
+    },
+    {
+      type: "computed-style",
+      selector: `${choice} .qti3-choice-label`,
+      property: "text-orientation",
+      value: "upright",
     },
   ];
 }
