@@ -59,13 +59,39 @@ export function mediaPlayCount(value: QtiValue): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
 }
 
-export function exceedsHotspotMatchMax(choice: QtiChoice, selectedPairs: string[]): boolean {
-  const maximum = parseUnlimitedMaximum(choice.attributes["match-max"]);
-  if (maximum === undefined) return false;
-  const currentUseCount = selectedPairs
-    .flatMap((pair) => pair.split(" "))
-    .filter((identifier) => identifier === choice.identifier).length;
-  return currentUseCount + 1 > maximum;
+export type DirectedPairUseSide = "source" | "target" | "either";
+
+export function choiceMatchMaximum(choice: QtiChoice): number | undefined {
+  return parseUnlimitedMaximum(choice.attributes["match-max"]);
+}
+
+export function directedPairChoiceUseCount(
+  choice: QtiChoice,
+  selectedPairs: string[],
+  side: DirectedPairUseSide = "either",
+): number {
+  return selectedPairs.reduce((count, pair) => {
+    const [source = "", target = ""] = pair.split(/\s+/);
+    if (side === "source") return source === choice.identifier ? count + 1 : count;
+    if (side === "target") return target === choice.identifier ? count + 1 : count;
+    return count + (source === choice.identifier ? 1 : 0) + (target === choice.identifier ? 1 : 0);
+  }, 0);
+}
+
+export function choiceMatchLimitExceeded(choice: QtiChoice, useCount: number): boolean {
+  const maximum = choiceMatchMaximum(choice);
+  return maximum !== undefined && useCount > maximum;
+}
+
+export function wouldExceedChoiceMatchMaximum(
+  choice: QtiChoice,
+  selectedPairs: string[],
+  side: DirectedPairUseSide = "either",
+): boolean {
+  return choiceMatchLimitExceeded(
+    choice,
+    directedPairChoiceUseCount(choice, selectedPairs, side) + 1,
+  );
 }
 
 export function parseUnlimitedMaximum(value: string | undefined): number | undefined {

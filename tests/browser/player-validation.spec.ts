@@ -432,31 +432,70 @@ test.describe("player validation", () => {
 </qti-assessment-item>`,
     );
 
-    await page
-      .locator(
-        '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="A"]',
-      )
-      .click();
-    await page
-      .locator(
-        '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="B"]',
-      )
-      .click();
-    await page
-      .locator(
-        '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="A"]',
-      )
-      .click();
-    await page
-      .locator(
-        '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="C"]',
-      )
-      .click();
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const state = element.serialize();
+      element.restore({
+        ...state,
+        responses: {
+          ...state.responses,
+          RESPONSE: ["A B", "A C"],
+        },
+      });
+    });
     await page.locator("#debug-score").click();
 
     await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
     await expect(page.locator("#events")).toContainText("response.matchMax");
     await expect(page.locator("#events")).toContainText("Alpha may be used at most 1 time.");
+  });
+
+  test("prevents associate selections beyond authored match-max during interaction", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-max-associate-ui" title="match-max-associate-ui" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
+  <qti-item-body>
+    <qti-associate-interaction response-identifier="RESPONSE" min-associations="0" max-associations="0">
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="A" match-max="2">Alpha</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="B" match-max="1">Beta</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="C" match-max="1">Gamma</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="D" match-max="1">Delta</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-associate-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const sourceA = page.locator(
+      '.qti3-token-region[aria-label="Associate sources"] button[data-choice-identifier="A"]',
+    );
+    const targetB = page.locator(
+      '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="B"]',
+    );
+    const targetC = page.locator(
+      '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="C"]',
+    );
+    const targetD = page.locator(
+      '.qti3-token-region[aria-label="Associate targets"] button[data-choice-identifier="D"]',
+    );
+
+    await sourceA.click();
+    await targetB.click();
+    await expectResponse(page, ["A B"]);
+
+    await sourceA.click();
+    await targetC.click();
+    await expectResponse(page, ["A B", "A C"]);
+
+    await sourceA.click();
+    await targetD.click();
+    await expectResponse(page, ["A B", "A C"]);
+    await expect(page.locator("qti-assessment-item-player .qti3-pair-chip")).toHaveCount(2);
   });
 
   test("allows optional responses when authored minimum is zero", async ({ page }) => {

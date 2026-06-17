@@ -1,6 +1,11 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
-import { associationMaximumResponses, parseUnlimitedMaximum } from "../response-limits.js";
+import {
+  associationMaximumResponses,
+  choiceMatchLimitExceeded,
+  choiceMatchMaximum,
+  directedPairChoiceUseCount,
+} from "../response-limits.js";
 
 export function directedPairKey(source: QtiChoice, target: QtiChoice): string {
   return `${source.identifier} ${target.identifier}`;
@@ -11,11 +16,15 @@ export function parseDirectedPair(pair: string): [string, string] {
   return [source ?? "", target ?? ""];
 }
 
+export type TogglePairResult =
+  | { accepted: true }
+  | { accepted: false; reason: "maximum" | "matchMax" };
+
 export type MatchDirectedPairState = {
   removePair: (pair: string) => void;
   removePairsForSource: (source: QtiChoice) => void;
   removePairsForTarget: (target: QtiChoice) => void;
-  togglePair: (source: QtiChoice, target: QtiChoice) => void;
+  togglePair: (source: QtiChoice, target: QtiChoice) => TogglePairResult;
   pairFor: (source: QtiChoice, target: QtiChoice) => string;
 };
 
@@ -86,10 +95,10 @@ export function createMatchDirectedPairState(
       removePairFromArray(pair);
     } else {
       let nextPairs = interaction.responseCardinality === "single" ? [] : [...selectedPairs];
-      if (parseUnlimitedMaximum(source.attributes["match-max"]) === 1) {
+      if (choiceMatchMaximum(source) === 1) {
         nextPairs = nextPairs.filter((entry) => !entry.startsWith(`${source.identifier} `));
       }
-      if (parseUnlimitedMaximum(target.attributes["match-max"]) === 1) {
+      if (choiceMatchMaximum(target) === 1) {
         nextPairs = nextPairs.filter((entry) => !entry.endsWith(` ${target.identifier}`));
       }
       if (
@@ -98,13 +107,19 @@ export function createMatchDirectedPairState(
         interaction.responseCardinality !== "single"
       ) {
         reportMaximumResponseExceeded(validationHost, interaction, maximum);
-        onChanged?.();
-        return;
+        return { accepted: false, reason: "maximum" };
       }
       nextPairs.push(pair);
+      if (
+        choiceMatchLimitExceeded(source, directedPairChoiceUseCount(source, nextPairs, "either")) ||
+        choiceMatchLimitExceeded(target, directedPairChoiceUseCount(target, nextPairs, "either"))
+      ) {
+        return { accepted: false, reason: "matchMax" };
+      }
       replacePairs(nextPairs);
     }
     finishMutation();
+    return { accepted: true };
   };
 
   return {

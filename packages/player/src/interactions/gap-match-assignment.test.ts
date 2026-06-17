@@ -55,6 +55,18 @@ describe("gap-match-assignment", () => {
     expect([...result.next.keys()]).toEqual(["G2"]);
   });
 
+  it("rejects source assignments beyond authored match-max", () => {
+    const source = gapSource("A", "2");
+    const current = new Map([
+      ["G1", source],
+      ["G2", source],
+    ]);
+    const result = tryGapMatchAssignment(current, "G3", source);
+
+    expect(result.accepted).toBe(false);
+    expect(result.next).toBe(current);
+  });
+
   it("serializes assignments into directed pair values", () => {
     const assignments = new Map([
       ["G1", gapSource("A")],

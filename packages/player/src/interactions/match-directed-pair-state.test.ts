@@ -100,6 +100,28 @@ describe("createMatchDirectedPairState", () => {
     expect(updates).toEqual([["C R"], ["C M"]]);
   });
 
+  it("allows repeated pairings until match-max is reached", () => {
+    const selectedPairs: string[] = [];
+    const updates: unknown[] = [];
+    const alpha = choice("A", "2");
+    const first = choice("T1", "1");
+    const second = choice("T2", "1");
+    const third = choice("T3", "1");
+    const state = createMatchDirectedPairState({
+      interaction: interaction(),
+      update: (value) => updates.push(value),
+      selectedPairs,
+      validationHost: validationHost().host,
+    });
+
+    state.togglePair(alpha, first);
+    state.togglePair(alpha, second);
+    state.togglePair(alpha, third);
+
+    expect(selectedPairs).toEqual(["A T1", "A T2"]);
+    expect(updates).toEqual([["A T1"], ["A T1", "A T2"]]);
+  });
+
   it("rejects selections beyond authored max-associations without committing", () => {
     const selectedPairs = ["A C"];
     const updates: unknown[] = [];
@@ -118,11 +140,12 @@ describe("createMatchDirectedPairState", () => {
       onChanged,
     });
 
-    state.togglePair(choice("B"), choice("D"));
+    const result = state.togglePair(choice("B"), choice("D"));
 
+    expect(result).toEqual({ accepted: false, reason: "maximum" });
     expect(selectedPairs).toEqual(["A C"]);
     expect(updates).toEqual([]);
-    expect(onChanged).toHaveBeenCalledTimes(1);
+    expect(onChanged).not.toHaveBeenCalled();
     expect(events).toHaveLength(1);
     expect(events[0]!.type).toBe(QTI3_INLINE_VALIDATION_EVENT);
     expect(events[0]!.detail).toMatchObject({

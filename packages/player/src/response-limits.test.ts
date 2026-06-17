@@ -9,6 +9,7 @@ import {
   orderSubsetLimitsActive,
   parseUnlimitedMaximum,
   responseLimitAttribute,
+  wouldExceedChoiceMatchMaximum,
 } from "./response-limits.js";
 
 describe("response-limits", () => {
@@ -16,6 +17,19 @@ describe("response-limits", () => {
     expect(parseUnlimitedMaximum("2")).toBe(2);
     expect(parseUnlimitedMaximum("0")).toBeUndefined();
     expect(parseUnlimitedMaximum(undefined)).toBeUndefined();
+  });
+
+  it("detects directed-pair match-max overuse", () => {
+    const choice = {
+      identifier: "A",
+      text: "A",
+      role: "hotspot" as const,
+      qtiName: "qti-associable-hotspot",
+      attributes: { "match-max": "2" },
+    };
+
+    expect(wouldExceedChoiceMatchMaximum(choice, ["A B"])).toBe(false);
+    expect(wouldExceedChoiceMatchMaximum(choice, ["A B", "C A"])).toBe(true);
   });
 
   it("returns interaction choices without synthetic fallback", () => {
@@ -101,10 +115,10 @@ describe("response-limits", () => {
     expect(maximumAllowedResponses(interaction)).toBe(2);
   });
 
-  it("defaults graphic gap match maximum associations to one when omitted", () => {
+  it("does not add an implicit graphic gap match maximum when max-associations is omitted", () => {
     expect(
       maximumAllowedResponses(testInteraction({ type: "graphicGapMatch", attributes: {} })),
-    ).toBe(1);
+    ).toBeUndefined();
     expect(
       maximumAllowedResponses(
         testInteraction({

@@ -17,7 +17,7 @@ import { createAssociationPairChip } from "./pair-chip.js";
 import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { associationMaximumResponses, exceedsHotspotMatchMax } from "../response-limits.js";
+import { associationMaximumResponses, wouldExceedChoiceMatchMaximum } from "../response-limits.js";
 
 export function renderGraphicAssociateResponse(
   interaction: QtiInteraction,
@@ -123,8 +123,8 @@ export function renderGraphicAssociateResponse(
         return;
       }
       if (
-        exceedsHotspotMatchMax(source, selectedPairs) ||
-        exceedsHotspotMatchMax(target, selectedPairs)
+        wouldExceedChoiceMatchMaximum(source, selectedPairs) ||
+        wouldExceedChoiceMatchMaximum(target, selectedPairs)
       ) {
         selectedHotspot = undefined;
         renderState();

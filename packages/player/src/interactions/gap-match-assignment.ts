@@ -1,5 +1,8 @@
 import type { QtiChoice, QtiValue } from "@longsightgroup/qti3-core";
-import { clearSingleUseSourceAssignments } from "./gap-match-source-bank.js";
+import {
+  clearSingleUseSourceAssignments,
+  sourceUseLimitExceeded,
+} from "./gap-match-source-bank.js";
 
 export interface GapMatchAssignmentOptions {
   originGapIdentifier?: string | undefined;
@@ -23,6 +26,9 @@ export function tryGapMatchAssignment(
   }
   clearSingleUseSourceAssignments(next, source, gapIdentifier);
   next.set(gapIdentifier, source);
+  if (sourceUseLimitExceeded(next, source)) {
+    return { accepted: false, next: current };
+  }
   const maximum = options.maximumAssignments;
   if (maximum !== undefined && next.size > maximum) {
     return { accepted: false, next: current };

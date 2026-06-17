@@ -1,10 +1,9 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { missingChoicesMessage, responseGroup, valueToStrings } from "../interaction-support.js";
-import { reportMaximumResponseExceeded } from "../inline-validation.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
-import { associationMaximumResponses } from "../response-limits.js";
 import { createAssociationPairChip } from "./pair-chip.js";
+import { createMatchDirectedPairState } from "./match-directed-pair-state.js";
 import {
   pairRegionLabels,
   sourceChoices,
@@ -29,7 +28,6 @@ export function renderPairResponse(
     return group;
   }
   const selectedPairs: string[] = valueToStrings(currentValue);
-  const maximum = associationMaximumResponses(interaction);
   let selectedSource: QtiChoice | undefined;
   let selectedTarget: QtiChoice | undefined;
   const labels = pairRegionLabels(interaction, messages);
@@ -52,10 +50,6 @@ export function renderPairResponse(
   );
   let draggedSource: string | undefined;
 
-  const commit = () => {
-    if (interaction.responseCardinality === "single") update(selectedPairs[0] ?? null);
-    else update([...selectedPairs]);
-  };
   const syncPressed = () => {
     for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
       button.setAttribute(
@@ -72,26 +66,10 @@ export function renderPairResponse(
   };
   const addSelectedPair = () => {
     if (!selectedSource || !selectedTarget) return;
-    const pair = `${selectedSource.identifier} ${selectedTarget.identifier}`;
-    if (!selectedPairs.includes(pair)) {
-      if (
-        maximum !== undefined &&
-        selectedPairs.length >= maximum &&
-        interaction.responseCardinality !== "single"
-      ) {
-        selectedSource = undefined;
-        selectedTarget = undefined;
-        reportMaximumResponseExceeded(group, interaction, maximum);
-        syncPressed();
-        return;
-      }
-      selectedPairs.push(pair);
-    }
+    pairs.togglePair(selectedSource, selectedTarget);
     selectedSource = undefined;
     selectedTarget = undefined;
     syncPressed();
-    renderPairs();
-    commit();
   };
   const addPair = (sourceIdentifier: string | undefined, targetIdentifier: string): void => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
@@ -117,16 +95,23 @@ export function renderPairResponse(
             label: targetChoice?.text || target,
           },
           messages,
-          onRemove: () => {
-            const index = selectedPairs.indexOf(pair);
-            if (index >= 0) selectedPairs.splice(index, 1);
-            renderPairs();
-            commit();
-          },
+          onRemove: () => pairs.removePair(pair),
         });
       }),
     );
   };
+  const pairs = createMatchDirectedPairState({
+    interaction,
+    update,
+    selectedPairs,
+    validationHost: group,
+    onChanged: () => {
+      selectedSource = undefined;
+      selectedTarget = undefined;
+      syncPressed();
+      renderPairs();
+    },
+  });
 
   for (const choice of sources) {
     const button = tokenButton(choice);

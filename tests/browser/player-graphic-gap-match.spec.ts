@@ -361,22 +361,32 @@ test.describe("player graphic gap match interactions", () => {
     await expect(sourceCButton).toBeHidden();
   });
 
-  test("defaults graphic gap match max-associations to one when omitted", async ({ page }) => {
+  test("allows multiple graphic gap match placements when max-associations is omitted", async ({
+    page,
+  }) => {
     await page.goto("/");
-    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="230" height="120" viewBox="0 0 230 120"><rect width="230" height="120" fill="#f4f2ea"/><rect x="34" y="34" width="60" height="42" fill="#2f4858"/><rect x="136" y="34" width="60" height="42" fill="#8b5d33"/></svg>`;
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="558" height="326" viewBox="0 0 558 326"><rect width="558" height="326" fill="#f4f2ea"/><rect x="55" y="256" width="78" height="63" fill="#2f4858"/><rect x="190" y="256" width="78" height="63" fill="#8b5d33"/><rect x="309" y="256" width="78" height="63" fill="#496b42"/><rect x="450" y="256" width="78" height="63" fill="#6f4b7a"/></svg>`;
+    const choiceSvg = (label: string) =>
+      svgBase64DataUrl(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff" stroke="#2f4858" stroke-width="3"/><text x="39" y="38" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">${label}</text></svg>`,
+      );
 
     await pasteXml(
       page,
       `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-default-max" title="graphic-gap-default-max" time-dependent="false">
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-no-interaction-max" title="graphic-gap-no-interaction-max" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
   <qti-item-body>
     <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
-      <object data="${svgBase64DataUrl(targetSvg)}" alt="Two target slots." type="image/svg+xml"/>
-      <qti-gap-text identifier="A" match-max="1">Alpha</qti-gap-text>
-      <qti-gap-text identifier="B" match-max="1">Beta</qti-gap-text>
-      <qti-associable-hotspot identifier="T1" shape="rect" coords="34,34,94,76" match-max="1"/>
-      <qti-associable-hotspot identifier="T2" shape="rect" coords="136,34,196,76" match-max="1"/>
+      <object data="${svgBase64DataUrl(targetSvg)}" alt="Timeline target." type="image/svg+xml"/>
+      <qti-gap-img identifier="DraggerA" match-max="1"><img alt="a-cw" height="63" src="${choiceSvg("A")}" width="78"/></qti-gap-img>
+      <qti-gap-img identifier="DraggerB" match-max="1"><img alt="b-ww2" height="63" src="${choiceSvg("B")}" width="78"/></qti-gap-img>
+      <qti-gap-img identifier="DraggerC" match-max="1"><img alt="c-vietnam" height="63" src="${choiceSvg("C")}" width="78"/></qti-gap-img>
+      <qti-gap-img identifier="DraggerD" match-max="1"><img alt="d-bay" height="63" src="${choiceSvg("D")}" width="78"/></qti-gap-img>
+      <qti-associable-hotspot identifier="A" shape="rect" coords="55,256,133,319" match-max="1"/>
+      <qti-associable-hotspot identifier="B" shape="rect" coords="190,256,268,319" match-max="1"/>
+      <qti-associable-hotspot identifier="C" shape="rect" coords="309,256,387,319" match-max="1"/>
+      <qti-associable-hotspot identifier="D" shape="rect" coords="450,256,528,319" match-max="1"/>
     </qti-graphic-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>`,
@@ -384,21 +394,96 @@ test.describe("player graphic gap match interactions", () => {
 
     const interaction = page.locator("qti-assessment-item-player .qti3-graphicGapMatch");
     const bank = interaction.locator(".qti3-graphic-gap-source-region");
-    const sourceA = bank.getByRole("button", { name: "Alpha" });
-    const sourceB = bank.getByRole("button", { name: "Beta" });
-    const sourceBButton = bank.locator('button[data-choice-identifier="B"]');
-    const target1 = interaction.locator('[data-gap-identifier="T1"]');
-    const target2 = interaction.locator('[data-gap-identifier="T2"]');
     const validation = interaction.locator('[data-validation-for="RESPONSE"]');
 
-    await dragCenter(page, sourceA, target1);
-    await dragCenter(page, sourceB, target2);
+    await dragCenter(
+      page,
+      bank.getByRole("button", { name: "a-cw" }),
+      interaction.locator('[data-gap-identifier="D"]'),
+    );
+    await dragCenter(
+      page,
+      bank.getByRole("button", { name: "b-ww2" }),
+      interaction.locator('[data-gap-identifier="A"]'),
+    );
+    await dragCenter(
+      page,
+      bank.getByRole("button", { name: "c-vietnam" }),
+      interaction.locator('[data-gap-identifier="C"]'),
+    );
+    await dragCenter(
+      page,
+      bank.getByRole("button", { name: "d-bay" }),
+      interaction.locator('[data-gap-identifier="B"]'),
+    );
 
-    await expectResponse(page, ["A T1"]);
-    await expect(validation).toBeVisible();
-    await expect(validation).toContainText("RESPONSE allows at most 1 response.");
-    await expect(target2).toHaveAccessibleName("Target 2, empty");
-    await expect(sourceBButton).toBeVisible();
+    await expectResponse(page, ["DraggerA D", "DraggerB A", "DraggerC C", "DraggerD B"]);
+    await expect(validation).toBeHidden();
+    await expect(interaction.locator('[data-gap-identifier="A"]')).toHaveAccessibleName(
+      "Target 1, assigned b-ww2",
+    );
+    await expect(interaction.locator('[data-gap-identifier="B"]')).toHaveAccessibleName(
+      "Target 2, assigned d-bay",
+    );
+    await expect(interaction.locator('[data-gap-identifier="C"]')).toHaveAccessibleName(
+      "Target 3, assigned c-vietnam",
+    );
+    await expect(interaction.locator('[data-gap-identifier="D"]')).toHaveAccessibleName(
+      "Target 4, assigned a-cw",
+    );
+  });
+
+  test("replenishes qti-gap-img sources until authored match-max is reached", async ({ page }) => {
+    await page.goto("/");
+    const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="330" height="140" viewBox="0 0 330 140"><rect width="330" height="140" fill="#f4f2ea"/><rect x="30" y="42" width="70" height="44" fill="#2f4858"/><rect x="130" y="42" width="70" height="44" fill="#8b5d33"/><rect x="230" y="42" width="70" height="44" fill="#496b42"/></svg>`;
+    const choiceSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff" stroke="#2f4858" stroke-width="3"/><text x="39" y="38" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#2f4858">A</text></svg>`;
+
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-cloned-source" title="graphic-gap-cloned-source" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+  <qti-item-body>
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+      <object data="${svgBase64DataUrl(targetSvg)}" alt="Three target slots." type="image/svg+xml"/>
+      <qti-gap-img identifier="DraggerA" match-max="2"><img alt="reusable marker" height="63" src="${svgBase64DataUrl(choiceSvg)}" width="78"/></qti-gap-img>
+      <qti-associable-hotspot identifier="T1" shape="rect" coords="30,42,100,86" match-max="1"/>
+      <qti-associable-hotspot identifier="T2" shape="rect" coords="130,42,200,86" match-max="1"/>
+      <qti-associable-hotspot identifier="T3" shape="rect" coords="230,42,300,86" match-max="1"/>
+    </qti-graphic-gap-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const interaction = page.locator("qti-assessment-item-player .qti3-graphicGapMatch");
+    const bank = interaction.locator(".qti3-graphic-gap-source-region");
+    const sourceButton = bank.locator('button[data-choice-identifier="DraggerA"]');
+
+    await dragCenter(
+      page,
+      bank.getByRole("button", { name: "reusable marker" }),
+      interaction.locator('[data-gap-identifier="T1"]'),
+    );
+    await expectResponse(page, ["DraggerA T1"]);
+    await expect(sourceButton).toBeVisible();
+
+    await dragCenter(
+      page,
+      bank.getByRole("button", { name: "reusable marker" }),
+      interaction.locator('[data-gap-identifier="T2"]'),
+    );
+    await expectResponse(page, ["DraggerA T1", "DraggerA T2"]);
+    await expect(sourceButton).toBeHidden();
+
+    await expect(interaction.locator('[data-gap-identifier="T1"]')).toHaveAccessibleName(
+      "Target 1, assigned reusable marker",
+    );
+    await expect(interaction.locator('[data-gap-identifier="T2"]')).toHaveAccessibleName(
+      "Target 2, assigned reusable marker",
+    );
+    await expect(interaction.locator('[data-gap-identifier="T3"]')).toHaveAccessibleName(
+      "Target 3, empty",
+    );
   });
 
   test("supports keyboard assignment and clearing for qti-gap-img choices", async ({ page }) => {

@@ -7,10 +7,10 @@ import type {
   QtiValue,
 } from "@longsightgroup/qti3-core";
 import {
+  choiceMatchMaximum,
   maximumAllowedResponses,
   mediaPlayCount,
   minimumMediaPlays,
-  parseUnlimitedMaximum,
   responseLimitAttribute,
 } from "./response-limits.js";
 
@@ -100,7 +100,7 @@ export function matchMaxDiagnostics(
 
   const diagnostics: QtiDiagnostic[] = [];
   for (const choice of interaction.choices) {
-    const maximum = parseUnlimitedMaximum(choice.attributes["match-max"]);
+    const maximum = choiceMatchMaximum(choice);
     if (maximum === undefined) continue;
     const count = counts.get(choice.identifier) ?? 0;
     if (count <= maximum) continue;
