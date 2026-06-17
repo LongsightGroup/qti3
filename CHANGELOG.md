@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.1 - 2026-06-17
+
+### Fixed
+
+- Resolve packaged item assets for dynamically rendered graphic gap match assignments without
+  reprocessing unchanged asset URLs.
+- Keep graphic gap match image choices usable when `match-max` allows repeated placements, including
+  replenishing source choices until their authored limit is reached.
+- Remove the implicit one-response default for graphic gap match interactions when
+  `max-associations` is omitted.
+- Enforce authored `match-max` limits consistently across gap match, graphic gap match, associate,
+  match, and graphic associate interactions.
+- Keep assigned gap match choices visible in dark mode.
+
 ## 0.9.0 - 2026-06-15
 
 ### Added
