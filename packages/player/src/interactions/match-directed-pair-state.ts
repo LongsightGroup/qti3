@@ -89,7 +89,7 @@ export function createMatchDirectedPairState(
     if (removed) finishMutation();
   };
 
-  const togglePair = (source: QtiChoice, target: QtiChoice) => {
+  const togglePair = (source: QtiChoice, target: QtiChoice): TogglePairResult => {
     const pair = pairFor(source, target);
     if (selectedPairs.includes(pair)) {
       removePairFromArray(pair);
