@@ -408,9 +408,25 @@ test.describe("player graphic interactions", () => {
     await page.goto("/");
     await loadFixture(page, "drawing");
 
+    const player = page.locator("qti-assessment-item-player");
+    const label = player.locator(".qti3-drawing-color-label");
     const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
     const box = await surface.boundingBox();
     if (!box) throw new Error("Missing drawing surface box.");
+
+    const colors = await player.evaluate((element) => {
+      const label = element.querySelector(".qti3-drawing-color-label");
+      if (!label) return null;
+      return {
+        labelColor: getComputedStyle(label).color,
+        playerColor: getComputedStyle(element).color,
+      };
+    });
+    expect(colors).not.toBeNull();
+    expect(colors?.labelColor).toBe(colors?.playerColor);
+    expect(colors?.labelColor).not.toBe("rgb(75, 85, 99)");
+    await expect(label).toHaveCSS("color-scheme", "light dark");
+    await expect(surface).toHaveCSS("background-color", "rgb(255, 255, 255)");
 
     await page.mouse.move(box.x + 10, box.y + 10);
     await page.mouse.down();

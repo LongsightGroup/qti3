@@ -15,10 +15,12 @@ export const GAP_MATCH_PLAYER_STYLES = `
   border: 1px dashed CanvasText;
 }
 
-.qti3-gap-passage {
+.qti3-gap-passage,
+.qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) {
   display: block;
   max-inline-size: 62rem;
   line-height: 2.3;
+  overflow-x: auto;
 }
 
 .qti3-gap-passage .qti3-gap-target {
@@ -32,12 +34,6 @@ export const GAP_MATCH_PLAYER_STYLES = `
 
 .qti3-gap-passage .qti3-gap-button {
   min-inline-size: var(--qti3-gap-input-width, 6ch);
-}
-
-.qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) {
-  display: block;
-  line-height: 2.3;
-  max-inline-size: 62rem;
 }
 
 .qti3-gapMatch.qti-gap-placement .qti3-gap-region:not(.qti3-gap-passage) .qti3-gap-target {
@@ -65,6 +61,9 @@ export const GAP_MATCH_PLAYER_STYLES = `
 .qti3-gap-button {
   min-inline-size: var(--qti3-gap-input-width, 8rem);
   min-block-size: 2.25rem;
+  border: 1px solid CanvasText;
+  background: Canvas;
+  color: CanvasText;
   text-align: start;
 }
 

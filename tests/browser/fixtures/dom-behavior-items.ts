@@ -185,6 +185,7 @@ export const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
 </qti-assessment-item>
 `.trim();
 
+/** Narrow-viewport overflow stress case: G2 uses width-72; sv-matrix uses width-10 as representative. */
 export const GAP_PLACEMENT_WIDTH_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-placement-width" title="gap-placement-width" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
@@ -192,7 +193,7 @@ export const GAP_PLACEMENT_WIDTH_ITEM = `
     <qti-gap-match-interaction response-identifier="RESPONSE" class="qti-gap-placement qti-choices-left" data-choices-container-width="120">
       <qti-gap-text identifier="A" match-max="1">alpha</qti-gap-text>
       <qti-gap-text identifier="B" match-max="1">beta</qti-gap-text>
-      <p>Place <qti-gap identifier="G1" class="qti-input-width-3"/> before <qti-gap identifier="G2" class="qti-input-width-10"/>.</p>
+      <p>Place <qti-gap identifier="G1" class="qti-input-width-3"/> before <qti-gap identifier="G2" class="qti-input-width-72"/>.</p>
     </qti-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>

@@ -1,6 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
 import {
-  assignGap,
   currentResponse,
   expectMoveButtons,
   loadFixture,
@@ -14,8 +13,6 @@ import {
   CHOICE_STACKING_ITEM,
   DEPRECATED_CHOICE_ORIENTATION_ITEM,
   EMPTY_CHOICE_ITEM,
-  GAP_CHOICES_CONTAINER_WIDTH_ITEM,
-  GAP_PLACEMENT_WIDTH_ITEM,
   HORIZONTAL_CHOICE_ITEM,
   HORIZONTAL_ORDER_ATTRIBUTE_ITEM,
   ITEM_LAYOUT_SHARED_VOCABULARY_ITEM,
@@ -664,43 +661,6 @@ test.describe("player DOM behavior", () => {
     await expect(capuletRomeo).toHaveAttribute("aria-pressed", "false");
     await expect(capuletMidsummer).toHaveAttribute("aria-pressed", "true");
     await expect(player.locator(".qti3-selection-summary")).toContainText("1 association made.");
-  });
-
-  test("keeps gap placement interaction usable with authored input widths", async ({ page }) => {
-    await page.goto("/");
-    await pasteXml(page, GAP_PLACEMENT_WIDTH_ITEM);
-
-    const player = page.locator("qti-assessment-item-player");
-    const wideGap = player.locator('[data-gap-identifier="G2"]');
-
-    await assignGap(page, "Gap match", "A", "G2");
-    await expect(currentResponse(page)).resolves.toEqual(["A G2"]);
-    await wideGap.locator("button").focus();
-    await page.keyboard.press("Delete");
-    await expect(currentResponse(page)).resolves.toEqual([]);
-
-    await page.setViewportSize({ width: 360, height: 640 });
-    const overflow = await player.evaluate((element) => element.scrollWidth > element.clientWidth);
-    expect(overflow).toBe(false);
-  });
-
-  test("applies gap choices container width without widening inline gap targets", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await pasteXml(page, GAP_CHOICES_CONTAINER_WIDTH_ITEM);
-
-    const player = page.locator("qti-assessment-item-player");
-    const bank = player.locator(".qti3-gap-source-region");
-    const gapButton = player.locator('[data-gap-identifier="G1"] button');
-
-    await expect(bank).toHaveAttribute("data-qti-choices-container-width", "200");
-
-    const bankBox = await bank.boundingBox();
-    const gapBox = await gapButton.boundingBox();
-    if (!bankBox || !gapBox) throw new Error("Missing gap layout boxes.");
-    expect(Math.abs(bankBox.width - 200)).toBeLessThanOrEqual(2);
-    expect(gapBox.width).toBeLessThan(100);
   });
 
   test("embeds text entry interactions inside paragraph flow", async ({ page }) => {

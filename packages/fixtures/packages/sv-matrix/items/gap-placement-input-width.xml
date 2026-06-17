@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- G2 uses width-10 as the representative matrix case. Overflow stress uses width-72 in tests/browser/player-gap-match.spec.ts -->
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-placement-input-width" title="gap-placement-input-width" time-dependent="false" xml:lang="en">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
   <qti-item-body>

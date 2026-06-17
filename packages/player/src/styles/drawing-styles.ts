@@ -11,7 +11,7 @@ export const DRAWING_PLAYER_STYLES = `
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color-scheme: light;
+  color: CanvasText;
 }
 
 .qti3-drawing-color-label {
@@ -19,6 +19,7 @@ export const DRAWING_PLAYER_STYLES = `
 }
 
 .qti3-drawing-color-input {
+  color-scheme: light;
   box-sizing: border-box;
   inline-size: 2.75rem;
   block-size: 2.75rem;

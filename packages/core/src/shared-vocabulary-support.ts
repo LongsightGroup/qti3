@@ -45,6 +45,7 @@ const sharedVocabularyValidationTests = [
 const choiceLayoutTests = ["packages/player/src/interactions/choice-layout.test.ts"];
 const browserBehaviorTests = [
   "tests/browser/player-dom-behavior.spec.ts",
+  "tests/browser/player-gap-match.spec.ts",
   ...sharedVocabularyMatrixTests,
 ];
 const graphicBrowserTests = [

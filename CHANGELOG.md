@@ -15,6 +15,15 @@
   identity, storage, LTI/service access, consent, authorization, and institutional policy remain
   host responsibilities.
 
+### Fixed
+
+- Keep gap-match assigned gap text visible in dark mode by giving gap buttons player-owned
+  foreground, background, and border colors.
+- Keep shared-vocabulary gap width stress cases contained without widening the surrounding player
+  layout.
+- Keep drawing interaction pen-color labels readable in dark mode while preserving the white drawing
+  canvas and light native color input.
+
 ## 0.8.2 - 2026-06-15
 
 ### Added
