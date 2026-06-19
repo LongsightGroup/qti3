@@ -42,6 +42,27 @@ export async function pasteXml(page: Page, xml: string): Promise<void> {
   }
   await page.locator("#xml").fill(xml);
   await page.locator("#load-xml").click();
+  await waitForPlayerLoad(page, itemIdentifierFromXml(xml));
+}
+
+function itemIdentifierFromXml(xml: string): string | undefined {
+  return /\bidentifier\s*=\s*["']([^"']+)["']/.exec(xml)?.[1];
+}
+
+async function waitForPlayerLoad(
+  page: Page,
+  expectedIdentifier: string | undefined,
+): Promise<void> {
+  await page.waitForFunction((identifier) => {
+    const player = document.querySelector("qti-assessment-item-player") as
+      | (HTMLElement & { serialize?: () => { itemIdentifier?: string } })
+      | null;
+    if (!player) return false;
+    if (player.textContent?.includes("Unable to ")) return true;
+    return identifier
+      ? player.serialize?.().itemIdentifier === identifier
+      : player.childElementCount > 0;
+  }, expectedIdentifier);
 }
 
 export async function dragCenter(page: Page, source: Locator, target: Locator): Promise<void> {

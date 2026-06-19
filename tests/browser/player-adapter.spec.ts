@@ -237,10 +237,15 @@ async function callHarness<T = unknown>(
   method: HarnessMethod,
   ...args: unknown[]
 ): Promise<T> {
+  await page.waitForFunction((methodName) => {
+    const harness = (window as Window & { qti3AdapterHarness?: BrowserHarness }).qti3AdapterHarness;
+    return typeof harness?.[methodName as HarnessMethod] === "function";
+  }, method);
   return page.evaluate(
     ({ method: methodName, args: methodArgs }) => {
-      const harness = (window as Window & { qti3AdapterHarness: BrowserHarness })
+      const harness = (window as Window & { qti3AdapterHarness?: BrowserHarness })
         .qti3AdapterHarness;
+      if (!harness) throw new Error("Adapter contract harness was not installed.");
       return harness[methodName](...methodArgs);
     },
     { args, method },

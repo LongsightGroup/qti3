@@ -187,9 +187,6 @@ export function syncQtiAssessmentItemPlayerAdapterChrome(
   element.messages = props.messages;
 }
 
-/** @deprecated Use {@link syncQtiAssessmentItemPlayerAdapterChrome}. */
-export const syncQtiAssessmentItemPlayerAdapterMessages = syncQtiAssessmentItemPlayerAdapterChrome;
-
 export interface QtiAssessmentItemPlayerAdapterLoadSyncInput {
   xml?: string | undefined;
   loadOptions?: QtiPlayerLoadOptions | undefined;

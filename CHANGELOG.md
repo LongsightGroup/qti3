@@ -265,8 +265,7 @@ publication and package metadata issues.
 
 ### Changed
 
-- Rename adapter chrome sync helper to `syncQtiAssessmentItemPlayerAdapterChrome` (old name kept
-  as deprecated alias).
+- Rename adapter chrome sync helper to `syncQtiAssessmentItemPlayerAdapterChrome`.
 - Document declarative `xml` clearing, empty-string load behavior, stable `messageCatalog` /
   `loadOptions` references, and JSON state reload keys.
 - Strengthen adapter contract and element load-lifecycle tests for superseded async loads.

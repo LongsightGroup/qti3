@@ -58,7 +58,6 @@ export {
   qtiAssessmentItemPlayerLoadDependencies,
   qtiAssessmentItemPlayerLoadStateKey,
   syncQtiAssessmentItemPlayerAdapterChrome,
-  syncQtiAssessmentItemPlayerAdapterMessages,
 } from "./player-adapter.js";
 export type { PlayerMessageCatalog } from "./player-message-catalog.js";
 export type { PlayerMessageKey, PlayerMessageResolverKind } from "./player-message-manifest.js";
