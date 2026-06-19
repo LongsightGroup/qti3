@@ -2,6 +2,12 @@
 
 ## 0.9.1 - 2026-06-17
 
+### Added
+
+- Add host-resolved `qti-stylesheet` delivery support in the player, including the
+  `resolveStylesheet` load option, browser evidence that resolved CSS affects rendered item
+  content, and support-matrix metadata for rendered stylesheet delivery.
+
 ### Fixed
 
 - Resolve packaged item assets for dynamically rendered graphic gap match assignments without

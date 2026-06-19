@@ -212,17 +212,22 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
   {
     qtiName: "qti-stylesheet",
     category: "itemMetadata",
-    support: "parsed",
+    support: "rendered",
     specReference: "QTI 3.0.1 ASI",
     parse: true,
     validate: true,
-    render: false,
+    render: true,
     process: false,
     fixtures: [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
     ],
-    tests: ["packages/core/src/core.test.ts", "packages/core/src/parser-item-metadata.test.ts"],
-    notes: "Parsed by parser-item-metadata.ts and validated by validateStylesheets.",
+    tests: [
+      "packages/core/src/core.test.ts",
+      "packages/core/src/parser-item-metadata.test.ts",
+      "tests/browser/player-package.spec.ts",
+    ],
+    notes:
+      "Parsed by parser-item-metadata.ts, validated by validateStylesheets, and delivered by the player only when a host resolveStylesheet hook returns a safe resolved stylesheet URL.",
   },
   {
     qtiName: "qti-modal-feedback",

@@ -128,6 +128,7 @@ export type QtiAssessmentItemPlayerLoadDependencies = readonly [
   boolean | undefined,
   QtiPlayerFetchXml | undefined,
   QtiPlayerResolveAsset | undefined,
+  QtiPlayerLoadOptions["resolveStylesheet"] | undefined,
 ];
 
 export function qtiAssessmentItemPlayerLoadStateKey(
@@ -148,6 +149,7 @@ export function qtiAssessmentItemPlayerLoadDependencies(
     loadOptions?.sessionControl?.showFeedback,
     loadOptions?.fetchXml,
     loadOptions?.resolveAsset,
+    loadOptions?.resolveStylesheet,
   ];
 }
 

@@ -10,6 +10,96 @@ import {
 } from "./player-helpers.js";
 
 test.describe("player package loading", () => {
+  test("attaches host-resolved qti-stylesheet resources during item rendering", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const xml = stylesheetEvidenceXml();
+
+    await page.locator("qti-assessment-item-player").evaluate(async (element, itemXml) => {
+      await (
+        element as HTMLElement & {
+          loadXml: (
+            xml: string,
+            options?: {
+              resolveStylesheet?: (stylesheet: {
+                href: string;
+                type?: string;
+                media?: string;
+                title?: string;
+              }) => { href: string; type?: string; media?: string; title?: string };
+            },
+          ) => Promise<void>;
+        }
+      ).loadXml(itemXml, {
+        resolveStylesheet: (stylesheet) => ({
+          href: `data:text/css,${encodeURIComponent(
+            ".qti3-extra-evidence { border-left: 6px solid rgb(12, 34, 56); padding-left: 4px; }",
+          )}`,
+          type: stylesheet.type,
+          media: stylesheet.media,
+          title: stylesheet.title,
+        }),
+      });
+    }, xml);
+
+    const stylesheet = page.locator('qti-assessment-item-player link[rel="stylesheet"]');
+    await expect(stylesheet).toHaveAttribute("href", /^data:text\/css/);
+    await expect(stylesheet).toHaveAttribute("type", "text/css");
+    await expect(stylesheet).toHaveAttribute("media", "screen");
+    await expect(stylesheet).toHaveAttribute("title", "Evidence styles");
+
+    await expect
+      .poll(async () =>
+        page.locator("qti-assessment-item-player .qti3-extra-evidence").evaluate((element) => {
+          return getComputedStyle(element).borderLeftWidth;
+        }),
+      )
+      .toBe("6px");
+  });
+
+  test("does not attach declined qti-stylesheet resources", async ({ page }) => {
+    await page.goto("/");
+    const xml = stylesheetEvidenceXml();
+
+    const diagnostics = await page
+      .locator("qti-assessment-item-player")
+      .evaluate(async (element, itemXml) => {
+        const player = element as HTMLElement & {
+          loadXml: (
+            xml: string,
+            options?: { resolveStylesheet?: () => undefined },
+          ) => Promise<void>;
+        };
+        const seen: Array<{ code: string; severity: string }> = [];
+        element.addEventListener("qti-diagnostics", (event) => {
+          seen.push(
+            ...((event as CustomEvent<{ diagnostics: Array<{ code: string; severity: string }> }>)
+              .detail.diagnostics ?? []),
+          );
+        });
+        await player.loadXml(itemXml, { resolveStylesheet: () => undefined });
+        return seen;
+      }, xml);
+
+    await expect(page.locator('qti-assessment-item-player link[rel="stylesheet"]')).toHaveCount(0);
+    await expect
+      .poll(async () =>
+        page.locator("qti-assessment-item-player .qti3-extra-evidence").evaluate((element) => {
+          return getComputedStyle(element).borderLeftWidth;
+        }),
+      )
+      .toBe("0px");
+    expect(diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "player.stylesheet.unresolved",
+          severity: "warning",
+        }),
+      ]),
+    );
+  });
+
   test("resolves packaged media sources and tracks from a zip upload", async ({ page }) => {
     const zip = createStoredZip({
       "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
@@ -393,3 +483,13 @@ test.describe("player package loading", () => {
     await expectImageLoaded(assignedImage);
   });
 });
+
+function stylesheetEvidenceXml(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-evidence" title="stylesheet-evidence" time-dependent="false">
+  <qti-stylesheet href="../styles/extra.css" type="text/css" media="screen" title="Evidence styles"/>
+  <qti-item-body>
+    <p class="qti3-extra-evidence">Stylesheet delivery evidence.</p>
+  </qti-item-body>
+</qti-assessment-item>`;
+}

@@ -779,6 +779,17 @@ async function loadSelectedLocalFile(): Promise<void> {
   nextFile.disabled = selectedFileIndex >= loadedFiles.length - 1;
   await player.loadXml(file.xml, {
     resolveAsset: (url) => resolveLoadedAsset(file.source, url),
+    resolveStylesheet: (stylesheet) => {
+      const href = resolveLoadedAsset(file.source, stylesheet.href);
+      // Demo-only: unchanged href means the asset is outside the uploaded package.
+      if (href === stylesheet.href) return undefined;
+      return {
+        href,
+        type: stylesheet.type,
+        media: stylesheet.media,
+        title: stylesheet.title,
+      };
+    },
   });
 }
 

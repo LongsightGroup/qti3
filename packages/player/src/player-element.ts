@@ -56,12 +56,14 @@ import {
 } from "./player/interaction-regions.js";
 import { renderPlayerShell } from "./player/render-shell.js";
 import { resolveRenderedAssets } from "./player/resolve-assets.js";
+import { resolvePlayerStylesheets } from "./player/stylesheet-delivery.js";
 import type {
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
   QtiPlayerLoadOptions,
   QtiPlayerResolveAsset,
   QtiPlayerSessionControl,
+  QtiResolvedStylesheet,
   QtiScoreAttemptOptions,
 } from "./player-types.js";
 import {
@@ -124,6 +126,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   private documentModel?: QtiDocument;
   private session?: QtiItemSession;
   private resolveAsset: QtiPlayerResolveAsset | undefined;
+  private resolvedStylesheets: QtiResolvedStylesheet[] = [];
   private assetObserver: MutationObserver | undefined;
   private validationMessages: QtiDiagnostic[] = [];
   private authoringDiagnostics: QtiDiagnostic[] = [];
@@ -247,6 +250,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.disconnectAssetObserver();
     delete this.documentModel;
     delete this.session;
+    this.resolvedStylesheets = [];
     this.validationMessages = [];
     this.authoringDiagnostics = [];
     this.replaceChildren();
@@ -296,10 +300,14 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     this.resolveAsset = options.resolveAsset;
 
     const result = parseQtiXml(xml);
+    const stylesheetResolution = result.document
+      ? resolvePlayerStylesheets(result.document.item.stylesheets, options.resolveStylesheet)
+      : { links: [], diagnostics: [] };
     const playerDiagnostics = result.document
       ? [
           ...collectInteractionRenderDiagnostics(result.document.item.interactions),
           ...collectEmbeddedInteractionDiagnostics(result.document.item),
+          ...stylesheetResolution.diagnostics,
         ]
       : [];
     if (!this.isCurrentLoad(generation)) return;
@@ -332,6 +340,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
     if (!this.isCurrentLoad(generation)) return;
 
     this.documentModel = result.document;
+    this.resolvedStylesheets = stylesheetResolution.links;
     try {
       this.session = createItemSession(result.document, options.state);
     } catch (error) {
@@ -531,6 +540,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       contentContext: this.contentContext(),
       renderStandaloneInteraction: (interaction) => this.renderInteraction(interaction),
       keywordEmphasisEnabled: this.keywordEmphasisEnabled,
+      stylesheets: this.resolvedStylesheets,
     });
     this.disconnectAssetObserver();
     if (this.resolveAsset) {

@@ -284,6 +284,9 @@ resolved URLs are available for host links:
 ```ts
 await player.loadXml(xml, {
   resolveAsset: (url) => packageAssetUrlFor(url),
+  resolveStylesheet: (stylesheet) => ({
+    href: packageStylesheetUrlFor(stylesheet.href),
+  }),
 });
 
 const materials = player.getCompanionMaterialsResolution();
@@ -293,6 +296,16 @@ const href = reference?.resolvedFileHref ?? reference?.fileHref;
 
 You can also call `createCompanionMaterialsResolution()` from `@longsightgroup/qti3-core` in Node
 for inspection or server-side delivery planning.
+
+`qti-stylesheet` delivery uses `resolveStylesheet` instead of `resolveAsset`. Core preserves the
+authored metadata, while the host resolves package-local CSS to a candidate-safe URL. The player
+attaches only resolved stylesheets and reports `player.stylesheet.unresolved` when a supplied
+resolver declines one. Package import, path validation, immutable asset storage, authorization, and
+unsafe URL rejection remain host responsibilities.
+
+When `resolveStylesheet` is omitted, the player does not attach item stylesheets and does not emit
+`player.stylesheet.unresolved` diagnostics. That silence is intentional opt-out, not a delivery
+failure.
 
 ## Styling
 

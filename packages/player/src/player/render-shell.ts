@@ -1,15 +1,23 @@
 import type { QtiDocument, QtiInteraction } from "@longsightgroup/qti3-core";
 import { renderContentNodes, type PlayerContentContext } from "../content/content-renderer.js";
 import { playerStyleElement } from "../player-styles.js";
+import type { QtiResolvedStylesheet } from "../player-types.js";
+import { stylesheetLinkElement } from "./stylesheet-delivery.js";
 
 export function renderPlayerShell(options: {
   documentModel: QtiDocument;
   contentContext: PlayerContentContext;
   renderStandaloneInteraction: (interaction: QtiInteraction) => HTMLElement;
   keywordEmphasisEnabled?: boolean | undefined;
+  stylesheets?: QtiResolvedStylesheet[] | undefined;
 }): HTMLElement {
-  const { documentModel, contentContext, renderStandaloneInteraction, keywordEmphasisEnabled } =
-    options;
+  const {
+    documentModel,
+    contentContext,
+    renderStandaloneInteraction,
+    keywordEmphasisEnabled,
+    stylesheets = [],
+  } = options;
   const root = document.createElement("article");
   root.className = "qti3-player";
   if (keywordEmphasisEnabled) root.dataset.keywordEmphasis = "true";
@@ -18,6 +26,7 @@ export function renderPlayerShell(options: {
     root.setAttribute("xml:lang", documentModel.item.language);
   }
   root.append(playerStyleElement());
+  root.append(...stylesheets.map(stylesheetLinkElement));
 
   if (documentModel.item.prompt && documentModel.item.body.length === 0) {
     const prompt = document.createElement("p");

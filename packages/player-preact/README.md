@@ -56,13 +56,13 @@ export function Preview({
   error when the XML is invalid.
 - Pass `messageCatalog` for localized player chrome (`languageOfInterface` alone does not load locale files).
 - The adapter reloads when `xml`, restored `loadOptions.state`, `status`, session-control flags,
-  `fetchXml`, or `resolveAsset` change.
+  `fetchXml`, `resolveAsset`, or `resolveStylesheet` change.
 - Equivalent `loadOptions.state` objects with different references do **not** trigger a reload when
   their serialized content matches. Key order follows object construction order; mutating a state
   object in place without changing the reload key does not trigger a reload.
-- Keep `messageCatalog`, `fetchXml`, `resolveAsset`, and `loadOptions` object literals stable across
-  renders (`useMemo` / hooks memoization). New references on every render cause unnecessary resyncs or
-  reloads.
+- Keep `messageCatalog`, `fetchXml`, `resolveAsset`, `resolveStylesheet`, and `loadOptions` object
+  literals stable across renders (`useMemo` / hooks memoization). New references on every render
+  cause unnecessary resyncs or reloads.
 - URL loading stays imperative: `ref.current?.loadUrl(url, loadOptions)`.
 
 ## Security Boundary

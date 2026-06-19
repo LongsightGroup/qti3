@@ -227,6 +227,7 @@ export type {
   QtiResponseProcessing,
   QtiResponseRule,
   QtiScoreResult,
+  QtiStylesheet,
   QtiLookupOutcomeValue,
   QtiSetOutcomeValue,
   QtiSupportStatus,

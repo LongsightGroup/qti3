@@ -62,8 +62,15 @@ export const QtiAssessmentItemPlayer = forwardRef<
     props.messages,
   ]);
 
-  const [loadStateKey, status, validateResponses, showFeedback, fetchXml, resolveAsset] =
-    qtiAssessmentItemPlayerLoadDependencies(props.loadOptions);
+  const [
+    loadStateKey,
+    status,
+    validateResponses,
+    showFeedback,
+    fetchXml,
+    resolveAsset,
+    resolveStylesheet,
+  ] = qtiAssessmentItemPlayerLoadDependencies(props.loadOptions);
 
   useLayoutEffect(() => {
     const element = elementRef.current;
@@ -73,7 +80,16 @@ export const QtiAssessmentItemPlayer = forwardRef<
       loadOptions: props.loadOptions,
       onLoadError: (error) => latestPropsRef.current.onLoadError?.(error),
     });
-  }, [props.xml, loadStateKey, status, validateResponses, showFeedback, fetchXml, resolveAsset]);
+  }, [
+    props.xml,
+    loadStateKey,
+    status,
+    validateResponses,
+    showFeedback,
+    fetchXml,
+    resolveAsset,
+    resolveStylesheet,
+  ]);
 
   return createElement("qti-assessment-item-player", {
     ...domPropsFrom(props),

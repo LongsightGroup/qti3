@@ -7,6 +7,7 @@ import type {
   QtiPortableCustomDefinition,
   QtiPortableCustomStateValue,
   QtiScoreResult,
+  QtiStylesheet,
   QtiValue,
 } from "@longsightgroup/qti3-core";
 export interface QtiPlayerSessionControl {
@@ -21,12 +22,24 @@ export interface QtiScoreAttemptOptions {
 export type QtiPlayerFetchXml = (url: string) => Promise<string>;
 export type QtiPlayerResolveAsset = (url: string) => string;
 
+export interface QtiResolvedStylesheet {
+  href: string;
+  type?: string | undefined;
+  media?: string | undefined;
+  title?: string | undefined;
+}
+
+export type QtiPlayerResolveStylesheet = (
+  stylesheet: QtiStylesheet,
+) => QtiResolvedStylesheet | undefined;
+
 export interface QtiPlayerLoadOptions {
   state?: QtiAttemptStateV1 | undefined;
   status?: QtiAttemptStatus | undefined;
   sessionControl?: QtiPlayerSessionControl | undefined;
   fetchXml?: QtiPlayerFetchXml | undefined;
   resolveAsset?: QtiPlayerResolveAsset | undefined;
+  resolveStylesheet?: QtiPlayerResolveStylesheet | undefined;
 }
 
 export interface QtiReadyEventDetail {

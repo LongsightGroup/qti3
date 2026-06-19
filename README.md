@@ -190,6 +190,9 @@ await player.loadUrl("/items/item-1.xml", {
 
 await player.loadXml(packageItemXml, {
   resolveAsset: (url) => packageAssetUrlFor(url),
+  resolveStylesheet: (stylesheet) => ({
+    href: packageStylesheetUrlFor(stylesheet.href),
+  }),
 });
 
 // Host-controlled opt-in. qti3 preserves qti-keyword-emphasis by default, but only
@@ -217,6 +220,16 @@ resolve companion-material file references through `getCompanionMaterialsResolut
 assets are already reachable by normal browser URLs can omit it. Package-backed media, graphic, and
 drawing assets should use this hook so rendered controls and serialized response exports can resolve
 authored asset references.
+
+`qti-stylesheet` delivery is a separate host contract. Core preserves stylesheet metadata, and the
+browser player attaches item stylesheets only when `loadXml` / `loadUrl` receives
+`resolveStylesheet`. The hook must return a candidate-safe stylesheet URL for package-local CSS or
+`undefined` to decline delivery. Package import, path validation, authorization, immutable asset
+preservation, and unsafe URL rejection remain host responsibilities.
+
+When `resolveStylesheet` is omitted, the player does not attach item stylesheets and does not emit
+`player.stylesheet.unresolved` diagnostics. That silence is intentional opt-out, not a delivery
+failure.
 
 Two response-bearing interactions have format-specific contracts worth calling out:
 
