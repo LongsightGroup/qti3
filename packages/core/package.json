@@ -31,7 +31,9 @@
     "dist/**/*.js.map",
     "!dist/**/*.test.*",
     "src/**/*.ts",
-    "!src/**/*.test.ts"
+    "!src/**/*.test.ts",
+    "!src/**/*.fixtures.ts",
+    "!src/interaction-test-fixtures.ts"
   ],
   "type": "module",
   "exports": {

@@ -1,4 +1,10 @@
 export {
+  processQtiAdaptiveItemTurn,
+  type QtiAdaptiveTurnInput,
+  type QtiAdaptiveTurnResponseInput,
+  type QtiAdaptiveTurnResult,
+} from "./adaptive-turn.js";
+export {
   createCatalogSupportResolution,
   type QtiCatalogSupportResolution,
   type QtiCatalogSupportResolutionOptions,

@@ -109,6 +109,45 @@ The delivery redaction and server-scoring APIs are library APIs in `0.5.x`. CLI 
 for delivery-safe XML generation and server-style scoring are not part of this release
 line yet.
 
+### Secure adaptive turns
+
+Adaptive item delivery should run each submitted turn against authoritative XML on the
+server, preserving prior `qti3.attempt-state.v1` between turns:
+
+```ts
+import { processQtiAdaptiveItemTurn } from "@longsightgroup/qti3-core";
+
+const turn = processQtiAdaptiveItemTurn({
+  itemXml: authoritativeItemXml,
+  priorState: savedAttemptState,
+  trustedResponses: { RESPONSE: "A" },
+});
+
+if (!turn.ok) {
+  throw new Error(turn.diagnostics.map((item) => item.message).join("; "));
+}
+
+store(turn.state);
+sendToCandidate(turn.candidateSafeXml, turn.state);
+```
+
+Deliver both artifacts to the player on each adaptive turn:
+
+- `candidateSafeXml` — server-materialized presentation for the current turn (outcome-visible feedback, secrets stripped)
+- `state` — authoritative `qti3.attempt-state.v1` with trusted responses, outcomes, and interaction state
+
+```ts
+await player.loadXml(turn.candidateSafeXml);
+player.restore(turn.state);
+```
+
+Refresh turns with no new submission still return updated materialized XML derived from restored outcomes, so a resume flow should load both values again even when the candidate does not submit a new response.
+
+The static delivery redactor still fails closed for adaptive response processing. Use
+`processQtiAdaptiveItemTurn()` when a host needs a server-materialized candidate view
+and updated authoritative outcomes for the next adaptive turn. The low-level adaptive-turn
+redactor is internal to the core package; hosts should not call it directly.
+
 ## Scope
 
 - Parse QTI XML into a typed item model.

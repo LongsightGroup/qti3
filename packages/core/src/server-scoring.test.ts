@@ -7,6 +7,7 @@ import {
   readQtiJsonValue,
   scoreQtiItemServerSide,
 } from "./index.js";
+import { noScoreProcessingItemXml } from "./trusted-item.fixtures.js";
 
 describe("server-side QTI scoring", () => {
   it("scores correct and wrong responses from authoritative XML", () => {
@@ -96,7 +97,7 @@ describe("server-side QTI scoring", () => {
     );
 
     const missingScore = scoreQtiItemServerSide({
-      itemXml: noScoreProcessingXml(),
+      itemXml: noScoreProcessingItemXml(),
       trustedResponses: { RESPONSE: "A" },
     });
     expect(missingScore.ok).toBe(false);
@@ -180,16 +181,6 @@ function unsupportedProcessingXml(): string {
           <qti-unsupported-expression/>
         </qti-set-outcome-value>
       </qti-response-processing>
-    </qti-assessment-item>
-  `;
-}
-
-function noScoreProcessingXml(): string {
-  return `
-    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-score" title="missing-score" time-dependent="false">
-      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
-      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-      <qti-item-body><p>No processing.</p></qti-item-body>
     </qti-assessment-item>
   `;
 }
