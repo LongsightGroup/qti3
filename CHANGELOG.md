@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.2 - 2026-06-19
+
+### Added
+
+- Add secure adaptive turn processing in `@longsightgroup/qti3-core` through
+  `processQtiAdaptiveItemTurn()`, preserving authoritative attempt state across turns while
+  returning candidate-safe XML for delivery.
+- Add adaptive candidate materialization that strips answer, scoring, mapping, lookup, and
+  response-processing material while preserving outcome-visible feedback from trusted server-side
+  outcomes.
+
+### Changed
+
+- Share delivery redaction parsing, source-range removal, diagnostics, and policy analysis between
+  static secure delivery redaction and adaptive candidate materialization.
+- Keep core package source fixture helpers out of published package files.
+
+### Fixed
+
+- Keep forged or undeclared browser-submitted outcome values from influencing adaptive scoring or
+  materialized feedback visibility.
+- Keep adaptive items that require template-processing materialization fail-closed until supported.
+
 ## 0.9.1 - 2026-06-17
 
 ### Added
