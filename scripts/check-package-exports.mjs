@@ -192,7 +192,7 @@ async function listFiles(directory, prefix = "") {
       files.push(path);
     }
   }
-  return files.sort((left, right) => left.localeCompare(right));
+  return files.toSorted((left, right) => left.localeCompare(right));
 }
 
 async function readJson(path) {

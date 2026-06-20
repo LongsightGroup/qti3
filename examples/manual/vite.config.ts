@@ -12,6 +12,22 @@ const oneEdTechExamplesRoot = resolve(
 );
 let buildOutDir = "";
 
+function connectAsyncHandler(
+  handler: (
+    request: import("node:http").IncomingMessage,
+    response: import("node:http").ServerResponse,
+    next: (error?: unknown) => void,
+  ) => Promise<void>,
+): (
+  request: import("node:http").IncomingMessage,
+  response: import("node:http").ServerResponse,
+  next: (error?: unknown) => void,
+) => void {
+  return (request, response, next) => {
+    void handler(request, response, next).catch(next);
+  };
+}
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -51,26 +67,28 @@ export default defineConfig({
           : resolve(config.root, config.build.outDir);
       },
       configureServer(server) {
-        server.middlewares.use(async (request, response, next) => {
-          const pathname = request.url?.split("?")[0];
-          if (pathname !== "/sv-gallery" && pathname !== "/sv-gallery/") {
-            next();
-            return;
-          }
+        server.middlewares.use(
+          connectAsyncHandler(async (request, response, next) => {
+            const pathname = request.url?.split("?")[0];
+            if (pathname !== "/sv-gallery" && pathname !== "/sv-gallery/") {
+              next();
+              return;
+            }
 
-          try {
-            const html = await readFile(galleryHtmlPath, "utf8");
-            const transformedHtml = await server.transformIndexHtml(
-              request.url ?? "/sv-gallery",
-              html.replace(`src="../src/sv-gallery.ts"`, `src="/src/sv-gallery.ts"`),
-            );
-            response.statusCode = 200;
-            response.setHeader("Content-Type", "text/html");
-            response.end(transformedHtml);
-          } catch (error) {
-            next(error);
-          }
-        });
+            try {
+              const html = await readFile(galleryHtmlPath, "utf8");
+              const transformedHtml = await server.transformIndexHtml(
+                request.url ?? "/sv-gallery",
+                html.replace(`src="../src/sv-gallery.ts"`, `src="/src/sv-gallery.ts"`),
+              );
+              response.statusCode = 200;
+              response.setHeader("Content-Type", "text/html");
+              response.end(transformedHtml);
+            } catch (error) {
+              next(error);
+            }
+          }),
+        );
       },
       async writeBundle() {
         await cp(
@@ -83,38 +101,40 @@ export default defineConfig({
     {
       name: "qti3-1edtech-examples",
       configureServer(server) {
-        server.middlewares.use(async (request, response, next) => {
-          const url = new URL(request.url ?? "/", "http://localhost");
-          if (url.pathname === "/__1edtech/index.json") {
-            const payload = await oneEdTechIndexPayload(oneEdTechExamplesRoot);
-            response.statusCode = 200;
-            response.setHeader("Content-Type", "application/json");
-            response.end(JSON.stringify(payload));
-            return;
-          }
+        server.middlewares.use(
+          connectAsyncHandler(async (request, response, next) => {
+            const url = new URL(request.url ?? "/", "http://localhost");
+            if (url.pathname === "/__1edtech/index.json") {
+              const payload = await oneEdTechIndexPayload(oneEdTechExamplesRoot);
+              response.statusCode = 200;
+              response.setHeader("Content-Type", "application/json");
+              response.end(JSON.stringify(payload));
+              return;
+            }
 
-          if (!url.pathname.startsWith("/__1edtech/file/")) {
-            next();
-            return;
-          }
+            if (!url.pathname.startsWith("/__1edtech/file/")) {
+              next();
+              return;
+            }
 
-          const requestedPath = decodeURIComponent(url.pathname.slice("/__1edtech/file/".length));
-          const filePath = resolve(oneEdTechExamplesRoot, requestedPath);
-          if (!isPathInside(oneEdTechExamplesRoot, filePath)) {
-            response.statusCode = 403;
-            response.end("Forbidden");
-            return;
-          }
+            const requestedPath = decodeURIComponent(url.pathname.slice("/__1edtech/file/".length));
+            const filePath = resolve(oneEdTechExamplesRoot, requestedPath);
+            if (!isPathInside(oneEdTechExamplesRoot, filePath)) {
+              response.statusCode = 403;
+              response.end("Forbidden");
+              return;
+            }
 
-          try {
-            const content = await readFile(filePath);
-            response.statusCode = 200;
-            response.setHeader("Content-Type", contentTypeForPath(filePath));
-            response.end(content);
-          } catch (error) {
-            next(error);
-          }
-        });
+            try {
+              const content = await readFile(filePath);
+              response.statusCode = 200;
+              response.setHeader("Content-Type", contentTypeForPath(filePath));
+              response.end(content);
+            } catch (error) {
+              next(error);
+            }
+          }),
+        );
       },
     },
   ],
@@ -170,7 +190,7 @@ async function indexOneEdTechExamples(root: string): Promise<OneEdTechExampleInd
       };
     }),
   );
-  return entries.sort((a, b) => a.path.localeCompare(b.path));
+  return entries.toSorted((a, b) => a.path.localeCompare(b.path));
 }
 
 async function walkXmlFiles(root: string): Promise<string[]> {

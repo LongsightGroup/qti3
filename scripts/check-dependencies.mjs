@@ -50,7 +50,7 @@ async function checkDirectDependencies() {
     ...(await workspaceImporters("packages")),
     ...(await workspaceImporters("examples")),
   ]);
-  for (const importer of [...actualImporters].sort()) {
+  for (const importer of [...actualImporters].toSorted()) {
     if (!expectedByImporter[importer]) {
       failures.push(
         `${importer} is not listed in scripts/dependency-policy.json directDependencies.`,
@@ -117,14 +117,14 @@ async function checkLockfilePackages() {
   const expected = new Set(policy.lockfilePackages ?? []);
   const actual = new Set(lockfilePackageKeys(await readFile(join(root, "pnpm-lock.yaml"), "utf8")));
 
-  for (const key of [...actual].sort((left, right) => left.localeCompare(right))) {
+  for (const key of [...actual].toSorted((left, right) => left.localeCompare(right))) {
     if (!expected.has(key)) {
       failures.push(
         `pnpm-lock.yaml contains unreviewed package ${key}. Update scripts/dependency-policy.json only after dependency review.`,
       );
     }
   }
-  for (const key of [...expected].sort((left, right) => left.localeCompare(right))) {
+  for (const key of [...expected].toSorted((left, right) => left.localeCompare(right))) {
     if (!actual.has(key)) {
       failures.push(
         `Dependency policy allows ${String(key)}, but it is no longer present in pnpm-lock.yaml.`,
@@ -158,7 +158,7 @@ function lockfilePackageKeys(lockfile) {
     const match = line.match(/^  ('[^']+'|[^\s].*):$/);
     if (match) keys.push(match[1].replace(/^'|'$/g, ""));
   }
-  return keys.sort((left, right) => left.localeCompare(right));
+  return keys.toSorted((left, right) => left.localeCompare(right));
 }
 
 async function checkInstalledPackageLicenses() {
@@ -241,7 +241,7 @@ function licenseString(license) {
 }
 
 function sortedEntries(record) {
-  return Object.entries(record).sort(([left], [right]) => left.localeCompare(right));
+  return Object.entries(record).toSorted(([left], [right]) => left.localeCompare(right));
 }
 
 function formatEntries(entries) {

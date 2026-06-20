@@ -715,7 +715,7 @@ async function expandBasicPackageTargets(targets: string[]): Promise<string[]> {
     const packageDirectories = entries
       .filter((entry) => entry.isDirectory())
       .map((entry) => join(target, entry.name))
-      .sort();
+      .toSorted();
     const before = expanded.length;
     for (const directory of packageDirectories) {
       if (await hasPackageManifest(directory)) expanded.push(directory);
@@ -773,7 +773,7 @@ function detectBasicItemFeatures(xml: string, result: ReturnType<typeof parseQti
   const order = new Map(
     basicItemPlayerProfile.features.map((feature, index) => [feature.featureId, index]),
   );
-  return [...featureIds].sort((a, b) => (order.get(a) ?? 999) - (order.get(b) ?? 999));
+  return [...featureIds].toSorted((a, b) => (order.get(a) ?? 999) - (order.get(b) ?? 999));
 }
 
 function basicInteractionFeature(qtiName: string, xml: string): string | undefined {
@@ -803,7 +803,7 @@ async function collectDirectoryPackageEntries(
   directory: string,
   entries: ZipEntry[],
 ): Promise<void> {
-  const directoryEntries = (await readdir(directory, { withFileTypes: true })).sort((a, b) =>
+  const directoryEntries = (await readdir(directory, { withFileTypes: true })).toSorted((a, b) =>
     a.name.localeCompare(b.name),
   );
   for (const entry of directoryEntries) {

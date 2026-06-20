@@ -249,7 +249,7 @@ function staticSiteRootUrl(): URL {
   const pageUrl = new URL(location.href);
   const galleryIndex = pageUrl.pathname.indexOf("/sv-gallery");
   if (galleryIndex >= 0) {
-    return new URL(`${pageUrl.pathname.slice(0, galleryIndex + 1)}`, pageUrl.origin);
+    return new URL(pageUrl.pathname.slice(0, galleryIndex + 1), pageUrl.origin);
   }
   return new URL("./", pageUrl);
 }
@@ -319,7 +319,7 @@ function populateFilter(select: HTMLSelectElement, values: string[]): void {
 }
 
 function unique(values: string[]): string[] {
-  return [...new Set(values)].sort();
+  return [...new Set(values)].toSorted();
 }
 
 function textElement<K extends keyof HTMLElementTagNameMap>(
@@ -337,10 +337,10 @@ function codeElement(text: string): HTMLElement {
   return textElement("code", text);
 }
 
-function requiredElement<T extends Element>(selector: string): T {
-  const element = document.querySelector<T>(selector);
+function requiredElement(selector: string): HTMLElement {
+  const element = document.querySelector(selector);
   if (!element) throw new Error(`Missing gallery element ${selector}.`);
-  return element;
+  return element as HTMLElement;
 }
 
 interface QtiGalleryPlayer extends HTMLElement {

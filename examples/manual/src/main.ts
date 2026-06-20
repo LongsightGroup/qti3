@@ -852,7 +852,9 @@ async function readPackageXmlFiles(fileList: FileList | null): Promise<LoadedFil
   const [file] = [...(fileList ?? [])];
   packageAssetPaths = [];
   if (!file || !file.name.toLowerCase().endsWith(".zip")) return [];
-  return (await readZipXmlFiles(file)).sort((left, right) => left.name.localeCompare(right.name));
+  return (await readZipXmlFiles(file)).toSorted((left, right) =>
+    left.name.localeCompare(right.name),
+  );
 }
 
 async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
@@ -860,7 +862,7 @@ async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
   packageAssetPaths = entries
     .filter((entry) => !entry.name.endsWith(".xml"))
     .map((entry) => entry.name)
-    .sort((left, right) => left.localeCompare(right));
+    .toSorted((left, right) => left.localeCompare(right));
   for (const entry of entries) {
     if (entry.name.endsWith(".xml")) continue;
     assetUrls.set(
@@ -1024,7 +1026,7 @@ function resolveLoadableItems(files: LoadedFile[]): LoadedFile[] {
   const orderedPaths =
     packageOrder.length > 0
       ? [...packageOrder, ...[...itemPaths].filter((path) => !packageOrder.includes(path))]
-      : [...itemPaths].sort((left, right) => left.localeCompare(right));
+      : [...itemPaths].toSorted((left, right) => left.localeCompare(right));
   return orderedPaths.map((path) => byPath.get(path)).filter((file) => file !== undefined);
 }
 
