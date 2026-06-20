@@ -13,9 +13,9 @@ describe("shared vocabulary support metadata", () => {
     const supportedClassNames = new Set(
       sharedVocabularyClassSupport.map((support) => support.className),
     );
-    const cssClassNames = [...new Set(authoredSharedVocabularyClasses(PLAYER_STYLES))].sort();
+    const cssClassNames = [...new Set(authoredSharedVocabularyClasses(PLAYER_STYLES))].toSorted();
 
     expect(cssClassNames.length).toBeGreaterThan(0);
-    expect([...supportedClassNames].sort()).toEqual(expect.arrayContaining(cssClassNames));
+    expect([...supportedClassNames].toSorted()).toEqual(expect.arrayContaining(cssClassNames));
   });
 });

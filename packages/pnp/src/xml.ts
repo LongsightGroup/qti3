@@ -76,9 +76,15 @@ function parseXmlString(
 function domParserConstructor():
   | (new () => { parseFromString(xml: string, mimeType: string): unknown })
   | undefined {
-  const value = (globalThis as { DOMParser?: unknown }).DOMParser;
-  if (typeof value !== "function") return undefined;
-  return value as new () => { parseFromString(xml: string, mimeType: string): unknown };
+  const value: unknown = Reflect.get(globalThis, "DOMParser");
+  if (!isDomParserConstructor(value)) return undefined;
+  return value;
+}
+
+function isDomParserConstructor(
+  value: unknown,
+): value is new () => { parseFromString(xml: string, mimeType: string): unknown } {
+  return typeof value === "function";
 }
 
 function xmlLike(input: unknown): Qti3PnpElementLike | undefined {
@@ -110,10 +116,13 @@ function domAttributes(input: Record<string, unknown>): Record<string, string> {
   const getAttributeNames = input.getAttributeNames;
   const getAttribute = input.getAttribute;
   if (typeof getAttributeNames === "function" && typeof getAttribute === "function") {
-    for (const name of getAttributeNames.call(input) as unknown[]) {
-      if (typeof name === "string") {
-        const value = getAttribute.call(input, name);
-        if (typeof value === "string") attributes[name] = value;
+    const names = Reflect.apply(getAttributeNames, input, []);
+    if (Array.isArray(names)) {
+      for (const name of names) {
+        if (typeof name === "string") {
+          const value = getAttribute.call(input, name);
+          if (typeof value === "string") attributes[name] = value;
+        }
       }
     }
   }

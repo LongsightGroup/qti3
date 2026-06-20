@@ -291,7 +291,9 @@ function renderTabularMatchResponse(
         }),
       );
       button.append(checkboxToggleIcon());
-      button.addEventListener("click", () => pairs.togglePair(source, target));
+      button.addEventListener("click", () => {
+        pairs.togglePair(source, target);
+      });
       button.addEventListener("keydown", (event) => {
         if (event.key !== "Delete" && event.key !== "Backspace") return;
         event.preventDefault();

@@ -1,4 +1,6 @@
 import {
+  numericTuple3,
+  numericTuple4,
   parsePositiveNumber,
   type QtiChoice,
   type QtiInteraction,
@@ -89,11 +91,15 @@ function placeGraphicGapLabelBelow(
   let y = height;
 
   if (shape === "circle" && coords.length >= 3) {
-    const [centerX, centerY, radius] = coords as [number, number, number];
+    const tuple = numericTuple3(coords);
+    if (!tuple) return;
+    const [centerX, centerY, radius] = tuple;
     x = centerX;
     y = centerY + radius;
   } else if (shape === "rect" && coords.length >= 4) {
-    const [left, , right, bottom] = coords as [number, number, number, number];
+    const tuple = numericTuple4(coords);
+    if (!tuple) return;
+    const [left, , right, bottom] = tuple;
     x = (left + right) / 2;
     y = bottom;
   } else if (shape === "poly" && coords.length >= 6) {

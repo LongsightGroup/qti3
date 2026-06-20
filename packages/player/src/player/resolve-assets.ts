@@ -2,8 +2,7 @@ import { isResolvableAssetUrl } from "../content/content-dom.js";
 import type { QtiPlayerResolveAsset } from "../player-types.js";
 
 export function resolveRenderedAssets(root: ParentNode, resolveAsset: QtiPlayerResolveAsset): void {
-  const ElementConstructor = globalThis.Element;
-  if (ElementConstructor && root instanceof ElementConstructor) {
+  if (root instanceof Element) {
     resolveElementAssets(root, resolveAsset);
   }
   for (const element of root.querySelectorAll("[src], [href], [data]")) {

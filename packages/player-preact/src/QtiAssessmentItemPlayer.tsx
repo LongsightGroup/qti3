@@ -11,12 +11,13 @@ import {
   type QtiAssessmentItemPlayerHandle,
   QtiAssessmentItemPlayer as QtiAssessmentItemPlayerElement,
 } from "@longsightgroup/qti3-player";
-import { createElement, type JSX } from "preact";
+import { createElement } from "preact";
+import * as preact from "preact";
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 
 type QtiPlayerDomProps = Omit<
-  JSX.HTMLAttributes<QtiAssessmentItemPlayerElement>,
+  preact.JSX.HTMLAttributes<QtiAssessmentItemPlayerElement>,
   QtiAssessmentItemPlayerAdapterPropName | "ref"
 >;
 
@@ -47,14 +48,17 @@ export const QtiAssessmentItemPlayer = forwardRef<
 
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {
+      return undefined;
+    }
     return bindQtiAssessmentItemPlayerAdapterEvents(element, () => latestPropsRef.current);
   }, []);
 
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
-    syncQtiAssessmentItemPlayerAdapterChrome(element, props);
+    if (element) {
+      syncQtiAssessmentItemPlayerAdapterChrome(element, props);
+    }
   }, [
     props.languageOfInterface,
     props.keywordEmphasisEnabled,
@@ -74,7 +78,9 @@ export const QtiAssessmentItemPlayer = forwardRef<
 
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {
+      return undefined;
+    }
     return loadSyncRef.current.run(element, {
       xml: props.xml,
       loadOptions: props.loadOptions,

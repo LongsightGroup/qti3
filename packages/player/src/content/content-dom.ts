@@ -252,7 +252,7 @@ export function isSafeUrl(value: string): boolean {
 }
 
 export function formatPrintedValue(value: QtiValue, format?: string): string {
-  if (value === null || value === undefined) return "";
+  if (value === null) return "";
   const numericValue =
     typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
   if (Number.isFinite(numericValue) && format) {

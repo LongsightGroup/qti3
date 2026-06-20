@@ -1,4 +1,4 @@
-import { qtiValueToIdentifierList } from "@longsightgroup/qti3-core";
+import { numericTuple3, numericTuple4, qtiValueToIdentifierList } from "@longsightgroup/qti3-core";
 import type {
   QtiChoice,
   QtiInteraction,
@@ -83,10 +83,10 @@ export function objectHeight(interaction: QtiInteraction): number {
 }
 
 export function objectIsImage(object: QtiObjectAsset): boolean {
-  return Boolean(
-    object.type?.startsWith("image/") ||
-    object.data?.startsWith("data:image/") ||
-    /\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(object.data ?? ""),
+  return (
+    object.type?.startsWith("image/") === true ||
+    object.data?.startsWith("data:image/") === true ||
+    /\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(object.data ?? "")
   );
 }
 
@@ -121,6 +121,12 @@ export function parseHotspotCoords(choice: QtiChoice): number[] {
     .filter((value) => Number.isFinite(value));
 }
 
+function numericTuple2(values: number[]): [number, number] | undefined {
+  const [a, b] = values;
+  if (a === undefined || b === undefined) return undefined;
+  return [a, b];
+}
+
 export type HotspotRectBounds = {
   left: number;
   top: number;
@@ -132,7 +138,9 @@ export function hotspotRectBounds(choice: QtiChoice): HotspotRectBounds | undefi
   if (choice.attributes.shape !== "rect") return undefined;
   const coords = parseHotspotCoords(choice);
   if (coords.length < 4) return undefined;
-  const [left, top, right, bottom] = coords as [number, number, number, number];
+  const tuple = numericTuple4(coords);
+  if (!tuple) return undefined;
+  const [left, top, right, bottom] = tuple;
   const inlineSize = right - left;
   const blockSize = bottom - top;
   if (inlineSize <= 0 || blockSize <= 0) return undefined;
@@ -151,7 +159,9 @@ export function createHotspotSvgElement(choice: QtiChoice): HotspotSvgShapeEleme
   const shape = choice.attributes.shape;
 
   if (shape === "circle" && coords.length >= 3) {
-    const [cx, cy, radius] = coords as [number, number, number];
+    const tuple = numericTuple3(coords);
+    if (!tuple) return undefined;
+    const [cx, cy, radius] = tuple;
     const circle = document.createElementNS(SVG_NAMESPACE, "circle");
     circle.setAttribute("cx", String(cx));
     circle.setAttribute("cy", String(cy));
@@ -160,7 +170,9 @@ export function createHotspotSvgElement(choice: QtiChoice): HotspotSvgShapeEleme
   }
 
   if (shape === "rect" && coords.length >= 4) {
-    const [left, top, right, bottom] = coords as [number, number, number, number];
+    const tuple = numericTuple4(coords);
+    if (!tuple) return undefined;
+    const [left, top, right, bottom] = tuple;
     const rect = document.createElementNS(SVG_NAMESPACE, "rect");
     rect.setAttribute("x", String(left));
     rect.setAttribute("y", String(top));
@@ -179,7 +191,9 @@ export function createHotspotSvgElement(choice: QtiChoice): HotspotSvgShapeEleme
 }
 
 function hotspotPolygonPathData(coords: number[]): string {
-  const [startX, startY] = coords as [number, number, ...number[]];
+  const tuple = numericTuple2(coords);
+  if (!tuple) return "";
+  const [startX, startY] = tuple;
   const commands = [`M ${startX} ${startY}`];
   for (let index = 2; index < coords.length; index += 2) {
     commands.push(`L ${coords[index]} ${coords[index + 1]}`);
@@ -251,7 +265,9 @@ export function placeHotspotButton(
   const shape = choice.attributes.shape;
 
   if (shape === "circle" && coords.length >= 3) {
-    const [x, y, radius] = coords as [number, number, number];
+    const tuple = numericTuple3(coords);
+    if (!tuple) return;
+    const [x, y, radius] = tuple;
     applyGraphicRegionPlacement(button, {
       insetInlineStart: `${percent(x - radius, width)}%`,
       insetBlockStart: `${percent(y - radius, height)}%`,
@@ -275,7 +291,9 @@ export function placeHotspotButton(
   }
 
   if (shape === "rect" && coords.length >= 4) {
-    const [left, top, right, bottom] = coords as [number, number, number, number];
+    const tuple = numericTuple4(coords);
+    if (!tuple) return;
+    const [left, top, right, bottom] = tuple;
     applyGraphicRegionPlacement(button, {
       insetInlineStart: `${percent(left, width)}%`,
       insetBlockStart: `${percent(top, height)}%`,
@@ -317,11 +335,15 @@ export function hotspotCenter(
   const coords = parseHotspotCoords(choice);
   const shape = choice.attributes.shape;
   if ((shape === "circle" || shape === "ellipse") && coords.length >= 2) {
-    const [x, y] = coords as [number, number];
+    const tuple = numericTuple2(coords);
+    if (!tuple) return { x: width / 2, y: height / 2 };
+    const [x, y] = tuple;
     return { x, y };
   }
   if (shape === "rect" && coords.length >= 4) {
-    const [left, top, right, bottom] = coords as [number, number, number, number];
+    const tuple = numericTuple4(coords);
+    if (!tuple) return { x: width / 2, y: height / 2 };
+    const [left, top, right, bottom] = tuple;
     return { x: (left + right) / 2, y: (top + bottom) / 2 };
   }
   if (shape === "poly" && coords.length >= 6) {

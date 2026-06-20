@@ -81,7 +81,8 @@ describe("validatePlayerMessageCatalog", () => {
     };
     for (const catalog of [swedish, german, spanish]) {
       const result = validatePlayerMessageCatalog(catalog);
-      expect(result.valid, JSON.stringify(result.diagnostics)).toBe(true);
+      expect(result.valid).toBe(true);
+      expect(result.diagnostics).toEqual([]);
     }
   });
 

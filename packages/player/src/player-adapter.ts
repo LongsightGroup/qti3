@@ -153,22 +153,28 @@ export function qtiAssessmentItemPlayerLoadDependencies(
   ];
 }
 
+function bindAdapterEvent(
+  element: QtiAssessmentItemPlayer,
+  getProps: () => QtiAssessmentItemPlayerAdapterProps,
+  entry: (typeof qtiAssessmentItemPlayerAdapterEventEntries)[number],
+): () => void {
+  const [eventName, propName] = entry;
+  const listener = (event: Event) => {
+    if (!(event instanceof CustomEvent)) return;
+    const callback = getProps()[propName];
+    callback?.(event.detail);
+  };
+  element.addEventListener(eventName, listener);
+  return () => element.removeEventListener(eventName, listener);
+}
+
 export function bindQtiAssessmentItemPlayerAdapterEvents(
   element: QtiAssessmentItemPlayer,
   getProps: () => QtiAssessmentItemPlayerAdapterProps,
 ): () => void {
-  const removers = qtiAssessmentItemPlayerAdapterEventEntries.map(([eventName, propName]) => {
-    const listener = (event: Event) => {
-      const callback = getProps()[propName] as
-        | QtiAssessmentItemPlayerAdapterEventCallback<typeof eventName>
-        | undefined;
-      callback?.(
-        (event as CustomEvent<QtiAssessmentItemPlayerEventDetailMap[typeof eventName]>).detail,
-      );
-    };
-    element.addEventListener(eventName, listener);
-    return () => element.removeEventListener(eventName, listener);
-  });
+  const removers = qtiAssessmentItemPlayerAdapterEventEntries.map((entry) =>
+    bindAdapterEvent(element, getProps, entry),
+  );
   return () => {
     for (const remove of removers) remove();
   };

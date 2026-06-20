@@ -41,12 +41,9 @@ export interface PlayerMessageCatalogValidationResult {
   diagnostics: PlayerMessageCatalogDiagnostic[];
 }
 
-const MANIFEST_KEYS = new Set(PLAYER_MESSAGE_MANIFEST.map((entry) => entry.key));
 const MANIFEST_BY_KEY = new Map(PLAYER_MESSAGE_MANIFEST.map((entry) => [entry.key, entry]));
 
 const AUXILIARY_STRING_KEYS = new Set<string>();
-
-const VALID_DIRECTION_KEYS = new Set<QtiPlayerMovementDirection>(["up", "down", "left", "right"]);
 
 type NormalizedCatalog = {
   strings: Record<string, string>;
@@ -63,6 +60,14 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string";
 }
 
+function isPlayerMessageKey(key: string): key is PlayerMessageKey {
+  return PLAYER_MESSAGE_MANIFEST.some((entry) => entry.key === key);
+}
+
+function isQtiPlayerMovementDirection(value: string): value is QtiPlayerMovementDirection {
+  return value === "up" || value === "down" || value === "left" || value === "right";
+}
+
 function pushDiagnostic(
   diagnostics: PlayerMessageCatalogDiagnostic[],
   diagnostic: PlayerMessageCatalogDiagnostic,
@@ -71,11 +76,11 @@ function pushDiagnostic(
 }
 
 function isManifestStringKey(key: string): boolean {
-  if (MANIFEST_KEYS.has(key as PlayerMessageKey)) return true;
+  if (isPlayerMessageKey(key)) return true;
   if (AUXILIARY_STRING_KEYS.has(key)) return true;
   const pluralMatch = /^(.+)\.(one|other)$/.exec(key);
-  if (pluralMatch && MANIFEST_KEYS.has(pluralMatch[1] as PlayerMessageKey)) {
-    return MANIFEST_BY_KEY.get(pluralMatch[1] as PlayerMessageKey)?.resolver === "plural";
+  if (pluralMatch?.[1] && isPlayerMessageKey(pluralMatch[1])) {
+    return MANIFEST_BY_KEY.get(pluralMatch[1])?.resolver === "plural";
   }
   return false;
 }
@@ -169,8 +174,8 @@ function validateTemplate(
 
 function manifestEntryForStringKey(key: string): PlayerMessageManifestEntry | undefined {
   const pluralMatch = /^(.+)\.(one|other)$/.exec(key);
-  const baseKey = (pluralMatch?.[1] ?? key) as PlayerMessageKey;
-  return MANIFEST_BY_KEY.get(baseKey);
+  const baseKey = pluralMatch?.[1] ?? key;
+  return isPlayerMessageKey(baseKey) ? MANIFEST_BY_KEY.get(baseKey) : undefined;
 }
 
 function normalizeCatalogInput(
@@ -272,7 +277,7 @@ function normalizeCatalogInput(
       });
     } else {
       for (const [direction, label] of Object.entries(input.directions)) {
-        if (!VALID_DIRECTION_KEYS.has(direction as QtiPlayerMovementDirection)) {
+        if (!isQtiPlayerMovementDirection(direction)) {
           pushDiagnostic(diagnostics, {
             code: "invalid-direction-key",
             key: direction,
@@ -290,7 +295,7 @@ function normalizeCatalogInput(
           });
           continue;
         }
-        normalized.directions[direction as QtiPlayerMovementDirection] = label;
+        normalized.directions[direction] = label;
       }
     }
   }

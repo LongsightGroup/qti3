@@ -1,7 +1,6 @@
 import type { PlayerMessageKey } from "./player-message-manifest.js";
 import type {
-  PlayerMessageOverride,
-  PlayerMessageParams,
+  MessageParamsArg,
   PlayerMessageResolver,
   QtiPlayerMessageOverrides,
 } from "./player-message-resolver.js";
@@ -12,18 +11,15 @@ class OverridePlayerMessageResolver implements PlayerMessageResolver {
     private readonly overrides: QtiPlayerMessageOverrides,
   ) {}
 
-  message<K extends PlayerMessageKey>(key: K, params?: PlayerMessageParams<K>): string {
-    const override = this.overrides[key] as PlayerMessageOverride<K> | undefined;
+  message<K extends PlayerMessageKey>(
+    key: K,
+    ...args: MessageParamsArg<K> extends never ? [] : [MessageParamsArg<K>]
+  ): string {
+    const override = this.overrides[key];
     if (override) {
-      if (params === undefined) {
-        return (override as () => string)();
-      }
-      return (override as (p: PlayerMessageParams<K>) => string)(params);
+      return Reflect.apply(override, null, args);
     }
-    if (params === undefined) {
-      return (this.base.message as (messageKey: K) => string)(key);
-    }
-    return (this.base.message as (messageKey: K, p: PlayerMessageParams<K>) => string)(key, params);
+    return this.base.message(key, ...args);
   }
 }
 

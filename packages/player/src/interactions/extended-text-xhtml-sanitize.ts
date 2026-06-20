@@ -33,7 +33,8 @@ function sanitizedRichTextNode(
   }
   if (node.nodeType !== Node.ELEMENT_NODE) return undefined;
 
-  const element = node as Element;
+  if (!(node instanceof Element)) return undefined;
+  const element = node;
   const localName = element.localName.toLowerCase();
   if (richTextDroppedElementNames.has(localName)) return undefined;
 
@@ -60,7 +61,8 @@ function serializeRichTextNode(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return escapeRichTextText(node.textContent ?? "");
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
-  const element = node as Element;
+  if (!(node instanceof Element)) return "";
+  const element = node;
   const name = element.localName.toLowerCase();
   if (name === "br") return "<br/>";
 

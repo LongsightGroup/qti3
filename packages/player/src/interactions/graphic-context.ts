@@ -6,7 +6,7 @@ export function appendGraphicContext(group: HTMLElement, interaction: QtiInterac
   const context = document.createElement("div");
   context.className = "qti3-graphic-context";
   const object = interaction.object;
-  const label = interaction.prompt ?? object.text ?? "Graphic interaction";
+  const label = interaction.prompt ?? (object.text || "Graphic interaction");
 
   if (object.data && objectIsImage(object)) {
     const image = document.createElement("img");

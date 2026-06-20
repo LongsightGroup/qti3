@@ -8,6 +8,12 @@ export interface InlineValidationDetail {
   diagnostic: QtiDiagnostic | undefined;
 }
 
+export function isInlineValidationDetail(detail: unknown): detail is InlineValidationDetail {
+  if (typeof detail !== "object" || detail === null) return false;
+  if (!("responseIdentifier" in detail)) return false;
+  return typeof detail.responseIdentifier === "string";
+}
+
 export function dispatchInlineValidation(
   host: HTMLElement,
   responseIdentifier: string,

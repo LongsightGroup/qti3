@@ -263,25 +263,26 @@ const supportDefinitions = [
     ],
     capability: display("textAppearance"),
     apply: (resolution, preference) => {
-      const display = resolution.display;
+      const resolvedDisplay = resolution.display;
       const params = preference.params;
       const fontSize = numberParam(params.fontSize);
-      if (fontSize !== undefined) display.fontSize = fontSize;
+      if (fontSize !== undefined) resolvedDisplay.fontSize = fontSize;
       const fontColor = stringParam(params, "fontColor");
-      if (fontColor !== undefined) display.fontColor = fontColor;
+      if (fontColor !== undefined) resolvedDisplay.fontColor = fontColor;
       const backgroundColor = stringParam(params, "backgroundColor");
-      if (backgroundColor !== undefined) display.backgroundColor = backgroundColor;
+      if (backgroundColor !== undefined) resolvedDisplay.backgroundColor = backgroundColor;
       const fontFace = stringParam(params, "fontFace");
-      if (fontFace !== undefined) display.fontFace = fontFace;
+      if (fontFace !== undefined) resolvedDisplay.fontFace = fontFace;
       const lineHeight = numberParam(params.lineHeight);
-      if (lineHeight !== undefined) display.lineHeight = lineHeight;
+      if (lineHeight !== undefined) resolvedDisplay.lineHeight = lineHeight;
       const lineSpacing = numberParam(params.lineSpacing);
-      if (lineSpacing !== undefined) display.lineSpacing = lineSpacing;
+      if (lineSpacing !== undefined) resolvedDisplay.lineSpacing = lineSpacing;
       const letterSpacing = numberParam(params.letterSpacing);
-      if (letterSpacing !== undefined) display.letterSpacing = letterSpacing;
+      if (letterSpacing !== undefined) resolvedDisplay.letterSpacing = letterSpacing;
       const wordSpacing = numberParam(params.wordSpacing);
-      if (wordSpacing !== undefined) display.wordSpacing = wordSpacing;
-      if (typeof params.wordWrapping === "boolean") display.wordWrapping = params.wordWrapping;
+      if (wordSpacing !== undefined) resolvedDisplay.wordSpacing = wordSpacing;
+      if (typeof params.wordWrapping === "boolean")
+        resolvedDisplay.wordWrapping = params.wordWrapping;
     },
   }),
   def("thesaurus-on-screen", "tool"),

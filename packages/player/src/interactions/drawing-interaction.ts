@@ -237,7 +237,7 @@ function drawingMetadataFromSvgDataUrl(raw: string): string | undefined {
 
 function drawingResponseImage(value: QtiValue): string | undefined {
   const raw = scalarString(value);
-  return raw?.startsWith("data:image/") ? raw : undefined;
+  return raw.startsWith("data:image/") ? raw : undefined;
 }
 
 export function parseDrawingStrokePayload(raw: string): ParsedDrawingStroke[] {

@@ -29,31 +29,52 @@ export function portableCustomDefinitionFromAttributes(
   };
 }
 
-export function portableCustomEventValue(event: Event): QtiValue | undefined {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isQtiValue(value: unknown): value is QtiValue {
+  if (value === null) return true;
+  if (typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isQtiValue);
+  if (isRecord(value)) return Object.values(value).every(isQtiValue);
+  return false;
+}
+
+function portableCustomEventDetail(event: Event): unknown {
   if (!("detail" in event)) return undefined;
-  const detail = event.detail as { value?: QtiValue; response?: QtiValue } | QtiValue | undefined;
+  return event.detail;
+}
+
+export function portableCustomEventValue(event: Event): QtiValue | undefined {
+  const detail = portableCustomEventDetail(event);
   if (detail === undefined) return undefined;
-  if (typeof detail === "object" && detail !== null && !Array.isArray(detail)) {
-    if ("value" in detail) return detail.value ?? null;
-    if ("response" in detail) return detail.response ?? null;
+  if (isRecord(detail)) {
+    if ("value" in detail) {
+      const value = detail.value;
+      return isQtiValue(value) ? value : null;
+    }
+    if ("response" in detail) {
+      const response = detail.response;
+      return isQtiValue(response) ? response : null;
+    }
     if ("state" in detail || "valid" in detail) return undefined;
   }
-  return detail as QtiValue;
+  return isQtiValue(detail) ? detail : undefined;
 }
 
 export function portableCustomEventState(event: Event): QtiPortableCustomStateValue | undefined {
-  if (!("detail" in event)) return undefined;
-  const detail = event.detail as { state?: unknown } | undefined;
-  if (typeof detail !== "object" || detail === null || !("state" in detail)) return undefined;
+  const detail = portableCustomEventDetail(event);
+  if (!isRecord(detail) || !("state" in detail)) return undefined;
   return isPortableCustomStateValue(detail.state) ? detail.state : undefined;
 }
 
 export function portableCustomEventValidity(
   event: Event,
 ): { valid: boolean; message?: string | undefined } | undefined {
-  if (!("detail" in event)) return undefined;
-  const detail = event.detail as { valid?: unknown; message?: unknown } | undefined;
-  if (typeof detail !== "object" || detail === null || typeof detail.valid !== "boolean") {
+  const detail = portableCustomEventDetail(event);
+  if (!isRecord(detail) || typeof detail.valid !== "boolean") {
     return undefined;
   }
   return {
@@ -67,8 +88,8 @@ export function isPortableCustomStateValue(value: unknown): value is QtiPortable
   if (typeof value === "string" || typeof value === "boolean") return true;
   if (typeof value === "number") return Number.isFinite(value);
   if (Array.isArray(value)) return value.every(isPortableCustomStateValue);
-  if (typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).every(isPortableCustomStateValue);
+  if (isRecord(value)) {
+    return Object.values(value).every(isPortableCustomStateValue);
   }
   return false;
 }

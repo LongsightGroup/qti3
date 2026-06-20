@@ -13,6 +13,21 @@ import {
 } from "./player-message-manifest.js";
 import type { QtiPlayerMovementDirection } from "./player-messages.js";
 
+function isQtiPlayerMovementDirection(value: unknown): value is QtiPlayerMovementDirection {
+  return value === "up" || value === "down" || value === "left" || value === "right";
+}
+
+function messageParamsRecord(value: unknown): Record<string, string | number> {
+  if (typeof value !== "object" || value === null) return {};
+  const params: Record<string, string | number> = {};
+  for (const [key, entryValue] of Object.entries(value)) {
+    if (typeof entryValue === "string" || typeof entryValue === "number") {
+      params[key] = entryValue;
+    }
+  }
+  return params;
+}
+
 type ManifestEntry = (typeof PLAYER_MESSAGE_MANIFEST)[number];
 
 const MANIFEST_BY_KEY = new Map(PLAYER_MESSAGE_MANIFEST.map((entry) => [entry.key, entry]));
@@ -38,6 +53,8 @@ export type PlayerMessageParams<K extends PlayerMessageKey> = ParamsFromManifest
 
 type MessageParamsArg<K extends PlayerMessageKey> =
   PlayerMessageParams<K> extends Record<string, never> ? never : PlayerMessageParams<K>;
+
+export type { MessageParamsArg };
 
 /** Typed override handler for a single manifest message id. */
 export type PlayerMessageOverride<K extends PlayerMessageKey> =
@@ -128,11 +145,13 @@ function resolveManifestEntry(
         ...params,
         typeName: typeName(String(params.type ?? "")),
       });
-    case "directionTemplate":
+    case "directionTemplate": {
+      const direction = isQtiPlayerMovementDirection(params.direction) ? params.direction : "up";
       return catalogString(strings, key, {
         ...params,
-        direction: directionLabel(params.direction as QtiPlayerMovementDirection),
+        direction: directionLabel(direction),
       });
+    }
     default:
       return key;
   }
@@ -160,7 +179,7 @@ class CatalogPlayerMessageResolver implements PlayerMessageResolver {
     if (!entry) {
       return key;
     }
-    const params = ((args as readonly unknown[])[0] ?? {}) as Record<string, string | number>;
+    const params = messageParamsRecord(args[0]);
     return resolveManifestEntry(entry, this.context, params);
   }
 }

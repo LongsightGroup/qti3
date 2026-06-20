@@ -88,7 +88,8 @@ export function bindOrderListItemDrag(
 
   item.addEventListener("pointerdown", (event) => {
     if (event.button !== 0) return;
-    if ((event.target as Element).closest(orderDragControlSelector)) {
+    const target = event.target;
+    if (target instanceof Element && target.closest(orderDragControlSelector)) {
       item.draggable = false;
       const restoreDraggable = () => {
         item.draggable = true;
@@ -121,7 +122,8 @@ export function bindOrderListItemDrag(
   });
 
   item.addEventListener("dragstart", (event) => {
-    if ((event.target as Element).closest(orderDragControlSelector)) {
+    const target = event.target;
+    if (target instanceof Element && target.closest(orderDragControlSelector)) {
       event.preventDefault();
       return;
     }

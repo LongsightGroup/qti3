@@ -63,7 +63,7 @@ export function renderExtendedTextXhtmlResponse(
     if (forceDomNormalize || richTextLiveDomNeedsNormalization(editor)) {
       if (editor.innerHTML !== sanitized) editor.innerHTML = sanitized;
     }
-    syncExtendedTextCounter(counter, counterState, (editor.textContent ?? "").length, messages);
+    syncExtendedTextCounter(counter, counterState, (editor.textContent || "").length, messages);
     syncRichTextToolbarButtonStates(toolbarState.buttons);
     if (emitResponse) update(sanitized);
   };

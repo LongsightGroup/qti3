@@ -74,7 +74,7 @@ import {
   validateItemResponses,
 } from "./player-validation.js";
 import { maximumAllowedResponses } from "./response-limits.js";
-import { QTI3_INLINE_VALIDATION_EVENT, type InlineValidationDetail } from "./inline-validation.js";
+import { QTI3_INLINE_VALIDATION_EVENT, isInlineValidationDetail } from "./inline-validation.js";
 import { syncValidationMessages } from "./player-validation-dom.js";
 import {
   isAuthoringDiagnostic,
@@ -82,23 +82,15 @@ import {
   responseValidationMessages,
   splitSerializedValidationMessages,
 } from "./player/validation-messages.js";
-
-const HTMLElementBase: typeof HTMLElement =
-  globalThis.HTMLElement ??
-  (class {
-    replaceChildren(): void {}
-    dispatchEvent(): boolean {
-      return true;
-    }
-  } as unknown as typeof HTMLElement);
+import { PlayerElementHost } from "./player-element-host.js";
 
 function observeResolvedAssets(
   root: ParentNode,
   resolveAsset: QtiPlayerResolveAsset,
 ): MutationObserver | undefined {
-  const Observer = globalThis.MutationObserver;
-  const NodeConstructor = globalThis.Node;
-  const ElementConstructor = globalThis.Element;
+  const Observer = "MutationObserver" in globalThis ? globalThis.MutationObserver : undefined;
+  const NodeConstructor = "Node" in globalThis ? globalThis.Node : undefined;
+  const ElementConstructor = "Element" in globalThis ? globalThis.Element : undefined;
   if (!Observer || !NodeConstructor || !ElementConstructor || !(root instanceof NodeConstructor)) {
     return undefined;
   }
@@ -118,7 +110,7 @@ function observeResolvedAssets(
   return observer;
 }
 
-export class QtiAssessmentItemPlayer extends HTMLElementBase {
+export class QtiAssessmentItemPlayer extends PlayerElementHost {
   static get observedAttributes(): string[] {
     return ["data-keyword-emphasis", "language-of-interface", "locale"];
   }
@@ -144,8 +136,8 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   get languageOfInterface(): string {
     return (
       this.languageOfInterfaceOverride ??
-      this.getAttribute?.("language-of-interface") ??
-      this.getAttribute?.("locale") ??
+      this.getAttribute("language-of-interface") ??
+      this.getAttribute("locale") ??
       defaultPlayerLocale(this)
     );
   }
@@ -185,11 +177,11 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
   }
 
   get keywordEmphasisEnabled(): boolean {
-    return this.keywordEmphasisOverride ?? this.getAttribute?.("data-keyword-emphasis") === "true";
+    return this.keywordEmphasisOverride ?? this.getAttribute("data-keyword-emphasis") === "true";
   }
 
   set keywordEmphasisEnabled(value: boolean | undefined) {
-    const nextOverride = value === undefined ? undefined : value === true;
+    const nextOverride = value === undefined ? undefined : value;
     if (nextOverride === this.keywordEmphasisOverride) {
       this.syncKeywordEmphasisPresentation();
       return;
@@ -220,8 +212,8 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
 
   private handleInlineValidation = (event: Event): void => {
     if (!(event instanceof CustomEvent)) return;
-    const detail = event.detail as InlineValidationDetail | undefined;
-    if (!detail?.responseIdentifier) return;
+    const detail = event.detail;
+    if (!isInlineValidationDetail(detail)) return;
     this.applyInlineValidation(detail.responseIdentifier, detail.diagnostic, { emitState: true });
   };
 
@@ -323,7 +315,7 @@ export class QtiAssessmentItemPlayer extends HTMLElementBase {
       ),
       ...playerDiagnostics.filter((diagnostic) => diagnostic.severity === "error"),
     ];
-    const serializedValidation = options.state?.validationMessages?.length
+    const serializedValidation = options.state?.validationMessages.length
       ? splitSerializedValidationMessages(options.state.validationMessages)
       : undefined;
     this.authoringDiagnostics = cloneDiagnostics(
@@ -756,7 +748,7 @@ function playerErrorDiagnostic(code: string, error: unknown): QtiDiagnostic {
 }
 
 export function defineQtiAssessmentItemPlayer(): void {
-  if (globalThis.customElements && !customElements.get("qti-assessment-item-player")) {
+  if (!customElements.get("qti-assessment-item-player")) {
     customElements.define("qti-assessment-item-player", QtiAssessmentItemPlayer);
   }
 }

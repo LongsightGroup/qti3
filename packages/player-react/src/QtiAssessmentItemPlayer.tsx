@@ -52,14 +52,17 @@ export const QtiAssessmentItemPlayer = forwardRef<
 
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {
+      return undefined;
+    }
     return bindQtiAssessmentItemPlayerAdapterEvents(element, () => latestPropsRef.current);
   }, []);
 
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
-    syncQtiAssessmentItemPlayerAdapterChrome(element, props);
+    if (element) {
+      syncQtiAssessmentItemPlayerAdapterChrome(element, props);
+    }
   }, [
     props.languageOfInterface,
     props.keywordEmphasisEnabled,
@@ -79,7 +82,9 @@ export const QtiAssessmentItemPlayer = forwardRef<
 
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {
+      return undefined;
+    }
     return loadSyncRef.current.run(element, {
       xml: props.xml,
       loadOptions: props.loadOptions,

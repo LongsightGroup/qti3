@@ -184,9 +184,7 @@ function choicesPositionFromState(
 ): SharedVocabularyChoicesPosition | undefined {
   const value = state["choices-position"];
   if (typeof value !== "string") return undefined;
-  return (SHARED_VOCABULARY_CHOICES_POSITIONS as readonly string[]).includes(value)
-    ? (value as SharedVocabularyChoicesPosition)
-    : undefined;
+  return SHARED_VOCABULARY_CHOICES_POSITIONS.find((position) => position === value);
 }
 
 function numericLabels(): string[] {

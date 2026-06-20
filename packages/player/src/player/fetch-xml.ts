@@ -1,5 +1,5 @@
 export async function defaultFetchXml(url: string): Promise<string> {
-  if (!globalThis.fetch) {
+  if (typeof globalThis.fetch !== "function") {
     throw new Error("No fetch implementation is available. Provide loadUrl(url, { fetchXml }).");
   }
   const response = await globalThis.fetch(url);

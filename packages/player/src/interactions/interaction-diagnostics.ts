@@ -129,9 +129,20 @@ function interactionRequiresChoices(interaction: QtiInteraction): boolean {
     case "graphicGapMatch":
     case "graphicAssociate":
       return true;
-    default:
+    case "custom":
+    case "drawing":
+    case "endAttempt":
+    case "extendedText":
+    case "media":
+    case "portableCustom":
+    case "positionObject":
+    case "selectPoint":
+    case "slider":
+    case "textEntry":
+    case "upload":
       return false;
   }
+  return false;
 }
 
 function interactionHasRequiredChoices(interaction: QtiInteraction): boolean {
@@ -162,7 +173,18 @@ function interactionHasRequiredChoices(interaction: QtiInteraction): boolean {
         );
       }
       return sourceChoices(interaction).length > 0 && targetChoices(interaction).length > 0;
-    default:
+    case "custom":
+    case "drawing":
+    case "endAttempt":
+    case "extendedText":
+    case "media":
+    case "portableCustom":
+    case "positionObject":
+    case "selectPoint":
+    case "slider":
+    case "textEntry":
+    case "upload":
       return true;
   }
+  return true;
 }

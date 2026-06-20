@@ -42,20 +42,25 @@ export function normalizedLocale(value: string | undefined | null): string | und
   }
 }
 
+function ownerDocumentLanguage(host: Element | undefined): string | undefined {
+  if (!host) return undefined;
+  return host.ownerDocument.documentElement.lang;
+}
+
 export function defaultPlayerLocale(host?: Element): string {
   const elementLanguage = normalizedLocale(host?.getAttribute("lang"));
   if (elementLanguage) return elementLanguage;
 
-  const navigatorLanguages = globalThis.navigator?.languages ?? [];
+  const navigatorLanguages = globalThis.navigator.languages;
   for (const language of navigatorLanguages) {
     const normalized = normalizedLocale(language);
     if (normalized) return normalized;
   }
   return (
-    normalizedLocale(globalThis.navigator?.language) ??
+    normalizedLocale(globalThis.navigator.language) ??
     normalizedLocale(host?.closest("[lang]")?.getAttribute("lang")) ??
-    normalizedLocale(host?.ownerDocument?.documentElement.lang) ??
-    normalizedLocale(globalThis.document?.documentElement.lang) ??
+    normalizedLocale(ownerDocumentLanguage(host)) ??
+    normalizedLocale(globalThis.document.documentElement.lang) ??
     "en"
   );
 }

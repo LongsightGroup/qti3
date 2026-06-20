@@ -87,7 +87,7 @@ function markQtiInteractionRegion(element: Element, marker: QtiInteractionRegion
 }
 
 export function getQtiInteractionRegions(root: ParentNode): QtiInteractionRegion[] {
-  return Array.from(root.querySelectorAll<Element>(regionSelector))
+  return Array.from(root.querySelectorAll(regionSelector))
     .filter(isVisibleRegionElement)
     .map(regionFromElement)
     .filter((region): region is QtiInteractionRegion => region !== undefined);
@@ -114,6 +114,8 @@ function regionFromElement(element: Element): QtiInteractionRegion | undefined {
 
 function regionKind(value: string | null): QtiInteractionRegionKind | undefined {
   switch (value) {
+    case null:
+      return undefined;
     case "interaction":
     case "choice":
     case "control":
@@ -132,7 +134,9 @@ function regionLabel(element: Element): string | undefined {
   if (ariaLabel) return ariaLabel;
   const title = element.getAttribute("title");
   if (title) return title;
-  const text = element.textContent?.replace(/\s+/g, " ").trim();
+  const rawText = element.textContent;
+  if (!rawText) return undefined;
+  const text = rawText.replace(/\s+/g, " ").trim();
   return text || undefined;
 }
 

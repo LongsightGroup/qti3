@@ -9,28 +9,26 @@ describe("PLAYER_MESSAGE_MANIFEST", () => {
     expect(new Set(PLAYER_MESSAGE_KEYS).size).toBe(PLAYER_MESSAGE_MANIFEST.length);
   });
 
-  it("has English defaults for every manifest key", () => {
-    for (const entry of PLAYER_MESSAGE_MANIFEST) {
-      const strings = defaultPlayerMessageCatalog.strings;
-      const hasBase = strings[entry.key] !== undefined;
-      const hasPluralForms =
-        strings[`${entry.key}.one`] !== undefined || strings[`${entry.key}.other`] !== undefined;
-      let satisfied = false;
-      switch (entry.resolver) {
-        case "typeLabel":
-          satisfied = true;
-          break;
-        case "plain":
-        case "template":
-        case "typeTemplate":
-        case "directionTemplate":
-          satisfied = hasBase;
-          break;
-        case "plural":
-          satisfied = hasBase || hasPluralForms;
-          break;
-      }
-      expect(satisfied, entry.key).toBe(true);
+  it.each(PLAYER_MESSAGE_MANIFEST)("has an English default for manifest key $key", (entry) => {
+    const strings = defaultPlayerMessageCatalog.strings;
+    const hasBase = strings[entry.key] !== undefined;
+    const hasPluralForms =
+      strings[`${entry.key}.one`] !== undefined || strings[`${entry.key}.other`] !== undefined;
+    let satisfied = false;
+    switch (entry.resolver) {
+      case "typeLabel":
+        satisfied = true;
+        break;
+      case "plain":
+      case "template":
+      case "typeTemplate":
+      case "directionTemplate":
+        satisfied = hasBase;
+        break;
+      case "plural":
+        satisfied = hasBase || hasPluralForms;
+        break;
     }
+    expect(satisfied).toBe(true);
   });
 });
