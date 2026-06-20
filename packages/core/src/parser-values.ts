@@ -1,10 +1,46 @@
 import type {
+  QtiBaseType,
   QtiCardinality,
   QtiRecordValue,
   QtiResponseDeclaration,
   QtiScalarValue,
   QtiValue,
 } from "./types.js";
+
+const QTI_BASE_TYPES = new Set<string>([
+  "identifier",
+  "boolean",
+  "integer",
+  "float",
+  "string",
+  "point",
+  "pair",
+  "directedPair",
+  "duration",
+  "file",
+  "uri",
+]);
+
+export function isQtiBaseType(value: string): value is QtiBaseType {
+  return QTI_BASE_TYPES.has(value);
+}
+
+export function parseBaseType(value: string | undefined): QtiBaseType | undefined {
+  if (value === undefined) return undefined;
+  return isQtiBaseType(value) ? value : undefined;
+}
+
+export function numericTuple3(values: number[]): [number, number, number] | undefined {
+  const [a, b, c] = values;
+  if (a === undefined || b === undefined || c === undefined) return undefined;
+  return [a, b, c];
+}
+
+export function numericTuple4(values: number[]): [number, number, number, number] | undefined {
+  const [a, b, c, d] = values;
+  if (a === undefined || b === undefined || c === undefined || d === undefined) return undefined;
+  return [a, b, c, d];
+}
 
 export function coerceValue(value: string, baseType: string | undefined): QtiScalarValue {
   if (baseType === "integer") return Number.parseInt(value, 10);

@@ -11,6 +11,7 @@ import {
   type UnaryExpressionType,
 } from "./processing-expression-tags.js";
 import { escapeXmlText } from "./xml.js";
+import { assertNever } from "./assert-never.js";
 import {
   addSerializerDiagnostic,
   knownAttributesWithBagFallback,
@@ -274,7 +275,7 @@ export function serializeExpression(
         indent,
       );
     default:
-      return unsupportedExpression(expression, context);
+      return assertNever(expression);
   }
 }
 
@@ -442,15 +443,4 @@ function isSerializableBaseValue(value: QtiValue): value is string | number | bo
     typeof value === "boolean" ||
     (typeof value === "number" && Number.isFinite(value))
   );
-}
-
-function unsupportedExpression(
-  expression: QtiProcessingExpression,
-  context: SerializationContext,
-): string[] {
-  addSerializerDiagnostic(context, "responseProcessing.serialize.unsupportedExpression", {
-    message: `Unsupported response-processing expression type: ${expression.type}.`,
-    source: expression.source,
-  });
-  return [];
 }

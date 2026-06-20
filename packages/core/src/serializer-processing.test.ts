@@ -294,10 +294,9 @@ describe("serializer processing", () => {
     );
   });
 
-  it("serializes every modeled expression variant with full XML", () => {
-    for (const expressionType of Object.keys(
-      expressionCoverage,
-    ) as QtiProcessingExpression["type"][]) {
+  it.each(Object.keys(expressionCoverage) as QtiProcessingExpression["type"][])(
+    "serializes modeled expression variant %s with full XML",
+    (expressionType) => {
       const result = serializeResponseProcessing({
         rules: [
           {
@@ -309,10 +308,10 @@ describe("serializer processing", () => {
         conditions: [],
       });
 
-      expect(result.ok, expressionType).toBe(true);
-      expect(result.xml, expressionType).toBe(expressionCoverageXml(expressionType));
-    }
-  });
+      expect(result.ok).toBe(true);
+      expect(result.xml).toBe(expressionCoverageXml(expressionType));
+    },
+  );
 
   it("preserves rawValue verbatim and attribute-bag template references", () => {
     const rawValue = "  spaced  ";
@@ -404,28 +403,26 @@ describe("serializer processing", () => {
     ]);
   });
 
-  it("round-trips fixture response processing models", () => {
-    for (const fixtureName of fixtureRoundTrips) {
-      const xml = readFileSync(join(fixturesDir, fixtureName), "utf8");
-      const parsed = parseQtiXml(xml);
-      const processing = parsed.document?.item.responseProcessing;
-      expect(processing, fixtureName).toBeDefined();
-      if (processing === undefined) continue;
+  it.each(fixtureRoundTrips)("round-trips fixture response processing model %s", (fixtureName) => {
+    const xml = readFileSync(join(fixturesDir, fixtureName), "utf8");
+    const parsed = parseQtiXml(xml);
+    const processing = parsed.document?.item.responseProcessing;
+    expect(processing).toBeDefined();
+    if (processing === undefined) return;
 
-      const serialized = serializeResponseProcessing(processing);
-      expect(serialized.ok, fixtureName).toBe(true);
+    const serialized = serializeResponseProcessing(processing);
+    expect(serialized.ok).toBe(true);
 
-      const reparsed = parseQtiXml(
-        xml.replace(
-          /<qti-response-processing[^>]*>[\s\S]*<\/qti-response-processing>|<qti-response-processing[^>]*\/>/,
-          serialized.xml ?? "",
-        ),
-      );
+    const reparsed = parseQtiXml(
+      xml.replace(
+        /<qti-response-processing[^>]*>[\s\S]*<\/qti-response-processing>|<qti-response-processing[^>]*\/>/,
+        serialized.xml ?? "",
+      ),
+    );
 
-      expect(stripSources(reparsed.document?.item.responseProcessing), fixtureName).toEqual(
-        stripSources(processing),
-      );
-    }
+    expect(stripSources(reparsed.document?.item.responseProcessing)).toEqual(
+      stripSources(processing),
+    );
   });
 });
 

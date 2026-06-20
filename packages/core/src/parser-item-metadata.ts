@@ -28,13 +28,14 @@ export function firstChildElement(
   duplicateCode: string,
 ): XmlNode | undefined {
   const matches = childElements(parent, childName);
-  if (matches.length > 1) {
+  const duplicate = matches[1];
+  if (duplicate) {
     diagnostics.push({
       code: duplicateCode,
       severity: "error",
       message: `${parent.localName} allows at most one ${childName} child.`,
-      path: matches[1]?.source?.path ?? parent.source?.path,
-      source: matches[1]?.source ?? parent.source,
+      path: duplicate.source.path,
+      source: duplicate.source,
     });
   }
   return matches[0];
@@ -177,7 +178,7 @@ export function parseCompanionMaterialsInfo(
       code: "companionMaterials.child.unsupported",
       severity: "warning",
       message: `${child.localName} is not currently modeled in companion materials parsing.`,
-      path: child.source?.path,
+      path: child.source.path,
       source: child.source,
     });
   }
@@ -200,7 +201,7 @@ function parsePhysicalMaterial(
       diagnostics,
       "companionMaterials.physicalMaterial.empty",
       "qti-physical-material requires non-empty text content.",
-      node.source?.path,
+      node.source.path,
       node.source,
     );
   }
@@ -225,7 +226,7 @@ function parseDigitalMaterial(
       diagnostics,
       "companionMaterials.digitalMaterial.fileHref.missing",
       "qti-digital-material requires a qti-file-href child.",
-      node.source?.path,
+      node.source.path,
       node.source,
     );
   }
@@ -236,7 +237,7 @@ function parseDigitalMaterial(
       diagnostics,
       "companionMaterials.digitalMaterial.fileHref.empty",
       "qti-digital-material qti-file-href requires non-empty text content.",
-      fileHrefNode.source?.path,
+      fileHrefNode.source.path,
       fileHrefNode.source,
     );
   }

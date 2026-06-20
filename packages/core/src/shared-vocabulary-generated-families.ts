@@ -122,7 +122,7 @@ function escapeRegExp(value: string): string {
 
 function alternationPattern(values: readonly string[]): string {
   return [...values]
-    .sort((left, right) => right.length - left.length)
+    .toSorted((left, right) => right.length - left.length)
     .map(escapeRegExp)
     .join("|");
 }

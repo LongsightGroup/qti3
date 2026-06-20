@@ -73,9 +73,10 @@ export function firstMatchingSharedVocabularyClass<T extends string>(
   classNames: string[],
   tokens: readonly T[],
 ): T | undefined {
-  const tokenSet = new Set<string>(tokens);
   for (const className of classNames) {
-    if (tokenSet.has(className)) return className as T;
+    for (const token of tokens) {
+      if (token === className) return token;
+    }
   }
   return undefined;
 }

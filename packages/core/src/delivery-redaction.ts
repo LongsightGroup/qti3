@@ -241,7 +241,7 @@ export interface RedactionRange {
 }
 
 function mergeSourceRanges(ranges: readonly RedactionRange[]): RedactionRange[] {
-  const sorted = [...ranges].sort((left, right) => left.startOffset - right.startOffset);
+  const sorted = ranges.toSorted((left, right) => left.startOffset - right.startOffset);
   const merged: RedactionRange[] = [];
   for (const range of sorted) {
     const last = merged.at(-1);

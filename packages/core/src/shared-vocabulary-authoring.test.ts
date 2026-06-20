@@ -10,6 +10,7 @@ import {
   sharedVocabularyInteractionFields,
   type QtiSharedVocabularyField,
 } from "./index.js";
+import { assertNever } from "./assert-never.js";
 import { sharedVocabularyClassSupport } from "./shared-vocabulary-support.js";
 
 const issueFieldIds = [
@@ -286,6 +287,8 @@ function expandedSupportNames(field: QtiSharedVocabularyField): string[] {
       return [field.className];
     case "attribute":
       return [field.attributeName];
+    default:
+      return assertNever(field);
   }
 }
 
@@ -294,5 +297,5 @@ function sameValues(left: readonly string[], right: readonly string[]): boolean 
 }
 
 function formatValues(values: readonly string[]): string {
-  return [...values].sort().join(", ");
+  return [...values].toSorted().join(", ");
 }

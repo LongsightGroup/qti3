@@ -112,7 +112,7 @@ function selectedCandidates(
     .filter((entry): entry is { candidate: Candidate; index: number; rank: number } =>
       Number.isInteger(entry.rank),
     )
-    .sort((a, b) => a.rank - b.rank || a.index - b.index);
+    .toSorted((a, b) => a.rank - b.rank || a.index - b.index);
   if (languageMatches.length > 0) return languageMatches.map((entry) => entry.candidate);
   if (options.includeDefaultFallback === false) return [];
   const defaults = candidates.filter((candidate) => candidate.default);

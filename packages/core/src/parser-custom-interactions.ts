@@ -212,7 +212,7 @@ function parseCustomMarkupNode(
       code: options.nestedInteractionCode,
       severity: "error",
       message: `${options.contextName} must not contain nested QTI interaction ${node.localName}.`,
-      path: node.source?.path,
+      path: node.source.path,
       source: node.source,
     });
   }

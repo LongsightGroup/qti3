@@ -127,9 +127,7 @@ export function runTrustedItemSession(
     return emptyTrustedItemSessionFailure(diagnostics);
   }
 
-  const shouldScore =
-    input.scoring === "always" ||
-    (input.scoring === "onSubmission" && applicationResult.appliedSubmission);
+  const shouldScore = input.scoring === "always" || applicationResult.appliedSubmission;
 
   let outcomes = sessionResult.session.serialize().outcomes;
   let state = sessionResult.session.serialize();

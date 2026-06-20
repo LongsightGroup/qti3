@@ -165,7 +165,7 @@ export function parseXmlTree(xml: string): { root: XmlNode | undefined; errors: 
     offset = endOffset + 1;
   }
 
-  for (const node of [...state.stack].reverse()) {
+  for (const node of state.stack.toReversed()) {
     state.errors.push(
       new Error(`Unexpected end of document. Missing closing tag for <${node.name}>.`),
     );

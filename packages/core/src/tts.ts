@@ -103,10 +103,17 @@ interface SegmentInput {
 }
 
 const dataSsmlFunctionNames = new Set(["break", "phoneme", "prosody", "say-as", "sub"]);
-const breakStrengths = new Set(["medium", "none", "strong", "weak", "x-strong", "x-weak"]);
-const phonemeAlphabets = new Set(["ipa", "x-sampa"]);
-const phonemeTypes = new Set(["default", "ruby"]);
-const sayAsInterpretations = new Set([
+const breakStrengths = new Set<QtiDataSsmlBreakStrength>([
+  "medium",
+  "none",
+  "strong",
+  "weak",
+  "x-strong",
+  "x-weak",
+]);
+const phonemeAlphabets = new Set<NonNullable<QtiDataSsmlPhoneme["alphabet"]>>(["ipa", "x-sampa"]);
+const phonemeTypes = new Set<NonNullable<QtiDataSsmlPhoneme["type"]>>(["default", "ruby"]);
+const sayAsInterpretations = new Set<QtiDataSsmlSayAs["interpret-as"]>([
   "cardinal",
   "characters",
   "date",
@@ -200,7 +207,7 @@ function validateBreak(value: Record<string, unknown>, errors: string[]): QtiDat
   const result: QtiDataSsmlBreak = {};
   const strength = optionalEnum(value, "strength", "break.strength", breakStrengths, errors);
   const time = optionalString(value, "time", "break.time", errors);
-  if (strength) result.strength = strength as QtiDataSsmlBreakStrength;
+  if (strength) result.strength = strength;
   if (time !== undefined) result.time = time;
   return result;
 }
@@ -215,8 +222,8 @@ function validatePhoneme(
   const type = optionalEnum(value, "type", "phoneme.type", phonemeTypes, errors);
   if (!ph) return undefined;
   const result: QtiDataSsmlPhoneme = { ph };
-  if (alphabet) result.alphabet = alphabet as QtiDataSsmlPhoneme["alphabet"];
-  if (type) result.type = type as QtiDataSsmlPhoneme["type"];
+  if (alphabet) result.alphabet = alphabet;
+  if (type) result.type = type;
   return result;
 }
 
@@ -241,7 +248,7 @@ function validateSayAs(
     errors,
   );
   if (!interpretation) return undefined;
-  return { "interpret-as": interpretation as QtiDataSsmlSayAs["interpret-as"] };
+  return { "interpret-as": interpretation };
 }
 
 function validateSub(value: Record<string, unknown>, errors: string[]): QtiDataSsmlSub | undefined {
@@ -520,29 +527,36 @@ function requiredString(
   return optionalString(value, name, path, errors);
 }
 
-function optionalEnum(
+function isAllowedEnum<T extends string>(value: string, allowed: ReadonlySet<T>): value is T {
+  for (const entry of allowed) {
+    if (entry === value) return true;
+  }
+  return false;
+}
+
+function optionalEnum<T extends string>(
   value: Record<string, unknown>,
   name: string,
   path: string,
-  allowed: Set<string>,
+  allowed: ReadonlySet<T>,
   errors: string[],
-): string | undefined {
+): T | undefined {
   const property = optionalString(value, name, path, errors);
   if (property === undefined) return undefined;
-  if (!allowed.has(property)) {
+  if (!isAllowedEnum(property, allowed)) {
     errors.push(`${path} has unsupported value "${property}".`);
     return undefined;
   }
   return property;
 }
 
-function requiredEnum(
+function requiredEnum<T extends string>(
   value: Record<string, unknown>,
   name: string,
   path: string,
-  allowed: Set<string>,
+  allowed: ReadonlySet<T>,
   errors: string[],
-): string | undefined {
+): T | undefined {
   if (!Object.hasOwn(value, name)) {
     errors.push(`${path} is required.`);
     return undefined;

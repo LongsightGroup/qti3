@@ -13,6 +13,7 @@ import type {
   QtiResponseProcessing,
   QtiResponseRule,
 } from "./types.js";
+import { assertNever } from "./assert-never.js";
 
 export interface QtiSerializeResponseProcessingResult {
   ok: boolean;
@@ -114,6 +115,8 @@ function serializeResponseRule(
         rule.rules.flatMap((child) => serializeResponseRule(child, context, indent + 1)),
         indent,
       );
+    default:
+      return assertNever(rule);
   }
 }
 

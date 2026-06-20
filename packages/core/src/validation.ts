@@ -21,6 +21,8 @@ import type {
   QtiValue,
   QtiValidationResult,
 } from "./types.js";
+import { assertNever } from "./assert-never.js";
+import { numericTuple3, numericTuple4 } from "./parser-values.js";
 import { validateInteractionSharedVocabulary } from "./shared-vocabulary-interaction-validation.js";
 import { isValidQtiPatternMask } from "./pattern-mask.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
@@ -408,6 +410,8 @@ function isValidDeclarationBaseValue(value: string, baseType: QtiBaseType): bool
     case "file":
     case "uri":
       return true;
+    default:
+      return assertNever(baseType);
   }
 }
 
@@ -2395,15 +2399,21 @@ function hotspotBounds(
 
   if (shape === "default") return undefined;
   if (shape === "circle") {
-    const [x, y, radius] = values as [number, number, number];
+    const tuple = numericTuple3(values);
+    if (!tuple) return undefined;
+    const [x, y, radius] = tuple;
     return { left: x - radius, top: y - radius, right: x + radius, bottom: y + radius };
   }
   if (shape === "ellipse") {
-    const [x, y, radiusX, radiusY] = values as [number, number, number, number];
+    const tuple = numericTuple4(values);
+    if (!tuple) return undefined;
+    const [x, y, radiusX, radiusY] = tuple;
     return { left: x - radiusX, top: y - radiusY, right: x + radiusX, bottom: y + radiusY };
   }
   if (shape === "rect") {
-    const [left, top, right, bottom] = values as [number, number, number, number];
+    const tuple = numericTuple4(values);
+    if (!tuple) return undefined;
+    const [left, top, right, bottom] = tuple;
     return { left, top, right, bottom };
   }
 
@@ -2417,7 +2427,9 @@ function hotspotBounds(
   };
 }
 
-function isHotspotShape(value: string): boolean {
+type QtiHotspotShape = "circle" | "default" | "ellipse" | "poly" | "rect";
+
+function isHotspotShape(value: string): value is QtiHotspotShape {
   return (
     value === "circle" ||
     value === "default" ||
@@ -2443,6 +2455,7 @@ function numericCsv(value: string): number[] {
 }
 
 function hasValidShapeCoordinateCount(shape: string, coords: number[]): boolean {
+  if (!isHotspotShape(shape)) return false;
   switch (shape) {
     case "circle":
       return coords.length === 3;
@@ -2454,7 +2467,7 @@ function hasValidShapeCoordinateCount(shape: string, coords: number[]): boolean 
     case "default":
       return true;
     default:
-      return false;
+      return assertNever(shape);
   }
 }
 
@@ -2616,6 +2629,8 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
       return new Set(common);
     case "custom":
       return undefined;
+    default:
+      return assertNever(interaction.type);
   }
 }
 

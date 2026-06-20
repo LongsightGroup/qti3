@@ -48,7 +48,7 @@ export function findSharedVocabularyCoverageViolations(input: {
     supportByClass.set(entry.className, existing);
   }
 
-  const gatedSupportClasses = [...supportByClass.keys()].sort();
+  const gatedSupportClasses = [...supportByClass.keys()].toSorted();
   if (gatedSupportClasses.length === 0) {
     violations.push({ message: "expected at least one enforced shared vocabulary class" });
   }

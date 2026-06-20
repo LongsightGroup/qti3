@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiContentNode, QtiSourceLocation } from "./types.js";
+import { assertNever } from "./assert-never.js";
 
 export interface FlatTextFromContentOptions {
   excludeAnnotations?: boolean;
@@ -63,6 +64,8 @@ function flatTextFromContentNode(node: QtiContentNode, excludeAnnotations: boole
     case "interaction":
     case "printedVariable":
       return "";
+    default:
+      return assertNever(node);
   }
 }
 

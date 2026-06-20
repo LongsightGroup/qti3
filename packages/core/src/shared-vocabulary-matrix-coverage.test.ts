@@ -21,18 +21,19 @@ describe("shared vocabulary matrix coverage families", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("matches each enforced stylesheet class with at most one family at that level", () => {
-    const enforcedStylesheetClasses = sharedVocabularyClassSupport
+  it.each(
+    sharedVocabularyClassSupport
       .filter((support) => isEnforcedSharedVocabularyLevel(support.level))
-      .map((support) => ({ className: support.className, level: support.level }));
-
-    for (const { className, level } of enforcedStylesheetClasses) {
+      .map((support) => ({ className: support.className, level: support.level })),
+  )(
+    "matches enforced stylesheet class $className with at most one family",
+    ({ className, level }) => {
       const matches = sharedVocabularyMatrixCoverageFamilies.filter(
         (family) => family.levels.includes(level) && family.matches(className),
       );
-      expect(matches.length, className).toBeLessThanOrEqual(1);
-    }
-  });
+      expect(matches.length).toBeLessThanOrEqual(1);
+    },
+  );
 
   it("resolves generated stylesheet classes through the family registry", () => {
     expect(matrixCoverageFamilyForClass("qti-layout-col3", "stylesheet")?.id).toBe(

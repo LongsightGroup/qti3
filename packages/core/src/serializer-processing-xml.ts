@@ -41,13 +41,13 @@ export function knownAttributesWithBagFallback(
   });
   const extras = Object.entries(bag ?? {})
     .filter(([name]) => !knownNames.has(name))
-    .sort(([left], [right]) => left.localeCompare(right));
+    .toSorted(([left], [right]) => left.localeCompare(right));
   return [...resolved, ...extras];
 }
 
 export function sortedBagAttributes(bag: Record<string, string> | undefined): XmlAttribute[] {
   return Object.entries(bag ?? {})
-    .sort(([left], [right]) => left.localeCompare(right))
+    .toSorted(([left], [right]) => left.localeCompare(right))
     .map(([name, value]) => [name, value] as const);
 }
 

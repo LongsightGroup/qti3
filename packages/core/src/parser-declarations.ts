@@ -1,6 +1,7 @@
 import {
   coerceValue,
   normalizeValueForCardinality,
+  parseBaseType,
   parseCardinality,
   parseCoords,
   parseShape,
@@ -18,7 +19,7 @@ import { childElements, textContent, type XmlNode } from "./xml.js";
 
 export function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
   const cardinality = parseCardinality(node.attributes.cardinality);
-  const baseType = node.attributes["base-type"] as QtiResponseDeclaration["baseType"];
+  const baseType = parseBaseType(node.attributes["base-type"]);
   return {
     kind: "response",
     identifier: node.attributes.identifier ?? "",
@@ -37,7 +38,7 @@ export function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration 
 }
 
 export function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
-  const baseType = node.attributes["base-type"] as QtiOutcomeDeclaration["baseType"];
+  const baseType = parseBaseType(node.attributes["base-type"]);
   return {
     kind: "outcome",
     identifier: node.attributes.identifier ?? "",
@@ -51,7 +52,7 @@ export function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
 }
 
 export function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
-  const baseType = node.attributes["base-type"] as QtiTemplateDeclaration["baseType"];
+  const baseType = parseBaseType(node.attributes["base-type"]);
   return {
     kind: "template",
     identifier: node.attributes.identifier ?? "",

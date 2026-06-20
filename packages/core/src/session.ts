@@ -17,6 +17,7 @@ import type {
   QtiValue,
   QtiVariableDeclaration,
 } from "./types.js";
+import { assertNever } from "./assert-never.js";
 import {
   isQtiPortableCustomStateValue,
   isQtiValue,
@@ -41,12 +42,6 @@ const COMPLETION_NOT_ATTEMPTED = "not_attempted";
 const COMPLETION_UNKNOWN = "unknown";
 const COMPLETION_COMPLETED = "completed";
 const ATTEMPT_STATE_SCHEMA = "qti3.attempt-state.v1";
-const ATTEMPT_STATUSES = new Set<QtiAttemptStatus>([
-  "initialized",
-  "interacting",
-  "suspended",
-  "completed",
-]);
 
 export interface QtiItemSessionOptions {
   randomSeed?: string | number | undefined;
@@ -410,6 +405,15 @@ function pairValueIsValid(value: QtiScalarValue): boolean {
   return parts.length === 2 && parts.every((part) => part.length > 0);
 }
 
+function isAttemptStatus(value: string): value is QtiAttemptStatus {
+  return (
+    value === "initialized" ||
+    value === "interacting" ||
+    value === "suspended" ||
+    value === "completed"
+  );
+}
+
 function attemptStateErrors(value: unknown): string[] {
   if (!isRecord(value)) return ["QTI attempt state must be an object."];
 
@@ -422,7 +426,7 @@ function attemptStateErrors(value: unknown): string[] {
   if (typeof value.itemIdentifier !== "string" || value.itemIdentifier.length === 0) {
     errors.push("QTI attempt state itemIdentifier must be a non-empty string.");
   }
-  if (typeof value.status !== "string" || !ATTEMPT_STATUSES.has(value.status as QtiAttemptStatus)) {
+  if (typeof value.status !== "string" || !isAttemptStatus(value.status)) {
     errors.push(`QTI attempt state status ${String(value.status)} is not supported.`);
   }
   if (!isQtiValueRecord(value.responses)) {
@@ -1663,6 +1667,8 @@ function evaluateValue(
     const values = valueContainer(value).map(numericValue);
     return statsOperatorValue(expression.name, values);
   }
+  // Explicit custom-operator boundary: do not infer this shape from if-chain fallthrough.
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- keeps customOperator fields gated by type.
   if (expression.type === "customOperator") {
     const operatorKey = expression.definition ?? expression.className ?? "";
     const handler = customOperators[operatorKey];
@@ -1686,7 +1692,7 @@ function evaluateValue(
       expression,
     });
   }
-  return null;
+  return assertNever(expression);
 }
 
 function getResponseDeclaration(
@@ -1750,7 +1756,7 @@ function lookupOutcomeValue(document: QtiDocument, identifier: string, value: Qt
     );
   }
   const entry = [...lookupTable.entries]
-    .sort((left, right) => left.sourceValue - right.sourceValue)
+    .toSorted((left, right) => left.sourceValue - right.sourceValue)
     .find(
       (candidate) =>
         numeric < candidate.sourceValue ||
@@ -1780,7 +1786,7 @@ function scoreAreaMapping(
       : qtiValueToStringList(response);
   let score = 0;
   for (const point of points) {
-    const parsed = parsePoint(String(point));
+    const parsed = parsePoint(point);
     if (!parsed) {
       score += areaMapping.defaultValue;
       continue;
@@ -1940,8 +1946,8 @@ function numericBound(value: string | undefined): number | undefined {
 function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {
   if (isRecordValue(actual) || isRecordValue(expected)) {
     if (!isRecordValue(actual) || !isRecordValue(expected)) return false;
-    const actualKeys = Object.keys(actual).sort();
-    const expectedKeys = Object.keys(expected).sort();
+    const actualKeys = Object.keys(actual).toSorted();
+    const expectedKeys = Object.keys(expected).toSorted();
     return (
       valuesEqual(actualKeys, expectedKeys, true) &&
       actualKeys.every((key) => valuesEqual(actual[key] ?? null, expected[key] ?? null, ordered))
@@ -1953,9 +1959,9 @@ function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boo
     if (actualValues.length !== expectedValues.length) return false;
     if (ordered)
       return actualValues.every((value, index) => scalarValuesEqual(value, expectedValues[index]!));
-    const sortedExpected = [...expectedValues].sort(compareScalarValues);
+    const sortedExpected = [...expectedValues].toSorted(compareScalarValues);
     return [...actualValues]
-      .sort(compareScalarValues)
+      .toSorted(compareScalarValues)
       .every((value, index) => scalarValuesEqual(value, sortedExpected[index]!));
   }
   return scalarValuesEqual(actual, expected);
@@ -1994,7 +2000,7 @@ function normalizeValueForCardinality(
 function valueContainer(value: QtiValue): QtiScalarValue[] {
   if (value === null) return [];
   if (isRecordValue(value)) return [];
-  return Array.isArray(value) ? value.filter((item) => item !== null) : [value];
+  return Array.isArray(value) ? value : [value];
 }
 
 function isRecordValue(value: QtiValue): value is QtiRecordValue {

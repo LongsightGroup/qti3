@@ -1734,7 +1734,7 @@ describe("@longsightgroup/qti3-core", () => {
       "qti-outcome-minimum",
       "qti-outcome-maximum",
       "qti-test-variables",
-    ]) {
+    ] as const) {
       const result = parseQtiXml(`
         <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${name}" title="${name}" time-dependent="false">
           <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
@@ -1745,8 +1745,8 @@ describe("@longsightgroup/qti3-core", () => {
         </qti-assessment-item>
       `);
 
-      expect(result.ok, name).toBe(false);
-      expect(result.diagnostics, name).toContainEqual(
+      expect(result.ok).toBe(false);
+      expect(result.diagnostics).toContainEqual(
         expect.objectContaining({
           code: "processing.response.forbidden",
           message: `${name} must not be used in qti-response-processing.`,
@@ -3900,8 +3900,8 @@ describe("@longsightgroup/qti3-core", () => {
       "SUBSTRING_NULL",
       "MEMBER_NULL",
       "CONTAINS_NULL",
-    ]) {
-      expect(score.outcomes[identifier], identifier).toBeNull();
+    ] as const) {
+      expect(score.outcomes[identifier]).toBeNull();
     }
   });
 

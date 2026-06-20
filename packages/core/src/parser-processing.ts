@@ -672,8 +672,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     if (variable && correct) {
       return {
         type: "matchCorrect",
-        identifier: variable?.attributes.identifier ?? "",
-        correctIdentifier: correct?.attributes.identifier ?? "",
+        identifier: variable.attributes.identifier ?? "",
+        correctIdentifier: correct.attributes.identifier ?? "",
         source: node.source,
       };
     }

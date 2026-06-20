@@ -4,6 +4,7 @@ export {
   type QtiAdaptiveTurnResponseInput,
   type QtiAdaptiveTurnResult,
 } from "./adaptive-turn.js";
+export { assertNever } from "./assert-never.js";
 export {
   createCatalogSupportResolution,
   type QtiCatalogSupportResolution,
@@ -35,6 +36,7 @@ export {
   type QtiPackageXmlTree,
 } from "./package-xml.js";
 export { parseQtiXml } from "./parser.js";
+export { numericTuple3, numericTuple4 } from "./parser-values.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
 export {
   scoreQtiItemServerSide,
