@@ -27,7 +27,7 @@ describe("@longsightgroup/qti3-cli", () => {
       for (const fixture of interactionFixtures) {
         const xml = await readFile(join(directory, `${fixture.id}.xml`), "utf8");
         const result = parseQtiXml(xml);
-        expect(result.ok, fixture.id).toBe(true);
+        expect(result.ok).toBe(true);
         expect(result.document?.item.interactions[0]?.type).toBe(fixture.interactionType);
       }
 
@@ -140,10 +140,10 @@ describe("@longsightgroup/qti3-cli", () => {
 
   it("keeps checked-in XML fixture artifacts aligned with canonical fixtures", async () => {
     const fixtureDirectory = join(process.cwd(), "packages/fixtures/xml");
-    const expectedFiles = canonicalFixtures.map((fixture) => `${fixture.id}.xml`).sort();
+    const expectedFiles = canonicalFixtures.map((fixture) => `${fixture.id}.xml`).toSorted();
     const actualFiles = (await readdir(fixtureDirectory))
       .filter((file) => file.endsWith(".xml"))
-      .sort();
+      .toSorted();
 
     expect(actualFiles).toEqual(expectedFiles);
     for (const fixture of canonicalFixtures) {
@@ -244,7 +244,7 @@ describe("@longsightgroup/qti3-cli", () => {
 
     for (const support of sharedVocabularyClassSupport) {
       if (isEnforcedSharedVocabularyLevel(support.level)) {
-        expect(support.tests?.length, support.className).toBeGreaterThan(0);
+        expect(support.tests?.length).toBeGreaterThan(0);
       }
     }
   });
@@ -263,12 +263,12 @@ describe("@longsightgroup/qti3-cli", () => {
 
     for (const [qtiName, fixturePath] of expectedFixtureEvidence) {
       const support = processingSupport.find((entry) => entry.qtiName === qtiName);
-      expect(support?.fixtures, qtiName).toContain(fixturePath);
+      expect(support?.fixtures).toContain(fixturePath);
     }
 
     for (const support of processingSupport) {
       for (const fixturePath of support.fixtures) {
-        expect(fixturePaths.has(fixturePath), `${support.qtiName} ${fixturePath}`).toBe(true);
+        expect(fixturePaths.has(fixturePath)).toBe(true);
       }
     }
   });
@@ -296,14 +296,12 @@ describe("@longsightgroup/qti3-cli", () => {
     };
 
     for (const support of interactionSupport) {
-      expect(support.fixtures, support.interactionType).toEqual([
+      expect(support.fixtures).toEqual([
         `packages/fixtures/xml/${support.interactionType}-reference.xml`,
         ...(extraInteractionFixtures[support.interactionType] ?? []),
       ]);
-      expect(fixtureIds.has(`${support.interactionType}-reference`), support.interactionType).toBe(
-        true,
-      );
-      expect(support.tests, support.interactionType).toEqual(
+      expect(fixtureIds.has(`${support.interactionType}-reference`)).toBe(true);
+      expect(support.tests).toEqual(
         expect.arrayContaining([
           "packages/fixtures/src/fixtures.test.ts",
           "packages/conformance/src/conformance.test.ts",

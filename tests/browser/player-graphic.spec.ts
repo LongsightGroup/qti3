@@ -415,10 +415,10 @@ test.describe("player graphic interactions", () => {
     if (!box) throw new Error("Missing drawing surface box.");
 
     const colors = await player.evaluate((element) => {
-      const label = element.querySelector(".qti3-drawing-color-label");
-      if (!label) return null;
+      const colorLabel = element.querySelector(".qti3-drawing-color-label");
+      if (!colorLabel) return null;
       return {
-        labelColor: getComputedStyle(label).color,
+        labelColor: getComputedStyle(colorLabel).color,
         playerColor: getComputedStyle(element).color,
       };
     });

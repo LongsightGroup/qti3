@@ -93,17 +93,17 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(fixture?.xml).not.toContain('orientation="vertical"');
   });
 
-  it("parses, validates, scores, and serializes Basic item-player fixture attempts", () => {
-    for (const fixture of [...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures]) {
+  it.each([...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures])(
+    "parses, validates, scores, and serializes Basic item-player fixture $id",
+    (fixture) => {
       const parsed = parseQtiXml(fixture.xml);
-      expect(parsed.ok, fixture.id).toBe(true);
-      expect(parsed.document, fixture.id).toBeDefined();
-      if (!parsed.document) continue;
+      expect(parsed.ok).toBe(true);
+      expect(parsed.document).toBeDefined();
+      if (!parsed.document) return;
 
       const validation = validateAssessmentItem(parsed.document);
       expect(
         validation.diagnostics.filter((diagnostic) => diagnostic.severity === "error"),
-        fixture.id,
       ).toEqual([]);
 
       for (const attempt of fixture.attempts) {
@@ -113,20 +113,19 @@ describe("@longsightgroup/qti3-fixtures", () => {
         }
 
         const scored = session.score();
-        expect(
-          scored.diagnostics.filter((diagnostic) => diagnostic.severity === "error"),
-          `${fixture.id}/${attempt.name}`,
-        ).toEqual([]);
+        expect(scored.diagnostics.filter((diagnostic) => diagnostic.severity === "error")).toEqual(
+          [],
+        );
         for (const [identifier, expected] of Object.entries(attempt.expectedOutcomes)) {
-          expect(scored.outcomes[identifier], `${fixture.id}/${attempt.name}`).toEqual(expected);
+          expect(scored.outcomes[identifier]).toEqual(expected);
         }
         const state = scored.state;
-        expect(state.schema, `${fixture.id}/${attempt.name}`).toBe("qti3.attempt-state.v1");
-        expect(state.itemIdentifier, `${fixture.id}/${attempt.name}`).toBe(fixture.id);
+        expect(state.schema).toBe("qti3.attempt-state.v1");
+        expect(state.itemIdentifier).toBe(fixture.id);
         for (const [identifier, expected] of Object.entries(attempt.expectedResponses ?? {})) {
-          expect(state.responses[identifier], `${fixture.id}/${attempt.name}`).toEqual(expected);
+          expect(state.responses[identifier]).toEqual(expected);
         }
       }
-    }
-  });
+    },
+  );
 });

@@ -58,7 +58,7 @@ async function regionSnapshots(page: Page): Promise<RegionSnapshot[]> {
 
 async function regionKindSet(page: Page): Promise<string[]> {
   const regions = await regionSnapshots(page);
-  return [...new Set(regions.map((region) => region.kind))].sort();
+  return [...new Set(regions.map((region) => region.kind))].toSorted();
 }
 
 test.describe("player interaction regions", () => {

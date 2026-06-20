@@ -29,18 +29,18 @@ async function loadedItemIdentifier(player: Locator): Promise<string | undefined
 }
 
 async function videoBottomStripLuma(page: Page, video: Locator): Promise<number> {
-  const image = await video.screenshot();
+  const screenshot = await video.screenshot();
   return page.evaluate(
     async (dataUrl) => {
-      const image = new Image();
-      image.src = dataUrl;
-      await image.decode();
+      const bitmap = new Image();
+      bitmap.src = dataUrl;
+      await bitmap.decode();
       const canvas = document.createElement("canvas");
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
+      canvas.width = bitmap.naturalWidth;
+      canvas.height = bitmap.naturalHeight;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("Canvas 2D context unavailable.");
-      context.drawImage(image, 0, 0);
+      context.drawImage(bitmap, 0, 0);
       const height = Math.min(36, canvas.height);
       const data = context.getImageData(0, canvas.height - height, canvas.width, height).data;
       let total = 0;
@@ -52,7 +52,7 @@ async function videoBottomStripLuma(page: Page, video: Locator): Promise<number>
       }
       return total / (data.length / 4);
     },
-    `data:image/png;base64,${image.toString("base64")}`,
+    `data:image/png;base64,${screenshot.toString("base64")}`,
   );
 }
 

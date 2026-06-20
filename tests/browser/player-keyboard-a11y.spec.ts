@@ -240,7 +240,10 @@ test.describe("player keyboard and accessibility", () => {
               if (!isVisible(element)) return false;
               if (element.getAttribute("aria-hidden") === "true") return false;
               if (element instanceof HTMLInputElement && element.type === "hidden") return false;
-              if ("disabled" in element && Boolean((element as HTMLButtonElement).disabled)) {
+              if (
+                (element instanceof HTMLButtonElement || element instanceof HTMLInputElement) &&
+                element.disabled
+              ) {
                 return false;
               }
               return true;

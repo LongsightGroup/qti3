@@ -8,42 +8,43 @@ import {
 
 describe("@longsightgroup/qti3-a11y", () => {
   it("defines an accessibility contract for every target interaction", () => {
-    expect(a11yContracts.map((contract) => contract.interactionType).sort()).toEqual(
-      interactionSupport.map((support) => support.interactionType).sort(),
+    expect(a11yContracts.map((contract) => contract.interactionType).toSorted()).toEqual(
+      interactionSupport.map((support) => support.interactionType).toSorted(),
     );
   });
 
-  it("defines concrete semantics, focus behavior, keyboard behavior, and states", () => {
-    for (const contract of a11yContracts) {
-      expect(contract.primaryRole, contract.interactionType).not.toHaveLength(0);
-      expect(contract.focusStrategy, contract.interactionType).not.toHaveLength(0);
-      expect(contract.keyboardModel.length, contract.interactionType).toBeGreaterThan(0);
-      expect(contract.requiredStates.length, contract.interactionType).toBeGreaterThan(0);
-    }
-  });
+  it.each(a11yContracts)(
+    "defines concrete semantics, focus behavior, keyboard behavior, and states for $interactionType",
+    (contract) => {
+      expect(contract.primaryRole).not.toHaveLength(0);
+      expect(contract.focusStrategy).not.toHaveLength(0);
+      expect(contract.keyboardModel.length).toBeGreaterThan(0);
+      expect(contract.requiredStates.length).toBeGreaterThan(0);
+    },
+  );
+
+  it.each(manualAssistiveTechnologyScripts)(
+    "defines a manual assistive technology script for $assistiveTechnology",
+    (script) => {
+      expect(script.setup.length).toBeGreaterThan(0);
+      expect(script.procedure.length).toBeGreaterThan(0);
+      expect(script.expectedResults.length).toBeGreaterThan(0);
+      expect(script.appliesTo.toSorted()).toEqual(
+        interactionSupport.map((support) => support.interactionType).toSorted(),
+      );
+    },
+  );
 
   it("defines manual assistive technology scripts covering every target interaction", () => {
     expect(
-      manualAssistiveTechnologyScripts.map((script) => script.assistiveTechnology).sort(),
+      manualAssistiveTechnologyScripts.map((script) => script.assistiveTechnology).toSorted(),
     ).toEqual(["JAWS", "NVDA", "VoiceOver"]);
-
-    for (const script of manualAssistiveTechnologyScripts) {
-      expect(script.setup.length, script.assistiveTechnology).toBeGreaterThan(0);
-      expect(script.procedure.length, script.assistiveTechnology).toBeGreaterThan(0);
-      expect(script.expectedResults.length, script.assistiveTechnology).toBeGreaterThan(0);
-      expect(script.appliesTo.sort(), script.assistiveTechnology).toEqual(
-        interactionSupport.map((support) => support.interactionType).sort(),
-      );
-    }
   });
 
-  it("defines a proof matrix for every target interaction", () => {
-    expect(accessibilityProofMatrix.map((entry) => entry.interactionType).sort()).toEqual(
-      interactionSupport.map((support) => support.interactionType).sort(),
-    );
-
-    for (const entry of accessibilityProofMatrix) {
-      expect(entry.proof.automated, entry.interactionType).toEqual(
+  it.each(accessibilityProofMatrix)(
+    "defines accessibility proof coverage for $interactionType",
+    (entry) => {
+      expect(entry.proof.automated).toEqual(
         expect.arrayContaining([
           "accessibility contract unit coverage in @longsightgroup/qti3-a11y",
           "manual harness reference fixture renders without axe-core violations",
@@ -52,7 +53,7 @@ describe("@longsightgroup/qti3-a11y", () => {
           "forced-colors, reduced-motion, and narrow viewport browser checks",
         ]),
       );
-      expect(entry.proof.manual, entry.interactionType).toEqual(
+      expect(entry.proof.manual).toEqual(
         expect.arrayContaining([
           "VoiceOver manual script",
           "NVDA manual script",
@@ -60,7 +61,13 @@ describe("@longsightgroup/qti3-a11y", () => {
           "focus order inspection",
         ]),
       );
-    }
+    },
+  );
+
+  it("defines a proof matrix for every target interaction", () => {
+    expect(accessibilityProofMatrix.map((entry) => entry.interactionType).toSorted()).toEqual(
+      interactionSupport.map((support) => support.interactionType).toSorted(),
+    );
 
     expect(
       accessibilityProofMatrix

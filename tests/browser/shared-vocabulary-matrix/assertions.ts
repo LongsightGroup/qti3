@@ -33,13 +33,40 @@ async function assertSvAssertion(page: Page, assertion: SharedVocabularyAssertio
     case "key":
       await page.keyboard.press(assertion.key);
       return;
-    default:
-      await page.evaluate(
-        async ({ assertion: item, coreUrl }) => {
-          const { runAssertionInRoot: run } = await import(coreUrl);
-          await run(document, item);
-        },
-        { assertion, coreUrl: SV_ASSERTION_CORE_URL },
-      );
+    case "attribute":
+    case "attribute-absent":
+    case "class-preserved":
+    case "computed-style":
+    case "computed-style-differs":
+    case "computed-style-not":
+    case "computed-style-number":
+    case "computed-style-same":
+    case "dom-order":
+    case "element-count":
+    case "hidden-focusable-input":
+    case "inline-style":
+    case "layout-not-clipped":
+    case "layout-same-row":
+    case "layout-width":
+    case "layout-width-ratio":
+    case "position":
+    case "set-attribute":
+    case "text":
+    case "validation-message":
+      await runDelegatedAssertion(page, assertion);
+      return;
   }
+}
+
+async function runDelegatedAssertion(
+  page: Page,
+  assertion: SharedVocabularyAssertion,
+): Promise<void> {
+  await page.evaluate(
+    async ({ assertion: item, coreUrl }) => {
+      const { runAssertionInRoot: run } = await import(coreUrl);
+      await run(document, item);
+    },
+    { assertion, coreUrl: SV_ASSERTION_CORE_URL },
+  );
 }

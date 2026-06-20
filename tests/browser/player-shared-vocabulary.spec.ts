@@ -39,8 +39,8 @@ test.describe("shared vocabulary matrix", () => {
     const fixtureFiles = (await readdir(fixtureDirectory))
       .filter((name) => name.endsWith(".xml"))
       .map((name) => name.slice(0, -".xml".length))
-      .sort();
-    const manifestIds = [...ids].sort();
+      .toSorted();
+    const manifestIds = [...ids].toSorted();
     expect(manifestIds).toEqual(fixtureFiles);
 
     for (const entry of matrixEntries) {
