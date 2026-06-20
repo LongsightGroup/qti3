@@ -38,5 +38,11 @@ export default defineConfig({
       "packages/**/*.test.tsx",
       "tests/browser/shared-vocabulary-matrix/coverage-policy.test.ts",
     ],
+    allowOnly: !process.env.CI,
+    clearMocks: true,
+    mockReset: true,
+    restoreMocks: true,
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
 });

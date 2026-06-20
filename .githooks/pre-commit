@@ -3,3 +3,4 @@ set -eu
 
 cd "$(git rev-parse --show-toplevel)"
 pnpm format:check
+pnpm lint:raw

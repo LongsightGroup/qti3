@@ -1,19 +1,31 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "oxc", "vitest"],
+  "plugins": ["typescript", "unicorn", "oxc", "vitest", "import"],
   "options": {
     "typeAware": true
   },
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "suspicious": "error"
   },
   "rules": {
     "typescript/no-explicit-any": "error",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/switch-exhaustiveness-check": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-unnecessary-condition": "error",
+    "typescript/no-deprecated": "warn",
+    "typescript/strict-void-return": "error",
+    "import/no-cycle": "error",
+    "unicorn/no-array-sort": "error",
+    "unicorn/no-array-reverse": "error",
+    "unicorn/consistent-function-scoping": "off",
     "vitest/consistent-each-for": "off",
     "vitest/expect-expect": "off",
-    "vitest/hoisted-apis-on-top": "off",
+    "vitest/hoisted-apis-on-top": "error",
     "vitest/no-conditional-expect": "off",
-    "vitest/no-conditional-tests": "off",
+    "vitest/no-conditional-tests": "error",
     "vitest/no-disabled-tests": "error",
     "vitest/no-focused-tests": "error",
     "vitest/no-standalone-expect": "off",
@@ -22,13 +34,84 @@
     "vitest/require-local-test-context-for-concurrent-snapshots": "off",
     "vitest/require-mock-type-parameters": "off",
     "vitest/require-to-throw-message": "off",
-    "vitest/valid-describe-callback": "off",
-    "vitest/valid-expect": "off",
+    "vitest/valid-describe-callback": "error",
+    "vitest/valid-expect": "error",
     "vitest/valid-expect-in-promise": "off",
-    "vitest/valid-title": "off",
+    "vitest/valid-title": "error",
     "vitest/warn-todo": "off"
   },
   "env": {
     "builtin": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/strict-void-return": "off"
+      }
+    },
+    {
+      "files": [
+        "packages/player/src/content/content-renderer.ts",
+        "packages/player/src/interactions/choice-interaction.ts",
+        "packages/player/src/interactions/gap-match-interaction.ts",
+        "packages/player/src/interactions/graphic-associate-interaction.ts",
+        "packages/player/src/interactions/inline-choice-interaction.ts",
+        "packages/player/src/interactions/interaction-dispatch.ts",
+        "packages/player/src/interactions/interaction-registry.ts",
+        "packages/player/src/interactions/match-directed-pair-list.ts",
+        "packages/player/src/interactions/match-directed-pairs.ts",
+        "packages/player/src/interactions/match-interaction.ts",
+        "packages/player/src/interactions/pair-chip.ts",
+        "packages/player/src/interactions/pair-interaction.ts",
+        "packages/player/src/interactions/shared.ts",
+        "packages/player/src/player-message-catalog.ts",
+        "packages/player/src/player-message-resolver.ts",
+        "packages/player/src/reorder/order-interaction.ts"
+      ],
+      "rules": {
+        "import/no-cycle": "off"
+      }
+    },
+    {
+      "files": ["tests/browser/**/*.ts"],
+      "rules": {
+        "eslint/no-underscore-dangle": [
+          "error",
+          {
+            "allow": ["__qtiCalls", "__qti3PortableCustomMount"]
+          }
+        ],
+        "typescript/no-misused-promises": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/no-unnecessary-condition": "off",
+        "typescript/strict-void-return": "off"
+      }
+    },
+    {
+      "files": ["examples/manual/**/*.ts", "examples/manual/**/*.js"],
+      "rules": {
+        "typescript/no-misused-promises": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/strict-void-return": "off",
+        "typescript/no-unnecessary-condition": "off"
+      }
+    },
+    {
+      "files": [
+        "packages/player/src/interactions/extended-text-xhtml.ts",
+        "packages/player/src/interactions/extended-text-xhtml-toolbar.ts"
+      ],
+      "rules": {
+        "typescript/no-deprecated": "off"
+      }
+    },
+    {
+      "files": ["packages/player-preact/**/*.tsx"],
+      "rules": {
+        "typescript/no-deprecated": "off"
+      }
+    }
+  ]
 }
