@@ -8,21 +8,14 @@ const requireExternal = process.env.QTI3_REQUIRE_EXTERNAL === "1";
 const validatorReport = process.env.QTI3_EXTERNAL_VALIDATOR_REPORT;
 const scoreCorrect = process.env.QTI3_EXTERNAL_SCORE_CORRECT === "1";
 const hasExternalDir = Boolean(externalDir);
-const runIfConfigured = hasExternalDir || requireExternal ? describe : describe.skip;
 
-runIfConfigured("@longsightgroup/qti3-conformance external QTI directory", () => {
+describe("@longsightgroup/qti3-conformance external QTI directory", () => {
   it.runIf(requireExternal)("requires official external conformance content", () => {
-    expect(
-      externalDir,
-      "Set QTI3_EXTERNAL_QTI_DIR to the official 1EdTech QTI 3 test content.",
-    ).toBeTruthy();
+    expect(externalDir).toBeTruthy();
   });
 
   it.runIf(requireExternal)("requires a non-empty official validator report artifact", async () => {
-    expect(
-      validatorReport,
-      "Set QTI3_EXTERNAL_VALIDATOR_REPORT to the official 1EdTech validator report.",
-    ).toBeTruthy();
+    expect(validatorReport).toBeTruthy();
     const report = await stat(validatorReport!);
     expect(report.isFile()).toBe(true);
     expect(report.size).toBeGreaterThan(0);

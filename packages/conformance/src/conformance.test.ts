@@ -185,13 +185,14 @@ describe("@longsightgroup/qti3-conformance", () => {
     expect(report.features.every((feature) => feature.status === "supported")).toBe(true);
   });
 
-  it("passes Basic item-player tolerance fixtures for extra unsupported content", () => {
-    for (const fixture of basicItemPlayerToleranceFixtures) {
+  it.each(basicItemPlayerToleranceFixtures)(
+    "passes Basic item-player tolerance fixture $id for extra unsupported content",
+    (fixture) => {
       const result = runFixture(fixture);
-      expect(result.diagnostics, fixture.id).toEqual([]);
-      expect(result.ok, fixture.id).toBe(true);
-    }
-  });
+      expect(result.diagnostics).toEqual([]);
+      expect(result.ok).toBe(true);
+    },
+  );
 
   it("fails Basic item-player readiness when required fixture evidence is missing", () => {
     const profile = {

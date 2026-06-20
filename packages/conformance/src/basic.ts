@@ -5,7 +5,7 @@ import {
   interactionFixtures,
   type QtiFixture,
 } from "@longsightgroup/qti3-fixtures";
-import { runFixture } from "./index.js";
+import { runFixture } from "./run-fixture.js";
 
 export type QtiBasicItemPlayerFeatureStatus = "supported" | "missing" | "evidence-missing";
 
