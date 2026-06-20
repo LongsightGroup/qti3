@@ -1,3 +1,5 @@
-import * as svGallery from "../../../tests/browser/fixtures/sv-gallery.ts";
+import { sharedVocabularyGalleryBootstrapped } from "../../../tests/browser/fixtures/sv-gallery.ts";
 
-void svGallery;
+if (!sharedVocabularyGalleryBootstrapped) {
+  throw new Error("Shared vocabulary gallery failed to bootstrap.");
+}

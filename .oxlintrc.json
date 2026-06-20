@@ -52,29 +52,6 @@
       }
     },
     {
-      "files": [
-        "packages/player/src/content/content-renderer.ts",
-        "packages/player/src/interactions/choice-interaction.ts",
-        "packages/player/src/interactions/gap-match-interaction.ts",
-        "packages/player/src/interactions/graphic-associate-interaction.ts",
-        "packages/player/src/interactions/inline-choice-interaction.ts",
-        "packages/player/src/interactions/interaction-dispatch.ts",
-        "packages/player/src/interactions/interaction-registry.ts",
-        "packages/player/src/interactions/match-directed-pair-list.ts",
-        "packages/player/src/interactions/match-directed-pairs.ts",
-        "packages/player/src/interactions/match-interaction.ts",
-        "packages/player/src/interactions/pair-chip.ts",
-        "packages/player/src/interactions/pair-interaction.ts",
-        "packages/player/src/interactions/shared.ts",
-        "packages/player/src/player-message-catalog.ts",
-        "packages/player/src/player-message-resolver.ts",
-        "packages/player/src/reorder/order-interaction.ts"
-      ],
-      "rules": {
-        "import/no-cycle": "off"
-      }
-    },
-    {
       "files": ["tests/browser/**/*.ts"],
       "rules": {
         "eslint/no-underscore-dangle": [

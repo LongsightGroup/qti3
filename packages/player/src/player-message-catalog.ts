@@ -2,14 +2,6 @@ import { playerDevWarningsEnabled, warnPlayerMessageOnce } from "./player-dev.js
 import type { QtiPlayerMovementDirection } from "./player-messages.js";
 
 export { defaultPlayerMessageCatalog } from "./player-message-catalog-default.js";
-export {
-  createPlayerMessageResolver,
-  defaultPlayerMessageResolver,
-  type PlayerMessageOverride,
-  type PlayerMessageParams,
-  type PlayerMessageResolver,
-  type QtiPlayerMessageOverrides,
-} from "./player-message-resolver.js";
 
 /** JSON-serializable chrome strings for Harbor/LMS locale files. */
 export interface PlayerMessageCatalog {

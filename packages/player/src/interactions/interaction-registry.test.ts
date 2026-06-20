@@ -2,11 +2,13 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { testInteraction } from "../interaction-test-fixtures.js";
 import {
+  INLINE_EMBED_POLICY,
+  inlineEmbedRendererIds,
   inlineEmbeddingDisposition,
-  interactionRegistry,
-  isInlineEmbeddableInteraction,
-  matchInteractionRegistryEntry,
-} from "./interaction-registry.js";
+  isInlineFlowInteraction,
+} from "./interaction-inline-embedding.js";
+import { resolveInlineInteractionRoute } from "./interaction-inline-route.js";
+import { interactionRegistry, matchInteractionRegistryEntry } from "./interaction-registry.js";
 
 describe("interaction registry ordering", () => {
   it("keeps a stable registry order for every supported renderer id", () => {
@@ -99,16 +101,16 @@ describe("interaction registry ordering", () => {
     ).toBe("hotspot");
   });
 
-  it("allows only inline-flow interaction renderers to embed inside prose", () => {
-    expect(isInlineEmbeddableInteraction(testInteraction({ type: "inlineChoice" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(testInteraction({ type: "textEntry" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(testInteraction({ type: "endAttempt" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(testInteraction({ type: "custom" }))).toBe(true);
-    expect(isInlineEmbeddableInteraction(testInteraction({ type: "choice" }))).toBe(false);
-    expect(isInlineEmbeddableInteraction(testInteraction({ type: "portableCustom" }))).toBe(false);
+  it("allows only inline-flow interactions inside prose", () => {
+    expect(isInlineFlowInteraction(testInteraction({ type: "inlineChoice" }))).toBe(true);
+    expect(isInlineFlowInteraction(testInteraction({ type: "textEntry" }))).toBe(true);
+    expect(isInlineFlowInteraction(testInteraction({ type: "endAttempt" }))).toBe(true);
+    expect(isInlineFlowInteraction(testInteraction({ type: "custom" }))).toBe(true);
+    expect(isInlineFlowInteraction(testInteraction({ type: "choice" }))).toBe(false);
+    expect(isInlineFlowInteraction(testInteraction({ type: "portableCustom" }))).toBe(false);
   });
 
-  it("classifies inline embedding with a single disposition policy", () => {
+  it("classifies inline flow with INLINE_EMBED_POLICY", () => {
     expect(inlineEmbeddingDisposition(testInteraction({ type: "inlineChoice" }))).toBe("supported");
     expect(inlineEmbeddingDisposition(testInteraction({ type: "textEntry" }))).toBe("supported");
     expect(inlineEmbeddingDisposition(testInteraction({ type: "endAttempt" }))).toBe("supported");
@@ -121,5 +123,35 @@ describe("interaction registry ordering", () => {
     const entry = matchInteractionRegistryEntry(testInteraction({ type: "textEntry" }));
     expect(entry?.renderEmbedded).toBeDefined();
     expect(entry?.renderEmbedded).not.toBe(entry?.render);
+  });
+
+  it("resolves inline interaction routes from policy and registry renderers", () => {
+    const supported = resolveInlineInteractionRoute(testInteraction({ type: "textEntry" }));
+    expect(supported.disposition).toBe("supported");
+    if (supported.disposition === "supported") {
+      expect(typeof supported.render).toBe("function");
+    }
+    expect(resolveInlineInteractionRoute(testInteraction({ type: "custom" }))).toEqual({
+      disposition: "unsupported",
+    });
+    expect(resolveInlineInteractionRoute(testInteraction({ type: "choice" }))).toEqual({
+      disposition: "invalid",
+    });
+  });
+
+  it("derives registry renderEmbedded hooks from INLINE_EMBED_POLICY", () => {
+    expect(inlineEmbedRendererIds()).toEqual(["inlineChoice", "textEntry", "endAttempt"]);
+    for (const rendererId of inlineEmbedRendererIds()) {
+      const entry = interactionRegistry.find((candidate) => candidate.id === rendererId);
+      expect(entry?.renderEmbedded).toBeDefined();
+    }
+    expect(
+      interactionRegistry.filter((entry) => entry.renderEmbedded).map((entry) => entry.id),
+    ).toEqual([...inlineEmbedRendererIds()]);
+    for (const [type, policy] of Object.entries(INLINE_EMBED_POLICY)) {
+      expect(
+        inlineEmbeddingDisposition(testInteraction({ type: type as QtiInteraction["type"] })),
+      ).toBe(policy.disposition);
+    }
   });
 });

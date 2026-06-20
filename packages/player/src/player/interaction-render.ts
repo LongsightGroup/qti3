@@ -1,10 +1,7 @@
 import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 import { copySafeAttributes } from "../content/content-dom.js";
-import {
-  inlineEmbeddingDisposition,
-  renderEmbeddedInteractionContent,
-  renderInteractionResponse,
-} from "../interactions/interaction-dispatch.js";
+import { resolveInlineInteractionRoute } from "../interactions/interaction-inline-route.js";
+import { renderInteractionResponse } from "../interactions/interaction-registry.js";
 import { interactionLabel, qtiSharedClassNames } from "../interactions/interaction-label.js";
 import {
   renderUnsupportedEmbeddedInteraction,
@@ -87,14 +84,13 @@ export function renderEmbeddedInteractionSection(
   options: EmbeddedInteractionRenderOptions,
 ): HTMLElement {
   const { interaction, messages, update, currentValue, endAttempt } = options;
+  const route = resolveInlineInteractionRoute(interaction);
 
-  switch (inlineEmbeddingDisposition(interaction)) {
-    case "invalid":
-      return renderUnsupportedEmbeddedInteraction(interaction);
-    case "unsupported":
-      return renderUnsupportedInlineInteraction(interaction);
-    case "supported":
-      break;
+  if (route.disposition === "invalid") {
+    return renderUnsupportedEmbeddedInteraction(interaction);
+  }
+  if (route.disposition === "unsupported") {
+    return renderUnsupportedInlineInteraction(interaction);
   }
 
   const regions = createQtiInteractionRegionMarkers(interaction);
@@ -110,7 +106,7 @@ export function renderEmbeddedInteractionSection(
     wrapper.append(inlineValidationMessageElement(interaction.responseIdentifier));
   }
   wrapper.append(
-    renderEmbeddedInteractionContent({
+    route.render({
       interaction,
       update,
       currentValue,

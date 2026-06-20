@@ -1,3 +1,4 @@
+import { assertNever } from "@longsightgroup/qti3-core";
 import { defaultPlayerMessageCatalog } from "./player-message-catalog-default.js";
 import {
   formatPlayerMessage,
@@ -9,7 +10,6 @@ import {
   PLAYER_MESSAGE_MANIFEST,
   type PlayerMessageKey,
   type PlayerMessageManifestEntry,
-  type PlayerMessageResolverKind,
 } from "./player-message-manifest.js";
 import type { QtiPlayerMovementDirection } from "./player-messages.js";
 
@@ -129,7 +129,7 @@ function resolveManifestEntry(
   const { strings, typeName, directionLabel } = context;
   const { key, resolver } = entry;
 
-  switch (resolver as PlayerMessageResolverKind) {
+  switch (resolver) {
     case "plain":
       return catalogString(strings, key);
     case "typeLabel":
@@ -153,7 +153,7 @@ function resolveManifestEntry(
       });
     }
     default:
-      return key;
+      return assertNever(resolver);
   }
 }
 

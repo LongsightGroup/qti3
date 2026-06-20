@@ -63,17 +63,19 @@ export type { PlayerMessageCatalog } from "./player-message-catalog.js";
 export type { PlayerMessageKey, PlayerMessageResolverKind } from "./player-message-manifest.js";
 export { PLAYER_MESSAGE_MANIFEST } from "./player-message-manifest.js";
 export {
-  createPlayerMessageResolver,
   defaultPlayerMessageCatalog,
-  defaultPlayerMessageResolver,
   extractMessagePlaceholders,
   formatPlayerMessage,
   mergePlayerMessageCatalogs,
+} from "./player-message-catalog.js";
+export {
+  createPlayerMessageResolver,
+  defaultPlayerMessageResolver,
   type PlayerMessageOverride,
   type PlayerMessageParams,
   type PlayerMessageResolver,
   type QtiPlayerMessageOverrides,
-} from "./player-message-catalog.js";
+} from "./player-message-resolver.js";
 export { PLAYER_MESSAGE_KEYS, PLAYER_MESSAGE_STRING_KEYS } from "./player-message-keys.js";
 export type {
   PlayerMessageCatalogDiagnostic,

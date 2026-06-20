@@ -356,3 +356,6 @@ async function waitForPlayerContent(host: QtiGalleryPlayer): Promise<void> {
   }
   throw new Error("Player did not render item content.");
 }
+
+/** Set after gallery module initialization for manual harness entrypoints. */
+export const sharedVocabularyGalleryBootstrapped = true;

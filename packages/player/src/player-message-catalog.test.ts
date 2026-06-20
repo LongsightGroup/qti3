@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createPlayerMessageResolver } from "./player-message-catalog.js";
+import { createPlayerMessageResolver } from "./player-message-resolver.js";
 import { defaultPlayerMessageCatalog } from "./player-message-catalog-default.js";
 import { defaultPlayerMessageResolver } from "./player-message-resolver.js";
 

@@ -1,5 +1,5 @@
 import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
-import { isInlineEmbeddableInteraction } from "../interactions/interaction-dispatch.js";
+import { isInlineFlowInteraction } from "../interactions/interaction-inline-embedding.js";
 import {
   contentElementName,
   copySafeAttributes,
@@ -43,7 +43,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   if (node.kind === "interaction") {
     const interaction = context.interactionAt(node.interactionIndex);
     if (!interaction) return [];
-    if (isInlineEmbeddableInteraction(interaction)) {
+    if (isInlineFlowInteraction(interaction)) {
       return [context.renderEmbeddedInteraction(interaction)];
     }
     return [context.renderBlockInteraction(interaction)];

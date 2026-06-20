@@ -9,7 +9,7 @@ import {
   interactionUnsupportedDiagnostics,
 } from "./interaction-diagnostics.js";
 
-describe("interaction-dispatch support", () => {
+describe("interaction registry support", () => {
   it("recognizes supported interaction types", () => {
     expect(
       isInteractionSupported(

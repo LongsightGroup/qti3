@@ -25,6 +25,11 @@ import {
 } from "./text-interaction.js";
 import { renderUnsupportedInteraction } from "./unsupported-interaction.js";
 import { renderUploadResponse } from "./upload-interaction.js";
+import {
+  inlineEmbedRendererIds,
+  isInlineEmbedRendererId,
+  type InlineEmbedRendererId,
+} from "./interaction-inline-embedding.js";
 
 export interface InteractionResponseContext {
   interaction: QtiInteraction;
@@ -73,18 +78,46 @@ export type InteractionRendererId =
 type InteractionRenderer = (context: InteractionResponseContext) => HTMLElement;
 type EmbeddedInteractionRenderer = (context: EmbeddedInteractionResponseContext) => HTMLElement;
 
-export type InlineEmbeddingDisposition = "supported" | "unsupported" | "invalid";
+const embeddedRenderers: Record<InlineEmbedRendererId, EmbeddedInteractionRenderer> = {
+  inlineChoice: ({ interaction, update, currentValue, messages }) =>
+    renderInlineChoice(interaction, update, currentValue, messages),
+  textEntry: ({ interaction, update, currentValue, messages }) =>
+    renderInlineTextEntry(interaction, update, currentValue, messages),
+  endAttempt: ({ interaction, update, endAttempt, messages }) =>
+    renderEndAttemptResponse(interaction, update, endAttempt, messages),
+};
 
-export interface InteractionRegistryEntry {
+function withInlineEmbedPolicy(entry: InteractionRegistryEntry): InteractionRegistryEntry {
+  if (!isInlineEmbedRendererId(entry.id)) return entry;
+  return { ...entry, renderEmbedded: embeddedRenderers[entry.id] };
+}
+
+function assertInlineEmbedPolicyAlignment(entries: InteractionRegistryEntry[]): void {
+  const embeddedIds = inlineEmbedRendererIds();
+  for (const rendererId of embeddedIds) {
+    const entry = entries.find((candidate) => candidate.id === rendererId);
+    if (!entry?.renderEmbedded) {
+      throw new Error(
+        `INLINE_EMBED_POLICY requires registry entry "${rendererId}" with renderEmbedded.`,
+      );
+    }
+  }
+  for (const entry of entries) {
+    if (!entry.renderEmbedded) continue;
+    if (!isInlineEmbedRendererId(entry.id)) {
+      throw new Error(`Registry entry "${entry.id}" has unexpected renderEmbedded hook.`);
+    }
+  }
+}
+
+export type InteractionRegistryEntry = {
   id: InteractionRendererId;
   matches: (interaction: QtiInteraction) => boolean;
   render: InteractionRenderer;
   renderEmbedded?: EmbeddedInteractionRenderer;
-}
+};
 
-const inlineUnsupportedInteractionTypes = new Set<QtiInteraction["type"]>(["custom"]);
-
-export const interactionRegistry: InteractionRegistryEntry[] = [
+const baseInteractionRegistry: InteractionRegistryEntry[] = [
   {
     id: "graphicOrder",
     matches: (interaction) => interaction.type === "graphicOrder",
@@ -145,8 +178,6 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     matches: (interaction) => interaction.type === "inlineChoice",
     render: ({ interaction, update, currentValue, messages }) =>
       renderInlineChoice(interaction, update, currentValue, messages),
-    renderEmbedded: ({ interaction, update, currentValue, messages }) =>
-      renderInlineChoice(interaction, update, currentValue, messages),
   },
   {
     id: "extendedText",
@@ -185,8 +216,6 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     matches: (interaction) => interaction.type === "textEntry",
     render: ({ interaction, update, currentValue, messages }) =>
       renderTextResponse(interaction, update, "entry", currentValue, messages),
-    renderEmbedded: ({ interaction, update, currentValue, messages }) =>
-      renderInlineTextEntry(interaction, update, currentValue, messages),
   },
   {
     id: "slider",
@@ -205,8 +234,6 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
     matches: (interaction) => interaction.type === "endAttempt",
     render: ({ interaction, update, endAttempt, messages }) =>
       renderEndAttemptResponse(interaction, update, endAttempt, messages),
-    renderEmbedded: ({ interaction, update, endAttempt, messages }) =>
-      renderEndAttemptResponse(interaction, update, endAttempt, messages),
   },
   {
     id: "media",
@@ -220,6 +247,11 @@ export const interactionRegistry: InteractionRegistryEntry[] = [
   },
 ];
 
+export const interactionRegistry: InteractionRegistryEntry[] =
+  baseInteractionRegistry.map(withInlineEmbedPolicy);
+
+assertInlineEmbedPolicyAlignment(interactionRegistry);
+
 export function matchInteractionRegistryEntry(
   interaction: QtiInteraction,
 ): InteractionRegistryEntry | undefined {
@@ -228,30 +260,6 @@ export function matchInteractionRegistryEntry(
 
 export function isInteractionSupported(interaction: QtiInteraction): boolean {
   return matchInteractionRegistryEntry(interaction) !== undefined;
-}
-
-export function inlineEmbeddingDisposition(
-  interaction: QtiInteraction,
-): InlineEmbeddingDisposition {
-  if (inlineUnsupportedInteractionTypes.has(interaction.type)) return "unsupported";
-  const entry = matchInteractionRegistryEntry(interaction);
-  return entry?.renderEmbedded ? "supported" : "invalid";
-}
-
-export function isInlineEmbeddableInteraction(interaction: QtiInteraction): boolean {
-  return inlineEmbeddingDisposition(interaction) !== "invalid";
-}
-
-export function renderEmbeddedInteractionContent(
-  context: EmbeddedInteractionResponseContext,
-): HTMLElement {
-  const entry = matchInteractionRegistryEntry(context.interaction);
-  if (!entry?.renderEmbedded) {
-    throw new Error(
-      `Interaction type "${context.interaction.type}" is not configured for inline embedding.`,
-    );
-  }
-  return entry.renderEmbedded(context);
 }
 
 export function renderInteractionResponse(context: InteractionResponseContext): HTMLElement {

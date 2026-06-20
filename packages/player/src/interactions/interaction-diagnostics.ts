@@ -7,8 +7,8 @@ import type {
 import { contentElementName } from "../content/content-dom.js";
 import { interactionChoices } from "../interaction-support.js";
 import { sourceChoices, targetChoices } from "./shared.js";
+import { isInlineFlowInteraction } from "./interaction-inline-embedding.js";
 import { isInteractionSupported } from "./interaction-registry.js";
-import { isInlineEmbeddableInteraction } from "./interaction-dispatch.js";
 
 function diagnosticPath(interaction: QtiInteraction): string | undefined {
   return interaction.responseIdentifier ?? undefined;
@@ -64,7 +64,7 @@ export function collectInteractionRenderDiagnostics(
 }
 
 export function interactionEmbeddedDiagnostics(interaction: QtiInteraction): QtiDiagnostic[] {
-  if (isInlineEmbeddableInteraction(interaction)) return [];
+  if (isInlineFlowInteraction(interaction)) return [];
   const path = diagnosticPath(interaction);
   return [
     {
