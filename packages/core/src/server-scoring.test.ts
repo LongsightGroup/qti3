@@ -62,6 +62,28 @@ describe("server-side QTI scoring", () => {
     expect(() => createItemSession(parsed.document!, scored.state ?? undefined)).not.toThrow();
   });
 
+  it("does not resolve undeclared response keys in a normal item session", () => {
+    const parsed = parseQtiXml(durationScoredXml());
+    expect(parsed.document).toBeDefined();
+
+    const session = createItemSession(parsed.document!);
+    session.respond("duration", 12.5);
+
+    expect(session.score().outcomes.SCORE).toBe(0);
+  });
+
+  it("rejects undeclared host-owned responses without an allow-list", () => {
+    const scored = scoreQtiItemServerSide({
+      itemXml: durationScoredXml(),
+      trustedResponses: { duration: 12.5 },
+    });
+
+    expect(scored.ok).toBe(false);
+    expect(scored.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "processing.variable.reference", severity: "error" }),
+    );
+  });
+
   it("fails invalid QTI response values", () => {
     const scored = scoreQtiItemServerSide({
       itemXml: scoredChoiceXml(),

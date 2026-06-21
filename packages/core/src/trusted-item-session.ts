@@ -107,6 +107,7 @@ export function runTrustedItemSession(
     parsedResult.parsed,
     input.priorState,
     input.diagnosticPrefix,
+    input.allowedUndeclaredResponseIdentifiers,
     parsedResult.parsed.diagnostics,
   );
   if (!sessionResult.ok) {
@@ -252,12 +253,15 @@ function createTrustedItemSession(
   parsed: QtiParsedTrustedItem,
   priorState: QtiAttemptStateV1 | null | undefined,
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix,
+  allowedUndeclaredResponseIdentifiers: readonly string[] | undefined,
   existingDiagnostics: QtiDiagnostic[] = [],
 ): { ok: true; session: QtiItemSession } | { ok: false; diagnostics: QtiDiagnostic[] } {
   try {
     return {
       ok: true,
-      session: createItemSession(parsed.document, priorState ?? undefined),
+      session: createItemSession(parsed.document, priorState ?? undefined, {
+        allowedUndeclaredResponseIdentifiers,
+      }),
     };
   } catch (error) {
     return {

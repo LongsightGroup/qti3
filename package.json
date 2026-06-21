@@ -41,7 +41,7 @@
     "check:deps": "node scripts/check-dependencies.mjs",
     "check:maps": "node scripts/check-package-source-maps.mjs",
     "check:exports": "node scripts/check-package-exports.mjs",
-    "build": "tsc -b",
+    "build": "node scripts/clean-package-dist.mjs && tsc -b",
     "pages:build": "vite build examples/manual --base /qti3/ --outDir ../../dist/pages --emptyOutDir",
     "dev": "vite --host 127.0.0.1 examples/manual",
     "dev:1edtech": "vite --host 127.0.0.1 examples/manual --open /1edtech.html",
