@@ -93,7 +93,7 @@ for (const adapter of adapterPages) {
         xml: "<item/>",
       });
 
-      expect(await callHarness<unknown[]>(page, "loadXmlCallSnapshot")).toHaveLength(2);
+      expect(await callHarness(page, "loadXmlCallSnapshot")).toHaveLength(2);
     });
 
     test("does not reload for equivalent restored state with a new object reference", async ({
@@ -111,7 +111,7 @@ for (const adapter of adapterPages) {
       await callHarness(page, "render", { loadOptions: { state }, xml: "<item/>" });
       await callHarness(page, "rerender", { loadOptions: { state: { ...state } }, xml: "<item/>" });
 
-      expect(await callHarness<unknown[]>(page, "loadXmlCallSnapshot")).toHaveLength(1);
+      expect(await callHarness(page, "loadXmlCallSnapshot")).toHaveLength(1);
     });
 
     test("reports declarative load failures", async ({ page }) => {
@@ -189,14 +189,14 @@ for (const adapter of adapterPages) {
       await expect
         .poll(
           async () =>
-            (await callHarness<ElementSnapshot>(page, "elementSnapshot")).childElementCount,
+            ((await callHarness(page, "elementSnapshot")) as ElementSnapshot).childElementCount,
         )
         .toBeGreaterThan(0);
 
       await callHarness(page, "resolvePendingLoad", 0);
       await callHarness(page, "flush");
 
-      const snapshot = await callHarness<ElementSnapshot>(page, "elementSnapshot");
+      const snapshot = (await callHarness(page, "elementSnapshot")) as ElementSnapshot;
       expect(snapshot.childElementCount).toBeGreaterThan(0);
       expect(snapshot.textContent).not.toContain("Unable to parse QTI item.");
       expect(snapshot.serializedItemIdentifier).toBeTruthy();
@@ -229,14 +229,14 @@ interface ElementSnapshot {
 }
 
 async function expectSnapshot(page: Page, expected: Partial<ElementSnapshot>): Promise<void> {
-  expect(await callHarness<ElementSnapshot>(page, "elementSnapshot")).toMatchObject(expected);
+  expect(await callHarness(page, "elementSnapshot")).toMatchObject(expected);
 }
 
-async function callHarness<T = unknown>(
+async function callHarness(
   page: Page,
   method: HarnessMethod,
   ...args: unknown[]
-): Promise<T> {
+): Promise<unknown> {
   await page.waitForFunction((methodName) => {
     const harness = (window as Window & { qti3AdapterHarness?: BrowserHarness }).qti3AdapterHarness;
     return typeof harness?.[methodName as HarnessMethod] === "function";
@@ -249,5 +249,5 @@ async function callHarness<T = unknown>(
       return harness[methodName](...methodArgs);
     },
     { args, method },
-  ) as Promise<T>;
+  );
 }
