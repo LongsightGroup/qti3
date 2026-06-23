@@ -21,6 +21,7 @@ describe("@longsightgroup/qti3-fixtures", () => {
       "mapping-processing-reference",
       "generic-match-processing-reference",
       "template-processing-reference",
+      "random-integer-template-reference",
       "template-content-reference",
       "advanced-processing-reference",
     ]);
@@ -34,6 +35,7 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(basicItemPlayerFixtures.map((fixture) => fixture.id)).toEqual([
       "basic-html-subset",
       "basic-template-response-processing",
+      "basic-template-processing",
       "basic-composite-item",
       "basic-mathml",
       "basic-rich-inline-choice",
@@ -107,7 +109,11 @@ describe("@longsightgroup/qti3-fixtures", () => {
       ).toEqual([]);
 
       for (const attempt of fixture.attempts) {
-        const session = createItemSession(parsed.document);
+        const session = createItemSession(
+          parsed.document,
+          undefined,
+          attempt.randomSeed === undefined ? {} : { randomSeed: attempt.randomSeed },
+        );
         for (const [identifier, value] of Object.entries(attempt.responses)) {
           session.respond(identifier, value);
         }
@@ -124,6 +130,11 @@ describe("@longsightgroup/qti3-fixtures", () => {
         expect(state.itemIdentifier).toBe(fixture.id);
         for (const [identifier, expected] of Object.entries(attempt.expectedResponses ?? {})) {
           expect(state.responses[identifier]).toEqual(expected);
+        }
+        for (const [identifier, expected] of Object.entries(
+          attempt.expectedState?.templateValues ?? {},
+        )) {
+          expect(state.templateValues?.[identifier]).toEqual(expected);
         }
       }
     },

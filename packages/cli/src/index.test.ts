@@ -164,6 +164,18 @@ describe("@longsightgroup/qti3-cli", () => {
     expect(xml).toBe(`${fixture.xml}\n`);
   });
 
+  it("keeps checked-in template-processing Basic item-player XML aligned with fixture metadata", async () => {
+    const fixture = basicItemPlayerFixtures.find((item) => item.id === "basic-template-processing");
+    if (!fixture) throw new Error("Missing basic-template-processing fixture.");
+    const path = join(
+      process.cwd(),
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items",
+      "template-processing.xml",
+    );
+    const xml = await readFile(path, "utf8");
+    expect(xml).toBe(`${fixture.xml}\n`);
+  });
+
   it("exposes evidence metadata in support entries", async () => {
     const choice = interactionSupport.find((support) => support.interactionType === "choice");
     expect(choice).toMatchObject({
@@ -256,6 +268,7 @@ describe("@longsightgroup/qti3-cli", () => {
     const expectedFixtureEvidence = new Map([
       ["qti-template-processing", "packages/fixtures/xml/template-processing-reference.xml"],
       ["qti-response-processing", "packages/fixtures/xml/advanced-processing-reference.xml"],
+      ["qti-random-integer", "packages/fixtures/xml/random-integer-template-reference.xml"],
       ["qti-gcd", "packages/fixtures/xml/advanced-processing-reference.xml"],
       ["qti-inside", "packages/fixtures/xml/advanced-processing-reference.xml"],
       ["qti-stats-operator", "packages/fixtures/xml/advanced-processing-reference.xml"],

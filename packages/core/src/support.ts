@@ -53,6 +53,7 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
 export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-template-processing", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/template-processing-reference.xml",
+    "packages/fixtures/xml/random-integer-template-reference.xml",
     "packages/fixtures/xml/template-content-reference.xml",
   ]),
   processingEntry("qti-response-processing", "packages/core/src/core.test.ts", [
@@ -63,11 +64,13 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   ]),
   processingEntry("qti-set-template-value", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/template-processing-reference.xml",
+    "packages/fixtures/xml/random-integer-template-reference.xml",
     "packages/fixtures/xml/template-content-reference.xml",
   ]),
   processingEntry("qti-set-default-value", "packages/core/src/core.test.ts"),
   processingEntry("qti-set-correct-response", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/template-processing-reference.xml",
+    "packages/fixtures/xml/random-integer-template-reference.xml",
   ]),
   processingEntry("qti-template-condition", "packages/core/src/core.test.ts"),
   processingEntry("qti-template-if", "packages/core/src/core.test.ts"),
@@ -119,11 +122,14 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-variable", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/template-processing-reference.xml",
+    "packages/fixtures/xml/random-integer-template-reference.xml",
     "packages/fixtures/xml/template-content-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-random-integer", "packages/core/src/core.test.ts"),
+  processingEntry("qti-random-integer", "packages/core/src/core.test.ts", [
+    "packages/fixtures/xml/random-integer-template-reference.xml",
+  ]),
   processingEntry("qti-random-float", "packages/core/src/core.test.ts"),
   processingEntry("qti-random", "packages/core/src/core.test.ts"),
   processingEntry("qti-multiple", "packages/core/src/core.test.ts", [
@@ -139,8 +145,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   ]),
   processingEntry("qti-sum", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/template-processing-reference.xml",
+    "packages/fixtures/xml/random-integer-template-reference.xml",
   ]),
-  processingEntry("qti-product", "packages/core/src/core.test.ts"),
+  processingEntry("qti-product", "packages/core/src/core.test.ts", [
+    "packages/fixtures/xml/random-integer-template-reference.xml",
+  ]),
   processingEntry("qti-min", "packages/core/src/core.test.ts"),
   processingEntry("qti-max", "packages/core/src/core.test.ts"),
   processingEntry("qti-subtract", "packages/core/src/core.test.ts"),

@@ -41,7 +41,11 @@ export function runFixture(fixture: QtiFixture): QtiConformanceResult {
   );
 
   for (const attempt of fixture.attempts) {
-    const session = createItemSession(parseResult.document);
+    const session = createItemSession(
+      parseResult.document,
+      undefined,
+      attempt.randomSeed === undefined ? {} : { randomSeed: attempt.randomSeed },
+    );
     for (const [identifier, value] of Object.entries(attempt.responses)) {
       session.respond(identifier, value);
     }

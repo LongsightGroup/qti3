@@ -570,26 +570,15 @@ test.describe("manual harness", () => {
     await expect(player.locator("#qti3-item-title")).toHaveCount(0);
   });
 
-  test("loads processing and adaptive canonical fixtures from the picker", async ({ page }) => {
+  test("loads adaptive canonical fixture from the picker", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.locator("#fixture optgroup[label='Processing references']")).toHaveCount(1);
     await expect(page.locator("#fixture optgroup[label='Adaptive references']")).toHaveCount(1);
 
-    const templateFixture = processingFixtures.find(
-      (fixture) => fixture.id === "template-processing-reference",
-    );
     const adaptiveFixture = adaptiveFixtures.find(
       (fixture) => fixture.id === "adaptive-feedback-reference",
     );
-    if (!templateFixture || !adaptiveFixture) throw new Error("Missing canonical fixtures.");
-
-    await page.locator("#fixture").selectOption(templateFixture.id);
-    await page.locator("#load-fixture").click();
-    await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Template processing generates the correct numeric response before delivery.",
-    );
-    await expect(page.locator("#debug-template-values")).toContainText('"ANSWER": 5');
+    if (!adaptiveFixture) throw new Error("Missing canonical fixtures.");
 
     await page.locator("#fixture").selectOption(adaptiveFixture.id);
     await page.locator("#load-fixture").click();

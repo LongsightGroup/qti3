@@ -6,6 +6,8 @@ export interface QtiFixtureAttempt {
   expectedOutcomes: Record<string, QtiValue>;
   expectedResponses?: Record<string, QtiValue> | undefined;
   expectedState?: Partial<QtiAttemptStateV1> | undefined;
+  /** When set, passed to createItemSession so template randomness is deterministic in tests. */
+  randomSeed?: string | number | undefined;
 }
 
 export function basicCorrectAttempt(

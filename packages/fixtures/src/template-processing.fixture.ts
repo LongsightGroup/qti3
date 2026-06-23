@@ -1,0 +1,75 @@
+import type { QtiFixture } from "./index.js";
+
+export const TEMPLATE_PROCESSING_CORRECT_RESPONSE = 5;
+
+export function createTemplateProcessingItemXml(identifier: string): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${identifier}" title="${identifier}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-template-declaration identifier="BASE" cardinality="single" base-type="integer"/>
+  <qti-template-declaration identifier="ANSWER" cardinality="single" base-type="integer"/>
+  <qti-template-processing>
+    <qti-set-template-value identifier="BASE"><qti-base-value base-type="integer">2</qti-base-value></qti-set-template-value>
+    <qti-set-template-value identifier="ANSWER">
+      <qti-sum><qti-variable identifier="BASE"/><qti-base-value base-type="integer">3</qti-base-value></qti-sum>
+    </qti-set-template-value>
+    <qti-set-correct-response identifier="RESPONSE"><qti-variable identifier="ANSWER"/></qti-set-correct-response>
+  </qti-template-processing>
+  <qti-item-body>
+    <p>Template processing generates the correct numeric response before delivery.</p>
+    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10" step="1"/>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+}
+
+export function createTemplateProcessingFixture(): QtiFixture {
+  const id = "template-processing-reference";
+  return {
+    id,
+    category: "processing",
+    title: "Template-processing reference fixture",
+    xml: createTemplateProcessingItemXml(id),
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "generated-correct",
+        responses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
+        expectedOutcomes: { SCORE: 1 },
+        expectedResponses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
+        expectedState: {
+          templateValues: { BASE: 2, ANSWER: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
+        },
+      },
+    ],
+  };
+}
+
+export function createBasicTemplateProcessingFixture(): QtiFixture {
+  const id = "basic-template-processing";
+  return {
+    id,
+    category: "basic",
+    interactionType: "slider",
+    qtiName: "qti-slider-interaction",
+    title: "Basic template processing fixture",
+    xml: createTemplateProcessingItemXml(id),
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "generated-correct",
+        responses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
+        expectedOutcomes: { SCORE: 1 },
+        expectedResponses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
+        expectedState: {
+          templateValues: { BASE: 2, ANSWER: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
+        },
+      },
+    ],
+  };
+}

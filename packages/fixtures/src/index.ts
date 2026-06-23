@@ -8,6 +8,11 @@ import {
 } from "@longsightgroup/qti3-core";
 import { createBasicRichInlineChoiceFixture } from "./basic-rich-inline-choice.fixture.js";
 import { basicCorrectAttempt, type QtiFixtureAttempt } from "./fixture-attempts.js";
+import { createRandomIntegerTemplateFixture } from "./random-integer-template.fixture.js";
+import {
+  createBasicTemplateProcessingFixture,
+  createTemplateProcessingFixture,
+} from "./template-processing.fixture.js";
 
 export type { QtiFixtureAttempt };
 
@@ -43,6 +48,7 @@ export const processingFixtures: QtiFixture[] = [
   createMappingProcessingFixture(),
   createGenericMatchProcessingFixture(),
   createTemplateProcessingFixture(),
+  createRandomIntegerTemplateFixture(),
   createTemplateContentFixture(),
   createAdvancedProcessingFixture(),
 ];
@@ -52,6 +58,7 @@ export const adaptiveFixtures: QtiFixture[] = [createAdaptiveFeedbackFixture()];
 export const basicItemPlayerFixtures: QtiFixture[] = [
   createBasicHtmlSubsetFixture(),
   createBasicTemplateResponseProcessingFixture(),
+  createBasicTemplateProcessingFixture(),
   createBasicCompositeItemFixture(),
   createBasicMathMlFixture(),
   createBasicRichInlineChoiceFixture(),
@@ -287,47 +294,6 @@ function createGenericMatchProcessingFixture(): QtiFixture {
         responses: { RESPONSE: "B" },
         expectedOutcomes: { SCORE: 0, FEEDBACK: "not-matched" },
         expectedResponses: { RESPONSE: "B" },
-      },
-    ],
-  };
-}
-
-function createTemplateProcessingFixture(): QtiFixture {
-  const id = "template-processing-reference";
-  return {
-    id,
-    category: "processing",
-    title: "Template-processing reference fixture",
-    xml: `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
-  <qti-template-declaration identifier="BASE" cardinality="single" base-type="integer"/>
-  <qti-template-declaration identifier="ANSWER" cardinality="single" base-type="integer"/>
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
-  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
-    <qti-default-value><qti-value>0</qti-value></qti-default-value>
-  </qti-outcome-declaration>
-  <qti-template-processing>
-    <qti-set-template-value identifier="BASE"><qti-base-value base-type="integer">2</qti-base-value></qti-set-template-value>
-    <qti-set-template-value identifier="ANSWER">
-      <qti-sum><qti-variable identifier="BASE"/><qti-base-value base-type="integer">3</qti-base-value></qti-sum>
-    </qti-set-template-value>
-    <qti-set-correct-response identifier="RESPONSE"><qti-variable identifier="ANSWER"/></qti-set-correct-response>
-  </qti-template-processing>
-  <qti-item-body>
-    <p>Template processing generates the correct numeric response before delivery.</p>
-    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10" step="1"/>
-  </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
-</qti-assessment-item>`,
-    expectedParseDiagnostics: [],
-    expectedValidationDiagnostics: [],
-    attempts: [
-      {
-        name: "generated-correct",
-        responses: { RESPONSE: 5 },
-        expectedOutcomes: { SCORE: 1 },
-        expectedResponses: { RESPONSE: 5 },
-        expectedState: { templateValues: { BASE: 2, ANSWER: 5 } },
       },
     ],
   };
