@@ -183,7 +183,14 @@ describe("QTI delivery security", () => {
     expect(template.secureDeliverySupported).toBe(false);
     expect(template.findings).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "unsupported-secure-delivery-element" }),
+        expect.objectContaining({
+          kind: "unsupported-secure-delivery-element",
+          localName: "qti-template-processing",
+        }),
+        expect.objectContaining({
+          kind: "unsupported-secure-delivery-element",
+          localName: "qti-set-correct-response",
+        }),
       ]),
     );
     expect(template.diagnostics).toContainEqual(

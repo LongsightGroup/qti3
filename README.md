@@ -464,6 +464,23 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
 - Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.
 
+## Randomized Item Instances
+
+`qti3` supports QTI-native randomized item instances through template processing.
+Authors can use `qti-random-integer`, generated template variables, printed variables,
+and `qti-set-correct-response` to build deterministic randomized math-style items.
+The canonical `random-integer-template-reference` fixture proves this path by rendering
+a generated equation, storing the generated values in `templateValues`, and scoring the
+generated numeric answer.
+
+Hosts should create a variant once, persist the full `qti3.attempt-state.v1` value, and
+restore from that state on resume. A `randomSeed` is useful for deterministic initial
+generation, but saved `templateValues` are the authority after an attempt exists. Static
+candidate-safe XML redaction and adaptive candidate materialization intentionally still
+fail closed for template-processing items; hosts that need secure browser delivery for
+randomized items must keep authoritative XML server-side until dedicated server
+materialization support is added.
+
 ## Coverage
 
 `qti3` includes public synthetic fixtures for every current, non-deprecated QTI 3 item

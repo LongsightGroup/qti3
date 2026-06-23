@@ -34,6 +34,24 @@ console.log(result.outcomes);
 console.log(result.state);
 ```
 
+### Randomized template items
+
+QTI template processing can generate deterministic item variants with expressions such
+as `qti-random-integer`, printed variables, and `qti-set-correct-response`:
+
+```ts
+const session = createItemSession(parsed.document, undefined, { randomSeed: "attempt-123" });
+const state = session.serialize();
+
+store(state);
+
+const resumed = createItemSession(parsed.document, state, { randomSeed: "different-seed" });
+```
+
+Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt exists,
+saved `templateValues` are authoritative; they are restored before generated correct
+responses are derived, so resuming does not depend on the original seed.
+
 ### Candidate-safe delivery XML
 
 High-stakes delivery systems can redact answer-bearing item XML before sending it to

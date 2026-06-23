@@ -297,40 +297,15 @@ describe("@longsightgroup/qti3-cli", () => {
   it("keeps supported interactions tied to concrete reference fixtures", () => {
     const fixtureIds = new Set(interactionFixtures.map((fixture) => fixture.id));
 
-    const extraInteractionFixtures: Partial<Record<string, string[]>> = {
-      extendedText: [
-        "packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml",
-        "packages/fixtures/packages/sv-matrix/items/extended-text-xhtml.xml",
-      ],
-      textEntry: ["packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml"],
-    };
-    const extraInteractionTests: Partial<Record<string, string[]>> = {
-      extendedText: [
-        "packages/core/src/pattern-mask.test.ts",
-        "tests/browser/player-dom-behavior.spec.ts",
-        "tests/browser/player-extended-text-xhtml.spec.ts",
-      ],
-      textEntry: [
-        "packages/core/src/pattern-mask.test.ts",
-        "tests/browser/player-dom-behavior.spec.ts",
-      ],
-    };
-
     for (const support of interactionSupport) {
-      expect(support.fixtures).toEqual([
+      expect(support.fixtures).toContain(
         `packages/fixtures/xml/${support.interactionType}-reference.xml`,
-        ...(extraInteractionFixtures[support.interactionType] ?? []),
-      ]);
-      expect(fixtureIds.has(`${support.interactionType}-reference`)).toBe(true);
-      expect(support.tests).toEqual(
-        expect.arrayContaining([
-          "packages/fixtures/src/fixtures.test.ts",
-          "packages/conformance/src/conformance.test.ts",
-          "packages/a11y/src/a11y.test.ts",
-          "tests/browser/player-interaction-sweep.spec.ts",
-          ...(extraInteractionTests[support.interactionType] ?? []),
-        ]),
       );
+      expect(fixtureIds.has(`${support.interactionType}-reference`)).toBe(true);
+      expect(support.tests).toContain("packages/fixtures/src/fixtures.test.ts");
+      expect(support.tests).toContain("packages/conformance/src/conformance.test.ts");
+      expect(support.tests).toContain("packages/a11y/src/a11y.test.ts");
+      expect(support.tests).toContain("tests/browser/player-interaction-sweep.spec.ts");
     }
   });
 

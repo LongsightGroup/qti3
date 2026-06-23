@@ -8,6 +8,12 @@ import {
   interactionFixtures,
   processingFixtures,
 } from "./index.js";
+import {
+  formatRandomIntegerTemplatePrompt,
+  RANDOM_INTEGER_TEMPLATE_REFERENCE_ID,
+  RANDOM_INTEGER_TEMPLATE_REFERENCE_SEED,
+  RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES,
+} from "./random-integer-template.fixture.js";
 
 describe("@longsightgroup/qti3-fixtures", () => {
   it("has one reference fixture for every target interaction", () => {
@@ -139,4 +145,30 @@ describe("@longsightgroup/qti3-fixtures", () => {
       }
     },
   );
+
+  it("restores the random-integer template fixture from serialized template values", () => {
+    const fixture = processingFixtures.find(
+      (item) => item.id === RANDOM_INTEGER_TEMPLATE_REFERENCE_ID,
+    );
+    if (!fixture) throw new Error(`Missing ${RANDOM_INTEGER_TEMPLATE_REFERENCE_ID}.`);
+
+    const parsed = parseQtiXml(fixture.xml);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.document).toBeDefined();
+    if (!parsed.document) return;
+
+    const original = createItemSession(parsed.document, undefined, {
+      randomSeed: RANDOM_INTEGER_TEMPLATE_REFERENCE_SEED,
+    });
+    original.respond("RESPONSE", RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES.TARGET);
+    const saved = original.score().state;
+
+    const restored = createItemSession(parsed.document, saved, { randomSeed: "different-seed" });
+    expect(restored.serialize().templateValues).toEqual(RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES);
+    expect(restored.correctResponses()).toEqual({
+      RESPONSE: RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES.TARGET,
+    });
+    expect(formatRandomIntegerTemplatePrompt()).toBe("Solve 4x + 4 = 40.");
+    expect(restored.score().outcomes.SCORE).toBe(1);
+  });
 });

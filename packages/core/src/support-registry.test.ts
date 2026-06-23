@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { testInteraction } from "./interaction-test-fixtures.js";
-import { interactionRegistryDiagnostics, interactionRegistryStatus } from "./support.js";
+import {
+  interactionRegistryDiagnostics,
+  interactionRegistryStatus,
+  interactionSupport,
+  processingSupport,
+} from "./support.js";
+import {
+  interactionSupportFixtures,
+  interactionSupportTests,
+  processingBrowserEvidence,
+  processingSupportTests,
+} from "./support-evidence.js";
 
 describe("interaction registry helpers", () => {
   it("reports supported status for registered current interactions", () => {
@@ -58,5 +69,22 @@ describe("interaction registry helpers", () => {
       qtiName: "qti-portable-custom-interaction",
       registryStatus: "supported",
     });
+  });
+
+  it("derives supported interaction evidence from the internal support-evidence registry", () => {
+    for (const support of interactionSupport) {
+      expect(support.fixtures).toEqual(interactionSupportFixtures(support.interactionType));
+      expect(support.tests).toEqual(interactionSupportTests(support.interactionType));
+    }
+  });
+
+  it("exposes processing browser evidence on parent constructs only", () => {
+    for (const qtiName of Object.keys(processingBrowserEvidence)) {
+      const support = processingSupport.find((entry) => entry.qtiName === qtiName);
+      expect(support?.tests).toEqual(processingSupportTests(qtiName));
+    }
+
+    const variable = processingSupport.find((entry) => entry.qtiName === "qti-variable");
+    expect(variable?.tests).toEqual(processingSupportTests("qti-variable"));
   });
 });

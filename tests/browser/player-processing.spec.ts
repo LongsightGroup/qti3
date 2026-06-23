@@ -2,10 +2,40 @@ import { expect, test } from "@playwright/test";
 import { processingFixtures } from "../../packages/fixtures/src/index.js";
 import {
   formatRandomIntegerTemplatePrompt,
+  RANDOM_INTEGER_TEMPLATE_REFERENCE_ID,
   RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES,
 } from "../../packages/fixtures/src/random-integer-template.fixture.js";
 import { TEMPLATE_PROCESSING_CORRECT_RESPONSE } from "../../packages/fixtures/src/template-processing.fixture.js";
-import { expectDebugTemplateValues, loadCanonicalFixture } from "./player-helpers.js";
+import { expectDebugTemplateValues, selectFixtureById } from "./player-helpers.js";
+import {
+  playerLocator,
+  resetThenRestorePlayerState,
+  scorePlayerAttempt,
+  serializePlayer,
+} from "./player-test-api.js";
+
+const choiceScoringCases = [
+  {
+    fixtureId: "mapping-processing-reference",
+    expectedOutcomes: ['"SCORE": 2'],
+  },
+  {
+    fixtureId: "generic-match-processing-reference",
+    expectedOutcomes: ['"SCORE": 1', '"FEEDBACK": "matched"'],
+  },
+  {
+    fixtureId: "advanced-processing-reference",
+    expectedOutcomes: [
+      '"ROUNDED": true',
+      '"GCD_VALUE": 6',
+      '"LCM_VALUE": 12',
+      '"MEAN_VALUE": 4',
+      '"ANY_INSIDE": true',
+      '"NONE_INSIDE": false',
+      '"IN_POLY": true',
+    ],
+  },
+] as const;
 
 test.describe("processing fixtures", () => {
   test("loads template-processing reference from the picker", async ({ page }) => {
@@ -16,8 +46,8 @@ test.describe("processing fixtures", () => {
     const fixture = processingFixtures.find((item) => item.id === "template-processing-reference");
     if (!fixture) throw new Error("Missing template-processing-reference fixture.");
 
-    await loadCanonicalFixture(page, fixture.id);
-    await expect(page.locator("qti-assessment-item-player")).toContainText(
+    await selectFixtureById(page, fixture.id);
+    await expect(playerLocator(page)).toContainText(
       "Template processing generates the correct numeric response before delivery.",
     );
     await expectDebugTemplateValues(page, {
@@ -30,76 +60,63 @@ test.describe("processing fixtures", () => {
     await page.goto("/");
 
     const fixture = processingFixtures.find(
-      (item) => item.id === "random-integer-template-reference",
+      (item) => item.id === RANDOM_INTEGER_TEMPLATE_REFERENCE_ID,
     );
     if (!fixture) throw new Error("Missing random-integer-template-reference fixture.");
 
-    await loadCanonicalFixture(page, fixture.id);
-    await expect(page.locator("qti-assessment-item-player")).toContainText(
-      formatRandomIntegerTemplatePrompt(),
-    );
+    await selectFixtureById(page, fixture.id);
+    await expect(playerLocator(page)).toContainText(formatRandomIntegerTemplatePrompt());
     await expectDebugTemplateValues(page, RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES);
   });
 
-  test("scores mapping-processing reference from the picker", async ({ page }) => {
+  test("restores random-integer template reference from serialized state", async ({ page }) => {
     await page.goto("/");
+    await selectFixtureById(page, RANDOM_INTEGER_TEMPLATE_REFERENCE_ID);
 
-    const fixture = processingFixtures.find((item) => item.id === "mapping-processing-reference");
-    if (!fixture) throw new Error("Missing mapping-processing-reference fixture.");
+    const savedState = await serializePlayer(page);
+    if (!savedState) throw new Error("Expected serialized state.");
 
-    await loadCanonicalFixture(page, fixture.id);
-    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
-    await page.locator("#debug-score").click();
+    await resetThenRestorePlayerState(page, {
+      ...savedState,
+      status: "interacting",
+      responses: { RESPONSE: RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES.TARGET },
+    });
 
-    await expect(page.locator("#debug-outcomes")).toContainText('"SCORE": 2');
-    await expect(page.locator("#debug-action-log")).toContainText("qti-score");
+    const player = playerLocator(page);
+    await expect(player).toContainText(formatRandomIntegerTemplatePrompt());
+    await expectDebugTemplateValues(page, RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES);
+
+    const scored = await scorePlayerAttempt(page);
+    expect(scored?.outcomes.SCORE).toBe(1);
+    expect(scored?.state.templateValues).toEqual(RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES);
   });
 
-  test("scores generic-match-processing reference from the picker", async ({ page }) => {
-    await page.goto("/");
+  for (const scoringCase of choiceScoringCases) {
+    test(`scores ${scoringCase.fixtureId} from the picker`, async ({ page }) => {
+      await page.goto("/");
 
-    const fixture = processingFixtures.find(
-      (item) => item.id === "generic-match-processing-reference",
-    );
-    if (!fixture) throw new Error("Missing generic-match-processing-reference fixture.");
+      const fixture = processingFixtures.find((item) => item.id === scoringCase.fixtureId);
+      if (!fixture) throw new Error(`Missing ${scoringCase.fixtureId} fixture.`);
 
-    await loadCanonicalFixture(page, fixture.id);
-    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
-    await page.locator("#debug-score").click();
+      await selectFixtureById(page, fixture.id);
+      await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+      await page.locator("#debug-score").click();
 
-    await expect(page.locator("#debug-outcomes")).toContainText('"SCORE": 1');
-    await expect(page.locator("#debug-outcomes")).toContainText('"FEEDBACK": "matched"');
-    await expect(page.locator("#debug-action-log")).toContainText("qti-score");
-  });
-
-  test("scores advanced processing fixtures through the manual debugger", async ({ page }) => {
-    await page.goto("/");
-
-    const fixture = processingFixtures.find((item) => item.id === "advanced-processing-reference");
-    if (!fixture) throw new Error("Missing advanced processing fixture.");
-
-    await loadCanonicalFixture(page, fixture.id);
-    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
-    await page.locator("#debug-score").click();
-
-    await expect(page.locator("#debug-outcomes")).toContainText('"ROUNDED": true');
-    await expect(page.locator("#debug-outcomes")).toContainText('"GCD_VALUE": 6');
-    await expect(page.locator("#debug-outcomes")).toContainText('"LCM_VALUE": 12');
-    await expect(page.locator("#debug-outcomes")).toContainText('"MEAN_VALUE": 4');
-    await expect(page.locator("#debug-outcomes")).toContainText('"ANY_INSIDE": true');
-    await expect(page.locator("#debug-outcomes")).toContainText('"NONE_INSIDE": false');
-    await expect(page.locator("#debug-outcomes")).toContainText('"IN_POLY": true');
-    await expect(page.locator("#debug-action-log")).toContainText("qti-score");
-  });
+      for (const outcome of scoringCase.expectedOutcomes) {
+        await expect(page.locator("#debug-outcomes")).toContainText(outcome);
+      }
+      await expect(page.locator("#debug-action-log")).toContainText("qti-score");
+    });
+  }
 
   test("renders template block and inline content from the template-content-reference fixture", async ({
     page,
   }) => {
     await page.goto("/");
 
-    await loadCanonicalFixture(page, "template-content-reference");
+    await selectFixtureById(page, "template-content-reference");
 
-    const player = page.locator("qti-assessment-item-player");
+    const player = playerLocator(page);
     await expect(
       player.locator(".qti3-template-block", { hasText: "reference branch" }),
     ).toContainText("The generated reference branch is visible.");

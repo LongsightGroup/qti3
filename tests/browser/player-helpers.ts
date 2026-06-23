@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import type { PlayerMessageCatalog } from "../../packages/player/src/player-message-catalog.js";
 import { reorderMovementDirections } from "../../packages/player/src/movement.js";
+import { resetThenRestorePlayerState } from "./player-test-api.js";
 
 export { createDeflatedZip, createStoredZip } from "./player-package-helpers.js";
 
@@ -21,7 +22,11 @@ export const operableControlSelector = [
 export async function loadFixture(page: Page, interactionType: string): Promise<void> {
   const fixture = interactionFixtures.find((item) => item.interactionType === interactionType);
   if (!fixture) throw new Error(`Missing ${interactionType} fixture.`);
-  await page.locator("#fixture").selectOption(fixture.id);
+  await selectFixtureById(page, fixture.id);
+}
+
+export async function selectFixtureById(page: Page, fixtureId: string): Promise<void> {
+  await page.locator("#fixture").selectOption(fixtureId);
   await page.locator("#load-fixture").click();
 }
 
@@ -92,10 +97,8 @@ export async function suspendRestoreCurrentAttempt(page: Page): Promise<void> {
     element.suspend();
     return element.serialize();
   });
-  await page.locator("qti-assessment-item-player").evaluate((element, attemptState) => {
-    element.reset();
-    element.restore(attemptState);
-  }, state);
+  if (!state) throw new Error("Expected serialized state.");
+  await resetThenRestorePlayerState(page, state);
 }
 
 export async function scoreCurrentAttempt(page: Page): Promise<
@@ -586,11 +589,6 @@ export async function loadedItemIdentifier(player: Locator): Promise<string | un
     };
     return qtiPlayer.serialize()?.itemIdentifier;
   });
-}
-
-export async function loadCanonicalFixture(page: Page, fixtureId: string): Promise<void> {
-  await page.locator("#fixture").selectOption(fixtureId);
-  await page.locator("#load-fixture").click();
 }
 
 export async function expectDebugTemplateValues(

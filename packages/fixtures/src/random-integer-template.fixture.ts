@@ -80,6 +80,16 @@ export function createRandomIntegerTemplateFixture(): QtiFixture {
           templateValues: RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES,
         },
       },
+      {
+        name: "generated-incorrect",
+        randomSeed: RANDOM_INTEGER_TEMPLATE_REFERENCE_SEED,
+        responses: { RESPONSE: TARGET - 1 },
+        expectedOutcomes: { SCORE: 0 },
+        expectedResponses: { RESPONSE: TARGET - 1 },
+        expectedState: {
+          templateValues: RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES,
+        },
+      },
     ],
   };
 }

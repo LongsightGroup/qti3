@@ -1,6 +1,28 @@
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
-import { loadedItemIdentifier, loadFixture, pasteXml } from "./player-helpers.js";
+import {
+  candidateVisibleItemXml,
+  catalogDebugItemXml,
+  companionMaterialsHostItemXml,
+  companionMaterialsOverrideItemXml,
+  mediaCatalogItemXml,
+  stylesheetDebugItemXml,
+} from "./harness-fixtures.js";
+import {
+  loadedItemIdentifier,
+  loadFixture,
+  pasteXml,
+  selectFixtureById,
+} from "./player-helpers.js";
+import {
+  getCatalogSupportResolution,
+  getCompanionMaterialsResolution,
+  loadPlayerUrlWithXml,
+  loadPlayerXmlWithAssetPrefix,
+  playerLocator,
+  resolveCompanionMaterialsWithUrlPrefixes,
+  serializePlayer,
+} from "./player-test-api.js";
 
 test.describe("manual harness", () => {
   test("does not render generic fieldset or legend wrappers around interactions", async ({
@@ -9,10 +31,9 @@ test.describe("manual harness", () => {
     await page.goto("/");
 
     for (const fixture of interactionFixtures) {
-      await page.locator("#fixture").selectOption(fixture.id);
-      await page.locator("#load-fixture").click();
+      await selectFixtureById(page, fixture.id);
 
-      const player = page.locator("qti-assessment-item-player");
+      const player = playerLocator(page);
       await expect(player.locator("fieldset"), fixture.id).toHaveCount(0);
       await expect(player.locator("legend"), fixture.id).toHaveCount(0);
     }
@@ -21,37 +42,14 @@ test.describe("manual harness", () => {
     await page.goto("/");
     await loadFixture(page, "choice");
 
-    const player = page.locator("qti-assessment-item-player");
+    const player = playerLocator(page);
     await expect(player.locator(".qti3-actions")).toHaveCount(0);
     await expect(player.getByRole("button", { name: "Score", exact: true })).toHaveCount(0);
     await expect(page.locator("#debug-score")).toHaveText("Score attempt");
   });
   test("shows dormant catalog metadata in the manual debugger", async ({ page }) => {
     await page.goto("/");
-    await pasteXml(
-      page,
-      `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-debug" title="catalog-debug" time-dependent="false">
-        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
-          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
-        </qti-response-declaration>
-        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-        <qti-item-body>
-          <p data-catalog-idref="term-help">Select the accurate statement.</p>
-          <qti-choice-interaction response-identifier="RESPONSE">
-            <qti-simple-choice identifier="A">QTI items may include dormant support-specific content.</qti-simple-choice>
-          </qti-choice-interaction>
-        </qti-item-body>
-        <qti-catalog-info>
-          <qti-catalog id="term-help">
-            <qti-card support="linguistic-guidance">
-              <qti-html-content>Accurate means correct.</qti-html-content>
-            </qti-card>
-          </qti-catalog>
-        </qti-catalog-info>
-      </qti-assessment-item>
-    `,
-    );
+    await pasteXml(page, catalogDebugItemXml);
 
     await expect(page.locator("#debug-catalogs")).toContainText('"id": "term-help"');
     await expect(page.locator("#debug-catalogs")).toContainText('"support": "linguistic-guidance"');
@@ -59,70 +57,11 @@ test.describe("manual harness", () => {
   });
   test("exposes resolved catalog supports for media alternatives", async ({ page }) => {
     await page.goto("/");
-    await pasteXml(
-      page,
-      `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-catalog" title="media-catalog" time-dependent="false">
-        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
-        <qti-item-body>
-          <p data-catalog-idref="audio-transcript">Listen to the recording.</p>
-          <qti-media-interaction response-identifier="RESPONSE" data-catalog-idref="video-alternatives">
-            <qti-prompt>Watch the clip.</qti-prompt>
-            <video width="320" height="180">
-              <source src="clips/presentation.mp4" type="video/mp4"/>
-              <track kind="captions" src="captions/presentation.vtt" srclang="en" label="English"/>
-            </video>
-          </qti-media-interaction>
-        </qti-item-body>
-        <qti-catalog-info>
-          <qti-catalog id="audio-transcript">
-            <qti-card support="transcript">
-              <qti-card-entry xml:lang="en" default="true">
-                <qti-html-content><p>English transcript.</p></qti-html-content>
-              </qti-card-entry>
-              <qti-card-entry xml:lang="es">
-                <qti-html-content><p>Transcripción en español.</p></qti-html-content>
-              </qti-card-entry>
-            </qti-card>
-          </qti-catalog>
-          <qti-catalog id="video-alternatives">
-            <qti-card support="audio-description">
-              <qti-card-entry default="true">
-                <qti-file-href mime-type="audio/mpeg">audio/presentation-description.mp3</qti-file-href>
-              </qti-card-entry>
-            </qti-card>
-            <qti-card support="sign-language">
-              <qti-card-entry xml:lang="ase" default="true">
-                <qti-html-content><p>ASL interpretation clip.</p></qti-html-content>
-              </qti-card-entry>
-            </qti-card>
-          </qti-catalog>
-        </qti-catalog-info>
-      </qti-assessment-item>
-    `,
-    );
+    await pasteXml(page, mediaCatalogItemXml);
 
-    const resolution = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return (
-        element as HTMLElement & {
-          getCatalogSupportResolution: (options?: { languages?: string[]; supports?: string[] }) =>
-            | {
-                references: Array<{
-                  idref: string;
-                  matches: Array<{
-                    fileHrefs: Array<{ href: string; mimeType?: string }>;
-                    htmlContent?: { text: string };
-                    language?: string;
-                    support: string;
-                  }>;
-                }>;
-              }
-            | undefined;
-        }
-      ).getCatalogSupportResolution({
-        supports: ["transcript", "audio-description", "sign-language"],
-        languages: ["es", "ase"],
-      });
+    const resolution = await getCatalogSupportResolution(page, {
+      supports: ["transcript", "audio-description", "sign-language"],
+      languages: ["es", "ase"],
     });
 
     expect(resolution?.references.map((reference) => reference.idref)).toEqual([
@@ -155,15 +94,7 @@ test.describe("manual harness", () => {
   });
   test("shows item stylesheet references in the manual debugger", async ({ page }) => {
     await page.goto("/");
-    await pasteXml(
-      page,
-      `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stylesheet-debug" title="stylesheet-debug" time-dependent="false">
-        <qti-stylesheet href="style/item.css" type="text/css" media="screen"/>
-        <qti-item-body><p>Styled item body.</p></qti-item-body>
-      </qti-assessment-item>
-    `,
-    );
+    await pasteXml(page, stylesheetDebugItemXml);
 
     await expect(page.locator("#debug-stylesheets")).toContainText('"href": "style/item.css"');
     await expect(page.locator("#debug-stylesheets")).toContainText('"type": "text/css"');
@@ -171,51 +102,13 @@ test.describe("manual harness", () => {
   });
   test("exposes resolved companion materials for host chrome", async ({ page }) => {
     await page.goto("/");
-    const xml = `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="companion-materials-host" title="companion-materials-host" time-dependent="false">
-        <qti-companion-materials-info>
-          <qti-physical-material>Bring a ruler.</qti-physical-material>
-          <qti-digital-material label="Reference card" mime-type="text/plain">
-            <qti-file-href>materials/reference.txt</qti-file-href>
-            <qti-resource-icon>materials/reference.svg</qti-resource-icon>
-          </qti-digital-material>
-        </qti-companion-materials-info>
-        <qti-item-body><p>Use the companion materials.</p></qti-item-body>
-      </qti-assessment-item>
-    `;
+    await loadPlayerXmlWithAssetPrefix(
+      page,
+      companionMaterialsHostItemXml,
+      "https://package.example/",
+    );
 
-    await page.locator("qti-assessment-item-player").evaluate(async (element, itemXml) => {
-      await (
-        element as HTMLElement & {
-          loadXml: (
-            xml: string,
-            options?: { resolveAsset?: (url: string) => string },
-          ) => Promise<void>;
-        }
-      ).loadXml(itemXml, {
-        resolveAsset: (url) => `https://package.example/${url}`,
-      });
-    }, xml);
-
-    const resolution = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return (
-        element as HTMLElement & {
-          getCompanionMaterialsResolution: () =>
-            | {
-                physicalMaterials: Array<{ text: string }>;
-                digitalMaterials: Array<{
-                  fileHref: string;
-                  resolvedFileHref?: string;
-                  label?: string;
-                  mimeType?: string;
-                  resourceIcon?: string;
-                  resolvedResourceIcon?: string;
-                }>;
-              }
-            | undefined;
-        }
-      ).getCompanionMaterialsResolution();
-    });
+    const resolution = await getCompanionMaterialsResolution(page);
 
     expect(resolution?.physicalMaterials).toEqual([
       expect.objectContaining({ text: "Bring a ruler." }),
@@ -239,44 +132,13 @@ test.describe("manual harness", () => {
   });
   test("lets hosts override companion material asset resolution per call", async ({ page }) => {
     await page.goto("/");
-    const xml = `
-      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="companion-materials-override" title="companion-materials-override" time-dependent="false">
-        <qti-companion-materials-info>
-          <qti-digital-material>
-            <qti-file-href>materials/reference.txt</qti-file-href>
-          </qti-digital-material>
-        </qti-companion-materials-info>
-        <qti-item-body><p>Use the companion materials.</p></qti-item-body>
-      </qti-assessment-item>
-    `;
 
-    const resolution = await page
-      .locator("qti-assessment-item-player")
-      .evaluate(async (element, itemXml) => {
-        const player = element as HTMLElement & {
-          loadXml: (
-            xml: string,
-            options?: { resolveAsset?: (url: string) => string },
-          ) => Promise<void>;
-          getCompanionMaterialsResolution: (options?: {
-            resolveAsset?: (url: string) => string;
-          }) =>
-            | {
-                digitalMaterials: Array<{
-                  resolvedFileHref?: string;
-                }>;
-              }
-            | undefined;
-        };
-
-        await player.loadXml(itemXml, {
-          resolveAsset: (url) => `https://load.example/${url}`,
-        });
-
-        return player.getCompanionMaterialsResolution({
-          resolveAsset: (url) => `https://override.example/${url}`,
-        });
-      }, xml);
+    const resolution = await resolveCompanionMaterialsWithUrlPrefixes(
+      page,
+      companionMaterialsOverrideItemXml,
+      "https://load.example/",
+      "https://override.example/",
+    );
 
     expect(resolution?.digitalMaterials[0]?.resolvedFileHref).toBe(
       "https://override.example/materials/reference.txt",
@@ -304,21 +166,9 @@ test.describe("manual harness", () => {
     page,
   }) => {
     await page.goto("/");
-    await pasteXml(
-      page,
-      `
-      <qti-assessment-item
-        xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
-        identifier="candidate-visible-item"
-        title="Internal Item Bank Title" time-dependent="false">
-        <qti-item-body>
-          <p>Candidate-visible item body.</p>
-        </qti-item-body>
-      </qti-assessment-item>
-    `,
-    );
+    await pasteXml(page, candidateVisibleItemXml);
 
-    const player = page.locator("qti-assessment-item-player");
+    const player = playerLocator(page);
     await expect(player).toContainText("Candidate-visible item body.");
     await expect(player).not.toContainText("Internal Item Bank Title");
     await expect(player.locator("#qti3-item-title")).toHaveCount(0);
@@ -362,7 +212,7 @@ test.describe("manual harness", () => {
       throw new Error("Missing selectable fixtures.");
     }
 
-    const player = page.locator("qti-assessment-item-player");
+    const player = playerLocator(page);
     const previousFixture = page.getByRole("button", { name: "Load previous fixture" });
     const nextFixture = page.getByRole("button", { name: "Load next fixture" });
 
@@ -389,27 +239,17 @@ test.describe("manual harness", () => {
     if (!fixture) throw new Error("Missing choice fixture.");
 
     await page.goto("/");
-    await page.locator("qti-assessment-item-player").evaluate(async (element, xml) => {
-      await element.loadUrl("/items/choice.xml", {
-        status: "interacting",
-        sessionControl: { validateResponses: false, showFeedback: false },
-        fetchXml: async (url: string) => {
-          if (url !== "/items/choice.xml") throw new Error(`Unexpected URL ${url}`);
-          return xml;
-        },
-      });
-    }, fixture.xml);
-
-    const loadedState = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
+    await loadPlayerUrlWithXml(page, "/items/choice.xml", fixture.xml, {
+      status: "interacting",
+      sessionControl: { validateResponses: false, showFeedback: false },
     });
-    expect(loadedState.status).toBe("interacting");
+
+    const loadedState = await serializePlayer(page);
+    expect(loadedState?.status).toBe("interacting");
 
     await page.locator("#debug-score").click();
-    const scoredState = await page.locator("qti-assessment-item-player").evaluate((element) => {
-      return element.serialize();
-    });
-    expect(scoredState.validationMessages).toEqual([]);
+    const scoredState = await serializePlayer(page);
+    expect(scoredState?.validationMessages).toEqual([]);
     await expect(page.locator("#events")).not.toContainText("response.required");
   });
 });
