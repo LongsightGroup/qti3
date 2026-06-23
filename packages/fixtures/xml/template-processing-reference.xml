@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-processing-reference" title="template-processing-reference" time-dependent="false" xml:lang="en">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
@@ -14,8 +14,8 @@
     <qti-set-correct-response identifier="RESPONSE"><qti-variable identifier="ANSWER"/></qti-set-correct-response>
   </qti-template-processing>
   <qti-item-body>
-    <p>Template processing generates the correct numeric response before delivery.</p>
-    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10" step="1"/>
+    <p>Before delivery, template processing computed BASE = <qti-printed-variable identifier="BASE"/> and ANSWER = <qti-printed-variable identifier="BASE"/> + 3 = <qti-printed-variable identifier="ANSWER"/>.</p>
+    <p>Type the generated value of ANSWER. <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

@@ -5,7 +5,12 @@ import {
   RANDOM_INTEGER_TEMPLATE_REFERENCE_ID,
   RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES,
 } from "../../packages/fixtures/src/random-integer-template.fixture.js";
-import { TEMPLATE_PROCESSING_CORRECT_RESPONSE } from "../../packages/fixtures/src/template-processing.fixture.js";
+import {
+  formatTemplateProcessingPrompt,
+  TEMPLATE_PROCESSING_BASE,
+  TEMPLATE_PROCESSING_CORRECT_RESPONSE,
+  TEMPLATE_PROCESSING_RESPONSE_PROMPT,
+} from "../../packages/fixtures/src/template-processing.fixture.js";
 import { expectDebugTemplateValues, selectFixtureById } from "./player-helpers.js";
 import {
   playerLocator,
@@ -47,11 +52,10 @@ test.describe("processing fixtures", () => {
     if (!fixture) throw new Error("Missing template-processing-reference fixture.");
 
     await selectFixtureById(page, fixture.id);
-    await expect(playerLocator(page)).toContainText(
-      "Template processing generates the correct numeric response before delivery.",
-    );
+    await expect(playerLocator(page)).toContainText(formatTemplateProcessingPrompt());
+    await expect(playerLocator(page)).toContainText(TEMPLATE_PROCESSING_RESPONSE_PROMPT);
     await expectDebugTemplateValues(page, {
-      BASE: 2,
+      BASE: TEMPLATE_PROCESSING_BASE,
       ANSWER: TEMPLATE_PROCESSING_CORRECT_RESPONSE,
     });
   });

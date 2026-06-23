@@ -45,6 +45,12 @@ function scalarValuesEqual(actual: QtiValue, expected: QtiValue): boolean {
   if (typeof actual === "string" && typeof expected === "boolean") {
     return actual === String(expected);
   }
+  if (typeof actual === "number" && typeof expected === "string") {
+    return String(actual) === expected;
+  }
+  if (typeof actual === "string" && typeof expected === "number") {
+    return actual === String(expected);
+  }
   return actual === expected;
 }
 
