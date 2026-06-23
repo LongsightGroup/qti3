@@ -70,21 +70,21 @@ describe("@longsightgroup/qti3-cli", () => {
             scope: "interaction",
             interactions: ["media"],
             level: "full",
-            tests: expect.arrayContaining(["tests/browser/player.spec.ts"]),
+            tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
           }),
           expect.objectContaining({
             className: "data-qti-media-player-pause-delay",
             scope: "interaction",
             interactions: ["media"],
             level: "full",
-            tests: expect.arrayContaining(["tests/browser/player.spec.ts"]),
+            tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
           }),
           expect.objectContaining({
             className: "data-qti-media-player-pause-duration",
             scope: "interaction",
             interactions: ["media"],
             level: "full",
-            tests: expect.arrayContaining(["tests/browser/player.spec.ts"]),
+            tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
           }),
         ]),
       );
@@ -185,7 +185,15 @@ describe("@longsightgroup/qti3-cli", () => {
       process: true,
       fixtures: ["packages/fixtures/xml/choice-reference.xml"],
     });
-    expect(choice?.tests).toContain("tests/browser/player.spec.ts");
+    expect(choice?.tests).toContain("tests/browser/player-interaction-sweep.spec.ts");
+    expect(choice?.tests).toContain("tests/browser/player-choice.spec.ts");
+    expect(choice?.tests).toContain("tests/browser/player-dom-behavior.spec.ts");
+
+    const hottext = interactionSupport.find((support) => support.interactionType === "hottext");
+    expect(hottext?.tests).toContain("tests/browser/player-hottext.spec.ts");
+
+    const match = interactionSupport.find((support) => support.interactionType === "match");
+    expect(match?.tests).toContain("tests/browser/player-match.spec.ts");
   });
 
   it("exposes processing elements in the public support matrix metadata", () => {
@@ -319,7 +327,7 @@ describe("@longsightgroup/qti3-cli", () => {
           "packages/fixtures/src/fixtures.test.ts",
           "packages/conformance/src/conformance.test.ts",
           "packages/a11y/src/a11y.test.ts",
-          "tests/browser/player.spec.ts",
+          "tests/browser/player-interaction-sweep.spec.ts",
           ...(extraInteractionTests[support.interactionType] ?? []),
         ]),
       );

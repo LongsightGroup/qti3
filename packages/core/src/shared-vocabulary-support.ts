@@ -52,7 +52,7 @@ const graphicBrowserTests = [
   "tests/browser/player-graphic.spec.ts",
   "tests/browser/player-graphic-gap-match.spec.ts",
 ];
-const mediaBrowserTests = ["tests/browser/player.spec.ts", ...sharedVocabularyMatrixTests];
+const mediaBrowserTests = ["tests/browser/player-media.spec.ts", ...sharedVocabularyMatrixTests];
 const mediaPlayerFixture =
   "packages/fixtures/packages/sv-matrix/items/media-controls-and-pause.xml";
 const interactionInputWidthFixtures = [
@@ -204,14 +204,14 @@ function registryAttributeSupportProfile(fieldId: string): {
         fixtures: [mediaPlayerFixture],
         tests: mediaBrowserTests,
         notes:
-          "Reflects authored pause-delay values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
+          "Reflects authored pause-delay values on rendered media assets. Pause timer behavior is covered in tests/browser/player-media.spec.ts.",
       };
     case "media-player-pause-duration":
       return {
         fixtures: [mediaPlayerFixture],
         tests: mediaBrowserTests,
         notes:
-          "Reflects authored pause-duration values on rendered media assets. Pause timer behavior is covered in tests/browser/player.spec.ts.",
+          "Reflects authored pause-duration values on rendered media assets. Pause timer behavior is covered in tests/browser/player-media.spec.ts.",
       };
     default:
       return {

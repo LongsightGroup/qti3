@@ -128,4 +128,93 @@ test.describe("player gap match interactions", () => {
     expect(Math.abs(bankBox.width - 200)).toBeLessThanOrEqual(2);
     expect(gapBox.width).toBeLessThan(100);
   });
+  test("captures one directed pair per gap in gap match interactions", async ({ page }) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="multi-gap" title="multi-gap" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response>
+      <qti-value>A G1</qti-value>
+      <qti-value>B G2</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <qti-gap-match-interaction response-identifier="RESPONSE">
+      <qti-gap-text identifier="A" match-max="1">Nixon</qti-gap-text>
+      <qti-gap-text identifier="B" match-max="1">Lincoln</qti-gap-text>
+      <p><qti-gap identifier="G1"/> resigned. <qti-gap identifier="G2"/> issued the Emancipation Proclamation.</p>
+    </qti-gap-match-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+
+    await page.goto("/");
+    await pasteXml(page, xml);
+
+    await assignGap(page, "Gap match", "A", "G1");
+    await assignGap(page, "Gap match", "B", "G2");
+
+    const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(state.responses.RESPONSE).toEqual(["A G1", "B G2"]);
+
+    await page.locator("#debug-score").click();
+    const scored = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      return element.serialize();
+    });
+    expect(scored.outcomes.SCORE).toBe(1);
+  });
+
+  test("renders gap match gaps in the authored sentence", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "gapMatch");
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player).toContainText("An interaction records the candidate answer in a");
+    await expect(player).toContainText("while scoring writes SCORE to an");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("G1");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("G2");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("Empty");
+    await expect(player.locator(".qti3-gap-region")).not.toContainText("Remove");
+
+    const inlineFlow = await player.locator(".qti3-gap-region").evaluate((region) => {
+      const walker = document.createTreeWalker(region, NodeFilter.SHOW_TEXT);
+      let textNode: Text | undefined;
+      while (walker.nextNode()) {
+        const node = walker.currentNode as Text;
+        if (node.data.includes("candidate answer in a")) {
+          textNode = node;
+          break;
+        }
+      }
+      if (!textNode) throw new Error("Missing text before first gap.");
+
+      const range = document.createRange();
+      const phrase = "candidate answer in a";
+      const start = textNode.data.indexOf(phrase);
+      range.setStart(textNode, start);
+      range.setEnd(textNode, start + phrase.length);
+      const textRect = range.getBoundingClientRect();
+      const gapRect = region
+        .querySelector<HTMLElement>('[data-gap-identifier="G1"]')
+        ?.getBoundingClientRect();
+      if (!gapRect) throw new Error("Missing first gap target.");
+
+      return {
+        textRight: textRect.right,
+        textCenterY: textRect.top + textRect.height / 2,
+        gapLeft: gapRect.left,
+        gapCenterY: gapRect.top + gapRect.height / 2,
+      };
+    });
+    expect(inlineFlow.gapLeft).toBeGreaterThan(inlineFlow.textRight);
+    expect(Math.abs(inlineFlow.gapCenterY - inlineFlow.textCenterY)).toBeLessThan(24);
+
+    await assignGap(page, "Gap match", "A", "G1");
+    await expectResponse(page, ["A G1"]);
+    await page.locator('qti-assessment-item-player [data-gap-identifier="G1"] button').focus();
+    await page.keyboard.press("Delete");
+    await expectResponse(page, []);
+  });
 });

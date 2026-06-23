@@ -9,6 +9,15 @@ import type {
   QtiSourceLocation,
 } from "./types.js";
 
+const browserProcessingTests = ["tests/browser/player-processing.spec.ts"];
+const browserFeedbackTests = ["tests/browser/player-feedback.spec.ts"];
+const browserAdaptiveTests = ["tests/browser/player-adaptive.spec.ts"];
+const browserBodyContentTests = ["tests/browser/player-body-content.spec.ts"];
+const browserHarnessTests = ["tests/browser/player-harness.spec.ts"];
+const browserMathmlTests = ["tests/browser/player-mathml.spec.ts"];
+const browserKeyboardA11yTests = ["tests/browser/player-keyboard-a11y.spec.ts"];
+const browserLifecycleTests = ["tests/browser/player-lifecycle.spec.ts"];
+
 export const interactionSupport: QtiInteractionElementSupport[] = [
   entry("qti-associate-interaction", "associate"),
   entry("qti-choice-interaction", "choice"),
@@ -51,22 +60,37 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
 ];
 
 export const processingSupport: QtiProcessingElementSupport[] = [
-  processingEntry("qti-template-processing", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/template-processing-reference.xml",
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-    "packages/fixtures/xml/template-content-reference.xml",
-  ]),
-  processingEntry("qti-response-processing", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/mapping-processing-reference.xml",
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
-  processingEntry("qti-set-template-value", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/template-processing-reference.xml",
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-    "packages/fixtures/xml/template-content-reference.xml",
-  ]),
+  processingEntry(
+    "qti-template-processing",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/template-processing-reference.xml",
+      "packages/fixtures/xml/random-integer-template-reference.xml",
+      "packages/fixtures/xml/template-content-reference.xml",
+    ],
+    [...browserProcessingTests, ...browserBodyContentTests, ...browserMathmlTests],
+  ),
+  processingEntry(
+    "qti-response-processing",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/mapping-processing-reference.xml",
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ],
+    [...browserProcessingTests, ...browserFeedbackTests, ...browserAdaptiveTests],
+  ),
+  processingEntry(
+    "qti-set-template-value",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/template-processing-reference.xml",
+      "packages/fixtures/xml/random-integer-template-reference.xml",
+      "packages/fixtures/xml/template-content-reference.xml",
+    ],
+    browserProcessingTests,
+  ),
   processingEntry("qti-set-default-value", "packages/core/src/core.test.ts"),
   processingEntry("qti-set-correct-response", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/template-processing-reference.xml",
@@ -77,25 +101,40 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-template-else-if", "packages/core/src/core.test.ts"),
   processingEntry("qti-template-else", "packages/core/src/core.test.ts"),
   processingEntry("qti-template-constraint", "packages/core/src/core.test.ts"),
-  processingEntry("qti-response-condition", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
-  processingEntry("qti-response-if", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
+  processingEntry(
+    "qti-response-condition",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ],
+    [...browserFeedbackTests, ...browserAdaptiveTests],
+  ),
+  processingEntry(
+    "qti-response-if",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ],
+    [...browserFeedbackTests, ...browserAdaptiveTests],
+  ),
   processingEntry("qti-response-else-if", "packages/core/src/core.test.ts"),
   processingEntry("qti-response-else", "packages/core/src/core.test.ts", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
   ]),
-  processingEntry("qti-set-outcome-value", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
+  processingEntry(
+    "qti-set-outcome-value",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ],
+    [...browserFeedbackTests, ...browserAdaptiveTests, ...browserProcessingTests],
+  ),
   processingEntry("qti-lookup-outcome-value", "packages/core/src/core.test.ts"),
   processingEntry("qti-exit-response", "packages/core/src/core.test.ts"),
   processingEntry("qti-exit-template", "packages/core/src/core.test.ts"),
@@ -119,17 +158,30 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry("qti-default", "packages/core/src/core.test.ts"),
   processingEntry("qti-map-response", "packages/core/src/core.test.ts"),
   processingEntry("qti-map-response-point", "packages/core/src/core.test.ts"),
-  processingEntry("qti-variable", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/template-processing-reference.xml",
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-    "packages/fixtures/xml/template-content-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
-  processingEntry("qti-random-integer", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-  ]),
+  processingEntry(
+    "qti-variable",
+    "packages/core/src/core.test.ts",
+    [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/template-processing-reference.xml",
+      "packages/fixtures/xml/random-integer-template-reference.xml",
+      "packages/fixtures/xml/template-content-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ],
+    [
+      ...browserProcessingTests,
+      ...browserBodyContentTests,
+      ...browserMathmlTests,
+      ...browserFeedbackTests,
+    ],
+  ),
+  processingEntry(
+    "qti-random-integer",
+    "packages/core/src/core.test.ts",
+    ["packages/fixtures/xml/random-integer-template-reference.xml"],
+    browserProcessingTests,
+  ),
   processingEntry("qti-random-float", "packages/core/src/core.test.ts"),
   processingEntry("qti-random", "packages/core/src/core.test.ts"),
   processingEntry("qti-multiple", "packages/core/src/core.test.ts", [
@@ -214,9 +266,13 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     fixtures: [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
     ],
-    tests: ["packages/core/src/core.test.ts", "packages/core/src/parser-item-metadata.test.ts"],
+    tests: [
+      "packages/core/src/core.test.ts",
+      "packages/core/src/parser-item-metadata.test.ts",
+      ...browserHarnessTests,
+    ],
     notes:
-      "Parsed by parser-item-metadata.ts and validated by validateCatalogInfo. Duplicate containers emit item.child.duplicate.",
+      "Parsed by parser-item-metadata.ts and validated by validateCatalogInfo. Duplicate containers emit item.child.duplicate. Manual harness debugger coverage is in player-harness.spec.ts.",
   },
   {
     qtiName: "qti-stylesheet",
@@ -234,6 +290,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/core/src/core.test.ts",
       "packages/core/src/parser-item-metadata.test.ts",
       "tests/browser/player-package.spec.ts",
+      ...browserHarnessTests,
     ],
     notes:
       "Parsed by parser-item-metadata.ts, validated by validateStylesheets, and delivered by the player only when a host resolveStylesheet hook returns a safe resolved stylesheet URL.",
@@ -248,9 +305,13 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     render: false,
     process: false,
     fixtures: ["packages/fixtures/src/index.ts"],
-    tests: ["packages/core/src/core.test.ts", "packages/core/src/parser-item-metadata.test.ts"],
+    tests: [
+      "packages/core/src/core.test.ts",
+      "packages/core/src/parser-item-metadata.test.ts",
+      ...browserFeedbackTests,
+    ],
     notes:
-      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Player rendering remains out of scope for this metadata slice.",
+      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Player renders outcome-gated modal feedback in player-feedback.spec.ts.",
   },
   {
     qtiName: "qti-companion-materials-info",
@@ -267,6 +328,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     tests: [
       "packages/core/src/parser-companion-materials.test.ts",
       "packages/core/src/parser-item-metadata.test.ts",
+      ...browserHarnessTests,
     ],
     notes:
       "Parses qti-physical-material text and qti-digital-material file references. Digital materials require non-empty qti-file-href text and may include label, mime-type, and qti-resource-icon metadata. Hosts read resolved materials through createCompanionMaterialsResolution() or player.getCompanionMaterialsResolution().",
@@ -362,6 +424,45 @@ export function interactionRegistryDiagnostics(
   return [];
 }
 
+function browserTestsFor(interactionType: QtiInteractionType): string[] {
+  const base = [
+    "packages/fixtures/src/fixtures.test.ts",
+    "packages/conformance/src/conformance.test.ts",
+    "packages/a11y/src/a11y.test.ts",
+    "tests/browser/player-interaction-sweep.spec.ts",
+  ];
+  const extras: Partial<Record<QtiInteractionType, string[]>> = {
+    associate: browserKeyboardA11yTests,
+    choice: ["tests/browser/player-choice.spec.ts", "tests/browser/player-dom-behavior.spec.ts"],
+    drawing: ["tests/browser/player-graphic.spec.ts"],
+    endAttempt: ["tests/browser/player-dom-behavior.spec.ts", ...browserKeyboardA11yTests],
+    extendedText: [
+      "tests/browser/player-dom-behavior.spec.ts",
+      "tests/browser/player-extended-text-xhtml.spec.ts",
+    ],
+    gapMatch: ["tests/browser/player-gap-match.spec.ts"],
+    graphicAssociate: ["tests/browser/player-graphic.spec.ts"],
+    graphicGapMatch: [
+      "tests/browser/player-graphic-gap-match.spec.ts",
+      "tests/browser/player-graphic.spec.ts",
+    ],
+    graphicOrder: ["tests/browser/player-graphic.spec.ts"],
+    hotspot: ["tests/browser/player-graphic.spec.ts"],
+    hottext: ["tests/browser/player-hottext.spec.ts", "tests/browser/player-dom-behavior.spec.ts"],
+    inlineChoice: ["tests/browser/player-inline-choice.spec.ts"],
+    match: ["tests/browser/player-match.spec.ts", "tests/browser/player-dom-behavior.spec.ts"],
+    media: ["tests/browser/player-media.spec.ts"],
+    order: [...browserKeyboardA11yTests, ...browserLifecycleTests],
+    portableCustom: ["tests/browser/player-portable-custom.spec.ts"],
+    positionObject: ["tests/browser/player-graphic.spec.ts", ...browserKeyboardA11yTests],
+    selectPoint: ["tests/browser/player-graphic.spec.ts"],
+    slider: browserKeyboardA11yTests,
+    textEntry: ["tests/browser/player-dom-behavior.spec.ts"],
+    upload: ["tests/browser/player-dom-behavior.spec.ts"],
+  };
+  return [...base, ...(extras[interactionType] ?? [])];
+}
+
 function entry(qtiName: string, interactionType: QtiInteractionType): QtiInteractionElementSupport {
   return {
     qtiName,
@@ -374,12 +475,7 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
     render: true,
     process: true,
     fixtures: [`packages/fixtures/xml/${interactionType}-reference.xml`],
-    tests: [
-      "packages/fixtures/src/fixtures.test.ts",
-      "packages/conformance/src/conformance.test.ts",
-      "packages/a11y/src/a11y.test.ts",
-      "tests/browser/player.spec.ts",
-    ],
+    tests: browserTestsFor(interactionType),
   };
 }
 
@@ -391,15 +487,7 @@ function extendedTextInteractionEntry(): QtiInteractionElementSupport {
       "packages/fixtures/packages/sv-matrix/items/extended-text-pattern-mask.xml",
       "packages/fixtures/packages/sv-matrix/items/extended-text-xhtml.xml",
     ],
-    tests: [
-      "packages/fixtures/src/fixtures.test.ts",
-      "packages/conformance/src/conformance.test.ts",
-      "packages/a11y/src/a11y.test.ts",
-      "packages/core/src/pattern-mask.test.ts",
-      "tests/browser/player.spec.ts",
-      "tests/browser/player-dom-behavior.spec.ts",
-      "tests/browser/player-extended-text-xhtml.spec.ts",
-    ],
+    tests: [...browserTestsFor("extendedText"), "packages/core/src/pattern-mask.test.ts"],
     notes: "Supports plain and format=xhtml extended text.",
   };
 }
@@ -411,14 +499,7 @@ function textEntryInteractionEntry(): QtiInteractionElementSupport {
       "packages/fixtures/xml/textEntry-reference.xml",
       "packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml",
     ],
-    tests: [
-      "packages/fixtures/src/fixtures.test.ts",
-      "packages/conformance/src/conformance.test.ts",
-      "packages/a11y/src/a11y.test.ts",
-      "packages/core/src/pattern-mask.test.ts",
-      "tests/browser/player.spec.ts",
-      "tests/browser/player-dom-behavior.spec.ts",
-    ],
+    tests: [...browserTestsFor("textEntry"), "packages/core/src/pattern-mask.test.ts"],
     notes: "Supports placeholder-text and pattern-mask on text-entry controls.",
   };
 }
@@ -435,6 +516,7 @@ function processingEntry(
   qtiName: string,
   test: string,
   fixtures: string[] = [],
+  extraTests: string[] = [],
 ): QtiProcessingElementSupport {
   return {
     qtiName,
@@ -446,6 +528,6 @@ function processingEntry(
     render: false,
     process: true,
     fixtures,
-    tests: [test],
+    tests: [test, ...extraTests],
   };
 }

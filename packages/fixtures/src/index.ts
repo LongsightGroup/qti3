@@ -326,6 +326,7 @@ function createTemplateContentFixture(): QtiFixture {
     <qti-template-block template-identifier="PATH" identifier="distractor" show-hide="show">
       <qti-content-body><p>The distractor branch should be hidden.</p></qti-content-body>
     </qti-template-block>
+    <p>This item uses the <qti-template-inline template-identifier="PATH" identifier="reference" show-hide="show">generated reference</qti-template-inline><qti-template-inline template-identifier="PATH" identifier="reference" show-hide="hide">hidden fallback</qti-template-inline> branch.</p>
     <p>The generated count appears in MathML as <math><mrow><mi>COUNT</mi><mo>+</mo><mn>1</mn></mrow></math>.</p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">Template content is controlled by template variables.</qti-simple-choice>

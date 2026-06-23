@@ -205,4 +205,16 @@ test.describe("player MathML rendering", () => {
       );
     for (const offset of verticalOffsets) expect(offset).toBeLessThanOrEqual(1);
   });
+
+  test("expands math-variable template values in MathML identifiers", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#fixture").selectOption("template-content-reference");
+    await page.locator("#load-fixture").click();
+
+    const math = page.locator("qti-assessment-item-player math");
+    await expect(math.locator("mi").first()).toHaveText("3");
+    expect(await math.evaluate((element) => element.namespaceURI)).toBe(
+      "http://www.w3.org/1998/Math/MathML",
+    );
+  });
 });

@@ -91,7 +91,7 @@ export interface QtiBasicItemPlayerReadinessOptions {
 const basicTestEvidence = [
   "packages/conformance/src/conformance.test.ts",
   "packages/fixtures/src/fixtures.test.ts",
-  "tests/browser/player.spec.ts",
+  "tests/browser/player-basic.spec.ts",
 ];
 
 export const basicItemPlayerCertificationContext: QtiBasicItemPlayerCertificationContext = {

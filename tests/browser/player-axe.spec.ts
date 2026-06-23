@@ -8,7 +8,7 @@ import {
   expectQuestionItemRendered,
   installAxe,
 } from "./axe-helpers.js";
-import { pasteXml } from "./player-helpers.js";
+import { expectResponse, loadFixture, pasteXml } from "./player-helpers.js";
 import { loadSvMatrixItem } from "./shared-vocabulary-matrix/load.js";
 import { sharedVocabularyManifest } from "./shared-vocabulary-matrix/manifest.js";
 
@@ -69,5 +69,23 @@ test.describe("player axe accessibility", () => {
     const ids = sharedVocabularyMatrixEntries.map((entry) => entry.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBeGreaterThan(0);
+  });
+  test("renders under forced colors and reduced motion preferences", async ({ page }) => {
+    await page.emulateMedia({
+      colorScheme: "dark",
+      forcedColors: "active",
+      reducedMotion: "reduce",
+    });
+    await page.goto("/");
+    await installAxe(page);
+    await loadFixture(page, "choice");
+
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "Select one answer from a standard single-choice interaction.",
+    );
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
+    await expectResponse(page, "A");
+
+    await expectNoAxeViolationsOnPlayer(page);
   });
 });

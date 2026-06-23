@@ -177,7 +177,7 @@ function assertSupportMatrix(): {
     "packages/fixtures/src/fixtures.test.ts",
     "packages/conformance/src/conformance.test.ts",
     "packages/a11y/src/a11y.test.ts",
-    "tests/browser/player.spec.ts",
+    "tests/browser/player-interaction-sweep.spec.ts",
   ];
 
   for (const support of interactionSupport) {

@@ -696,4 +696,35 @@ test.describe("player graphic gap match interactions", () => {
     await expect(target).toHaveAccessibleName("Target 2, assigned Alpha");
     await expect(target).not.toHaveCSS("opacity", "0");
   });
+  test("loads the manual qti-gap-img graphic gap match example", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#fixture").selectOption("graphic-gap-img-example");
+    await page.locator("#load-fixture").click();
+
+    const source = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Civil War marker" });
+    const sourceB = page
+      .locator("qti-assessment-item-player .qti3-graphic-gap-source-region")
+      .getByRole("button", { name: "Reconstruction marker" });
+    const target = page.locator('qti-assessment-item-player [data-gap-identifier="TargetA"]');
+    const targetB = page.locator('qti-assessment-item-player [data-gap-identifier="TargetB"]');
+    await expect(
+      page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region button"),
+    ).toHaveCount(2);
+    await expect(page.locator("qti-assessment-item-player .qti3-graphic-gap-hotspot")).toHaveCount(
+      2,
+    );
+    await expectImageLoaded(source.locator("img"));
+    await expectImageLoaded(sourceB.locator("img"));
+
+    await source.click();
+    await target.click();
+    await sourceB.click();
+    await targetB.click();
+
+    await expectResponse(page, ["DraggerA TargetA", "DraggerB TargetB"]);
+    await expect(target).toHaveAccessibleName("Target 1, assigned Civil War marker");
+    await expect(targetB).toHaveAccessibleName("Target 2, assigned Reconstruction marker");
+  });
 });
