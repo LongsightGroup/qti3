@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Annotate the delivery-flow diagram with a freehand drawing.</p>
-    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Annotate the diagram by circling the response capture step.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-drawing-interaction>
+    <p>A science item asks the student to annotate a field-study workflow diagram.</p>
+    <qti-drawing-interaction response-identifier="RESPONSE"><qti-prompt>Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/></qti-drawing-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

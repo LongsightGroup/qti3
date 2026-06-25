@@ -14,8 +14,8 @@
     <qti-set-correct-response identifier="RESPONSE"><qti-variable identifier="ANSWER"/></qti-set-correct-response>
   </qti-template-processing>
   <qti-item-body>
-    <p>Before delivery, template processing computed BASE = <qti-printed-variable identifier="BASE"/> and ANSWER = <qti-printed-variable identifier="BASE"/> + 3 = <qti-printed-variable identifier="ANSWER"/>.</p>
-    <p>Type the generated value of ANSWER. <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
+    <p>A food pantry already has <qti-printed-variable identifier="BASE"/> cases of bottled water and expects <qti-printed-variable identifier="ANSWER"/> cases total for the weekend distribution.</p>
+    <p>Type the total number of cases the pantry expects to have ready. <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

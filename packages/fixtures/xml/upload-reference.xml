@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Choose a file as the candidate response.</p>
-    <qti-upload-interaction response-identifier="RESPONSE"><qti-prompt>Upload a text file named upload.txt containing implementation notes.</qti-prompt></qti-upload-interaction>
+    <p>A constructed-response item asks the student to upload a field-notes text file.</p>
+    <qti-upload-interaction response-identifier="RESPONSE"><qti-prompt>Upload a text file named upload.txt containing your one-page field notes from the water-quality investigation.</qti-prompt></qti-upload-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

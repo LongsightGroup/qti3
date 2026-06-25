@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Arrange the runtime steps in their usual order.</p>
-    <qti-order-interaction response-identifier="RESPONSE"><qti-prompt>Put these QTI runtime steps in the usual player order.</qti-prompt><qti-simple-choice identifier="A">Load and parse the assessment item</qti-simple-choice><qti-simple-choice identifier="B">Capture the candidate response</qti-simple-choice><qti-simple-choice identifier="C">Apply response processing to produce outcomes</qti-simple-choice></qti-order-interaction>
+    <p>A science-planning item asks the student to arrange investigation steps in order.</p>
+    <qti-order-interaction response-identifier="RESPONSE"><qti-prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.</qti-prompt><qti-simple-choice identifier="A">Set up identical trays with the same soil, seed type, and water schedule.</qti-simple-choice><qti-simple-choice identifier="B">Place one tray in full light and one tray in reduced light for the same number of days.</qti-simple-choice><qti-simple-choice identifier="C">Measure and compare seedling height at the end of the trial.</qti-simple-choice><qti-simple-choice identifier="D">Write a conclusion before collecting any measurements.</qti-simple-choice></qti-order-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

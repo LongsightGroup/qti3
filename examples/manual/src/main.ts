@@ -158,13 +158,16 @@ const graphicGapImageChoiceExample = {
   </qti-response-declaration>
   <qti-item-body>
     <qti-graphic-gap-match-interaction response-identifier="RESPONSE" max-associations="2">
-      <qti-prompt>Place the image-backed draggers onto the matching highlighted targets.</qti-prompt>
+      <qti-prompt>A museum exhibit team is checking a timeline panel before it goes to print. Place the Civil War marker on the first highlighted period and the Reconstruction marker on the second highlighted period. Leave the later Industrialization marker unused.</qti-prompt>
       <object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='160'%20viewBox='0%200%20300%20160'%3E%3Crect%20width='300'%20height='160'%20fill='%23f4f2ea'/%3E%3Crect%20x='36'%20y='44'%20width='92'%20height='64'%20rx='6'%20fill='%232f4858'/%3E%3Crect%20x='172'%20y='44'%20width='92'%20height='64'%20rx='6'%20fill='%238b5d33'/%3E%3Ctext%20x='82'%20y='82'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%20A%3C/text%3E%3Ctext%20x='218'%20y='82'%20text-anchor='middle'%20font-size='16'%20font-family='sans-serif'%20fill='white'%3ETarget%20B%3C/text%3E%3C/svg%3E" alt="Diagram with two highlighted targets." type="image/svg+xml"/>
       <qti-gap-img identifier="DraggerA" match-max="1">
         <img alt="Civil War marker" height="63" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='78'%20height='63'%20viewBox='0%200%2078%2063'%3E%3Crect%20width='78'%20height='63'%20rx='4'%20fill='white'%20stroke='%232f4858'%20stroke-width='3'/%3E%3Ctext%20x='39'%20y='38'%20text-anchor='middle'%20font-size='18'%20font-family='sans-serif'%20fill='%232f4858'%3EA%3C/text%3E%3C/svg%3E" width="78"/>
       </qti-gap-img>
       <qti-gap-img identifier="DraggerB" match-max="1">
         <img alt="Reconstruction marker" height="63" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='78'%20height='63'%20viewBox='0%200%2078%2063'%3E%3Crect%20width='78'%20height='63'%20rx='4'%20fill='white'%20stroke='%238b5d33'%20stroke-width='3'/%3E%3Ctext%20x='39'%20y='38'%20text-anchor='middle'%20font-size='18'%20font-family='sans-serif'%20fill='%238b5d33'%3EB%3C/text%3E%3C/svg%3E" width="78"/>
+      </qti-gap-img>
+      <qti-gap-img identifier="DraggerC" match-max="1">
+        <img alt="Industrialization marker distractor" height="63" src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='78'%20height='63'%20viewBox='0%200%2078%2063'%3E%3Crect%20width='78'%20height='63'%20rx='4'%20fill='white'%20stroke='%236c757d'%20stroke-width='3'/%3E%3Ctext%20x='39'%20y='38'%20text-anchor='middle'%20font-size='18'%20font-family='sans-serif'%20fill='%236c757d'%3EC%3C/text%3E%3C/svg%3E" width="78"/>
       </qti-gap-img>
       <qti-associable-hotspot identifier="TargetA" shape="rect" coords="36,44,128,108" match-max="1"/>
       <qti-associable-hotspot identifier="TargetB" shape="rect" coords="172,44,264,108" match-max="1"/>
@@ -182,15 +185,15 @@ const extendedTextPatternMaskExample = {
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Enter a decimal value using no more than six total digits or decimal points.</p>
+    <p>A lab technician records the pH reading from a calibrated water-quality probe. Enter the value exactly as a decimal, using no more than six total digits or decimal points.</p>
     <qti-extended-text-interaction
       response-identifier="RESPONSE"
       class="qti-height-lines-3"
       expected-length="6"
       format="plain"
-      placeholder-text="Enter a decimal number..."
+      placeholder-text="Example: 7.25"
       pattern-mask="([0-9.]{0,6})"
-      data-patternmask-message="Maximum of 6 digits or decimal points permitted"
+      data-patternmask-message="Use no more than 6 digits or decimal points"
     />
   </qti-item-body>
 </qti-assessment-item>`,
@@ -208,16 +211,18 @@ const pnpKeywordEmphasisExample = {
   </qti-outcome-declaration>
   <qti-item-body>
     <qti-choice-interaction response-identifier="RESPONSE">
-      <qti-prompt>Choose the statement with the <span class="qti-keyword-emphasis" data-catalog-idref="pnp-help">critical keyword</span>.</qti-prompt>
-      <qti-simple-choice identifier="A">The critical keyword is emphasized when host-provided PNP requests it.</qti-simple-choice>
-      <qti-simple-choice identifier="B">The player fetches the candidate's PNP profile on its own.</qti-simple-choice>
+      <qti-prompt>The city wants to <span class="qti-keyword-emphasis" data-catalog-idref="pnp-help">mitigate</span> flooding near the playground by planting native grasses and improving drainage. Which option best explains the highlighted word in this context?</qti-prompt>
+      <qti-simple-choice identifier="A">Reduce the severity or impact of the flooding problem.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Measure the depth of floodwater after every storm.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Move the playground to a different neighborhood immediately.</qti-simple-choice>
+      <qti-simple-choice identifier="D">Describe the flooding in a more dramatic way.</qti-simple-choice>
     </qti-choice-interaction>
   </qti-item-body>
   <qti-catalog-info>
     <qti-catalog id="pnp-help">
       <qti-card support="linguistic-guidance">
         <qti-card-entry xml:lang="en" default="true">
-          <qti-html-content>Critical means the word should receive extra attention.</qti-html-content>
+          <qti-html-content>Mitigate means to make a problem less severe or less harmful.</qti-html-content>
         </qti-card-entry>
       </qti-card>
     </qti-catalog>

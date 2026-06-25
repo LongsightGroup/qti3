@@ -11,10 +11,12 @@
   <qti-outcome-declaration identifier="NONE_INSIDE" cardinality="single" base-type="boolean"/>
   <qti-outcome-declaration identifier="IN_POLY" cardinality="single" base-type="boolean"/>
   <qti-item-body>
-    <p>Reference fixture for advanced QTI response-processing expressions.</p>
+    <p>A robotics team is checking a test run summary. The controller rounded two sensor readings, calculated gear-ratio factors, averaged three speed trials, repeated a command sequence, and checked whether plotted points fell inside target zones. Which review action should run the complete analysis?</p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
-      <qti-simple-choice identifier="A">Run advanced response processing.</qti-simple-choice>
-      <qti-simple-choice identifier="B">Do not run advanced response processing.</qti-simple-choice>
+      <qti-simple-choice identifier="A">Approve the full diagnostics run so every derived result is recalculated from the test data.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Skip the diagnostics because the raw readings are already listed in the notebook.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Run only the pretest setup, which cannot evaluate the completed trial.</qti-simple-choice>
+      <qti-simple-choice identifier="D">Archive the run without checking the target-zone points.</qti-simple-choice>
     </qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing>

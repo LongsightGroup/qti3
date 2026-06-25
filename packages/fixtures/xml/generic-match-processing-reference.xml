@@ -6,11 +6,12 @@
   </qti-outcome-declaration>
   <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
   <qti-item-body>
-    <p>Choose the expression that compares two arbitrary processing values.</p>
+    <p>A city council is comparing two proposals for a dangerous intersection near a middle school. Which recommendation most directly addresses the crash pattern described in the traffic report?</p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
-      <qti-simple-choice identifier="A">qti-match</qti-simple-choice>
-      <qti-simple-choice identifier="B">qti-map-response</qti-simple-choice>
-      <qti-simple-choice identifier="C">qti-random</qti-simple-choice>
+      <qti-simple-choice identifier="A">Add a protected left-turn phase during arrival and dismissal, when most crashes occur.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Replace the nearby street trees, even though visibility was not cited in the report.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Move the bus stop two blocks away without changing the intersection controls.</qti-simple-choice>
+      <qti-simple-choice identifier="D">Paint a mural on the retaining wall to make the corridor feel more welcoming.</qti-simple-choice>
     </qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing>

@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Write a short explanation in a multiline response.</p>
-    <qti-extended-text-interaction response-identifier="RESPONSE" expected-lines="4"><qti-prompt>Explain why a QTI item player should keep response capture separate from scoring and analytics.</qti-prompt></qti-extended-text-interaction>
+    <p>A constructed-response item asks for a recommendation based on garden moisture data.</p>
+    <qti-extended-text-interaction response-identifier="RESPONSE" expected-lines="6"><qti-prompt>Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.</qti-prompt></qti-extended-text-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

@@ -10,11 +10,12 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Choose the best-supported scoring expression for a mapped response.</p>
+    <p>A wetlands team measured dissolved oxygen, stream temperature, and visible algae after a summer storm. Which conclusion is best supported by the evidence?</p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
-      <qti-simple-choice identifier="A">qti-map-response</qti-simple-choice>
-      <qti-simple-choice identifier="B">qti-match</qti-simple-choice>
-      <qti-simple-choice identifier="C">qti-null</qti-simple-choice>
+      <qti-simple-choice identifier="A">Runoff probably carried nutrients into the stream, because algae increased while dissolved oxygen fell.</qti-simple-choice>
+      <qti-simple-choice identifier="B">The stream was unaffected by the storm, because the students visited the same site each day.</qti-simple-choice>
+      <qti-simple-choice identifier="C">The warmer water caused the field notebooks to record more precise measurements.</qti-simple-choice>
+      <qti-simple-choice identifier="D">The data show that all aquatic organisms left the stream immediately after the storm.</qti-simple-choice>
     </qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>

@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Select one answer from a standard single-choice interaction.</p>
-    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1"><qti-prompt>Which QTI element declares the variable that stores a candidate response?</qti-prompt><qti-simple-choice identifier="A">qti-response-declaration</qti-simple-choice><qti-simple-choice identifier="B">qti-outcome-declaration</qti-simple-choice><qti-simple-choice identifier="C">qti-template-declaration</qti-simple-choice><qti-simple-choice identifier="D">qti-rubric-block</qti-simple-choice></qti-choice-interaction>
+    <p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1"><qti-prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</qti-prompt><qti-simple-choice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</qti-simple-choice><qti-simple-choice identifier="B">The library repainted the study room in a brighter color during spring break.</qti-simple-choice><qti-simple-choice identifier="C">Several tutors said they enjoyed helping younger students with homework.</qti-simple-choice><qti-simple-choice identifier="D">The tutoring flyers used the same logo as the summer reading program.</qti-simple-choice><qti-simple-choice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</qti-simple-choice></qti-choice-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

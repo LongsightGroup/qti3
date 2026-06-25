@@ -168,7 +168,9 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(restored.correctResponses()).toEqual({
       RESPONSE: RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES.TARGET,
     });
-    expect(formatRandomIntegerTemplatePrompt()).toBe("Solve 4x + 4 = 40.");
+    expect(formatRandomIntegerTemplatePrompt()).toBe(
+      "A bike-share station charges a fixed unlock fee of 4 dollars plus 4 dollars per hour. A rider paid 40 dollars total.",
+    );
     expect(restored.score().outcomes.SCORE).toBe(1);
   });
 });

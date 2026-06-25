@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300" role="img" aria-label="QTI delivery flow diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="300" viewBox="0 0 480 300" role="img" aria-label="Field study workflow diagram">
   <rect width="480" height="300" fill="#f7f7f4"/>
   <rect x="24" y="52" width="112" height="72" rx="8" fill="#dcecff" stroke="#314158" stroke-width="2"/>
   <rect x="184" y="52" width="112" height="72" rx="8" fill="#dbf3df" stroke="#314158" stroke-width="2"/>
@@ -10,12 +10,12 @@
   <path d="M168 82l10 6-10 6" fill="none" stroke="#314158" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M328 82l10 6-10 6" fill="none" stroke="#314158" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M234 160l6 10 6-10" fill="none" stroke="#314158" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="80" y="82" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Item XML</text>
-  <text x="80" y="104" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">definition</text>
-  <text x="240" y="82" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Response</text>
-  <text x="240" y="104" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">capture</text>
-  <text x="400" y="82" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Processing</text>
-  <text x="400" y="104" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">rules</text>
-  <text x="240" y="208" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Outcomes</text>
-  <text x="240" y="230" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">SCORE, feedback</text>
+  <text x="80" y="82" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Plan</text>
+  <text x="80" y="104" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">sampling route</text>
+  <text x="240" y="82" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Collect</text>
+  <text x="240" y="104" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">water data</text>
+  <text x="400" y="82" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Analyze</text>
+  <text x="400" y="104" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">results</text>
+  <text x="240" y="208" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="15" font-weight="700" fill="#18202c">Report</text>
+  <text x="240" y="230" text-anchor="middle" font-family="system-ui, Arial, sans-serif" font-size="12" fill="#314158">recommendations</text>
 </svg>

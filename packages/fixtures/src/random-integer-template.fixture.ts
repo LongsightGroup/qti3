@@ -16,7 +16,7 @@ export function formatRandomIntegerTemplatePrompt(
     "FACTOR" | "OFFSET" | "RESULT"
   > = RANDOM_INTEGER_TEMPLATE_REFERENCE_VALUES,
 ): string {
-  return `Solve ${values.FACTOR}x + ${values.OFFSET} = ${values.RESULT}.`;
+  return `A bike-share station charges a fixed unlock fee of ${values.OFFSET} dollars plus ${values.FACTOR} dollars per hour. A rider paid ${values.RESULT} dollars total.`;
 }
 
 export function createRandomIntegerTemplateFixture(): QtiFixture {
@@ -60,9 +60,9 @@ export function createRandomIntegerTemplateFixture(): QtiFixture {
     </qti-set-correct-response>
   </qti-template-processing>
   <qti-item-body>
-    <p>Solve <qti-printed-variable identifier="FACTOR"/>x + <qti-printed-variable identifier="OFFSET"/> = <qti-printed-variable identifier="RESULT"/>.</p>
+    <p>A bike-share station charges a fixed unlock fee of <qti-printed-variable identifier="OFFSET"/> dollars plus <qti-printed-variable identifier="FACTOR"/> dollars per hour. A rider paid <qti-printed-variable identifier="RESULT"/> dollars total.</p>
     <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="12" step="1">
-      <qti-prompt>Select the value of x.</qti-prompt>
+      <qti-prompt>Select the number of hours the rider used the bike.</qti-prompt>
     </qti-slider-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>

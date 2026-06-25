@@ -2,14 +2,14 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="textEntry-reference" title="textEntry-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
-        <qti-correct-response><qti-value>SCORE</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>estuary</qti-value></qti-correct-response>
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Type a short QTI outcome name in the sentence.</p>
-    <p>Response processing stores the final numeric result in the outcome named <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="10"/>.</p>
+    <p>A geography vocabulary item asks the student to type the name of a coastal feature.</p>
+    <p>A river meets the ocean in a partly enclosed area where fresh water and salt water mix. Type the vocabulary word for this coastal feature: <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="10"/>.</p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

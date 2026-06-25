@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Choose a publication year on the timeline.</p>
-    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="2010" upper-bound="2030" step="1"><qti-prompt>In what year was the QTI 3.0 specification line published?</qti-prompt></qti-slider-interaction>
+    <p>A timeline item asks the student to choose the opening year of a restored rail-trail.</p>
+    <qti-slider-interaction response-identifier="RESPONSE" lower-bound="2010" upper-bound="2030" step="1"><qti-prompt>A community archive asks students to place the opening year of the restored rail-trail on a timeline. The project opened in 2024 after fourteen years of planning. Select the opening year.</qti-prompt></qti-slider-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

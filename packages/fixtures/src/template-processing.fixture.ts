@@ -5,13 +5,14 @@ export const TEMPLATE_PROCESSING_OFFSET = 3;
 export const TEMPLATE_PROCESSING_CORRECT_RESPONSE =
   TEMPLATE_PROCESSING_BASE + TEMPLATE_PROCESSING_OFFSET;
 
-export const TEMPLATE_PROCESSING_RESPONSE_PROMPT = "Type the generated value of ANSWER.";
+export const TEMPLATE_PROCESSING_RESPONSE_PROMPT =
+  "Type the total number of cases the pantry expects to have ready.";
 
 export function formatTemplateProcessingPrompt(
   base: number = TEMPLATE_PROCESSING_BASE,
   answer: number = TEMPLATE_PROCESSING_CORRECT_RESPONSE,
 ): string {
-  return `Before delivery, template processing computed BASE = ${base} and ANSWER = ${base} + 3 = ${answer}.`;
+  return `A food pantry already has ${base} cases of bottled water and expects ${answer} cases total for the weekend distribution.`;
 }
 
 export function createTemplateProcessingItemXml(identifier: string): string {
@@ -31,7 +32,7 @@ export function createTemplateProcessingItemXml(identifier: string): string {
     <qti-set-correct-response identifier="RESPONSE"><qti-variable identifier="ANSWER"/></qti-set-correct-response>
   </qti-template-processing>
   <qti-item-body>
-    <p>Before delivery, template processing computed BASE = <qti-printed-variable identifier="BASE"/> and ANSWER = <qti-printed-variable identifier="BASE"/> + 3 = <qti-printed-variable identifier="ANSWER"/>.</p>
+    <p>A food pantry already has <qti-printed-variable identifier="BASE"/> cases of bottled water and expects <qti-printed-variable identifier="ANSWER"/> cases total for the weekend distribution.</p>
     <p>${TEMPLATE_PROCESSING_RESPONSE_PROMPT} <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>

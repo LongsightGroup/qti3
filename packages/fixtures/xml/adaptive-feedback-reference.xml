@@ -9,14 +9,16 @@
   </qti-outcome-declaration>
   <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
   <qti-item-body>
-    <p>Use the hint control or answer the item.</p>
+    <p>A student is revising a claim about an ecosystem after reading a data table. The hint gives a scaffold, but the scored answer should still identify the best evidence-based revision.</p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
-      <qti-simple-choice identifier="A">Reference implementations expose feedback through outcomes.</qti-simple-choice>
-      <qti-simple-choice identifier="B">Reference implementations hide all outcomes.</qti-simple-choice>
+      <qti-simple-choice identifier="A">Revise the claim to explain that lower plant cover may increase erosion during heavy rain.</qti-simple-choice>
+      <qti-simple-choice identifier="B">Keep the original claim because one table is never useful as evidence.</qti-simple-choice>
+      <qti-simple-choice identifier="C">Revise the claim to say rainfall has no connection to soil movement.</qti-simple-choice>
+      <qti-simple-choice identifier="D">Focus only on the names of the sites, not the measured plant cover.</qti-simple-choice>
     </qti-choice-interaction>
     <qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/>
     <qti-feedback-block identifier="HINT_FEEDBACK" outcome-identifier="FEEDBACK" show-hide="show">
-      <qti-content-body><p>Hint feedback is visible after the end-attempt interaction.</p></qti-content-body>
+      <qti-content-body><p>Hint: Compare the rows with the lowest plant cover to the rows with the most soil movement after rain.</p></qti-content-body>
     </qti-feedback-block>
   </qti-item-body>
   <qti-response-processing>

@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Select a phrase directly inside the reading passage.</p>
-    <qti-hottext-interaction response-identifier="RESPONSE"><qti-prompt>Select the phrase that names the QTI construct for storing a candidate answer.</qti-prompt><p>A <qti-hottext identifier="A">response declaration</qti-hottext> defines the variable used by an interaction. An <qti-hottext identifier="B">outcome declaration</qti-hottext> stores derived results such as SCORE. A <qti-hottext identifier="C">template declaration</qti-hottext> supports item variability before delivery.</p></qti-hottext-interaction>
+    <p>A reading item asks the student to select the author's claim inside a short paragraph.</p>
+    <qti-hottext-interaction response-identifier="RESPONSE"><qti-prompt>Read the paragraph and select the phrase that best states the author's claim.</qti-prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <qti-hottext identifier="A">A small green space would give nearby residents a shaded place to gather</qti-hottext>, and volunteers have already offered to maintain native plants. <qti-hottext identifier="B">The lot is 0.4 acres</qti-hottext> and sits next to a bus stop. <qti-hottext identifier="C">The planning department posted the proposal last Tuesday</qti-hottext>. <qti-hottext identifier="D">Two benches are stored in a public works warehouse</qti-hottext>.</p></qti-hottext-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

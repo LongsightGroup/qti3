@@ -10,8 +10,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Choose QTI terms directly in the sentence.</p>
-    <p>In QTI 3.0, an interaction writes a candidate answer to a <qti-inline-choice-interaction response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">response declaration</qti-inline-choice><qti-inline-choice identifier="B">template declaration</qti-inline-choice><qti-inline-choice identifier="C">rubric block</qti-inline-choice></qti-inline-choice-interaction>, and response processing writes derived values such as SCORE to an <qti-inline-choice-interaction response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">item body</qti-inline-choice><qti-inline-choice identifier="B">outcome declaration</qti-inline-choice><qti-inline-choice identifier="C">choice interaction</qti-inline-choice></qti-inline-choice-interaction>.</p>
+    <p>Read the sentence from a school-news article and choose the words that make the account accurate.</p>
+    <p>After a three-week pilot, the cafeteria team reported that the reusable tray program <qti-inline-choice-interaction response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">reduced lunchroom waste</qti-inline-choice><qti-inline-choice identifier="B">increased disposable packaging</qti-inline-choice><qti-inline-choice identifier="C">left trash levels unchanged</qti-inline-choice><qti-inline-choice identifier="D">stopped food donations</qti-inline-choice></qti-inline-choice-interaction>, and the strongest evidence was the <qti-inline-choice-interaction response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">number of students who bought lunch</qti-inline-choice><qti-inline-choice identifier="B">drop in bags collected after lunch</qti-inline-choice><qti-inline-choice identifier="C">color of the new trays</qti-inline-choice><qti-inline-choice identifier="D">menu posted on Monday</qti-inline-choice></qti-inline-choice-interaction>.</p>
   </qti-item-body>
   <qti-response-processing>
     <qti-response-condition>

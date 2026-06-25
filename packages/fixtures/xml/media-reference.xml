@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Render media through a native browser playback control.</p>
-    <qti-media-interaction response-identifier="RESPONSE" autostart="false" min-plays="1"><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent WAV fixture audio</object></qti-media-interaction>
+    <p>A listening item renders a town-hall audio excerpt through native browser media controls.</p>
+    <qti-media-interaction response-identifier="RESPONSE" autostart="false" min-plays="1"><qti-prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</qti-prompt><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object></qti-media-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

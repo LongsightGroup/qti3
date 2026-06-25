@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Select one meaningful region on the delivery-flow diagram.</p>
-    <qti-hotspot-interaction response-identifier="RESPONSE"><qti-prompt>Select the region representing response capture in the delivery flow.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-hotspot-choice identifier="A" shape="rect" coords="184,52,296,124"/><qti-hotspot-choice identifier="B" shape="rect" coords="24,52,136,124"/><qti-hotspot-choice identifier="C" shape="rect" coords="344,52,456,124"/></qti-hotspot-interaction>
+    <p>A diagram item asks the student to select the workflow step where stream data are collected.</p>
+    <qti-hotspot-interaction response-identifier="RESPONSE"><qti-prompt>The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.</qti-prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"/><qti-hotspot-choice identifier="A" shape="rect" coords="184,52,296,124"/><qti-hotspot-choice identifier="B" shape="rect" coords="24,52,136,124"/><qti-hotspot-choice identifier="C" shape="rect" coords="344,52,456,124"/><qti-hotspot-choice identifier="D" shape="rect" coords="184,178,296,250"/></qti-hotspot-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

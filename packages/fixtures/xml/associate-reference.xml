@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Create one association from a shared pool of QTI interaction terms.</p>
-    <qti-associate-interaction response-identifier="RESPONSE"><qti-prompt>Select the interaction and response base type that belong together.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Associate interaction</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">pair response base type</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Outcome variable</qti-simple-associable-choice><qti-simple-associable-choice identifier="D" match-max="1">Template processing</qti-simple-associable-choice></qti-simple-match-set></qti-associate-interaction>
+    <p>A media-literacy item asks the student to connect a source detail with the reason it is useful.</p>
+    <qti-associate-interaction response-identifier="RESPONSE"><qti-prompt>Choose the two details that belong together in a source-evaluation note.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="A" match-max="1">Interview with the park ranger who led the restoration project</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" match-max="1">Firsthand source for project timeline</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Anonymous comment on a neighborhood forum</qti-simple-associable-choice><qti-simple-associable-choice identifier="D" match-max="1">Decorative map border</qti-simple-associable-choice><qti-simple-associable-choice identifier="E" match-max="1">Weather forecast for next month</qti-simple-associable-choice></qti-simple-match-set></qti-associate-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

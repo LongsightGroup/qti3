@@ -8,8 +8,8 @@
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
-    <p>Exercise the portable custom interaction host contract.</p>
-    <qti-portable-custom-interaction response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the portable custom interaction contract to return A.</qti-prompt><qti-interaction-modules primary-configuration="modules/module_resolution.js"><qti-interaction-module id="fixture-portable-custom" primary-path="modules/fixture-portable-custom"/></qti-interaction-modules><qti-interaction-markup><div class="qti3-fixture-pci-markup">Portable custom fixture markup</div></qti-interaction-markup></qti-portable-custom-interaction>
+    <p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p>
+    <qti-portable-custom-interaction response-identifier="RESPONSE" custom-interaction-type-identifier="urn:qti3:fixture:portable-custom" module="fixture-portable-custom"><qti-prompt>Use the custom graphing tool to choose the claim best supported by the sample data. The fixture module returns A for the supported claim.</qti-prompt><qti-interaction-modules primary-configuration="modules/module_resolution.js"><qti-interaction-module id="fixture-portable-custom" primary-path="modules/fixture-portable-custom"/></qti-interaction-modules><qti-interaction-markup><div class="qti3-fixture-pci-markup">Custom graphing widget placeholder for sample data</div></qti-interaction-markup></qti-portable-custom-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>
