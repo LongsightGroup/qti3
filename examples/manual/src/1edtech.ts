@@ -20,17 +20,17 @@ interface ExampleIndexPayload {
   error?: string;
 }
 
-const status = requiredElement<HTMLElement>("#status");
-const filter = requiredElement<HTMLInputElement>("#filter");
-const examplesSelect = requiredElement<HTMLSelectElement>("#examples");
-const previous = requiredElement<HTMLButtonElement>("#previous");
-const next = requiredElement<HTMLButtonElement>("#next");
-const copyOriginal = requiredElement<HTMLButtonElement>("#copy-original");
-const meta = requiredElement<HTMLElement>("#meta");
-const xmlInput = requiredElement<HTMLTextAreaElement>("#xml");
-const reload = requiredElement<HTMLButtonElement>("#reload");
-const events = requiredElement<HTMLPreElement>("#events");
-const player = requiredElement<QtiAssessmentItemPlayer>("qti-assessment-item-player");
+const status = requiredElement("#status") as HTMLElement;
+const filter = requiredElement("#filter") as HTMLInputElement;
+const examplesSelect = requiredElement("#examples") as HTMLSelectElement;
+const previous = requiredElement("#previous") as HTMLButtonElement;
+const next = requiredElement("#next") as HTMLButtonElement;
+const copyOriginal = requiredElement("#copy-original") as HTMLButtonElement;
+const meta = requiredElement("#meta") as HTMLElement;
+const xmlInput = requiredElement("#xml") as HTMLTextAreaElement;
+const reload = requiredElement("#reload") as HTMLButtonElement;
+const events = requiredElement("#events") as HTMLPreElement;
+const player = requiredElement("qti-assessment-item-player") as QtiAssessmentItemPlayer;
 
 let allExamples: ExampleEntry[] = [];
 let visibleExamples: ExampleEntry[] = [];
@@ -176,8 +176,8 @@ async function fetchText(url: string): Promise<string> {
   return await response.text();
 }
 
-function requiredElement<T extends Element = Element>(selector: string): T {
-  const element = document.querySelector<T>(selector);
+function requiredElement(selector: string): Element {
+  const element = document.querySelector(selector);
   if (!element) throw new Error(`Missing ${selector}`);
   return element;
 }
