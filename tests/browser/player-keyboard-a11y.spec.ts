@@ -172,7 +172,7 @@ test.describe("player keyboard and accessibility", () => {
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
 
     await page.keyboard.press("End");
-    await expect(interaction.locator('[role="option"][data-choice-identifier="C"]')).toBeFocused();
+    await expect(interaction.locator('[role="option"][data-choice-identifier="D"]')).toBeFocused();
 
     await page.keyboard.press("Escape");
     await expect(listbox).toBeHidden();
@@ -578,7 +578,7 @@ test.describe("player keyboard and accessibility", () => {
       page
         .locator('qti-assessment-item-player [aria-label="Associate targets"]')
         .locator(".qti3-token:visible"),
-    ).toHaveCount(4);
+    ).toHaveCount(5);
     await page
       .locator('qti-assessment-item-player [aria-label="Associate targets"]')
       .locator('[data-choice-identifier="B"]')

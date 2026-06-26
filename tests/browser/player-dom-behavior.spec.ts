@@ -148,7 +148,7 @@ test.describe("player DOM behavior", () => {
 
     const button = page.locator("qti-assessment-item-player button.qti3-end-attempt-button");
     await expect(button).toBeVisible();
-    await expect(button).toHaveText("Show hint");
+    await expect(button).toHaveText("Show planning hint");
   });
 
   test("renders end-attempt controls embedded in feedback paragraph flow", async ({ page }) => {
@@ -693,7 +693,7 @@ test.describe("player DOM behavior", () => {
     const textarea = page.locator("qti-assessment-item-player textarea");
     const patternMessage = page.locator("qti-assessment-item-player .qti3-pattern-mask-message");
 
-    await expect(textarea).toHaveAttribute("placeholder", "Enter a decimal number...");
+    await expect(textarea).toHaveAttribute("placeholder", "Example: 7.25");
     await textarea.pressSequentially("abc");
     await expect(textarea).toHaveValue("");
 
@@ -708,11 +708,11 @@ test.describe("player DOM behavior", () => {
     });
 
     await expect(patternMessage).toBeVisible();
-    await expect(patternMessage).toHaveText("Maximum of 6 digits or decimal points permitted");
+    await expect(patternMessage).toHaveText("Use no more than 6 digits or decimal points");
     await expect(textarea).toHaveAttribute("aria-invalid", "true");
     await expect(
       textarea.evaluate((control) => (control as HTMLTextAreaElement).validationMessage),
-    ).resolves.toBe("Maximum of 6 digits or decimal points permitted");
+    ).resolves.toBe("Use no more than 6 digits or decimal points");
     await expect(currentResponse(page)).resolves.toBe("abcdef");
 
     await textarea.fill("12.34");

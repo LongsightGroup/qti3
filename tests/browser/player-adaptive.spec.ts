@@ -15,11 +15,11 @@ test.describe("adaptive fixtures", () => {
     await page.locator("#fixture").selectOption(adaptiveFixture.id);
     await page.locator("#load-fixture").click();
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Use the hint control or answer the item.",
+      "A student is revising a claim about an ecosystem",
     );
     await page.getByRole("button", { name: "Show hint" }).click();
     await expect(page.locator("qti-assessment-item-player .qti3-feedback-block")).toContainText(
-      "Hint feedback is visible",
+      "Compare the rows with the lowest plant cover",
     );
   });
 });

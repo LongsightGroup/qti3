@@ -12,7 +12,7 @@ test.describe("player media", () => {
     await expect(audio).toHaveAttribute("controls", "");
     await expect(audio).toHaveAttribute("preload", "none");
     await expect(audio).toHaveAttribute("src", /^data:audio\/wav;base64,/);
-    await expect(audio).toHaveAccessibleName("Silent WAV fixture audio");
+    await expect(audio).toHaveAccessibleName(/Play the town-hall audio excerpt once/);
     await expect(audio).toHaveAttribute("data-play-count", "0");
   });
 

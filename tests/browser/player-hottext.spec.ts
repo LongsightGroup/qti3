@@ -9,13 +9,14 @@ test.describe("player hottext interactions", () => {
     const player = page.locator("qti-assessment-item-player");
     const passage = player.locator(".qti3-hottext-passage");
     await expect(passage).toContainText(
-      "A response declaration defines the variable used by an interaction.",
+      "The city should convert the vacant lot on Pine Street into a pocket park.",
     );
     await expect(player.locator(".qti3-choice-option")).toHaveCount(0);
 
+    const claim = "A small green space would give nearby residents a shaded place to gather";
     const token = player.locator('.qti3-hottext-token[data-choice-identifier="A"]');
-    await expect(player.getByRole("button", { name: "response declaration" })).toBeVisible();
-    await expect(token).toHaveText("response declaration");
+    await expect(player.getByRole("button", { name: claim })).toBeVisible();
+    await expect(token).toHaveText(claim);
     await token.click();
     await expect(token).toHaveAttribute("aria-pressed", "true");
     await expectResponse(page, "A");
@@ -31,7 +32,7 @@ test.describe("player hottext interactions", () => {
         <qti-item-body>
           <qti-hottext-interaction response-identifier="RESPONSE">
             <qti-prompt>Select the term before the comma.</qti-prompt>
-            <p>Select <qti-hottext identifier="A">response declaration</qti-hottext>, then continue.</p>
+            <p>Select <qti-hottext identifier="A">Plan route</qti-hottext>, then continue.</p>
           </qti-hottext-interaction>
         </qti-item-body>
       </qti-assessment-item>
@@ -39,6 +40,6 @@ test.describe("player hottext interactions", () => {
     );
 
     const passage = page.locator("qti-assessment-item-player .qti3-hottext-passage");
-    await expect(passage).toContainText("Select response declaration, then continue.");
+    await expect(passage).toContainText("Select Plan route, then continue.");
   });
 });

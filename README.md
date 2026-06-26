@@ -330,31 +330,16 @@ document for the normative shared vocabulary and example CSS.
 
 ## Checks
 
-Every change should pass the same checks locally and in CI:
-
-```sh
-pnpm format:check
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm test:conformance
-pnpm test:a11y
-pnpm check:deps
-pnpm build
-pnpm check:maps
-pnpm check:exports
-pnpm test:browser
-```
-
-The publish gate is the release check:
+Every change should pass the same release gate locally, in CI, and before publish:
 
 ```sh
 pnpm release:check
 ```
 
-`pnpm release:check` uses the public fixture set, browser coverage, support metadata,
-package exports, and built CLI fixture runner. It does not require official 1EdTech
-certification artifacts.
+`pnpm release:check` runs formatting, typecheck, lint, unit and conformance tests,
+accessibility checks, dependency policy, build, source-map validation, package export
+checks, browser coverage, support metadata, and the built CLI fixture runner. It does
+not require official 1EdTech certification artifacts.
 
 The certification-oriented gate is available separately:
 

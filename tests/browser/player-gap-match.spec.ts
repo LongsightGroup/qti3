@@ -3,7 +3,13 @@ import {
   GAP_CHOICES_CONTAINER_WIDTH_ITEM,
   GAP_PLACEMENT_WIDTH_ITEM,
 } from "./fixtures/dom-behavior-items.js";
-import { assignGap, currentResponse, loadFixture, pasteXml } from "./player-helpers.js";
+import {
+  assignGap,
+  currentResponse,
+  expectResponse,
+  loadFixture,
+  pasteXml,
+} from "./player-helpers.js";
 
 async function expectHorizontalOverflow(locator: Locator, shouldOverflow: boolean): Promise<void> {
   await expect
@@ -88,8 +94,8 @@ test.describe("player gap match interactions", () => {
     const assignedGapButton = player.locator('[data-gap-identifier="G1"] button');
 
     await assignGap(page, "Gap match", "B", "G1");
-    await expect(assignedGapButton).toHaveText("outcome declaration");
-    await expect(assignedGapButton).toHaveAccessibleName("Gap 1, assigned outcome declaration");
+    await expect(assignedGapButton).toHaveText("claim");
+    await expect(assignedGapButton).toHaveAccessibleName("Gap 1, assigned claim");
     await expectGapButtonMatchesPlayerForeground(player, "G1");
     await expectPlainGapButtonMatchesPlayerSurface(player, "G1");
     const playerColor = await player.evaluate((element) => getComputedStyle(element).color);
@@ -171,8 +177,8 @@ test.describe("player gap match interactions", () => {
     await loadFixture(page, "gapMatch");
 
     const player = page.locator("qti-assessment-item-player");
-    await expect(player).toContainText("An interaction records the candidate answer in a");
-    await expect(player).toContainText("while scoring writes SCORE to an");
+    await expect(player).toContainText("The water sample data are the");
+    await expect(player).toContainText("that supports the report's");
     await expect(player.locator(".qti3-gap-region")).not.toContainText("G1");
     await expect(player.locator(".qti3-gap-region")).not.toContainText("G2");
     await expect(player.locator(".qti3-gap-region")).not.toContainText("Empty");
@@ -183,7 +189,7 @@ test.describe("player gap match interactions", () => {
       let textNode: Text | undefined;
       while (walker.nextNode()) {
         const node = walker.currentNode as Text;
-        if (node.data.includes("candidate answer in a")) {
+        if (node.data.includes("The water sample data are the")) {
           textNode = node;
           break;
         }
@@ -191,7 +197,7 @@ test.describe("player gap match interactions", () => {
       if (!textNode) throw new Error("Missing text before first gap.");
 
       const range = document.createRange();
-      const phrase = "candidate answer in a";
+      const phrase = "The water sample data are the";
       const start = textNode.data.indexOf(phrase);
       range.setStart(textNode, start);
       range.setEnd(textNode, start + phrase.length);

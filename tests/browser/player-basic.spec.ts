@@ -60,11 +60,11 @@ test.describe("Basic item player readiness", () => {
     await loadFixture(page, "textEntry");
     await page
       .locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])')
-      .fill("SCORE");
+      .fill("estuary");
     await suspendRestoreCurrentAttempt(page);
     await expect(
       page.locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])'),
-    ).toHaveValue("SCORE");
+    ).toHaveValue("estuary");
     score = await scoreCurrentAttempt(page);
     expect(score?.outcomes.SCORE).toBe(1);
   });

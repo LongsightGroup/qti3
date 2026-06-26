@@ -10,10 +10,10 @@ test.describe("player inline choice", () => {
     const player = page.locator("qti-assessment-item-player");
     await expect(player.locator(".qti3-inlineChoice")).toHaveCount(2);
     await expect(player.locator(".qti3-item-body p").nth(1)).toContainText(
-      "In QTI 3.0, an interaction writes a candidate answer to a",
+      "After a three-week pilot, the cafeteria team reported that the reusable tray program",
     );
     await expect(player.locator(".qti3-item-body p").nth(1)).toContainText(
-      "and response processing writes derived values such as SCORE to an",
+      "and the strongest evidence was the",
     );
     await expect(
       player.locator(

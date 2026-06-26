@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 jobs:
-  verify:
+  release-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -19,15 +19,4 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm test:conformance
-      - run: pnpm test:a11y
-      - run: pnpm check:deps
-      - run: pnpm test:browser
-      - run: pnpm build
-      - run: pnpm check:exports
-      - run: node packages/cli/dist/index.js assert-support
-      - run: node packages/cli/dist/index.js run-fixtures
+      - run: pnpm release:check

@@ -8,6 +8,7 @@ import { swedishPlayerMessageCatalog } from "./catalogs/player-message-catalogs.
 import {
   currentResponse,
   expectResponse,
+  loadFixture,
   pasteXml,
   setPlayerMessageCatalog,
 } from "./player-helpers.js";

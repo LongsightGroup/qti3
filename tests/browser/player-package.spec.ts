@@ -170,7 +170,7 @@ test.describe("player package loading", () => {
 
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Select one answer from a standard single-choice interaction.",
+      "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     );
     await expect(page.locator("#debug-package")).toContainText('"status": "loaded"');
     await expect(page.locator("#debug-package")).toContainText('"items/choice.xml"');
@@ -181,7 +181,7 @@ test.describe("player package loading", () => {
     await page.locator("#next-file").click();
     await expect(page.locator("#file-summary")).toContainText("2 of 2");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Type a short QTI outcome name in the sentence.",
+      "A geography vocabulary item asks the student to type the name of a coastal feature.",
     );
     await expect(page.locator("#debug-package")).toContainText(
       '"selectedItem": "items/text-entry.xml"',
@@ -233,13 +233,13 @@ test.describe("player package loading", () => {
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Select one answer from a standard single-choice interaction.",
+      "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     );
     await page.locator("#next-file").click();
     await expect(page.locator("#file-summary")).toContainText("2 of 2");
     await expect(page.locator("#file-summary")).toContainText("items/text-entry.xml");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Type a short QTI outcome name in the sentence.",
+      "A geography vocabulary item asks the student to type the name of a coastal feature.",
     );
   });
 
@@ -269,7 +269,7 @@ test.describe("player package loading", () => {
     await expect(page.locator("#file-summary")).toContainText("1 of 1");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Select one answer from a standard single-choice interaction.",
+      "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     );
   });
 
@@ -387,7 +387,7 @@ test.describe("player package loading", () => {
     await expect(page.locator("#file-summary")).toContainText("1 of 1");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Select one answer from a standard single-choice interaction.",
+      "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     );
   });
 

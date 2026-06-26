@@ -81,7 +81,7 @@ test.describe("player axe accessibility", () => {
     await loadFixture(page, "choice");
 
     await expect(page.locator("qti-assessment-item-player")).toContainText(
-      "Select one answer from a standard single-choice interaction.",
+      "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     );
     await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').check();
     await expectResponse(page, "A");

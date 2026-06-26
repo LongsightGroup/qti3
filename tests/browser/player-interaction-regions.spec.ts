@@ -113,7 +113,7 @@ test.describe("player interaction regions", () => {
       .click();
 
     const open = await regionSnapshots(page);
-    expect(open.filter((region) => region.kind === "choice")).toHaveLength(3);
+    expect(open.filter((region) => region.kind === "choice")).toHaveLength(4);
     expect(open.some((region) => region.choiceIdentifier === "A")).toBe(true);
   });
 

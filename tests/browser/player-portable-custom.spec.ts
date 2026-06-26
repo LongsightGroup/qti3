@@ -42,7 +42,7 @@ test.describe("player portable custom", () => {
       "modules/module_resolution.js",
     );
     await expect(host.locator(".qti3-fixture-pci-markup")).toHaveText(
-      "Portable custom fixture markup",
+      "Custom graphing widget placeholder for sample data",
     );
     const mount = await page.evaluate(() => {
       const target = window as unknown as {
@@ -60,7 +60,7 @@ test.describe("player portable custom", () => {
       module: "fixture-portable-custom",
       primaryConfiguration: "modules/module_resolution.js",
       interactionMarkupRaw:
-        '<div class="qti3-fixture-pci-markup">Portable custom fixture markup</div>',
+        '<div class="qti3-fixture-pci-markup">Custom graphing widget placeholder for sample data</div>',
     });
     await expect(host).not.toHaveAttribute("data-interaction-markup", /.*/);
 

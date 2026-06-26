@@ -9,7 +9,7 @@ test.describe("player choice interactions", () => {
       interactionFixtures[0];
     if (!fixture) throw new Error("Missing choice fixture.");
     const xml = fixture.xml.replace(
-      "<p>Select one answer from a standard single-choice interaction.</p>",
+      "<p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p>",
       "<qti-prompt>Which president resigned after Watergate?</qti-prompt>",
     );
 

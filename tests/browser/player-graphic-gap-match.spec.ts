@@ -48,11 +48,11 @@ test.describe("player graphic gap match interactions", () => {
     const target = page.locator('qti-assessment-item-player [data-gap-identifier="G1"]').first();
     await dragCenter(page, source, target);
     await expectResponse(page, ["A G1"]);
-    await expect(
-      target.getByRole("button", { name: "Gap 1, assigned response declaration" }),
-    ).toHaveText("response declaration");
+    await expect(target.getByRole("button", { name: "Gap 1, assigned Plan route" })).toHaveText(
+      "Plan route",
+    );
 
-    await target.getByRole("button", { name: "Gap 1, assigned response declaration" }).focus();
+    await target.getByRole("button", { name: "Gap 1, assigned Plan route" }).focus();
     await page.keyboard.press("Delete");
     await expectResponse(page, []);
   });
@@ -711,7 +711,7 @@ test.describe("player graphic gap match interactions", () => {
     const targetB = page.locator('qti-assessment-item-player [data-gap-identifier="TargetB"]');
     await expect(
       page.locator("qti-assessment-item-player .qti3-graphic-gap-source-region button"),
-    ).toHaveCount(2);
+    ).toHaveCount(3);
     await expect(page.locator("qti-assessment-item-player .qti3-graphic-gap-hotspot")).toHaveCount(
       2,
     );

@@ -47,10 +47,12 @@ test.describe("player graphic chrome locale", () => {
     await loadFixture(page, "graphicAssociate");
 
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Response capture" }).click();
+    await surface.getByRole("button", { name: "Plan sampling route" }).click();
+    await surface.getByRole("button", { name: "Collect water data" }).click();
 
-    const remove = page.getByRole("button", { name: "Eliminar Item XML con Response capture" });
+    const remove = page.getByRole("button", {
+      name: "Eliminar Plan sampling route con Collect water data",
+    });
     await expect(remove).toHaveAttribute("title", "Eliminar");
     await remove.click();
     await expectResponse(page, []);
@@ -62,11 +64,11 @@ test.describe("player graphic chrome locale", () => {
     await loadFixture(page, "graphicAssociate");
 
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Response capture" }).click();
+    await surface.getByRole("button", { name: "Plan sampling route" }).click();
+    await surface.getByRole("button", { name: "Collect water data" }).click();
 
     const remove = page.getByRole("button", {
-      name: "Item XML mit Response capture entfernen",
+      name: "Plan sampling route mit Collect water data entfernen",
     });
     await expect(remove).toHaveAttribute("title", "Entfernen");
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(

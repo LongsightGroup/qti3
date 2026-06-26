@@ -121,17 +121,17 @@ test.describe("processing fixtures", () => {
     await selectFixtureById(page, "template-content-reference");
 
     const player = playerLocator(page);
+    await expect(player.locator(".qti3-template-block", { hasText: "north marsh" })).toContainText(
+      "The selected field site is the north marsh, where students recorded three bird species during the morning count.",
+    );
     await expect(
-      player.locator(".qti3-template-block", { hasText: "reference branch" }),
-    ).toContainText("The generated reference branch is visible.");
-    await expect(
-      player.locator(".qti3-template-block", { hasText: "distractor branch" }),
+      player.locator(".qti3-template-block", { hasText: "alternate field site" }),
     ).toBeHidden();
     await expect(
-      player.locator(".qti3-template-inline", { hasText: "generated reference" }),
+      player.locator(".qti3-template-inline", { hasText: "north marsh observation" }),
     ).toBeVisible();
     await expect(
-      player.locator(".qti3-template-inline", { hasText: "hidden fallback" }),
+      player.locator(".qti3-template-inline", { hasText: "south meadow observation" }),
     ).toBeHidden();
   });
 });

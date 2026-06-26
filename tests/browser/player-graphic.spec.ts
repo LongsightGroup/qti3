@@ -56,34 +56,36 @@ test.describe("player graphic interactions", () => {
     await loadFixture(page, "graphicAssociate");
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
     await expect(surface.locator("img")).toHaveAttribute("src", /hotspot-flow-unlabeled\.svg$/);
-    await expect(surface.getByRole("button", { name: "Item XML" })).toHaveAttribute(
+    await expect(surface.getByRole("button", { name: "Plan sampling route" })).toHaveAttribute(
       "data-choice-identifier",
       "A",
     );
-    await expect(surface.getByRole("button", { name: "Response capture" })).toHaveCSS(
+    await expect(surface.getByRole("button", { name: "Collect water data" })).toHaveCSS(
       "position",
       "absolute",
     );
     await expectImageLoaded(surface.locator("img"));
 
-    const itemXmlButton = surface.getByRole("button", { name: "Item XML" });
+    const itemXmlButton = surface.getByRole("button", { name: "Plan sampling route" });
     await expect(itemXmlButton).toHaveCSS("border-top-width", "2px");
     await itemXmlButton.focus();
     await expect(itemXmlButton).toHaveCSS("outline-width", "3px");
     await itemXmlButton.click();
     await expect(itemXmlButton).toHaveAttribute("aria-pressed", "true");
     await expect(itemXmlButton).toHaveAttribute("data-selected", "true");
-    await surface.getByRole("button", { name: "Response capture" }).click();
+    await surface.getByRole("button", { name: "Collect water data" }).click();
     await expectResponse(page, ["A B"]);
     await expect(surface.locator("svg.qti3-graphic-associate-lines line")).toHaveCount(1);
     await expect(page.locator("qti-assessment-item-player .qti3-pair-list")).toContainText(
-      "Item XML to Response capture",
+      "Plan sampling route to Collect water data",
     );
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Processing rules" }).click();
+    await surface.getByRole("button", { name: "Plan sampling route" }).click();
+    await surface.getByRole("button", { name: "Collect water data" }).click();
     await expectResponse(page, ["A B"]);
 
-    const remove = page.getByRole("button", { name: "Remove Item XML to Response capture" });
+    const remove = page.getByRole("button", {
+      name: "Remove Plan sampling route to Collect water data",
+    });
     const trashIcon = remove.locator("svg.qti3-trash-icon");
     await expect(trashIcon).toHaveCount(1);
     await expect(trashIcon).toHaveAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -192,10 +194,10 @@ test.describe("player graphic interactions", () => {
     await loadFixture(page, "graphicAssociate");
 
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).focus();
+    await surface.getByRole("button", { name: "Plan sampling route" }).focus();
     await page.keyboard.press("Enter");
     await page.keyboard.press("ArrowRight");
-    await expect(surface.getByRole("button", { name: "Response capture" })).toBeFocused();
+    await expect(surface.getByRole("button", { name: "Collect water data" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expectResponse(page, ["A B"]);
 
@@ -644,7 +646,7 @@ test.describe("player graphic interactions", () => {
       "viewBox",
       "0 0 480 300",
     );
-    await expect(surface.locator("rect.qti3-hotspot-button")).toHaveCount(3);
+    await expect(surface.locator("rect.qti3-hotspot-button")).toHaveCount(4);
 
     const hotspot = surface.getByRole("button", { name: "A" });
     await expect(hotspot).toHaveAttribute("data-shape", "rect");

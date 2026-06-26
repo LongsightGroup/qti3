@@ -736,11 +736,11 @@ test.describe("player lifecycle", () => {
     await loadFixture(page, "textEntry");
     await page
       .locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])')
-      .fill("SCORE");
+      .fill("estuary");
     await restoreCurrentAttempt();
     await expect(
       page.locator('qti-assessment-item-player input:not([type="file"]):not([type="range"])'),
-    ).toHaveValue("SCORE");
+    ).toHaveValue("estuary");
     await expect(page.locator("qti-assessment-item-player .qti3-inline-counter")).toHaveCount(0);
 
     await loadFixture(page, "order");

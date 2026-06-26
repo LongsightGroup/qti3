@@ -38,10 +38,12 @@ test.describe("player chrome locale", () => {
     await assignMatch(page, "B", "G1");
     await expect(
       page.locator("qti-assessment-item-player .qti3-pair-chip span").first(),
-    ).toHaveText("Outcome declaration to Candidate response value");
+    ).toHaveText(
+      "Uncovered beds had more weeds by the third week. to Mulch helped reduce water loss from the soil.",
+    );
     await expect(
       page.getByRole("button", {
-        name: "Eliminar Outcome declaration con Candidate response value",
+        name: "Eliminar Uncovered beds had more weeds by the third week. con Mulch helped reduce water loss from the soil.",
       }),
     ).toBeVisible();
   });
@@ -79,11 +81,11 @@ test.describe("player chrome locale", () => {
     await loadFixture(page, "graphicAssociate");
 
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-associate-surface");
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Response capture" }).click();
+    await surface.getByRole("button", { name: "Plan sampling route" }).click();
+    await surface.getByRole("button", { name: "Collect water data" }).click();
 
     const remove = page.getByRole("button", {
-      name: "Remove Item XML to Response capture",
+      name: "Remove Plan sampling route to Collect water data",
     });
     await expect(remove).toHaveAttribute("title", "Remove");
     await remove.click();

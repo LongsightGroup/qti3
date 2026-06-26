@@ -2,14 +2,14 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order-reference" title="order-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
-        <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value><qti-value>D</qti-value></qti-correct-response>
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
   <qti-item-body>
     <p>A science-planning item asks the student to arrange investigation steps in order.</p>
-    <qti-order-interaction response-identifier="RESPONSE"><qti-prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.</qti-prompt><qti-simple-choice identifier="A">Set up identical trays with the same soil, seed type, and water schedule.</qti-simple-choice><qti-simple-choice identifier="B">Place one tray in full light and one tray in reduced light for the same number of days.</qti-simple-choice><qti-simple-choice identifier="C">Measure and compare seedling height at the end of the trial.</qti-simple-choice><qti-simple-choice identifier="D">Write a conclusion before collecting any measurements.</qti-simple-choice></qti-order-interaction>
+    <qti-order-interaction response-identifier="RESPONSE"><qti-prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.</qti-prompt><qti-simple-choice identifier="A">Set up identical trays with the same soil, seed type, and water schedule.</qti-simple-choice><qti-simple-choice identifier="B">Place one tray in full light and one tray in reduced light for the same number of days.</qti-simple-choice><qti-simple-choice identifier="C">Measure and compare seedling height at the end of the trial.</qti-simple-choice><qti-simple-choice identifier="D">Use the measurements to write a conclusion about how light affected growth.</qti-simple-choice></qti-order-interaction>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

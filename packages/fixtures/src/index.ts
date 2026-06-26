@@ -1086,7 +1086,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
       identifier: "RESPONSE",
       cardinality: "ordered",
       baseType: "identifier",
-      correct: ["A", "B", "C"],
+      correct: ["A", "B", "C", "D"],
     };
   }
   if (interactionType === "graphicOrder") {
@@ -1178,7 +1178,7 @@ function renderInteractionXml(qtiName: string, interactionType: QtiInteractionTy
     return `<p>A river meets the ocean in a partly enclosed area where fresh water and salt water mix. Type the vocabulary word for this coastal feature: <${qtiName} response-identifier="RESPONSE" expected-length="10"/>.</p>`;
   }
   if (interactionType === "order") {
-    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.</qti-prompt><qti-simple-choice identifier="A">Set up identical trays with the same soil, seed type, and water schedule.</qti-simple-choice><qti-simple-choice identifier="B">Place one tray in full light and one tray in reduced light for the same number of days.</qti-simple-choice><qti-simple-choice identifier="C">Measure and compare seedling height at the end of the trial.</qti-simple-choice><qti-simple-choice identifier="D">Write a conclusion before collecting any measurements.</qti-simple-choice></${qtiName}>`;
+    return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.</qti-prompt><qti-simple-choice identifier="A">Set up identical trays with the same soil, seed type, and water schedule.</qti-simple-choice><qti-simple-choice identifier="B">Place one tray in full light and one tray in reduced light for the same number of days.</qti-simple-choice><qti-simple-choice identifier="C">Measure and compare seedling height at the end of the trial.</qti-simple-choice><qti-simple-choice identifier="D">Use the measurements to write a conclusion about how light affected growth.</qti-simple-choice></${qtiName}>`;
   }
   if (interactionType === "hottext") {
     return `<${qtiName} response-identifier="RESPONSE"><qti-prompt>Read the paragraph and select the phrase that best states the author's claim.</qti-prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <qti-hottext identifier="A">A small green space would give nearby residents a shaded place to gather</qti-hottext>, and volunteers have already offered to maintain native plants. <qti-hottext identifier="B">The lot is 0.4 acres</qti-hottext> and sits next to a bus stop. <qti-hottext identifier="C">The planning department posted the proposal last Tuesday</qti-hottext>. <qti-hottext identifier="D">Two benches are stored in a public works warehouse</qti-hottext>.</p></${qtiName}>`;
