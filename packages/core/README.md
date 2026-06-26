@@ -123,9 +123,8 @@ then runs response processing. It does not run candidate response-validation pol
 as required interactions, cardinality limits, or min/max response counts; delivery hosts
 should enforce that policy before accepting a submission or finalizing an attempt.
 
-The delivery redaction and server-scoring APIs are library APIs in `0.5.x`. CLI commands
-for delivery-safe XML generation and server-style scoring are not part of this release
-line yet.
+Delivery redaction, server-style scoring, and secure adaptive turn handling are library
+APIs. Dedicated CLI commands for those operations are planned separately.
 
 ### Secure adaptive turns
 

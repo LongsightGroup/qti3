@@ -283,6 +283,13 @@ Rendered elements use `qti3-*` class names for player structure, such as
 like `qti3-choice`, `qti3-textEntry`, and `qti3-hotspot`. Authored QTI shared-vocabulary
 classes that start with `qti-` are preserved on rendered interactions where applicable.
 
+The player also exposes a small set of theme-aware CSS custom properties for structural
+controls where host products commonly need to tune density or contrast without relying
+on renderer internals. For order interaction rows, hosts can set
+`--qti3-order-row-border-color`, `--qti3-order-row-background`, and
+`--qti3-order-row-background-hover` on the player or an ancestor. Their defaults use
+system colors, so they work in light mode, dark mode, and forced-colors environments.
+
 QTI shared vocabulary classes are authoring hints defined by the specification, not
 product theme classes. Classes such as `qti-labels-none`,
 `qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden` describe
@@ -396,9 +403,8 @@ It can also score each item by applying its declared correct responses:
 node packages/cli/dist/index.js score-correct-dir /path/to/items
 ```
 
-Delivery-safe XML generation and server-style scoring are library APIs in `0.5.x`.
-Dedicated CLI commands for those operations are planned separately, not shipped in this
-release line.
+Delivery-safe XML generation, server-style scoring, and secure adaptive turn handling are
+library APIs. Dedicated CLI commands for those operations are planned separately.
 
 For package-level inspection without creating an open-source runner, use:
 
@@ -484,7 +490,9 @@ materialization support is added.
 ## Coverage
 
 `qti3` includes public synthetic fixtures for every current, non-deprecated QTI 3 item
-interaction. The fixtures cover response shape, scoring, browser rendering, keyboard
+interaction. The canonical examples use realistic item prompts and classroom-style
+scenarios rather than placeholder QTI terminology, while staying synthetic and
+MIT-licensed. The fixtures cover response shape, scoring, browser rendering, keyboard
 operation, and accessibility evidence.
 
 Processing coverage includes response processing, template processing, feedback, printed

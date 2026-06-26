@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.3 - 2026-06-26
+
+### Changed
+
+- Enrich the public fixture and manual harness item content with more realistic classroom,
+  field-study, media-review, and planning scenarios while preserving synthetic MIT-licensed
+  fixture coverage.
+- Simplify plain order interaction row styling so each row presents one theme-aware,
+  host-overridable boundary instead of nested borders.
+
+### Fixed
+
+- Keep order and graphic-order browser expectations aligned with the richer fixture content and
+  four-choice ordering examples.
+
 ## 0.9.2 - 2026-06-19
 
 ### Added
