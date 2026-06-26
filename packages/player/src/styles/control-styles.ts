@@ -1,4 +1,10 @@
 export const CONTROL_PLAYER_STYLES = `
+.qti3-player {
+  --qti3-control-border-color: color-mix(in srgb, CanvasText 34%, Canvas);
+  --qti3-control-surface: Canvas;
+  --qti3-control-surface-hover: color-mix(in srgb, CanvasText 5%, Canvas);
+}
+
 .qti3-reorder-item,
 .qti3-token-region,
 .qti3-pair-chip,
@@ -194,8 +200,8 @@ export const CONTROL_PLAYER_STYLES = `
 
 .qti3-reorder-item {
   padding: 0.5rem;
-  border: 1px solid CanvasText;
-  background: Canvas;
+  border: 0;
+  background: transparent;
   color: CanvasText;
 }
 
@@ -231,6 +237,12 @@ export const CONTROL_PLAYER_STYLES = `
   text-align: start;
   min-inline-size: 0;
   min-block-size: 4rem;
+  border-color: var(--qti3-order-row-border-color, var(--qti3-control-border-color));
+  background: var(--qti3-order-row-background, var(--qti3-control-surface));
+}
+
+.qti3-reorder-handle:hover {
+  background: var(--qti3-order-row-background-hover, var(--qti3-control-surface-hover));
 }
 
 .qti3-gap-choice-image {

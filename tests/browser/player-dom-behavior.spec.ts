@@ -248,6 +248,19 @@ test.describe("player DOM behavior", () => {
     await expect(player.locator("p .qti3-inlineChoice")).toHaveCount(0);
   });
 
+  test("renders plain order rows with a single visible row boundary", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "order");
+
+    const player = page.locator("qti-assessment-item-player");
+    const firstItem = player.locator(".qti3-reorder-item").first();
+    const firstHandle = firstItem.locator(".qti3-reorder-handle");
+
+    await expect(firstItem).toHaveCSS("border-top-width", "0px");
+    await expect(firstHandle).toHaveCSS("border-top-width", "1px");
+    await expect(firstHandle).toHaveCSS("border-top-style", "solid");
+  });
+
   test("renders rich order choice content without leaking XML comments", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, RICH_ORDER_CONTENT_ITEM);

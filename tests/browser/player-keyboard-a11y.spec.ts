@@ -330,7 +330,7 @@ test.describe("player keyboard and accessibility", () => {
       .locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]')
       .focus();
     await page.keyboard.press("ArrowUp");
-    await expectResponse(page, ["B", "A", "C"]);
+    await expectResponse(page, ["B", "A", "C", "D"]);
     const moveSummary = page.locator("qti-assessment-item-player .qti3-selection-summary");
     await expect(moveSummary).toHaveAttribute("aria-live", "polite");
     await expect(moveSummary).toHaveCSS("clip-path", "inset(50%)");
@@ -340,7 +340,7 @@ test.describe("player keyboard and accessibility", () => {
     ).toBeFocused();
 
     await page.keyboard.press("ArrowDown");
-    await expectResponse(page, ["A", "B", "C"]);
+    await expectResponse(page, ["A", "B", "C", "D"]);
     await expect(
       page.locator('qti-assessment-item-player .qti3-reorder-handle[data-choice-identifier="B"]'),
     ).toBeFocused();
@@ -356,7 +356,7 @@ test.describe("player keyboard and accessibility", () => {
         'qti-assessment-item-player .qti3-reorder-item[data-choice-identifier="B"] [data-move-direction="down"]',
       )
       .click();
-    await expectResponse(page, ["A", "C", "B"]);
+    await expectResponse(page, ["A", "C", "B", "D"]);
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
       /moved down\.$/,
     );
@@ -513,18 +513,18 @@ test.describe("player keyboard and accessibility", () => {
     await loadFixture(page, "graphicOrder");
 
     const surface = page.locator("qti-assessment-item-player .qti3-graphic-order-surface");
-    await expect(surface.getByRole("button", { name: "Item XML" })).toBeVisible();
-    await expect(surface.getByRole("button", { name: "Response capture" })).toBeVisible();
+    await expect(surface.getByRole("button", { name: "Plan sampling route" })).toBeVisible();
+    await expect(surface.getByRole("button", { name: "Collect water data" })).toBeVisible();
 
-    await surface.getByRole("button", { name: "Response capture" }).click();
+    await surface.getByRole("button", { name: "Collect water data" }).click();
     await expectResponse(page, ["B"]);
-    await expect(surface.getByRole("button", { name: "Response capture" })).toHaveAttribute(
+    await expect(surface.getByRole("button", { name: "Collect water data" })).toHaveAttribute(
       "data-order",
       "1",
     );
 
-    await surface.getByRole("button", { name: "Item XML" }).click();
-    await surface.getByRole("button", { name: "Outcomes" }).click();
+    await surface.getByRole("button", { name: "Plan sampling route" }).click();
+    await surface.getByRole("button", { name: "Report recommendations" }).click();
     await expectResponse(page, ["B", "A", "C"]);
     await expect(surface.locator("svg.qti3-graphic-sequence-lines line")).toHaveCount(2);
 
@@ -541,10 +541,10 @@ test.describe("player keyboard and accessibility", () => {
       .click();
     await expectResponse(page, ["A", "B", "C"]);
     await expect(page.locator("qti-assessment-item-player .qti3-selection-summary")).toHaveText(
-      /Response capture moved down\.$/,
+      /Collect water data moved down\.$/,
     );
 
-    await surface.getByRole("button", { name: "Outcomes" }).focus();
+    await surface.getByRole("button", { name: "Report recommendations" }).focus();
     await page.keyboard.press("Delete");
     await expectResponse(page, ["A", "B"]);
   });
