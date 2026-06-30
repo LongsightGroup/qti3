@@ -58,18 +58,18 @@ High-stakes delivery systems can redact answer-bearing item XML before sending i
 a browser:
 
 ```ts
-import { buildQtiDeliverySafeXml } from "@longsightgroup/qti3-core";
+import { prepareQtiDeliveryXml } from "@longsightgroup/qti3-core";
 
-const delivery = buildQtiDeliverySafeXml(authoritativeItemXml);
+const delivery = prepareQtiDeliveryXml(authoritativeItemXml, { mode: "static" });
 
 if (!delivery.ok) {
   throw new Error(delivery.diagnostics.map((item) => item.message).join("; "));
 }
 
-sendToCandidate(delivery.xml);
+sendToCandidate(delivery.candidateSafeXml);
 ```
 
-Use `buildQtiDeliverySafeXml().ok` for deliverability. The
+Use `prepareQtiDeliveryXml().ok` for deliverability. The
 `analyzeQtiDeliverySecurity().deliverySafe` flag describes the exact XML being analyzed,
 so it is normally `false` for an authoritative scorable item before redaction and `true`
 only for the redacted output.
@@ -82,9 +82,28 @@ template processing, set-correct-response, and adaptive response processing.
 String-range redaction uses the same dependency-free XML parser as `parseQtiXml`, with
 source ranges recorded during parsing. XML parse failures are reported as `xml.parse`
 error diagnostics; hosts must treat those diagnostics, `parseQtiXml().ok === false`,
-and `buildQtiDeliverySafeXml().ok === false` as non-deliverable. The redacted output is
+and `prepareQtiDeliveryXml().ok === false` as non-deliverable. The redacted output is
 re-analyzed before `ok` is returned, but hosts should still treat redacted XML as
 untrusted presentation input.
+
+`prepareQtiDeliveryXml()` is the high-level host API. Use `mode: "static"` for
+non-adaptive delivery where all response processing and feedback are removed. Use
+`mode: "server-materialized-adaptive"` only after the server has authoritative outcomes
+for the current adaptive view; pass those outcomes so visible feedback can be retained
+while answer keys, processing, mappings, lookup tables, declaration defaults, and hidden
+feedback are stripped. Static delivery fails closed for adaptive response processing;
+server-materialized adaptive delivery still fails closed for unsupported template
+processing and `qti-set-correct-response` materialization.
+
+Use `analyzeQtiDeliverySecurity()` when a host only needs diagnostics about a specific
+XML string, and `buildQtiDeliverySafeXml()` when a host explicitly wants the lower-level
+static redaction primitive. Most delivery services should call `prepareQtiDeliveryXml()`
+instead.
+
+Diagnostic codes depend on the preparation path: static mode reports `delivery.*` codes,
+while `mode: "server-materialized-adaptive"` reports `adaptiveTurn.materialization.*`
+codes for materialization blockers. Hosts should branch on `result.ok` and inspect
+`result.diagnostics` without assuming a single code namespace across modes.
 
 The parser does not resolve external entities, process DTD entity declarations, or access
 the network or filesystem. Unknown named entities are preserved verbatim, and numeric
@@ -188,9 +207,10 @@ player.restore(turn.state);
 Refresh turns with no new submission still return updated materialized XML derived from restored outcomes, so a resume flow should load both values again even when the candidate does not submit a new response.
 
 The static delivery redactor still fails closed for adaptive response processing. Use
-`processQtiAdaptiveItemTurn()` when a host needs a server-materialized candidate view
-and updated authoritative outcomes for the next adaptive turn. The low-level adaptive-turn
-redactor is internal to the core package; hosts should not call it directly.
+`processQtiAdaptiveItemTurn()` when a host needs both a server-materialized candidate
+view and updated authoritative outcomes for the next adaptive turn. Use
+`prepareQtiDeliveryXml(..., { mode: "server-materialized-adaptive", outcomes })` only
+when the host already owns the authoritative outcomes and needs to prepare candidate XML.
 
 ## Scope
 

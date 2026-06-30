@@ -22,6 +22,12 @@ export {
 } from "./companion-materials-resolution.js";
 export { isResolvableAssetUrl } from "./asset-url.js";
 export {
+  prepareQtiDeliveryXml,
+  type QtiDeliveryPreparationMode,
+  type QtiDeliveryPreparationOptions,
+  type QtiDeliveryPreparationResult,
+} from "./delivery-preparation.js";
+export {
   analyzeQtiDeliverySecurity,
   buildQtiDeliverySafeXml,
   type QtiDeliverySafeXmlResult,

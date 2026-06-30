@@ -63,7 +63,8 @@ export function processQtiAdaptiveItemTurn(input: QtiAdaptiveTurnInput): QtiAdap
     outcomes: sessionResult.outcomes,
   });
   const deliveryDiagnostics = [...sessionResult.diagnostics, ...delivery.diagnostics];
-  if (!delivery.ok || !delivery.xml) {
+  const candidateSafeXml = delivery.xml;
+  if (!delivery.ok || !candidateSafeXml) {
     return failed(
       [
         ...deliveryDiagnostics,
@@ -87,7 +88,7 @@ export function processQtiAdaptiveItemTurn(input: QtiAdaptiveTurnInput): QtiAdap
     outcomes: sessionResult.outcomes,
     score: sessionResult.score,
     completionStatus: sessionResult.outcomes.completionStatus ?? null,
-    candidateSafeXml: delivery.xml,
+    candidateSafeXml,
   };
 }
 
