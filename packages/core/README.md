@@ -123,6 +123,33 @@ then runs response processing. It does not run candidate response-validation pol
 as required interactions, cardinality limits, or min/max response counts; delivery hosts
 should enforce that policy before accepting a submission or finalizing an attempt.
 
+For the same response-validation policy the browser player uses, call
+`validateQtiResponseVariables()` against a parsed assessment item before scoring or
+persisting a submission:
+
+```ts
+import { parseQtiXml, validateQtiResponseVariables } from "@longsightgroup/qti3-core";
+
+const parsed = parseQtiXml(authoritativeItemXml);
+if (!parsed.ok) throw new Error("invalid item");
+
+const validation = validateQtiResponseVariables({
+  item: parsed.document.item,
+  responses: { RESPONSE: "A" },
+  allowedUndeclaredResponseIdentifiers: ["duration"],
+});
+
+if (!validation.ok) {
+  throw new Error(validation.diagnostics.map((item) => item.message).join("; "));
+}
+```
+
+`validateQtiResponseVariables()` uses the same runtime diagnostic codes as the player
+(`response.required`, `response.maximum`, `response.matchMax`, and related codes). It
+checks cardinality shape, required responses, min/max choice and association bounds, and
+per-choice `match-max` limits. It does not render custom validation messages in the DOM
+or validate media play counts beyond what the item model exposes.
+
 Delivery redaction, server-style scoring, and secure adaptive turn handling are library
 APIs. Dedicated CLI commands for those operations are planned separately.
 

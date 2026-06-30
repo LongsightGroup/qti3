@@ -48,6 +48,11 @@ export function isNonNegativeInteger(value: string): boolean {
   return /^\d+$/.test(value);
 }
 
+export function parseNonNegativeInteger(value: string | undefined): number | undefined {
+  if (value === undefined || !isNonNegativeInteger(value)) return undefined;
+  return Number(value);
+}
+
 export function isBooleanAttribute(value: string): boolean {
   return value === "true" || value === "false" || value === "1" || value === "0";
 }

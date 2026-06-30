@@ -10,20 +10,18 @@ import type {
   QtiValue,
 } from "./types.js";
 import { isQtiPortableCustomStateValue, readQtiJsonValue } from "./value-format.js";
+import {
+  listNamedResponseInputs,
+  type QtiNamedResponseInput,
+  type QtiNamedResponsesInput,
+} from "./response-input.js";
+
+export type QtiTrustedResponseInput = QtiNamedResponseInput;
+
+export type QtiTrustedResponsesInput = QtiNamedResponsesInput;
 
 export type QtiTrustedInputDiagnosticPrefix = "serverScoring" | "adaptiveTurn";
 
-export interface QtiTrustedResponseInput {
-  identifier: string;
-  value: unknown;
-}
-
-export type QtiTrustedResponsesInput =
-  | Record<string, unknown>
-  | readonly QtiTrustedResponseInput[]
-  | undefined;
-
-/** Trusted candidate responses and portable custom interaction state for one application. */
 export interface QtiTrustedResponseApplication {
   trustedResponses?: QtiTrustedResponsesInput;
   trustedInteractionStates?: Record<string, QtiPortableCustomStateValue> | undefined;
@@ -289,7 +287,7 @@ function applyTrustedResponseApplication(
   const allowedUndeclared = new Set(allowedUndeclaredResponseIdentifiers ?? []);
   let appliedSubmission = false;
 
-  for (const response of normalizeResponseInputs(submission.trustedResponses)) {
+  for (const response of listNamedResponseInputs(submission.trustedResponses)) {
     const identifier = response.identifier.trim();
     if (!identifier) {
       diagnostics.push({
@@ -409,12 +407,6 @@ function stripUndeclaredResponses(
       ),
     ),
   };
-}
-
-function normalizeResponseInputs(responses: QtiTrustedResponsesInput): QtiTrustedResponseInput[] {
-  if (!responses) return [];
-  if (Array.isArray(responses)) return [...responses];
-  return Object.entries(responses).map(([identifier, value]) => ({ identifier, value }));
 }
 
 function isAllowedUndeclaredVariableReference(

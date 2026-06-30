@@ -63,6 +63,38 @@ export {
   type QtiServerScoringResult,
 } from "./server-scoring.js";
 export {
+  associationMaximumResponses,
+  choiceMatchLimitExceeded,
+  choiceMatchMaximum,
+  directedPairChoiceUseCount,
+  matchMaxDiagnostics,
+  maximumAllowedResponses,
+  maximumMediaPlays,
+  maximumResponseDiagnostic,
+  mediaPlayCount,
+  minimumMediaPlays,
+  minimumRequiredResponses,
+  orderSubsetLimitsActive,
+  parseUnlimitedMaximum,
+  requiredResponseDiagnostic,
+  responseCount,
+  responseIsEmpty,
+  responseLimitAttribute,
+  responseValidationPolicy,
+  wouldExceedChoiceMatchMaximum,
+  type DirectedPairUseSide,
+  type QtiResponseValidationPolicy,
+} from "./response-validation-policy.js";
+export {
+  validateQtiResponseVariables,
+  type QtiResponseValidationDiagnostic,
+  type QtiResponseValidationDiagnosticCode,
+  type QtiResponseValidationInput,
+  type QtiResponseValidationResult,
+  type QtiResponseVariableInput,
+  type QtiResponseVariablesInput,
+} from "./response-validation.js";
+export {
   serializeResponseProcessing,
   type QtiSerializeResponseProcessingResult,
 } from "./serializer-processing.js";

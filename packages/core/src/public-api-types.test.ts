@@ -16,6 +16,10 @@ import type {
   QtiPackageItem,
   QtiPackageParseResult,
   QtiProcessingExpression,
+  QtiResponseValidationDiagnostic,
+  QtiResponseValidationDiagnosticCode,
+  QtiResponseValidationInput,
+  QtiResponseValidationResult,
   QtiResponseBranch,
   QtiResponseCondition,
   QtiResponseDeclaration,
@@ -51,6 +55,10 @@ type PublicParserModelTypes = [
   QtiAssessmentTestPackageModel,
   QtiTimingMetadata,
   QtiStandardAlignment,
+  QtiResponseValidationDiagnostic,
+  QtiResponseValidationDiagnosticCode,
+  QtiResponseValidationInput,
+  QtiResponseValidationResult,
 ];
 
 const typeExportsCompile: PublicParserModelTypes | undefined = undefined;
