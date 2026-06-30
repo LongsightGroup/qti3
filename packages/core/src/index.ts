@@ -35,6 +35,24 @@ export {
   type QtiPackageXmlNode,
   type QtiPackageXmlTree,
 } from "./package-xml.js";
+export {
+  parseQtiPackage,
+  type QtiAssessmentTestItemRef,
+  type QtiAssessmentTestPackageModel,
+  type QtiManifestFile,
+  type QtiManifestResource,
+  type QtiPackageAsset,
+  type QtiPackageAssetSource,
+  type QtiPackageInflateContext,
+  type QtiPackageInflateRaw,
+  type QtiPackageItem,
+  type QtiPackageItemSource,
+  type QtiPackageParseOptions,
+  type QtiPackageParseResult,
+  type QtiPackageShape,
+  type QtiStandardAlignment,
+  type QtiTimingMetadata,
+} from "./qti-package.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4 } from "./parser-values.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
