@@ -11,6 +11,7 @@ import {
   type Qti3PnpResolution,
   type QtiCatalogSupportSummary,
 } from "@longsightgroup/qti3-pnp";
+import { detectPackageMediaType } from "@longsightgroup/qti3-core";
 import {
   defineQtiAssessmentItemPlayer,
   type QtiAssessmentItemPlayer,
@@ -950,16 +951,7 @@ function isRelativeAssetUrl(url: string): boolean {
 }
 
 function mimeTypeForPath(path: string): string {
-  if (/\.svg$/i.test(path)) return "image/svg+xml";
-  if (/\.png$/i.test(path)) return "image/png";
-  if (/\.jpe?g$/i.test(path)) return "image/jpeg";
-  if (/\.gif$/i.test(path)) return "image/gif";
-  if (/\.webp$/i.test(path)) return "image/webp";
-  if (/\.mp3$/i.test(path)) return "audio/mpeg";
-  if (/\.wav$/i.test(path)) return "audio/wav";
-  if (/\.mp4$/i.test(path)) return "video/mp4";
-  if (/\.webm$/i.test(path)) return "video/webm";
-  return "application/octet-stream";
+  return detectPackageMediaType(path) ?? "application/octet-stream";
 }
 
 function findEndOfCentralDirectory(view: DataView): number {

@@ -4,7 +4,13 @@ import type { PlayerMessageCatalog } from "../../packages/player/src/player-mess
 import { reorderMovementDirections } from "../../packages/player/src/movement.js";
 import { resetThenRestorePlayerState } from "./player-test-api.js";
 
-export { createDeflatedZip, createStoredZip } from "./player-package-helpers.js";
+export {
+  createDeflatedZip,
+  createItemPackageZip,
+  createStoredZip,
+  qtiAssessmentTestResource,
+  qtiItemResource,
+} from "./player-package-helpers.js";
 
 export const operableControlSelector = [
   "button",

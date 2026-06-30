@@ -3,6 +3,7 @@
   "type": "module",
   "dependencies": {
     "@longsightgroup/qti3-a11y": "workspace:*",
+    "@longsightgroup/qti3-core": "workspace:*",
     "@longsightgroup/qti3-fixtures": "workspace:*",
     "@longsightgroup/qti3-player": "workspace:*",
     "@longsightgroup/qti3-player-preact": "workspace:*",

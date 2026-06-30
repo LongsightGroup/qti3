@@ -41,6 +41,9 @@ importers:
       '@longsightgroup/qti3-a11y':
         specifier: workspace:*
         version: link:../../packages/a11y
+      '@longsightgroup/qti3-core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@longsightgroup/qti3-fixtures':
         specifier: workspace:*
         version: link:../../packages/fixtures

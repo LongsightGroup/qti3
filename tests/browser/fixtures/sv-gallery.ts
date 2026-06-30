@@ -32,6 +32,7 @@ const entries: GalleryCase[] = sharedVocabularyManifest
 const moduleUrl = new URL(import.meta.url);
 const repoRootUrl = new URL("../../../", moduleUrl);
 const fixtureRootUrl = moduleUrl.pathname.includes("/@fs/") ? repoRootUrl : staticSiteRootUrl();
+const caseRoot = requiredElement<HTMLElement>(".main");
 const player = requiredElement<QtiGalleryPlayer>("#player");
 const interactionFilter = requiredElement<HTMLSelectElement>("#interaction-filter");
 const familyFilter = requiredElement<HTMLSelectElement>("#family-filter");
@@ -49,6 +50,8 @@ const copyStatus = requiredElement<HTMLElement>("#copy-status");
 
 let selectedEntry = entryFromUrl() ?? entries[0]?.entry;
 let selectedXml = "";
+let selectedLoadId = 0;
+let selectedLoadQueue: Promise<void> = Promise.resolve();
 
 populateFilter(interactionFilter, [
   "all",
@@ -83,20 +86,50 @@ async function selectCase(caseId: string | undefined, pushUrl: boolean): Promise
   if (!match) return;
   selectedEntry = match.entry;
   if (pushUrl) updateUrl(caseId, true);
-  await loadSelectedCase();
+  await scheduleSelectedCaseLoad(match.entry);
 }
 
-async function loadSelectedCase(): Promise<void> {
-  if (!selectedEntry) return;
-  selectedXml = await fetchXml(selectedEntry);
-  player.messageCatalog = selectedEntry.messageCatalog;
-  await player.loadXml(selectedXml);
-  await waitForPlayerContent(player);
-  updateHeader(selectedEntry);
-  renderClassInspector(selectedEntry);
-  renderAssertionSkeleton(selectedEntry.assertions);
-  const results = await assertSvCaseInDocument(selectedEntry.assertions);
-  renderAssertions(results);
+function scheduleSelectedCaseLoad(entry: SharedVocabularyManifestEntry): Promise<void> {
+  const loadId = (selectedLoadId += 1);
+  selectedLoadQueue = selectedLoadQueue
+    .catch(() => undefined)
+    .then(async () => {
+      if (!isCurrentCaseLoad(entry, loadId)) return;
+      await loadSelectedCase(entry, loadId);
+    });
+  return selectedLoadQueue;
+}
+
+async function loadSelectedCase(
+  entry: SharedVocabularyManifestEntry,
+  loadId: number,
+): Promise<void> {
+  markCaseStatus(entry.id, "loading");
+  try {
+    const xml = await fetchXml(entry);
+    if (!isCurrentCaseLoad(entry, loadId)) return;
+    selectedXml = xml;
+    player.messageCatalog = entry.messageCatalog;
+    await player.loadXml(xml);
+    if (!isCurrentCaseLoad(entry, loadId)) return;
+    await waitForPlayerContent(player);
+    if (!isCurrentCaseLoad(entry, loadId)) return;
+    updateHeader(entry);
+    renderClassInspector(entry);
+    renderAssertionSkeleton(entry.assertions);
+    const results = await assertSvCaseInDocument(entry.assertions);
+    if (!isCurrentCaseLoad(entry, loadId)) return;
+    renderAssertions(results);
+    markCaseStatus(entry.id, "ready");
+  } catch (error: unknown) {
+    if (!isCurrentCaseLoad(entry, loadId)) return;
+    markCaseStatus(entry.id, "error");
+    renderCaseLoadError(entry, error);
+  }
+}
+
+function isCurrentCaseLoad(entry: SharedVocabularyManifestEntry, loadId: number): boolean {
+  return selectedEntry === entry && selectedLoadId === loadId;
 }
 
 function renderCaseList(): void {
@@ -106,7 +139,7 @@ function renderCaseList(): void {
     if (next && next.id !== selectedEntry?.id) {
       selectedEntry = next;
       updateUrl(next.id, false);
-      void loadSelectedCase();
+      void scheduleSelectedCaseLoad(next);
     }
   }
 
@@ -129,7 +162,7 @@ function renderCaseList(): void {
         selectedEntry = item.entry;
         updateUrl(item.entry.id, true);
         renderCaseList();
-        void loadSelectedCase();
+        void scheduleSelectedCaseLoad(item.entry);
       });
       return button;
     }),
@@ -228,6 +261,19 @@ function renderAssertions(results: SharedVocabularyProbeResult[]): void {
       return row;
     }),
   );
+}
+
+function markCaseStatus(caseId: string, status: "loading" | "ready" | "error"): void {
+  caseRoot.dataset.selectedCaseId = caseId;
+  caseRoot.dataset.caseStatus = status;
+}
+
+function renderCaseLoadError(entry: SharedVocabularyManifestEntry, error: unknown): void {
+  title.textContent = entry.id;
+  description.textContent = error instanceof Error ? error.message : String(error);
+  tags.replaceChildren(textElement("span", "error", "tag"));
+  classInspector.replaceChildren();
+  assertionList.replaceChildren();
 }
 
 function classPreservationAssertions(

@@ -18,6 +18,7 @@
     "examples/manual": {
       "dependencies": {
         "@longsightgroup/qti3-a11y": "workspace:*",
+        "@longsightgroup/qti3-core": "workspace:*",
         "@longsightgroup/qti3-fixtures": "workspace:*",
         "@longsightgroup/qti3-pnp": "workspace:*",
         "@longsightgroup/qti3-player": "workspace:*",

@@ -220,7 +220,7 @@ function materializeAssets(
     .toSorted((left, right) => left.href.localeCompare(right.href));
 }
 
-function detectPackageMediaType(href: string): string | undefined {
+export function detectPackageMediaType(href: string): string | undefined {
   const extension = href.slice(href.lastIndexOf(".") + 1).toLowerCase();
   switch (extension) {
     case "css":
@@ -246,6 +246,8 @@ function detectPackageMediaType(href: string): string | undefined {
       return "audio/wav";
     case "webm":
       return "video/webm";
+    case "webp":
+      return "image/webp";
     case "xml":
       return "application/xml";
     default:

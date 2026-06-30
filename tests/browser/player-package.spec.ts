@@ -2,11 +2,13 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import {
-  createStoredZip,
-  createDeflatedZip,
   dragCenter,
   expectImageLoaded,
   expectResponse,
+  createItemPackageZip,
+  createStoredZip,
+  qtiAssessmentTestResource,
+  qtiItemResource,
 } from "./player-helpers.js";
 
 test.describe("player package loading", () => {
@@ -58,6 +60,50 @@ test.describe("player package loading", () => {
       .toBe("6px");
   });
 
+  test("attaches package-local qti-stylesheet resources from a zip upload", async ({ page }) => {
+    const zip = createItemPackageZip({
+      resources: [qtiItemResource("stylesheet-item", "item.xml", ["styles/item.css"])],
+      files: {
+        "item.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-stylesheet" title="packaged-stylesheet" time-dependent="false">
+  <qti-stylesheet href="styles/item.css" type="text/css" media="screen"/>
+  <qti-item-body>
+    <p class="qti3-package-stylesheet-evidence">Stylesheet delivery evidence.</p>
+  </qti-item-body>
+</qti-assessment-item>`,
+        "styles/item.css": `
+.qti3-package-stylesheet-evidence {
+  border-left: 7px solid rgb(23, 45, 67);
+  padding-left: 5px;
+}
+`,
+      },
+    });
+
+    await page.goto("/");
+    await page.locator("#file").setInputFiles({
+      name: "stylesheet-package.zip",
+      mimeType: "application/zip",
+      buffer: zip,
+    });
+
+    await expect(page.locator("#file-summary")).toContainText("item.xml");
+    const stylesheet = page.locator('qti-assessment-item-player link[rel="stylesheet"]');
+    await expect(stylesheet).toHaveAttribute("href", /^blob:/);
+    await expect(stylesheet).toHaveAttribute("type", "text/css");
+    await expect(stylesheet).toHaveAttribute("media", "screen");
+
+    await expect
+      .poll(async () =>
+        page
+          .locator("qti-assessment-item-player .qti3-package-stylesheet-evidence")
+          .evaluate((element) => {
+            return getComputedStyle(element).borderLeftWidth;
+          }),
+      )
+      .toBe("7px");
+  });
+
   test("does not attach declined qti-stylesheet resources", async ({ page }) => {
     await page.goto("/");
     const xml = stylesheetEvidenceXml();
@@ -101,18 +147,15 @@ test.describe("player package loading", () => {
   });
 
   test("resolves packaged media sources and tracks from a zip upload", async ({ page }) => {
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="media" type="imsqti_item_xmlv3p0" href="items/media.xml">
-      <file href="items/media.xml"/>
-      <file href="items/media/clip.mp4"/>
-      <file href="items/captions/clip.vtt"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "items/media.xml": `<?xml version="1.0" encoding="UTF-8"?>
+    const zip = createItemPackageZip({
+      resources: [
+        qtiItemResource("media", "items/media.xml", [
+          "items/media/clip.mp4",
+          "items/captions/clip.vtt",
+        ]),
+      ],
+      files: {
+        "items/media.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-media" title="packaged-media" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
   <qti-item-body>
@@ -125,8 +168,9 @@ test.describe("player package loading", () => {
     </qti-media-interaction>
   </qti-item-body>
 </qti-assessment-item>`,
-      "items/media/clip.mp4": Buffer.from("not-real-mp4"),
-      "items/captions/clip.vtt": Buffer.from("WEBVTT\n\n00:00.000 --> 00:01.000\nCaption\n"),
+        "items/media/clip.mp4": Buffer.from("not-real-mp4"),
+        "items/captions/clip.vtt": Buffer.from("WEBVTT\n\n00:00.000 --> 00:01.000\nCaption\n"),
+      },
     });
 
     await page.goto("/");
@@ -140,6 +184,16 @@ test.describe("player package loading", () => {
     const video = page.locator("qti-assessment-item-player video");
     await expect(video.locator("source")).toHaveAttribute("src", /^blob:/);
     await expect(video.locator("track")).toHaveAttribute("src", /^blob:/);
+    await expect
+      .poll(async () =>
+        video.locator("track").evaluate(async (track) => {
+          const src = track.getAttribute("src");
+          if (!src) return "";
+          const response = await fetch(src);
+          return response.headers.get("content-type") ?? "";
+        }),
+      )
+      .toBe("text/vtt");
   });
 
   test("requires a single zip upload for local package loading", async ({ page }) => {
@@ -195,22 +249,14 @@ test.describe("player package loading", () => {
     const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");
     if (!choice || !textEntry) throw new Error("Missing package fixtures.");
 
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="test-1" type="imsqti_test_xmlv3p0" href="assessment.xml">
-      <file href="assessment.xml"/>
-    </resource>
-    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
-      <file href="items/choice.xml"/>
-    </resource>
-    <resource identifier="text" type="imsqti_item_xmlv3p0" href="items/text-entry.xml">
-      <file href="items/text-entry.xml"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
+    const zip = createItemPackageZip({
+      resources: [
+        qtiAssessmentTestResource("test-1", "assessment.xml"),
+        qtiItemResource("choice", "items/choice.xml"),
+        qtiItemResource("text", "items/text-entry.xml"),
+      ],
+      files: {
+        "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="US Presidents Sampler">
   <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
     <qti-assessment-section identifier="section-1" visible="true">
@@ -219,8 +265,9 @@ test.describe("player package loading", () => {
     </qti-assessment-section>
   </qti-test-part>
 </qti-assessment-test>`,
-      "items/choice.xml": choice.xml,
-      "items/text-entry.xml": textEntry.xml,
+        "items/choice.xml": choice.xml,
+        "items/text-entry.xml": textEntry.xml,
+      },
     });
 
     await page.goto("/");
@@ -247,16 +294,12 @@ test.describe("player package loading", () => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     if (!choice) throw new Error("Missing package fixture.");
 
-    const zip = createDeflatedZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
-      <file href="items/choice.xml"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "items/choice.xml": choice.xml,
+    const zip = createItemPackageZip({
+      compression: "deflated",
+      resources: [qtiItemResource("choice", "items/choice.xml")],
+      files: {
+        "items/choice.xml": choice.xml,
+      },
     });
 
     await page.goto("/");
@@ -313,16 +356,11 @@ test.describe("player package loading", () => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     if (!choice) throw new Error("Missing package fixture.");
 
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="../items/choice.xml">
-      <file href="../items/choice.xml"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "items/choice.xml": choice.xml,
+    const zip = createItemPackageZip({
+      resources: [qtiItemResource("choice", "../items/choice.xml")],
+      files: {
+        "items/choice.xml": choice.xml,
+      },
     });
 
     await page.goto("/");
@@ -339,13 +377,15 @@ test.describe("player package loading", () => {
   });
 
   test("reports package item references that do not exist", async ({ page }) => {
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/missing.xml"/>
-  </resources>
-</manifest>`,
+    const zip = createItemPackageZip({
+      resources: [
+        {
+          identifier: "choice",
+          type: "imsqti_item_xmlv3p0",
+          href: "items/missing.xml",
+        },
+      ],
+      files: {},
     });
 
     await page.goto("/");
@@ -365,16 +405,17 @@ test.describe("player package loading", () => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     if (!choice) throw new Error("Missing package fixture.");
 
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="choice" type="imsqti_item_xmlv3p0p1">
-      <file href="items/choice.xml"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "items/choice.xml": choice.xml,
+    const zip = createItemPackageZip({
+      resources: [
+        {
+          identifier: "choice",
+          type: "imsqti_item_xmlv3p0p1",
+          files: ["items/choice.xml"],
+        },
+      ],
+      files: {
+        "items/choice.xml": choice.xml,
+      },
     });
 
     await page.goto("/");
@@ -398,18 +439,16 @@ test.describe("player package loading", () => {
     if (!graphicOrder) throw new Error("Missing graphic order fixture.");
     const diagram = await readFile("examples/manual/public/hotspot-flow-unlabeled.svg");
 
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="graphic-order" type="imsqti_item_xmlv3p0" href="items/graphic-order.xml">
-      <file href="items/graphic-order.xml"/>
-      <file href="items/hotspot-flow-unlabeled.svg"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "items/graphic-order.xml": graphicOrder.xml,
-      "items/hotspot-flow-unlabeled.svg": diagram,
+    const zip = createItemPackageZip({
+      resources: [
+        qtiItemResource("graphic-order", "items/graphic-order.xml", [
+          "items/hotspot-flow-unlabeled.svg",
+        ]),
+      ],
+      files: {
+        "items/graphic-order.xml": graphicOrder.xml,
+        "items/hotspot-flow-unlabeled.svg": diagram,
+      },
     });
 
     await page.goto("/");
@@ -429,18 +468,15 @@ test.describe("player package loading", () => {
     const targetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="560" height="326" viewBox="0 0 560 326"><rect width="560" height="326" fill="#f5f1e8"/><rect x="55" y="256" width="78" height="63" fill="#d8cab8" stroke="#3f4d5a" stroke-width="2"/></svg>`;
     const draggerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="78" height="63" viewBox="0 0 78 63"><rect width="78" height="63" rx="4" fill="#fff" stroke="#3f4d5a" stroke-width="3"/><path d="M12 44h54" stroke="#b65f2d" stroke-width="5"/><text x="39" y="30" text-anchor="middle" font-size="16" font-family="sans-serif" fill="#3f4d5a">D</text></svg>`;
 
-    const zip = createStoredZip({
-      "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources>
-    <resource identifier="graphic-gap" type="imsqti_item_xmlv3p0" href="items/graphic-gap.xml">
-      <file href="items/graphic-gap.xml"/>
-      <file href="items/images/background.svg"/>
-      <file href="items/images/d-bay.svg"/>
-    </resource>
-  </resources>
-</manifest>`,
-      "items/graphic-gap.xml": `<?xml version="1.0" encoding="UTF-8"?>
+    const zip = createItemPackageZip({
+      resources: [
+        qtiItemResource("graphic-gap", "items/graphic-gap.xml", [
+          "items/images/background.svg",
+          "items/images/d-bay.svg",
+        ]),
+      ],
+      files: {
+        "items/graphic-gap.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-graphic-gap" title="packaged-graphic-gap" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
   <qti-item-body>
@@ -453,8 +489,9 @@ test.describe("player package loading", () => {
     </qti-graphic-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>`,
-      "items/images/background.svg": targetSvg,
-      "items/images/d-bay.svg": draggerSvg,
+        "items/images/background.svg": targetSvg,
+        "items/images/d-bay.svg": draggerSvg,
+      },
     });
 
     await page.goto("/");

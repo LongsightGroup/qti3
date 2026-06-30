@@ -67,6 +67,7 @@ export {
   type QtiStandardAlignment,
   type QtiTimingMetadata,
 } from "./qti-package.js";
+export { detectPackageMediaType } from "./qti-package-assets.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4 } from "./parser-values.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
