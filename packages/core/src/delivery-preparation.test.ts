@@ -43,7 +43,24 @@ describe("QTI delivery preparation", () => {
     expect(staticAdaptive.ok).toBe(false);
     expect(staticAdaptive.candidateSafeXml).toBeUndefined();
     expect(staticAdaptive.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "delivery.preparation.unsupportedAdaptiveResponseProcessing",
+      }),
+    );
+    expect(staticAdaptive.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "delivery.preparation.forbiddenElement" }),
+    );
+    expect(staticAdaptive.analysis.diagnostics).toContainEqual(
       expect.objectContaining({ code: "delivery.unsupportedAdaptiveResponseProcessing" }),
+    );
+
+    const staticTemplate = prepareQtiDeliveryXml(templateProcessingXml(), {
+      mode: "static",
+    });
+    expect(staticTemplate.ok).toBe(false);
+    expect(staticTemplate.candidateSafeXml).toBeUndefined();
+    expect(staticTemplate.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "delivery.preparation.unsupportedSecureDelivery" }),
     );
 
     const adaptiveTemplate = prepareQtiDeliveryXml(templateProcessingXml(), {
@@ -53,7 +70,25 @@ describe("QTI delivery preparation", () => {
     expect(adaptiveTemplate.ok).toBe(false);
     expect(adaptiveTemplate.candidateSafeXml).toBeUndefined();
     expect(adaptiveTemplate.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "delivery.preparation.unsupportedMaterialization" }),
+    );
+    expect(adaptiveTemplate.analysis.diagnostics).toContainEqual(
       expect.objectContaining({ code: "adaptiveTurn.materialization.unsupported" }),
+    );
+  });
+
+  it("keeps parse diagnostic codes unchanged", () => {
+    const result = prepareQtiDeliveryXml(
+      `
+        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="incomplete" title="incomplete" time-dependent="false">
+          <qti-item-body>
+      `,
+      { mode: "static" },
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "xml.parse", severity: "error" }),
     );
   });
 

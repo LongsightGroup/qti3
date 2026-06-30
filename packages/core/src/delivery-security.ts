@@ -82,13 +82,13 @@ const staticDeliveryPolicy: DeliveryRedactionPolicy = {
 
     return null;
   },
-  diagnosticCodeForFinding,
+  diagnosticCodeForFinding: staticDiagnosticCodeForFinding,
   forbiddenElementMessage(node: XmlNode) {
     return `${node.name} exposes answer keys, scoring, mapping, feedback, or solution information during delivery.`;
   },
 };
 
-function diagnosticCodeForFinding(kind: QtiDeliverySecurityFindingKind): string {
+function staticDiagnosticCodeForFinding(kind: QtiDeliverySecurityFindingKind): string {
   if (kind === "forbidden-delivery-element") return "delivery.forbiddenElement";
   if (kind === "unsupported-adaptive-response-processing") {
     return "delivery.unsupportedAdaptiveResponseProcessing";

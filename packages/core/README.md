@@ -100,10 +100,12 @@ XML string, and `buildQtiDeliverySafeXml()` when a host explicitly wants the low
 static redaction primitive. Most delivery services should call `prepareQtiDeliveryXml()`
 instead.
 
-Diagnostic codes depend on the preparation path: static mode reports `delivery.*` codes,
-while `mode: "server-materialized-adaptive"` reports `adaptiveTurn.materialization.*`
-codes for materialization blockers. Hosts should branch on `result.ok` and inspect
-`result.diagnostics` without assuming a single code namespace across modes.
+`prepareQtiDeliveryXml()` returns normalized `delivery.preparation.*` diagnostic codes
+for delivery preparation failures across both modes. Hosts can key on
+`result.diagnostics[].code` for logging, i18n, HTTP mapping, or telemetry when using the
+facade. `result.analysis.findings[].kind` remains available as the structured semantic
+contract for hosts that prefer mode-independent finding data. Lower-level APIs keep
+their own diagnostic namespaces for callers that intentionally use those primitives.
 
 The parser does not resolve external entities, process DTD entity declarations, or access
 the network or filesystem. Unknown named entities are preserved verbatim, and numeric

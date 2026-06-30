@@ -71,14 +71,16 @@ function adaptiveMaterializationPolicy(
         source: node.source,
       };
     },
-    diagnosticCodeForFinding,
+    diagnosticCodeForFinding: adaptiveMaterializationDiagnosticCodeForFinding,
     forbiddenElementMessage(node) {
       return `${node.name} exposes answer keys, scoring, mapping, feedback, or solution information during adaptive delivery.`;
     },
   };
 }
 
-function diagnosticCodeForFinding(kind: QtiDeliverySecurityFindingKind): string {
+function adaptiveMaterializationDiagnosticCodeForFinding(
+  kind: QtiDeliverySecurityFindingKind,
+): string {
   return kind === "unsupported-secure-delivery-element"
     ? "adaptiveTurn.materialization.unsupported"
     : "adaptiveTurn.materialization.forbiddenElement";
