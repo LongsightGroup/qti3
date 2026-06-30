@@ -167,7 +167,13 @@ export function redactDeliveryXml(
     [parsed.root, ...descendants(parsed.root, () => true)],
     (node, normalizedName) => policy.isForbiddenElement(node, normalizedName),
   );
-  const redactedXml = removeSourceRanges(xml, redactionRanges);
+  const redactedXml = applySourceRangeEdits(
+    xml,
+    redactionRanges.map((range) => ({
+      startOffset: range.startOffset,
+      endOffset: range.endOffset,
+    })),
+  );
   const redactedAnalysis = analyzeDeliveryXml(parseDeliveryXml(redactedXml), policy);
   if (!redactedAnalysis.deliverySafe || !redactedAnalysis.secureDeliverySupported) {
     return {
@@ -203,14 +209,34 @@ export function sourceRangeFor(node: XmlNode): RedactionRange[] {
   return [{ startOffset: node.sourceRange.startOffset, endOffset }];
 }
 
-export function removeSourceRanges(xml: string, ranges: readonly RedactionRange[]): string {
+export function applySourceRangeEdits(xml: string, edits: readonly SourceRangeEdit[]): string {
+  if (edits.length === 0) return xml;
+  const sorted = edits.toSorted((left, right) => left.startOffset - right.startOffset);
+  assertNonOverlappingSourceRangeEdits(sorted);
   let output = "";
   let cursor = 0;
-  for (const range of ranges) {
-    output += xml.slice(cursor, range.startOffset);
-    cursor = range.endOffset;
+  for (const edit of sorted) {
+    output += xml.slice(cursor, edit.startOffset);
+    if (edit.text !== undefined) output += edit.text;
+    cursor = edit.endOffset;
   }
   return output + xml.slice(cursor);
+}
+
+function assertNonOverlappingSourceRangeEdits(edits: readonly SourceRangeEdit[]): void {
+  for (let index = 1; index < edits.length; index += 1) {
+    const previous = edits[index - 1];
+    const current = edits[index];
+    if (!previous || !current || current.startOffset >= previous.endOffset) continue;
+    throw new Error("Source range edits must not overlap.");
+  }
+}
+
+export function removeSourceRanges(xml: string, ranges: readonly RedactionRange[]): string {
+  return applySourceRangeEdits(
+    xml,
+    ranges.map((range) => ({ startOffset: range.startOffset, endOffset: range.endOffset })),
+  );
 }
 
 export function normalizedQtiElementName(localName: string): string {
@@ -238,6 +264,11 @@ export function isDeclarationDefaultValue(node: XmlNode, normalizedName: string)
 export interface RedactionRange {
   startOffset: number;
   endOffset: number;
+}
+
+export interface SourceRangeEdit extends RedactionRange {
+  /** When omitted, the source range is removed. When set, the range is replaced with this text. */
+  text?: string | undefined;
 }
 
 function mergeSourceRanges(ranges: readonly RedactionRange[]): RedactionRange[] {

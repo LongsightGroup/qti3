@@ -51,12 +51,51 @@ export function adaptiveTemplateItemXml(): string {
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive-template" adaptive="true" title="adaptive-template" time-dependent="false">
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
       <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-      <qti-item-body><p>Template adaptive item.</p></qti-item-body>
+      <qti-item-body><p>Template adaptive item <qti-printed-variable identifier="MISSING_TEMPLATE"/>.</p></qti-item-body>
       <qti-template-processing>
         <qti-set-correct-response identifier="RESPONSE">
           <qti-base-value base-type="identifier">A</qti-base-value>
         </qti-set-correct-response>
       </qti-template-processing>
+    </qti-assessment-item>
+  `;
+}
+
+export function adaptiveTemplatePresentationItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive-template-presentation" adaptive="true" title="adaptive-template-presentation" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+        <qti-default-value><qti-value>0</qti-value></qti-default-value>
+      </qti-outcome-declaration>
+      <qti-template-declaration identifier="PROMPT_VALUE" cardinality="single" base-type="integer"/>
+      <qti-template-declaration identifier="PATH" cardinality="single" base-type="identifier"/>
+      <qti-template-processing>
+        <qti-set-template-value identifier="PROMPT_VALUE">
+          <qti-base-value base-type="integer">7</qti-base-value>
+        </qti-set-template-value>
+        <qti-set-template-value identifier="PATH">
+          <qti-base-value base-type="identifier">visible</qti-base-value>
+        </qti-set-template-value>
+        <qti-set-correct-response identifier="RESPONSE">
+          <qti-base-value base-type="identifier">A</qti-base-value>
+        </qti-set-correct-response>
+      </qti-template-processing>
+      <qti-item-body>
+        <p>Generated value: <qti-printed-variable identifier="PROMPT_VALUE"/>.</p>
+        <p>Initial score: <qti-printed-variable identifier="SCORE"/>.</p>
+        <qti-template-block template-identifier="PATH" identifier="visible" show-hide="show">
+          <p>Visible template path <qti-printed-variable identifier="PROMPT_VALUE"/>.</p>
+        </qti-template-block>
+        <qti-template-block template-identifier="PATH" identifier="hidden" show-hide="show">
+          <p>Hidden template path.</p>
+        </qti-template-block>
+        <qti-choice-interaction response-identifier="RESPONSE">
+          <qti-simple-choice identifier="A">A</qti-simple-choice>
+          <qti-simple-choice identifier="B">B</qti-simple-choice>
+        </qti-choice-interaction>
+      </qti-item-body>
+      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
     </qti-assessment-item>
   `;
 }

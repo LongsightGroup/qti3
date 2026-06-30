@@ -89,11 +89,14 @@ untrusted presentation input.
 `prepareQtiDeliveryXml()` is the high-level host API. Use `mode: "static"` for
 non-adaptive delivery where all response processing and feedback are removed. Use
 `mode: "server-materialized-adaptive"` only after the server has authoritative outcomes
-for the current adaptive view; pass those outcomes so visible feedback can be retained
-while answer keys, processing, mappings, lookup tables, declaration defaults, and hidden
-feedback are stripped. Static delivery fails closed for adaptive response processing;
-server-materialized adaptive delivery still fails closed for unsupported template
-processing and `qti-set-correct-response` materialization.
+for the current adaptive view; pass those outcomes so visible feedback can be retained.
+Pass `templateValues` when the item uses template-derived presentation (`qti-printed-variable`,
+`qti-template-block`, or `qti-template-inline`). Adaptive turn processing supplies these
+from session state automatically; hosts calling `prepareQtiDeliveryXml()` directly must
+provide the same authoritative template snapshot. Generated answer keys, template and response
+processing, mappings, lookup tables, declaration defaults, and hidden feedback are
+stripped from candidate XML. Static delivery fails closed for adaptive response or
+template processing where server materialization is required.
 
 Use `analyzeQtiDeliverySecurity()` when a host only needs diagnostics about a specific
 XML string, and `buildQtiDeliverySafeXml()` when a host explicitly wants the lower-level

@@ -1,25 +1,27 @@
 import {
   FORBIDDEN_DELIVERY_SECRET_ELEMENT_NAMES,
+  analyzeDeliveryXml,
   isDeclarationDefaultValue,
+  parseDeliveryXml,
   redactDeliveryXml,
   type DeliveryRedactionPolicy,
   type QtiDeliverySecurityAnalysis,
   type QtiDeliverySecurityFindingKind,
 } from "./delivery-redaction.js";
+import { materializeTemplatePresentation } from "./template-presentation-materializer.js";
 import type { QtiDiagnostic, QtiValue } from "./types.js";
 import { qtiValueToString } from "./value-format.js";
 import type { XmlNode } from "./xml.js";
 
-const UNSUPPORTED_MATERIALIZATION_ELEMENT_NAMES = new Set([
-  "template-processing",
-  "set-correct-response",
-]);
+const TEMPLATE_PROCESSING_ELEMENT_NAMES = new Set(["template-processing", "set-correct-response"]);
 
 const FEEDBACK_ELEMENT_NAMES = new Set(["feedback-inline", "feedback-block", "modal-feedback"]);
 
 export interface QtiAdaptiveCandidateMaterializationInput {
   itemXml: string;
   outcomes: Record<string, QtiValue>;
+  templateValues?: Record<string, QtiValue>;
+  responses?: Record<string, QtiValue>;
 }
 
 export interface QtiAdaptiveCandidateMaterializationResult {
@@ -32,7 +34,22 @@ export interface QtiAdaptiveCandidateMaterializationResult {
 export function materializeAdaptiveCandidateView(
   input: QtiAdaptiveCandidateMaterializationInput,
 ): QtiAdaptiveCandidateMaterializationResult {
-  return redactDeliveryXml(input.itemXml, adaptiveMaterializationPolicy(input.outcomes));
+  const policy = adaptiveMaterializationPolicy(input.outcomes);
+  const templateMaterialization = materializeTemplatePresentation(input.itemXml, {
+    outcomes: input.outcomes,
+    templateValues: input.templateValues ?? {},
+    responses: input.responses,
+  });
+  if (!templateMaterialization.ok) {
+    const analysis = analyzeDeliveryXml(parseDeliveryXml(input.itemXml), policy);
+    const diagnostics = [...templateMaterialization.diagnostics, ...analysis.diagnostics];
+    return {
+      ok: false,
+      diagnostics,
+      analysis,
+    };
+  }
+  return redactDeliveryXml(templateMaterialization.xml, policy);
 }
 
 function shouldPreserveFeedback(node: XmlNode, outcomes: Record<string, QtiValue>): boolean {
@@ -57,19 +74,13 @@ function adaptiveMaterializationPolicy(
     isForbiddenElement(node, normalizedName) {
       if (isFeedbackElement(normalizedName)) return !shouldPreserveFeedback(node, outcomes);
       return (
+        TEMPLATE_PROCESSING_ELEMENT_NAMES.has(normalizedName) ||
         FORBIDDEN_DELIVERY_SECRET_ELEMENT_NAMES.has(normalizedName) ||
         isDeclarationDefaultValue(node, normalizedName)
       );
     },
-    unsupportedFinding(node, normalizedName) {
-      if (!UNSUPPORTED_MATERIALIZATION_ELEMENT_NAMES.has(normalizedName)) return null;
-      return {
-        kind: "unsupported-secure-delivery-element",
-        qtiName: node.name,
-        localName: node.localName,
-        message: `${node.name} is not supported by adaptive candidate materialization v1.`,
-        source: node.source,
-      };
+    unsupportedFinding() {
+      return null;
     },
     diagnosticCodeForFinding: adaptiveMaterializationDiagnosticCodeForFinding,
     forbiddenElementMessage(node) {

@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { prepareQtiDeliveryXml } from "./index.js";
 import type { QtiDeliveryPreparationOptions, QtiValue } from "./index.js";
+import { adaptiveTemplatePresentationItemXml } from "./trusted-item.fixtures.js";
 
 describe("QTI delivery preparation", () => {
   it("prepares static candidate-safe XML through the high-level API", () => {
@@ -34,6 +35,23 @@ describe("QTI delivery preparation", () => {
     expect(result.candidateSafeXml).toContain("Modal feedback.");
     expect(result.analysis.deliverySafe).toBe(true);
     expect(result.analysis.secureDeliverySupported).toBe(true);
+  });
+
+  it("materializes template presentation for server-materialized adaptive delivery", () => {
+    const result = prepareQtiDeliveryXml(adaptiveTemplatePresentationItemXml(), {
+      mode: "server-materialized-adaptive",
+      outcomes: { SCORE: 0, completionStatus: "not_attempted" },
+      templateValues: { PROMPT_VALUE: 7, PATH: "visible" },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.candidateSafeXml).toContain("Generated value: 7.");
+    expect(result.candidateSafeXml).toContain("Initial score: 0.");
+    expect(result.candidateSafeXml).toContain("Visible template path 7.");
+    expect(result.candidateSafeXml).not.toContain("Hidden template path.");
+    expect(result.candidateSafeXml).not.toMatch(/<qti-template-processing\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-set-correct-response\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-response-processing\b/);
   });
 
   it("fails closed for unsupported preparation mode constructs", () => {
@@ -72,9 +90,6 @@ describe("QTI delivery preparation", () => {
     expect(adaptiveTemplate.diagnostics).toContainEqual(
       expect.objectContaining({ code: "delivery.preparation.unsupportedMaterialization" }),
     );
-    expect(adaptiveTemplate.analysis.diagnostics).toContainEqual(
-      expect.objectContaining({ code: "adaptiveTurn.materialization.unsupported" }),
-    );
   });
 
   it("keeps parse diagnostic codes unchanged", () => {
@@ -100,6 +115,7 @@ describe("QTI delivery preparation", () => {
     expectTypeOf<AdaptiveBranch>().toEqualTypeOf<{
       mode: "server-materialized-adaptive";
       outcomes: Record<string, QtiValue>;
+      templateValues?: Record<string, QtiValue>;
     }>();
     expectTypeOf({ mode: "static" } satisfies QtiDeliveryPreparationOptions).toEqualTypeOf<{
       mode: "static";
@@ -138,7 +154,7 @@ function templateProcessingXml(): string {
   return `
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template" title="template" time-dependent="false">
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
-      <qti-item-body><p>Template.</p></qti-item-body>
+      <qti-item-body><p>Template <qti-printed-variable identifier="MISSING_TEMPLATE"/>.</p></qti-item-body>
       <qti-template-processing>
         <qti-set-correct-response identifier="RESPONSE">
           <qti-base-value base-type="identifier">A</qti-base-value>

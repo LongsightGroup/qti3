@@ -11,7 +11,11 @@ export type QtiDeliveryPreparationMode = "static" | "server-materialized-adaptiv
 
 export type QtiDeliveryPreparationOptions =
   | { mode: "static" }
-  | { mode: "server-materialized-adaptive"; outcomes: Record<string, QtiValue> };
+  | {
+      mode: "server-materialized-adaptive";
+      outcomes: Record<string, QtiValue>;
+      templateValues?: Record<string, QtiValue>;
+    };
 
 export interface QtiDeliveryPreparationResult {
   ok: boolean;
@@ -32,6 +36,9 @@ export function prepareQtiDeliveryXml(
       : materializeAdaptiveCandidateView({
           itemXml: xml,
           outcomes: options.outcomes,
+          ...(options.templateValues === undefined
+            ? {}
+            : { templateValues: options.templateValues }),
         });
 
   return {
@@ -54,6 +61,13 @@ function normalizePreparationDiagnostics(
 
   return redaction.diagnostics.map((diagnostic) => {
     if (!isDeliveryFindingDiagnosticCode(diagnostic.code)) return diagnostic;
+
+    if (diagnostic.code === "adaptiveTurn.materialization.unsupported") {
+      return {
+        ...diagnostic,
+        code: preparationDiagnosticCodeForLowerLevelCode(diagnostic.code, mode),
+      };
+    }
 
     const code = findingCodes[findingIndex];
     findingIndex += 1;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildQtiDeliverySafeXml, parseQtiXml, processQtiAdaptiveItemTurn } from "./index.js";
 import {
   adaptiveChoiceItemXml,
+  adaptiveTemplatePresentationItemXml,
   adaptiveTemplateItemXml,
   noScoreProcessingItemXml,
 } from "./trusted-item.fixtures.js";
@@ -150,6 +151,87 @@ describe("adaptive QTI item turns", () => {
     const adaptiveTurn = processQtiAdaptiveItemTurn({ itemXml: adaptiveChoiceItemXml() });
     expect(adaptiveTurn.ok).toBe(true);
     expect(adaptiveTurn.candidateSafeXml).not.toMatch(/<qti-response-processing\b/);
+
+    const staticTemplateDelivery = buildQtiDeliverySafeXml(adaptiveTemplatePresentationItemXml());
+    expect(staticTemplateDelivery.ok).toBe(false);
+    expect(staticTemplateDelivery.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "delivery.unsupportedSecureDelivery" }),
+    );
+  });
+
+  it("materializes adaptive template presentation from authoritative session state", () => {
+    const result = processQtiAdaptiveItemTurn({
+      itemXml: adaptiveTemplatePresentationItemXml(),
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.state?.templateValues).toMatchObject({
+      PROMPT_VALUE: 7,
+      PATH: "visible",
+    });
+    expect(result.candidateSafeXml).toContain("Generated value: 7.");
+    expect(result.candidateSafeXml).toContain("Initial score: 0.");
+    expect(result.candidateSafeXml).toContain("Visible template path 7.");
+    expect(result.candidateSafeXml).not.toContain("Hidden template path.");
+    expect(result.candidateSafeXml).not.toMatch(/<qti-template-processing\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-set-correct-response\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-correct-response\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-response-processing\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-mapping\b/);
+    expect(result.candidateSafeXml).not.toMatch(/<qti-match-table\b/);
+  });
+
+  it("preserves adaptive template presentation across submitted turns and refreshes", () => {
+    const submitted = processQtiAdaptiveItemTurn({
+      itemXml: adaptiveTemplatePresentationItemXml(),
+      trustedResponses: { RESPONSE: "A" },
+    });
+    expect(submitted.ok).toBe(true);
+    expect(submitted.score).toBe(1);
+    expect(submitted.state?.templateValues).toMatchObject({
+      PROMPT_VALUE: 7,
+      PATH: "visible",
+    });
+    expect(submitted.candidateSafeXml).toContain("Generated value: 7.");
+    expect(submitted.candidateSafeXml).toContain("Initial score: 1.");
+    expect(submitted.candidateSafeXml).toContain("Visible template path 7.");
+
+    const refreshed = processQtiAdaptiveItemTurn({
+      itemXml: adaptiveTemplatePresentationItemXml(),
+      priorState: submitted.state,
+    });
+    expect(refreshed.ok).toBe(true);
+    expect(refreshed.state).toEqual(submitted.state);
+    expect(refreshed.candidateSafeXml).toContain("Generated value: 7.");
+    expect(refreshed.candidateSafeXml).toContain("Initial score: 1.");
+    expect(refreshed.candidateSafeXml).toContain("Visible template path 7.");
+  });
+
+  it("ignores forged template and outcome inputs during adaptive template materialization", () => {
+    const result = processQtiAdaptiveItemTurn({
+      itemXml: adaptiveTemplatePresentationItemXml(),
+      trustedResponses: {
+        RESPONSE: "B",
+        PROMPT_VALUE: 99,
+        PATH: "hidden",
+        SCORE: 1,
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.score).toBe(0);
+    expect(result.state?.templateValues).toMatchObject({
+      PROMPT_VALUE: 7,
+      PATH: "visible",
+    });
+    expect(result.candidateSafeXml).toContain("Generated value: 7.");
+    expect(result.candidateSafeXml).toContain("Initial score: 0.");
+    expect(result.candidateSafeXml).toContain("Visible template path 7.");
+    expect(result.candidateSafeXml).not.toContain("Generated value: 99.");
+    expect(result.candidateSafeXml).not.toContain("Hidden template path.");
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "adaptiveTurn.response.ignored", severity: "warning" }),
+    );
   });
 
   it("fails closed when adaptive turn candidate XML cannot be safely materialized", () => {

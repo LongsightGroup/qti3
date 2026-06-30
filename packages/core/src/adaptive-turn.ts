@@ -81,6 +81,8 @@ export function runTrustedAdaptiveItemTurn(
   const delivery = materializeAdaptiveCandidateView({
     itemXml: input.itemXml,
     outcomes: sessionResult.outcomes,
+    responses: sessionResult.responses,
+    templateValues: sessionResult.state.templateValues ?? {},
   });
   const deliveryDiagnostics = [...sessionResult.diagnostics, ...delivery.diagnostics];
   const candidateSafeXml = delivery.xml;
