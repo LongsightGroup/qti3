@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.9.4 - 2026-06-30
+
+### Added
+
+- Add a neutral QTI package manifest parser model and expose package media-type detection for
+  host package import and delivery tooling.
+- Add `validateQtiResponseVariables()` for checking host-supplied response payloads against parsed
+  item declarations before scoring.
+- Add `prepareQtiDeliveryXml()` as the high-level secure delivery facade for static and
+  server-materialized adaptive candidate XML preparation.
+- Add `materializeQtiItemSubmission()` for reusable server-side response validation, scoring, and
+  attempt-state materialization.
+- Add server-side adaptive template presentation materialization for candidate-safe XML, preserving
+  template-derived prompt state while stripping generated answer keys and processing rules.
+- Add package-local `qti-stylesheet` browser delivery evidence, including host-resolved CSS blob
+  attachment through package upload.
+
+### Changed
+
+- Normalize `prepareQtiDeliveryXml()` diagnostics under `delivery.preparation.*` while keeping
+  lower-level delivery and adaptive materialization diagnostics stable.
+- Consolidate manual package asset MIME detection on the core package media-type helper.
+
+### Fixed
+
+- Keep package-local caption tracks on the manual package path served as `text/vtt`.
+- Harden shared-vocabulary gallery loading so browser evidence waits for the selected case, not a
+  stale load result.
+
 ## 0.9.3 - 2026-06-26
 
 ### Changed

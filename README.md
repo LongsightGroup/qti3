@@ -467,10 +467,11 @@ generated numeric answer.
 Hosts should create a variant once, persist the full `qti3.attempt-state.v1` value, and
 restore from that state on resume. A `randomSeed` is useful for deterministic initial
 generation, but saved `templateValues` are the authority after an attempt exists. Static
-candidate-safe XML redaction and adaptive candidate materialization intentionally still
-fail closed for template-processing items; hosts that need secure browser delivery for
-randomized items must keep authoritative XML server-side until dedicated server
-materialization support is added.
+candidate-safe XML redaction remains conservative for template-processing items.
+Server-materialized adaptive delivery can render safe template-derived presentation
+values from authoritative session state while stripping generated answer keys, template
+and response processing, mappings, lookup tables, and declaration defaults from the
+candidate XML.
 
 ## Coverage
 
