@@ -8,8 +8,13 @@ import type {
   QtiHottextSegment,
   QtiHottextTextSegment,
   QtiLookupOutcomeValue,
+  QtiAssessmentTestPackageModel,
+  QtiManifestResource,
   QtiMapEntry,
   QtiOutcomeDeclaration,
+  QtiPackageAsset,
+  QtiPackageItem,
+  QtiPackageParseResult,
   QtiProcessingExpression,
   QtiResponseBranch,
   QtiResponseCondition,
@@ -17,6 +22,8 @@ import type {
   QtiResponseProcessing,
   QtiResponseRule,
   QtiSetOutcomeValue,
+  QtiStandardAlignment,
+  QtiTimingMetadata,
 } from "./index.js";
 
 type PublicParserModelTypes = [
@@ -37,6 +44,13 @@ type PublicParserModelTypes = [
   QtiGapMatchSegment,
   QtiGapMatchTextSegment,
   QtiGapMatchGapSegment,
+  QtiPackageParseResult,
+  QtiPackageItem,
+  QtiPackageAsset,
+  QtiManifestResource,
+  QtiAssessmentTestPackageModel,
+  QtiTimingMetadata,
+  QtiStandardAlignment,
 ];
 
 const typeExportsCompile: PublicParserModelTypes | undefined = undefined;
