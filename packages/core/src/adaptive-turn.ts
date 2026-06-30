@@ -3,9 +3,12 @@ import type { QtiAttemptStateV1, QtiDiagnostic, QtiValue } from "./types.js";
 import {
   readPriorAttemptState,
   runTrustedItemSession,
+  type QtiTrustedInputDiagnosticPrefix,
+  type QtiTrustedItemDocument,
   type QtiTrustedItemParseOptions,
-  type QtiTrustedResponseApplication,
   type QtiTrustedResponseInput,
+  type QtiTrustedResponseApplication,
+  type QtiTrustedSubmissionValidation,
 } from "./trusted-item-session.js";
 
 export type QtiAdaptiveTurnResponseInput = QtiTrustedResponseInput;
@@ -20,6 +23,13 @@ export interface QtiAdaptiveTurnInput
   priorState?: unknown;
 }
 
+export interface TrustedAdaptiveItemTurnInput extends QtiAdaptiveTurnInput {
+  parsedItem?: QtiTrustedItemDocument | undefined;
+  diagnosticPrefix: QtiTrustedInputDiagnosticPrefix;
+  submissionValidation?: QtiTrustedSubmissionValidation | undefined;
+  allowIncompleteResponses?: boolean | undefined;
+}
+
 export interface QtiAdaptiveTurnResult {
   ok: boolean;
   diagnostics: QtiDiagnostic[];
@@ -32,14 +42,22 @@ export interface QtiAdaptiveTurnResult {
 }
 
 export function processQtiAdaptiveItemTurn(input: QtiAdaptiveTurnInput): QtiAdaptiveTurnResult {
-  const priorStateResult = readPriorAttemptState(input.priorState, "adaptiveTurn");
+  return runTrustedAdaptiveItemTurn({ ...input, diagnosticPrefix: "adaptiveTurn" });
+}
+
+export function runTrustedAdaptiveItemTurn(
+  input: TrustedAdaptiveItemTurnInput,
+): QtiAdaptiveTurnResult {
+  const diagnosticPrefix = input.diagnosticPrefix;
+  const priorStateResult = readPriorAttemptState(input.priorState, diagnosticPrefix);
   if (priorStateResult.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
     return failed(priorStateResult.diagnostics);
   }
 
   const sessionResult = runTrustedItemSession({
     itemXml: input.itemXml,
-    diagnosticPrefix: "adaptiveTurn",
+    parsedItem: input.parsedItem,
+    diagnosticPrefix,
     allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,
     priorState: priorStateResult.state,
     submission: {
@@ -48,6 +66,8 @@ export function processQtiAdaptiveItemTurn(input: QtiAdaptiveTurnInput): QtiAdap
     },
     scoring: "onSubmission",
     requireNumericScore: true,
+    submissionValidation: input.submissionValidation,
+    allowIncompleteResponses: input.allowIncompleteResponses,
   });
   if (!sessionResult.ok) {
     return failed(
@@ -69,7 +89,7 @@ export function processQtiAdaptiveItemTurn(input: QtiAdaptiveTurnInput): QtiAdap
       [
         ...deliveryDiagnostics,
         {
-          code: "adaptiveTurn.delivery.materialization",
+          code: `${diagnosticPrefix}.delivery.materialization`,
           severity: "error",
           message: "Adaptive turn did not produce candidate-safe item XML.",
         },

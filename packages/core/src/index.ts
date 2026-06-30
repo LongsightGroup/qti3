@@ -22,6 +22,14 @@ export {
 } from "./companion-materials-resolution.js";
 export { isResolvableAssetUrl } from "./asset-url.js";
 export {
+  materializeQtiItemSubmission,
+  type QtiItemSubmissionMaterializationInput,
+  type QtiItemSubmissionMaterializationResult,
+  type QtiItemSubmissionResponseInput,
+  type QtiItemSubmissionScoringDisposition,
+  type QtiVariableSnapshot,
+} from "./item-submission-materialization.js";
+export {
   prepareQtiDeliveryXml,
   type QtiDeliveryPreparationMode,
   type QtiDeliveryPreparationOptions,

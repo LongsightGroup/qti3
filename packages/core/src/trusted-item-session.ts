@@ -1,7 +1,8 @@
 import { parseQtiXml } from "./parser.js";
+import { itemExpectsAutomatedScore } from "./item-scoring-expectation.js";
+import { validateQtiResponseVariables } from "./response-validation.js";
 import { createItemSession, isQtiAttemptStateV1, type QtiItemSession } from "./session.js";
 import type {
-  QtiAssessmentItem,
   QtiAttemptStateV1,
   QtiAttemptStatus,
   QtiDiagnostic,
@@ -20,7 +21,9 @@ export type QtiTrustedResponseInput = QtiNamedResponseInput;
 
 export type QtiTrustedResponsesInput = QtiNamedResponsesInput;
 
-export type QtiTrustedInputDiagnosticPrefix = "serverScoring" | "adaptiveTurn";
+export type QtiTrustedInputDiagnosticPrefix = "serverScoring" | "adaptiveTurn" | "itemSubmission";
+
+export type QtiTrustedSubmissionValidation = "trusted" | "strict";
 
 export interface QtiTrustedResponseApplication {
   trustedResponses?: QtiTrustedResponsesInput;
@@ -31,7 +34,7 @@ export interface QtiTrustedItemParseOptions {
   allowedUndeclaredResponseIdentifiers?: readonly string[] | undefined;
 }
 
-interface QtiParsedTrustedItem {
+export interface QtiTrustedItemDocument {
   document: QtiDocument;
   diagnostics: QtiDiagnostic[];
   responseIdentifiers: Set<string>;
@@ -41,6 +44,7 @@ export type QtiTrustedItemScoringPolicy = "always" | "onSubmission";
 
 export interface RunTrustedItemSessionInput extends QtiTrustedItemParseOptions {
   itemXml: string;
+  parsedItem?: QtiTrustedItemDocument | undefined;
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix;
   submission: QtiTrustedResponseApplication;
   priorState?: QtiAttemptStateV1 | null | undefined;
@@ -48,6 +52,12 @@ export interface RunTrustedItemSessionInput extends QtiTrustedItemParseOptions {
   attemptStatus?: QtiAttemptStatus | undefined;
   scoring: QtiTrustedItemScoringPolicy;
   requireNumericScore: boolean;
+  /**
+   * `strict` rejects undeclared and malformed responses before trusted application.
+   * `trusted` keeps the legacy warning path for undeclared identifiers.
+   */
+  submissionValidation?: QtiTrustedSubmissionValidation | undefined;
+  allowIncompleteResponses?: boolean | undefined;
 }
 
 export interface RunTrustedItemSessionSuccess {
@@ -84,19 +94,58 @@ export function readPriorAttemptState(
       {
         code: `${diagnosticPrefix}.state.value`,
         severity: "error",
-        message: "Prior adaptive turn state is not a valid qti3.attempt-state.v1 value.",
+        message: "Prior attempt state is not a valid qti3.attempt-state.v1 value.",
       },
     ],
+  };
+}
+
+export function parseTrustedItemDocument(
+  itemXml: string,
+  allowedUndeclaredResponseIdentifiers: readonly string[] = [],
+): { ok: true; parsed: QtiTrustedItemDocument } | { ok: false; diagnostics: QtiDiagnostic[] } {
+  let parsed: ReturnType<typeof parseQtiXml>;
+  try {
+    parsed = parseQtiXml(itemXml);
+  } catch (error) {
+    return {
+      ok: false,
+      diagnostics: [
+        {
+          code: "xml.parse",
+          severity: "error",
+          message: error instanceof Error ? error.message : String(error),
+        },
+      ],
+    };
+  }
+
+  const allowedUndeclared = new Set(allowedUndeclaredResponseIdentifiers);
+  const diagnostics = parsed.diagnostics.filter(
+    (diagnostic) => !isAllowedUndeclaredVariableReference(diagnostic, allowedUndeclared),
+  );
+  if (!parsed.document || diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+    return { ok: false, diagnostics };
+  }
+
+  return {
+    ok: true,
+    parsed: {
+      document: parsed.document,
+      diagnostics,
+      responseIdentifiers: new Set(
+        parsed.document.item.responseDeclarations.map((declaration) => declaration.identifier),
+      ),
+    },
   };
 }
 
 export function runTrustedItemSession(
   input: RunTrustedItemSessionInput,
 ): RunTrustedItemSessionResult {
-  const parsedResult = parseTrustedItemXml(
-    input.itemXml,
-    input.allowedUndeclaredResponseIdentifiers,
-  );
+  const parsedResult = input.parsedItem
+    ? { ok: true as const, parsed: input.parsedItem }
+    : parseTrustedItemDocument(input.itemXml, input.allowedUndeclaredResponseIdentifiers);
   if (!parsedResult.ok) {
     return emptyTrustedItemSessionFailure(parsedResult.diagnostics);
   }
@@ -113,6 +162,18 @@ export function runTrustedItemSession(
   }
 
   if (input.attemptStatus) sessionResult.session.setStatus(input.attemptStatus);
+
+  if (input.submissionValidation === "strict") {
+    const validation = validateQtiResponseVariables({
+      item: parsedResult.parsed.document.item,
+      responses: input.submission.trustedResponses ?? {},
+      allowIncompleteResponses: input.allowIncompleteResponses,
+      allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,
+    });
+    if (!validation.ok) {
+      return emptyTrustedItemSessionFailure(validation.diagnostics);
+    }
+  }
 
   const applicationResult = applyTrustedResponseApplication(
     sessionResult.session,
@@ -162,7 +223,7 @@ export function runTrustedItemSession(
 
     if (
       input.requireNumericScore &&
-      shouldRequireNumericScore(parsedResult.parsed.document.item) &&
+      itemExpectsAutomatedScore(parsedResult.parsed.document.item) &&
       score === null
     ) {
       return emptyTrustedItemSessionFailure(
@@ -207,48 +268,8 @@ function emptyTrustedItemSessionFailure(
   };
 }
 
-function parseTrustedItemXml(
-  itemXml: string,
-  allowedUndeclaredResponseIdentifiers: readonly string[] = [],
-): { ok: true; parsed: QtiParsedTrustedItem } | { ok: false; diagnostics: QtiDiagnostic[] } {
-  let parsed: ReturnType<typeof parseQtiXml>;
-  try {
-    parsed = parseQtiXml(itemXml);
-  } catch (error) {
-    return {
-      ok: false,
-      diagnostics: [
-        {
-          code: "xml.parse",
-          severity: "error",
-          message: error instanceof Error ? error.message : String(error),
-        },
-      ],
-    };
-  }
-
-  const allowedUndeclared = new Set(allowedUndeclaredResponseIdentifiers);
-  const diagnostics = parsed.diagnostics.filter(
-    (diagnostic) => !isAllowedUndeclaredVariableReference(diagnostic, allowedUndeclared),
-  );
-  if (!parsed.document || diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
-    return { ok: false, diagnostics };
-  }
-
-  return {
-    ok: true,
-    parsed: {
-      document: parsed.document,
-      diagnostics,
-      responseIdentifiers: new Set(
-        parsed.document.item.responseDeclarations.map((declaration) => declaration.identifier),
-      ),
-    },
-  };
-}
-
 function createTrustedItemSession(
-  parsed: QtiParsedTrustedItem,
+  parsed: QtiTrustedItemDocument,
   priorState: QtiAttemptStateV1 | null | undefined,
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix,
   allowedUndeclaredResponseIdentifiers: readonly string[] | undefined,
@@ -278,7 +299,7 @@ function createTrustedItemSession(
 
 function applyTrustedResponseApplication(
   session: QtiItemSession,
-  parsed: QtiParsedTrustedItem,
+  parsed: QtiTrustedItemDocument,
   submission: QtiTrustedResponseApplication,
   allowedUndeclaredResponseIdentifiers: readonly string[] | undefined,
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix,
@@ -367,13 +388,6 @@ function scoreTrustedItemSession(
       ],
     };
   }
-}
-
-function shouldRequireNumericScore(item: QtiAssessmentItem): boolean {
-  return (
-    Boolean(item.responseProcessing) ||
-    item.outcomeDeclarations.some((declaration) => declaration.identifier === "SCORE")
-  );
 }
 
 function readNumericScore(value: QtiValue | undefined): number | null {

@@ -169,6 +169,34 @@ checks cardinality shape, required responses, min/max choice and association bou
 per-choice `match-max` limits. It does not render custom validation messages in the DOM
 or validate media play counts beyond what the item model exposes.
 
+Use `materializeQtiItemSubmission()` when a server needs the reusable QTI mechanics behind
+finalization: response validation, trusted response application, response processing,
+adaptive turn materialization, normalized response/outcome snapshots, and a generic scoring
+disposition:
+
+```ts
+import { materializeQtiItemSubmission } from "@longsightgroup/qti3-core";
+
+const materialized = materializeQtiItemSubmission({
+  itemXml: authoritativeItemXml,
+  existingState: priorAttemptState,
+  trustedResponses: { RESPONSE: "A" },
+});
+
+if (!materialized.ok) {
+  throw new Error(materialized.diagnostics.map((item) => item.message).join("; "));
+}
+
+console.log(materialized.scoringDisposition);
+console.log(materialized.responseVariables);
+console.log(materialized.outcomeVariables);
+```
+
+`scoringDisposition` uses a default generic taxonomy from `qti3-core`: `scored`,
+`manual-scoring-required`, `unscored-reference`, or `invalid`. Host applications can map
+these dispositions to product-specific finalization statuses, grading queues, result
+aggregation, and external exports.
+
 Delivery redaction, server-style scoring, and secure adaptive turn handling are library
 APIs. Dedicated CLI commands for those operations are planned separately.
 
