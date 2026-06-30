@@ -17,6 +17,7 @@ import {
   minimumRequiredResponses,
   requiredResponseDiagnostic,
   responseCount,
+  responseLimitAttribute,
   responseValidationPolicy,
 } from "./response-validation-policy.js";
 import { readQtiJsonValue } from "./value-format.js";
@@ -262,7 +263,14 @@ function effectiveMinimumRequiredResponses(
   interaction: QtiInteraction | undefined,
 ): number {
   const minimum = minimumRequiredResponses(interaction);
-  return declaration.correctResponse !== null ? Math.max(minimum, 1) : minimum;
+  if (declaration.correctResponse === null || hasAuthoredMinimum(interaction)) return minimum;
+  return Math.max(minimum, 1);
+}
+
+function hasAuthoredMinimum(interaction: QtiInteraction | undefined): boolean {
+  if (!interaction) return false;
+  if (interaction.type === "media") return interaction.attributes["min-plays"] !== undefined;
+  return responseLimitAttribute(interaction, "min-choices", "min-associations") !== undefined;
 }
 
 function attachResponseIdentifier(

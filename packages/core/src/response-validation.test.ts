@@ -107,6 +107,15 @@ describe("QTI response variable validation", () => {
     );
   });
 
+  it("honors authored zero minimums for scored optional interactions", () => {
+    const item = parsedItem(scoredOptionalChoiceItemXml({ minChoices: 0 }));
+
+    const result = validateQtiResponseVariables({ item, responses: {} });
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
+
   it("applies required interaction validation beyond choice interactions", () => {
     const item = parsedItem(requiredExtendedTextItemXml());
 
@@ -404,14 +413,16 @@ function choiceItemXml(options: { required?: boolean | string } = {}): string {
   `;
 }
 
-function scoredOptionalChoiceItemXml(): string {
+function scoredOptionalChoiceItemXml(options: { minChoices?: number } = {}): string {
+  const minChoicesAttribute =
+    options.minChoices === undefined ? "" : ` min-choices="${options.minChoices}"`;
   return `
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="scored-optional-choice" title="scored-optional-choice" time-dependent="false">
       <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
         <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
       </qti-response-declaration>
       <qti-item-body>
-        <qti-choice-interaction response-identifier="CHOICE" max-choices="1">
+        <qti-choice-interaction response-identifier="CHOICE" max-choices="1"${minChoicesAttribute}>
           <qti-simple-choice identifier="A">A</qti-simple-choice>
           <qti-simple-choice identifier="B">B</qti-simple-choice>
         </qti-choice-interaction>
