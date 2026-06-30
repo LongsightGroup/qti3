@@ -84,7 +84,10 @@ describe("player-validation", () => {
       expect(
         minimumRequiredResponses(testInteraction({ type, attributes: { "min-choices": "2" } })),
       ).toBe(2);
-      expect(minimumRequiredResponses(testInteraction({ type, attributes: {} }))).toBe(1);
+      expect(minimumRequiredResponses(testInteraction({ type, attributes: {} }))).toBe(0);
+      expect(
+        minimumRequiredResponses(testInteraction({ type, attributes: { required: "true" } })),
+      ).toBe(1);
     },
   );
 
@@ -131,6 +134,19 @@ describe("player-validation", () => {
       checkMinimum: false,
       checkMaximum: false,
       checkMatchMax: false,
+    });
+  });
+
+  it("enables minimum checks for required unscored interactions", () => {
+    expect(
+      responseValidationPolicy(
+        { correctResponse: null },
+        testInteraction({ type: "choice", attributes: { required: "true" } }),
+      ),
+    ).toMatchObject({
+      checkMinimum: true,
+      checkMaximum: false,
+      checkMatchMax: true,
     });
   });
 

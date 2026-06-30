@@ -541,6 +541,7 @@ function validateInteractionLimitAttributes(
 
   validateMinMaxPair(interaction, "min-choices", "max-choices", diagnostics);
   validateMinMaxPair(interaction, "min-associations", "max-associations", diagnostics);
+  validateBooleanAttribute(interaction, "required", diagnostics);
   if (interaction.type === "media") {
     validateNonNegativeIntegerAttribute(interaction, "max-plays", diagnostics);
     validateNonNegativeIntegerAttribute(interaction, "min-plays", diagnostics);

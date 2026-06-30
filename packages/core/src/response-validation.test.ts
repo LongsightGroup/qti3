@@ -37,25 +37,113 @@ describe("QTI response variable validation", () => {
     ]);
   });
 
-  it("reports missing interaction responses unless incomplete responses are allowed", () => {
-    const item = parsedItem(choiceBoundsItemXml());
+  it.each([
+    ["authored minimum", choiceBoundsItemXml(), "CHOICE"],
+    ["required attribute", choiceItemXml({ required: true }), "CHOICE"],
+  ] as const)(
+    "reports missing interaction responses for %s unless incomplete responses are allowed",
+    (_label, xml, identifier) => {
+      const item = parsedItem(xml);
+
+      const blocked = validateQtiResponseVariables({ item, responses: {} });
+      expect(blocked.ok).toBe(false);
+      expect(blocked.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code: "response.required",
+          identifier,
+        }),
+      );
+
+      const draft = validateQtiResponseVariables({
+        item,
+        responses: {},
+        allowIncompleteResponses: true,
+      });
+      expect(draft.ok).toBe(true);
+      expect(draft.diagnostics).toEqual([]);
+    },
+  );
+
+  it("accepts submitted responses for required interactions without authored minimums", () => {
+    const item = parsedItem(choiceItemXml({ required: true }));
+
+    const submitted = validateQtiResponseVariables({
+      item,
+      responses: { CHOICE: "A" },
+    });
+    expect(submitted.ok).toBe(true);
+    expect(submitted.diagnostics).toEqual([]);
+  });
+
+  it("does not require optional interactions without authored minimums or correct responses", () => {
+    const item = parsedItem(choiceItemXml());
+
+    const result = validateQtiResponseVariables({ item, responses: {} });
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it("treats explicit required=false as optional", () => {
+    const item = parsedItem(choiceItemXml({ required: false }));
+
+    const result = validateQtiResponseVariables({ item, responses: {} });
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it("requires a response for scored optional interactions without authored minimums", () => {
+    const item = parsedItem(scoredOptionalChoiceItemXml());
+
+    const result = validateQtiResponseVariables({ item, responses: {} });
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "response.required",
+        identifier: "CHOICE",
+      }),
+    );
+  });
+
+  it("applies required interaction validation beyond choice interactions", () => {
+    const item = parsedItem(requiredExtendedTextItemXml());
+
+    const result = validateQtiResponseVariables({ item, responses: {} });
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "response.required",
+        identifier: "TEXT",
+      }),
+    );
+  });
+
+  it("applies required media play defaults without authored min-plays", () => {
+    const item = parsedItem(mediaItemXml({ required: true }));
 
     const blocked = validateQtiResponseVariables({ item, responses: {} });
     expect(blocked.ok).toBe(false);
     expect(blocked.diagnostics).toContainEqual(
       expect.objectContaining({
         code: "response.required",
-        identifier: "CHOICE",
+        identifier: "MEDIA",
       }),
     );
 
-    const draft = validateQtiResponseVariables({
-      item,
-      responses: {},
-      allowIncompleteResponses: true,
-    });
-    expect(draft.ok).toBe(true);
-    expect(draft.diagnostics).toEqual([]);
+    const optional = parsedItem(mediaItemXml());
+    expect(validateQtiResponseVariables({ item: optional, responses: {} }).ok).toBe(true);
+  });
+
+  it("rejects invalid required interaction attribute values at parse time", () => {
+    const result = parseQtiXml(choiceItemXml({ required: "yes" }));
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "interaction.booleanAttribute" }),
+    );
   });
 
   it("validates minChoices and maxChoices interaction bounds", () => {
@@ -289,6 +377,69 @@ function matchBoundsItemXml(): string {
             <qti-simple-associable-choice identifier="Y" match-max="1">Y</qti-simple-associable-choice>
           </qti-simple-match-set>
         </qti-match-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function choiceItemXml(options: { required?: boolean | string } = {}): string {
+  const requiredAttribute =
+    options.required === true
+      ? ' required="true"'
+      : options.required === false
+        ? ' required="false"'
+        : typeof options.required === "string"
+          ? ` required="${options.required}"`
+          : "";
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-item" title="choice-item" time-dependent="false">
+      <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier"/>
+      <qti-item-body>
+        <qti-choice-interaction response-identifier="CHOICE" max-choices="1"${requiredAttribute}>
+          <qti-simple-choice identifier="A">A</qti-simple-choice>
+          <qti-simple-choice identifier="B">B</qti-simple-choice>
+        </qti-choice-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function scoredOptionalChoiceItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="scored-optional-choice" title="scored-optional-choice" time-dependent="false">
+      <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
+        <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+      </qti-response-declaration>
+      <qti-item-body>
+        <qti-choice-interaction response-identifier="CHOICE" max-choices="1">
+          <qti-simple-choice identifier="A">A</qti-simple-choice>
+          <qti-simple-choice identifier="B">B</qti-simple-choice>
+        </qti-choice-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function requiredExtendedTextItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="required-extended-text" title="required-extended-text" time-dependent="false">
+      <qti-response-declaration identifier="TEXT" cardinality="single" base-type="string"/>
+      <qti-item-body>
+        <qti-extended-text-interaction response-identifier="TEXT" required="true"/>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function mediaItemXml(options: { required?: boolean } = {}): string {
+  const requiredAttribute = options.required ? ' required="true"' : "";
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-item" title="media-item" time-dependent="false">
+      <qti-response-declaration identifier="MEDIA" cardinality="single" base-type="integer"/>
+      <qti-item-body>
+        <qti-media-interaction response-identifier="MEDIA"${requiredAttribute}>
+          <audio><source src="clip.mp3"/></audio>
+        </qti-media-interaction>
       </qti-item-body>
     </qti-assessment-item>
   `;

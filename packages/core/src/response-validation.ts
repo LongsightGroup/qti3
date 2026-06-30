@@ -225,7 +225,7 @@ function validateDeclarationResponse(
     interaction?.type === "media" ? mediaPlayCount(effectiveValue) : responseCount(effectiveValue);
 
   if (policy.checkMinimum && !allowIncompleteResponses) {
-    const minimum = minimumRequiredResponses(interaction);
+    const minimum = effectiveMinimumRequiredResponses(declaration, interaction);
     if (count < minimum) {
       diagnostics.push(
         attachResponseIdentifier(
@@ -255,6 +255,14 @@ function validateDeclarationResponse(
       ),
     );
   }
+}
+
+function effectiveMinimumRequiredResponses(
+  declaration: { readonly correctResponse: QtiValue | null },
+  interaction: QtiInteraction | undefined,
+): number {
+  const minimum = minimumRequiredResponses(interaction);
+  return declaration.correctResponse !== null ? Math.max(minimum, 1) : minimum;
 }
 
 function attachResponseIdentifier(

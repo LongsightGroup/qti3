@@ -46,6 +46,16 @@ describe("response-limits", () => {
     expect(mediaPlayCount(3)).toBe(3);
   });
 
+  it.each([
+    ["optional media", {}, 0],
+    ["required media", { required: "true" }, 1],
+  ] as const)(
+    "defaults minimumMediaPlays for %s without min-plays",
+    (_label, attributes, minimum) => {
+      expect(minimumMediaPlays(testInteraction({ type: "media", attributes }))).toBe(minimum);
+    },
+  );
+
   it.each(["order", "graphicOrder"] as const)(
     "uses choice limits, not association limits, for %s interactions",
     (type) => {
