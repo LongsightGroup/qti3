@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-player-preact",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Preact TSX adapter for the qti3 QTI 3 assessment item player web component.",
   "keywords": [
     "assessment",

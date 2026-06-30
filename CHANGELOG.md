@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.5 - 2026-06-30
+
+### Fixed
+
+- Enforce `required="true"` in `validateQtiResponseVariables()` for interactions that do
+  not author explicit minimum response counts or correct responses.
+- Validate malformed interaction `required` attributes as boolean authoring errors.
+
 ## 0.9.4 - 2026-06-30
 
 ### Added
