@@ -75,6 +75,7 @@ interactions the writer can currently write and validate:
 | Choice            | `qti-choice-interaction`            | Writes and validates                                                  |
 | Order             | `qti-order-interaction`             | Writes and validates ordered cardinality and choice references        |
 | Inline choice     | `qti-inline-choice-interaction`     | Replaces empty QTI placeholders and validates slot references         |
+| Hottext           | `qti-hottext-interaction`           | Replaces empty QTI placeholders and validates choice references       |
 | Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices            |
 | Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
@@ -94,6 +95,10 @@ interaction for the matching slot. This keeps qflow editor markers out of the pu
 letting host tools control the surrounding inline prose. Default `all_or_nothing` scoring writes the
 slot count as the score when every inline choice is correct, so a two-slot item awards `SCORE = 2`.
 Use `map_response` scoring when the host needs per-slot partial credit or custom normalization.
+
+Hottext items use trusted `bodyHtml` inside the generated `qti-hottext-interaction`. Each generated
+hottext choice is placed by an empty `<qti-hottext identifier="..."/>` placeholder in that body
+fragment.
 
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
@@ -122,16 +127,15 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. hottext
-2. gap match
-3. extended text
-4. upload
-5. media
-6. graphic order
-7. select point
-8. position object
-9. slider
-10. custom
-11. portable custom
-12. drawing
-13. end attempt
+1. gap match
+2. extended text
+3. upload
+4. media
+5. graphic order
+6. select point
+7. position object
+8. slider
+9. custom
+10. portable custom
+11. drawing
+12. end attempt

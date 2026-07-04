@@ -108,6 +108,34 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "hottext",
+          identifier: "hottext-invalid",
+          title: "Hottext",
+          bodyHtml: qti3TrustedXmlFragment(
+            '<p><qti-hottext identifier="BODY_ONLY"/><qti-hottext identifier="BODY_ONLY"/></p>',
+          ),
+          choices: [
+            { identifier: "DECLARED_ONLY", text: "" },
+            { identifier: "DECLARED_ONLY", text: "Duplicate" },
+          ],
+          correctResponse: ["UNKNOWN"],
+          minChoices: 2,
+          maxChoices: 1,
+        },
+        codes: [
+          "duplicate_identifier",
+          "empty_hottext_choice",
+          "invalid_hottext_choice_bounds",
+          "unknown_hottext_reference",
+          "duplicate_identifier",
+          "unknown_hottext_placeholder",
+          "unknown_hottext_placeholder",
+          "missing_hottext_placeholder_for_choice",
+          "missing_hottext_placeholder_for_choice",
+        ],
+      },
+      {
+        item: {
           interactionType: "match",
           identifier: "match-invalid",
           title: "Match",
@@ -275,6 +303,14 @@ describe("qti3-writer validation", () => {
         ],
       },
       {
+        interactionType: "hottext",
+        identifier: "support-hottext",
+        title: "Hottext",
+        bodyHtml: qti3TrustedXmlFragment('<p><qti-hottext identifier="A"/></p>'),
+        choices: [{ identifier: "A", text: "A" }],
+        correctResponse: ["A"],
+      },
+      {
         interactionType: "associate",
         identifier: "support-associate",
         title: "Associate",
@@ -359,7 +395,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "hottext",
       "gapMatch",
       "extendedText",
       "upload",

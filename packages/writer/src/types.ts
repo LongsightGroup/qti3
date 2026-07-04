@@ -139,6 +139,29 @@ export type Qti3InlineChoiceBuilderInput = Omit<
   readonly interactionType?: "inlineChoice" | undefined;
 };
 
+export interface Qti3HottextChoice {
+  readonly identifier: string;
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+}
+
+export interface Qti3HottextAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "hottext";
+  /** Trusted bodyHtml must contain empty qti-hottext placeholders for writer-owned choices. */
+  readonly bodyHtml: Qti3TrustedXmlFragment;
+  readonly choices: readonly Qti3HottextChoice[];
+  readonly correctResponse: readonly string[];
+  readonly minChoices?: number | undefined;
+  readonly maxChoices?: number | undefined;
+  readonly minChoicesMessage?: string | undefined;
+  readonly maxChoicesMessage?: string | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3HottextBuilderInput = Omit<Qti3HottextAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "hottext" | undefined;
+};
+
 export interface Qti3AssociateChoice {
   readonly identifier: string;
   readonly text?: string | undefined;
@@ -351,6 +374,7 @@ export type Qti3AuthoringItem =
   | Qti3ChoiceAuthoringItem
   | Qti3OrderAuthoringItem
   | Qti3InlineChoiceAuthoringItem
+  | Qti3HottextAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
