@@ -21,14 +21,22 @@ import {
   primaryTiming,
   uniqueStandards,
 } from "./qti-package-metadata.js";
-import type { QtiPackageParseResult } from "./qti-package-types.js";
+import type {
+  QtiManifestResource,
+  QtiPackageParseResult,
+  QtiPackageShape,
+} from "./qti-package-types.js";
 import { parseXmlFiles, pushXmlDiagnostics } from "./qti-package-xml.js";
 import {
+  decodeUtf8,
   readQtiPackageZipEntries,
   type QtiPackageEntry,
   type QtiPackageParseOptions,
 } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
+
+export { decodeUtf8, readQtiPackageZipEntries };
+export type { QtiPackageEntry };
 
 export type {
   QtiAssessmentTestItemRef,
@@ -58,11 +66,12 @@ export function parseQtiPackage(
 ): QtiPackageParseResult {
   const diagnostics: QtiDiagnostic[] = [];
   const entries = readQtiPackageZipEntries(bytes, options, diagnostics);
-  return parseQtiPackageEntries(entries, diagnostics);
+  return parseQtiPackageEntries(entries, options, diagnostics);
 }
 
 function parseQtiPackageEntries(
   entries: readonly QtiPackageEntry[],
+  options: QtiPackageParseOptions,
   diagnostics: QtiDiagnostic[],
 ): QtiPackageParseResult {
   const entriesByPath = indexEntries(entries, diagnostics);
@@ -107,7 +116,12 @@ function parseQtiPackageEntries(
   );
   diagnosePrimaryResourceHrefs([...itemResources, ...assessmentTestResources], diagnostics);
 
-  const packageShape = detectPackageShape(itemResources, assessmentTestResources, diagnostics);
+  const packageShape = resolvePackageShape(
+    itemResources,
+    assessmentTestResources,
+    options,
+    diagnostics,
+  );
   const assessmentTest = parseAssessmentTestPackageModel(
     packageShape,
     assessmentTestResources,
@@ -173,4 +187,20 @@ function indexEntries(
     entriesByPath.set(entry.path, entry);
   }
   return entriesByPath;
+}
+
+function resolvePackageShape(
+  itemResources: readonly QtiManifestResource[],
+  assessmentTestResources: readonly QtiManifestResource[],
+  options: QtiPackageParseOptions,
+  diagnostics: QtiDiagnostic[],
+): QtiPackageShape {
+  if (
+    options.manifestShapePolicy === "prefer-assessment-test" &&
+    assessmentTestResources.length > 0
+  ) {
+    return "assessment-test-resource";
+  }
+
+  return detectPackageShape(itemResources, assessmentTestResources, diagnostics);
 }

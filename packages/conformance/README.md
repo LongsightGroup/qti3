@@ -45,12 +45,14 @@ Certification-oriented runs are required and fail fast without official inputs:
 
 ```sh
 QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
-QTI3_EXTERNAL_VALIDATOR_REPORT=/path/to/validator-report.json \
 pnpm test:external:required
 ```
 
-Set `QTI3_EXTERNAL_SCORE_CORRECT=1` to also score every discovered assessment item with
-its declared correct responses.
+The Basic IMPORT evidence runners read official package zips from the conformance
+tree. Item evidence filters manifest item resources and ignores convenience test
+resources; test evidence imports the official T4/T7 test-structure package.
+`QTI3_EXTERNAL_VALIDATOR_REPORT` may be supplied as supplemental evidence, but it is
+not required for import proof.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

@@ -14,6 +14,7 @@ out/
 lib/
 coverage/
 .nyc_output/
+.certification/
 
 # Vite / Vitest
 .vite/

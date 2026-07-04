@@ -18,6 +18,12 @@ export type QtiPackageInflateRaw = (
 /** Options for parsing a QTI ZIP package. */
 export interface QtiPackageParseOptions {
   readonly inflateRaw?: QtiPackageInflateRaw | undefined;
+  /**
+   * When both item and assessment-test manifest resources are present, strict mode
+   * reports package.shape.ambiguous. prefer-assessment-test treats the package as a
+   * test-structure import and resolves items from assessment-test item refs.
+   */
+  readonly manifestShapePolicy?: "strict" | "prefer-assessment-test" | undefined;
 }
 
 /** Decoded ZIP entry from a QTI package. */

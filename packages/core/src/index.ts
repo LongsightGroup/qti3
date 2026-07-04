@@ -50,13 +50,16 @@ export {
   type QtiPackageXmlTree,
 } from "./package-xml.js";
 export {
+  decodeUtf8,
   parseQtiPackage,
+  readQtiPackageZipEntries,
   type QtiAssessmentTestItemRef,
   type QtiAssessmentTestPackageModel,
   type QtiManifestFile,
   type QtiManifestResource,
   type QtiPackageAsset,
   type QtiPackageAssetSource,
+  type QtiPackageEntry,
   type QtiPackageInflateContext,
   type QtiPackageInflateRaw,
   type QtiPackageItem,

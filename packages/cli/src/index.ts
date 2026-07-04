@@ -9,11 +9,14 @@ import {
 import {
   basicItemPlayerProfile,
   runBasicItemPlayerReadiness,
+  runQti3BasicImportItemOnlyCertification,
+  runQti3BasicImportTestCertification,
   runFixture,
   type QtiBasicItemPlayerPackageEvidence,
 } from "@longsightgroup/qti3-conformance";
 import {
   createItemSession,
+  decodeUtf8,
   deprecatedInteractionSupport,
   elementSupport,
   interactionSupport,
@@ -21,6 +24,7 @@ import {
   parseQtiPackageXmlTree,
   parseQtiXml,
   processingSupport,
+  readQtiPackageZipEntries,
   isEnforcedSharedVocabularyLevel,
   sharedVocabularyClassSupport,
   validateAssessmentItem,
@@ -44,6 +48,32 @@ interface PackageXmlFile {
 
 export async function main(args = process.argv.slice(2)): Promise<number> {
   const [command, file] = args;
+  if (command === "certification" && file === "import-basic-items") {
+    const options = parseCertificationImportBasicItemsArgs(args.slice(2));
+    if (!options.ok) {
+      console.error(options.message);
+      return 1;
+    }
+    const report = await runQti3BasicImportItemOnlyCertification({
+      qtiRoot: options.qtiRoot,
+      validatorReport: options.validatorReport,
+    });
+    console.log(JSON.stringify(report, null, 2));
+    return report.ok ? 0 : 1;
+  }
+  if (command === "certification" && file === "import-basic-tests") {
+    const options = parseCertificationImportBasicTestsArgs(args.slice(2));
+    if (!options.ok) {
+      console.error(options.message);
+      return 1;
+    }
+    const report = await runQti3BasicImportTestCertification({
+      qtiRoot: options.qtiRoot,
+    });
+    console.log(JSON.stringify(report, null, 2));
+    return report.ok ? 0 : 1;
+  }
+
   if (command === "parse" && file) {
     const xml = await readFile(file, "utf8");
     const result = parseQtiXml(xml);
@@ -158,9 +188,79 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip|directory> | qti3 validate-package <package.zip|directory> | qti3 basic-item-player-report [package.zip|directory ...] | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 assert-support | qti3 run-fixtures",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip|directory> | qti3 validate-package <package.zip|directory> | qti3 basic-item-player-report [package.zip|directory ...] | qti3 certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>] | qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 assert-support | qti3 run-fixtures",
   );
   return 1;
+}
+
+function parseCertificationImportBasicItemsArgs(
+  args: string[],
+):
+  | { readonly ok: true; readonly qtiRoot: string; readonly validatorReport?: string | undefined }
+  | { readonly ok: false; readonly message: string } {
+  let qtiRoot: string | undefined;
+  let validatorReport: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    const value = args[index + 1];
+    if (arg === "--qti-root" && value !== undefined) {
+      qtiRoot = value;
+      index += 1;
+      continue;
+    }
+    if (arg === "--validator-report" && value !== undefined) {
+      validatorReport = value;
+      index += 1;
+      continue;
+    }
+    return {
+      ok: false,
+      message:
+        "Usage: qti3 certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>]",
+    };
+  }
+
+  if (qtiRoot === undefined) {
+    return {
+      ok: false,
+      message:
+        "Usage: qti3 certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>]",
+    };
+  }
+
+  return { ok: true, qtiRoot, validatorReport };
+}
+
+function parseCertificationImportBasicTestsArgs(
+  args: string[],
+):
+  | { readonly ok: true; readonly qtiRoot: string }
+  | { readonly ok: false; readonly message: string } {
+  let qtiRoot: string | undefined;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    const value = args[index + 1];
+    if (arg === "--qti-root" && value !== undefined) {
+      qtiRoot = value;
+      index += 1;
+      continue;
+    }
+    return {
+      ok: false,
+      message: "Usage: qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0>",
+    };
+  }
+
+  if (qtiRoot === undefined) {
+    return {
+      ok: false,
+      message: "Usage: qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0>",
+    };
+  }
+
+  return { ok: true, qtiRoot };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -819,62 +919,23 @@ async function collectDirectoryPackageEntries(
 }
 
 function readZipEntries(buffer: Uint8Array): ZipEntry[] {
-  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-  const eocdOffset = findEndOfCentralDirectory(view);
-  if (eocdOffset < 0) throw new Error("No ZIP central directory was found.");
-
-  const entryCount = view.getUint16(eocdOffset + 10, true);
-  let offset = view.getUint32(eocdOffset + 16, true);
-  const entries: ZipEntry[] = [];
-  const decoder = new TextDecoder();
-
-  for (let index = 0; index < entryCount; index += 1) {
-    if (view.getUint32(offset, true) !== 0x02014b50) break;
-    const method = view.getUint16(offset + 10, true);
-    const compressedSize = view.getUint32(offset + 20, true);
-    const nameLength = view.getUint16(offset + 28, true);
-    const extraLength = view.getUint16(offset + 30, true);
-    const commentLength = view.getUint16(offset + 32, true);
-    const localHeaderOffset = view.getUint32(offset + 42, true);
-    const rawName = buffer.slice(offset + 46, offset + 46 + nameLength);
-    const name = normalizePackagePath(decoder.decode(rawName), "ZIP entry");
-    offset += 46 + nameLength + extraLength + commentLength;
-    if (!name || name.endsWith("/")) continue;
-
-    const content = zipEntryBytes(buffer, view, localHeaderOffset, compressedSize, method);
-    if (content) entries.push({ name, bytes: content });
+  const diagnostics: QtiDiagnostic[] = [];
+  const entries = readQtiPackageZipEntries(
+    buffer,
+    { inflateRaw: (bytes) => inflateRawSync(bytes) },
+    diagnostics,
+  );
+  if (entries.length === 0) {
+    const message =
+      diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
+      "No ZIP central directory was found.";
+    throw new Error(message);
   }
-
-  return entries;
-}
-
-function findEndOfCentralDirectory(view: DataView): number {
-  const minimumOffset = Math.max(0, view.byteLength - 65557);
-  for (let offset = view.byteLength - 22; offset >= minimumOffset; offset -= 1) {
-    if (view.getUint32(offset, true) === 0x06054b50) return offset;
-  }
-  return -1;
-}
-
-function zipEntryBytes(
-  bytes: Uint8Array,
-  view: DataView,
-  localHeaderOffset: number,
-  compressedSize: number,
-  method: number,
-): Uint8Array | undefined {
-  if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) return undefined;
-  const nameLength = view.getUint16(localHeaderOffset + 26, true);
-  const extraLength = view.getUint16(localHeaderOffset + 28, true);
-  const dataOffset = localHeaderOffset + 30 + nameLength + extraLength;
-  const compressed = bytes.slice(dataOffset, dataOffset + compressedSize);
-  if (method === 0) return compressed;
-  if (method === 8) return inflateRawSync(compressed);
-  return undefined;
+  return entries.map((entry) => ({ name: entry.path, bytes: entry.bytes }));
 }
 
 function parsePackageXml(entry: ZipEntry): PackageXmlFile {
-  const xml = new TextDecoder().decode(entry.bytes);
+  const xml = decodeUtf8(entry.bytes);
   const parsed = parseQtiPackageXmlTree(xml);
   return { path: entry.name, xml, root: parsed.root, errors: parsed.errors };
 }

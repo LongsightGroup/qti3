@@ -35,7 +35,7 @@
     "test": "vitest run",
     "test:conformance": "vitest run packages/conformance",
     "test:external": "vitest run packages/conformance/src/external-qti.test.ts",
-    "test:external:required": "QTI3_REQUIRE_EXTERNAL=1 QTI3_EXTERNAL_SCORE_CORRECT=1 vitest run packages/conformance/src/external-qti.test.ts",
+    "test:external:required": "QTI3_REQUIRE_EXTERNAL=1 vitest run packages/conformance/src/external-qti.test.ts",
     "test:a11y": "vitest run packages/a11y",
     "test:browser": "playwright test",
     "check:deps": "node scripts/check-dependencies.mjs",

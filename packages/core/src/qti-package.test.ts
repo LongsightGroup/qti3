@@ -262,6 +262,52 @@ describe("QTI package parser", () => {
       ]),
     );
   });
+
+  it("prefers assessment-test shape when mixed manifest resources are allowed", () => {
+    const result = parseQtiPackage(
+      createStoredZip({
+        "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <file href="items/choice.xml"/>
+    </resource>
+    <resource identifier="test" type="imsqti_test_xmlv3p0" href="assessment.xml">
+      <file href="assessment.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+        "items/choice.xml": choiceItemXml(),
+        "stimuli/stimulus.xml": `<qti-assessment-stimulus xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="stimulus">
+  <p>Read this first.</p>
+</qti-assessment-stimulus>`,
+        "styles/item.css": ".prompt { color: currentColor; }",
+        "media/prompt.png": new Uint8Array([137, 80, 78, 71]),
+        "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Mixed">
+  <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
+    <qti-assessment-section identifier="section-1" title="Section" visible="true">
+      <qti-assessment-item-ref identifier="choice-ref" href="items/choice.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`,
+      }),
+      { manifestShapePolicy: "prefer-assessment-test" },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.packageShape).toBe("assessment-test-resource");
+    expect(result.diagnostics).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "package.shape.ambiguous" })]),
+    );
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        href: "items/choice.xml",
+        source: "assessment-test",
+        assessmentItemRefIdentifier: "choice-ref",
+      }),
+    ]);
+  });
 });
 
 function choiceItemXml(): string {

@@ -123,6 +123,98 @@ describe("@longsightgroup/qti3-cli", () => {
     await expect(main(["run-fixtures"])).resolves.toBe(0);
   });
 
+  it("requires explicit inputs for Basic IMPORT item certification evidence", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      await expect(main(["certification", "import-basic-items"])).resolves.toBe(1);
+      expect(String(error.mock.calls.at(-1)?.[0])).toContain("--qti-root");
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it("requires explicit inputs for Basic IMPORT test certification evidence", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      await expect(main(["certification", "import-basic-tests"])).resolves.toBe(1);
+      expect(String(error.mock.calls.at(-1)?.[0])).toContain("--qti-root");
+    } finally {
+      error.mockRestore();
+    }
+  });
+
+  it("prints a Basic IMPORT item certification report", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-certification-"));
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await expect(
+        main(["certification", "import-basic-items", "--qti-root", directory]),
+      ).resolves.toBe(1);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      expect(report).toMatchObject({
+        targetCapability: "IMPORT",
+        targetLevel: "Basic",
+        targetScope: "Item Only Packages",
+      });
+      expect(report.failed).toBeGreaterThan(0);
+    } finally {
+      log.mockRestore();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("prints a failing Basic IMPORT test certification report", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-certification-"));
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await expect(
+        main(["certification", "import-basic-tests", "--qti-root", directory]),
+      ).resolves.toBe(1);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      expect(report).toMatchObject({
+        targetCapability: "IMPORT",
+        targetLevel: "Basic",
+        targetScope: "Test Structure Packages",
+      });
+      expect(report.failed).toBeGreaterThan(0);
+    } finally {
+      log.mockRestore();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("prints a passing Basic IMPORT test certification report", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-certification-"));
+    const packagePath = join(directory, "Basic/T4 and T7 - Test Structures/T4T7TestStructures.zip");
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await mkdir(join(directory, "Basic/T4 and T7 - Test Structures"), { recursive: true });
+      await writeFile(packagePath, createStoredZip(basicImportTestPackageEntries()));
+
+      await expect(
+        main(["certification", "import-basic-tests", "--qti-root", directory]),
+      ).resolves.toBe(0);
+      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      expect(report).toMatchObject({
+        checked: 4,
+        failed: 0,
+        ok: true,
+        packageEvidence: {
+          testResourceHref: "assessment.xml",
+          itemRefHrefs: [
+            "items/choice-single-cardinality.xml",
+            "items/choice-multiple-cardinality.xml",
+            "items/text-entry.xml",
+            "items/extended-text.xml",
+          ],
+        },
+      });
+    } finally {
+      log.mockRestore();
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("fails release support assertions when matrix evidence regresses", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     try {
@@ -982,6 +1074,64 @@ function basicFeatureIds(): string[] {
     "A-1",
     "P-4",
   ];
+}
+
+function basicImportTestPackageEntries(): Record<string, string> {
+  return {
+    "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="qti3-l1-T1-test-entry">
+  <resources>
+    <resource identifier="t1-test-entry-item1" type="imsqti_item_xmlv3p0" href="items/choice-single-cardinality.xml"><file href="items/choice-single-cardinality.xml"/></resource>
+    <resource identifier="t1-test-entry-item2" type="imsqti_item_xmlv3p0" href="items/choice-multiple-cardinality.xml"><file href="items/choice-multiple-cardinality.xml"/></resource>
+    <resource identifier="t1-test-entry-item3" type="imsqti_item_xmlv3p0" href="items/text-entry.xml"><file href="items/text-entry.xml"/></resource>
+    <resource identifier="t1-test-entry-item4" type="imsqti_item_xmlv3p0" href="items/extended-text.xml"><file href="items/extended-text.xml"/></resource>
+    <resource identifier="t1-test-entry" type="imsqti_test_xmlv3p0" href="assessment.xml"><file href="assessment.xml"/></resource>
+  </resources>
+</manifest>`,
+    "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="t1-test-entry" title="T1 - test entry">
+  <qti-test-part identifier="testPart-1" navigation-mode="linear" submission-mode="individual">
+    <qti-assessment-section identifier="assessmentSection-1" title="Section 1" visible="true">
+      <qti-assessment-item-ref identifier="t1-test-entry-item1" href="items/choice-single-cardinality.xml"/>
+      <qti-assessment-item-ref identifier="t1-test-entry-item2" href="items/choice-multiple-cardinality.xml"/>
+      <qti-assessment-item-ref identifier="t1-test-entry-item3" href="items/text-entry.xml"/>
+      <qti-assessment-item-ref identifier="t1-test-entry-item4" href="items/extended-text.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`,
+    "items/choice-single-cardinality.xml": basicImportTestItemXml(
+      "choice-single",
+      "identifier",
+      '<qti-choice-interaction response-identifier="RESPONSE" min-choices="0" max-choices="1"><qti-simple-choice identifier="A">A</qti-simple-choice><qti-simple-choice identifier="B">B</qti-simple-choice></qti-choice-interaction>',
+    ),
+    "items/choice-multiple-cardinality.xml": basicImportTestItemXml(
+      "choice-multiple",
+      "identifier",
+      '<qti-choice-interaction response-identifier="RESPONSE" min-choices="0" max-choices="2"><qti-simple-choice identifier="A">A</qti-simple-choice><qti-simple-choice identifier="B">B</qti-simple-choice></qti-choice-interaction>',
+    ),
+    "items/text-entry.xml": basicImportTestItemXml(
+      "text-entry",
+      "string",
+      '<qti-text-entry-interaction response-identifier="RESPONSE"/>',
+    ),
+    "items/extended-text.xml": basicImportTestItemXml(
+      "extended-text",
+      "string",
+      '<qti-extended-text-interaction response-identifier="RESPONSE"/>',
+    ),
+  };
+}
+
+function basicImportTestItemXml(
+  identifier: string,
+  baseType: "identifier" | "string",
+  interactionXml: string,
+): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${identifier}" title="${identifier}" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="${baseType}"/>
+  <qti-item-body>${interactionXml}</qti-item-body>
+</qti-assessment-item>`;
 }
 
 function createStoredZip(entries: Record<string, string | Uint8Array>): Buffer {
