@@ -108,6 +108,29 @@ describe("qti3-writer hottext", () => {
     expect(parsed.interactions[0]?.qtiName).toBe("qti-hottext-interaction");
   });
 
+  it("requires at least one correct response", () => {
+    const diagnostics = validateQti3HottextItem({
+      identifier: "hottext-missing-correct",
+      title: "Hottext",
+      bodyHtml: qti3TrustedXmlFragment('<p><qti-hottext identifier="A"/></p>'),
+      choices: [{ identifier: "A", text: "A" }],
+      correctResponse: [],
+    });
+
+    expect(diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "missing_hottext_correct_response",
+    );
+    expect(() =>
+      buildQti3HottextItem({
+        identifier: "hottext-missing-correct",
+        title: "Hottext",
+        bodyHtml: qti3TrustedXmlFragment('<p><qti-hottext identifier="A"/></p>'),
+        choices: [{ identifier: "A", text: "A" }],
+        correctResponse: [],
+      }),
+    ).toThrow("at least one correct response");
+  });
+
   it("rejects invalid hottext authoring inputs", () => {
     const diagnostics = validateQti3HottextItem({
       identifier: "bad hottext",

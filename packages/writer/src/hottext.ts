@@ -196,6 +196,15 @@ function validateCorrectResponse(
   );
   const choiceIdentifiers = new Set(input.choices.map((choice) => choice.identifier.trim()));
   const correctResponse = dedupeNonemptyTrimmed(input.correctResponse);
+  if (correctResponse.length === 0) {
+    diagnostics.push(
+      writerDiagnostic(
+        "missing_hottext_correct_response",
+        "correctResponse",
+        "Hottext items must include at least one correct response identifier.",
+      ),
+    );
+  }
   if (input.maxChoices === 1 && correctResponse.length > 1) {
     diagnostics.push(
       writerDiagnostic(

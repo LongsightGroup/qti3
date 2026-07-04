@@ -98,7 +98,8 @@ Use `map_response` scoring when the host needs per-slot partial credit or custom
 
 Hottext items use trusted `bodyHtml` inside the generated `qti-hottext-interaction`. Each generated
 hottext choice is placed by an empty `<qti-hottext identifier="..."/>` placeholder in that body
-fragment.
+fragment. When `maxChoices` is omitted, the writer emits `cardinality="multiple"`; set
+`maxChoices: 1` for single-select hottext items.
 
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
