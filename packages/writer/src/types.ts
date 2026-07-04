@@ -247,6 +247,67 @@ export type Qti3GraphicAssociateBuilderInput = Omit<
   readonly interactionType?: "graphicAssociate" | undefined;
 };
 
+export interface Qti3GraphicGapTextChoice {
+  readonly identifier: string;
+  readonly kind: "text";
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+  readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
+}
+
+export interface Qti3GraphicGapImageChoice {
+  readonly identifier: string;
+  readonly kind: "image";
+  readonly object: Qti3GraphicObject;
+  readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
+}
+
+export type Qti3GraphicGapChoice = Qti3GraphicGapTextChoice | Qti3GraphicGapImageChoice;
+
+export interface Qti3GraphicGapHotspotTarget {
+  readonly targetType?: "hotspot" | undefined;
+  readonly identifier: string;
+  readonly shape: Qti3HotspotShape;
+  readonly coords: string;
+  readonly matchMax?: number | undefined;
+}
+
+export interface Qti3GraphicGapInlineTarget {
+  readonly targetType: "inlineGap";
+  readonly identifier: string;
+  readonly matchMax?: number | undefined;
+}
+
+export type Qti3GraphicGapTarget = Qti3GraphicGapHotspotTarget | Qti3GraphicGapInlineTarget;
+
+export interface Qti3GraphicGapPair {
+  readonly sourceIdentifier: string;
+  readonly targetIdentifier: string;
+}
+
+export interface Qti3GraphicGapMatchAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "graphicGapMatch";
+  readonly object: Qti3GraphicObject;
+  readonly choices: readonly Qti3GraphicGapChoice[];
+  readonly targets: readonly Qti3GraphicGapTarget[];
+  readonly correctResponse: readonly Qti3GraphicGapPair[];
+  readonly scoring?: Qti3ResponseProcessingTemplate | undefined;
+  readonly minAssociations?: number | undefined;
+  readonly maxAssociations?: number | undefined;
+  readonly minAssociationsMessage?: string | undefined;
+  readonly maxAssociationsMessage?: string | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3GraphicGapMatchBuilderInput = Omit<
+  Qti3GraphicGapMatchAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "graphicGapMatch" | undefined;
+};
+
 export type Qti3AuthoringItem =
   | Qti3ChoiceAuthoringItem
   | Qti3OrderAuthoringItem
@@ -254,4 +315,5 @@ export type Qti3AuthoringItem =
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
   | Qti3HotspotAuthoringItem
-  | Qti3GraphicAssociateAuthoringItem;
+  | Qti3GraphicAssociateAuthoringItem
+  | Qti3GraphicGapMatchAuthoringItem;

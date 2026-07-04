@@ -12,7 +12,7 @@ export interface Qti3GraphicObjectLike {
 }
 
 export interface GraphicObjectValidationOptions {
-  readonly codePrefix: "hotspot" | "graphic_associate";
+  readonly codePrefix: string;
   readonly label: string;
   readonly path: string;
 }

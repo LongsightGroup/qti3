@@ -4,6 +4,10 @@ export {
   buildQti3GraphicAssociateItem,
   validateQti3GraphicAssociateItem,
 } from "./graphic-associate.js";
+export {
+  buildQti3GraphicGapMatchItem,
+  validateQti3GraphicGapMatchItem,
+} from "./graphic-gap-match.js";
 export { buildQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
 export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
@@ -33,6 +37,15 @@ export type {
   Qti3GraphicAssociateObject,
   Qti3GraphicAssociatePair,
   Qti3GraphicAssociateShape,
+  Qti3GraphicGapChoice,
+  Qti3GraphicGapHotspotTarget,
+  Qti3GraphicGapImageChoice,
+  Qti3GraphicGapInlineTarget,
+  Qti3GraphicGapMatchAuthoringItem,
+  Qti3GraphicGapMatchBuilderInput,
+  Qti3GraphicGapPair,
+  Qti3GraphicGapTarget,
+  Qti3GraphicGapTextChoice,
   Qti3HotspotAuthoringItem,
   Qti3HotspotBuilderInput,
   Qti3HotspotChoice,

@@ -181,6 +181,32 @@ describe("qti3-writer validation", () => {
           "graphic_associate_match_max_exceeded",
         ],
       },
+      {
+        item: {
+          interactionType: "graphicGapMatch",
+          identifier: "graphic-gap-match-invalid",
+          title: "Graphic Gap Match",
+          object: { data: "/uploads/no-extension" },
+          choices: [
+            { identifier: "A", kind: "text", text: "" },
+            { identifier: "A", kind: "text", text: "Duplicate" },
+          ],
+          targets: [{ identifier: "T1", shape: "rect", coords: "" }],
+          correctResponse: [{ sourceIdentifier: "B", targetIdentifier: "T2" }],
+          minAssociations: 2,
+          maxAssociations: 1,
+        },
+        codes: [
+          "missing_graphic_gap_match_object_alt",
+          "unknown_graphic_gap_match_object_type",
+          "duplicate_identifier",
+          "empty_graphic_gap_match_choice",
+          "missing_graphic_gap_match_target_coords",
+          "invalid_graphic_gap_match_bounds",
+          "unknown_graphic_gap_match_choice_reference",
+          "unknown_graphic_gap_match_target_reference",
+        ],
+      },
     ];
 
     for (const { item, codes } of invalidItems) {
@@ -276,6 +302,15 @@ describe("qti3-writer validation", () => {
         ],
         correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "B" }],
       },
+      {
+        interactionType: "graphicGapMatch",
+        identifier: "support-graphic-gap-match",
+        title: "Graphic Gap Match",
+        object: { data: "map.png", alt: "Map", width: 100, height: 100 },
+        choices: [{ identifier: "A", kind: "text", text: "Alpha" }],
+        targets: [{ identifier: "T1", shape: "rect", coords: "1,1,20,20" }],
+        correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "T1" }],
+      },
     ];
 
     const supportedTypes = new Set<QtiInteractionType>(
@@ -313,7 +348,6 @@ describe("qti3-writer validation", () => {
       "upload",
       "media",
       "graphicOrder",
-      "graphicGapMatch",
       "selectPoint",
       "positionObject",
       "slider",

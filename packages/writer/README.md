@@ -79,6 +79,7 @@ interactions the writer can currently write and validate:
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
 | Hotspot           | `qti-hotspot-interaction`           | Writes and validates accessible object metadata and references        |
 | Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses    |
+| Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes              |
 
 The writer test suite round-trips every supported builder through `@longsightgroup/qti3-core`
 parsing and `validateAssessmentItem()` with zero diagnostics.
@@ -86,9 +87,13 @@ parsing and `validateAssessmentItem()` with zero diagnostics.
 For order items, an explicit `correctOrder` must include every choice by default. Partial correct
 orders are accepted only when `minChoices` or `maxChoices` explicitly configures subset ordering.
 
-Graphic interactions render trusted `bodyHtml` before generated long-description markup, followed by
-the interaction element. Future graphic writers should keep that ordering so authored context,
-accessibility metadata, and the interaction surface stay consistent.
+Graphic interactions render generated long-description markup immediately before the interaction
+element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
+targets can be parsed and validated by QTI engines.
+
+Graphic gap match supports two target modes. Hotspot targets are generated as
+`qti-associable-hotspot` elements on the graphic. Inline targets are declared in `targets` with
+`targetType: "inlineGap"` and must have matching trusted `bodyHtml` containing `qti-gap` elements.
 
 ## Migration Pattern
 
@@ -116,11 +121,10 @@ Current planned order:
 5. upload
 6. media
 7. graphic order
-8. graphic gap match
-9. select point
-10. position object
-11. slider
-12. custom
-13. portable custom
-14. drawing
-15. end attempt
+8. select point
+9. position object
+10. slider
+11. custom
+12. portable custom
+13. drawing
+14. end attempt

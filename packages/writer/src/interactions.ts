@@ -7,6 +7,10 @@ import {
   renderQti3GraphicAssociateItem,
   validateQti3GraphicAssociateItem,
 } from "./graphic-associate.js";
+import {
+  renderQti3GraphicGapMatchItem,
+  validateQti3GraphicGapMatchItem,
+} from "./graphic-gap-match.js";
 import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
@@ -67,6 +71,15 @@ export const qti3WriterInteractions: Record<
     ],
     notes: "Writes and validates object metadata, associable hotspots, and pair responses.",
   },
+  graphicGapMatch: {
+    qtiName: "qti-graphic-gap-match-interaction",
+    interactionType: "graphicGapMatch",
+    tests: [
+      "packages/writer/src/graphic-gap-match.test.ts",
+      "packages/writer/src/validation.test.ts",
+    ],
+    notes: "Supports hotspot targets and inline qti-gap targets in trusted bodyHtml.",
+  },
 };
 
 export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
@@ -85,6 +98,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3HotspotItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
+    case "graphicGapMatch":
+      return validateQti3GraphicGapMatchItem(item);
     default:
       return assertNever(item);
   }
@@ -106,6 +121,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3HotspotItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
+    case "graphicGapMatch":
+      return renderQti3GraphicGapMatchItem(item);
     default:
       return assertNever(item);
   }
