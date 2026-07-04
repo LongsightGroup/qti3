@@ -12,6 +12,7 @@ import {
   validateQti3GraphicGapMatchItem,
 } from "./graphic-gap-match.js";
 import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
+import { renderQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inline-choice.js";
 import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
 import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
@@ -39,6 +40,13 @@ export const qti3WriterInteractions: Record<
     qtiName: "qti-order-interaction",
     interactionType: "order",
     tests: ["packages/writer/src/order.test.ts", "packages/writer/src/validation.test.ts"],
+  },
+  inlineChoice: {
+    qtiName: "qti-inline-choice-interaction",
+    interactionType: "inlineChoice",
+    tests: ["packages/writer/src/inline-choice.test.ts", "packages/writer/src/validation.test.ts"],
+    notes:
+      "Replaces empty inline-choice placeholders in trusted bodyHtml with generated interactions.",
   },
   associate: {
     qtiName: "qti-associate-interaction",
@@ -88,6 +96,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3ChoiceItem(item);
     case "order":
       return validateQti3OrderItem(item);
+    case "inlineChoice":
+      return validateQti3InlineChoiceItem(item);
     case "associate":
       return validateQti3AssociateItem(item);
     case "textEntry":
@@ -111,6 +121,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3ChoiceItem(item);
     case "order":
       return renderQti3OrderItem(item);
+    case "inlineChoice":
+      return renderQti3InlineChoiceItem(item);
     case "associate":
       return renderQti3AssociateItem(item);
     case "textEntry":

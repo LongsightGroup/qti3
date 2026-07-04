@@ -100,6 +100,45 @@ export type Qti3OrderBuilderInput = Omit<Qti3OrderAuthoringItem, "interactionTyp
   readonly interactionType?: "order" | undefined;
 };
 
+export type Qti3InlineChoiceScoring = "all_or_nothing" | "map_response";
+
+export interface Qti3InlineChoiceOption {
+  readonly identifier: string;
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+  readonly fixed?: boolean | undefined;
+  readonly score?: number | undefined;
+}
+
+export interface Qti3InlineChoiceSlot {
+  readonly responseIdentifier: string;
+  readonly options: readonly Qti3InlineChoiceOption[];
+  readonly correctResponse?: string | undefined;
+  readonly shuffle?: boolean | undefined;
+  readonly required?: boolean | undefined;
+  readonly classNames?: readonly string[] | undefined;
+  readonly sharedVocabulary?: QtiSharedVocabularyState | undefined;
+}
+
+export interface Qti3InlineChoiceAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "inlineChoice";
+  /**
+   * Trusted bodyHtml must contain an empty qti-inline-choice-interaction placeholder for every
+   * slot, for example: <qti-inline-choice-interaction response-identifier="RESPONSE"/>.
+   */
+  readonly bodyHtml: Qti3TrustedXmlFragment;
+  readonly slots: readonly Qti3InlineChoiceSlot[];
+  readonly scoring?: Qti3InlineChoiceScoring | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3InlineChoiceBuilderInput = Omit<
+  Qti3InlineChoiceAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "inlineChoice" | undefined;
+};
+
 export interface Qti3AssociateChoice {
   readonly identifier: string;
   readonly text?: string | undefined;
@@ -311,6 +350,7 @@ export type Qti3GraphicGapMatchBuilderInput = Omit<
 export type Qti3AuthoringItem =
   | Qti3ChoiceAuthoringItem
   | Qti3OrderAuthoringItem
+  | Qti3InlineChoiceAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem

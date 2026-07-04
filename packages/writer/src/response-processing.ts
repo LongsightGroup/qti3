@@ -1,4 +1,5 @@
 import type { Qti3ResponseProcessingTemplate } from "./types.js";
+import { xmlEscape } from "./xml.js";
 
 const RESPONSE_PROCESSING_TEMPLATE_URIS = {
   match_correct: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct",
@@ -7,4 +8,93 @@ const RESPONSE_PROCESSING_TEMPLATE_URIS = {
 
 export function responseProcessingTemplateXml(template: Qti3ResponseProcessingTemplate): string {
   return `  <qti-response-processing template="${RESPONSE_PROCESSING_TEMPLATE_URIS[template]}"/>`;
+}
+
+export function sumMappedResponsesProcessingXml(responseIdentifiers: readonly string[]): string {
+  const ids = uniqueIdentifiers(responseIdentifiers);
+  if (!ids.length) return zeroScoreProcessingXml();
+  const conditions = ids
+    .map((id) => {
+      const responseIdentifier = xmlEscape(id);
+      return `  <qti-response-condition>
+    <qti-response-if>
+      <qti-not>
+        <qti-is-null>
+          <qti-variable identifier="${responseIdentifier}"/>
+        </qti-is-null>
+      </qti-not>
+      <qti-set-outcome-value identifier="SCORE">
+        <qti-sum>
+          <qti-variable identifier="SCORE"/>
+          <qti-map-response identifier="${responseIdentifier}"/>
+        </qti-sum>
+      </qti-set-outcome-value>
+    </qti-response-if>
+  </qti-response-condition>`;
+    })
+    .join("\n");
+  return `  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-base-value base-type="float">0</qti-base-value>
+    </qti-set-outcome-value>
+${conditions}
+  </qti-response-processing>`;
+}
+
+export function allOrNothingCorrectProcessingXml(
+  responseIdentifiers: readonly string[],
+  score: number,
+): string {
+  const ids = uniqueIdentifiers(responseIdentifiers);
+  const scoreValue = Number.isFinite(score) ? score : 0;
+  if (!ids.length || scoreValue <= 0) return zeroScoreProcessingXml();
+  const conditions = ids
+    .map((id) => {
+      const responseIdentifier = xmlEscape(id);
+      return `      <qti-not>
+        <qti-is-null>
+          <qti-variable identifier="${responseIdentifier}"/>
+        </qti-is-null>
+      </qti-not>
+      <qti-match>
+        <qti-variable identifier="${responseIdentifier}"/>
+        <qti-correct identifier="${responseIdentifier}"/>
+      </qti-match>`;
+    })
+    .join("\n");
+  return `  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-base-value base-type="float">0</qti-base-value>
+    </qti-set-outcome-value>
+  <qti-response-condition>
+    <qti-response-if>
+      <qti-and>
+${conditions}
+      </qti-and>
+      <qti-set-outcome-value identifier="SCORE">
+        <qti-base-value base-type="float">${String(scoreValue)}</qti-base-value>
+      </qti-set-outcome-value>
+    </qti-response-if>
+  </qti-response-condition>
+  </qti-response-processing>`;
+}
+
+function zeroScoreProcessingXml(): string {
+  return `  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-base-value base-type="float">0</qti-base-value>
+    </qti-set-outcome-value>
+  </qti-response-processing>`;
+}
+
+function uniqueIdentifiers(values: readonly string[]): string[] {
+  const identifiers: string[] = [];
+  const seen = new Set<string>();
+  for (const value of values) {
+    const identifier = value.trim();
+    if (!identifier || seen.has(identifier)) continue;
+    seen.add(identifier);
+    identifiers.push(identifier);
+  }
+  return identifiers;
 }

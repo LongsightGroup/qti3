@@ -9,6 +9,7 @@ export {
   validateQti3GraphicGapMatchItem,
 } from "./graphic-gap-match.js";
 export { buildQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
+export { buildQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inline-choice.js";
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
 export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
 export { buildQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
@@ -51,6 +52,11 @@ export type {
   Qti3HotspotChoice,
   Qti3HotspotObject,
   Qti3HotspotShape,
+  Qti3InlineChoiceAuthoringItem,
+  Qti3InlineChoiceBuilderInput,
+  Qti3InlineChoiceOption,
+  Qti3InlineChoiceScoring,
+  Qti3InlineChoiceSlot,
   Qti3MatchAuthoringItem,
   Qti3MatchBuilderInput,
   Qti3MatchChoice,

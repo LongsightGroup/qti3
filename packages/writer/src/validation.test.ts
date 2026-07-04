@@ -257,6 +257,24 @@ describe("qti3-writer validation", () => {
         ],
       },
       {
+        interactionType: "inlineChoice",
+        identifier: "support-inline-choice",
+        title: "Inline Choice",
+        bodyHtml: qti3TrustedXmlFragment(
+          '<p><qti-inline-choice-interaction response-identifier="RESPONSE"/></p>',
+        ),
+        slots: [
+          {
+            responseIdentifier: "RESPONSE",
+            correctResponse: "A",
+            options: [
+              { identifier: "A", text: "A" },
+              { identifier: "B", text: "B" },
+            ],
+          },
+        ],
+      },
+      {
         interactionType: "associate",
         identifier: "support-associate",
         title: "Associate",
@@ -341,7 +359,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "inlineChoice",
       "hottext",
       "gapMatch",
       "extendedText",
