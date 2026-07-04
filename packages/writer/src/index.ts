@@ -16,6 +16,7 @@ export { buildQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inlin
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
 export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
 export { buildQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
+export { buildQti3UploadItem, validateQti3UploadItem } from "./upload.js";
 export {
   qti3WriterInteractionSupport,
   qti3WriterInteractions,
@@ -89,6 +90,9 @@ export type {
   Qti3TextEntryBuilderInput,
   Qti3TextEntryResponse,
   Qti3TrustedXmlFragment,
+  Qti3UploadAuthoringItem,
+  Qti3UploadBuilderInput,
+  Qti3UploadScoring,
   Qti3WriterDiagnostic,
   Qti3WriterResult,
 } from "./types.js";

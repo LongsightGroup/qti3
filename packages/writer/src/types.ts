@@ -27,6 +27,8 @@ export type Qti3ExtendedTextResponseBaseType = "string" | "integer" | "float";
 
 export type Qti3ExtendedTextResponseCardinality = "single" | "multiple" | "ordered";
 
+export type Qti3UploadScoring = "match_correct";
+
 export interface Qti3WriterDiagnostic {
   readonly code: string;
   readonly path: string;
@@ -241,6 +243,20 @@ export type Qti3ExtendedTextBuilderInput = Omit<
   "interactionType"
 > & {
   readonly interactionType?: "extendedText" | undefined;
+};
+
+export interface Qti3UploadAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "upload";
+  readonly maxFileSize?: number | undefined;
+  readonly fileTypes?: string | undefined;
+  readonly multiple?: boolean | undefined;
+  readonly correctResponse?: string | undefined;
+  readonly scoring?: Qti3UploadScoring | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3UploadBuilderInput = Omit<Qti3UploadAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "upload" | undefined;
 };
 
 export interface Qti3AssociateChoice {
@@ -458,6 +474,7 @@ export type Qti3AuthoringItem =
   | Qti3HottextAuthoringItem
   | Qti3GapMatchAuthoringItem
   | Qti3ExtendedTextAuthoringItem
+  | Qti3UploadAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem

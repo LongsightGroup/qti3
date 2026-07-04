@@ -78,6 +78,7 @@ interactions the writer can currently write and validate:
 | Hottext           | `qti-hottext-interaction`           | Replaces empty QTI placeholders and validates choice references       |
 | Gap match         | `qti-gap-match-interaction`         | Writes and validates gap choices, targets, and directed pairs         |
 | Extended text     | `qti-extended-text-interaction`     | Writes constructed-response interactions and rubric blocks            |
+| Upload            | `qti-upload-interaction`            | Writes file response declarations and host upload metadata            |
 | Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices            |
 | Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
@@ -115,6 +116,13 @@ pattern-mask attributes, `format="plain"`, `format="preformatted"`, and `format=
 `qti3-core` validates extended text response declarations as `cardinality="single"` and
 `base-type="string"`, so the writer reports diagnostics for other response shapes.
 
+Upload items write a single `qti-upload-interaction` with a `cardinality="single"` /
+`base-type="file"` response declaration. Host constraints such as maximum file size, allowed file
+types, and multiple-file UI behavior are emitted as `data-max-size`, `data-file-types`, and
+`data-multiple` attributes for host runtimes that understand them. When `correctResponse` is
+provided, the writer emits a correct-response filename and the `match_correct` response-processing
+template; otherwise upload items remain manually scored/unscored.
+
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
 targets can be parsed and validated by QTI engines.
@@ -142,13 +150,12 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. upload
-2. media
-3. graphic order
-4. select point
-5. position object
-6. slider
-7. custom
-8. portable custom
-9. drawing
-10. end attempt
+1. media
+2. graphic order
+3. select point
+4. position object
+5. slider
+6. custom
+7. portable custom
+8. drawing
+9. end attempt

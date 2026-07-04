@@ -92,6 +92,24 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "upload",
+          identifier: "upload-invalid",
+          title: "Upload",
+          responseIdentifier: "bad response",
+          maxFileSize: 1.5,
+          correctResponse: "",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          scoring: "map_response" as "match_correct",
+        },
+        codes: [
+          "invalid_identifier",
+          "invalid_upload_max_file_size",
+          "empty_upload_correct_response",
+          "invalid_upload_scoring",
+        ],
+      },
+      {
+        item: {
           interactionType: "associate",
           identifier: "associate-invalid",
           title: "Associate",
@@ -380,6 +398,13 @@ describe("qti3-writer validation", () => {
         expectedLength: 200,
       },
       {
+        interactionType: "upload",
+        identifier: "support-upload",
+        title: "Upload",
+        bodyHtml: qti3TrustedXmlFragment("<p>Upload the requested file.</p>"),
+        responseIdentifier: "RESPONSE",
+      },
+      {
         interactionType: "associate",
         identifier: "support-associate",
         title: "Associate",
@@ -464,7 +489,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "upload",
       "media",
       "graphicOrder",
       "selectPoint",

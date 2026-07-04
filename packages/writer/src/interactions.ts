@@ -20,6 +20,7 @@ import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
 import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
 import type { Qti3AuthoringItem, Qti3WriterDiagnostic } from "./types.js";
+import { renderQti3UploadItem, validateQti3UploadItem } from "./upload.js";
 
 type Qti3WriterInteractionType = Qti3AuthoringItem["interactionType"];
 
@@ -68,6 +69,12 @@ export const qti3WriterInteractions: Record<
     interactionType: "extendedText",
     tests: ["packages/writer/src/extended-text.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Writes constructed-response extended text interactions and rubric blocks.",
+  },
+  upload: {
+    qtiName: "qti-upload-interaction",
+    interactionType: "upload",
+    tests: ["packages/writer/src/upload.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes single-file response declarations and host upload metadata attributes.",
   },
   associate: {
     qtiName: "qti-associate-interaction",
@@ -125,6 +132,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3GapMatchItem(item);
     case "extendedText":
       return validateQti3ExtendedTextItem(item);
+    case "upload":
+      return validateQti3UploadItem(item);
     case "associate":
       return validateQti3AssociateItem(item);
     case "textEntry":
@@ -156,6 +165,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3GapMatchItem(item);
     case "extendedText":
       return renderQti3ExtendedTextItem(item);
+    case "upload":
+      return renderQti3UploadItem(item);
     case "associate":
       return renderQti3AssociateItem(item);
     case "textEntry":
