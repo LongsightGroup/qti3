@@ -85,6 +85,7 @@ interactions the writer can currently write and validate:
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
 | Hotspot           | `qti-hotspot-interaction`           | Writes and validates accessible object metadata and references        |
 | Graphic order     | `qti-graphic-order-interaction`     | Writes and validates object metadata, hotspots, and ordered responses |
+| Select point      | `qti-select-point-interaction`      | Writes and validates point responses, area mappings, and object data  |
 | Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses    |
 | Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes              |
 
@@ -134,8 +135,10 @@ Graphic interactions render generated long-description markup immediately before
 element. Graphic order defaults `correctOrder` to the declared hotspot order when omitted. For
 graphic order items, an explicit `correctOrder` must include every hotspot by default. Partial
 correct orders are accepted only when `minChoices` or `maxChoices` explicitly configures subset
-ordering. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap` targets can be
-parsed and validated by QTI engines.
+ordering. Select point writes `map_response_point` scoring and requires at least one area mapping
+target. When `maxChoices` is omitted, select point emits `cardinality="single"`; set `maxChoices`
+above 1 for multi-point responses. For graphic gap match, trusted `bodyHtml` is interaction content
+so inline `qti-gap` targets can be parsed and validated by QTI engines.
 
 Graphic gap match supports two target modes. Hotspot targets are generated as
 `qti-associable-hotspot` elements on the graphic. Inline targets are declared in `targets` with
@@ -160,10 +163,9 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. select point
-2. position object
-3. slider
-4. custom
-5. portable custom
-6. drawing
-7. end attempt
+1. position object
+2. slider
+3. custom
+4. portable custom
+5. drawing
+6. end attempt

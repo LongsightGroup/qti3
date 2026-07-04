@@ -21,6 +21,8 @@ export type Qti3TextEntryBaseType = "string" | "integer" | "float";
 
 export type Qti3ResponseProcessingTemplate = "match_correct" | "map_response";
 
+export type Qti3PointResponseProcessingTemplate = "map_response_point";
+
 export type Qti3ExtendedTextFormat = "plain" | "preformatted" | "xhtml";
 
 export type Qti3ExtendedTextResponseBaseType = "string" | "integer" | "float";
@@ -446,6 +448,30 @@ export type Qti3GraphicOrderBuilderInput = Omit<
   readonly interactionType?: "graphicOrder" | undefined;
 };
 
+export type Qti3SelectPointShape = "circle" | "default" | "poly" | "rect";
+
+export interface Qti3SelectPointTarget {
+  readonly shape: Qti3SelectPointShape;
+  readonly coords: string;
+  readonly mappedValue?: number | undefined;
+}
+
+export type Qti3SelectPointObject = Qti3GraphicObject;
+
+export interface Qti3SelectPointAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "selectPoint";
+  readonly object: Qti3GraphicObject;
+  readonly targets?: readonly Qti3SelectPointTarget[] | undefined;
+  readonly correctResponse?: readonly string[] | undefined;
+  readonly minChoices?: number | undefined;
+  readonly maxChoices?: number | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3SelectPointBuilderInput = Omit<Qti3SelectPointAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "selectPoint" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -544,5 +570,6 @@ export type Qti3AuthoringItem =
   | Qti3MatchAuthoringItem
   | Qti3HotspotAuthoringItem
   | Qti3GraphicOrderAuthoringItem
+  | Qti3SelectPointAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

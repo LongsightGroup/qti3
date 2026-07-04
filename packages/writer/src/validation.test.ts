@@ -299,6 +299,28 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "selectPoint",
+          identifier: "select-point-invalid",
+          title: "Select Point",
+          responseIdentifier: "bad response",
+          object: { data: "/uploads/no-extension" },
+          targets: [{ shape: "circle", coords: "1,2" }],
+          correctResponse: ["1,2", "3 4"],
+          minChoices: 2,
+          maxChoices: 1,
+        },
+        codes: [
+          "invalid_identifier",
+          "missing_select_point_object_alt",
+          "unknown_select_point_object_type",
+          "invalid_select_point_bounds",
+          "invalid_select_point_correct_response",
+          "invalid_select_point_correct_response_count",
+          "invalid_select_point_target_coords",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -508,6 +530,14 @@ describe("qti3-writer validation", () => {
         correctOrder: ["A", "B"],
       },
       {
+        interactionType: "selectPoint",
+        identifier: "support-select-point",
+        title: "Select Point",
+        object: { data: "map.png", alt: "Map", width: 100, height: 100 },
+        targets: [{ shape: "circle", coords: "25,25,10", mappedValue: 1 }],
+        correctResponse: ["25 25"],
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -557,7 +587,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "selectPoint",
       "positionObject",
       "slider",
       "custom",

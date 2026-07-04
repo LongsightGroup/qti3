@@ -1,4 +1,7 @@
-import type { Qti3ResponseProcessingTemplate } from "./types.js";
+import type {
+  Qti3PointResponseProcessingTemplate,
+  Qti3ResponseProcessingTemplate,
+} from "./types.js";
 import { xmlEscape } from "./xml.js";
 
 const RESPONSE_PROCESSING_TEMPLATE_URIS = {
@@ -6,8 +9,26 @@ const RESPONSE_PROCESSING_TEMPLATE_URIS = {
   map_response: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response",
 } as const satisfies Record<Qti3ResponseProcessingTemplate, string>;
 
-export function responseProcessingTemplateXml(template: Qti3ResponseProcessingTemplate): string {
+const POINT_RESPONSE_PROCESSING_TEMPLATE_URIS = {
+  map_response_point: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point",
+} as const satisfies Record<Qti3PointResponseProcessingTemplate, string>;
+
+export function responseProcessingTemplateXml(
+  template: Qti3ResponseProcessingTemplate | Qti3PointResponseProcessingTemplate,
+): string {
+  if (template === "map_response_point") {
+    return `  <qti-response-processing template="${POINT_RESPONSE_PROCESSING_TEMPLATE_URIS[template]}"/>`;
+  }
   return `  <qti-response-processing template="${RESPONSE_PROCESSING_TEMPLATE_URIS[template]}"/>`;
+}
+
+export function mapResponsePointProcessingXml(responseIdentifier: string): string {
+  const identifier = xmlEscape(responseIdentifier);
+  return `  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-map-response-point identifier="${identifier}"/>
+    </qti-set-outcome-value>
+  </qti-response-processing>`;
 }
 
 export function sumMappedResponsesProcessingXml(responseIdentifiers: readonly string[]): string {
