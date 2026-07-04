@@ -567,6 +567,44 @@ export type Qti3CustomInteractionBuilderInput = Omit<
   readonly interactionType?: "custom" | undefined;
 };
 
+export interface Qti3PortableCustomDataAttribute {
+  readonly name: string;
+  readonly value: string;
+}
+
+export interface Qti3PortableCustomInteractionModule {
+  readonly id: string;
+  readonly primaryPath?: string | undefined;
+  readonly fallbackPath?: string | undefined;
+}
+
+export interface Qti3PortableCustomInteractionModules {
+  readonly primaryConfiguration?: string | undefined;
+  readonly secondaryConfiguration?: string | undefined;
+  readonly modules: readonly Qti3PortableCustomInteractionModule[];
+}
+
+export interface Qti3PortableCustomAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "portableCustom";
+  readonly responseBaseType?: Qti3CustomInteractionBaseType | undefined;
+  readonly responseCardinality?: Qti3CustomInteractionCardinality | undefined;
+  readonly customInteractionTypeIdentifier: string;
+  readonly module?: string | undefined;
+  readonly label?: string | undefined;
+  readonly dataAttributes?: readonly Qti3PortableCustomDataAttribute[] | undefined;
+  readonly interactionModules?: Qti3PortableCustomInteractionModules | undefined;
+  readonly interactionMarkupHtml?: Qti3TrustedXmlFragment | undefined;
+  readonly responseProcessingXml?: Qti3TrustedXmlFragment | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3PortableCustomBuilderInput = Omit<
+  Qti3PortableCustomAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "portableCustom" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -669,5 +707,6 @@ export type Qti3AuthoringItem =
   | Qti3PositionObjectAuthoringItem
   | Qti3SliderAuthoringItem
   | Qti3CustomInteractionAuthoringItem
+  | Qti3PortableCustomAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

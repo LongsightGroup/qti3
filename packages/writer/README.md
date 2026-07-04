@@ -89,6 +89,7 @@ interactions the writer can currently write and validate:
 | Position object   | `qti-position-object-interaction`   | Writes and validates stage/movable objects, point responses, targets   |
 | Slider            | `qti-slider-interaction`            | Writes and validates numeric bounds, responses, mappings, presentation |
 | Custom            | `qti-custom-interaction`            | Writes trusted legacy custom markup and response processing fragments  |
+| Portable custom   | `qti-portable-custom-interaction`   | Writes launch metadata, modules, trusted markup, response processing   |
 | Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses     |
 | Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes               |
 
@@ -142,6 +143,9 @@ when they are not.
 Custom interaction items write deprecated legacy `qti-custom-interaction` items for hosts that still
 need that QTI shape. The writer validates response declaration shape and XML attribute names, but it
 treats widget markup and custom response processing as trusted fragments supplied by the host.
+Portable custom items write `qti-portable-custom-interaction` launch metadata, optional
+`qti-interaction-modules`, and trusted `qti-interaction-markup`. The writer requires a custom
+interaction type identifier plus either a `module` attribute or at least one interaction module.
 
 Graphic interactions render generated long-description markup immediately before the interaction
 element. Graphic order defaults `correctOrder` to the declared hotspot order when omitted. For
@@ -176,6 +180,5 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. portable custom
-2. drawing
-3. end attempt
+1. drawing
+2. end attempt

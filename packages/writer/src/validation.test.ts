@@ -403,6 +403,34 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "portableCustom",
+          identifier: "bad pci",
+          title: "",
+          responseIdentifier: "bad response",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          responseBaseType: "json" as "string",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          responseCardinality: "list" as "single",
+          customInteractionTypeIdentifier: "",
+          dataAttributes: [{ name: "aria-label", value: "bad" }],
+          interactionModules: {
+            primaryConfiguration: "modules/module_resolution.js",
+            modules: [],
+          },
+        },
+        codes: [
+          "invalid_identifier",
+          "missing_title",
+          "invalid_portable_custom_response_base_type",
+          "invalid_portable_custom_response_cardinality",
+          "missing_portable_custom_type_identifier",
+          "missing_portable_custom_module",
+          "missing_portable_custom_modules",
+          "invalid_portable_custom_data_attribute_prefix",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -645,6 +673,13 @@ describe("qti3-writer validation", () => {
         interactionMarkupHtml: qti3TrustedXmlFragment('<div class="widget">Ready</div>'),
       },
       {
+        interactionType: "portableCustom",
+        identifier: "support-portable-custom",
+        title: "Portable Custom",
+        customInteractionTypeIdentifier: "urn:qti3:fixture:portable-custom",
+        module: "pciModule",
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -697,7 +732,7 @@ describe("qti3-writer validation", () => {
       (planned) => planned.interactionType,
     );
 
-    expect(plannedTypes).toEqual(["portableCustom", "drawing", "endAttempt"]);
+    expect(plannedTypes).toEqual(["drawing", "endAttempt"]);
     expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
     expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
       true,

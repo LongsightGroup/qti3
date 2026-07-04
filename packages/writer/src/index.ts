@@ -22,6 +22,7 @@ export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
 export { buildQti3MediaItem, validateQti3MediaItem } from "./media.js";
 export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
 export { buildQti3PositionObjectItem, validateQti3PositionObjectItem } from "./position-object.js";
+export { buildQti3PortableCustomItem, validateQti3PortableCustomItem } from "./portable-custom.js";
 export { buildQti3SelectPointItem, validateQti3SelectPointItem } from "./select-point.js";
 export { buildQti3SliderItem, validateQti3SliderItem } from "./slider.js";
 export { buildQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
@@ -106,6 +107,11 @@ export type {
   Qti3MediaSource,
   Qti3OrderAuthoringItem,
   Qti3OrderBuilderInput,
+  Qti3PortableCustomAuthoringItem,
+  Qti3PortableCustomBuilderInput,
+  Qti3PortableCustomDataAttribute,
+  Qti3PortableCustomInteractionModule,
+  Qti3PortableCustomInteractionModules,
   Qti3ResponseProcessingTemplate,
   Qti3PointResponseProcessingTemplate,
   Qti3PositionObjectAuthoringItem,

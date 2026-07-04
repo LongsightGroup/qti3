@@ -25,6 +25,7 @@ import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
 import { renderQti3MediaItem, validateQti3MediaItem } from "./media.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
 import { renderQti3PositionObjectItem, validateQti3PositionObjectItem } from "./position-object.js";
+import { renderQti3PortableCustomItem, validateQti3PortableCustomItem } from "./portable-custom.js";
 import { renderQti3SelectPointItem, validateQti3SelectPointItem } from "./select-point.js";
 import { renderQti3SliderItem, validateQti3SliderItem } from "./slider.js";
 import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
@@ -152,6 +153,15 @@ export const qti3WriterInteractions: Record<
     notes:
       "Writes legacy custom interactions from trusted widget markup and response processing fragments.",
   },
+  portableCustom: {
+    qtiName: "qti-portable-custom-interaction",
+    interactionType: "portableCustom",
+    tests: [
+      "packages/writer/src/portable-custom.test.ts",
+      "packages/writer/src/validation.test.ts",
+    ],
+    notes: "Writes portable custom interactions with launch metadata, modules, and trusted markup.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -208,6 +218,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3SliderItem(item);
     case "custom":
       return validateQti3CustomInteractionItem(item);
+    case "portableCustom":
+      return validateQti3PortableCustomItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -253,6 +265,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3SliderItem(item);
     case "custom":
       return renderQti3CustomInteractionItem(item);
+    case "portableCustom":
+      return renderQti3PortableCustomItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
