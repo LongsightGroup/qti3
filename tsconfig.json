@@ -3,6 +3,7 @@
   "references": [
     { "path": "./packages/core" },
     { "path": "./packages/core/tsconfig.test.json" },
+    { "path": "./packages/writer" },
     { "path": "./packages/fixtures" },
     { "path": "./packages/player" },
     { "path": "./packages/player-preact" },

@@ -157,6 +157,12 @@ importers:
 
   packages/pnp: {}
 
+  packages/writer:
+    dependencies:
+      '@longsightgroup/qti3-core':
+        specifier: workspace:*
+        version: link:../core
+
 packages:
 
   '@emnapi/core@1.10.0':

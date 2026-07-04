@@ -1,0 +1,53 @@
+{
+  "name": "@longsightgroup/qti3-writer",
+  "version": "0.9.5",
+  "description": "Framework-neutral QTI 3 assessment item XML writer for authoring systems.",
+  "keywords": [
+    "assessment",
+    "authoring",
+    "qti",
+    "qti3",
+    "typescript",
+    "xml"
+  ],
+  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/writer#readme",
+  "bugs": {
+    "url": "https://github.com/LongsightGroup/qti3/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Sam Ottenhoff",
+    "url": "https://github.com/ottenhoff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LongsightGroup/qti3.git",
+    "directory": "packages/writer"
+  },
+  "files": [
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "!dist/**/*.test.*",
+    "src/**/*.ts",
+    "!src/**/*.test.ts"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm --dir ../.. release:check"
+  },
+  "dependencies": {
+    "@longsightgroup/qti3-core": "workspace:*"
+  }
+}

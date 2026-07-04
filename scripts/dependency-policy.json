@@ -102,6 +102,12 @@
         "react": ">=18.2 <20",
         "react-dom": ">=18.2 <20"
       }
+    },
+    "packages/writer": {
+      "dependencies": {
+        "@longsightgroup/qti3-core": "workspace:*"
+      },
+      "devDependencies": {}
     }
   },
   "lockfilePackages": [
