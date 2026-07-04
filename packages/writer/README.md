@@ -74,6 +74,7 @@ interactions the writer can currently write and validate:
 | ----------- | ---------------------------- | --------------------------------------------------------------------- |
 | Choice      | `qti-choice-interaction`     | Writes and validates                                                  |
 | Order       | `qti-order-interaction`      | Writes and validates ordered cardinality and choice references        |
+| Associate   | `qti-associate-interaction`  | Writes and validates pair responses and associable choices            |
 | Text entry  | `qti-text-entry-interaction` | Writes declarations and validates trusted body interaction references |
 | Match       | `qti-match-interaction`      | Writes and validates                                                  |
 | Hotspot     | `qti-hotspot-interaction`    | Writes and validates accessible object metadata and references        |
@@ -103,20 +104,19 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. associate
-2. inline choice
-3. hottext
-4. gap match
-5. extended text
-6. upload
-7. media
-8. graphic order
-9. graphic associate
-10. graphic gap match
-11. select point
-12. position object
-13. slider
-14. custom
-15. portable custom
-16. drawing
-17. end attempt
+1. inline choice
+2. hottext
+3. gap match
+4. extended text
+5. upload
+6. media
+7. graphic order
+8. graphic associate
+9. graphic gap match
+10. select point
+11. position object
+12. slider
+13. custom
+14. portable custom
+15. drawing
+16. end attempt

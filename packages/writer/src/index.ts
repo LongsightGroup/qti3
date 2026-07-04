@@ -1,3 +1,4 @@
+export { buildQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 export { buildQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
 export { buildQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
@@ -15,6 +16,10 @@ export type {
   Qti3AuthoringChoice,
   Qti3AuthoringItem,
   Qti3AuthoringItemBase,
+  Qti3AssociateAuthoringItem,
+  Qti3AssociateBuilderInput,
+  Qti3AssociateChoice,
+  Qti3AssociatePair,
   Qti3ChoiceAuthoringItem,
   Qti3ChoiceBuilderInput,
   Qti3HotspotAuthoringItem,

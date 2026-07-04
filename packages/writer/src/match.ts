@@ -1,12 +1,12 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
-  isNonNegativeInteger,
   throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
 } from "./diagnostics.js";
+import { associableChoiceXml, validateAssociableChoice } from "./associable-choice.js";
 import {
   interactionAttributeList,
   optionalBodySection,
@@ -17,7 +17,12 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
-import type { Qti3MatchBuilderInput, Qti3MatchChoice, Qti3WriterDiagnostic } from "./types.js";
+import type { Qti3MatchBuilderInput, Qti3WriterDiagnostic } from "./types.js";
+import {
+  pairResponseDeclarationXml,
+  validatePairMatchMax,
+  validatePairReferences,
+} from "./pair-declaration.js";
 import { xmlEscape } from "./xml.js";
 
 export function buildQti3MatchItem(input: Qti3MatchBuilderInput): string {
@@ -32,17 +37,11 @@ export function renderQti3MatchItem(input: Qti3MatchBuilderInput): string {
     "Response identifier",
   );
   const escapedResponseIdentifier = xmlEscape(responseIdentifier);
-  const correct = input.correctResponse
-    .map(
-      (pair) =>
-        `      <qti-value>${xmlEscape(pair.sourceIdentifier)} ${xmlEscape(pair.targetIdentifier)}</qti-value>`,
-    )
-    .join("\n");
-  const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="multiple" base-type="directedPair">
-    <qti-correct-response>
-${correct}
-    </qti-correct-response>
-  </qti-response-declaration>`;
+  const declarationsXml = pairResponseDeclarationXml({
+    responseIdentifier: escapedResponseIdentifier,
+    baseType: "directedPair",
+    pairs: input.correctResponse,
+  });
   const interactionAttrs = interactionAttributeList({
     responseIdentifier: escapedResponseIdentifier,
     sharedVocabulary: input.sharedVocabulary,
@@ -64,14 +63,22 @@ ${correct}
     optionalPromptSection(input.promptHtml),
     `      <qti-simple-match-set>
 ${input.sources
-  .map(choiceXml)
-  .map((xml) => `      ${xml}`)
+  .map((choice) =>
+    associableChoiceXml(choice, {
+      identifierLabel: "Match choice identifier",
+      indent: "      ",
+    }),
+  )
   .join("\n")}
       </qti-simple-match-set>
       <qti-simple-match-set>
 ${input.targets
-  .map(choiceXml)
-  .map((xml) => `      ${xml}`)
+  .map((choice) =>
+    associableChoiceXml(choice, {
+      identifierLabel: "Match choice identifier",
+      indent: "      ",
+    }),
+  )
   .join("\n")}
       </qti-simple-match-set>`,
     optionalBodySection(input.bodyHtml),
@@ -82,14 +89,6 @@ ${input.targets
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml("match_correct"),
   });
-}
-
-function choiceXml(choice: Qti3MatchChoice): string {
-  const identifier = xmlEscape(assertQtiIdentifier(choice.identifier, "Match choice identifier"));
-  const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
-  return `<qti-simple-associable-choice identifier="${identifier}" match-max="${String(
-    choice.matchMax ?? 1,
-  )}">${body}</qti-simple-associable-choice>`;
 }
 
 export function validateQti3MatchItem(input: Qti3MatchBuilderInput): Qti3WriterDiagnostic[] {
@@ -129,58 +128,51 @@ export function validateQti3MatchItem(input: Qti3MatchBuilderInput): Qti3WriterD
   );
 
   for (const [index, choice] of input.sources.entries()) {
-    validateMatchChoice(choice, `sources.${index}`, diagnostics);
+    validateAssociableChoice(choice, `sources.${index}`, diagnostics, {
+      identifierLabel: "Match choice identifier",
+      emptyCode: "empty_match_choice",
+      matchMaxCode: "invalid_match_max",
+      requireContent: false,
+    });
   }
   for (const [index, choice] of input.targets.entries()) {
-    validateMatchChoice(choice, `targets.${index}`, diagnostics);
+    validateAssociableChoice(choice, `targets.${index}`, diagnostics, {
+      identifierLabel: "Match choice identifier",
+      emptyCode: "empty_match_choice",
+      matchMaxCode: "invalid_match_max",
+      requireContent: false,
+    });
   }
 
   const sourceIdentifiers = new Set(input.sources.map((choice) => choice.identifier.trim()));
   const targetIdentifiers = new Set(input.targets.map((choice) => choice.identifier.trim()));
-  for (const [index, pair] of input.correctResponse.entries()) {
-    if (!sourceIdentifiers.has(pair.sourceIdentifier.trim())) {
-      diagnostics.push(
-        writerDiagnostic(
-          "unknown_match_source_reference",
-          `correctResponse.${index}.sourceIdentifier`,
-          `Match correct response references unknown source "${pair.sourceIdentifier}".`,
-          pair.sourceIdentifier,
-        ),
-      );
-    }
-    if (!targetIdentifiers.has(pair.targetIdentifier.trim())) {
-      diagnostics.push(
-        writerDiagnostic(
-          "unknown_match_target_reference",
-          `correctResponse.${index}.targetIdentifier`,
-          `Match correct response references unknown target "${pair.targetIdentifier}".`,
-          pair.targetIdentifier,
-        ),
-      );
-    }
-  }
-  return diagnostics;
-}
-
-function validateMatchChoice(
-  choice: Qti3MatchChoice,
-  path: string,
-  diagnostics: Qti3WriterDiagnostic[],
-): void {
-  const identifierDiagnostic = validateQtiIdentifier(
-    `${path}.identifier`,
-    "Match choice identifier",
-    choice.identifier,
-  );
-  if (identifierDiagnostic) diagnostics.push(identifierDiagnostic);
-  if (choice.matchMax !== undefined && !isNonNegativeInteger(choice.matchMax)) {
-    diagnostics.push(
-      writerDiagnostic(
-        "invalid_match_max",
-        `${path}.matchMax`,
-        "Match choice matchMax must be a non-negative integer.",
+  validatePairReferences({
+    pairs: input.correctResponse,
+    sourceIdentifiers,
+    targetIdentifiers,
+    diagnostics,
+    path: "correctResponse",
+    sourceLabel: "Match pair source identifier",
+    targetLabel: "Match pair target identifier",
+    unknownSourceCode: "unknown_match_source_reference",
+    unknownTargetCode: "unknown_match_target_reference",
+    unknownSourceMessage: (identifier) =>
+      `Match correct response references unknown source "${identifier}".`,
+    unknownTargetMessage: (identifier) =>
+      `Match correct response references unknown target "${identifier}".`,
+  });
+  validatePairMatchMax({
+    pairs: input.correctResponse,
+    matchMaxByIdentifier: new Map(
+      [...input.sources, ...input.targets].map((choice) => [
+        choice.identifier.trim(),
         choice.matchMax,
-      ),
-    );
-  }
+      ]),
+    ),
+    diagnostics,
+    path: "correctResponse",
+    code: "match_match_max_exceeded",
+    label: "Match choice",
+  });
+  return diagnostics;
 }

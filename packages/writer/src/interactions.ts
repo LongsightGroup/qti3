@@ -1,6 +1,7 @@
 import { assertNever } from "@longsightgroup/qti3-core";
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
+import { renderQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 import { renderQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
 import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
@@ -31,6 +32,11 @@ export const qti3WriterInteractions: Record<
     interactionType: "order",
     tests: ["packages/writer/src/order.test.ts", "packages/writer/src/validation.test.ts"],
   },
+  associate: {
+    qtiName: "qti-associate-interaction",
+    interactionType: "associate",
+    tests: ["packages/writer/src/associate.test.ts", "packages/writer/src/validation.test.ts"],
+  },
   textEntry: {
     qtiName: "qti-text-entry-interaction",
     interactionType: "textEntry",
@@ -56,6 +62,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3ChoiceItem(item);
     case "order":
       return validateQti3OrderItem(item);
+    case "associate":
+      return validateQti3AssociateItem(item);
     case "textEntry":
       return validateQti3TextEntryItem(item);
     case "match":
@@ -73,6 +81,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3ChoiceItem(item);
     case "order":
       return renderQti3OrderItem(item);
+    case "associate":
+      return renderQti3AssociateItem(item);
     case "textEntry":
       return renderQti3TextEntryItem(item);
     case "match":

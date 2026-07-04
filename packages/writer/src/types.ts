@@ -100,6 +100,34 @@ export type Qti3OrderBuilderInput = Omit<Qti3OrderAuthoringItem, "interactionTyp
   readonly interactionType?: "order" | undefined;
 };
 
+export interface Qti3AssociateChoice {
+  readonly identifier: string;
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+  readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
+}
+
+export interface Qti3AssociatePair {
+  readonly sourceIdentifier: string;
+  readonly targetIdentifier: string;
+}
+
+export interface Qti3AssociateAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "associate";
+  readonly choices: readonly Qti3AssociateChoice[];
+  readonly correctResponse: readonly Qti3AssociatePair[];
+  readonly scoring?: Qti3ResponseProcessingTemplate | undefined;
+  readonly shuffle?: boolean | undefined;
+  readonly minAssociations?: number | undefined;
+  readonly maxAssociations?: number | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3AssociateBuilderInput = Omit<Qti3AssociateAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "associate" | undefined;
+};
+
 export interface Qti3TextEntryAnswer {
   readonly value: string;
   readonly score?: number | undefined;
@@ -185,6 +213,7 @@ export type Qti3HotspotBuilderInput = Omit<Qti3HotspotAuthoringItem, "interactio
 export type Qti3AuthoringItem =
   | Qti3ChoiceAuthoringItem
   | Qti3OrderAuthoringItem
+  | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
   | Qti3HotspotAuthoringItem;

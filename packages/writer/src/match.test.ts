@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildQti3MatchItem, qti3TrustedXmlFragment } from "./index.js";
+import { buildQti3MatchItem, qti3TrustedXmlFragment, validateQti3MatchItem } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
 
 describe("qti3-writer match", () => {
@@ -61,5 +61,29 @@ describe("qti3-writer match", () => {
         correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "T2" }],
       }),
     ).toThrow('unknown target "T2"');
+  });
+
+  it("rejects match correct responses that exceed a choice matchMax", () => {
+    const diagnostics = validateQti3MatchItem({
+      identifier: "match-match-max",
+      title: "Match",
+      sources: [{ identifier: "A", text: "A", matchMax: 1 }],
+      targets: [
+        { identifier: "T1", text: "T1" },
+        { identifier: "T2", text: "T2" },
+      ],
+      correctResponse: [
+        { sourceIdentifier: "A", targetIdentifier: "T1" },
+        { sourceIdentifier: "A", targetIdentifier: "T2" },
+      ],
+    });
+
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "match_match_max_exceeded",
+        path: "correctResponse",
+        value: { identifier: "A", useCount: 2, matchMax: 1 },
+      }),
+    );
   });
 });

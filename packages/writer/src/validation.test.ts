@@ -65,6 +65,26 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "associate",
+          identifier: "associate-invalid",
+          title: "Associate",
+          choices: [
+            { identifier: "A", text: "" },
+            { identifier: "A", text: "Duplicate A" },
+          ],
+          correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "B" }],
+          minAssociations: 2,
+          maxAssociations: 1,
+        },
+        codes: [
+          "duplicate_identifier",
+          "empty_associate_choice",
+          "invalid_associate_bounds",
+          "unknown_associate_reference",
+        ],
+      },
+      {
+        item: {
           interactionType: "textEntry",
           identifier: "text-entry-invalid",
           title: "Text Entry",
@@ -180,6 +200,16 @@ describe("qti3-writer validation", () => {
         ],
       },
       {
+        interactionType: "associate",
+        identifier: "support-associate",
+        title: "Associate",
+        choices: [
+          { identifier: "A", text: "A" },
+          { identifier: "B", text: "B" },
+        ],
+        correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "B" }],
+      },
+      {
         interactionType: "textEntry",
         identifier: "support-text-entry",
         title: "Text Entry",
@@ -234,7 +264,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "associate",
       "inlineChoice",
       "hottext",
       "gapMatch",
