@@ -161,6 +161,15 @@ export function validateQti3InlineChoiceItem(
 
   const allInteractionIds = extractInlineChoiceInteractionIdentifiers(input.bodyHtml);
   const placeholderIds = extractInlineChoicePlaceholderIdentifiers(input.bodyHtml);
+  for (const index of extractInlineChoicePlaceholderMissingResponseIndexes(input.bodyHtml)) {
+    diagnostics.push(
+      writerDiagnostic(
+        "missing_inline_choice_placeholder_response_identifier",
+        `bodyHtml.placeholders.${index}`,
+        "Inline choice placeholders must include a response-identifier attribute.",
+      ),
+    );
+  }
   if (allInteractionIds.length > placeholderIds.length) {
     diagnostics.push(
       writerDiagnostic(
@@ -327,6 +336,19 @@ function extractInlineChoicePlaceholderIdentifiers(bodyHtml: string): string[] {
     if (responseIdentifier) identifiers.push(responseIdentifier);
   }
   return identifiers;
+}
+
+function extractInlineChoicePlaceholderMissingResponseIndexes(bodyHtml: string): number[] {
+  const indexes: number[] = [];
+  const placeholderPattern =
+    /<qti-inline-choice-interaction\b([^>]*)\/>|<qti-inline-choice-interaction\b([^>]*)>\s*<\/qti-inline-choice-interaction>/gi;
+  let index = 0;
+  for (const match of bodyHtml.matchAll(placeholderPattern)) {
+    const attrs = match[1] ?? match[2] ?? "";
+    if (!extractResponseIdentifier(attrs)) indexes.push(index);
+    index += 1;
+  }
+  return indexes;
 }
 
 function extractInlineChoiceInteractionIdentifiers(bodyHtml: string): string[] {

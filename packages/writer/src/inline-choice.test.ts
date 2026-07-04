@@ -176,4 +176,26 @@ describe("qti3-writer inline choice", () => {
       }),
     ).toThrow("correct response");
   });
+
+  it("diagnoses placeholders missing response identifiers directly", () => {
+    const diagnostics = validateQti3InlineChoiceItem({
+      identifier: "inline-choice-missing-placeholder-response",
+      title: "Inline choice",
+      bodyHtml: qti3TrustedXmlFragment("<p>Pick <qti-inline-choice-interaction/>.</p>"),
+      slots: [
+        {
+          responseIdentifier: "RESPONSE",
+          correctResponse: "A",
+          options: [
+            { identifier: "A", text: "A" },
+            { identifier: "B", text: "B" },
+          ],
+        },
+      ],
+    });
+
+    expect(diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "missing_inline_choice_placeholder_response_identifier",
+    );
+  });
 });

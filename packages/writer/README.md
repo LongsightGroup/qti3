@@ -91,7 +91,9 @@ orders are accepted only when `minChoices` or `maxChoices` explicitly configures
 Inline choice items use trusted `bodyHtml` with empty QTI-shaped placeholders. The writer replaces
 each `<qti-inline-choice-interaction response-identifier="..."/>` placeholder with the generated
 interaction for the matching slot. This keeps qflow editor markers out of the public API while still
-letting host tools control the surrounding inline prose.
+letting host tools control the surrounding inline prose. Default `all_or_nothing` scoring writes the
+slot count as the score when every inline choice is correct, so a two-slot item awards `SCORE = 2`.
+Use `map_response` scoring when the host needs per-slot partial credit or custom normalization.
 
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
