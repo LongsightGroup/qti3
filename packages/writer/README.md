@@ -70,20 +70,25 @@ the host authoring system's responsibility.
 The exported `qti3WriterInteractionSupport` array is the authoritative support matrix for
 interactions the writer can currently write and validate:
 
-| Interaction | QTI element                  | Writer support                                                        |
-| ----------- | ---------------------------- | --------------------------------------------------------------------- |
-| Choice      | `qti-choice-interaction`     | Writes and validates                                                  |
-| Order       | `qti-order-interaction`      | Writes and validates ordered cardinality and choice references        |
-| Associate   | `qti-associate-interaction`  | Writes and validates pair responses and associable choices            |
-| Text entry  | `qti-text-entry-interaction` | Writes declarations and validates trusted body interaction references |
-| Match       | `qti-match-interaction`      | Writes and validates                                                  |
-| Hotspot     | `qti-hotspot-interaction`    | Writes and validates accessible object metadata and references        |
+| Interaction       | QTI element                         | Writer support                                                        |
+| ----------------- | ----------------------------------- | --------------------------------------------------------------------- |
+| Choice            | `qti-choice-interaction`            | Writes and validates                                                  |
+| Order             | `qti-order-interaction`             | Writes and validates ordered cardinality and choice references        |
+| Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices            |
+| Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
+| Match             | `qti-match-interaction`             | Writes and validates                                                  |
+| Hotspot           | `qti-hotspot-interaction`           | Writes and validates accessible object metadata and references        |
+| Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses    |
 
 The writer test suite round-trips every supported builder through `@longsightgroup/qti3-core`
 parsing and `validateAssessmentItem()` with zero diagnostics.
 
 For order items, an explicit `correctOrder` must include every choice by default. Partial correct
 orders are accepted only when `minChoices` or `maxChoices` explicitly configures subset ordering.
+
+Graphic interactions render trusted `bodyHtml` before generated long-description markup, followed by
+the interaction element. Future graphic writers should keep that ordering so authored context,
+accessibility metadata, and the interaction surface stay consistent.
 
 ## Migration Pattern
 
@@ -111,12 +116,11 @@ Current planned order:
 5. upload
 6. media
 7. graphic order
-8. graphic associate
-9. graphic gap match
-10. select point
-11. position object
-12. slider
-13. custom
-14. portable custom
-15. drawing
-16. end attempt
+8. graphic gap match
+9. select point
+10. position object
+11. slider
+12. custom
+13. portable custom
+14. drawing
+15. end attempt

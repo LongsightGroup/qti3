@@ -10,7 +10,14 @@ import {
   writerDiagnostic,
 } from "./diagnostics.js";
 import {
+  optionalLongDescriptionBlock,
+  renderGraphicObjectAttributes,
+  validateGraphicObject,
+} from "./graphic-object.js";
+import { validateHotspotGeometry } from "./hotspot-geometry.js";
+import {
   interactionAttributeList,
+  optionalBodySection,
   optionalPromptSection,
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
@@ -44,14 +51,10 @@ ${correctResponse.map((value) => `      <qti-value>${xmlEscape(value)}</qti-valu
     : "";
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="${cardinality}" base-type="identifier">
 ${correctXml}  </qti-response-declaration>`;
-  const longDescription = input.object.longDescription?.trim();
-  const longDescriptionId = longDescription ? `longdesc-${input.identifier}` : "";
-  const longDescriptionBlock = longDescription
-    ? `    <div id="${longDescriptionId}" class="qti-visually-hidden" data-qti-a11y-content-role="long-description">${xmlEscape(longDescription)}</div>\n`
-    : "";
-  const longDescriptionAttr = longDescriptionId
-    ? ` data-qti-aria-describedby="${longDescriptionId}"`
-    : "";
+  const longDescription = optionalLongDescriptionBlock(
+    input.identifier,
+    input.object.longDescription,
+  );
   const interactionAttrs = interactionAttributeList({
     responseIdentifier: escapedResponseIdentifier,
     sharedVocabulary: input.sharedVocabulary,
@@ -66,16 +69,10 @@ ${correctXml}  </qti-response-declaration>`;
       input.maxChoicesMessage?.trim()
         ? `data-max-selections-message="${xmlEscape(input.maxChoicesMessage.trim())}"`
         : "",
-      longDescriptionAttr.trim(),
+      longDescription.attributeXml,
     ],
   });
-  const objectAttrs = [
-    `data="${xmlEscape(input.object.data.trim())}"`,
-    `alt="${xmlEscape(input.object.alt?.trim() ?? "")}"`,
-    `type="${xmlEscape(input.object.type ?? inferMimeFromSrc(input.object.data) ?? "")}"`,
-    input.object.width !== undefined ? `width="${String(input.object.width)}"` : "",
-    input.object.height !== undefined ? `height="${String(input.object.height)}"` : "",
-  ];
+  const objectAttrs = renderGraphicObjectAttributes(input.object);
   const choicesXml = input.choices
     .map((choice) => {
       const identifier = xmlEscape(assertQtiIdentifier(choice.identifier, "Hotspot identifier"));
@@ -83,7 +80,7 @@ ${correctXml}  </qti-response-declaration>`;
       return `      <qti-hotspot-choice identifier="${identifier}" shape="${choice.shape}" coords="${xmlEscape(coords)}"/>`;
     })
     .join("\n");
-  const bodyXml = `${longDescriptionBlock}    <qti-hotspot-interaction ${interactionAttrs}>
+  const bodyXml = `${optionalBodySection(input.bodyHtml)}${longDescription.blockXml}    <qti-hotspot-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objectAttrs)}/>
 ${choicesXml}
     </qti-hotspot-interaction>`;
@@ -104,16 +101,6 @@ function normalizeBound(value: number | undefined, min: number): number | null {
   return integer;
 }
 
-function inferMimeFromSrc(src: string): string | undefined {
-  const path = src.toLowerCase();
-  if (path.endsWith(".png")) return "image/png";
-  if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
-  if (path.endsWith(".gif")) return "image/gif";
-  if (path.endsWith(".svg") || path.endsWith(".svgz")) return "image/svg+xml";
-  if (path.endsWith(".webp")) return "image/webp";
-  return undefined;
-}
-
 export function validateQti3HotspotItem(input: Qti3HotspotBuilderInput): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
@@ -123,67 +110,11 @@ export function validateQti3HotspotItem(input: Qti3HotspotBuilderInput): Qti3Wri
     responseIdentifier,
   );
   if (responseIdentifierDiagnostic) diagnostics.push(responseIdentifierDiagnostic);
-  if (!input.object.data.trim()) {
-    diagnostics.push(
-      writerDiagnostic(
-        "missing_hotspot_object_data",
-        "object.data",
-        "Hotspot object data is required.",
-      ),
-    );
-  }
-  if (!input.object.alt?.trim()) {
-    diagnostics.push(
-      writerDiagnostic(
-        "missing_hotspot_object_alt",
-        "object.alt",
-        "Hotspot object alt text is required.",
-      ),
-    );
-  }
-  if (input.object.type !== undefined && !input.object.type.trim()) {
-    diagnostics.push(
-      writerDiagnostic(
-        "missing_hotspot_object_type",
-        "object.type",
-        "Hotspot object type must not be empty when provided.",
-      ),
-    );
-  }
-  if (
-    input.object.type === undefined &&
-    input.object.data.trim() &&
-    !inferMimeFromSrc(input.object.data)
-  ) {
-    diagnostics.push(
-      writerDiagnostic(
-        "unknown_hotspot_object_type",
-        "object.type",
-        "Hotspot object type is required when it cannot be inferred from the image path.",
-        input.object.data,
-      ),
-    );
-  }
-  if (input.object.width !== undefined && !isPositiveInteger(input.object.width)) {
-    diagnostics.push(
-      writerDiagnostic(
-        "invalid_hotspot_object_width",
-        "object.width",
-        "Hotspot object width must be a positive integer when provided.",
-        input.object.width,
-      ),
-    );
-  }
-  if (input.object.height !== undefined && !isPositiveInteger(input.object.height)) {
-    diagnostics.push(
-      writerDiagnostic(
-        "invalid_hotspot_object_height",
-        "object.height",
-        "Hotspot object height must be a positive integer when provided.",
-        input.object.height,
-      ),
-    );
-  }
+  validateGraphicObject(input.object, diagnostics, {
+    codePrefix: "hotspot",
+    label: "Hotspot",
+    path: "object",
+  });
   if (!input.choices.length) {
     diagnostics.push(
       writerDiagnostic(
@@ -201,21 +132,12 @@ export function validateQti3HotspotItem(input: Qti3HotspotBuilderInput): Qti3Wri
     ),
   );
   for (const [index, choice] of input.choices.entries()) {
-    const identifierDiagnostic = validateQtiIdentifier(
-      `choices.${index}.identifier`,
-      "Hotspot identifier",
-      choice.identifier,
-    );
-    if (identifierDiagnostic) diagnostics.push(identifierDiagnostic);
-    if (!choice.coords.trim()) {
-      diagnostics.push(
-        writerDiagnostic(
-          "missing_hotspot_coords",
-          `choices.${index}.coords`,
-          `Hotspot "${choice.identifier}" must have coordinates.`,
-        ),
-      );
-    }
+    validateHotspotGeometry(choice, `choices.${index}`, diagnostics, {
+      identifierLabel: "Hotspot identifier",
+      itemLabel: "Hotspot",
+      missingCoordsCode: "missing_hotspot_coords",
+      invalidShapeCode: "invalid_hotspot_shape",
+    });
   }
 
   const maxChoices = input.maxChoices ?? 1;

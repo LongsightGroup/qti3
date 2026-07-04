@@ -14,6 +14,7 @@ describe("qti3-writer hotspot", () => {
     const xml = buildQti3HotspotItem({
       identifier: "hotspot-1",
       title: "Hotspot",
+      bodyHtml: qti3TrustedXmlFragment("<p>Map context</p>"),
       promptHtml: qti3TrustedXmlFragment("Select a region"),
       object: {
         data: "images/map.png",
@@ -31,6 +32,13 @@ describe("qti3-writer hotspot", () => {
       sharedVocabulary: { "selections-tone": "light" },
       classNames: ["writer-hotspot"],
     });
+
+    expect(xml.indexOf("<p>Map context</p>")).toBeLessThan(
+      xml.indexOf('data-qti-a11y-content-role="long-description"'),
+    );
+    expect(xml.indexOf('data-qti-a11y-content-role="long-description"')).toBeLessThan(
+      xml.indexOf("<qti-hotspot-interaction"),
+    );
 
     const item = expectValidParsedItem(xml);
     expect(item.responseDeclarations[0]).toMatchObject({

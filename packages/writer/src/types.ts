@@ -179,13 +179,15 @@ export type Qti3MatchBuilderInput = Omit<Qti3MatchAuthoringItem, "interactionTyp
 
 export type Qti3HotspotShape = "circle" | "rect" | "poly";
 
+export type Qti3GraphicAssociateShape = Qti3HotspotShape;
+
 export interface Qti3HotspotChoice {
   readonly identifier: string;
   readonly shape: Qti3HotspotShape;
   readonly coords: string;
 }
 
-export interface Qti3HotspotObject {
+export interface Qti3GraphicObject {
   readonly data: string;
   readonly alt?: string | undefined;
   readonly type?: string | undefined;
@@ -194,9 +196,11 @@ export interface Qti3HotspotObject {
   readonly longDescription?: string | undefined;
 }
 
+export type Qti3HotspotObject = Qti3GraphicObject;
+
 export interface Qti3HotspotAuthoringItem extends Qti3AuthoringItemBase {
   readonly interactionType: "hotspot";
-  readonly object: Qti3HotspotObject;
+  readonly object: Qti3GraphicObject;
   readonly choices: readonly Qti3HotspotChoice[];
   readonly correctResponse?: readonly string[] | undefined;
   readonly minChoices?: number | undefined;
@@ -210,10 +214,44 @@ export type Qti3HotspotBuilderInput = Omit<Qti3HotspotAuthoringItem, "interactio
   readonly interactionType?: "hotspot" | undefined;
 };
 
+export interface Qti3GraphicAssociateHotspot {
+  readonly identifier: string;
+  readonly shape: Qti3GraphicAssociateShape;
+  readonly coords: string;
+  readonly matchMax?: number | undefined;
+  readonly hotspotLabel?: string | undefined;
+}
+
+export type Qti3GraphicAssociateObject = Qti3GraphicObject;
+
+export interface Qti3GraphicAssociatePair {
+  readonly sourceIdentifier: string;
+  readonly targetIdentifier: string;
+}
+
+export interface Qti3GraphicAssociateAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "graphicAssociate";
+  readonly object: Qti3GraphicObject;
+  readonly hotspots: readonly Qti3GraphicAssociateHotspot[];
+  readonly correctResponse: readonly Qti3GraphicAssociatePair[];
+  readonly scoring?: Qti3ResponseProcessingTemplate | undefined;
+  readonly minAssociations?: number | undefined;
+  readonly maxAssociations?: number | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3GraphicAssociateBuilderInput = Omit<
+  Qti3GraphicAssociateAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "graphicAssociate" | undefined;
+};
+
 export type Qti3AuthoringItem =
   | Qti3ChoiceAuthoringItem
   | Qti3OrderAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
-  | Qti3HotspotAuthoringItem;
+  | Qti3HotspotAuthoringItem
+  | Qti3GraphicAssociateAuthoringItem;

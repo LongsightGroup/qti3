@@ -1,5 +1,9 @@
 export { buildQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 export { buildQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+export {
+  buildQti3GraphicAssociateItem,
+  validateQti3GraphicAssociateItem,
+} from "./graphic-associate.js";
 export { buildQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
 export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
@@ -22,6 +26,13 @@ export type {
   Qti3AssociatePair,
   Qti3ChoiceAuthoringItem,
   Qti3ChoiceBuilderInput,
+  Qti3GraphicObject,
+  Qti3GraphicAssociateAuthoringItem,
+  Qti3GraphicAssociateBuilderInput,
+  Qti3GraphicAssociateHotspot,
+  Qti3GraphicAssociateObject,
+  Qti3GraphicAssociatePair,
+  Qti3GraphicAssociateShape,
   Qti3HotspotAuthoringItem,
   Qti3HotspotBuilderInput,
   Qti3HotspotChoice,

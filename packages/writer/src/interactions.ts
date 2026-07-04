@@ -3,6 +3,10 @@ import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
 import { renderQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 import { renderQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+import {
+  renderQti3GraphicAssociateItem,
+  validateQti3GraphicAssociateItem,
+} from "./graphic-associate.js";
 import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
@@ -54,6 +58,15 @@ export const qti3WriterInteractions: Record<
     tests: ["packages/writer/src/hotspot.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Requires accessible object metadata and referentially valid hotspot choices.",
   },
+  graphicAssociate: {
+    qtiName: "qti-graphic-associate-interaction",
+    interactionType: "graphicAssociate",
+    tests: [
+      "packages/writer/src/graphic-associate.test.ts",
+      "packages/writer/src/validation.test.ts",
+    ],
+    notes: "Writes and validates object metadata, associable hotspots, and pair responses.",
+  },
 };
 
 export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
@@ -70,6 +83,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3MatchItem(item);
     case "hotspot":
       return validateQti3HotspotItem(item);
+    case "graphicAssociate":
+      return validateQti3GraphicAssociateItem(item);
     default:
       return assertNever(item);
   }
@@ -89,6 +104,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3MatchItem(item);
     case "hotspot":
       return renderQti3HotspotItem(item);
+    case "graphicAssociate":
+      return renderQti3GraphicAssociateItem(item);
     default:
       return assertNever(item);
   }

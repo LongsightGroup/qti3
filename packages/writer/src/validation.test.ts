@@ -150,6 +150,37 @@ describe("qti3-writer validation", () => {
           "unknown_hotspot_reference",
         ],
       },
+      {
+        item: {
+          interactionType: "graphicAssociate",
+          identifier: "graphic-associate-invalid",
+          title: "Graphic Associate",
+          object: { data: "/uploads/no-extension" },
+          hotspots: [
+            { identifier: "A", shape: "rect", coords: "", matchMax: -1 },
+            { identifier: "A", shape: "circle", coords: "1,1,2" },
+            { identifier: "C", shape: "circle", coords: "2,2,3", matchMax: 1 },
+          ],
+          correctResponse: [
+            { sourceIdentifier: "A", targetIdentifier: "A" },
+            { sourceIdentifier: "C", targetIdentifier: "A" },
+            { sourceIdentifier: "C", targetIdentifier: "B" },
+          ],
+          minAssociations: 2,
+          maxAssociations: 1,
+        },
+        codes: [
+          "missing_graphic_associate_object_alt",
+          "unknown_graphic_associate_object_type",
+          "duplicate_identifier",
+          "missing_graphic_associate_coords",
+          "invalid_graphic_associate_match_max",
+          "invalid_graphic_associate_bounds",
+          "invalid_graphic_associate_self_pair",
+          "unknown_graphic_associate_reference",
+          "graphic_associate_match_max_exceeded",
+        ],
+      },
     ];
 
     for (const { item, codes } of invalidItems) {
@@ -234,6 +265,17 @@ describe("qti3-writer validation", () => {
         choices: [{ identifier: "R1", shape: "rect", coords: "1,1,2,2" }],
         correctResponse: ["R1"],
       },
+      {
+        interactionType: "graphicAssociate",
+        identifier: "support-graphic-associate",
+        title: "Graphic Associate",
+        object: { data: "map.png", alt: "Map", width: 100, height: 100 },
+        hotspots: [
+          { identifier: "A", shape: "circle", coords: "25,25,10" },
+          { identifier: "B", shape: "circle", coords: "75,25,10" },
+        ],
+        correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "B" }],
+      },
     ];
 
     const supportedTypes = new Set<QtiInteractionType>(
@@ -271,7 +313,6 @@ describe("qti3-writer validation", () => {
       "upload",
       "media",
       "graphicOrder",
-      "graphicAssociate",
       "graphicGapMatch",
       "selectPoint",
       "positionObject",
