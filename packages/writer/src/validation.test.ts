@@ -431,6 +431,23 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "drawing",
+          identifier: "bad drawing",
+          title: "",
+          responseIdentifier: "bad response",
+          object: { data: "/uploads/no-extension", alt: "", width: 0, height: 1.5 },
+        },
+        codes: [
+          "invalid_identifier",
+          "missing_title",
+          "missing_drawing_object_alt",
+          "unknown_drawing_object_type",
+          "invalid_drawing_object_width",
+          "invalid_drawing_object_height",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -680,6 +697,12 @@ describe("qti3-writer validation", () => {
         module: "pciModule",
       },
       {
+        interactionType: "drawing",
+        identifier: "support-drawing",
+        title: "Drawing",
+        object: { data: "canvas.png", alt: "Canvas", width: 100, height: 100 },
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -732,7 +755,7 @@ describe("qti3-writer validation", () => {
       (planned) => planned.interactionType,
     );
 
-    expect(plannedTypes).toEqual(["drawing", "endAttempt"]);
+    expect(plannedTypes).toEqual(["endAttempt"]);
     expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
     expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
       true,

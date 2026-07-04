@@ -7,6 +7,7 @@ import {
   renderQti3CustomInteractionItem,
   validateQti3CustomInteractionItem,
 } from "./custom-interaction.js";
+import { renderQti3DrawingItem, validateQti3DrawingItem } from "./drawing.js";
 import { renderQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
 import { renderQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 import {
@@ -162,6 +163,12 @@ export const qti3WriterInteractions: Record<
     ],
     notes: "Writes portable custom interactions with launch metadata, modules, and trusted markup.",
   },
+  drawing: {
+    qtiName: "qti-drawing-interaction",
+    interactionType: "drawing",
+    tests: ["packages/writer/src/drawing.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes drawing interactions with accessible canvas object metadata.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -220,6 +227,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3CustomInteractionItem(item);
     case "portableCustom":
       return validateQti3PortableCustomItem(item);
+    case "drawing":
+      return validateQti3DrawingItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -267,6 +276,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3CustomInteractionItem(item);
     case "portableCustom":
       return renderQti3PortableCustomItem(item);
+    case "drawing":
+      return renderQti3DrawingItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":

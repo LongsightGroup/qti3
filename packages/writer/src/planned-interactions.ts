@@ -13,14 +13,6 @@ export const qti3WriterPlannedInteractionMigrationOrder: readonly Qti3WriterPlan
   [
     {
       priority: 1,
-      interactionType: "drawing",
-      qtiName: "qti-drawing-interaction",
-      source: "qflow",
-      status: "planned",
-      notes: "Specialist migration after the common built-in interactions.",
-    },
-    {
-      priority: 2,
       interactionType: "endAttempt",
       qtiName: "qti-end-attempt-interaction",
       source: "qflow",

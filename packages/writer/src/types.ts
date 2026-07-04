@@ -605,6 +605,18 @@ export type Qti3PortableCustomBuilderInput = Omit<
   readonly interactionType?: "portableCustom" | undefined;
 };
 
+export type Qti3DrawingObject = Qti3GraphicObject;
+
+export interface Qti3DrawingAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "drawing";
+  readonly object: Qti3GraphicObject;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3DrawingBuilderInput = Omit<Qti3DrawingAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "drawing" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -708,5 +720,6 @@ export type Qti3AuthoringItem =
   | Qti3SliderAuthoringItem
   | Qti3CustomInteractionAuthoringItem
   | Qti3PortableCustomAuthoringItem
+  | Qti3DrawingAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;
