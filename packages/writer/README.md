@@ -91,6 +91,7 @@ interactions the writer can currently write and validate:
 | Custom            | `qti-custom-interaction`            | Writes trusted legacy custom markup and response processing fragments  |
 | Portable custom   | `qti-portable-custom-interaction`   | Writes launch metadata, modules, trusted markup, response processing   |
 | Drawing           | `qti-drawing-interaction`           | Writes file responses with accessible canvas object metadata           |
+| End attempt       | `qti-end-attempt-interaction`       | Writes boolean end-attempt responses and button metadata               |
 | Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses     |
 | Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes               |
 
@@ -149,6 +150,8 @@ Portable custom items write `qti-portable-custom-interaction` launch metadata, o
 interaction type identifier plus either a `module` attribute or at least one interaction module.
 Drawing items write a single `qti-drawing-interaction` with a `cardinality="single"` /
 `base-type="file"` response declaration and an accessible canvas object.
+End attempt items write a single `qti-end-attempt-interaction` with a `cardinality="single"` /
+`base-type="boolean"` response declaration and a required button title.
 
 Graphic interactions render generated long-description markup immediately before the interaction
 element. Graphic order defaults `correctOrder` to the declared hotspot order when omitted. For
@@ -181,6 +184,4 @@ The exported `qti3WriterPlannedInteractionMigrationOrder` from `planned-interact
 intended qflow migration sequence. Planned interactions are not part of the supported writer matrix
 until they have writer validation, XML output, support metadata, and round-trip tests.
 
-Current planned order:
-
-1. end attempt
+Current planned order: none.

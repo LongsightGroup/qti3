@@ -448,6 +448,16 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "endAttempt",
+          identifier: "bad end",
+          title: "",
+          responseIdentifier: "bad response",
+          buttonTitle: "",
+        },
+        codes: ["invalid_identifier", "missing_title", "missing_end_attempt_button_title"],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -703,6 +713,13 @@ describe("qti3-writer validation", () => {
         object: { data: "canvas.png", alt: "Canvas", width: 100, height: 100 },
       },
       {
+        interactionType: "endAttempt",
+        identifier: "support-end-attempt",
+        title: "End Attempt",
+        responseIdentifier: "END_ATTEMPT",
+        buttonTitle: "End Attempt",
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -755,7 +772,7 @@ describe("qti3-writer validation", () => {
       (planned) => planned.interactionType,
     );
 
-    expect(plannedTypes).toEqual(["endAttempt"]);
+    expect(plannedTypes).toEqual([]);
     expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
     expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
       true,

@@ -617,6 +617,17 @@ export type Qti3DrawingBuilderInput = Omit<Qti3DrawingAuthoringItem, "interactio
   readonly interactionType?: "drawing" | undefined;
 };
 
+export interface Qti3EndAttemptAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "endAttempt";
+  readonly buttonTitle: string;
+  readonly countAttempt?: boolean | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3EndAttemptBuilderInput = Omit<Qti3EndAttemptAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "endAttempt" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -721,5 +732,6 @@ export type Qti3AuthoringItem =
   | Qti3CustomInteractionAuthoringItem
   | Qti3PortableCustomAuthoringItem
   | Qti3DrawingAuthoringItem
+  | Qti3EndAttemptAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

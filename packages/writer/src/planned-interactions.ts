@@ -10,13 +10,4 @@ export type Qti3WriterPlannedInteractionMigration = {
 };
 
 export const qti3WriterPlannedInteractionMigrationOrder: readonly Qti3WriterPlannedInteractionMigration[] =
-  [
-    {
-      priority: 1,
-      interactionType: "endAttempt",
-      qtiName: "qti-end-attempt-interaction",
-      source: "qflow",
-      status: "planned",
-      notes: "Specialist migration after the common built-in interactions.",
-    },
-  ];
+  [];

@@ -5,6 +5,7 @@ export {
   validateQti3CustomInteractionItem,
 } from "./custom-interaction.js";
 export { buildQti3DrawingItem, validateQti3DrawingItem } from "./drawing.js";
+export { buildQti3EndAttemptItem, validateQti3EndAttemptItem } from "./end-attempt.js";
 export { buildQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
 export { buildQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 export {
@@ -54,6 +55,8 @@ export type {
   Qti3DrawingAuthoringItem,
   Qti3DrawingBuilderInput,
   Qti3DrawingObject,
+  Qti3EndAttemptAuthoringItem,
+  Qti3EndAttemptBuilderInput,
   Qti3ExtendedTextAuthoringItem,
   Qti3ExtendedTextBuilderInput,
   Qti3ExtendedTextFormat,

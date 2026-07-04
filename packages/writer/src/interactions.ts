@@ -8,6 +8,7 @@ import {
   validateQti3CustomInteractionItem,
 } from "./custom-interaction.js";
 import { renderQti3DrawingItem, validateQti3DrawingItem } from "./drawing.js";
+import { renderQti3EndAttemptItem, validateQti3EndAttemptItem } from "./end-attempt.js";
 import { renderQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
 import { renderQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 import {
@@ -169,6 +170,12 @@ export const qti3WriterInteractions: Record<
     tests: ["packages/writer/src/drawing.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Writes drawing interactions with accessible canvas object metadata.",
   },
+  endAttempt: {
+    qtiName: "qti-end-attempt-interaction",
+    interactionType: "endAttempt",
+    tests: ["packages/writer/src/end-attempt.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes end-attempt controls with single boolean response declarations.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -229,6 +236,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3PortableCustomItem(item);
     case "drawing":
       return validateQti3DrawingItem(item);
+    case "endAttempt":
+      return validateQti3EndAttemptItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -278,6 +287,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3PortableCustomItem(item);
     case "drawing":
       return renderQti3DrawingItem(item);
+    case "endAttempt":
+      return renderQti3EndAttemptItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
