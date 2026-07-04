@@ -17,6 +17,7 @@ import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 import { renderQti3HottextItem, validateQti3HottextItem } from "./hottext.js";
 import { renderQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inline-choice.js";
 import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
+import { renderQti3MediaItem, validateQti3MediaItem } from "./media.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
 import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
 import type { Qti3AuthoringItem, Qti3WriterDiagnostic } from "./types.js";
@@ -76,6 +77,12 @@ export const qti3WriterInteractions: Record<
     tests: ["packages/writer/src/upload.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Writes single-file response declarations and host upload metadata attributes.",
   },
+  media: {
+    qtiName: "qti-media-interaction",
+    interactionType: "media",
+    tests: ["packages/writer/src/media.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes audio, video, and object media interactions with playback metadata.",
+  },
   associate: {
     qtiName: "qti-associate-interaction",
     interactionType: "associate",
@@ -134,6 +141,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3ExtendedTextItem(item);
     case "upload":
       return validateQti3UploadItem(item);
+    case "media":
+      return validateQti3MediaItem(item);
     case "associate":
       return validateQti3AssociateItem(item);
     case "textEntry":
@@ -167,6 +176,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3ExtendedTextItem(item);
     case "upload":
       return renderQti3UploadItem(item);
+    case "media":
+      return renderQti3MediaItem(item);
     case "associate":
       return renderQti3AssociateItem(item);
     case "textEntry":

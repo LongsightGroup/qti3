@@ -110,6 +110,30 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "media",
+          identifier: "media-invalid",
+          title: "Media",
+          responseIdentifier: "bad response",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          kind: "stream" as "video",
+          sources: [{ src: "" }],
+          minPlays: 2,
+          maxPlays: 1,
+          width: 0,
+          captionSrc: "captions.srt",
+        },
+        codes: [
+          "invalid_identifier",
+          "invalid_media_kind",
+          "missing_media_source_src",
+          "invalid_media_play_bounds",
+          "invalid_media_dimension",
+          "invalid_media_caption_kind",
+          "invalid_media_caption_src",
+        ],
+      },
+      {
+        item: {
           interactionType: "associate",
           identifier: "associate-invalid",
           title: "Associate",
@@ -405,6 +429,14 @@ describe("qti3-writer validation", () => {
         responseIdentifier: "RESPONSE",
       },
       {
+        interactionType: "media",
+        identifier: "support-media",
+        title: "Media",
+        responseIdentifier: "RESPONSE",
+        kind: "audio",
+        sources: [{ src: "audio.mp3", type: "audio/mpeg" }],
+      },
+      {
         interactionType: "associate",
         identifier: "support-associate",
         title: "Associate",
@@ -489,7 +521,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "media",
       "graphicOrder",
       "selectPoint",
       "positionObject",

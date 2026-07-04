@@ -14,6 +14,7 @@ export { buildQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 export { buildQti3HottextItem, validateQti3HottextItem } from "./hottext.js";
 export { buildQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inline-choice.js";
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
+export { buildQti3MediaItem, validateQti3MediaItem } from "./media.js";
 export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
 export { buildQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
 export { buildQti3UploadItem, validateQti3UploadItem } from "./upload.js";
@@ -81,6 +82,10 @@ export type {
   Qti3MatchBuilderInput,
   Qti3MatchChoice,
   Qti3MatchPair,
+  Qti3MediaAuthoringItem,
+  Qti3MediaBuilderInput,
+  Qti3MediaKind,
+  Qti3MediaSource,
   Qti3OrderAuthoringItem,
   Qti3OrderBuilderInput,
   Qti3ResponseProcessingTemplate,

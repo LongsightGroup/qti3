@@ -79,6 +79,7 @@ interactions the writer can currently write and validate:
 | Gap match         | `qti-gap-match-interaction`         | Writes and validates gap choices, targets, and directed pairs         |
 | Extended text     | `qti-extended-text-interaction`     | Writes constructed-response interactions and rubric blocks            |
 | Upload            | `qti-upload-interaction`            | Writes file response declarations and host upload metadata            |
+| Media             | `qti-media-interaction`             | Writes audio, video, and object media with playback metadata          |
 | Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices            |
 | Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
@@ -123,6 +124,11 @@ types, and multiple-file UI behavior are emitted as `data-max-size`, `data-file-
 provided, the writer emits a correct-response filename and the `match_correct` response-processing
 template; otherwise upload items remain manually scored/unscored.
 
+Media items write a single `qti-media-interaction` with a `cardinality="single"` /
+`base-type="integer"` response declaration for play count. The writer supports audio, video, and
+object media sources, video captions, transcript companion materials, autostart/loop flags,
+min/max play bounds, coords, labels, dimensions, and media shared-vocabulary player controls.
+
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
 targets can be parsed and validated by QTI engines.
@@ -150,12 +156,11 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. media
-2. graphic order
-3. select point
-4. position object
-5. slider
-6. custom
-7. portable custom
-8. drawing
-9. end attempt
+1. graphic order
+2. select point
+3. position object
+4. slider
+5. custom
+6. portable custom
+7. drawing
+8. end attempt

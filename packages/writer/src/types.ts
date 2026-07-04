@@ -29,6 +29,8 @@ export type Qti3ExtendedTextResponseCardinality = "single" | "multiple" | "order
 
 export type Qti3UploadScoring = "match_correct";
 
+export type Qti3MediaKind = "audio" | "video" | "object";
+
 export interface Qti3WriterDiagnostic {
   readonly code: string;
   readonly path: string;
@@ -259,6 +261,34 @@ export type Qti3UploadBuilderInput = Omit<Qti3UploadAuthoringItem, "interactionT
   readonly interactionType?: "upload" | undefined;
 };
 
+export interface Qti3MediaSource {
+  readonly src: string;
+  readonly type?: string | undefined;
+}
+
+export interface Qti3MediaAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "media";
+  readonly kind: Qti3MediaKind;
+  readonly sources: readonly Qti3MediaSource[];
+  readonly interactionLabel?: string | undefined;
+  readonly objectLabel?: string | undefined;
+  readonly captionSrc?: string | undefined;
+  readonly captionLang?: string | undefined;
+  readonly transcript?: string | undefined;
+  readonly autostart?: boolean | undefined;
+  readonly loop?: boolean | undefined;
+  readonly minPlays?: number | undefined;
+  readonly maxPlays?: number | undefined;
+  readonly coords?: string | undefined;
+  readonly width?: number | undefined;
+  readonly height?: number | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3MediaBuilderInput = Omit<Qti3MediaAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "media" | undefined;
+};
+
 export interface Qti3AssociateChoice {
   readonly identifier: string;
   readonly text?: string | undefined;
@@ -475,6 +505,7 @@ export type Qti3AuthoringItem =
   | Qti3GapMatchAuthoringItem
   | Qti3ExtendedTextAuthoringItem
   | Qti3UploadAuthoringItem
+  | Qti3MediaAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
