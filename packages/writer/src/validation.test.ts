@@ -136,6 +136,31 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "gapMatch",
+          identifier: "gap-match-invalid",
+          title: "Gap Match",
+          bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="BODY_ONLY"/></p>'),
+          choices: [
+            { identifier: "A", kind: "text", text: "" },
+            { identifier: "A", kind: "text", text: "Duplicate" },
+          ],
+          targets: [{ identifier: "DECLARED_ONLY" }],
+          correctResponse: [{ sourceIdentifier: "B", targetIdentifier: "T2" }],
+          minAssociations: 2,
+          maxAssociations: 1,
+        },
+        codes: [
+          "duplicate_identifier",
+          "empty_gap_match_choice",
+          "invalid_gap_match_bounds",
+          "unknown_gap_match_body_gap",
+          "missing_gap_match_body_gap",
+          "unknown_gap_match_choice_reference",
+          "unknown_gap_match_target_reference",
+        ],
+      },
+      {
+        item: {
           interactionType: "match",
           identifier: "match-invalid",
           title: "Match",
@@ -311,6 +336,15 @@ describe("qti3-writer validation", () => {
         correctResponse: ["A"],
       },
       {
+        interactionType: "gapMatch",
+        identifier: "support-gap-match",
+        title: "Gap Match",
+        bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="G1"/></p>'),
+        choices: [{ identifier: "A", kind: "text", text: "A" }],
+        targets: [{ identifier: "G1" }],
+        correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "G1" }],
+      },
+      {
         interactionType: "associate",
         identifier: "support-associate",
         title: "Associate",
@@ -395,7 +429,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "gapMatch",
       "extendedText",
       "upload",
       "media",

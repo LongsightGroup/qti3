@@ -3,6 +3,7 @@ import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
 import { renderQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 import { renderQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+import { renderQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 import {
   renderQti3GraphicAssociateItem,
   validateQti3GraphicAssociateItem,
@@ -54,6 +55,12 @@ export const qti3WriterInteractions: Record<
     interactionType: "hottext",
     tests: ["packages/writer/src/hottext.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Replaces empty qti-hottext placeholders in trusted bodyHtml with generated choices.",
+  },
+  gapMatch: {
+    qtiName: "qti-gap-match-interaction",
+    interactionType: "gapMatch",
+    tests: ["packages/writer/src/gap-match.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes and validates gap choices, qti-gap body targets, and directed-pair responses.",
   },
   associate: {
     qtiName: "qti-associate-interaction",
@@ -107,6 +114,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3InlineChoiceItem(item);
     case "hottext":
       return validateQti3HottextItem(item);
+    case "gapMatch":
+      return validateQti3GapMatchItem(item);
     case "associate":
       return validateQti3AssociateItem(item);
     case "textEntry":
@@ -134,6 +143,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3InlineChoiceItem(item);
     case "hottext":
       return renderQti3HottextItem(item);
+    case "gapMatch":
+      return renderQti3GapMatchItem(item);
     case "associate":
       return renderQti3AssociateItem(item);
     case "textEntry":

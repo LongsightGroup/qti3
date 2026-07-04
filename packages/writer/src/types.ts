@@ -162,6 +162,57 @@ export type Qti3HottextBuilderInput = Omit<Qti3HottextAuthoringItem, "interactio
   readonly interactionType?: "hottext" | undefined;
 };
 
+export type Qti3GapMatchScoring = Qti3ResponseProcessingTemplate;
+
+export interface Qti3GapTextChoice {
+  readonly identifier: string;
+  readonly kind: "text";
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+  readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
+}
+
+export interface Qti3GapImageChoice {
+  readonly identifier: string;
+  readonly kind: "image";
+  readonly object: Qti3GraphicObject;
+  readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
+}
+
+export type Qti3GapMatchChoice = Qti3GapTextChoice | Qti3GapImageChoice;
+
+export interface Qti3GapTarget {
+  readonly identifier: string;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export interface Qti3GapMatchPair {
+  readonly sourceIdentifier: string;
+  readonly targetIdentifier: string;
+}
+
+export interface Qti3GapMatchAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "gapMatch";
+  /** Trusted interaction body content containing qti-gap target elements. */
+  readonly bodyHtml: Qti3TrustedXmlFragment;
+  readonly choices: readonly Qti3GapMatchChoice[];
+  readonly targets: readonly Qti3GapTarget[];
+  readonly correctResponse: readonly Qti3GapMatchPair[];
+  readonly scoring?: Qti3GapMatchScoring | undefined;
+  readonly shuffle?: boolean | undefined;
+  readonly minAssociations?: number | undefined;
+  readonly maxAssociations?: number | undefined;
+  readonly minAssociationsMessage?: string | undefined;
+  readonly maxAssociationsMessage?: string | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3GapMatchBuilderInput = Omit<Qti3GapMatchAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "gapMatch" | undefined;
+};
+
 export interface Qti3AssociateChoice {
   readonly identifier: string;
   readonly text?: string | undefined;
@@ -375,6 +426,7 @@ export type Qti3AuthoringItem =
   | Qti3OrderAuthoringItem
   | Qti3InlineChoiceAuthoringItem
   | Qti3HottextAuthoringItem
+  | Qti3GapMatchAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem

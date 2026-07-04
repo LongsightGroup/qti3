@@ -1,5 +1,6 @@
 export { buildQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 export { buildQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+export { buildQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 export {
   buildQti3GraphicAssociateItem,
   validateQti3GraphicAssociateItem,
@@ -39,6 +40,14 @@ export type {
   Qti3GraphicAssociateObject,
   Qti3GraphicAssociatePair,
   Qti3GraphicAssociateShape,
+  Qti3GapImageChoice,
+  Qti3GapMatchAuthoringItem,
+  Qti3GapMatchBuilderInput,
+  Qti3GapMatchChoice,
+  Qti3GapMatchPair,
+  Qti3GapMatchScoring,
+  Qti3GapTarget,
+  Qti3GapTextChoice,
   Qti3GraphicGapChoice,
   Qti3GraphicGapHotspotTarget,
   Qti3GraphicGapImageChoice,
