@@ -13,6 +13,7 @@ import {
   renderQti3GraphicGapMatchItem,
   validateQti3GraphicGapMatchItem,
 } from "./graphic-gap-match.js";
+import { renderQti3GraphicOrderItem, validateQti3GraphicOrderItem } from "./graphic-order.js";
 import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 import { renderQti3HottextItem, validateQti3HottextItem } from "./hottext.js";
 import { renderQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inline-choice.js";
@@ -105,6 +106,12 @@ export const qti3WriterInteractions: Record<
     tests: ["packages/writer/src/hotspot.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Requires accessible object metadata and referentially valid hotspot choices.",
   },
+  graphicOrder: {
+    qtiName: "qti-graphic-order-interaction",
+    interactionType: "graphicOrder",
+    tests: ["packages/writer/src/graphic-order.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes and validates object metadata, hotspot choices, and ordered responses.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -151,6 +158,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3MatchItem(item);
     case "hotspot":
       return validateQti3HotspotItem(item);
+    case "graphicOrder":
+      return validateQti3GraphicOrderItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -186,6 +195,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3MatchItem(item);
     case "hotspot":
       return renderQti3HotspotItem(item);
+    case "graphicOrder":
+      return renderQti3GraphicOrderItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":

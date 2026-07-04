@@ -413,6 +413,39 @@ export interface Qti3GraphicAssociateHotspot {
 
 export type Qti3GraphicAssociateObject = Qti3GraphicObject;
 
+export type Qti3GraphicOrderShape = Qti3HotspotShape;
+
+export interface Qti3GraphicOrderHotspot {
+  readonly identifier: string;
+  readonly shape: Qti3GraphicOrderShape;
+  readonly coords: string;
+  readonly hotspotLabel?: string | undefined;
+}
+
+export type Qti3GraphicOrderObject = Qti3GraphicObject;
+
+export interface Qti3GraphicOrderAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "graphicOrder";
+  readonly object: Qti3GraphicObject;
+  readonly hotspots: readonly Qti3GraphicOrderHotspot[];
+  /**
+   * Defaults to the current hotspot order when omitted or empty.
+   * When provided, all identifiers must reference declared hotspots and include every hotspot unless
+   * minChoices or maxChoices configures subset ordering.
+   */
+  readonly correctOrder?: readonly string[] | undefined;
+  readonly minChoices?: number | undefined;
+  readonly maxChoices?: number | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3GraphicOrderBuilderInput = Omit<
+  Qti3GraphicOrderAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "graphicOrder" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -510,5 +543,6 @@ export type Qti3AuthoringItem =
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
   | Qti3HotspotAuthoringItem
+  | Qti3GraphicOrderAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

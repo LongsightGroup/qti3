@@ -84,6 +84,7 @@ interactions the writer can currently write and validate:
 | Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
 | Hotspot           | `qti-hotspot-interaction`           | Writes and validates accessible object metadata and references        |
+| Graphic order     | `qti-graphic-order-interaction`     | Writes and validates object metadata, hotspots, and ordered responses |
 | Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses    |
 | Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes              |
 
@@ -130,8 +131,11 @@ object media sources, video captions, transcript companion materials, autostart/
 min/max play bounds, coords, labels, dimensions, and media shared-vocabulary player controls.
 
 Graphic interactions render generated long-description markup immediately before the interaction
-element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
-targets can be parsed and validated by QTI engines.
+element. Graphic order defaults `correctOrder` to the declared hotspot order when omitted. For
+graphic order items, an explicit `correctOrder` must include every hotspot by default. Partial
+correct orders are accepted only when `minChoices` or `maxChoices` explicitly configures subset
+ordering. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap` targets can be
+parsed and validated by QTI engines.
 
 Graphic gap match supports two target modes. Hotspot targets are generated as
 `qti-associable-hotspot` elements on the graphic. Inline targets are declared in `targets` with
@@ -156,11 +160,10 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. graphic order
-2. select point
-3. position object
-4. slider
-5. custom
-6. portable custom
-7. drawing
-8. end attempt
+1. select point
+2. position object
+3. slider
+4. custom
+5. portable custom
+6. drawing
+7. end attempt

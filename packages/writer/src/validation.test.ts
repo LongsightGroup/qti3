@@ -274,6 +274,31 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "graphicOrder",
+          identifier: "graphic-order-invalid",
+          title: "Graphic Order",
+          responseIdentifier: "bad response",
+          object: { data: "/uploads/no-extension" },
+          hotspots: [
+            { identifier: "A", shape: "rect", coords: "" },
+            { identifier: "A", shape: "circle", coords: "1,1,2" },
+          ],
+          correctOrder: ["B"],
+          minChoices: 2,
+          maxChoices: 1,
+        },
+        codes: [
+          "invalid_identifier",
+          "missing_graphic_order_object_alt",
+          "unknown_graphic_order_object_type",
+          "duplicate_identifier",
+          "missing_graphic_order_coords",
+          "invalid_graphic_order_bounds",
+          "unknown_graphic_order_reference",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -472,6 +497,17 @@ describe("qti3-writer validation", () => {
         correctResponse: ["R1"],
       },
       {
+        interactionType: "graphicOrder",
+        identifier: "support-graphic-order",
+        title: "Graphic Order",
+        object: { data: "map.png", alt: "Map", width: 100, height: 100 },
+        hotspots: [
+          { identifier: "A", shape: "circle", coords: "25,25,10" },
+          { identifier: "B", shape: "circle", coords: "75,25,10" },
+        ],
+        correctOrder: ["A", "B"],
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -521,7 +557,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "graphicOrder",
       "selectPoint",
       "positionObject",
       "slider",
