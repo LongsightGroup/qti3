@@ -347,6 +347,33 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "slider",
+          identifier: "slider-invalid",
+          title: "Slider",
+          responseIdentifier: "bad response",
+          lowerBound: 10,
+          upperBound: 5,
+          step: 0,
+          correctResponse: 12,
+          baseType: "integer",
+          mappings: [
+            { mapKey: 1.5, mappedValue: 1 },
+            { mapKey: 1.5, mappedValue: Number.NaN },
+          ],
+          scoring: "map_response",
+        },
+        codes: [
+          "invalid_identifier",
+          "invalid_slider_bounds",
+          "invalid_slider_step",
+          "invalid_slider_correct_response_bounds",
+          "invalid_slider_integer_value",
+          "invalid_slider_mapped_value",
+          "duplicate_slider_map_key",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -573,6 +600,16 @@ describe("qti3-writer validation", () => {
         correctResponse: ["25 25"],
       },
       {
+        interactionType: "slider",
+        identifier: "support-slider",
+        title: "Slider",
+        lowerBound: 0,
+        upperBound: 100,
+        step: 10,
+        correctResponse: 70,
+        mappings: [{ mapKey: 70, mappedValue: 1 }],
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -621,7 +658,7 @@ describe("qti3-writer validation", () => {
       (planned) => planned.interactionType,
     );
 
-    expect(plannedTypes).toEqual(["slider", "custom", "portableCustom", "drawing", "endAttempt"]);
+    expect(plannedTypes).toEqual(["custom", "portableCustom", "drawing", "endAttempt"]);
     expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
     expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
       true,

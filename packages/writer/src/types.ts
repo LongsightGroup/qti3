@@ -33,6 +33,12 @@ export type Qti3UploadScoring = "match_correct";
 
 export type Qti3MediaKind = "audio" | "video" | "object";
 
+export type Qti3SliderBaseType = "integer" | "float";
+
+export type Qti3SliderOrientation = "horizontal" | "vertical";
+
+export type Qti3SliderScoring = "match_correct" | "map_response";
+
 export interface Qti3WriterDiagnostic {
   readonly code: string;
   readonly path: string;
@@ -499,6 +505,30 @@ export type Qti3PositionObjectBuilderInput = Omit<
   readonly interactionType?: "positionObject" | undefined;
 };
 
+export interface Qti3SliderMappingEntry {
+  readonly mapKey: number;
+  readonly mappedValue: number;
+}
+
+export interface Qti3SliderAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "slider";
+  readonly lowerBound: number;
+  readonly upperBound: number;
+  readonly step?: number | undefined;
+  readonly stepLabel?: boolean | undefined;
+  readonly orientation?: Qti3SliderOrientation | undefined;
+  readonly reverse?: boolean | undefined;
+  readonly correctResponse: number;
+  readonly mappings?: readonly Qti3SliderMappingEntry[] | undefined;
+  readonly scoring?: Qti3SliderScoring | undefined;
+  readonly baseType?: Qti3SliderBaseType | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3SliderBuilderInput = Omit<Qti3SliderAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "slider" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -599,5 +629,6 @@ export type Qti3AuthoringItem =
   | Qti3GraphicOrderAuthoringItem
   | Qti3SelectPointAuthoringItem
   | Qti3PositionObjectAuthoringItem
+  | Qti3SliderAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

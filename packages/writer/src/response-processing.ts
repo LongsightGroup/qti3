@@ -31,6 +31,32 @@ export function mapResponsePointProcessingXml(responseIdentifier: string): strin
   </qti-response-processing>`;
 }
 
+export function mapResponseProcessingXml(responseIdentifier: string): string {
+  const identifier = xmlEscape(responseIdentifier);
+  return `  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-map-response identifier="${identifier}"/>
+    </qti-set-outcome-value>
+  </qti-response-processing>`;
+}
+
+export function matchCorrectProcessingXml(responseIdentifier: string): string {
+  const identifier = xmlEscape(responseIdentifier);
+  return `  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="${identifier}"/>
+          <qti-correct identifier="${identifier}"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-base-value base-type="float">1</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>`;
+}
+
 export function sumMappedResponsesProcessingXml(responseIdentifiers: readonly string[]): string {
   const ids = uniqueIdentifiers(responseIdentifiers);
   if (!ids.length) return zeroScoreProcessingXml();

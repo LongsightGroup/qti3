@@ -70,25 +70,26 @@ the host authoring system's responsibility.
 The exported `qti3WriterInteractionSupport` array is the authoritative support matrix for
 interactions the writer can currently write and validate:
 
-| Interaction       | QTI element                         | Writer support                                                        |
-| ----------------- | ----------------------------------- | --------------------------------------------------------------------- |
-| Choice            | `qti-choice-interaction`            | Writes and validates                                                  |
-| Order             | `qti-order-interaction`             | Writes and validates ordered cardinality and choice references        |
-| Inline choice     | `qti-inline-choice-interaction`     | Replaces empty QTI placeholders and validates slot references         |
-| Hottext           | `qti-hottext-interaction`           | Replaces empty QTI placeholders and validates choice references       |
-| Gap match         | `qti-gap-match-interaction`         | Writes and validates gap choices, targets, and directed pairs         |
-| Extended text     | `qti-extended-text-interaction`     | Writes constructed-response interactions and rubric blocks            |
-| Upload            | `qti-upload-interaction`            | Writes file response declarations and host upload metadata            |
-| Media             | `qti-media-interaction`             | Writes audio, video, and object media with playback metadata          |
-| Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices            |
-| Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
-| Match             | `qti-match-interaction`             | Writes and validates                                                  |
-| Hotspot           | `qti-hotspot-interaction`           | Writes and validates accessible object metadata and references        |
-| Graphic order     | `qti-graphic-order-interaction`     | Writes and validates object metadata, hotspots, and ordered responses |
-| Select point      | `qti-select-point-interaction`      | Writes and validates point responses, area mappings, and object data  |
-| Position object   | `qti-position-object-interaction`   | Writes and validates stage/movable objects, point responses, targets  |
-| Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses    |
-| Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes              |
+| Interaction       | QTI element                         | Writer support                                                         |
+| ----------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| Choice            | `qti-choice-interaction`            | Writes and validates                                                   |
+| Order             | `qti-order-interaction`             | Writes and validates ordered cardinality and choice references         |
+| Inline choice     | `qti-inline-choice-interaction`     | Replaces empty QTI placeholders and validates slot references          |
+| Hottext           | `qti-hottext-interaction`           | Replaces empty QTI placeholders and validates choice references        |
+| Gap match         | `qti-gap-match-interaction`         | Writes and validates gap choices, targets, and directed pairs          |
+| Extended text     | `qti-extended-text-interaction`     | Writes constructed-response interactions and rubric blocks             |
+| Upload            | `qti-upload-interaction`            | Writes file response declarations and host upload metadata             |
+| Media             | `qti-media-interaction`             | Writes audio, video, and object media with playback metadata           |
+| Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices             |
+| Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references  |
+| Match             | `qti-match-interaction`             | Writes and validates                                                   |
+| Hotspot           | `qti-hotspot-interaction`           | Writes and validates accessible object metadata and references         |
+| Graphic order     | `qti-graphic-order-interaction`     | Writes and validates object metadata, hotspots, and ordered responses  |
+| Select point      | `qti-select-point-interaction`      | Writes and validates point responses, area mappings, and object data   |
+| Position object   | `qti-position-object-interaction`   | Writes and validates stage/movable objects, point responses, targets   |
+| Slider            | `qti-slider-interaction`            | Writes and validates numeric bounds, responses, mappings, presentation |
+| Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses     |
+| Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes               |
 
 The writer test suite round-trips every supported builder through `@longsightgroup/qti3-core`
 parsing and `validateAssessmentItem()` with zero diagnostics.
@@ -132,6 +133,11 @@ Media items write a single `qti-media-interaction` with a `cardinality="single"`
 object media sources, video captions, transcript companion materials, autostart/loop flags,
 min/max play bounds, coords, labels, dimensions, and media shared-vocabulary player controls.
 
+Slider items write a single numeric `qti-slider-interaction`. The writer infers `base-type` as
+`integer` when bounds, step, correct response, and mapping keys are whole numbers; otherwise it uses
+`float`. Slider scoring defaults to `map_response` when mappings are present and `match_correct`
+when they are not.
+
 Graphic interactions render generated long-description markup immediately before the interaction
 element. Graphic order defaults `correctOrder` to the declared hotspot order when omitted. For
 graphic order items, an explicit `correctOrder` must include every hotspot by default. Partial
@@ -165,8 +171,7 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. slider
-2. custom
-3. portable custom
-4. drawing
-5. end attempt
+1. custom
+2. portable custom
+3. drawing
+4. end attempt

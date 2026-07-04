@@ -22,6 +22,7 @@ import { renderQti3MediaItem, validateQti3MediaItem } from "./media.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
 import { renderQti3PositionObjectItem, validateQti3PositionObjectItem } from "./position-object.js";
 import { renderQti3SelectPointItem, validateQti3SelectPointItem } from "./select-point.js";
+import { renderQti3SliderItem, validateQti3SliderItem } from "./slider.js";
 import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
 import type { Qti3AuthoringItem, Qti3WriterDiagnostic } from "./types.js";
 import { renderQti3UploadItem, validateQti3UploadItem } from "./upload.js";
@@ -130,6 +131,13 @@ export const qti3WriterInteractions: Record<
     notes:
       "Writes and validates stage objects, movable objects, point responses, and area mappings.",
   },
+  slider: {
+    qtiName: "qti-slider-interaction",
+    interactionType: "slider",
+    tests: ["packages/writer/src/slider.test.ts", "packages/writer/src/validation.test.ts"],
+    notes:
+      "Writes and validates numeric slider bounds, responses, mappings, and presentation attributes.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -182,6 +190,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3SelectPointItem(item);
     case "positionObject":
       return validateQti3PositionObjectItem(item);
+    case "slider":
+      return validateQti3SliderItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -223,6 +233,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3SelectPointItem(item);
     case "positionObject":
       return renderQti3PositionObjectItem(item);
+    case "slider":
+      return renderQti3SliderItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
