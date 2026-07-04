@@ -1,4 +1,4 @@
-import { duplicateDiagnostics, writerDiagnostic } from "./diagnostics.js";
+import { writerDiagnostic } from "./diagnostics.js";
 import type { Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, xmlEscape } from "./xml.js";
 
@@ -15,6 +15,33 @@ export interface PointAreaValidationOptions {
   readonly label: string;
   readonly path: string;
   readonly requireTargets?: boolean | undefined;
+}
+
+export interface PointResponseDeclarationInput {
+  readonly responseIdentifier: string;
+  readonly cardinality: "single" | "multiple";
+  readonly correctResponse?: readonly string[] | undefined;
+  readonly targets?: readonly Qti3PointAreaTarget[] | undefined;
+}
+
+export function pointCardinality(input: {
+  readonly minChoices?: number | undefined;
+  readonly maxChoices?: number | undefined;
+}): "single" | "multiple" {
+  if ((input.maxChoices ?? 1) > 1 || (input.minChoices ?? 0) > 1) return "multiple";
+  return "single";
+}
+
+export function pointResponseDeclarationXml(input: PointResponseDeclarationInput): string {
+  const correctResponse = input.correctResponse ?? [];
+  const correctResponseXml = correctResponse.length
+    ? `    <qti-correct-response>
+${correctResponse.map((point) => `      <qti-value>${xmlEscape(point.trim())}</qti-value>`).join("\n")}
+    </qti-correct-response>
+`
+    : "";
+  return `  <qti-response-declaration identifier="${xmlEscape(input.responseIdentifier)}" cardinality="${input.cardinality}" base-type="point">
+${correctResponseXml}${areaMappingBlock(input.targets)}  </qti-response-declaration>`;
 }
 
 export function areaMappingBlock(targets: readonly Qti3PointAreaTarget[] | undefined): string {
@@ -44,12 +71,30 @@ export function dedupePointValues(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const value of values) {
-    const point = value.trim().replace(/\s+/g, " ");
+    const point = normalizedPointValue(value);
     if (!point || seen.has(point)) continue;
     seen.add(point);
     out.push(point);
   }
   return out;
+}
+
+export function duplicatePointValueDiagnostics(
+  values: readonly string[],
+  path: string,
+  label: string,
+): Qti3WriterDiagnostic[] {
+  const seen = new Set<string>();
+  const duplicateValues = new Set<string>();
+  for (const value of values) {
+    const point = normalizedPointValue(value);
+    if (!point) continue;
+    if (seen.has(point)) duplicateValues.add(point);
+    else seen.add(point);
+  }
+  return Array.from(duplicateValues).map((value) =>
+    writerDiagnostic("duplicate_identifier", path, `${label} "${value}" must be unique.`, value),
+  );
 }
 
 export function validatePointValues(
@@ -59,7 +104,7 @@ export function validatePointValues(
   invalidCode: string,
   diagnostics: Qti3WriterDiagnostic[],
 ): void {
-  diagnostics.push(...duplicateDiagnostics(points, path, label));
+  diagnostics.push(...duplicatePointValueDiagnostics(points, path, label));
   for (const [index, point] of points.entries()) {
     if (isPointValue(point)) continue;
     diagnostics.push(
@@ -71,6 +116,10 @@ export function validatePointValues(
       ),
     );
   }
+}
+
+function normalizedPointValue(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
 }
 
 export function validatePointAreaTargets(

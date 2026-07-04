@@ -321,6 +321,32 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "positionObject",
+          identifier: "position-object-invalid",
+          title: "Position Object",
+          responseIdentifier: "bad response",
+          stageObject: { data: "/uploads/no-extension" },
+          movableObject: { data: "marker.png" },
+          targets: [{ shape: "circle", coords: "1,2" }],
+          correctResponse: ["1,2", "3 4"],
+          centerPoint: "1,2",
+          minChoices: 2,
+          maxChoices: 1,
+        },
+        codes: [
+          "invalid_identifier",
+          "missing_position_object_stage_object_alt",
+          "unknown_position_object_stage_object_type",
+          "missing_position_object_movable_object_alt",
+          "invalid_position_object_bounds",
+          "invalid_position_object_correct_response",
+          "invalid_position_object_correct_response_count",
+          "invalid_position_object_center_point",
+          "invalid_position_object_target_coords",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -538,6 +564,15 @@ describe("qti3-writer validation", () => {
         correctResponse: ["25 25"],
       },
       {
+        interactionType: "positionObject",
+        identifier: "support-position-object",
+        title: "Position Object",
+        stageObject: { data: "stage.png", alt: "Stage", width: 100, height: 100 },
+        movableObject: { data: "marker.png", alt: "Marker", width: 16, height: 16 },
+        targets: [{ shape: "circle", coords: "25,25,10", mappedValue: 1 }],
+        correctResponse: ["25 25"],
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -586,14 +621,7 @@ describe("qti3-writer validation", () => {
       (planned) => planned.interactionType,
     );
 
-    expect(plannedTypes).toEqual([
-      "positionObject",
-      "slider",
-      "custom",
-      "portableCustom",
-      "drawing",
-      "endAttempt",
-    ]);
+    expect(plannedTypes).toEqual(["slider", "custom", "portableCustom", "drawing", "endAttempt"]);
     expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
     expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
       true,

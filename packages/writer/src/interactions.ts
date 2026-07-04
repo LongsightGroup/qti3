@@ -20,6 +20,7 @@ import { renderQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inli
 import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
 import { renderQti3MediaItem, validateQti3MediaItem } from "./media.js";
 import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
+import { renderQti3PositionObjectItem, validateQti3PositionObjectItem } from "./position-object.js";
 import { renderQti3SelectPointItem, validateQti3SelectPointItem } from "./select-point.js";
 import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
 import type { Qti3AuthoringItem, Qti3WriterDiagnostic } from "./types.js";
@@ -119,6 +120,16 @@ export const qti3WriterInteractions: Record<
     tests: ["packages/writer/src/select-point.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Writes and validates point responses, area mappings, and object metadata.",
   },
+  positionObject: {
+    qtiName: "qti-position-object-interaction",
+    interactionType: "positionObject",
+    tests: [
+      "packages/writer/src/position-object.test.ts",
+      "packages/writer/src/validation.test.ts",
+    ],
+    notes:
+      "Writes and validates stage objects, movable objects, point responses, and area mappings.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -169,6 +180,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3GraphicOrderItem(item);
     case "selectPoint":
       return validateQti3SelectPointItem(item);
+    case "positionObject":
+      return validateQti3PositionObjectItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -208,6 +221,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3GraphicOrderItem(item);
     case "selectPoint":
       return renderQti3SelectPointItem(item);
+    case "positionObject":
+      return renderQti3PositionObjectItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":

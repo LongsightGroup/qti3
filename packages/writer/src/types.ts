@@ -472,6 +472,33 @@ export type Qti3SelectPointBuilderInput = Omit<Qti3SelectPointAuthoringItem, "in
   readonly interactionType?: "selectPoint" | undefined;
 };
 
+export type Qti3PositionObjectShape = Qti3SelectPointShape;
+
+export type Qti3PositionObjectTarget = Qti3SelectPointTarget;
+
+export type Qti3PositionObjectStageObject = Qti3GraphicObject;
+
+export type Qti3PositionObjectMovableObject = Qti3GraphicObject;
+
+export interface Qti3PositionObjectAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "positionObject";
+  readonly stageObject: Qti3GraphicObject;
+  readonly movableObject: Qti3GraphicObject;
+  readonly targets?: readonly Qti3PositionObjectTarget[] | undefined;
+  readonly correctResponse?: readonly string[] | undefined;
+  readonly centerPoint?: string | undefined;
+  readonly minChoices?: number | undefined;
+  readonly maxChoices?: number | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3PositionObjectBuilderInput = Omit<
+  Qti3PositionObjectAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "positionObject" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -571,5 +598,6 @@ export type Qti3AuthoringItem =
   | Qti3HotspotAuthoringItem
   | Qti3GraphicOrderAuthoringItem
   | Qti3SelectPointAuthoringItem
+  | Qti3PositionObjectAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

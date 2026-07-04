@@ -13,20 +13,13 @@ export const qti3WriterPlannedInteractionMigrationOrder: readonly Qti3WriterPlan
   [
     {
       priority: 1,
-      interactionType: "positionObject",
-      qtiName: "qti-position-object-interaction",
-      source: "qflow",
-      status: "planned",
-    },
-    {
-      priority: 2,
       interactionType: "slider",
       qtiName: "qti-slider-interaction",
       source: "qflow",
       status: "planned",
     },
     {
-      priority: 3,
+      priority: 2,
       interactionType: "custom",
       qtiName: "qti-custom-interaction",
       source: "qflow",
@@ -34,7 +27,7 @@ export const qti3WriterPlannedInteractionMigrationOrder: readonly Qti3WriterPlan
       notes: "Specialist migration after the common built-in interactions.",
     },
     {
-      priority: 4,
+      priority: 3,
       interactionType: "portableCustom",
       qtiName: "qti-portable-custom-interaction",
       source: "qflow",
@@ -42,7 +35,7 @@ export const qti3WriterPlannedInteractionMigrationOrder: readonly Qti3WriterPlan
       notes: "Specialist migration after the common built-in interactions.",
     },
     {
-      priority: 5,
+      priority: 4,
       interactionType: "drawing",
       qtiName: "qti-drawing-interaction",
       source: "qflow",
@@ -50,7 +43,7 @@ export const qti3WriterPlannedInteractionMigrationOrder: readonly Qti3WriterPlan
       notes: "Specialist migration after the common built-in interactions.",
     },
     {
-      priority: 6,
+      priority: 5,
       interactionType: "endAttempt",
       qtiName: "qti-end-attempt-interaction",
       source: "qflow",

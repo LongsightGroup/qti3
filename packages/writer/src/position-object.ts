@@ -18,30 +18,31 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import {
-  mapResponsePointProcessingXml,
-  responseProcessingTemplateXml,
-} from "./response-processing.js";
-import {
   dedupePointValues,
+  isPointValue,
   pointCardinality,
   pointResponseDeclarationXml,
   validatePointAreaTargets,
   validatePointValues,
 } from "./point-area.js";
+import {
+  mapResponsePointProcessingXml,
+  responseProcessingTemplateXml,
+} from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
-import type { Qti3SelectPointBuilderInput, Qti3WriterDiagnostic } from "./types.js";
+import type { Qti3PositionObjectBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, xmlEscape } from "./xml.js";
 
-export function buildQti3SelectPointItem(input: Qti3SelectPointBuilderInput): string {
-  const diagnostics = validateQti3SelectPointItem(input);
+export function buildQti3PositionObjectItem(input: Qti3PositionObjectBuilderInput): string {
+  const diagnostics = validateQti3PositionObjectItem(input);
   throwIfDiagnostics(diagnostics);
-  return renderQti3SelectPointItem(input);
+  return renderQti3PositionObjectItem(input);
 }
 
-export function renderQti3SelectPointItem(input: Qti3SelectPointBuilderInput): string {
+export function renderQti3PositionObjectItem(input: Qti3PositionObjectBuilderInput): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
-    "Select point response identifier",
+    "Position object response identifier",
   );
   const escapedResponseIdentifier = xmlEscape(responseIdentifier);
   const declarationsXml = pointResponseDeclarationXml({
@@ -52,22 +53,26 @@ export function renderQti3SelectPointItem(input: Qti3SelectPointBuilderInput): s
   });
   const longDescription = optionalLongDescriptionBlock(
     input.identifier,
-    input.object.longDescription,
+    input.stageObject.longDescription,
   );
   const interactionAttrs = interactionAttributeList({
     responseIdentifier: escapedResponseIdentifier,
     sharedVocabulary: input.sharedVocabulary,
-    interactionType: "selectPoint",
+    interactionType: "positionObject",
     classNames: input.classNames,
     extraAttributes: [
       input.minChoices !== undefined ? `min-choices="${String(input.minChoices)}"` : "",
       input.maxChoices !== undefined ? `max-choices="${String(input.maxChoices)}"` : "",
+      input.centerPoint?.trim() ? `center-point="${xmlEscape(input.centerPoint.trim())}"` : "",
       longDescription.attributeXml,
     ],
   });
-  const bodyXml = `${optionalBodySection(input.bodyHtml)}${longDescription.blockXml}    <qti-select-point-interaction ${interactionAttrs}>
-${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.object))}/>
-    </qti-select-point-interaction>`;
+  const bodyXml = `${optionalBodySection(input.bodyHtml)}${longDescription.blockXml}    <qti-position-object-stage>
+      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.stageObject))}/>
+      <qti-position-object-interaction ${interactionAttrs}>
+${optionalPromptSection(input.promptHtml)}        <object ${xmlAttributeList(renderGraphicObjectAttributes(input.movableObject))}/>
+      </qti-position-object-interaction>
+    </qti-position-object-stage>`;
 
   return assessmentItemShell({
     ...input,
@@ -80,38 +85,49 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(rende
   });
 }
 
-export function validateQti3SelectPointItem(
-  input: Qti3SelectPointBuilderInput,
+export function validateQti3PositionObjectItem(
+  input: Qti3PositionObjectBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
     "responseIdentifier",
-    "Select point response identifier",
+    "Position object response identifier",
     responseIdentifier,
   );
   if (responseIdentifierDiagnostic) diagnostics.push(responseIdentifierDiagnostic);
-  validateGraphicObject(input.object, diagnostics, {
-    codePrefix: "select_point",
-    label: "Select point",
-    path: "object",
+  validateGraphicObject(input.stageObject, diagnostics, {
+    codePrefix: "position_object_stage",
+    label: "Position object stage",
+    path: "stageObject",
+  });
+  validateGraphicObject(input.movableObject, diagnostics, {
+    codePrefix: "position_object_movable",
+    label: "Position object movable",
+    path: "movableObject",
   });
   validateChoiceBounds(input, diagnostics);
   validateCorrectResponse(input, diagnostics);
-  validateTargets(input, diagnostics);
+  validateCenterPoint(input, diagnostics);
+  validatePointAreaTargets(input.targets, diagnostics, {
+    codePrefix: "position_object",
+    label: "Position object",
+    path: "targets",
+    requireTargets: true,
+  });
   return diagnostics;
 }
 
 function validateChoiceBounds(
-  input: Qti3SelectPointBuilderInput,
+  input: Qti3PositionObjectBuilderInput,
   diagnostics: Qti3WriterDiagnostic[],
 ): void {
   if (input.minChoices !== undefined && !isNonNegativeInteger(input.minChoices)) {
     diagnostics.push(
       writerDiagnostic(
-        "invalid_select_point_min_choices",
+        "invalid_position_object_min_choices",
         "minChoices",
-        "Select point minChoices must be a non-negative integer.",
+        "Position object minChoices must be a non-negative integer.",
         input.minChoices,
       ),
     );
@@ -119,9 +135,9 @@ function validateChoiceBounds(
   if (input.maxChoices !== undefined && !isNonNegativeInteger(input.maxChoices)) {
     diagnostics.push(
       writerDiagnostic(
-        "invalid_select_point_max_choices",
+        "invalid_position_object_max_choices",
         "maxChoices",
-        "Select point maxChoices must be a non-negative integer.",
+        "Position object maxChoices must be a non-negative integer.",
         input.maxChoices,
       ),
     );
@@ -134,9 +150,9 @@ function validateChoiceBounds(
   ) {
     diagnostics.push(
       writerDiagnostic(
-        "invalid_select_point_bounds",
+        "invalid_position_object_bounds",
         "minChoices|maxChoices",
-        "Select point minChoices must be less than or equal to maxChoices unless maxChoices is 0.",
+        "Position object minChoices must be less than or equal to maxChoices unless maxChoices is 0.",
         { minChoices: input.minChoices, maxChoices: input.maxChoices },
       ),
     );
@@ -144,23 +160,23 @@ function validateChoiceBounds(
 }
 
 function validateCorrectResponse(
-  input: Qti3SelectPointBuilderInput,
+  input: Qti3PositionObjectBuilderInput,
   diagnostics: Qti3WriterDiagnostic[],
 ): void {
   const points = input.correctResponse ?? [];
   validatePointValues(
     points,
     "correctResponse",
-    "Select point correctResponse",
-    "invalid_select_point_correct_response",
+    "Position object correctResponse",
+    "invalid_position_object_correct_response",
     diagnostics,
   );
   if ((input.maxChoices ?? 1) === 1 && dedupePointValues(points).length > 1) {
     diagnostics.push(
       writerDiagnostic(
-        "invalid_select_point_correct_response_count",
+        "invalid_position_object_correct_response_count",
         "correctResponse",
-        "Select point correctResponse cannot contain multiple points when maxChoices is 1 or omitted.",
+        "Position object correctResponse cannot contain multiple points when maxChoices is 1 or omitted.",
         points,
       ),
     );
@@ -168,23 +184,27 @@ function validateCorrectResponse(
   if (input.maxChoices !== undefined && input.maxChoices > 0 && points.length > input.maxChoices) {
     diagnostics.push(
       writerDiagnostic(
-        "invalid_select_point_correct_response_count",
+        "invalid_position_object_correct_response_count",
         "correctResponse",
-        "Select point correctResponse count cannot exceed maxChoices.",
+        "Position object correctResponse count cannot exceed maxChoices.",
         { correctResponse: points.length, maxChoices: input.maxChoices },
       ),
     );
   }
 }
 
-function validateTargets(
-  input: Qti3SelectPointBuilderInput,
+function validateCenterPoint(
+  input: Qti3PositionObjectBuilderInput,
   diagnostics: Qti3WriterDiagnostic[],
 ): void {
-  validatePointAreaTargets(input.targets, diagnostics, {
-    codePrefix: "select_point",
-    label: "Select point",
-    path: "targets",
-    requireTargets: true,
-  });
+  if (input.centerPoint === undefined || input.centerPoint.trim() === "") return;
+  if (isPointValue(input.centerPoint)) return;
+  diagnostics.push(
+    writerDiagnostic(
+      "invalid_position_object_center_point",
+      "centerPoint",
+      'Position object centerPoint must be a QTI point value in the form "x y".',
+      input.centerPoint,
+    ),
+  );
 }
