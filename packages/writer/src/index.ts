@@ -1,5 +1,9 @@
 export { buildQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 export { buildQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+export {
+  buildQti3CustomInteractionItem,
+  validateQti3CustomInteractionItem,
+} from "./custom-interaction.js";
 export { buildQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
 export { buildQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 export {
@@ -40,6 +44,11 @@ export type {
   Qti3AssociatePair,
   Qti3ChoiceAuthoringItem,
   Qti3ChoiceBuilderInput,
+  Qti3CustomInteractionAttribute,
+  Qti3CustomInteractionAuthoringItem,
+  Qti3CustomInteractionBaseType,
+  Qti3CustomInteractionBuilderInput,
+  Qti3CustomInteractionCardinality,
   Qti3ExtendedTextAuthoringItem,
   Qti3ExtendedTextBuilderInput,
   Qti3ExtendedTextFormat,

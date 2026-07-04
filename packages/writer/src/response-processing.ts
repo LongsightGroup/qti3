@@ -1,8 +1,9 @@
 import type {
   Qti3PointResponseProcessingTemplate,
   Qti3ResponseProcessingTemplate,
+  Qti3TrustedXmlFragment,
 } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { indentXml, xmlEscape } from "./xml.js";
 
 const RESPONSE_PROCESSING_TEMPLATE_URIS = {
   match_correct: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct",
@@ -55,6 +56,15 @@ export function matchCorrectProcessingXml(responseIdentifier: string): string {
       </qti-response-if>
     </qti-response-condition>
   </qti-response-processing>`;
+}
+
+export function trustedResponseProcessingXml(xml: Qti3TrustedXmlFragment | undefined): string {
+  const raw = stripXmlDeclaration(xml ?? "").trim();
+  if (!raw) return zeroScoreProcessingXml();
+  const block = /^<\s*qti-response-processing\b/i.test(raw)
+    ? raw
+    : `<qti-response-processing>\n${raw}\n</qti-response-processing>`;
+  return indentXml(block, 2);
 }
 
 export function sumMappedResponsesProcessingXml(responseIdentifiers: readonly string[]): string {
@@ -132,6 +142,10 @@ function zeroScoreProcessingXml(): string {
       <qti-base-value base-type="float">0</qti-base-value>
     </qti-set-outcome-value>
   </qti-response-processing>`;
+}
+
+function stripXmlDeclaration(xml: string): string {
+  return xml.replace(/^<\?xml[^>]*\?>\s*/i, "").trim();
 }
 
 function uniqueIdentifiers(values: readonly string[]): string[] {

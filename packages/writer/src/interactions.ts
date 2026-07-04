@@ -3,6 +3,10 @@ import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
 import { renderQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 import { renderQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+import {
+  renderQti3CustomInteractionItem,
+  validateQti3CustomInteractionItem,
+} from "./custom-interaction.js";
 import { renderQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
 import { renderQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 import {
@@ -138,6 +142,16 @@ export const qti3WriterInteractions: Record<
     notes:
       "Writes and validates numeric slider bounds, responses, mappings, and presentation attributes.",
   },
+  custom: {
+    qtiName: "qti-custom-interaction",
+    interactionType: "custom",
+    tests: [
+      "packages/writer/src/custom-interaction.test.ts",
+      "packages/writer/src/validation.test.ts",
+    ],
+    notes:
+      "Writes legacy custom interactions from trusted widget markup and response processing fragments.",
+  },
   graphicAssociate: {
     qtiName: "qti-graphic-associate-interaction",
     interactionType: "graphicAssociate",
@@ -192,6 +206,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3PositionObjectItem(item);
     case "slider":
       return validateQti3SliderItem(item);
+    case "custom":
+      return validateQti3CustomInteractionItem(item);
     case "graphicAssociate":
       return validateQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
@@ -235,6 +251,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3PositionObjectItem(item);
     case "slider":
       return renderQti3SliderItem(item);
+    case "custom":
+      return renderQti3CustomInteractionItem(item);
     case "graphicAssociate":
       return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":

@@ -39,6 +39,21 @@ export type Qti3SliderOrientation = "horizontal" | "vertical";
 
 export type Qti3SliderScoring = "match_correct" | "map_response";
 
+export type Qti3CustomInteractionBaseType =
+  | "identifier"
+  | "boolean"
+  | "integer"
+  | "float"
+  | "string"
+  | "point"
+  | "pair"
+  | "directedPair"
+  | "duration"
+  | "file"
+  | "uri";
+
+export type Qti3CustomInteractionCardinality = "single" | "multiple" | "ordered" | "record";
+
 export interface Qti3WriterDiagnostic {
   readonly code: string;
   readonly path: string;
@@ -529,6 +544,29 @@ export type Qti3SliderBuilderInput = Omit<Qti3SliderAuthoringItem, "interactionT
   readonly interactionType?: "slider" | undefined;
 };
 
+export interface Qti3CustomInteractionAttribute {
+  readonly name: string;
+  readonly value: string;
+}
+
+export interface Qti3CustomInteractionAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "custom";
+  readonly responseBaseType?: Qti3CustomInteractionBaseType | undefined;
+  readonly responseCardinality?: Qti3CustomInteractionCardinality | undefined;
+  readonly definition?: string | undefined;
+  readonly attributes?: readonly Qti3CustomInteractionAttribute[] | undefined;
+  readonly interactionMarkupHtml: Qti3TrustedXmlFragment;
+  readonly responseProcessingXml?: Qti3TrustedXmlFragment | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3CustomInteractionBuilderInput = Omit<
+  Qti3CustomInteractionAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "custom" | undefined;
+};
+
 export interface Qti3GraphicAssociatePair {
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
@@ -630,5 +668,6 @@ export type Qti3AuthoringItem =
   | Qti3SelectPointAuthoringItem
   | Qti3PositionObjectAuthoringItem
   | Qti3SliderAuthoringItem
+  | Qti3CustomInteractionAuthoringItem
   | Qti3GraphicAssociateAuthoringItem
   | Qti3GraphicGapMatchAuthoringItem;

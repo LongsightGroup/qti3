@@ -12,6 +12,7 @@ import {
   type Qti3AuthoringItem,
 } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
+import { expectValidParsedItemAllowingDiagnostics } from "./test-helpers.js";
 
 describe("qti3-writer validation", () => {
   it("reports diagnostics for each supported interaction validator", () => {
@@ -374,6 +375,34 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "custom",
+          identifier: "bad custom",
+          title: "",
+          responseIdentifier: "bad response",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          responseBaseType: "json" as "string",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          responseCardinality: "list" as "single",
+          attributes: [
+            { name: "", value: "empty" },
+            { name: "data mode", value: "bad" },
+            { name: "class", value: "reserved" },
+          ],
+          interactionMarkupHtml: qti3TrustedXmlFragment(""),
+        },
+        codes: [
+          "invalid_identifier",
+          "missing_title",
+          "invalid_custom_response_base_type",
+          "invalid_custom_response_cardinality",
+          "missing_custom_attribute_name",
+          "invalid_custom_attribute_name",
+          "reserved_custom_attribute_name",
+          "missing_custom_interaction_markup",
+        ],
+      },
+      {
+        item: {
           interactionType: "graphicAssociate",
           identifier: "graphic-associate-invalid",
           title: "Graphic Associate",
@@ -610,6 +639,12 @@ describe("qti3-writer validation", () => {
         mappings: [{ mapKey: 70, mappedValue: 1 }],
       },
       {
+        interactionType: "custom",
+        identifier: "support-custom",
+        title: "Custom",
+        interactionMarkupHtml: qti3TrustedXmlFragment('<div class="widget">Ready</div>'),
+      },
+      {
         interactionType: "graphicAssociate",
         identifier: "support-graphic-associate",
         title: "Graphic Associate",
@@ -642,7 +677,11 @@ describe("qti3-writer validation", () => {
     }
 
     const emittedNames = examples.map((example) => {
-      const item = expectValidParsedItem(writeQti3AssessmentItem(example));
+      const xml = writeQti3AssessmentItem(example);
+      const item =
+        example.interactionType === "custom"
+          ? expectValidParsedItemAllowingDiagnostics(xml, ["interaction.deprecated"])
+          : expectValidParsedItem(xml);
       return item.interactions[0]?.qtiName;
     });
     expect(new Set(emittedNames)).toEqual(
@@ -658,7 +697,7 @@ describe("qti3-writer validation", () => {
       (planned) => planned.interactionType,
     );
 
-    expect(plannedTypes).toEqual(["custom", "portableCustom", "drawing", "endAttempt"]);
+    expect(plannedTypes).toEqual(["portableCustom", "drawing", "endAttempt"]);
     expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
     expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
       true,
