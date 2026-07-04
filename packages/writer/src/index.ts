@@ -1,13 +1,16 @@
 export { buildQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
 export { buildQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
 export { buildQti3MatchItem, validateQti3MatchItem } from "./match.js";
+export { buildQti3OrderItem, validateQti3OrderItem } from "./order.js";
 export { buildQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
 export {
   qti3WriterInteractionSupport,
   qti3WriterInteractions,
   validateQti3AuthoringItem,
 } from "./interactions.js";
+export { qti3WriterPlannedInteractionMigrationOrder } from "./planned-interactions.js";
 export type { Qti3WriterInteractionSupport } from "./interactions.js";
+export type { Qti3WriterPlannedInteractionMigration } from "./planned-interactions.js";
 export type {
   Qti3AuthoringChoice,
   Qti3AuthoringItem,
@@ -23,6 +26,8 @@ export type {
   Qti3MatchBuilderInput,
   Qti3MatchChoice,
   Qti3MatchPair,
+  Qti3OrderAuthoringItem,
+  Qti3OrderBuilderInput,
   Qti3ResponseProcessingTemplate,
   Qti3TextEntryAnswer,
   Qti3TextEntryAuthoringItem,

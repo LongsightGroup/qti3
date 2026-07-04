@@ -78,6 +78,28 @@ export type Qti3ChoiceBuilderInput = Omit<Qti3ChoiceAuthoringItem, "interactionT
   readonly interactionType?: "choice" | undefined;
 };
 
+export interface Qti3OrderAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "order";
+  readonly choices: readonly Qti3AuthoringChoice[];
+  /**
+   * Defaults to the current choice order when omitted or empty.
+   * When provided, this must include every choice unless minChoices or maxChoices explicitly
+   * configures a subset-ordering interaction.
+   */
+  readonly correctOrder?: readonly string[] | undefined;
+  readonly shuffle?: boolean | undefined;
+  readonly minChoices?: number | undefined;
+  readonly maxChoices?: number | undefined;
+  readonly minChoicesMessage?: string | undefined;
+  readonly maxChoicesMessage?: string | undefined;
+  readonly choiceVisibility?: "visible" | "hide" | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3OrderBuilderInput = Omit<Qti3OrderAuthoringItem, "interactionType"> & {
+  readonly interactionType?: "order" | undefined;
+};
+
 export interface Qti3TextEntryAnswer {
   readonly value: string;
   readonly score?: number | undefined;
@@ -162,6 +184,7 @@ export type Qti3HotspotBuilderInput = Omit<Qti3HotspotAuthoringItem, "interactio
 
 export type Qti3AuthoringItem =
   | Qti3ChoiceAuthoringItem
+  | Qti3OrderAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem
   | Qti3HotspotAuthoringItem;

@@ -2,6 +2,7 @@ import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 
 import {
+  qti3WriterPlannedInteractionMigrationOrder,
   qti3WriterInteractionSupport,
   qti3TrustedXmlFragment,
   validateQti3AuthoringItem,
@@ -40,6 +41,26 @@ describe("qti3-writer validation", () => {
           "invalid_correct_response_count",
           "unknown_choice_reference",
           "unknown_choice_reference",
+        ],
+      },
+      {
+        item: {
+          interactionType: "order",
+          identifier: "order-invalid",
+          title: "Order",
+          choices: [
+            { identifier: "A", text: "" },
+            { identifier: "A", text: "Duplicate A" },
+          ],
+          correctOrder: ["B"],
+          minChoices: 2,
+          maxChoices: 1,
+        },
+        codes: [
+          "duplicate_identifier",
+          "empty_order_choice",
+          "invalid_order_bounds",
+          "unknown_order_reference",
         ],
       },
       {
@@ -150,6 +171,15 @@ describe("qti3-writer validation", () => {
         correctResponse: ["A"],
       },
       {
+        interactionType: "order",
+        identifier: "support-order",
+        title: "Order",
+        choices: [
+          { identifier: "A", text: "A" },
+          { identifier: "B", text: "B" },
+        ],
+      },
+      {
         interactionType: "textEntry",
         identifier: "support-text-entry",
         title: "Text Entry",
@@ -192,6 +222,45 @@ describe("qti3-writer validation", () => {
     });
     expect(new Set(emittedNames)).toEqual(
       new Set(qti3WriterInteractionSupport.map((support) => support.qtiName)),
+    );
+  });
+
+  it("keeps planned qflow migrations separate from supported writer interactions", () => {
+    const supportedTypes = new Set(
+      qti3WriterInteractionSupport.map((support) => support.interactionType),
+    );
+    const plannedTypes = qti3WriterPlannedInteractionMigrationOrder.map(
+      (planned) => planned.interactionType,
+    );
+
+    expect(plannedTypes).toEqual([
+      "associate",
+      "inlineChoice",
+      "hottext",
+      "gapMatch",
+      "extendedText",
+      "upload",
+      "media",
+      "graphicOrder",
+      "graphicAssociate",
+      "graphicGapMatch",
+      "selectPoint",
+      "positionObject",
+      "slider",
+      "custom",
+      "portableCustom",
+      "drawing",
+      "endAttempt",
+    ]);
+    expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
+    expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
+      true,
+    );
+    expect(qti3WriterPlannedInteractionMigrationOrder.map((planned) => planned.priority)).toEqual(
+      Array.from(
+        { length: qti3WriterPlannedInteractionMigrationOrder.length },
+        (_, index) => index + 1,
+      ),
     );
   });
 });
