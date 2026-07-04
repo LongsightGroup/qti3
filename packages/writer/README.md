@@ -104,8 +104,9 @@ fragment. When `maxChoices` is omitted, the writer emits `cardinality="multiple"
 
 Gap match items use trusted `bodyHtml` inside the generated `qti-gap-match-interaction`. Targets are
 QTI-shaped `<qti-gap identifier="..."/>` elements in that body fragment and must match the structured
-`targets` list. The writer supports text and image gap choices and defaults to `map_response`
-scoring for parity with qflow gap match exports.
+`targets` list. Gap styling, including input-width classes, belongs on those trusted `qti-gap`
+elements. The writer supports text and image gap choices and defaults to `map_response` scoring for
+parity with qflow gap match exports.
 
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`

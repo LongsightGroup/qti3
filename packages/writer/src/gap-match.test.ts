@@ -156,6 +156,16 @@ describe("qti3-writer gap match", () => {
         "unknown_gap_match_target_reference",
       ]),
     );
+    expect(
+      validateQti3GapMatchItem({
+        identifier: "gap-match-missing-correct",
+        title: "Gap Match",
+        bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="G1"/></p>'),
+        choices: [{ identifier: "A", kind: "text", text: "A" }],
+        targets: [{ identifier: "G1" }],
+        correctResponse: [],
+      }).map((diagnostic) => diagnostic.code),
+    ).toContain("missing_gap_match_correct_response");
     expect(() =>
       buildQti3GapMatchItem({
         identifier: "gap-match-missing-correct",
@@ -185,6 +195,30 @@ describe("qti3-writer gap match", () => {
 
     expect(diagnostics.map((diagnostic) => diagnostic.code)).toContain(
       "gap_match_match_max_exceeded",
+    );
+  });
+
+  it("rejects cross-pool duplicate identifiers and duplicate correct pairs", () => {
+    const diagnostics = validateQti3GapMatchItem({
+      identifier: "gap-match-duplicates",
+      title: "Gap Match",
+      bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="A"/></p>'),
+      choices: [{ identifier: "A", kind: "text", text: "A" }],
+      targets: [{ identifier: "A" }],
+      correctResponse: [
+        { sourceIdentifier: "A", targetIdentifier: "A" },
+        { sourceIdentifier: "A", targetIdentifier: "A" },
+      ],
+    });
+
+    expect(diagnostics.map((diagnostic) => diagnostic.code)).toEqual(
+      expect.arrayContaining(["duplicate_identifier", "duplicate_identifier"]),
+    );
+    expect(diagnostics.filter((diagnostic) => diagnostic.code === "duplicate_identifier")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: "choices|targets" }),
+        expect.objectContaining({ path: "correctResponse" }),
+      ]),
     );
   });
 });

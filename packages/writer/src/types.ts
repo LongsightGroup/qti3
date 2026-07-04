@@ -185,7 +185,6 @@ export type Qti3GapMatchChoice = Qti3GapTextChoice | Qti3GapImageChoice;
 
 export interface Qti3GapTarget {
   readonly identifier: string;
-  readonly classNames?: readonly string[] | undefined;
 }
 
 export interface Qti3GapMatchPair {
