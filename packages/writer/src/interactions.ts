@@ -3,6 +3,7 @@ import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
 import { renderQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
 import { renderQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+import { renderQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
 import { renderQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
 import {
   renderQti3GraphicAssociateItem,
@@ -62,6 +63,12 @@ export const qti3WriterInteractions: Record<
     tests: ["packages/writer/src/gap-match.test.ts", "packages/writer/src/validation.test.ts"],
     notes: "Writes and validates gap choices, qti-gap body targets, and directed-pair responses.",
   },
+  extendedText: {
+    qtiName: "qti-extended-text-interaction",
+    interactionType: "extendedText",
+    tests: ["packages/writer/src/extended-text.test.ts", "packages/writer/src/validation.test.ts"],
+    notes: "Writes constructed-response extended text interactions and rubric blocks.",
+  },
   associate: {
     qtiName: "qti-associate-interaction",
     interactionType: "associate",
@@ -116,6 +123,8 @@ export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDi
       return validateQti3HottextItem(item);
     case "gapMatch":
       return validateQti3GapMatchItem(item);
+    case "extendedText":
+      return validateQti3ExtendedTextItem(item);
     case "associate":
       return validateQti3AssociateItem(item);
     case "textEntry":
@@ -145,6 +154,8 @@ export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
       return renderQti3HottextItem(item);
     case "gapMatch":
       return renderQti3GapMatchItem(item);
+    case "extendedText":
+      return renderQti3ExtendedTextItem(item);
     case "associate":
       return renderQti3AssociateItem(item);
     case "textEntry":

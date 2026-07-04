@@ -65,6 +65,33 @@ describe("qti3-writer validation", () => {
       },
       {
         item: {
+          interactionType: "extendedText",
+          identifier: "extended-text-invalid",
+          title: "Extended Text",
+          responseIdentifier: "bad response",
+          stringIdentifier: "bad string id",
+          responseBaseType: "integer",
+          responseCardinality: "multiple",
+          expectedLength: -1,
+          minStrings: 2,
+          maxStrings: 1,
+          patternMask: "[",
+          // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- deliberate invalid runtime value.
+          format: "markdown" as "plain",
+        },
+        codes: [
+          "invalid_identifier",
+          "invalid_identifier",
+          "invalid_extended_text_response_base_type",
+          "invalid_extended_text_response_cardinality",
+          "invalid_extended_text_format",
+          "invalid_extended_text_numeric_attribute",
+          "invalid_extended_text_string_bounds",
+          "invalid_extended_text_pattern_mask",
+        ],
+      },
+      {
+        item: {
           interactionType: "associate",
           identifier: "associate-invalid",
           title: "Associate",
@@ -345,6 +372,14 @@ describe("qti3-writer validation", () => {
         correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "G1" }],
       },
       {
+        interactionType: "extendedText",
+        identifier: "support-extended-text",
+        title: "Extended Text",
+        bodyHtml: qti3TrustedXmlFragment("<p>Write a paragraph.</p>"),
+        responseIdentifier: "RESPONSE",
+        expectedLength: 200,
+      },
+      {
         interactionType: "associate",
         identifier: "support-associate",
         title: "Associate",
@@ -429,7 +464,6 @@ describe("qti3-writer validation", () => {
     );
 
     expect(plannedTypes).toEqual([
-      "extendedText",
       "upload",
       "media",
       "graphicOrder",

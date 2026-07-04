@@ -21,6 +21,12 @@ export type Qti3TextEntryBaseType = "string" | "integer" | "float";
 
 export type Qti3ResponseProcessingTemplate = "match_correct" | "map_response";
 
+export type Qti3ExtendedTextFormat = "plain" | "preformatted" | "xhtml";
+
+export type Qti3ExtendedTextResponseBaseType = "string" | "integer" | "float";
+
+export type Qti3ExtendedTextResponseCardinality = "single" | "multiple" | "ordered";
+
 export interface Qti3WriterDiagnostic {
   readonly code: string;
   readonly path: string;
@@ -210,6 +216,31 @@ export interface Qti3GapMatchAuthoringItem extends Qti3AuthoringItemBase {
 
 export type Qti3GapMatchBuilderInput = Omit<Qti3GapMatchAuthoringItem, "interactionType"> & {
   readonly interactionType?: "gapMatch" | undefined;
+};
+
+export interface Qti3ExtendedTextAuthoringItem extends Qti3AuthoringItemBase {
+  readonly interactionType: "extendedText";
+  readonly rubricHtml?: Qti3TrustedXmlFragment | undefined;
+  readonly responseBaseType?: Qti3ExtendedTextResponseBaseType | undefined;
+  readonly responseCardinality?: Qti3ExtendedTextResponseCardinality | undefined;
+  readonly base?: number | undefined;
+  readonly stringIdentifier?: string | undefined;
+  readonly expectedLength?: number | undefined;
+  readonly expectedLines?: number | undefined;
+  readonly minStrings?: number | undefined;
+  readonly maxStrings?: number | undefined;
+  readonly placeholderText?: string | undefined;
+  readonly format?: Qti3ExtendedTextFormat | undefined;
+  readonly patternMask?: string | undefined;
+  readonly patternMessage?: string | undefined;
+  readonly classNames?: readonly string[] | undefined;
+}
+
+export type Qti3ExtendedTextBuilderInput = Omit<
+  Qti3ExtendedTextAuthoringItem,
+  "interactionType"
+> & {
+  readonly interactionType?: "extendedText" | undefined;
 };
 
 export interface Qti3AssociateChoice {
@@ -426,6 +457,7 @@ export type Qti3AuthoringItem =
   | Qti3InlineChoiceAuthoringItem
   | Qti3HottextAuthoringItem
   | Qti3GapMatchAuthoringItem
+  | Qti3ExtendedTextAuthoringItem
   | Qti3AssociateAuthoringItem
   | Qti3TextEntryAuthoringItem
   | Qti3MatchAuthoringItem

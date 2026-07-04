@@ -77,6 +77,7 @@ interactions the writer can currently write and validate:
 | Inline choice     | `qti-inline-choice-interaction`     | Replaces empty QTI placeholders and validates slot references         |
 | Hottext           | `qti-hottext-interaction`           | Replaces empty QTI placeholders and validates choice references       |
 | Gap match         | `qti-gap-match-interaction`         | Writes and validates gap choices, targets, and directed pairs         |
+| Extended text     | `qti-extended-text-interaction`     | Writes constructed-response interactions and rubric blocks            |
 | Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices            |
 | Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references |
 | Match             | `qti-match-interaction`             | Writes and validates                                                  |
@@ -108,6 +109,12 @@ QTI-shaped `<qti-gap identifier="..."/>` elements in that body fragment and must
 elements. The writer supports text and image gap choices and defaults to `map_response` scoring for
 parity with qflow gap match exports.
 
+Extended text items write a single `qti-extended-text-interaction` after optional trusted `bodyHtml`.
+The writer supports prompt, rubric, expected length/lines, min/max strings, placeholder text,
+pattern-mask attributes, `format="plain"`, `format="preformatted"`, and `format="xhtml"`.
+`qti3-core` validates extended text response declarations as `cardinality="single"` and
+`base-type="string"`, so the writer reports diagnostics for other response shapes.
+
 Graphic interactions render generated long-description markup immediately before the interaction
 element. For graphic gap match, trusted `bodyHtml` is interaction content so inline `qti-gap`
 targets can be parsed and validated by QTI engines.
@@ -135,14 +142,13 @@ until they have writer validation, XML output, support metadata, and round-trip 
 
 Current planned order:
 
-1. extended text
-2. upload
-3. media
-4. graphic order
-5. select point
-6. position object
-7. slider
-8. custom
-9. portable custom
-10. drawing
-11. end attempt
+1. upload
+2. media
+3. graphic order
+4. select point
+5. position object
+6. slider
+7. custom
+8. portable custom
+9. drawing
+10. end attempt
