@@ -215,6 +215,20 @@ function validateCorrectResponse(
       ),
     );
   }
+  if (
+    input.maxChoices !== undefined &&
+    Number.isFinite(input.maxChoices) &&
+    correctResponse.length > input.maxChoices
+  ) {
+    diagnostics.push(
+      writerDiagnostic(
+        "invalid_hottext_correct_response_max_choices",
+        "correctResponse",
+        "Hottext correct response count must not exceed maxChoices.",
+        { correctResponse, maxChoices: input.maxChoices },
+      ),
+    );
+  }
   for (const [index, identifier] of correctResponse.entries()) {
     const identifierDiagnostic = validateQtiIdentifier(
       `correctResponse.${index}`,

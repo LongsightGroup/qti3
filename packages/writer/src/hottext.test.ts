@@ -131,6 +131,27 @@ describe("qti3-writer hottext", () => {
     ).toThrow("at least one correct response");
   });
 
+  it("rejects more correct responses than maxChoices", () => {
+    const diagnostics = validateQti3HottextItem({
+      identifier: "hottext-too-many-correct",
+      title: "Hottext",
+      bodyHtml: qti3TrustedXmlFragment(
+        '<p><qti-hottext identifier="A"/> <qti-hottext identifier="B"/> <qti-hottext identifier="C"/></p>',
+      ),
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+        { identifier: "C", text: "C" },
+      ],
+      correctResponse: ["A", "B", "C"],
+      maxChoices: 2,
+    });
+
+    expect(diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "invalid_hottext_correct_response_max_choices",
+    );
+  });
+
   it("rejects invalid hottext authoring inputs", () => {
     const diagnostics = validateQti3HottextItem({
       identifier: "bad hottext",
