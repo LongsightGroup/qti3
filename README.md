@@ -31,19 +31,26 @@ flowchart LR
     a11y["a11y<br/>keyboard and accessibility<br/>proof contracts"]
     cli["cli<br/>validate, score, inspect,<br/>write fixtures"]
     pnp["pnp<br/>normalize and resolve<br/>candidate preferences"]
+    writer["writer<br/>QTI-shaped authoring<br/>XML output"]
+    migrator["migrator<br/>QTI 1.2 and 2.x<br/>to QTI 3 authoring"]
   end
 
   content --> core
   content --> cli
+  content --> migrator
   core --> player
   core --> cli
   core --> pnp
+  core --> writer
+  writer --> migrator
   fixtures --> conformance
   fixtures --> cli
   conformance --> review
   a11y --> review
   cli --> review
   pnp --> host
+  writer --> host
+  migrator --> host
   player --> host
   core --> host
 ```
@@ -152,6 +159,8 @@ node packages/cli/dist/index.js support-matrix
 | `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                    |
 | `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                         |
 | `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                         |
+| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML writer with typed diagnostics                        |
+| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items and XML                   |
 | `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI        |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,

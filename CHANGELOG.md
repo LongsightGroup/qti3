@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.9.6 - 2026-07-05
+
+### Added
+
+- Add `@longsightgroup/qti3-writer`, a framework-neutral QTI 3 authoring XML writer
+  with typed diagnostics, support metadata, round-trip validation through `qti3-core`,
+  and builders for the currently migrated item interaction families.
+- Add `@longsightgroup/qti3-migrator`, a framework-neutral QTI 1.2 and QTI 2.x
+  migration package that detects source packages/items, produces QTI-shaped authoring
+  items, and writes QTI 3 XML through `@longsightgroup/qti3-writer`.
+- Add migration coverage for Canvas-style QTI 1.2 matching structures alongside the
+  package/item detection, manifest parsing, asset collection, and diagnostic reporting
+  needed for legacy QTI import workflows.
+- Export the core UTF-8 package decoding helper used by package and migration tooling.
+
+### Changed
+
+- Align all workspace package versions on `0.9.6` so writer, migrator, core, player,
+  adapters, conformance, fixtures, accessibility, CLI, and PNP packages can be published
+  as a consistent release set.
+- Document the writer and migrator package boundaries in the root package overview.
+
 ## 0.9.5 - 2026-06-30
 
 ### Fixed
