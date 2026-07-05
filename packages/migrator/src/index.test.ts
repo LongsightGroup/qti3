@@ -52,6 +52,54 @@ describe("@longsightgroup/qti3-migrator", () => {
     for (const item of result.items) expectValidXml(item.xml ?? "");
   });
 
+  it("migrates Canvas QTI 1.2 multi-response matching items", () => {
+    const result = migrateQtiItemToQti3({
+      filename: "canvas_matching_question.xml",
+      xml: canvasQti12MatchingItem(),
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.authoringItem?.interactionType).toBe("match");
+    if (result.authoringItem?.interactionType !== "match") {
+      throw new Error("Expected match authoring item.");
+    }
+    expect(result.authoringItem.sources.map((source) => source.identifier)).toEqual([
+      "response_washington",
+      "response_jefferson",
+    ]);
+    expect(result.authoringItem.targets.map((target) => target.identifier)).toEqual([
+      "first",
+      "declaration",
+      "emancipation",
+    ]);
+    expect(result.authoringItem.correctResponse).toEqual([
+      { sourceIdentifier: "response_washington", targetIdentifier: "first" },
+      { sourceIdentifier: "response_jefferson", targetIdentifier: "declaration" },
+    ]);
+    expectValidXml(result.xml ?? "");
+  });
+
+  it("detects Canvas IMSCC QTI 1.2 assessment resources", async () => {
+    const bytes = createStoredZip({
+      "imsmanifest.xml": manifest(
+        "imsqti_xmlv1p2/imscc_xmlv1p1/assessment",
+        "assessment/quiz1.xml",
+      ),
+      "assessment/quiz1.xml": canvasQti12MatchingItem(),
+      "web_resources/diagram.png": new Uint8Array([1, 2, 3]),
+    });
+
+    const detection = detectQtiMigrationSource({ filename: "canvas.imscc", bytes });
+    const result = await migrateQtiToQti3({ filename: "canvas.imscc", bytes });
+
+    expect(detection.supported).toBe(true);
+    expect(detection.sourceFormat).toBe("qti12");
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.authoringItem?.interactionType).toBe("match");
+    expect(result.assets.map((asset) => asset.path)).toContain("web_resources/diagram.png");
+    expectValidXml(result.items[0]?.xml ?? "");
+  });
+
   it("rejects source repairs by default and allows them only under safe policy", () => {
     const strict = migrateQtiItemToQti3({
       filename: "bad-choice.xml",
@@ -272,6 +320,46 @@ function qti12Items(): string {
   <item ident="text12" title="Text 12"><presentation><material><mattext>Type.</mattext></material><response_str ident="RESPONSE"><render_fib/></response_str></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">answer</varequal></conditionvar></respcondition></resprocessing></item>
   <item ident="essay12" title="Essay question"><presentation><material><mattext>Write.</mattext></material></presentation></item>
   <item ident="hotspot12" title="Hotspot 12"><presentation><material><mattext>Click.</mattext></material><response_lid ident="RESPONSE"><render_hotspot><response_label ident="H1" rarea="Rectangle" coords="0,0,10,10"/></render_hotspot></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">H1</varequal></conditionvar></respcondition></resprocessing></item>
+</questestinterop>`;
+}
+
+function canvasQti12MatchingItem(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2p1.xsd">
+  <assessment ident="canvas_assessment" title="US Presidents Quiz">
+    <section ident="root_section">
+      <item ident="canvas_matching" title="Match Presidents to Achievements">
+        <itemmetadata>
+          <qtimetadata>
+            <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>matching_question</fieldentry></qtimetadatafield>
+          </qtimetadata>
+        </itemmetadata>
+        <presentation>
+          <material><mattext texttype="text/html">&lt;p&gt;Match each president.&lt;/p&gt;</mattext></material>
+          <response_lid ident="response_washington">
+            <material><mattext texttype="text/plain">George Washington</mattext></material>
+            <render_choice>
+              <response_label ident="first"><material><mattext>First President</mattext></material></response_label>
+              <response_label ident="declaration"><material><mattext>Declaration of Independence</mattext></material></response_label>
+              <response_label ident="emancipation"><material><mattext>Emancipation Proclamation</mattext></material></response_label>
+            </render_choice>
+          </response_lid>
+          <response_lid ident="response_jefferson">
+            <material><mattext texttype="text/plain">Thomas Jefferson</mattext></material>
+            <render_choice>
+              <response_label ident="first"><material><mattext>First President</mattext></material></response_label>
+              <response_label ident="declaration"><material><mattext>Declaration of Independence</mattext></material></response_label>
+              <response_label ident="emancipation"><material><mattext>Emancipation Proclamation</mattext></material></response_label>
+            </render_choice>
+          </response_lid>
+        </presentation>
+        <resprocessing>
+          <respcondition><conditionvar><varequal respident="response_washington">first</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
+          <respcondition><conditionvar><varequal respident="response_jefferson">declaration</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
+        </resprocessing>
+      </item>
+    </section>
+  </assessment>
 </questestinterop>`;
 }
 

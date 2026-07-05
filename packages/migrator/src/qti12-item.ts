@@ -2,6 +2,7 @@ import {
   qti3TrustedXmlFragment,
   type Qti3AuthoringChoice,
   type Qti3AuthoringItem,
+  type Qti3MatchChoice,
 } from "@longsightgroup/qti3-writer";
 import { diagnostic } from "./diagnostics.js";
 import { escapeText, normalizeIdentifier } from "./text.js";
@@ -99,9 +100,16 @@ function migrateQti12ItemElement(
     };
   }
 
-  const choiceResponse = responseLids.find((response) =>
+  const choiceResponses = responseLids.filter((response) =>
     findDescendantByLocalName(response, "render_choice"),
   );
+  if (choiceResponses.length > 1) {
+    return {
+      ...mapQti12CanvasMatch(identifier, title, choiceResponses, bodyHtml, correct, options),
+    };
+  }
+
+  const choiceResponse = choiceResponses[0];
   if (choiceResponse) {
     return {
       ...mapQti12Choice(identifier, title, choiceResponse, bodyHtml, correct, options),
@@ -125,6 +133,83 @@ function migrateQti12ItemElement(
       }),
     ],
   };
+}
+
+function mapQti12CanvasMatch(
+  identifier: string,
+  title: string,
+  responses: readonly XmlElement[],
+  bodyHtml: ReturnType<typeof qti3TrustedXmlFragment>,
+  correct: ReadonlyMap<string, string[]>,
+  options: ResolvedQtiMigrationOptions,
+): {
+  readonly authoringItem?: Qti3AuthoringItem | undefined;
+  readonly diagnostics: readonly QtiMigrationDiagnostic[];
+} {
+  const sources: Qti3MatchChoice[] = responses.map((response, index) => {
+    const responseIdentifier = normalizeIdentifier(attr(response, "ident"), `SOURCE_${index + 1}`);
+    const material = findDescendantByLocalName(response, "material");
+    return {
+      identifier: responseIdentifier,
+      contentHtml: qti3TrustedXmlFragment(material ? materialHtml(material) : responseIdentifier),
+      text: textOf(material) || responseIdentifier,
+      matchMax: 1,
+    };
+  });
+  const targets = canvasMatchTargets(responses);
+  const targetIdentifiers = new Set(targets.map((target) => target.identifier));
+  const correctResponse = sources.flatMap((source) => {
+    const targetIdentifier = (correct.get(source.identifier) ?? [])
+      .map((entry) => normalizeIdentifier(entry))
+      .find((entry) => targetIdentifiers.has(entry));
+    return targetIdentifier ? [{ sourceIdentifier: source.identifier, targetIdentifier }] : [];
+  });
+  const repair = repairOrError({
+    needed: correctResponse.length !== sources.length,
+    options,
+    code: "qti12_canvas_match_correct_response_incomplete",
+    message: "Canvas QTI 1.2 matching item has incomplete or invalid correct pairs.",
+    repairMessage:
+      "Canvas QTI 1.2 matching item has incomplete correct pairs; migrating available pairs for review.",
+  });
+  if (repair.blocked) return { diagnostics: repair.diagnostics };
+  return {
+    authoringItem: {
+      interactionType: "match",
+      identifier,
+      title,
+      bodyHtml,
+      responseIdentifier: "RESPONSE",
+      sources,
+      targets,
+      correctResponse,
+      shuffle: false,
+    },
+    diagnostics: repair.diagnostics,
+  };
+}
+
+function canvasMatchTargets(responses: readonly XmlElement[]): Qti3MatchChoice[] {
+  const targets: Qti3MatchChoice[] = [];
+  const seen = new Set<string>();
+  for (const response of responses) {
+    const renderChoice = findDescendantByLocalName(response, "render_choice");
+    const labels = renderChoice
+      ? findAllDescendantsByLocalName(renderChoice, "response_label")
+      : [];
+    for (const [index, label] of labels.entries()) {
+      const identifier = normalizeIdentifier(attr(label, "ident"), `TARGET_${index + 1}`);
+      if (seen.has(identifier)) continue;
+      seen.add(identifier);
+      targets.push({
+        identifier,
+        contentHtml: qti3TrustedXmlFragment(materialHtml(label)),
+        text: textOf(label) || identifier,
+        matchMax: 1,
+      });
+    }
+  }
+  return targets;
 }
 
 function mapQti12Choice(
