@@ -86,7 +86,7 @@ export const qti3WriterInteractions: Record<
     qtiName: "qti-upload-interaction",
     interactionType: "upload",
     tests: ["packages/writer/src/upload.test.ts", "packages/writer/src/validation.test.ts"],
-    notes: "Writes single-file response declarations and host upload metadata attributes.",
+    notes: "Writes single-file response declarations and application upload metadata attributes.",
   },
   media: {
     qtiName: "qti-media-interaction",

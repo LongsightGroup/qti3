@@ -1,7 +1,7 @@
 {
   "name": "@longsightgroup/qti3-writer",
   "version": "0.9.5",
-  "description": "Framework-neutral QTI 3 assessment item XML writer for authoring systems.",
+  "description": "Framework-neutral QTI 3 assessment item XML writer for authoring applications.",
   "keywords": [
     "assessment",
     "authoring",
@@ -31,11 +31,9 @@
     "dist/**/*.js.map",
     "!dist/**/*.test.*",
     "!dist/test-helpers.*",
-    "!dist/planned-interactions.*",
     "src/**/*.ts",
     "!src/**/*.test.ts",
-    "!src/test-helpers.ts",
-    "!src/planned-interactions.ts"
+    "!src/test-helpers.ts"
   ],
   "type": "module",
   "exports": {

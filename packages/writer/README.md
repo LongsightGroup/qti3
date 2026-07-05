@@ -1,10 +1,10 @@
 # @longsightgroup/qti3-writer
 
-Framework-neutral QTI 3 assessment item XML writer for authoring systems.
+Framework-neutral QTI 3 assessment item XML writer for authoring applications.
 
-This package writes QTI-shaped authoring primitives to QTI 3 XML. It does not expose host draft
-types, render UI, or sanitize HTML. Trusted XHTML/QTI fragments must be prepared by the host before
-they are passed to the writer.
+This package writes QTI-shaped authoring primitives to QTI 3 XML. It does not render UI or sanitize
+HTML. Trusted XHTML/QTI fragments must be prepared by the calling application before they are passed
+to the writer.
 
 ## Install
 
@@ -37,9 +37,9 @@ if (!result.ok) {
 console.log(result.xml);
 ```
 
-The stable host-facing API is `writeQti3AssessmentItemResult(item)`. It returns typed diagnostics
-and should be used by production authoring systems. Use `validateQti3AuthoringItem(item)` when a UI
-or import pipeline needs diagnostics before writing XML.
+The stable application-facing API is `writeQti3AssessmentItemResult(item)`. It returns typed
+diagnostics and should be used by production authoring systems. Use
+`validateQti3AuthoringItem(item)` when a UI or import pipeline needs diagnostics before writing XML.
 
 `writeQti3AssessmentItem(item)` remains available as a convenience API for scripts and tests. It
 throws `Qti3WriterError` when writer invariants fail.
@@ -63,7 +63,7 @@ const xml = buildQti3TextEntryItem({
 
 `bodyHtml`, `promptHtml`, and rich choice content use `Qti3TrustedXmlFragment`. The writer escapes
 plain text fields and XML attributes, but it assembles trusted fragments as provided. Sanitization is
-the host authoring system's responsibility.
+the calling application's responsibility.
 
 ## Support Matrix
 
@@ -78,7 +78,7 @@ interactions the writer can currently write and validate:
 | Hottext           | `qti-hottext-interaction`           | Replaces empty QTI placeholders and validates choice references        |
 | Gap match         | `qti-gap-match-interaction`         | Writes and validates gap choices, targets, and directed pairs          |
 | Extended text     | `qti-extended-text-interaction`     | Writes constructed-response interactions and rubric blocks             |
-| Upload            | `qti-upload-interaction`            | Writes file response declarations and host upload metadata             |
+| Upload            | `qti-upload-interaction`            | Writes file response declarations and application upload metadata      |
 | Media             | `qti-media-interaction`             | Writes audio, video, and object media with playback metadata           |
 | Associate         | `qti-associate-interaction`         | Writes and validates pair responses and associable choices             |
 | Text entry        | `qti-text-entry-interaction`        | Writes declarations and validates trusted body interaction references  |
@@ -104,9 +104,10 @@ orders are accepted only when `minChoices` or `maxChoices` explicitly configures
 Inline choice items use trusted `bodyHtml` with empty QTI-shaped placeholders. The writer replaces
 each `<qti-inline-choice-interaction response-identifier="..."/>` placeholder with the generated
 interaction for the matching slot. This keeps editor markers out of the public API while still
-letting host tools control the surrounding inline prose. Default `all_or_nothing` scoring writes the
-slot count as the score when every inline choice is correct, so a two-slot item awards `SCORE = 2`.
-Use `map_response` scoring when the host needs per-slot partial credit or custom normalization.
+letting applications control the surrounding inline prose. Default `all_or_nothing` scoring writes
+the slot count as the score when every inline choice is correct, so a two-slot item awards
+`SCORE = 2`. Use `map_response` scoring when the application needs per-slot partial credit or custom
+normalization.
 
 Hottext items use trusted `bodyHtml` inside the generated `qti-hottext-interaction`. Each generated
 hottext choice is placed by an empty `<qti-hottext identifier="..."/>` placeholder in that body
@@ -127,9 +128,9 @@ pattern-mask attributes, `format="plain"`, `format="preformatted"`, and `format=
 `base-type="string"`, so the writer reports diagnostics for other response shapes.
 
 Upload items write a single `qti-upload-interaction` with a `cardinality="single"` /
-`base-type="file"` response declaration. Host constraints such as maximum file size, allowed file
+`base-type="file"` response declaration. Application constraints such as maximum file size, allowed file
 types, and multiple-file UI behavior are emitted as `data-max-size`, `data-file-types`, and
-`data-multiple` attributes for host runtimes that understand them. When `correctResponse` is
+`data-multiple` attributes for runtimes that understand them. When `correctResponse` is
 provided, the writer emits a correct-response filename and the `match_correct` response-processing
 template; otherwise upload items remain manually scored/unscored.
 
@@ -143,9 +144,10 @@ Slider items write a single numeric `qti-slider-interaction`. The writer infers 
 `float`. Slider scoring defaults to `map_response` when mappings are present and `match_correct`
 when they are not.
 
-Custom interaction items write deprecated legacy `qti-custom-interaction` items for hosts that still
-need that QTI shape. The writer validates response declaration shape and XML attribute names, but it
-treats widget markup and custom response processing as trusted fragments supplied by the host.
+Custom interaction items write deprecated legacy `qti-custom-interaction` items for applications
+that still need that QTI shape. The writer validates response declaration shape and XML attribute
+names, but it treats widget markup and custom response processing as trusted fragments supplied by
+the application.
 Portable custom items write `qti-portable-custom-interaction` launch metadata, optional
 `qti-interaction-modules`, and trusted `qti-interaction-markup`. The writer requires a custom
 interaction type identifier plus either a `module` attribute or at least one interaction module.
@@ -167,16 +169,3 @@ QTI engines.
 Graphic gap match supports two target modes. Hotspot targets are generated as
 `qti-associable-hotspot` elements on the graphic. Inline targets are declared in `targets` with
 `targetType: "inlineGap"` and must have matching trusted `bodyHtml` containing `qti-gap` elements.
-
-## Migration Pattern
-
-Future host-specific XML writers should move into this package one interaction at a time. Each
-migration should add:
-
-- a `Qti3XAuthoringItem` union member
-- a direct-builder input type that does not require `interactionType`
-- a validator returning `Qti3WriterDiagnostic[]`
-- a package-owned XML writer
-- a `qti3WriterInteractionSupport` entry
-- a host adapter from its draft model to the QTI authoring model
-- parser plus `validateAssessmentItem()` round-trip tests
