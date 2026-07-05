@@ -107,7 +107,10 @@ describe("qti3 package writer", () => {
           path: "/items/choice.xml",
           identifier: "same",
           xml: "<not-qti/>",
-          assets: ["missing.png", "missing.png"],
+          assets: [
+            { path: "dup.png", data: "" },
+            { path: "dup.png", data: "" },
+          ],
         },
         {
           kind: "xml",
@@ -123,23 +126,22 @@ describe("qti3 package writer", () => {
             ],
             correctResponse: ["A"],
           }),
+          assets: [{ path: "../missing.png", data: "", mediaType: "" }],
         },
       ],
-      assets: [{ path: "../missing.png", data: "" }],
     });
 
     expect(diagnostics.map((diagnostic) => diagnostic.code)).toEqual(
       expect.arrayContaining([
         "invalid_identifier",
         "missing_package_title",
-        "invalid_package_path_absolute",
+        "package.path.absolute",
         "duplicate_package_path",
         "duplicate_package_item_identifier",
         "invalid_package_item_xml_qti.root",
         "duplicate_package_item_asset",
-        "missing_package_asset",
-        "invalid_package_path_escape",
-        "unreferenced_package_asset",
+        "package.path.escape",
+        "missing_package_asset_media_type",
         "package_item_identifier_mismatch",
       ]),
     );
@@ -189,7 +191,7 @@ function packageInput(): Qti3PackageAuthoringInput {
       {
         kind: "authoringItem",
         path: "items/choice.xml",
-        assets: ["items/assets/prompt.png"],
+        assets: [{ path: "items/assets/prompt.png", data: new Uint8Array([137, 80, 78, 71]) }],
         item: {
           interactionType: "choice",
           identifier: "choice-1",
@@ -204,6 +206,5 @@ function packageInput(): Qti3PackageAuthoringInput {
         },
       },
     ],
-    assets: [{ path: "items/assets/prompt.png", data: new Uint8Array([137, 80, 78, 71]) }],
   };
 }

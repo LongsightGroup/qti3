@@ -62,7 +62,7 @@ export interface QtiMigrationItemResult {
   readonly identifier: string;
   readonly title: string;
   readonly href: string;
-  readonly assets?: readonly string[] | undefined;
+  readonly assetHrefs?: readonly string[] | undefined;
   readonly authoringItem?: Qti3AuthoringItem | undefined;
   readonly xml?: string | undefined;
   readonly diagnostics: readonly QtiMigrationDiagnostic[];

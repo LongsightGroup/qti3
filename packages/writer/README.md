@@ -73,6 +73,13 @@ const result = writeQti3PackageZipResult({
     {
       kind: "authoringItem",
       path: "items/item-1.xml",
+      assets: [
+        {
+          path: "items/assets/prompt.png",
+          data: new Uint8Array([137, 80, 78, 71]),
+          mediaType: "image/png",
+        },
+      ],
       item: {
         interactionType: "choice",
         identifier: "item-1",
@@ -99,9 +106,8 @@ Use `writeQti3PackageManifestResult(input)` for only `imsmanifest.xml`,
 `@longsightgroup/qti3-core` and return typed diagnostics. Convenience APIs without `Result` throw
 `Qti3WriterError`.
 
-Package writing currently targets item-bank packages. Assets are explicit: declare package assets in
-`assets`, and list the asset paths used by each item in that item's `assets` field. The writer does
-not rewrite URLs inside trusted item XML.
+Package writing currently targets item-bank packages. Assets are explicit: declare each asset on the
+item that owns the manifest resource. The writer does not rewrite URLs inside trusted item XML.
 
 ## Trusted Fragments
 

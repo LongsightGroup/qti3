@@ -33,6 +33,16 @@ export {
   writeQti3PackageZip,
   writeQti3PackageZipResult,
 } from "./package.js";
+export type {
+  Qti3PackageAsset,
+  Qti3PackageAuthoringInput,
+  Qti3PackageAuthoringItem,
+  Qti3PackageFile,
+  Qti3PackageFilesResult,
+  Qti3PackageItem,
+  Qti3PackageXmlItem,
+  Qti3PackageZipResult,
+} from "./package.js";
 export { buildQti3PortableCustomItem, validateQti3PortableCustomItem } from "./portable-custom.js";
 export { buildQti3SelectPointItem, validateQti3SelectPointItem } from "./select-point.js";
 export { buildQti3SliderItem, validateQti3SliderItem } from "./slider.js";
@@ -121,14 +131,6 @@ export type {
   Qti3MediaSource,
   Qti3OrderAuthoringItem,
   Qti3OrderBuilderInput,
-  Qti3PackageAsset,
-  Qti3PackageAuthoringInput,
-  Qti3PackageAuthoringItem,
-  Qti3PackageFile,
-  Qti3PackageFilesResult,
-  Qti3PackageItem,
-  Qti3PackageXmlItem,
-  Qti3PackageZipResult,
   Qti3PortableCustomAuthoringItem,
   Qti3PortableCustomBuilderInput,
   Qti3PortableCustomDataAttribute,

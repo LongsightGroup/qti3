@@ -3,12 +3,10 @@ import {
   qti3TrustedXmlFragment,
   writeQti3AssessmentItemResult,
   type Qti3AuthoringItem,
-  type Qti3PackageAsset,
-  type Qti3PackageAuthoringInput,
-  type Qti3PackageItem,
 } from "@longsightgroup/qti3-writer";
 import { diagnostic, hasErrors } from "./diagnostics.js";
 import { resolveOptions } from "./options.js";
+import { migrationResultToPackage } from "./package-result.js";
 import { migrateQti12Xml } from "./qti12-item.js";
 import { itemTitleFromXml, migrateQti2ItemXml } from "./qti2-item.js";
 import {
@@ -218,7 +216,7 @@ function migratePackageSource(
     const migratedItems = migrateItemXml(entry.text, href, sourceFormat, options);
     for (const item of migratedItems) {
       const finalized = finalizeItemResult(item, `${item.identifier}.xml`, options);
-      items.push({ ...finalized, assets: assetHrefsByItemHref.get(href) ?? [] });
+      items.push({ ...finalized, assetHrefs: assetHrefsByItemHref.get(href) ?? [] });
     }
   }
   return {
@@ -252,67 +250,6 @@ function migrateItemSource(
     assets: [],
     diagnostics: [],
   };
-}
-
-function migrationResultToPackage(result: QtiMigrationResult): QtiPackageMigrationResult {
-  const diagnostics = [...result.diagnostics, ...result.items.flatMap((item) => item.diagnostics)];
-  const writerAssets = migrationAssetsForWriter(result.assets, diagnostics);
-  const items: Qti3PackageItem[] = [];
-
-  for (const item of result.items) {
-    if (!item.xml) {
-      diagnostics.push(
-        diagnostic("package_item_xml_missing", "error", "Migrated item has no QTI 3 XML.", {
-          path: item.href,
-          sourceFormat: result.sourceFormat,
-        }),
-      );
-      continue;
-    }
-
-    items.push({
-      kind: "xml",
-      path: item.href,
-      identifier: item.identifier,
-      xml: item.xml,
-      assets: item.assets ?? [],
-    });
-  }
-
-  if (hasErrors(diagnostics)) return { ok: false, diagnostics };
-  return {
-    ok: true,
-    package: {
-      identifier: pathIdentifier(result.title),
-      title: result.title,
-      items,
-      assets: writerAssets,
-    },
-    diagnostics,
-  };
-}
-
-function migrationAssetsForWriter(
-  assets: readonly QtiMigrationAsset[],
-  diagnostics: QtiMigrationDiagnostic[],
-): Qti3PackageAuthoringInput["assets"] {
-  const writerAssets: Qti3PackageAsset[] = [];
-  for (const asset of assets) {
-    if (!asset.data) {
-      diagnostics.push(
-        diagnostic("package_asset_data_missing", "error", "Migrated package asset has no data.", {
-          path: asset.path,
-        }),
-      );
-      continue;
-    }
-    writerAssets.push({
-      path: asset.path,
-      data: asset.data,
-      mediaType: asset.mediaType,
-    });
-  }
-  return writerAssets;
 }
 
 function migrateItemXml(

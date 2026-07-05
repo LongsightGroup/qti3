@@ -36,6 +36,7 @@ import {
 import type { QtiDiagnostic } from "./types.js";
 
 export { decodeUtf8, readQtiPackageZipEntries };
+export { normalizePackagePath } from "./qti-package-paths.js";
 export type { QtiPackageEntry };
 
 export type {

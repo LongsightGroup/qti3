@@ -51,6 +51,7 @@ export {
 } from "./package-xml.js";
 export {
   decodeUtf8,
+  normalizePackagePath,
   parseQtiPackage,
   readQtiPackageZipEntries,
   type QtiAssessmentTestItemRef,

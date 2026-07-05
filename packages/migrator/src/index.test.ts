@@ -43,7 +43,7 @@ describe("@longsightgroup/qti3-migrator", () => {
         kind: "xml",
         path: "choice_item.xml",
         identifier: "choice_item",
-        assets: ["items/image.png"],
+        assets: [expect.objectContaining({ path: "items/image.png", mediaType: "image/png" })],
       }),
     ]);
     const files = writeQti3PackageFilesResult(migrated.package);

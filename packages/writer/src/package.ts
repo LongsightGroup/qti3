@@ -1,18 +1,14 @@
-import { parseQtiPackage, parseQtiXml } from "@longsightgroup/qti3-core";
+import {
+  normalizePackagePath,
+  parseQtiPackage,
+  parseQtiXml,
+  type QtiDiagnostic,
+} from "@longsightgroup/qti3-core";
 import { zipSync, strToU8 } from "fflate";
 
 import { throwIfDiagnostics, validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
 import { renderQti3AuthoringItem, validateQti3AuthoringItem } from "./interactions.js";
-import type {
-  Qti3PackageAsset,
-  Qti3PackageAuthoringInput,
-  Qti3PackageFile,
-  Qti3PackageFilesResult,
-  Qti3PackageItem,
-  Qti3PackageZipResult,
-  Qti3WriterDiagnostic,
-  Qti3WriterResult,
-} from "./types.js";
+import type { Qti3AuthoringItem, Qti3WriterDiagnostic, Qti3WriterResult } from "./types.js";
 import { Qti3WriterError } from "./types.js";
 import { xmlEscape, xmlLines } from "./xml.js";
 
@@ -20,22 +16,78 @@ const QTI_PACKAGE_MANIFEST_PATH = "imsmanifest.xml";
 const QTI_ITEM_RESOURCE_TYPE = "imsqti_item_xmlv3p0";
 const ZIP_EPOCH = new Date("1980-01-02T12:00:00.000Z");
 
+/** Input model for an item-bank QTI 3 package. */
+export interface Qti3PackageAuthoringInput {
+  readonly identifier: string;
+  readonly title?: string | undefined;
+  readonly items: readonly Qti3PackageItem[];
+}
+
+/** Assessment item source for a generated QTI 3 package. */
+export type Qti3PackageItem = Qti3PackageAuthoringItem | Qti3PackageXmlItem;
+
+/** Package item that is rendered from the writer's structured authoring model. */
+export interface Qti3PackageAuthoringItem {
+  readonly kind: "authoringItem";
+  readonly path: string;
+  readonly item: Qti3AuthoringItem;
+  readonly assets?: readonly Qti3PackageAsset[] | undefined;
+}
+
+/** Package item supplied as trusted assessment-item XML. */
+export interface Qti3PackageXmlItem {
+  readonly kind: "xml";
+  readonly path: string;
+  readonly identifier: string;
+  readonly xml: string;
+  readonly assets?: readonly Qti3PackageAsset[] | undefined;
+}
+
+/** Non-item file included in an item's manifest resource. */
+export interface Qti3PackageAsset {
+  readonly path: string;
+  readonly data: Uint8Array | string;
+  readonly mediaType?: string | undefined;
+}
+
+/** File emitted by the QTI 3 package writer. */
+export interface Qti3PackageFile {
+  readonly path: string;
+  readonly data: Uint8Array | string;
+}
+
+export type Qti3PackageFilesResult =
+  | {
+      readonly ok: true;
+      readonly files: readonly Qti3PackageFile[];
+      readonly diagnostics: readonly [];
+    }
+  | { readonly ok: false; readonly diagnostics: readonly Qti3WriterDiagnostic[] };
+
+export type Qti3PackageZipResult =
+  | {
+      readonly ok: true;
+      readonly zip: Uint8Array;
+      readonly diagnostics: readonly [];
+    }
+  | { readonly ok: false; readonly diagnostics: readonly Qti3WriterDiagnostic[] };
+
 /** Validate a package authoring input without writing package files. */
 export function validateQti3Package(
   input: Qti3PackageAuthoringInput,
 ): readonly Qti3WriterDiagnostic[] {
-  return buildPackageFiles(input).diagnostics;
+  return buildValidPackage(input).diagnostics;
 }
 
 /** Write an IMS manifest XML document for an item-bank QTI 3 package. */
 export function writeQti3PackageManifest(input: Qti3PackageAuthoringInput): string {
   throwIfDiagnostics(validateQti3Package(input));
-  return renderPackageManifest(normalizePackage(input, []));
+  return renderPackageManifest(buildValidPackage(input).normalized);
 }
 
 /** Write an IMS manifest XML document and return diagnostics instead of throwing. */
 export function writeQti3PackageManifestResult(input: Qti3PackageAuthoringInput): Qti3WriterResult {
-  const built = buildPackageFiles(input);
+  const built = buildValidPackage(input);
   if (built.diagnostics.length) return { ok: false, diagnostics: built.diagnostics };
   return { ok: true, xml: renderPackageManifest(built.normalized), diagnostics: [] };
 }
@@ -53,9 +105,9 @@ export function writeQti3PackageFiles(
 export function writeQti3PackageFilesResult(
   input: Qti3PackageAuthoringInput,
 ): Qti3PackageFilesResult {
-  const built = buildPackageFiles(input);
+  const built = buildValidPackage(input);
   if (built.diagnostics.length) return { ok: false, diagnostics: built.diagnostics };
-  return { ok: true, files: built.files, diagnostics: [] };
+  return { ok: true, files: packageFiles(built.normalized), diagnostics: [] };
 }
 
 /** Write a deterministic stored ZIP archive for an item-bank QTI 3 package. */
@@ -94,14 +146,13 @@ interface NormalizedPackage {
   readonly identifier: string;
   readonly title?: string | undefined;
   readonly items: readonly NormalizedPackageItem[];
-  readonly assets: readonly NormalizedPackageAsset[];
 }
 
 interface NormalizedPackageItem {
   readonly path: string;
   readonly identifier: string;
   readonly xml: string;
-  readonly assets: readonly string[];
+  readonly assets: readonly NormalizedPackageAsset[];
 }
 
 interface NormalizedPackageAsset {
@@ -112,26 +163,25 @@ interface NormalizedPackageAsset {
 
 interface BuildPackageFilesResult {
   readonly normalized: NormalizedPackage;
-  readonly files: readonly Qti3PackageFile[];
   readonly diagnostics: readonly Qti3WriterDiagnostic[];
 }
 
-function buildPackageFiles(input: Qti3PackageAuthoringInput): BuildPackageFilesResult {
+function buildValidPackage(input: Qti3PackageAuthoringInput): BuildPackageFilesResult {
   const diagnostics = validatePackageBase(input);
   const normalized = normalizePackage(input, diagnostics);
   diagnostics.push(...validatePackageGraph(normalized));
-  if (diagnostics.length) return { normalized, files: [], diagnostics };
+  return { normalized, diagnostics };
+}
 
+function packageFiles(input: NormalizedPackage): readonly Qti3PackageFile[] {
   const files: Qti3PackageFile[] = [
-    { path: QTI_PACKAGE_MANIFEST_PATH, data: renderPackageManifest(normalized) },
+    { path: QTI_PACKAGE_MANIFEST_PATH, data: renderPackageManifest(input) },
   ];
-  for (const item of normalized.items) files.push({ path: item.path, data: item.xml });
-  for (const asset of normalized.assets) files.push({ path: asset.path, data: asset.data });
-  return {
-    normalized,
-    files: files.toSorted((left, right) => left.path.localeCompare(right.path)),
-    diagnostics,
-  };
+  for (const item of input.items) {
+    files.push({ path: item.path, data: item.xml });
+    for (const asset of item.assets) files.push({ path: asset.path, data: asset.data });
+  }
+  return files.toSorted((left, right) => left.path.localeCompare(right.path));
 }
 
 function validatePackageBase(input: Qti3PackageAuthoringInput): Qti3WriterDiagnostic[] {
@@ -171,7 +221,6 @@ function normalizePackage(
     identifier: input.identifier.trim(),
     title: input.title?.trim(),
     items: input.items.map((item) => normalizePackageItem(item, diagnostics)),
-    assets: (input.assets ?? []).map((asset) => normalizePackageAsset(asset)),
   };
 }
 
@@ -179,8 +228,8 @@ function normalizePackageItem(
   item: Qti3PackageItem,
   diagnostics: Qti3WriterDiagnostic[],
 ): NormalizedPackageItem {
-  const path = normalizePackagePathUnchecked(item.path);
-  const assets = (item.assets ?? []).map(normalizePackagePathUnchecked);
+  const path = parsePackagePath(item.path, "item path", `items.${item.path}.path`, diagnostics);
+  const assets = (item.assets ?? []).map((asset) => normalizePackageAsset(asset, diagnostics));
   if (item.kind === "authoringItem") {
     return {
       path,
@@ -197,9 +246,12 @@ function normalizePackageItem(
   };
 }
 
-function normalizePackageAsset(asset: Qti3PackageAsset): NormalizedPackageAsset {
+function normalizePackageAsset(
+  asset: Qti3PackageAsset,
+  diagnostics: Qti3WriterDiagnostic[],
+): NormalizedPackageAsset {
   return {
-    path: normalizePackagePathUnchecked(asset.path),
+    path: parsePackagePath(asset.path, "asset path", `assets.${asset.path}.path`, diagnostics),
     data: asset.data,
     mediaType: asset.mediaType?.trim(),
   };
@@ -209,39 +261,12 @@ function validatePackageGraph(input: NormalizedPackage): Qti3WriterDiagnostic[] 
   const diagnostics: Qti3WriterDiagnostic[] = [];
   const seenItemIdentifiers = new Set<string>();
   const seenPaths = new Set<string>([QTI_PACKAGE_MANIFEST_PATH]);
-  const assetPaths = new Set(input.assets.map((asset) => asset.path));
-  const referencedAssetPaths = new Set(input.items.flatMap((item) => item.assets));
 
   for (const item of input.items) {
-    validatePackagePath(item.path, `items.${item.identifier || "(missing)"}.path`, diagnostics);
     validateUniquePath(item.path, seenPaths, diagnostics);
     validateItemIdentifier(item, seenItemIdentifiers, diagnostics);
     validateItemXml(item, diagnostics);
-    validateItemAssets(item, assetPaths, diagnostics);
-  }
-
-  for (const asset of input.assets) {
-    validatePackagePath(asset.path, `assets.${asset.path || "(missing)"}.path`, diagnostics);
-    validateUniquePath(asset.path, seenPaths, diagnostics);
-    if (asset.mediaType !== undefined && !asset.mediaType.trim()) {
-      diagnostics.push(
-        writerDiagnostic(
-          "missing_package_asset_media_type",
-          `assets.${asset.path}.mediaType`,
-          "Package asset mediaType must not be empty when provided.",
-        ),
-      );
-    }
-    if (!referencedAssetPaths.has(asset.path)) {
-      diagnostics.push(
-        writerDiagnostic(
-          "unreferenced_package_asset",
-          `assets.${asset.path}`,
-          `Package asset "${asset.path}" must be referenced by at least one item.`,
-          asset.path,
-        ),
-      );
-    }
+    validateItemAssets(item, seenPaths, diagnostics);
   }
 
   return diagnostics;
@@ -256,7 +281,7 @@ function packageItemXml(item: Qti3PackageItem, diagnostics: Qti3WriterDiagnostic
       ...itemDiagnostics.map((diagnostic) =>
         writerDiagnostic(
           diagnostic.code,
-          `items.${normalizePackagePathUnchecked(item.path)}.${diagnostic.path}`,
+          `items.${normalizePackagePathForDiagnostic(item.path)}.${diagnostic.path}`,
           diagnostic.message,
           diagnostic.value,
         ),
@@ -321,35 +346,65 @@ function validateItemXml(item: NormalizedPackageItem, diagnostics: Qti3WriterDia
 
 function validateItemAssets(
   item: NormalizedPackageItem,
-  assetPaths: ReadonlySet<string>,
+  seenPaths: Set<string>,
   diagnostics: Qti3WriterDiagnostic[],
 ): void {
   const seen = new Set<string>();
-  for (const assetPath of item.assets) {
-    validatePackagePath(assetPath, `items.${item.path}.assets`, diagnostics);
-    if (seen.has(assetPath)) {
+  for (const asset of item.assets) {
+    if (seen.has(asset.path)) {
       diagnostics.push(
         writerDiagnostic(
           "duplicate_package_item_asset",
           `items.${item.path}.assets`,
-          `Package item asset "${assetPath}" must be unique for the item.`,
-          assetPath,
+          `Package item asset "${asset.path}" must be unique for the item.`,
+          asset.path,
         ),
       );
       continue;
     }
-    seen.add(assetPath);
-    if (!assetPaths.has(assetPath)) {
+    seen.add(asset.path);
+    validateUniquePath(asset.path, seenPaths, diagnostics);
+    if (asset.mediaType !== undefined && !asset.mediaType.trim()) {
       diagnostics.push(
         writerDiagnostic(
-          "missing_package_asset",
-          `items.${item.path}.assets`,
-          `Package item references missing asset "${assetPath}".`,
-          assetPath,
+          "missing_package_asset_media_type",
+          `items.${item.path}.assets.${asset.path}.mediaType`,
+          "Package asset mediaType must not be empty when provided.",
         ),
       );
     }
   }
+}
+
+function parsePackagePath(
+  path: string,
+  context: string,
+  diagnosticPath: string,
+  diagnostics: Qti3WriterDiagnostic[],
+): string {
+  if (!path) {
+    diagnostics.push(
+      writerDiagnostic("missing_package_path", diagnosticPath, "Package path is required."),
+    );
+    return "";
+  }
+
+  const coreDiagnostics: QtiDiagnostic[] = [];
+  const slashPath = path.replaceAll("\\", "/");
+  const normalized = normalizePackagePath(slashPath, context, coreDiagnostics);
+  diagnostics.push(
+    ...coreDiagnostics.map((diagnostic) =>
+      writerDiagnostic(diagnostic.code, diagnosticPath, diagnostic.message),
+    ),
+  );
+  return normalized ?? slashPath;
+}
+
+function normalizePackagePathForDiagnostic(path: string): string {
+  return (
+    normalizePackagePath(path.replaceAll("\\", "/"), "package item path", []) ??
+    path.replaceAll("\\", "/")
+  );
 }
 
 function validateUniquePath(
@@ -372,39 +427,6 @@ function validateUniquePath(
   seenPaths.add(path);
 }
 
-function validatePackagePath(
-  path: string,
-  diagnosticPath: string,
-  diagnostics: Qti3WriterDiagnostic[],
-): void {
-  if (!path) {
-    diagnostics.push(
-      writerDiagnostic("missing_package_path", diagnosticPath, "Package path is required."),
-    );
-    return;
-  }
-  if (path.startsWith("/") || /^[A-Za-z]:[\\/]/.test(path) || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
-    diagnostics.push(
-      writerDiagnostic(
-        "invalid_package_path_absolute",
-        diagnosticPath,
-        `Package path "${path}" must be package-relative.`,
-        path,
-      ),
-    );
-  }
-  if (path.split("/").includes("..")) {
-    diagnostics.push(
-      writerDiagnostic(
-        "invalid_package_path_escape",
-        diagnosticPath,
-        `Package path "${path}" must not escape the package root.`,
-        path,
-      ),
-    );
-  }
-}
-
 function renderPackageManifest(input: NormalizedPackage): string {
   return xmlLines([
     `<?xml version="1.0" encoding="UTF-8"?>`,
@@ -420,31 +442,12 @@ function renderPackageManifest(input: NormalizedPackage): string {
 }
 
 function renderManifestItemResource(item: NormalizedPackageItem): string {
-  const files = [item.path, ...item.assets];
+  const files = [item.path, ...item.assets.map((asset) => asset.path)];
   return xmlLines([
     `    <resource identifier="${xmlEscape(item.identifier)}" type="${QTI_ITEM_RESOURCE_TYPE}" href="${xmlEscape(item.path)}">`,
     ...files.map((path) => `      <file href="${xmlEscape(path)}"/>`),
     `    </resource>`,
   ]);
-}
-
-function normalizePackagePathUnchecked(path: string): string {
-  const slashPath = path.replaceAll("\\", "/");
-  if (
-    slashPath.startsWith("/") ||
-    /^[A-Za-z]:\//.test(slashPath) ||
-    /^[a-z][a-z0-9+.-]*:/i.test(slashPath) ||
-    slashPath.split("/").includes("..")
-  ) {
-    return slashPath;
-  }
-
-  const parts: string[] = [];
-  for (const part of slashPath.split("/")) {
-    if (!part || part === ".") continue;
-    parts.push(part);
-  }
-  return parts.join("/");
 }
 
 function fileDataBytes(data: Uint8Array | string): Uint8Array {
