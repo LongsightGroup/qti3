@@ -34,9 +34,7 @@ export {
   qti3WriterInteractions,
   validateQti3AuthoringItem,
 } from "./interactions.js";
-export { qti3WriterPlannedInteractionMigrationOrder } from "./planned-interactions.js";
 export type { Qti3WriterInteractionSupport } from "./interactions.js";
-export type { Qti3WriterPlannedInteractionMigration } from "./planned-interactions.js";
 export type {
   Qti3AuthoringChoice,
   Qti3AuthoringItem,

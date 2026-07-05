@@ -30,8 +30,12 @@
     "dist/**/*.js",
     "dist/**/*.js.map",
     "!dist/**/*.test.*",
+    "!dist/test-helpers.*",
+    "!dist/planned-interactions.*",
     "src/**/*.ts",
-    "!src/**/*.test.ts"
+    "!src/**/*.test.ts",
+    "!src/test-helpers.ts",
+    "!src/planned-interactions.ts"
   ],
   "type": "module",
   "exports": {

@@ -2,7 +2,6 @@ import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 
 import {
-  qti3WriterPlannedInteractionMigrationOrder,
   qti3WriterInteractionSupport,
   qti3TrustedXmlFragment,
   validateQti3AuthoringItem,
@@ -761,27 +760,6 @@ describe("qti3-writer validation", () => {
     });
     expect(new Set(emittedNames)).toEqual(
       new Set(qti3WriterInteractionSupport.map((support) => support.qtiName)),
-    );
-  });
-
-  it("keeps planned qflow migrations separate from supported writer interactions", () => {
-    const supportedTypes = new Set(
-      qti3WriterInteractionSupport.map((support) => support.interactionType),
-    );
-    const plannedTypes = qti3WriterPlannedInteractionMigrationOrder.map(
-      (planned) => planned.interactionType,
-    );
-
-    expect(plannedTypes).toEqual([]);
-    expect(new Set(plannedTypes).size).toBe(plannedTypes.length);
-    expect(plannedTypes.every((interactionType) => !supportedTypes.has(interactionType))).toBe(
-      true,
-    );
-    expect(qti3WriterPlannedInteractionMigrationOrder.map((planned) => planned.priority)).toEqual(
-      Array.from(
-        { length: qti3WriterPlannedInteractionMigrationOrder.length },
-        (_, index) => index + 1,
-      ),
     );
   });
 });

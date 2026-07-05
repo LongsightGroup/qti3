@@ -2,7 +2,7 @@
 
 Framework-neutral QTI 3 assessment item XML writer for authoring systems.
 
-This package writes QTI-shaped authoring primitives to QTI 3 XML. It does not expose qflow draft
+This package writes QTI-shaped authoring primitives to QTI 3 XML. It does not expose host draft
 types, render UI, or sanitize HTML. Trusted XHTML/QTI fragments must be prepared by the host before
 they are passed to the writer.
 
@@ -103,7 +103,7 @@ orders are accepted only when `minChoices` or `maxChoices` explicitly configures
 
 Inline choice items use trusted `bodyHtml` with empty QTI-shaped placeholders. The writer replaces
 each `<qti-inline-choice-interaction response-identifier="..."/>` placeholder with the generated
-interaction for the matching slot. This keeps qflow editor markers out of the public API while still
+interaction for the matching slot. This keeps editor markers out of the public API while still
 letting host tools control the surrounding inline prose. Default `all_or_nothing` scoring writes the
 slot count as the score when every inline choice is correct, so a two-slot item awards `SCORE = 2`.
 Use `map_response` scoring when the host needs per-slot partial credit or custom normalization.
@@ -118,7 +118,7 @@ QTI-shaped `<qti-gap identifier="..."/>` elements in that body fragment and must
 `targets` list. Gap styling, including input-width classes, belongs on those trusted `qti-gap`
 elements. Each gap target can have at most one associated choice; repeated target identifiers in
 `correctResponse` are rejected. The writer supports text and image gap choices and defaults to
-`map_response` scoring for parity with qflow gap match exports.
+`map_response` scoring for authoring systems that need per-pair partial credit.
 
 Extended text items write a single `qti-extended-text-interaction` after optional trusted `bodyHtml`.
 The writer supports prompt, rubric, expected length/lines, min/max strings, placeholder text,
@@ -170,7 +170,7 @@ Graphic gap match supports two target modes. Hotspot targets are generated as
 
 ## Migration Pattern
 
-Future qflow interaction writers should move into this package one interaction at a time. Each
+Future host-specific XML writers should move into this package one interaction at a time. Each
 migration should add:
 
 - a `Qti3XAuthoringItem` union member
@@ -178,11 +178,5 @@ migration should add:
 - a validator returning `Qti3WriterDiagnostic[]`
 - a package-owned XML writer
 - a `qti3WriterInteractionSupport` entry
-- a qflow adapter from draft model to QTI authoring model
+- a host adapter from its draft model to the QTI authoring model
 - parser plus `validateAssessmentItem()` round-trip tests
-
-The exported `qti3WriterPlannedInteractionMigrationOrder` from `planned-interactions.js` records the
-intended qflow migration sequence. Planned interactions are not part of the supported writer matrix
-until they have writer validation, XML output, support metadata, and round-trip tests.
-
-Current planned order: none.
