@@ -5,6 +5,7 @@ export default defineConfig({
   // Exclude Vitest *.test.ts files that live under tests/browser/.
   testMatch: "**/*.spec.ts",
   timeout: 30_000,
+  workers: 4,
   use: {
     baseURL: "http://127.0.0.1:4179",
     trace: "on-first-retry",
