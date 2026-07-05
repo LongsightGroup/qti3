@@ -2,7 +2,7 @@
 
 Framework-neutral QTI 1.2 and QTI 2.x to QTI 3 migration utilities.
 
-The migrator reads legacy QTI package or item XML and produces QTI-shaped authoring models from `@longsightgroup/qti3-writer`. It is not a qflow draft importer and does not own authoring UI review policy.
+The migrator reads legacy QTI package or item XML and produces QTI-shaped authoring models from `@longsightgroup/qti3-writer`. It does not own application-specific draft models or authoring UI review policy.
 
 ```ts
 import { migrateQtiToQti3 } from "@longsightgroup/qti3-migrator";

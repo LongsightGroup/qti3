@@ -54,7 +54,7 @@ describe("@longsightgroup/qti3-migrator", () => {
 
   it("migrates Canvas QTI 1.2 multi-response matching items", () => {
     const result = migrateQtiItemToQti3({
-      filename: "canvas_matching_question.xml",
+      filename: "canvas_matching.xml",
       xml: canvasQti12MatchingItem(),
     });
 
@@ -64,17 +64,17 @@ describe("@longsightgroup/qti3-migrator", () => {
       throw new Error("Expected match authoring item.");
     }
     expect(result.authoringItem.sources.map((source) => source.identifier)).toEqual([
-      "response_washington",
-      "response_jefferson",
+      "response_source_a",
+      "response_source_b",
     ]);
     expect(result.authoringItem.targets.map((target) => target.identifier)).toEqual([
-      "first",
-      "declaration",
-      "emancipation",
+      "target_a",
+      "target_b",
+      "target_c",
     ]);
     expect(result.authoringItem.correctResponse).toEqual([
-      { sourceIdentifier: "response_washington", targetIdentifier: "first" },
-      { sourceIdentifier: "response_jefferson", targetIdentifier: "declaration" },
+      { sourceIdentifier: "response_source_a", targetIdentifier: "target_a" },
+      { sourceIdentifier: "response_source_b", targetIdentifier: "target_b" },
     ]);
     expectValidXml(result.xml ?? "");
   });
@@ -326,36 +326,36 @@ function qti12Items(): string {
 function canvasQti12MatchingItem(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2p1.xsd">
-  <assessment ident="canvas_assessment" title="US Presidents Quiz">
+  <assessment ident="canvas_assessment" title="Sample Matching Assessment">
     <section ident="root_section">
-      <item ident="canvas_matching" title="Match Presidents to Achievements">
+      <item ident="canvas_matching" title="Match Sources to Targets">
         <itemmetadata>
           <qtimetadata>
             <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>matching_question</fieldentry></qtimetadatafield>
           </qtimetadata>
         </itemmetadata>
         <presentation>
-          <material><mattext texttype="text/html">&lt;p&gt;Match each president.&lt;/p&gt;</mattext></material>
-          <response_lid ident="response_washington">
-            <material><mattext texttype="text/plain">George Washington</mattext></material>
+          <material><mattext texttype="text/html">&lt;p&gt;Match each source to its target.&lt;/p&gt;</mattext></material>
+          <response_lid ident="response_source_a">
+            <material><mattext texttype="text/plain">Source A</mattext></material>
             <render_choice>
-              <response_label ident="first"><material><mattext>First President</mattext></material></response_label>
-              <response_label ident="declaration"><material><mattext>Declaration of Independence</mattext></material></response_label>
-              <response_label ident="emancipation"><material><mattext>Emancipation Proclamation</mattext></material></response_label>
+              <response_label ident="target_a"><material><mattext>Target A</mattext></material></response_label>
+              <response_label ident="target_b"><material><mattext>Target B</mattext></material></response_label>
+              <response_label ident="target_c"><material><mattext>Target C</mattext></material></response_label>
             </render_choice>
           </response_lid>
-          <response_lid ident="response_jefferson">
-            <material><mattext texttype="text/plain">Thomas Jefferson</mattext></material>
+          <response_lid ident="response_source_b">
+            <material><mattext texttype="text/plain">Source B</mattext></material>
             <render_choice>
-              <response_label ident="first"><material><mattext>First President</mattext></material></response_label>
-              <response_label ident="declaration"><material><mattext>Declaration of Independence</mattext></material></response_label>
-              <response_label ident="emancipation"><material><mattext>Emancipation Proclamation</mattext></material></response_label>
+              <response_label ident="target_a"><material><mattext>Target A</mattext></material></response_label>
+              <response_label ident="target_b"><material><mattext>Target B</mattext></material></response_label>
+              <response_label ident="target_c"><material><mattext>Target C</mattext></material></response_label>
             </render_choice>
           </response_lid>
         </presentation>
         <resprocessing>
-          <respcondition><conditionvar><varequal respident="response_washington">first</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
-          <respcondition><conditionvar><varequal respident="response_jefferson">declaration</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
+          <respcondition><conditionvar><varequal respident="response_source_a">target_a</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
+          <respcondition><conditionvar><varequal respident="response_source_b">target_b</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
         </resprocessing>
       </item>
     </section>

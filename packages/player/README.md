@@ -57,7 +57,7 @@ change chrome by itself; the host loads a locale file.
 
 ### Locale files (recommended)
 
-Harbor or an LMS maintains JSON (or ICU/Fluent exported to JSON) with the shape
+A host application or LMS maintains JSON (or ICU/Fluent exported to JSON) with the shape
 `PlayerMessageCatalog`: a flat `strings` map, optional `interactionTypes`, and
 `directions`. Copy `defaultPlayerMessageCatalog` from the package as the template; omit
 keys you do not need to translate (missing keys fall back to English).
