@@ -198,6 +198,31 @@ describe("qti3-writer gap match", () => {
     );
   });
 
+  it("rejects correct responses that place multiple choices in the same gap target", () => {
+    const diagnostics = validateQti3GapMatchItem({
+      identifier: "gap-match-target-single-use",
+      title: "Gap Match",
+      bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="G1"/></p>'),
+      choices: [
+        { identifier: "A", kind: "text", text: "A" },
+        { identifier: "B", kind: "text", text: "B" },
+      ],
+      targets: [{ identifier: "G1" }],
+      correctResponse: [
+        { sourceIdentifier: "A", targetIdentifier: "G1" },
+        { sourceIdentifier: "B", targetIdentifier: "G1" },
+      ],
+    });
+
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "gap_match_target_multiple_correct_choices",
+        path: "correctResponse",
+        value: { identifier: "G1", useCount: 2 },
+      }),
+    );
+  });
+
   it("rejects cross-pool duplicate identifiers and duplicate correct pairs", () => {
     const diagnostics = validateQti3GapMatchItem({
       identifier: "gap-match-duplicates",

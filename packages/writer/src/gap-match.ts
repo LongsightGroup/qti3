@@ -367,6 +367,30 @@ function validateCorrectResponse(
     code: "gap_match_match_max_exceeded",
     label: "Gap match choice",
   });
+  validateGapTargetSingleUse(input, diagnostics);
+}
+
+function validateGapTargetSingleUse(
+  input: Qti3GapMatchBuilderInput,
+  diagnostics: Qti3WriterDiagnostic[],
+): void {
+  const targetUseCounts = new Map<string, number>();
+  for (const pair of input.correctResponse) {
+    const targetIdentifier = pair.targetIdentifier.trim();
+    if (!targetIdentifier) continue;
+    targetUseCounts.set(targetIdentifier, (targetUseCounts.get(targetIdentifier) ?? 0) + 1);
+  }
+  for (const [identifier, useCount] of targetUseCounts.entries()) {
+    if (useCount <= 1) continue;
+    diagnostics.push(
+      writerDiagnostic(
+        "gap_match_target_multiple_correct_choices",
+        "correctResponse",
+        `Gap match target "${identifier}" is used ${useCount} times, but qti-gap targets can have at most one associated choice.`,
+        { identifier, useCount },
+      ),
+    );
+  }
 }
 
 function extractGapIdentifiers(bodyHtml: string): string[] {
