@@ -101,7 +101,12 @@ export function migrateQtiItemToQti3(
       ],
     };
   }
-  const results = migrateItemXml(source.xml, input.filename ?? "item.xml", detection.sourceFormat);
+  const results = migrateItemXml(
+    source.xml,
+    input.filename ?? "item.xml",
+    detection.sourceFormat,
+    resolvedOptions,
+  );
   const result = results[0];
   if (!result) {
     return {
@@ -152,6 +157,16 @@ function migratePackageSource(
 
   const manifest = parseLegacyManifest(manifestEntry.text);
   diagnostics.push(...manifest.diagnostics.map((entry) => ({ ...entry, sourceFormat })));
+  if (manifest.testHrefs.length) {
+    diagnostics.push(
+      diagnostic(
+        "assessment_test_structure_not_migrated",
+        "warning",
+        "QTI assessment-test structure is not migrated yet; items are returned in a flat review part.",
+        { sourceFormat, path: "imsmanifest.xml" },
+      ),
+    );
+  }
   const entriesByPath = new Map(source.entries.map((entry) => [entry.path, entry]));
   const itemHrefs = manifest.itemHrefs.length
     ? manifest.itemHrefs
@@ -177,7 +192,7 @@ function migratePackageSource(
       });
       continue;
     }
-    const migratedItems = migrateItemXml(entry.text, href, sourceFormat);
+    const migratedItems = migrateItemXml(entry.text, href, sourceFormat, options);
     for (const item of migratedItems) {
       items.push(finalizeItemResult(item, `${item.identifier}.xml`, options));
     }
@@ -199,9 +214,12 @@ function migrateItemSource(
 ): QtiMigrationResult {
   const sourceFormat = detection.sourceFormat!;
   const xml = source.xml ?? "";
-  const migratedItems = migrateItemXml(xml, source.filename ?? "item.xml", sourceFormat).map(
-    (item) => finalizeItemResult(item, `${item.identifier}.xml`, options),
-  );
+  const migratedItems = migrateItemXml(
+    xml,
+    source.filename ?? "item.xml",
+    sourceFormat,
+    options,
+  ).map((item) => finalizeItemResult(item, `${item.identifier}.xml`, options));
   return {
     title: migratedItems[0]?.title ?? source.filename ?? "Imported QTI Item",
     sourceFormat,
@@ -216,16 +234,17 @@ function migrateItemXml(
   xml: string,
   path: string,
   sourceFormat: QtiMigrationSourceFormat,
+  options: ReturnType<typeof resolveOptions>,
 ): readonly PendingMigrationItem[] {
   if (sourceFormat === "qti12") {
-    return migrateQti12Xml(xml, path).map((result, index) => ({
+    return migrateQti12Xml(xml, path, options).map((result, index) => ({
       identifier: result.authoringItem?.identifier ?? `ITEM_${index + 1}`,
       title: result.authoringItem?.title ?? itemTitleFromXmlSafe(xml),
       authoringItem: result.authoringItem,
       diagnostics: result.diagnostics,
     }));
   }
-  const result = migrateQti2ItemXml(xml, path, sourceFormat);
+  const result = migrateQti2ItemXml(xml, path, sourceFormat, options);
   return [
     {
       identifier: result.authoringItem?.identifier ?? pathIdentifier(path),

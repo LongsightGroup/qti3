@@ -33,8 +33,11 @@ describe("@longsightgroup/qti3-migrator", () => {
     expect(detection.sourceFormat).toBe("qti22");
   });
 
-  it("migrates QTI 1.2 choice, text entry, essay, and hotspot items", async () => {
-    const result = await migrateQtiToQti3({ filename: "qti12.xml", xml: qti12Items() });
+  it("migrates QTI 1.2 choice, text entry, essay, and hotspot items with explicit safe repairs", async () => {
+    const result = await migrateQtiToQti3(
+      { filename: "qti12.xml", xml: qti12Items() },
+      { repairPolicy: "safe" },
+    );
 
     expect(result.sourceFormat).toBe("qti12");
     expect(result.items.map((item) => item.authoringItem?.interactionType)).toEqual([
@@ -43,7 +46,28 @@ describe("@longsightgroup/qti3-migrator", () => {
       "extendedText",
       "hotspot",
     ]);
+    expect(result.items[3]?.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "qti12_hotspot_image_missing_repaired",
+    );
     for (const item of result.items) expectValidXml(item.xml ?? "");
+  });
+
+  it("rejects source repairs by default and allows them only under safe policy", () => {
+    const strict = migrateQtiItemToQti3({
+      filename: "bad-choice.xml",
+      xml: qti12ChoiceWithoutKey(),
+    });
+    expect(strict.xml).toBeUndefined();
+    expect(strict.diagnostics[0]?.code).toBe("qti12_choice_correct_response_missing");
+
+    const safe = migrateQtiItemToQti3(
+      { filename: "bad-choice.xml", xml: qti12ChoiceWithoutKey() },
+      { repairPolicy: "safe" },
+    );
+    expect(safe.xml).toContain("<qti-choice-interaction");
+    expect(safe.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "qti12_choice_correct_response_missing_repaired",
+    );
   });
 
   it("migrates QTI 2.x inline, hottext, gap, and graphic interactions", async () => {
@@ -88,6 +112,28 @@ describe("@longsightgroup/qti3-migrator", () => {
       "unsupported_item_stubbed",
     );
   });
+
+  it("rejects composite QTI 2.x items instead of partially migrating the first interaction", () => {
+    const result = migrateQtiItemToQti3({ filename: "composite.xml", xml: compositeQti21Item() });
+
+    expect(result.xml).toBeUndefined();
+    expect(result.diagnostics[0]?.code).toBe("qti2_composite_interactions_unsupported");
+  });
+
+  it("reports package test structure loss explicitly", async () => {
+    const bytes = createStoredZip({
+      "imsmanifest.xml": manifestWithTest("imsqti_item_xmlv2p1", "items/choice.xml"),
+      "items/choice.xml": qti21ChoiceItem(),
+      "tests/test.xml": "<assessmentTest/>",
+    });
+
+    const result = await migrateQtiToQti3({ filename: "test-package.zip", bytes });
+
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "assessment_test_structure_not_migrated",
+    );
+    expectValidXml(result.items[0]?.xml ?? "");
+  });
 });
 
 function expectValidXml(xml: string): void {
@@ -108,6 +154,21 @@ function manifest(type: string, href: string): string {
     <resource identifier="ITEM_1" type="${type}" href="${href}">
       <file href="${href}"/>
       <file href="items/image.png"/>
+    </resource>
+  </resources>
+</manifest>`;
+}
+
+function manifestWithTest(type: string, href: string): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="MANIFEST">
+  <organizations/>
+  <resources>
+    <resource identifier="TEST_1" type="imsqti_test_xmlv2p1" href="tests/test.xml">
+      <file href="tests/test.xml"/>
+    </resource>
+    <resource identifier="ITEM_1" type="${type}" href="${href}">
+      <file href="${href}"/>
     </resource>
   </resources>
 </manifest>`;
@@ -212,4 +273,21 @@ function qti12Items(): string {
   <item ident="essay12" title="Essay question"><presentation><material><mattext>Write.</mattext></material></presentation></item>
   <item ident="hotspot12" title="Hotspot 12"><presentation><material><mattext>Click.</mattext></material><response_lid ident="RESPONSE"><render_hotspot><response_label ident="H1" rarea="Rectangle" coords="0,0,10,10"/></render_hotspot></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">H1</varequal></conditionvar></respcondition></resprocessing></item>
 </questestinterop>`;
+}
+
+function qti12ChoiceWithoutKey(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<item ident="choice12" title="Choice 12"><presentation><material><mattext>Pick.</mattext></material><response_lid ident="RESPONSE" rcardinality="Single"><render_choice><response_label ident="A"><material><mattext>A</mattext></material></response_label><response_label ident="B"><material><mattext>B</mattext></material></response_label></render_choice></response_lid></presentation></item>`;
+}
+
+function compositeQti21Item(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="composite" title="Composite">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>B</value></correctResponse></responseDeclaration>
+  <responseDeclaration identifier="RESPONSE_2" cardinality="single" baseType="string"><correctResponse><value>answer</value></correctResponse></responseDeclaration>
+  <itemBody>
+    <choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><simpleChoice identifier="A">A</simpleChoice><simpleChoice identifier="B">B</simpleChoice></choiceInteraction>
+    <textEntryInteraction responseIdentifier="RESPONSE_2"/>
+  </itemBody>
+</assessmentItem>`;
 }

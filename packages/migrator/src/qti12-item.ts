@@ -5,7 +5,7 @@ import {
 } from "@longsightgroup/qti3-writer";
 import { diagnostic } from "./diagnostics.js";
 import { escapeText, normalizeIdentifier } from "./text.js";
-import type { QtiMigrationDiagnostic } from "./types.js";
+import type { QtiMigrationDiagnostic, ResolvedQtiMigrationOptions } from "./types.js";
 import {
   attr,
   childElements,
@@ -21,6 +21,7 @@ import {
 export function migrateQti12Xml(
   xml: string,
   path: string,
+  options: ResolvedQtiMigrationOptions,
 ): readonly {
   authoringItem?: Qti3AuthoringItem | undefined;
   diagnostics: readonly QtiMigrationDiagnostic[];
@@ -41,13 +42,14 @@ export function migrateQti12Xml(
       },
     ];
   }
-  return itemElements.map((item, index) => migrateQti12ItemElement(item, index, path));
+  return itemElements.map((item, index) => migrateQti12ItemElement(item, index, path, options));
 }
 
 function migrateQti12ItemElement(
   item: XmlElement,
   index: number,
   path: string,
+  options: ResolvedQtiMigrationOptions,
 ): {
   authoringItem?: Qti3AuthoringItem | undefined;
   diagnostics: readonly QtiMigrationDiagnostic[];
@@ -84,8 +86,7 @@ function migrateQti12ItemElement(
   );
   if (hotspotResponse) {
     return {
-      authoringItem: mapQti12Hotspot(identifier, title, hotspotResponse, bodyHtml, correct),
-      diagnostics: [],
+      ...mapQti12Hotspot(identifier, title, hotspotResponse, bodyHtml, correct, options),
     };
   }
 
@@ -94,8 +95,7 @@ function migrateQti12ItemElement(
   );
   if (groupedChoice) {
     return {
-      authoringItem: mapQti12Associate(identifier, title, groupedChoice, bodyHtml, correct),
-      diagnostics: [],
+      ...mapQti12Associate(identifier, title, groupedChoice, bodyHtml, correct, options),
     };
   }
 
@@ -104,8 +104,7 @@ function migrateQti12ItemElement(
   );
   if (choiceResponse) {
     return {
-      authoringItem: mapQti12Choice(identifier, title, choiceResponse, bodyHtml, correct),
-      diagnostics: [],
+      ...mapQti12Choice(identifier, title, choiceResponse, bodyHtml, correct, options),
     };
   }
 
@@ -114,8 +113,7 @@ function migrateQti12ItemElement(
   );
   if (fibResponse) {
     return {
-      authoringItem: mapQti12TextEntry(identifier, title, fibResponse, presentation, correct),
-      diagnostics: [],
+      ...mapQti12TextEntry(identifier, title, fibResponse, presentation, correct, options),
     };
   }
 
@@ -135,27 +133,45 @@ function mapQti12Choice(
   response: XmlElement,
   bodyHtml: ReturnType<typeof qti3TrustedXmlFragment>,
   correct: ReadonlyMap<string, string[]>,
-): Qti3AuthoringItem {
+  options: ResolvedQtiMigrationOptions,
+): {
+  readonly authoringItem?: Qti3AuthoringItem | undefined;
+  readonly diagnostics: readonly QtiMigrationDiagnostic[];
+} {
   const responseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const choices = responseChoices(response, "CHOICE");
+  const rawCorrect = correct.get(responseIdentifier) ?? [];
   const correctResponse = (correct.get(responseIdentifier) ?? [])
     .map((value) => normalizeIdentifier(value))
     .filter((value) => choices.some((choice) => choice.identifier === value));
+  const repair = repairOrError({
+    needed: !correctResponse.length,
+    options,
+    code: "qti12_choice_correct_response_missing",
+    message: "QTI 1.2 choice response has no valid correct response.",
+    repairMessage: rawCorrect.length
+      ? "QTI 1.2 choice correct response referenced unknown labels; using the first declared choice."
+      : "QTI 1.2 choice response did not declare a correct response; using the first declared choice.",
+  });
+  if (repair.blocked) return { diagnostics: repair.diagnostics };
   const isMultiple =
     (attr(response, "rcardinality") ?? "").toLowerCase() === "multiple" ||
     correctResponse.length > 1;
   return {
-    interactionType: "choice",
-    identifier,
-    title,
-    bodyHtml,
-    responseIdentifier,
-    responseCardinality: isMultiple ? "multiple" : "single",
-    choices,
-    correctResponse: correctResponse.length
-      ? correctResponse
-      : choices.slice(0, 1).map((choice) => choice.identifier),
-    maxChoices: isMultiple ? undefined : 1,
+    authoringItem: {
+      interactionType: "choice",
+      identifier,
+      title,
+      bodyHtml,
+      responseIdentifier,
+      responseCardinality: isMultiple ? "multiple" : "single",
+      choices,
+      correctResponse: correctResponse.length
+        ? correctResponse
+        : choices.slice(0, 1).map((choice) => choice.identifier),
+      maxChoices: isMultiple ? undefined : 1,
+    },
+    diagnostics: repair.diagnostics,
   };
 }
 
@@ -165,7 +181,11 @@ function mapQti12Associate(
   response: XmlElement,
   bodyHtml: ReturnType<typeof qti3TrustedXmlFragment>,
   correct: ReadonlyMap<string, string[]>,
-): Qti3AuthoringItem {
+  options: ResolvedQtiMigrationOptions,
+): {
+  readonly authoringItem?: Qti3AuthoringItem | undefined;
+  readonly diagnostics: readonly QtiMigrationDiagnostic[];
+} {
   const responseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const choices = responseChoices(response, "CHOICE").map((choice) => ({ ...choice, matchMax: 2 }));
   const pairs = (correct.get(responseIdentifier) ?? [])
@@ -177,18 +197,30 @@ function mapQti12Associate(
       };
     })
     .filter((pair) => pair.sourceIdentifier && pair.targetIdentifier);
+  const repair = repairOrError({
+    needed: !pairs.length,
+    options,
+    code: "qti12_associate_correct_response_missing",
+    message: "QTI 1.2 associate response has no valid correct pair.",
+    repairMessage:
+      "QTI 1.2 associate response did not declare a valid pair; using the first two choices.",
+  });
+  if (repair.blocked) return { diagnostics: repair.diagnostics };
   return {
-    interactionType: "associate",
-    identifier,
-    title,
-    bodyHtml,
-    responseIdentifier,
-    choices,
-    correctResponse: pairs.length
-      ? pairs
-      : choices.length >= 2
-        ? [{ sourceIdentifier: choices[0]!.identifier, targetIdentifier: choices[1]!.identifier }]
-        : [],
+    authoringItem: {
+      interactionType: "associate",
+      identifier,
+      title,
+      bodyHtml,
+      responseIdentifier,
+      choices,
+      correctResponse: pairs.length
+        ? pairs
+        : choices.length >= 2
+          ? [{ sourceIdentifier: choices[0]!.identifier, targetIdentifier: choices[1]!.identifier }]
+          : [],
+    },
+    diagnostics: repair.diagnostics,
   };
 }
 
@@ -198,24 +230,40 @@ function mapQti12TextEntry(
   response: XmlElement,
   presentation: XmlElement | null,
   correct: ReadonlyMap<string, string[]>,
-): Qti3AuthoringItem {
+  options: ResolvedQtiMigrationOptions,
+): {
+  readonly authoringItem?: Qti3AuthoringItem | undefined;
+  readonly diagnostics: readonly QtiMigrationDiagnostic[];
+} {
   const responseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const values = correct.get(responseIdentifier) ?? [];
+  const repair = repairOrError({
+    needed: !values.length,
+    options,
+    code: "qti12_text_entry_correct_response_missing",
+    message: "QTI 1.2 text entry response has no correct text value.",
+    repairMessage:
+      "QTI 1.2 text entry response did not declare a correct value; using an empty answer.",
+  });
+  if (repair.blocked) return { diagnostics: repair.diagnostics };
   return {
-    interactionType: "textEntry",
-    identifier,
-    title,
-    bodyHtml: qti3TrustedXmlFragment(
-      `${presentation ? materialHtml(presentation) : "<p></p>"}<p><qti-text-entry-interaction response-identifier="${escapeText(responseIdentifier)}"/></p>`,
-    ),
-    responses: [
-      {
-        responseIdentifier,
-        answers: values.length
-          ? values.map((value) => ({ value, score: 1, caseSensitive: false }))
-          : [{ value: "", score: 1, caseSensitive: false }],
-      },
-    ],
+    authoringItem: {
+      interactionType: "textEntry",
+      identifier,
+      title,
+      bodyHtml: qti3TrustedXmlFragment(
+        `${presentation ? materialHtml(presentation) : "<p></p>"}<p><qti-text-entry-interaction response-identifier="${escapeText(responseIdentifier)}"/></p>`,
+      ),
+      responses: [
+        {
+          responseIdentifier,
+          answers: values.length
+            ? values.map((value) => ({ value, score: 1, caseSensitive: false }))
+            : [{ value: "", score: 1, caseSensitive: false }],
+        },
+      ],
+    },
+    diagnostics: repair.diagnostics,
   };
 }
 
@@ -225,7 +273,11 @@ function mapQti12Hotspot(
   response: XmlElement,
   bodyHtml: ReturnType<typeof qti3TrustedXmlFragment>,
   correct: ReadonlyMap<string, string[]>,
-): Qti3AuthoringItem {
+  options: ResolvedQtiMigrationOptions,
+): {
+  readonly authoringItem?: Qti3AuthoringItem | undefined;
+  readonly diagnostics: readonly QtiMigrationDiagnostic[];
+} {
   const responseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const labels = findAllDescendantsByLocalName(response, "response_label");
   const choices = labels.map((label, index) => ({
@@ -237,18 +289,44 @@ function mapQti12Hotspot(
   const correctResponse = (correct.get(responseIdentifier) ?? []).map((value) =>
     normalizeIdentifier(value),
   );
+  const correctRepair = repairOrError({
+    needed: !correctResponse.length,
+    options,
+    code: "qti12_hotspot_correct_response_missing",
+    message: "QTI 1.2 hotspot response has no correct hotspot identifier.",
+    repairMessage:
+      "QTI 1.2 hotspot response did not declare a correct hotspot; using the first hotspot.",
+  });
+  if (correctRepair.blocked) return { diagnostics: correctRepair.diagnostics };
+  const imageRepair = repairOrError({
+    needed: true,
+    options,
+    code: "qti12_hotspot_image_missing",
+    message: "QTI 1.2 hotspot migration could not identify the source image.",
+    repairMessage:
+      "QTI 1.2 hotspot source image was not identified; using review placeholder image.png.",
+  });
+  if (imageRepair.blocked) return { diagnostics: imageRepair.diagnostics };
   return {
-    interactionType: "hotspot",
-    identifier,
-    title,
-    bodyHtml,
-    responseIdentifier,
-    object: { data: "image.png", alt: "Image", width: dimensions.width, height: dimensions.height },
-    choices,
-    correctResponse: correctResponse.length
-      ? correctResponse
-      : choices.slice(0, 1).map((choice) => choice.identifier),
-    maxChoices: 1,
+    authoringItem: {
+      interactionType: "hotspot",
+      identifier,
+      title,
+      bodyHtml,
+      responseIdentifier,
+      object: {
+        data: "image.png",
+        alt: "Image",
+        width: dimensions.width,
+        height: dimensions.height,
+      },
+      choices,
+      correctResponse: correctResponse.length
+        ? correctResponse
+        : choices.slice(0, 1).map((choice) => choice.identifier),
+      maxChoices: 1,
+    },
+    diagnostics: [...correctRepair.diagnostics, ...imageRepair.diagnostics],
   };
 }
 
@@ -321,4 +399,24 @@ function inferImageDimensions(coords: readonly string[]): { width: number; heigh
     }
   }
   return { width: Math.ceil(maxX), height: Math.ceil(maxY) };
+}
+
+function repairOrError(input: {
+  readonly needed: boolean;
+  readonly options: ResolvedQtiMigrationOptions;
+  readonly code: string;
+  readonly message: string;
+  readonly repairMessage: string;
+}): { readonly blocked: boolean; readonly diagnostics: readonly QtiMigrationDiagnostic[] } {
+  if (!input.needed) return { blocked: false, diagnostics: [] };
+  if (input.options.repairPolicy === "safe") {
+    return {
+      blocked: false,
+      diagnostics: [diagnostic(`${input.code}_repaired`, "warning", input.repairMessage)],
+    };
+  }
+  return {
+    blocked: true,
+    diagnostics: [diagnostic(input.code, "error", input.message)],
+  };
 }

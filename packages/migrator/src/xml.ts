@@ -110,7 +110,7 @@ export function textOf(element: XmlElement | null | undefined): string {
   return (element?.textContent ?? "").trim();
 }
 
-function isXmlElement(node: XmlNode | null): node is XmlElement {
+export function isXmlElement(node: XmlNode | null): node is XmlElement {
   return node?.nodeType === 1;
 }
 
