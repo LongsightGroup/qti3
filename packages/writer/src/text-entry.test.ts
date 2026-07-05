@@ -102,6 +102,39 @@ describe("qti3-writer text entry", () => {
     ]);
   });
 
+  it("preserves trusted MathML in text entry body and prompt fragments", () => {
+    const math =
+      '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>x</mi><mo>=</mo><mn>4</mn></mrow></math>';
+    const xml = buildQti3TextEntryItem({
+      interactionType: "textEntry",
+      identifier: "text-entry-mathml",
+      title: "Text Entry MathML",
+      promptHtml: qti3TrustedXmlFragment(`Solve ${math}`),
+      bodyHtml: qti3TrustedXmlFragment(
+        `<p>${math} when squared is <qti-text-entry-interaction response-identifier="RESPONSE"/></p>`,
+      ),
+      responses: [
+        {
+          responseIdentifier: "RESPONSE",
+          answers: [{ value: "16", score: 1 }],
+        },
+      ],
+    });
+
+    const item = expectValidParsedItem(xml);
+    const mathNodes = item.body
+      .flatMap((node) => (node.kind === "element" ? node.children : []))
+      .filter((node) => node.kind === "element" && node.qtiName === "math");
+
+    expect(xml).toContain('<math xmlns="http://www.w3.org/1998/Math/MathML">');
+    expect(item.bodyText).toContain("x = 4 when squared is");
+    expect(mathNodes).toHaveLength(2);
+    expect(item.interactions[0]).toMatchObject({
+      type: "textEntry",
+      responseIdentifier: "RESPONSE",
+    });
+  });
+
   it("returns typed diagnostics for invalid authoring input", () => {
     const result = writeQti3AssessmentItemResult({
       interactionType: "textEntry",

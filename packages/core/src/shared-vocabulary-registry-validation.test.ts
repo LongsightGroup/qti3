@@ -54,4 +54,17 @@ describe("shared vocabulary registry validation", () => {
       }),
     ]);
   });
+
+  it("does not classify label suffix classes as invalid label style classes", () => {
+    const diagnostics: QtiDiagnostic[] = [];
+    const classNames = ["qti-labels-lower-alpha", "qti-labels-suffix-parenthesis"];
+
+    validateRegistrySharedVocabularyClasses(
+      interaction("choice", { class: classNames.join(" ") }),
+      classNames,
+      diagnostics,
+    );
+
+    expect(diagnostics).toEqual([]);
+  });
 });

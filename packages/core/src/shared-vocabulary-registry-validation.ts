@@ -101,9 +101,14 @@ function validateUnsupportedClassValueClasses(
   classNames: string[],
   diagnostics: QtiDiagnostic[],
 ): void {
+  const classValueFields = sharedVocabularyFieldsForInteraction(interaction.type).filter(
+    (candidate): candidate is Extract<QtiSharedVocabularyField, { kind: "class-value" }> =>
+      candidate.kind === "class-value",
+  );
   for (const className of classNames) {
     if (!className.startsWith(field.classPrefix)) continue;
     if (parseClassValue(field, className) !== undefined) continue;
+    if (isSupportedBySiblingClassValueField(classValueFields, field, className)) continue;
     diagnostics.push({
       code: classValueInvalidCode(field.id),
       severity: "warning",
@@ -112,6 +117,16 @@ function validateUnsupportedClassValueClasses(
       source: interaction.source,
     });
   }
+}
+
+function isSupportedBySiblingClassValueField(
+  fields: readonly Extract<QtiSharedVocabularyField, { kind: "class-value" }>[],
+  currentField: Extract<QtiSharedVocabularyField, { kind: "class-value" }>,
+  className: string,
+): boolean {
+  return fields.some(
+    (field) => field.id !== currentField.id && parseClassValue(field, className) !== undefined,
+  );
 }
 
 function unsupportedClassValueMessage(

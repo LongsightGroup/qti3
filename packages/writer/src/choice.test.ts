@@ -94,6 +94,42 @@ describe("qti3-writer choice", () => {
     });
   });
 
+  it("preserves trusted MathML in prompts, body fragments, and rich choice content", () => {
+    const math =
+      '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math>';
+    const xml = buildQti3ChoiceItem({
+      identifier: "choice-mathml",
+      title: "Choice MathML",
+      bodyHtml: qti3TrustedXmlFragment(`<p>Evaluate ${math}</p>`),
+      promptHtml: qti3TrustedXmlFragment(`Choose the expression equal to ${math}.`),
+      responseCardinality: "single",
+      maxChoices: 1,
+      choices: [
+        { identifier: "A", contentHtml: qti3TrustedXmlFragment(math) },
+        { identifier: "B", text: "5" },
+      ],
+      correctResponse: ["A"],
+    });
+
+    const item = expectValidParsedItem(xml);
+    const interaction = item.interactions[0];
+    const firstChoice = interaction.choices[0];
+    const bodyMath = item.body
+      .flatMap((node) => (node.kind === "element" ? node.children : []))
+      .find((node) => node.kind === "element" && node.qtiName === "math");
+
+    expect(xml).toContain('<math xmlns="http://www.w3.org/1998/Math/MathML">');
+    expect(interaction.prompt).toBe("Choose the expression equal to 2 + 2 .");
+    expect(
+      interaction.promptContent?.some((node) => node.kind === "element" && node.qtiName === "math"),
+    ).toBe(true);
+    expect(bodyMath).toMatchObject({ kind: "element", qtiName: "math" });
+    expect(firstChoice.text).toBe("2 + 2");
+    expect(
+      firstChoice.content?.some((node) => node.kind === "element" && node.qtiName === "math"),
+    ).toBe(true);
+  });
+
   it("rejects invalid choice correct responses instead of writing lossy XML", () => {
     expect(() =>
       buildQti3ChoiceItem({
