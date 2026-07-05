@@ -59,6 +59,50 @@ const xml = buildQti3TextEntryItem({
 });
 ```
 
+## Packages
+
+The package writer emits item-bank QTI 3 packages as a manifest, file map, or deterministic ZIP:
+
+```ts
+import { writeQti3PackageZipResult } from "@longsightgroup/qti3-writer";
+
+const result = writeQti3PackageZipResult({
+  identifier: "package-1",
+  title: "Example package",
+  items: [
+    {
+      kind: "authoringItem",
+      path: "items/item-1.xml",
+      item: {
+        interactionType: "choice",
+        identifier: "item-1",
+        title: "Choice item",
+        responseCardinality: "single",
+        choices: [
+          { identifier: "A", text: "Alpha" },
+          { identifier: "B", text: "Beta" },
+        ],
+        correctResponse: ["B"],
+      },
+    },
+  ],
+});
+
+if (result.ok) {
+  console.log(result.zip);
+}
+```
+
+Use `writeQti3PackageManifestResult(input)` for only `imsmanifest.xml`,
+`writeQti3PackageFilesResult(input)` for `imsmanifest.xml`, item XML, and assets as files, and
+`writeQti3PackageZipResult(input)` for ZIP bytes. Package result APIs validate item XML through
+`@longsightgroup/qti3-core` and return typed diagnostics. Convenience APIs without `Result` throw
+`Qti3WriterError`.
+
+Package writing currently targets item-bank packages. Assets are explicit: declare package assets in
+`assets`, and list the asset paths used by each item in that item's `assets` field. The writer does
+not rewrite URLs inside trusted item XML.
+
 ## Trusted Fragments
 
 `bodyHtml`, `promptHtml`, and rich choice content use `Qti3TrustedXmlFragment`. The writer escapes

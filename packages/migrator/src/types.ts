@@ -1,4 +1,8 @@
-import type { Qti3AuthoringItem, Qti3WriterDiagnostic } from "@longsightgroup/qti3-writer";
+import type {
+  Qti3AuthoringItem,
+  Qti3PackageAuthoringInput,
+  Qti3WriterDiagnostic,
+} from "@longsightgroup/qti3-writer";
 
 export type QtiMigrationSourceFormat = "qti12" | "qti21" | "qti22";
 
@@ -58,6 +62,7 @@ export interface QtiMigrationItemResult {
   readonly identifier: string;
   readonly title: string;
   readonly href: string;
+  readonly assets?: readonly string[] | undefined;
   readonly authoringItem?: Qti3AuthoringItem | undefined;
   readonly xml?: string | undefined;
   readonly diagnostics: readonly QtiMigrationDiagnostic[];
@@ -71,3 +76,11 @@ export interface QtiMigrationResult {
   readonly assets: readonly QtiMigrationAsset[];
   readonly diagnostics: readonly QtiMigrationDiagnostic[];
 }
+
+export type QtiPackageMigrationResult =
+  | {
+      readonly ok: true;
+      readonly package: Qti3PackageAuthoringInput;
+      readonly diagnostics: readonly QtiMigrationDiagnostic[];
+    }
+  | { readonly ok: false; readonly diagnostics: readonly QtiMigrationDiagnostic[] };

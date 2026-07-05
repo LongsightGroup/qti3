@@ -1,6 +1,12 @@
 import { parseQtiXml, validateAssessmentItem } from "@longsightgroup/qti3-core";
+import { writeQti3PackageFilesResult } from "@longsightgroup/qti3-writer";
 import { describe, expect, it } from "vitest";
-import { detectQtiMigrationSource, migrateQtiItemToQti3, migrateQtiToQti3 } from "./index.js";
+import {
+  detectQtiMigrationSource,
+  migrateQtiItemToQti3,
+  migrateQtiToQti3,
+  migrateQtiToQti3Package,
+} from "./index.js";
 import { createStoredZip } from "./test-helpers.js";
 
 describe("@longsightgroup/qti3-migrator", () => {
@@ -19,6 +25,33 @@ describe("@longsightgroup/qti3-migrator", () => {
     expect(result.items[0]?.authoringItem?.interactionType).toBe("choice");
     expect(result.items[0]?.diagnostics).toEqual([]);
     expectValidXml(result.items[0]?.xml ?? "");
+  });
+
+  it("migrates a QTI 2.1 package into writer package input", async () => {
+    const bytes = createStoredZip({
+      "imsmanifest.xml": manifest("imsqti_item_xmlv2p1", "items/choice.xml"),
+      "items/choice.xml": qti21ChoiceItem(),
+      "items/image.png": new Uint8Array([1, 2, 3]),
+    });
+
+    const migrated = await migrateQtiToQti3Package({ filename: "choice.zip", bytes });
+
+    expect(migrated).toMatchObject({ ok: true });
+    if (!migrated.ok) throw new Error("Expected package migration to succeed.");
+    expect(migrated.package.items).toEqual([
+      expect.objectContaining({
+        kind: "xml",
+        path: "choice_item.xml",
+        identifier: "choice_item",
+        assets: ["items/image.png"],
+      }),
+    ]);
+    const files = writeQti3PackageFilesResult(migrated.package);
+    expect(files).toMatchObject({ ok: true });
+    if (!files.ok) throw new Error("Expected writer package files to emit.");
+    expect(files.files.map((file) => file.path)).toContain("imsmanifest.xml");
+    expect(files.files.map((file) => file.path)).toContain("choice_item.xml");
+    expect(files.files.map((file) => file.path)).toContain("items/image.png");
   });
 
   it("detects QTI 2.2 packages through the QTI 2.x parser", () => {

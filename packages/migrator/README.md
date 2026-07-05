@@ -10,4 +10,19 @@ import { migrateQtiToQti3 } from "@longsightgroup/qti3-migrator";
 const result = await migrateQtiToQti3({ filename: "quiz.zip", bytes });
 ```
 
+Use `migrateQtiToQti3Package` when the output should be passed directly to
+`@longsightgroup/qti3-writer` package APIs:
+
+```ts
+import { migrateQtiToQti3Package } from "@longsightgroup/qti3-migrator";
+import { writeQti3PackageZipResult } from "@longsightgroup/qti3-writer";
+
+const migrated = await migrateQtiToQti3Package({ filename: "quiz.zip", bytes });
+
+if (migrated.ok) {
+  const qti3Package = writeQti3PackageZipResult(migrated.package);
+  console.log(qti3Package);
+}
+```
+
 Defaults are strict: source repair is disabled and unsupported interactions are reported as diagnostics instead of silently converted.

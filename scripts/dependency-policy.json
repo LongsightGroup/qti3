@@ -114,7 +114,8 @@
     },
     "packages/writer": {
       "dependencies": {
-        "@longsightgroup/qti3-core": "workspace:*"
+        "@longsightgroup/qti3-core": "workspace:*",
+        "fflate": "^0.8.2"
       },
       "devDependencies": {}
     }

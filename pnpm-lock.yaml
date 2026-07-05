@@ -177,6 +177,9 @@ importers:
       '@longsightgroup/qti3-core':
         specifier: workspace:*
         version: link:../core
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
 
 packages:
 
