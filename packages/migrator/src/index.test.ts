@@ -257,6 +257,7 @@ describe("@longsightgroup/qti3-migrator", () => {
       launchHref: "assessment/quiz_choice12.xml",
     });
     if (!result.ok) throw new Error("Expected multi-item resource migration to succeed.");
+    expect(result.migration.items.map((item) => item.href)).toEqual(result.itemHrefs);
     expect(result.itemHrefs).toEqual([
       "assessment/quiz_choice12.xml",
       "assessment/quiz_text12.xml",

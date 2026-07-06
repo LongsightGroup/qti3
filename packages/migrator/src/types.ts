@@ -112,6 +112,7 @@ export type QtiResourceMigrationResult =
       readonly itemHrefs: readonly string[];
       readonly entries: readonly QtiMigrationResourceEntry[];
       readonly diagnostics: readonly QtiMigrationDiagnostic[];
+      readonly migration: QtiMigrationResult;
     }
   | {
       readonly ok: false;

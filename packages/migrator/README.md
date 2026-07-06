@@ -28,7 +28,8 @@ if (migrated.ok) {
 
 Use `migrateQtiResourceToQti3` when a host package, such as IMS Common Cartridge, has already
 identified one QTI resource and can provide that resource's local file closure. The result includes
-launchable QTI 3 package entries, a `launchHref`, item hrefs, and diagnostics:
+the underlying migration, launchable QTI 3 package entries, a `launchHref`, item hrefs, and
+diagnostics:
 
 ```ts
 import { migrateQtiResourceToQti3 } from "@longsightgroup/qti3-migrator";

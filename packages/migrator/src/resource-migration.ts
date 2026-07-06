@@ -137,6 +137,7 @@ export async function migrateQtiResourceToQti3(
     itemHrefs,
     entries: packageEntries.entries,
     diagnostics,
+    migration,
   };
 }
 
