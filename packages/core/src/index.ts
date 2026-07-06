@@ -52,6 +52,8 @@ export {
 export {
   decodeUtf8,
   normalizePackagePath,
+  QTI_ITEM_RESOURCE_TYPE,
+  QTI_PACKAGE_MANIFEST_PATH,
   parseQtiPackage,
   readQtiPackageZipEntries,
   type QtiAssessmentTestItemRef,

@@ -1,10 +1,16 @@
-import { parseQtiXml, validateAssessmentItem, type QtiDiagnostic } from "@longsightgroup/qti3-core";
+import {
+  detectPackageMediaType,
+  parseQtiXml,
+  validateAssessmentItem,
+  type QtiDiagnostic,
+} from "@longsightgroup/qti3-core";
 import {
   qti3TrustedXmlFragment,
   writeQti3AssessmentItemResult,
   type Qti3AuthoringItem,
 } from "@longsightgroup/qti3-writer";
 import { diagnostic, hasErrors } from "./diagnostics.js";
+import { migrationPathIdentifier } from "./identifiers.js";
 import { resolveOptions } from "./options.js";
 import { migrationResultToPackage } from "./package-result.js";
 import { migrateQti12Xml } from "./qti12-item.js";
@@ -201,7 +207,7 @@ function migratePackageSource(
     const entry = entriesByPath.get(href) ?? entriesByPath.get(href.replace(/^\.\//, ""));
     if (!entry?.text) {
       items.push({
-        identifier: pathIdentifier(href),
+        identifier: migrationPathIdentifier(href),
         title: href,
         href,
         diagnostics: [
@@ -215,7 +221,7 @@ function migratePackageSource(
     }
     const migratedItems = migrateItemXml(entry.text, href, sourceFormat, options);
     for (const item of migratedItems) {
-      const finalized = finalizeItemResult(item, `${item.identifier}.xml`, options);
+      const finalized = finalizeItemResult(item, href, options);
       items.push({ ...finalized, assetHrefs: assetHrefsByItemHref.get(href) ?? [] });
     }
   }
@@ -241,7 +247,7 @@ function migrateItemSource(
     source.filename ?? "item.xml",
     sourceFormat,
     options,
-  ).map((item) => finalizeItemResult(item, `${item.identifier}.xml`, options));
+  ).map((item) => finalizeItemResult(item, source.filename ?? `${item.identifier}.xml`, options));
   return {
     title: migratedItems[0]?.title ?? source.filename ?? "Imported QTI Item",
     sourceFormat,
@@ -269,7 +275,7 @@ function migrateItemXml(
   const result = migrateQti2ItemXml(xml, path, sourceFormat, options);
   return [
     {
-      identifier: result.authoringItem?.identifier ?? pathIdentifier(path),
+      identifier: result.authoringItem?.identifier ?? migrationPathIdentifier(path),
       title: result.authoringItem?.title ?? itemTitleFromXmlSafe(xml),
       authoringItem: result.authoringItem,
       diagnostics: result.diagnostics,
@@ -381,7 +387,11 @@ function stubItem(identifier: string, title: string): Qti3AuthoringItem {
 function packageAssets(entries: readonly MigrationEntry[]): QtiMigrationAsset[] {
   return entries
     .filter((entry) => !entry.path.toLowerCase().endsWith(".xml"))
-    .map((entry) => ({ path: entry.path, data: entry.bytes, mediaType: mediaType(entry.path) }));
+    .map((entry) => ({
+      path: entry.path,
+      data: entry.bytes,
+      mediaType: detectPackageMediaType(entry.path),
+    }));
 }
 
 function partFromItems(
@@ -392,24 +402,10 @@ function partFromItems(
   return { identifier, title, itemHrefs: items.map((item) => item.href) };
 }
 
-function pathIdentifier(path: string): string {
-  return path.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_]/g, "_") || "ITEM";
-}
-
 function itemTitleFromXmlSafe(xml: string): string {
   try {
     return itemTitleFromXml(xml);
   } catch {
     return "Imported Item";
   }
-}
-
-function mediaType(path: string): string | undefined {
-  if (/\.png$/i.test(path)) return "image/png";
-  if (/\.jpe?g$/i.test(path)) return "image/jpeg";
-  if (/\.gif$/i.test(path)) return "image/gif";
-  if (/\.svg$/i.test(path)) return "image/svg+xml";
-  if (/\.mp3$/i.test(path)) return "audio/mpeg";
-  if (/\.mp4$/i.test(path)) return "video/mp4";
-  return undefined;
 }

@@ -7,8 +7,10 @@ import type { QtiDiagnostic } from "./types.js";
 
 export const QTI_PACKAGE_MANIFEST_PATH = "imsmanifest.xml";
 
+export const QTI_ITEM_RESOURCE_TYPE = "imsqti_item_xmlv3p0";
+
 export function isQtiItemResource(type: string): boolean {
-  return type.toLowerCase().startsWith("imsqti_item_xmlv3p0");
+  return type.toLowerCase().startsWith(QTI_ITEM_RESOURCE_TYPE);
 }
 
 export function isQtiAssessmentTestResource(type: string): boolean {

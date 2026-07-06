@@ -126,7 +126,7 @@ describe("qti3 package writer", () => {
             ],
             correctResponse: ["A"],
           }),
-          assets: [{ path: "../missing.png", data: "", mediaType: "" }],
+          assets: [{ path: "../missing.png", data: "" }],
         },
       ],
     });
@@ -141,7 +141,6 @@ describe("qti3 package writer", () => {
         "invalid_package_item_xml_qti.root",
         "duplicate_package_item_asset",
         "package.path.escape",
-        "missing_package_asset_media_type",
         "package_item_identifier_mismatch",
       ]),
     );

@@ -1,6 +1,7 @@
 import type { Qti3PackageAsset, Qti3PackageItem } from "@longsightgroup/qti3-writer";
 
 import { diagnostic, hasErrors } from "./diagnostics.js";
+import { migrationPackageIdentifier } from "./identifiers.js";
 import type {
   QtiMigrationAsset,
   QtiMigrationDiagnostic,
@@ -9,10 +10,36 @@ import type {
 } from "./types.js";
 
 export function migrationResultToPackage(result: QtiMigrationResult): QtiPackageMigrationResult {
-  const diagnostics = [...result.diagnostics, ...result.items.flatMap((item) => item.diagnostics)];
-  const assetsByPath = migrationAssetsByPath(result.assets, diagnostics);
-  const items: Qti3PackageItem[] = [];
+  const itemDiagnostics = result.items.flatMap((item) => item.diagnostics);
+  const assetDiagnostics: QtiMigrationDiagnostic[] = [];
+  const assetsByPath = migrationAssetsByPath(result.assets, assetDiagnostics);
+  const itemBuildDiagnostics: QtiMigrationDiagnostic[] = [];
+  const items = buildPackageItems(result, assetsByPath, itemBuildDiagnostics);
+  const diagnostics = [
+    ...result.diagnostics,
+    ...itemDiagnostics,
+    ...assetDiagnostics,
+    ...itemBuildDiagnostics,
+  ];
 
+  if (hasErrors(diagnostics)) return { ok: false, diagnostics };
+  return {
+    ok: true,
+    package: {
+      identifier: migrationPackageIdentifier(result.title),
+      title: result.title,
+      items,
+    },
+    diagnostics,
+  };
+}
+
+function buildPackageItems(
+  result: QtiMigrationResult,
+  assetsByPath: ReadonlyMap<string, Qti3PackageAsset>,
+  diagnostics: QtiMigrationDiagnostic[],
+): Qti3PackageItem[] {
+  const items: Qti3PackageItem[] = [];
   for (const item of result.items) {
     if (!item.xml) {
       diagnostics.push(
@@ -32,17 +59,7 @@ export function migrationResultToPackage(result: QtiMigrationResult): QtiPackage
       assets: packageItemAssets(item.assetHrefs ?? [], assetsByPath, diagnostics),
     });
   }
-
-  if (hasErrors(diagnostics)) return { ok: false, diagnostics };
-  return {
-    ok: true,
-    package: {
-      identifier: packageIdentifier(result.title),
-      title: result.title,
-      items,
-    },
-    diagnostics,
-  };
+  return items;
 }
 
 function migrationAssetsByPath(
@@ -62,7 +79,6 @@ function migrationAssetsByPath(
     assetsByPath.set(asset.path, {
       path: asset.path,
       data: asset.data,
-      mediaType: asset.mediaType,
     });
   }
   return assetsByPath;
@@ -92,9 +108,4 @@ function packageItemAssets(
     assets.push(asset);
   }
   return assets;
-}
-
-function packageIdentifier(title: string): string {
-  const normalized = title.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_]/g, "_") || "PACKAGE";
-  return /^[A-Za-z_]/.test(normalized) ? normalized : `PACKAGE_${normalized}`;
 }

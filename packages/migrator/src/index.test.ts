@@ -41,16 +41,16 @@ describe("@longsightgroup/qti3-migrator", () => {
     expect(migrated.package.items).toEqual([
       expect.objectContaining({
         kind: "xml",
-        path: "choice_item.xml",
+        path: "items/choice.xml",
         identifier: "choice_item",
-        assets: [expect.objectContaining({ path: "items/image.png", mediaType: "image/png" })],
+        assets: [expect.objectContaining({ path: "items/image.png" })],
       }),
     ]);
     const files = writeQti3PackageFilesResult(migrated.package);
     expect(files).toMatchObject({ ok: true });
     if (!files.ok) throw new Error("Expected writer package files to emit.");
     expect(files.files.map((file) => file.path)).toContain("imsmanifest.xml");
-    expect(files.files.map((file) => file.path)).toContain("choice_item.xml");
+    expect(files.files.map((file) => file.path)).toContain("items/choice.xml");
     expect(files.files.map((file) => file.path)).toContain("items/image.png");
   });
 

@@ -40,6 +40,7 @@ export type {
   Qti3PackageFile,
   Qti3PackageFilesResult,
   Qti3PackageItem,
+  Qti3PackageManifestResult,
   Qti3PackageXmlItem,
   Qti3PackageZipResult,
 } from "./package.js";

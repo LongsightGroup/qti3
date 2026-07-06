@@ -77,7 +77,6 @@ const result = writeQti3PackageZipResult({
         {
           path: "items/assets/prompt.png",
           data: new Uint8Array([137, 80, 78, 71]),
-          mediaType: "image/png",
         },
       ],
       item: {
@@ -101,13 +100,14 @@ if (result.ok) {
 ```
 
 Use `writeQti3PackageManifestResult(input)` for only `imsmanifest.xml`,
-`writeQti3PackageFilesResult(input)` for `imsmanifest.xml`, item XML, and assets as files, and
-`writeQti3PackageZipResult(input)` for ZIP bytes. Package result APIs validate item XML through
-`@longsightgroup/qti3-core` and return typed diagnostics. Convenience APIs without `Result` throw
-`Qti3WriterError`.
+`writeQti3PackageFilesResult(input)` for an ordered file list containing `imsmanifest.xml`, item XML,
+and item-owned assets, and `writeQti3PackageZipResult(input)` for deterministic ZIP bytes. Package
+result APIs validate item XML through `@longsightgroup/qti3-core` and return typed diagnostics.
+Convenience APIs without `Result` throw `Qti3WriterError`.
 
 Package writing currently targets item-bank packages. Assets are explicit: declare each asset on the
 item that owns the manifest resource. The writer does not rewrite URLs inside trusted item XML.
+`@longsightgroup/qti3-core` infers asset media types from file extensions when packages are parsed.
 
 ## Trusted Fragments
 

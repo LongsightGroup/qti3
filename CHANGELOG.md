@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.7 - 2026-07-06
+
+### Added
+
+- Add item-bank QTI 3 package emission to `@longsightgroup/qti3-writer`, including
+  `imsmanifest.xml`, item XML files, item-owned asset files, and deterministic ZIP output.
+- Add migrator package projection so `@longsightgroup/qti3-migrator` can preserve source manifest
+  item paths and asset paths while handing package output directly to the writer.
+
+### Changed
+
+- Split the writer package-emission layer into focused build, manifest, ZIP, and public type modules.
+- Reuse core package path normalization and manifest constants across core, writer, and migrator.
+- Align all workspace package versions on `0.9.7`.
+
 ## 0.9.6 - 2026-07-05
 
 ### Added

@@ -159,8 +159,8 @@ node packages/cli/dist/index.js support-matrix
 | `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                    |
 | `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                         |
 | `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                         |
-| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML writer with typed diagnostics                        |
-| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items and XML                   |
+| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML and item-bank package writer with typed diagnostics  |
+| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items, XML, and package input   |
 | `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI        |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,

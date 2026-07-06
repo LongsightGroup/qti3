@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-writer",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Framework-neutral QTI 3 assessment item XML writer for authoring applications.",
   "keywords": [
     "assessment",

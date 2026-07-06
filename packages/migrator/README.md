@@ -11,7 +11,8 @@ const result = await migrateQtiToQti3({ filename: "quiz.zip", bytes });
 ```
 
 Use `migrateQtiToQti3Package` when the output should be passed directly to
-`@longsightgroup/qti3-writer` package APIs:
+`@longsightgroup/qti3-writer` package APIs. Package migration preserves manifest item and asset
+paths from the source package:
 
 ```ts
 import { migrateQtiToQti3Package } from "@longsightgroup/qti3-migrator";
