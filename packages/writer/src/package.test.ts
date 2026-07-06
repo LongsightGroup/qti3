@@ -97,6 +97,192 @@ describe("qti3 package writer", () => {
     });
   });
 
+  it("emits shared asset files once when multiple item resources reference the same asset", () => {
+    const first = buildQti3ChoiceItem({
+      identifier: "choice-shared-1",
+      title: "Choice Shared 1",
+      bodyHtml: qti3TrustedXmlFragment('<p><img src="prompt.png" alt="Prompt"/></p>'),
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["A"],
+    });
+    const second = buildQti3ChoiceItem({
+      identifier: "choice-shared-2",
+      title: "Choice Shared 2",
+      bodyHtml: qti3TrustedXmlFragment('<p><img src="prompt.png" alt="Prompt"/></p>'),
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["B"],
+    });
+
+    const result = writeQti3PackageFilesResult({
+      identifier: "pkg-shared-assets",
+      items: [
+        {
+          kind: "xml",
+          path: "items/first.xml",
+          identifier: "choice-shared-1",
+          xml: first,
+          assets: [{ path: "items/prompt.png", data: new Uint8Array([1, 2, 3]) }],
+        },
+        {
+          kind: "xml",
+          path: "items/second.xml",
+          identifier: "choice-shared-2",
+          xml: second,
+          assets: [{ path: "items/prompt.png", data: new Uint8Array([1, 2, 3]) }],
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) throw new Error("Expected shared-asset package files to write.");
+    expect(result.files.filter((file) => file.path === "items/prompt.png")).toHaveLength(1);
+    expect(result.files.map((file) => file.path)).toEqual([
+      "imsmanifest.xml",
+      "items/first.xml",
+      "items/prompt.png",
+      "items/second.xml",
+    ]);
+  });
+
+  it("returns diagnostics when multiple items reference the same asset path with different data", () => {
+    const first = buildQti3ChoiceItem({
+      identifier: "choice-shared-1",
+      title: "Choice Shared 1",
+      bodyHtml: qti3TrustedXmlFragment('<p><img src="prompt.png" alt="Prompt"/></p>'),
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["A"],
+    });
+    const second = buildQti3ChoiceItem({
+      identifier: "choice-shared-2",
+      title: "Choice Shared 2",
+      bodyHtml: qti3TrustedXmlFragment('<p><img src="prompt.png" alt="Prompt"/></p>'),
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["B"],
+    });
+
+    const result = writeQti3PackageFilesResult({
+      identifier: "pkg-conflicting-assets",
+      items: [
+        {
+          kind: "xml",
+          path: "items/first.xml",
+          identifier: "choice-shared-1",
+          xml: first,
+          assets: [{ path: "items/prompt.png", data: new Uint8Array([1, 2, 3]) }],
+        },
+        {
+          kind: "xml",
+          path: "items/second.xml",
+          identifier: "choice-shared-2",
+          xml: second,
+          assets: [{ path: "items/prompt.png", data: new Uint8Array([4, 5, 6]) }],
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected conflicting shared assets to fail.");
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "duplicate_package_path",
+    );
+  });
+
+  it("returns diagnostics when an asset path collides with an item path", () => {
+    const xml = buildQti3ChoiceItem({
+      identifier: "choice-item",
+      title: "Choice Item",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["A"],
+    });
+
+    const result = writeQti3PackageFilesResult({
+      identifier: "pkg-item-asset-collision",
+      items: [
+        {
+          kind: "xml",
+          path: "items/choice.xml",
+          identifier: "choice-item",
+          xml,
+          assets: [{ path: "items/choice.xml", data: new Uint8Array([1, 2, 3]) }],
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected item and asset path collision to fail.");
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "duplicate_package_path",
+    );
+  });
+
+  it("returns diagnostics when an asset path collides with another item path", () => {
+    const first = buildQti3ChoiceItem({
+      identifier: "choice-first",
+      title: "Choice First",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["A"],
+    });
+    const second = buildQti3ChoiceItem({
+      identifier: "choice-second",
+      title: "Choice Second",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["B"],
+    });
+
+    const result = writeQti3PackageFilesResult({
+      identifier: "pkg-cross-item-asset-collision",
+      items: [
+        {
+          kind: "xml",
+          path: "items/first.xml",
+          identifier: "choice-first",
+          xml: first,
+          assets: [{ path: "items/second.xml", data: new Uint8Array([1, 2, 3]) }],
+        },
+        {
+          kind: "xml",
+          path: "items/second.xml",
+          identifier: "choice-second",
+          xml: second,
+        },
+      ],
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Expected cross-item asset collision to fail.");
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "duplicate_package_path",
+    );
+  });
+
   it("returns diagnostics for invalid package structure", () => {
     const diagnostics = validateQti3Package({
       identifier: "bad package",

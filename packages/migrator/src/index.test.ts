@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   detectQtiMigrationSource,
   migrateQtiItemToQti3,
+  migrateQtiResourceToQti3,
   migrateQtiToQti3,
   migrateQtiToQti3Package,
 } from "./index.js";
@@ -131,6 +132,149 @@ describe("@longsightgroup/qti3-migrator", () => {
     expect(result.items[0]?.authoringItem?.interactionType).toBe("match");
     expect(result.assets.map((asset) => asset.path)).toContain("web_resources/diagram.png");
     expectValidXml(result.items[0]?.xml ?? "");
+  });
+
+  it("emits unique sibling paths for multi-item QTI 1.2 package resources", async () => {
+    const bytes = createStoredZip({
+      "imsmanifest.xml": manifest("imsqti_xmlv1p2", "assessment/quiz.xml"),
+      "assessment/quiz.xml": qti12Items(),
+      "items/image.png": new Uint8Array([1, 2, 3]),
+    });
+
+    const result = await migrateQtiToQti3(
+      { filename: "qti12-package.zip", bytes },
+      { repairPolicy: "safe" },
+    );
+    const migrated = await migrateQtiToQti3Package(
+      { filename: "qti12-package.zip", bytes },
+      { repairPolicy: "safe" },
+    );
+
+    expect(result.items.map((item) => item.href)).toEqual([
+      "assessment/quiz_choice12.xml",
+      "assessment/quiz_text12.xml",
+      "assessment/quiz_essay12.xml",
+      "assessment/quiz_hotspot12.xml",
+    ]);
+    expect(migrated).toMatchObject({ ok: true });
+    if (!migrated.ok) throw new Error("Expected package migration to succeed.");
+    const files = writeQti3PackageFilesResult(migrated.package);
+    expect(files).toMatchObject({ ok: true });
+    if (!files.ok) throw new Error("Expected writer package files to emit.");
+    expect(files.files.map((file) => file.path)).toEqual(
+      expect.arrayContaining([
+        "assessment/quiz_choice12.xml",
+        "assessment/quiz_text12.xml",
+        "assessment/quiz_essay12.xml",
+        "assessment/quiz_hotspot12.xml",
+      ]),
+    );
+  });
+
+  it("preserves the source href for single-item QTI 1.2 package resources", async () => {
+    const bytes = createStoredZip({
+      "imsmanifest.xml": manifest("imsqti_xmlv1p2", "assessment/quiz.xml"),
+      "assessment/quiz.xml": canvasQti12MatchingItem(),
+    });
+
+    const result = await migrateQtiToQti3({ filename: "single-qti12.zip", bytes });
+
+    expect(result.items.map((item) => item.href)).toEqual(["assessment/quiz.xml"]);
+  });
+
+  it("migrates one resource file closure into launchable QTI 3 package entries", async () => {
+    const result = await migrateQtiResourceToQti3({
+      sourcePath: "assessment/choice.xml",
+      title: "Choice Resource",
+      files: {
+        "assessment\\choice.xml": new TextEncoder().encode(qti21ChoiceItem()),
+        "assessment\\image.png": new Uint8Array([1, 2, 3]),
+      },
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      title: "Choice Resource",
+      status: "converted",
+      sourceFormat: "qti21",
+      launchHref: "assessment/choice.xml",
+      itemHrefs: ["assessment/choice.xml"],
+    });
+    expect(result.entries.map((entry) => entry.path)).toEqual([
+      "imsmanifest.xml",
+      "assessment/choice.xml",
+      "assessment/image.png",
+    ]);
+    expect(result.entries.find((entry) => entry.path === "assessment/image.png")?.mediaType).toBe(
+      "image/png",
+    );
+  });
+
+  it("returns resource migration diagnostics instead of throwing for missing source files", async () => {
+    const result = await migrateQtiResourceToQti3({
+      sourcePath: "assessment/missing.xml",
+      files: {
+        "assessment/image.png": new Uint8Array([1, 2, 3]),
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe("failed");
+    expect(result.title).toBe("assessment/missing.xml");
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "resource_source_missing",
+    );
+  });
+
+  it("returns resource migration diagnostics instead of throwing for unsupported XML", async () => {
+    const result = await migrateQtiResourceToQti3({
+      sourcePath: "assessment/not-qti.xml",
+      files: {
+        "assessment/not-qti.xml": new TextEncoder().encode("<not-qti/>"),
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe("failed");
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain("source_unsupported");
+    expect(result.migration).toBeDefined();
+  });
+
+  it("emits unique sibling paths for multi-item QTI 1.2 resource migration", async () => {
+    const result = await migrateQtiResourceToQti3(
+      {
+        sourcePath: "assessment/quiz.xml",
+        files: {
+          "assessment/quiz.xml": new TextEncoder().encode(qti12Items()),
+          "assessment/shared.png": new Uint8Array([1, 2, 3]),
+        },
+      },
+      { repairPolicy: "safe" },
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      launchHref: "assessment/quiz_choice12.xml",
+    });
+    if (!result.ok) throw new Error("Expected multi-item resource migration to succeed.");
+    expect(result.itemHrefs).toEqual([
+      "assessment/quiz_choice12.xml",
+      "assessment/quiz_text12.xml",
+      "assessment/quiz_essay12.xml",
+      "assessment/quiz_hotspot12.xml",
+    ]);
+    expect(result.entries.map((entry) => entry.path)).toEqual(
+      expect.arrayContaining([
+        "assessment/quiz_choice12.xml",
+        "assessment/quiz_text12.xml",
+        "assessment/quiz_essay12.xml",
+        "assessment/quiz_hotspot12.xml",
+        "assessment/shared.png",
+      ]),
+    );
+    expect(result.entries.filter((entry) => entry.path === "assessment/shared.png")).toHaveLength(
+      1,
+    );
   });
 
   it("rejects source repairs by default and allows them only under safe policy", () => {

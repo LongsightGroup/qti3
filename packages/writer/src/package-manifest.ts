@@ -18,10 +18,27 @@ export function renderPackageManifest(input: NormalizedPackage): string {
 }
 
 function renderManifestItemResource(item: NormalizedPackageItem): string {
-  const files = [item.path, ...item.assets.map((asset) => asset.path)];
+  const files = uniqueManifestFilePaths(
+    item.path,
+    item.assets.map((asset) => asset.path),
+  );
   return xmlLines([
     `    <resource identifier="${xmlEscape(item.identifier)}" type="${QTI_ITEM_RESOURCE_TYPE}" href="${xmlEscape(item.path)}">`,
     ...files.map((path) => `      <file href="${xmlEscape(path)}"/>`),
     `    </resource>`,
   ]);
+}
+
+function uniqueManifestFilePaths(
+  itemPath: string,
+  assetPaths: readonly string[],
+): readonly string[] {
+  const files: string[] = [];
+  const seen = new Set<string>();
+  for (const path of [itemPath, ...assetPaths]) {
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    files.push(path);
+  }
+  return files;
 }

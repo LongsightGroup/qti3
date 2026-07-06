@@ -1,42 +1,30 @@
-import {
-  detectPackageMediaType,
-  parseQtiXml,
-  validateAssessmentItem,
-  type QtiDiagnostic,
-} from "@longsightgroup/qti3-core";
-import {
-  qti3TrustedXmlFragment,
-  writeQti3AssessmentItemResult,
-  type Qti3AuthoringItem,
-} from "@longsightgroup/qti3-writer";
-import { diagnostic, hasErrors } from "./diagnostics.js";
+import { diagnostic } from "./diagnostics.js";
 import { migrationPathIdentifier } from "./identifiers.js";
+import { finalizeItemResult, finalizeItemResults } from "./item-finalize.js";
+import { migrateItemXml } from "./migrate-items.js";
+import { migrationPackageAssets } from "./assets.js";
 import { resolveOptions } from "./options.js";
 import { migrationResultToPackage } from "./package-result.js";
-import { migrateQti12Xml } from "./qti12-item.js";
-import { itemTitleFromXml, migrateQti2ItemXml } from "./qti2-item.js";
+import { migrateQtiResourceToQti3 } from "./resource-migration.js";
 import {
   detectMigrationSource,
   detectQtiMigrationSource,
   parseLegacyManifest,
   readMigrationSource,
-  type MigrationEntry,
   type MigrationSource,
 } from "./source.js";
 import type {
-  QtiMigrationAsset,
   QtiMigrationDetectionResult,
   QtiMigrationDiagnostic,
   QtiMigrationItemResult,
   QtiMigrationOptions,
-  QtiPackageMigrationResult,
   QtiMigrationPart,
   QtiMigrationResult,
-  QtiMigrationSourceFormat,
   QtiMigrationSourceInput,
+  QtiPackageMigrationResult,
 } from "./types.js";
 
-export { detectQtiMigrationSource };
+export { detectQtiMigrationSource, migrateQtiResourceToQti3 };
 export type {
   QtiMigrationAsset,
   QtiMigrationDetectionResult,
@@ -46,11 +34,15 @@ export type {
   QtiMigrationOptions,
   QtiPackageMigrationResult,
   QtiMigrationPart,
+  QtiMigrationResourceEntry,
+  QtiMigrationResourceInput,
   QtiMigrationRepairPolicy,
   QtiMigrationResult,
   QtiMigrationSourceFormat,
   QtiMigrationSourceInput,
   QtiMigrationUnsupportedPolicy,
+  QtiResourceMigrationResult,
+  QtiResourceMigrationStatus,
 } from "./types.js";
 
 export async function migrateQtiToQti3(
@@ -219,10 +211,13 @@ function migratePackageSource(
       });
       continue;
     }
-    const migratedItems = migrateItemXml(entry.text, href, sourceFormat, options);
+    const migratedItems = finalizeItemResults(
+      migrateItemXml(entry.text, href, sourceFormat, options),
+      href,
+      options,
+    );
     for (const item of migratedItems) {
-      const finalized = finalizeItemResult(item, href, options);
-      items.push({ ...finalized, assetHrefs: assetHrefsByItemHref.get(href) ?? [] });
+      items.push({ ...item, assetHrefs: assetHrefsByItemHref.get(href) ?? [] });
     }
   }
   return {
@@ -230,7 +225,7 @@ function migratePackageSource(
     sourceFormat,
     parts: [partFromItems("PART_1", manifest.title, items)],
     items,
-    assets: packageAssets(source.entries),
+    assets: migrationPackageAssets(source.entries),
     diagnostics,
   };
 }
@@ -242,12 +237,12 @@ function migrateItemSource(
 ): QtiMigrationResult {
   const sourceFormat = detection.sourceFormat!;
   const xml = source.xml ?? "";
-  const migratedItems = migrateItemXml(
-    xml,
-    source.filename ?? "item.xml",
-    sourceFormat,
+  const href = source.filename ?? "item.xml";
+  const migratedItems = finalizeItemResults(
+    migrateItemXml(xml, href, sourceFormat, options),
+    href,
     options,
-  ).map((item) => finalizeItemResult(item, source.filename ?? `${item.identifier}.xml`, options));
+  );
   return {
     title: migratedItems[0]?.title ?? source.filename ?? "Imported QTI Item",
     sourceFormat,
@@ -258,154 +253,10 @@ function migrateItemSource(
   };
 }
 
-function migrateItemXml(
-  xml: string,
-  path: string,
-  sourceFormat: QtiMigrationSourceFormat,
-  options: ReturnType<typeof resolveOptions>,
-): readonly PendingMigrationItem[] {
-  if (sourceFormat === "qti12") {
-    return migrateQti12Xml(xml, path, options).map((result, index) => ({
-      identifier: result.authoringItem?.identifier ?? `ITEM_${index + 1}`,
-      title: result.authoringItem?.title ?? itemTitleFromXmlSafe(xml),
-      authoringItem: result.authoringItem,
-      diagnostics: result.diagnostics,
-    }));
-  }
-  const result = migrateQti2ItemXml(xml, path, sourceFormat, options);
-  return [
-    {
-      identifier: result.authoringItem?.identifier ?? migrationPathIdentifier(path),
-      title: result.authoringItem?.title ?? itemTitleFromXmlSafe(xml),
-      authoringItem: result.authoringItem,
-      diagnostics: result.diagnostics,
-    },
-  ];
-}
-
-interface PendingMigrationItem {
-  readonly identifier: string;
-  readonly title: string;
-  readonly authoringItem?: Qti3AuthoringItem | undefined;
-  readonly diagnostics: readonly QtiMigrationDiagnostic[];
-}
-
-function finalizeItemResult(
-  pending: PendingMigrationItem,
-  href: string,
-  options: ReturnType<typeof resolveOptions>,
-): QtiMigrationItemResult {
-  const diagnostics = [...pending.diagnostics];
-  if (pending.authoringItem && !hasErrors(diagnostics)) {
-    const writer = writeQti3AssessmentItemResult(pending.authoringItem);
-    if (writer.ok) {
-      diagnostics.push(...validateWrittenXml(writer.xml));
-      return {
-        identifier: pending.identifier,
-        title: pending.title,
-        href,
-        authoringItem: pending.authoringItem,
-        xml: writer.xml,
-        diagnostics,
-      };
-    }
-    diagnostics.push({
-      code: "writer_diagnostics",
-      severity: "error",
-      message: "QTI 3 writer rejected migrated authoring item.",
-      writerDiagnostics: writer.diagnostics,
-    });
-  }
-
-  if (options.unsupportedPolicy === "stub") {
-    const stub = stubItem(pending.identifier, pending.title);
-    const writer = writeQti3AssessmentItemResult(stub);
-    return {
-      identifier: pending.identifier,
-      title: pending.title,
-      href,
-      authoringItem: stub,
-      xml: writer.ok ? writer.xml : undefined,
-      diagnostics: [
-        ...diagnostics,
-        diagnostic(
-          "unsupported_item_stubbed",
-          "warning",
-          "Unsupported item migrated as an extended-text review stub.",
-        ),
-      ],
-    };
-  }
-
-  return {
-    identifier: pending.identifier,
-    title: pending.title,
-    href,
-    authoringItem: options.unsupportedPolicy === "skip" ? undefined : pending.authoringItem,
-    diagnostics,
-  };
-}
-
-function validateWrittenXml(xml: string): QtiMigrationDiagnostic[] {
-  const parsed = parseQtiXml(xml);
-  const diagnostics: QtiMigrationDiagnostic[] = [];
-  if (!parsed.ok || !parsed.document) {
-    diagnostics.push(...coreDiagnostics("core_parse", parsed.diagnostics));
-    return diagnostics;
-  }
-  const validation = validateAssessmentItem(parsed.document);
-  if (!validation.ok) diagnostics.push(...coreDiagnostics("core_validate", validation.diagnostics));
-  return diagnostics;
-}
-
-function coreDiagnostics(
-  prefix: string,
-  diagnostics: readonly QtiDiagnostic[],
-): QtiMigrationDiagnostic[] {
-  return diagnostics.map((entry) =>
-    diagnostic(
-      `${prefix}.${entry.code}`,
-      entry.severity === "error" ? "error" : "warning",
-      entry.message,
-    ),
-  );
-}
-
-function stubItem(identifier: string, title: string): Qti3AuthoringItem {
-  return {
-    interactionType: "extendedText",
-    identifier,
-    title,
-    bodyHtml: qti3TrustedXmlFragment("<p>This item requires manual migration review.</p>"),
-    responseIdentifier: "RESPONSE",
-    responseBaseType: "string",
-    responseCardinality: "single",
-    expectedLines: 6,
-  };
-}
-
-function packageAssets(entries: readonly MigrationEntry[]): QtiMigrationAsset[] {
-  return entries
-    .filter((entry) => !entry.path.toLowerCase().endsWith(".xml"))
-    .map((entry) => ({
-      path: entry.path,
-      data: entry.bytes,
-      mediaType: detectPackageMediaType(entry.path),
-    }));
-}
-
 function partFromItems(
   identifier: string,
   title: string,
   items: readonly QtiMigrationItemResult[],
 ): QtiMigrationPart {
   return { identifier, title, itemHrefs: items.map((item) => item.href) };
-}
-
-function itemTitleFromXmlSafe(xml: string): string {
-  try {
-    return itemTitleFromXml(xml);
-  } catch {
-    return "Imported Item";
-  }
 }

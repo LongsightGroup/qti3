@@ -51,9 +51,15 @@ export function packageFiles(
   input: NormalizedPackage,
 ): readonly { path: string; data: Uint8Array | string }[] {
   const files: { path: string; data: Uint8Array | string }[] = [];
+  const pathRegistry = createPackagePathRegistry();
   for (const item of input.items) {
+    pathRegistry.claimItemPath(item.path);
     files.push({ path: item.path, data: item.xml });
-    for (const asset of item.assets) files.push({ path: asset.path, data: asset.data });
+    for (const asset of item.assets) {
+      if (pathRegistry.shouldEmitAsset(asset.path, asset.data)) {
+        files.push({ path: asset.path, data: asset.data });
+      }
+    }
   }
   return files.toSorted((left, right) => left.path.localeCompare(right.path));
 }
@@ -163,13 +169,22 @@ function normalizePackageAsset(asset: Qti3PackageAsset): {
 function validatePackageGraph(input: NormalizedPackage): Qti3WriterDiagnostic[] {
   const diagnostics: Qti3WriterDiagnostic[] = [];
   const seenItemIdentifiers = new Set<string>();
-  const seenPaths = new Set<string>([QTI_PACKAGE_MANIFEST_PATH]);
+  const pathRegistry = createPackagePathRegistry();
 
   for (const item of input.items) {
-    validateUniquePath(item.path, seenPaths, diagnostics);
+    if (!pathRegistry.claimItemPath(item.path)) {
+      diagnostics.push(
+        writerDiagnostic(
+          "duplicate_package_path",
+          item.path,
+          `Package path "${item.path}" must be unique.`,
+          item.path,
+        ),
+      );
+    }
     validateItemIdentifier(item, seenItemIdentifiers, diagnostics);
     validateItemXml(item, diagnostics);
-    validateItemAssets(item, seenPaths, diagnostics);
+    validateItemAssets(item, pathRegistry, diagnostics);
   }
 
   return diagnostics;
@@ -252,7 +267,7 @@ function validateItemXml(item: NormalizedPackageItem, diagnostics: Qti3WriterDia
 
 function validateItemAssets(
   item: NormalizedPackageItem,
-  seenPaths: Set<string>,
+  pathRegistry: PackagePathRegistry,
   diagnostics: Qti3WriterDiagnostic[],
 ): void {
   const seen = new Set<string>();
@@ -269,8 +284,65 @@ function validateItemAssets(
       continue;
     }
     seen.add(asset.path);
-    validateUniquePath(asset.path, seenPaths, diagnostics);
+    if (pathRegistry.claimAssetPath(asset.path, asset.data) === "conflicting_duplicate") {
+      diagnostics.push(
+        writerDiagnostic(
+          "duplicate_package_path",
+          asset.path,
+          `Package path "${asset.path}" must be unique.`,
+          asset.path,
+        ),
+      );
+    }
   }
+}
+
+type PackageAssetRegistration = "new" | "identical_duplicate" | "conflicting_duplicate";
+
+interface PackagePathRegistry {
+  claimItemPath(path: string): boolean;
+  claimAssetPath(path: string, data: Uint8Array | string): PackageAssetRegistration;
+  shouldEmitAsset(path: string, data: Uint8Array | string): boolean;
+}
+
+function createPackagePathRegistry(
+  reservedPaths: readonly string[] = [QTI_PACKAGE_MANIFEST_PATH],
+): PackagePathRegistry {
+  const claimedPaths = new Set(reservedPaths);
+  const assetDataByPath = new Map<string, Uint8Array | string>();
+  return {
+    claimItemPath(path) {
+      if (!path) return true;
+      if (claimedPaths.has(path)) return false;
+      claimedPaths.add(path);
+      return true;
+    },
+    claimAssetPath(path, data) {
+      if (!path) return "new";
+      if (claimedPaths.has(path) && !assetDataByPath.has(path)) {
+        return "conflicting_duplicate";
+      }
+      const existing = assetDataByPath.get(path);
+      if (existing !== undefined) {
+        return packageDataEqual(existing, data) ? "identical_duplicate" : "conflicting_duplicate";
+      }
+      claimedPaths.add(path);
+      assetDataByPath.set(path, data);
+      return "new";
+    },
+    shouldEmitAsset(path, data) {
+      return this.claimAssetPath(path, data) === "new";
+    },
+  };
+}
+
+function packageDataEqual(left: Uint8Array | string, right: Uint8Array | string): boolean {
+  if (typeof left === "string" || typeof right === "string") return left === right;
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
 }
 
 function parsePackagePath(
@@ -302,24 +374,4 @@ function normalizePackagePathForDiagnostic(path: string): string {
     normalizePackagePath(path.replaceAll("\\", "/"), "package item path", []) ??
     path.replaceAll("\\", "/")
   );
-}
-
-function validateUniquePath(
-  path: string,
-  seenPaths: Set<string>,
-  diagnostics: Qti3WriterDiagnostic[],
-): void {
-  if (!path) return;
-  if (seenPaths.has(path)) {
-    diagnostics.push(
-      writerDiagnostic(
-        "duplicate_package_path",
-        path,
-        `Package path "${path}" must be unique.`,
-        path,
-      ),
-    );
-    return;
-  }
-  seenPaths.add(path);
 }

@@ -1,13 +1,24 @@
+import { detectPackageMediaType } from "@longsightgroup/qti3-core";
 import type { Qti3PackageAsset, Qti3PackageItem } from "@longsightgroup/qti3-writer";
+import { writeQti3PackageFilesResult } from "@longsightgroup/qti3-writer";
 
 import { diagnostic, hasErrors } from "./diagnostics.js";
 import { migrationPackageIdentifier } from "./identifiers.js";
 import type {
   QtiMigrationAsset,
   QtiMigrationDiagnostic,
+  QtiMigrationResourceEntry,
   QtiMigrationResult,
   QtiPackageMigrationResult,
 } from "./types.js";
+
+export type MigrationPackageEntriesResult =
+  | {
+      readonly ok: true;
+      readonly entries: readonly QtiMigrationResourceEntry[];
+      readonly diagnostics: readonly QtiMigrationDiagnostic[];
+    }
+  | { readonly ok: false; readonly diagnostics: readonly QtiMigrationDiagnostic[] };
 
 export function migrationResultToPackage(result: QtiMigrationResult): QtiPackageMigrationResult {
   const itemDiagnostics = result.items.flatMap((item) => item.diagnostics);
@@ -31,6 +42,41 @@ export function migrationResultToPackage(result: QtiMigrationResult): QtiPackage
       items,
     },
     diagnostics,
+  };
+}
+
+export function migrationResultToPackageEntries(
+  result: QtiMigrationResult,
+): MigrationPackageEntriesResult {
+  const packageResult = migrationResultToPackage(result);
+  if (!packageResult.ok) {
+    return { ok: false, diagnostics: packageResult.diagnostics };
+  }
+
+  const files = writeQti3PackageFilesResult(packageResult.package);
+  if (!files.ok) {
+    return {
+      ok: false,
+      diagnostics: [
+        ...packageResult.diagnostics,
+        {
+          code: "writer_diagnostics",
+          severity: "error",
+          message: "QTI 3 writer rejected migrated package files.",
+          writerDiagnostics: files.diagnostics,
+        },
+      ],
+    };
+  }
+
+  return {
+    ok: true,
+    entries: files.files.map((file) => ({
+      path: file.path,
+      data: file.data,
+      mediaType: detectPackageMediaType(file.path),
+    })),
+    diagnostics: packageResult.diagnostics,
   };
 }
 

@@ -21,6 +21,44 @@ export interface MigrationSource {
   readonly xml?: string | undefined;
 }
 
+export function buildMigrationEntry(path: string, bytes: Uint8Array): MigrationEntry {
+  return {
+    path,
+    bytes,
+    text: isMigrationTextPath(path) ? decodeUtf8(bytes) : undefined,
+  };
+}
+
+export function migrationEntriesFromFileMap(
+  files: Readonly<Record<string, Uint8Array>>,
+  normalizePath: (path: string) => string | undefined,
+): {
+  readonly entries: readonly MigrationEntry[];
+  readonly diagnostics: readonly QtiMigrationDiagnostic[];
+} {
+  const diagnostics: QtiMigrationDiagnostic[] = [];
+  const entries: MigrationEntry[] = [];
+  const seenPaths = new Set<string>();
+  for (const [path, bytes] of Object.entries(files)) {
+    const normalizedPath = normalizePath(path);
+    if (!normalizedPath) continue;
+    if (seenPaths.has(normalizedPath)) {
+      diagnostics.push(
+        diagnostic(
+          "resource_file_duplicate",
+          "error",
+          `Resource file path ${normalizedPath} is duplicated after normalization.`,
+          { path: normalizedPath },
+        ),
+      );
+      continue;
+    }
+    seenPaths.add(normalizedPath);
+    entries.push(buildMigrationEntry(normalizedPath, bytes));
+  }
+  return { entries, diagnostics };
+}
+
 export function readMigrationSource(input: QtiMigrationSourceInput): MigrationSource {
   if (input.xml !== undefined) {
     return { filename: input.filename, isPackage: false, entries: [], xml: input.xml };
@@ -32,11 +70,7 @@ export function readMigrationSource(input: QtiMigrationSourceInput): MigrationSo
     const unzipped = unzipSync(input.bytes);
     const entries = Object.entries(unzipped)
       .filter(([path]) => !path.endsWith("/"))
-      .map(([path, bytes]) => ({
-        path: path.replaceAll("\\", "/"),
-        bytes,
-        text: isTextPath(path) ? decodeUtf8(bytes) : undefined,
-      }));
+      .map(([path, bytes]) => buildMigrationEntry(path.replaceAll("\\", "/"), bytes));
     return { filename: input.filename, isPackage: true, entries };
   }
   return {
@@ -246,6 +280,6 @@ function isZip(bytes: Uint8Array): boolean {
   return bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b;
 }
 
-function isTextPath(path: string): boolean {
+function isMigrationTextPath(path: string): boolean {
   return /\.(xml|html?|txt|json|css|js)$/i.test(path);
 }

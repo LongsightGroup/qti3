@@ -17,6 +17,13 @@ export interface QtiMigrationSourceInput {
   readonly mime?: string | undefined;
 }
 
+/** Local file closure for migrating one QTI resource from a larger host package. */
+export interface QtiMigrationResourceInput {
+  readonly sourcePath: string;
+  readonly files: Readonly<Record<string, Uint8Array>>;
+  readonly title?: string | undefined;
+}
+
 export interface QtiMigrationOptions {
   readonly repairPolicy?: QtiMigrationRepairPolicy | undefined;
   readonly unsupportedPolicy?: QtiMigrationUnsupportedPolicy | undefined;
@@ -77,6 +84,15 @@ export interface QtiMigrationResult {
   readonly diagnostics: readonly QtiMigrationDiagnostic[];
 }
 
+/** File emitted by resource-level migration for host storage or packaging. */
+export interface QtiMigrationResourceEntry {
+  readonly path: string;
+  readonly data: Uint8Array | string;
+  readonly mediaType?: string | undefined;
+}
+
+export type QtiResourceMigrationStatus = "converted" | "converted_with_warnings" | "failed";
+
 export type QtiPackageMigrationResult =
   | {
       readonly ok: true;
@@ -84,3 +100,26 @@ export type QtiPackageMigrationResult =
       readonly diagnostics: readonly QtiMigrationDiagnostic[];
     }
   | { readonly ok: false; readonly diagnostics: readonly QtiMigrationDiagnostic[] };
+
+/** Result of migrating one host-package resource and its local file closure. */
+export type QtiResourceMigrationResult =
+  | {
+      readonly ok: true;
+      readonly title: string;
+      readonly status: "converted" | "converted_with_warnings";
+      readonly sourceFormat: QtiMigrationSourceFormat;
+      readonly launchHref: string;
+      readonly itemHrefs: readonly string[];
+      readonly entries: readonly QtiMigrationResourceEntry[];
+      readonly diagnostics: readonly QtiMigrationDiagnostic[];
+    }
+  | {
+      readonly ok: false;
+      readonly title: string;
+      readonly status: "failed";
+      readonly sourceFormat?: QtiMigrationSourceFormat | undefined;
+      readonly itemHrefs: readonly string[];
+      readonly entries: readonly QtiMigrationResourceEntry[];
+      readonly diagnostics: readonly QtiMigrationDiagnostic[];
+      readonly migration: QtiMigrationResult;
+    };
