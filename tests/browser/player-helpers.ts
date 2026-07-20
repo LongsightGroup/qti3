@@ -78,6 +78,8 @@ async function waitForPlayerLoad(
 }
 
 export async function dragCenter(page: Page, source: Locator, target: Locator): Promise<void> {
+  await source.scrollIntoViewIfNeeded();
+  await target.scrollIntoViewIfNeeded();
   const sourceBox = await source.boundingBox();
   const targetBox = await target.boundingBox();
   if (!sourceBox || !targetBox) throw new Error("Missing drag boxes.");
