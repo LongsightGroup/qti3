@@ -1,0 +1,28 @@
+# qti3
+
+> qti3 is a dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items, maintained by Longsight.
+
+## Project resources
+
+- [Interactive QTI 3 manual](https://longsightgroup.github.io/qti3/): Load reference fixtures, QTI package archives, or QTI XML and inspect rendering, scoring, validation, state, accessibility evidence, and diagnostics.
+- [Shared vocabulary gallery](https://longsightgroup.github.io/qti3/sv-gallery/): Review QTI shared-vocabulary fixtures and their implementation evidence.
+- [Source repository](https://github.com/LongsightGroup/qti3): TypeScript packages, fixtures, tests, examples, issues, and release history.
+- [npm packages](https://www.npmjs.com/org/longsightgroup): Published packages under the `@longsightgroup` scope.
+
+## Package areas
+
+- Core: Parse, validate, process, score, serialize, and restore QTI item state.
+- Player: Render one QTI assessment item with a native Web Component.
+- Conformance and fixtures: Run synthetic reference items through documented support checks.
+- Accessibility: Track keyboard, semantics, contrast, reflow, and assistive-technology evidence.
+- PNP: Normalize and resolve host-provided Personal Needs and Preferences data.
+- Writer and migrator: Produce QTI-shaped authoring output and migrate QTI 1.2 or QTI 2.x content toward QTI 3.
+- CLI: Validate, inspect, score, and report on QTI content from Node or Deno.
+
+## Related work
+
+- [QFlowLearn QTI 3 standards](https://www.qflowlearn.com/standards/qti-3/): How the open-source QTI implementation connects to assessment authoring and delivery.
+- [QFlowLearn QTI migration](https://www.qflowlearn.com/migration/): Migration and human fidelity-review workflow.
+- [Longsight open-source educational software](https://www.longsight.com/): Maintainer and institutional engineering context.
+
+qti3 does not claim formal 1EdTech certification unless certification has been completed and published.

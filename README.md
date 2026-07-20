@@ -3,6 +3,12 @@
 `qti3` is a dependency-light, framework-neutral TypeScript reference implementation for
 QTI 3 assessment items. The core engine and CLI ship with zero third-party runtime dependencies.
 
+Use the [interactive qti3 manual](https://longsightgroup.github.io/qti3/) to load reference
+fixtures, QTI packages, or item XML and inspect rendering, scoring, validation, state, diagnostics,
+and accessibility evidence. The
+[shared vocabulary gallery](https://longsightgroup.github.io/qti3/sv-gallery/) provides runnable
+matrix fixtures for presentation-class review.
+
 The project ships public releases on npm. The target is a clean, auditable item engine for
 parsing, validating, rendering, scoring, serializing, restoring, and testing QTI 3 items
 across products. The core stays independent of any UI framework.
@@ -10,6 +16,12 @@ across products. The core stays independent of any UI framework.
 This is not another framework-specific item player. The public project focuses on QTI
 item and question-type conformance. Host products own runners, controllers, LMS shells,
 candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations.
+
+Longsight maintains qti3 as part of its
+[open-source educational software work](https://www.longsight.com/). The implementation also
+supports the open-standards direction used by
+[QFlowLearn's QTI 3 assessment platform](https://www.qflowlearn.com/standards/qti-3/) while keeping
+product-specific authoring and delivery responsibilities outside this repository.
 
 ## Project shape
 

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">qti3 TypeScript reference implementation</title>
+  <desc id="description">QTI 3 parsing, validation, rendering, scoring, migration, and conformance tooling by Longsight.</desc>
+  <rect width="1200" height="630" fill="#0b182a"/>
+  <rect x="64" y="64" width="1072" height="502" rx="28" fill="#10243e" stroke="#315274" stroke-width="2"/>
+  <circle cx="128" cy="134" r="28" fill="#66c7b5"/>
+  <path d="M114 119h28v8h-10v24h-8v-24h-10z" fill="#0b182a"/>
+  <text x="178" y="150" fill="#d9e6f2" font-family="system-ui, sans-serif" font-size="38" font-weight="700">Longsight open source</text>
+  <text x="108" y="296" fill="#ffffff" font-family="system-ui, sans-serif" font-size="94" font-weight="760">qti3</text>
+  <text x="108" y="382" fill="#d9e6f2" font-family="system-ui, sans-serif" font-size="48" font-weight="600">QTI 3 assessment items in TypeScript</text>
+  <text x="108" y="456" fill="#a9bed1" font-family="system-ui, sans-serif" font-size="30">Parse · validate · render · score · migrate · verify</text>
+  <rect x="108" y="510" width="226" height="8" rx="4" fill="#66c7b5"/>
+</svg>

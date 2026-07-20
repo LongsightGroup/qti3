@@ -3,7 +3,55 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>qti3 manual harness</title>
+    <title>qti3: QTI 3 TypeScript Parser, Player &amp; Tooling</title>
+    <meta
+      name="description"
+      content="Open-source TypeScript packages for parsing, validating, rendering, scoring, authoring, and migrating QTI 3 assessment items. Try the live manual."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#10243e" />
+    <link rel="canonical" href="https://longsightgroup.github.io/qti3/" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="qti3 by Longsight" />
+    <meta property="og:title" content="qti3: QTI 3 assessment items in TypeScript" />
+    <meta
+      property="og:description"
+      content="Parse, validate, render, score, author, migrate, and verify QTI 3 assessment items with inspectable open-source TypeScript packages."
+    />
+    <meta property="og:url" content="https://longsightgroup.github.io/qti3/" />
+    <meta property="og:image" content="https://longsightgroup.github.io/qti3/qti3-social.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="qti3, QTI 3 assessment items in TypeScript by Longsight"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="qti3: QTI 3 assessment items in TypeScript" />
+    <meta
+      name="twitter:description"
+      content="Open-source QTI 3 parsing, validation, rendering, scoring, migration, and conformance tooling."
+    />
+    <meta name="twitter:image" content="https://longsightgroup.github.io/qti3/qti3-social.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": "qti3",
+        "description": "A dependency-light, framework-neutral TypeScript reference implementation for QTI 3 assessment items.",
+        "url": "https://longsightgroup.github.io/qti3/",
+        "codeRepository": "https://github.com/LongsightGroup/qti3",
+        "license": "https://opensource.org/license/mit",
+        "programmingLanguage": "TypeScript",
+        "runtimePlatform": ["Modern browsers", "Node.js 22+", "Deno 2+"],
+        "author": {
+          "@type": "Organization",
+          "name": "Longsight",
+          "url": "https://www.longsight.com/"
+        }
+      }
+    </script>
     <style>
       :root {
         color-scheme: light;
@@ -19,6 +67,13 @@
         --warning-bg: #fff6e8;
         --success: #23643a;
         --success-bg: #edf7ef;
+        --brand: #10243e;
+        --brand-deep: #0b182a;
+        --brand-text: #eaf3fa;
+        --brand-muted: #b8cad9;
+        --signal: #4fae9d;
+        --signal-light: #66c7b5;
+        --page-width: 74rem;
       }
 
       body {
@@ -26,7 +81,10 @@
         color: var(--ink);
         background: var(--bg);
         font:
-          14px/1.5 system-ui,
+          1rem/1.55 system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
           sans-serif;
       }
 
@@ -36,13 +94,292 @@
         box-sizing: border-box;
       }
 
-      main {
-        display: grid;
-        grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
-        min-block-size: 100vh;
+      .skip-link {
+        position: fixed;
+        inset-block-start: 0.5rem;
+        inset-inline-start: 0.5rem;
+        z-index: 20;
+        padding: 0.65rem 0.85rem;
+        background: var(--panel);
+        color: var(--brand);
+        font-weight: 700;
+        transform: translateY(-160%);
       }
 
-      aside {
+      .skip-link:focus {
+        transform: translateY(0);
+      }
+
+      .site-header {
+        background: var(--brand-deep);
+        color: var(--brand-text);
+        border-block-end: 1px solid #28435f;
+      }
+
+      .site-header-inner,
+      .content-width {
+        inline-size: min(100% - 2rem, var(--page-width));
+        margin-inline: auto;
+      }
+
+      .site-header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        min-block-size: 4rem;
+      }
+
+      .wordmark {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.2rem;
+        margin: 0;
+      }
+
+      .site-nav a {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 2.75rem;
+        padding-inline: 0.7rem;
+        color: var(--brand-muted);
+        font-size: 0.9rem;
+        font-weight: 650;
+        text-decoration: none;
+      }
+
+      .site-nav a:hover,
+      .site-nav a:focus-visible {
+        color: #fff;
+      }
+
+      .hero {
+        padding-block: clamp(4rem, 9vw, 7.5rem);
+        color: var(--brand-text);
+        background:
+          radial-gradient(circle at 84% 20%, rgb(79 174 157 / 24%), transparent 28rem),
+          var(--brand-deep);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
+        gap: clamp(3rem, 8vw, 7rem);
+        align-items: end;
+      }
+
+      .hero-kicker {
+        margin: 0 0 1rem;
+        color: var(--signal-light);
+        font-weight: 750;
+      }
+
+      .hero h1 {
+        max-inline-size: 13ch;
+        margin: 0;
+        color: #fff;
+        font-size: clamp(2.6rem, 5vw, 5.4rem);
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+        text-wrap: balance;
+      }
+
+      .hero-copy {
+        max-inline-size: 66ch;
+        margin-block: 1.6rem 0;
+        color: var(--brand-muted);
+        font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+        line-height: 1.65;
+        text-wrap: pretty;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-block-start: 2rem;
+      }
+
+      .action-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-block-size: 3rem;
+        padding-inline: 1.1rem;
+        border: 1px solid #42617e;
+        color: #fff;
+        font-weight: 750;
+        text-decoration: none;
+      }
+
+      .action-link-primary {
+        border-color: var(--signal-light);
+        background: var(--signal-light);
+        color: var(--brand-deep);
+      }
+
+      .hero-facts {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-block-start: 1px solid #315274;
+      }
+
+      .hero-facts li {
+        padding-block: 1rem;
+        border-block-end: 1px solid #315274;
+      }
+
+      .hero-facts strong,
+      .hero-facts span {
+        display: block;
+      }
+
+      .hero-facts strong {
+        color: #fff;
+        font-size: 1.05rem;
+      }
+
+      .hero-facts span {
+        margin-block-start: 0.15rem;
+        color: var(--brand-muted);
+        font-size: 0.9rem;
+      }
+
+      .project-overview,
+      .ecosystem,
+      .manual-section {
+        padding-block: clamp(3.5rem, 7vw, 6rem);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 0.7fr) minmax(20rem, 1.3fr);
+        gap: clamp(2rem, 7vw, 6rem);
+        align-items: start;
+        margin-block-end: 2.5rem;
+      }
+
+      .section-heading h2,
+      .ecosystem h2,
+      .manual-intro h2 {
+        margin: 0;
+        color: var(--brand);
+        font-size: clamp(1.8rem, 3vw, 3rem);
+        line-height: 1.1;
+        letter-spacing: -0.035em;
+        text-wrap: balance;
+      }
+
+      .section-heading p,
+      .ecosystem-copy,
+      .manual-intro p {
+        max-inline-size: 68ch;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        text-wrap: pretty;
+      }
+
+      .package-list {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin: 0;
+        padding: 0;
+        border-block: 1px solid var(--line);
+        list-style: none;
+      }
+
+      .package-list li {
+        padding: 1.4rem;
+        border-inline-start: 1px solid var(--line);
+      }
+
+      .package-list li:first-child {
+        border-inline-start: 0;
+      }
+
+      .package-list strong {
+        display: block;
+        color: var(--brand);
+        font-size: 1.05rem;
+      }
+
+      .package-list span {
+        display: block;
+        margin-block-start: 0.45rem;
+        color: var(--muted);
+      }
+
+      .ecosystem {
+        color: var(--brand-text);
+        background: var(--brand);
+      }
+
+      .ecosystem-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: clamp(2rem, 8vw, 7rem);
+        align-items: center;
+      }
+
+      .ecosystem h2 {
+        color: #fff;
+      }
+
+      .ecosystem-copy {
+        margin-block-start: 1rem;
+        color: var(--brand-muted);
+      }
+
+      .ecosystem-links {
+        display: grid;
+        border-block-start: 1px solid #42617e;
+      }
+
+      .ecosystem-links a {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-block: 1rem;
+        border-block-end: 1px solid #42617e;
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .manual-section {
+        background: var(--bg);
+      }
+
+      .manual-intro {
+        display: grid;
+        grid-template-columns: minmax(0, 0.75fr) minmax(20rem, 1.25fr);
+        gap: clamp(2rem, 7vw, 6rem);
+        margin-block-end: 2rem;
+      }
+
+      .manual-shell {
+        display: grid;
+        grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+        min-block-size: 44rem;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: 0 1.5rem 4rem rgb(16 36 62 / 10%);
+        font-size: 0.875rem;
+      }
+
+      .manual-sidebar {
         min-inline-size: 0;
         padding: 1rem;
         border-inline-end: 1px solid var(--line);
@@ -50,13 +387,13 @@
         overflow: auto;
       }
 
-      main > section {
+      .player-stage {
         min-inline-size: 0;
         padding: 1rem;
         overflow: auto;
       }
 
-      main > * {
+      .manual-shell > * {
         min-inline-size: 0;
       }
 
@@ -66,17 +403,18 @@
         margin-block: 0;
       }
 
-      h1 {
+      .manual-sidebar > h2 {
+        margin: 0;
         font-size: 1.2rem;
         line-height: 1.25;
       }
 
-      h2 {
+      .manual-sidebar h3 {
         margin-block-start: 1rem;
         font-size: 1rem;
       }
 
-      nav {
+      .manual-sidebar nav {
         margin-block-start: 0.35rem;
         color: var(--muted);
       }
@@ -179,7 +517,7 @@
         background: var(--panel-alt);
       }
 
-      .score-panel h2 {
+      .score-panel h3 {
         margin: 0;
       }
 
@@ -282,7 +620,7 @@
         background: var(--panel-alt);
       }
 
-      .pnp-panel h2 {
+      .pnp-panel h3 {
         margin: 0;
       }
 
@@ -355,188 +693,420 @@
         border-bottom: 0;
       }
 
-      @media (max-width: 48rem) {
-        main {
+      .site-footer {
+        padding-block: 2rem;
+        color: var(--brand-muted);
+        background: var(--brand-deep);
+        border-block-start: 1px solid #28435f;
+      }
+
+      .site-footer-inner {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem 2rem;
+      }
+
+      .site-footer p {
+        margin: 0;
+      }
+
+      .site-footer a {
+        color: #fff;
+      }
+
+      @media (max-width: 62rem) {
+        .hero-grid,
+        .section-heading,
+        .ecosystem-grid,
+        .manual-intro {
           grid-template-columns: 1fr;
         }
 
-        aside {
+        .package-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .package-list li:nth-child(3) {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--line);
+        }
+
+        .package-list li:nth-child(4) {
+          border-block-start: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 48rem) {
+        .site-header-inner {
+          align-items: flex-start;
+          flex-direction: column;
+          padding-block: 0.65rem;
+        }
+
+        .site-nav {
+          justify-content: flex-start;
+        }
+
+        .site-nav a {
+          padding-inline: 0 0.9rem;
+        }
+
+        .manual-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .manual-sidebar {
           border-inline-end: 0;
           border-block-end: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 34rem) {
+        .package-list {
+          grid-template-columns: 1fr;
+        }
+
+        .package-list li,
+        .package-list li:nth-child(4) {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--line);
+        }
+
+        .package-list li:first-child {
+          border-block-start: 0;
+        }
+      }
+
+      @media (forced-colors: active) {
+        .hero,
+        .ecosystem,
+        .site-header,
+        .site-footer {
+          border-color: CanvasText;
+        }
+
+        .action-link,
+        .manual-shell {
+          box-shadow: none;
         }
       }
     </style>
   </head>
   <body>
-    <main>
-      <aside>
-        <h1>qti3 manual harness</h1>
-        <nav aria-label="Other dev harnesses">
-          <p>
-            <a href="sv-gallery/">Shared vocabulary gallery</a>
-            ·
-            <a href="1edtech.html">1EdTech examples</a>
-            ·
-            <a href="adapter-react.html">React adapter demo</a>
-          </p>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="./" aria-label="qti3 homepage">qti3</a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="#manual">Interactive manual</a>
+          <a href="sv-gallery/">Vocabulary gallery</a>
+          <a href="https://github.com/LongsightGroup/qti3">GitHub source</a>
+          <a href="https://www.npmjs.com/org/longsightgroup">npm packages</a>
         </nav>
-        <div class="load-options">
-          <details class="load-option" name="load-options" open>
-            <summary>Reference fixture</summary>
-            <div class="load-option-body">
-              <label>
-                Reference fixture
-                <select id="fixture"></select>
-              </label>
-              <div class="fixture-controls">
-                <button id="previous-fixture" type="button" aria-label="Load previous fixture">
-                  &larr;
-                </button>
-                <button id="load-fixture" type="button">Load fixture</button>
-                <button id="next-fixture" type="button" aria-label="Load next fixture">
-                  &rarr;
-                </button>
+      </div>
+    </header>
+
+    <main id="content">
+      <section class="hero">
+        <div class="content-width hero-grid">
+          <div>
+            <p class="hero-kicker">Open-source QTI 3 implementation</p>
+            <h1>Build QTI 3 item workflows on inspectable TypeScript.</h1>
+            <p class="hero-copy">
+              qti3 parses, validates, renders, scores, serializes, authors, and migrates assessment
+              items without tying the item engine to a UI framework. Run the reference fixtures,
+              inspect state and diagnostics, or embed the packages in a host product.
+            </p>
+            <div class="hero-actions">
+              <a class="action-link action-link-primary" href="#manual"
+                >Open the interactive manual</a
+              >
+              <a class="action-link" href="https://github.com/LongsightGroup/qti3"
+                >Inspect the source</a
+              >
+            </div>
+          </div>
+          <ul class="hero-facts" aria-label="Project characteristics">
+            <li>
+              <strong>Framework-neutral core</strong
+              ><span>Adapters stay outside item semantics.</span>
+            </li>
+            <li>
+              <strong>Runnable conformance evidence</strong
+              ><span>Fixtures connect support claims to tests.</span>
+            </li>
+            <li>
+              <strong>Browser, Node, and Deno</strong
+              ><span>Core processing does not require a DOM.</span>
+            </li>
+            <li>
+              <strong>MIT licensed</strong
+              ><span>Published under the LongsightGroup organization.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="project-overview">
+        <div class="content-width">
+          <div class="section-heading">
+            <h2>One item engine, explicit package boundaries.</h2>
+            <p>
+              Host products retain assessment navigation, timing, attempts, analytics, proctoring,
+              rostering, and LMS integration. qti3 owns the portable item behavior those products
+              need to parse, render, score, inspect, and exchange.
+            </p>
+          </div>
+          <ul class="package-list">
+            <li>
+              <strong>Core and CLI</strong
+              ><span>Parse, validate, process, score, inspect, and serialize QTI item state.</span>
+            </li>
+            <li>
+              <strong>Player and adapters</strong
+              ><span
+                >Render native Web Components with thin React and Preact integration layers.</span
+              >
+            </li>
+            <li>
+              <strong>Fixtures and proof</strong
+              ><span
+                >Connect interaction support to conformance, browser, and accessibility
+                evidence.</span
+              >
+            </li>
+            <li>
+              <strong>Writer and migrator</strong
+              ><span
+                >Create QTI-shaped output and migrate QTI 1.2 or 2.x source content toward QTI
+                3.</span
+              >
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="ecosystem">
+        <div class="content-width ecosystem-grid">
+          <div>
+            <h2>Maintained in the open, used in assessment products.</h2>
+            <p class="ecosystem-copy">
+              Longsight maintains qti3 as reusable infrastructure. QFlowLearn uses the same open
+              standards direction for assessment authoring, migration, and delivery while keeping
+              product responsibilities outside this item-focused repository.
+            </p>
+          </div>
+          <div class="ecosystem-links">
+            <a href="https://www.qflowlearn.com/standards/qti-3/"
+              >QFlowLearn QTI 3 standards <span aria-hidden="true">↗</span></a
+            >
+            <a href="https://www.qflowlearn.com/migration/"
+              >QTI migration and fidelity review <span aria-hidden="true">↗</span></a
+            >
+            <a href="https://www.longsight.com/"
+              >Longsight open-source education software <span aria-hidden="true">↗</span></a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="manual-section" id="manual" aria-labelledby="manual-heading">
+        <div class="content-width">
+          <div class="manual-intro">
+            <h2 id="manual-heading">Run the QTI 3 manual.</h2>
+            <p>
+              Load a synthetic reference fixture, open a QTI package archive, or paste item XML. The
+              panels expose rendering, response state, scoring, diagnostics, PNP resolution, package
+              contents, and accessibility evidence from the same implementation.
+            </p>
+          </div>
+          <div class="manual-shell">
+            <aside class="manual-sidebar">
+              <h2>Load and inspect items</h2>
+              <nav aria-label="Other dev harnesses">
+                <p>
+                  <a href="sv-gallery/">Shared vocabulary gallery</a>
+                  ·
+                  <a href="https://github.com/LongsightGroup/qti3#packages">Package reference</a>
+                </p>
+              </nav>
+              <div class="load-options">
+                <details class="load-option" name="load-options" open>
+                  <summary>Reference fixture</summary>
+                  <div class="load-option-body">
+                    <label>
+                      Reference fixture
+                      <select id="fixture"></select>
+                    </label>
+                    <div class="fixture-controls">
+                      <button
+                        id="previous-fixture"
+                        type="button"
+                        aria-label="Load previous fixture"
+                      >
+                        &larr;
+                      </button>
+                      <button id="load-fixture" type="button">Load fixture</button>
+                      <button id="next-fixture" type="button" aria-label="Load next fixture">
+                        &rarr;
+                      </button>
+                    </div>
+                  </div>
+                </details>
+                <details class="load-option" name="load-options" id="package-loader">
+                  <summary>Open QTI package zip</summary>
+                  <div class="load-option-body">
+                    <label>
+                      QTI package zip
+                      <input
+                        id="file"
+                        type="file"
+                        accept=".zip,application/zip,application/x-zip-compressed"
+                      />
+                    </label>
+                    <label>
+                      Loaded file
+                      <select id="local-files"></select>
+                    </label>
+                    <div>
+                      <button id="previous-file" type="button">Previous</button>
+                      <button id="next-file" type="button">Next</button>
+                    </div>
+                    <p id="file-summary" aria-live="polite"></p>
+                  </div>
+                </details>
+                <details class="load-option" name="load-options" id="xml-loader">
+                  <summary>Paste QTI XML</summary>
+                  <div class="load-option-body">
+                    <textarea id="xml" spellcheck="false"></textarea>
+                    <button id="load-xml" type="button">Load XML</button>
+                  </div>
+                </details>
               </div>
-            </div>
-          </details>
-          <details class="load-option" name="load-options" id="package-loader">
-            <summary>Open QTI package zip</summary>
-            <div class="load-option-body">
-              <label>
-                QTI package zip
-                <input
-                  id="file"
-                  type="file"
-                  accept=".zip,application/zip,application/x-zip-compressed"
-                />
-              </label>
-              <label>
-                Loaded file
-                <select id="local-files"></select>
-              </label>
-              <div>
-                <button id="previous-file" type="button">Previous</button>
-                <button id="next-file" type="button">Next</button>
+              <section class="pnp-panel" aria-labelledby="pnp-heading">
+                <h3 id="pnp-heading">PNP resolver</h3>
+                <form id="pnp-form" action="/" method="post">
+                  <label for="pnp-xml">
+                    Synthetic PNP XML
+                    <textarea id="pnp-xml" name="pnp_xml" spellcheck="false"></textarea>
+                  </label>
+                  <div class="pnp-actions">
+                    <button id="apply-pnp" type="submit">Apply PNP</button>
+                    <button id="reset-pnp" type="button">Reset PNP</button>
+                  </div>
+                </form>
+                <details>
+                  <summary>Resolved PNP debug</summary>
+                  <pre id="debug-pnp">{}</pre>
+                </details>
+              </section>
+              <div id="score-panel" class="score-panel" data-status="idle" aria-live="polite">
+                <h3>Score result</h3>
+                <p id="score-status">Not scored yet.</p>
+                <dl class="score-kpis">
+                  <div>
+                    <dt>SCORE</dt>
+                    <dd id="score-value">-</dd>
+                  </div>
+                  <div>
+                    <dt>Responses</dt>
+                    <dd id="response-count">0</dd>
+                  </div>
+                  <div>
+                    <dt>Validation</dt>
+                    <dd id="validation-count">0</dd>
+                  </div>
+                </dl>
+                <details>
+                  <summary>Responses and outcomes</summary>
+                  <pre id="score-details">{}</pre>
+                </details>
               </div>
-              <p id="file-summary" aria-live="polite"></p>
+              <h3>Debug actions</h3>
+              <div class="debug-actions">
+                <button id="debug-score" type="button">Score attempt</button>
+                <button id="debug-suspend" type="button">Suspend</button>
+                <button id="debug-end" type="button">End attempt</button>
+                <button id="debug-reset" type="button">Reset</button>
+              </div>
+              <h3>Debug panels</h3>
+              <div class="debug-grid">
+                <details class="debug-panel" open>
+                  <summary>Responses</summary>
+                  <pre id="debug-responses">{}</pre>
+                </details>
+                <details class="debug-panel" open>
+                  <summary>Outcomes</summary>
+                  <pre id="debug-outcomes">{}</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Template values</summary>
+                  <pre id="debug-template-values">{}</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Catalogs</summary>
+                  <pre id="debug-catalogs">[]</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Stylesheets</summary>
+                  <pre id="debug-stylesheets">[]</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Companion materials</summary>
+                  <pre id="debug-companion-materials">null</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Package</summary>
+                  <pre id="debug-package">{}</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Validation messages</summary>
+                  <pre id="debug-validation">[]</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Diagnostics</summary>
+                  <pre id="debug-diagnostics">[]</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Serialized state</summary>
+                  <pre id="debug-state">{}</pre>
+                </details>
+                <details class="debug-panel" open>
+                  <summary>Action log</summary>
+                  <pre id="debug-action-log" aria-live="polite">[]</pre>
+                </details>
+                <details class="debug-panel">
+                  <summary>Accessibility proof</summary>
+                  <div id="debug-a11y-proof" class="a11y-proof">No interaction loaded.</div>
+                </details>
+                <details class="debug-panel">
+                  <summary>Manual AT scripts</summary>
+                  <div id="debug-at-scripts" class="at-scripts">No interaction loaded.</div>
+                </details>
+              </div>
+              <h3>Latest event</h3>
+              <pre id="events" aria-live="polite"></pre>
+            </aside>
+            <div class="player-stage">
+              <qti-assessment-item-player id="player"></qti-assessment-item-player>
             </div>
-          </details>
-          <details class="load-option" name="load-options" id="xml-loader">
-            <summary>Paste QTI XML</summary>
-            <div class="load-option-body">
-              <textarea id="xml" spellcheck="false"></textarea>
-              <button id="load-xml" type="button">Load XML</button>
-            </div>
-          </details>
+          </div>
         </div>
-        <section class="pnp-panel" aria-labelledby="pnp-heading">
-          <h2 id="pnp-heading">PNP resolver</h2>
-          <form id="pnp-form" action="/" method="post">
-            <label for="pnp-xml">
-              Synthetic PNP XML
-              <textarea id="pnp-xml" name="pnp_xml" spellcheck="false"></textarea>
-            </label>
-            <div class="pnp-actions">
-              <button id="apply-pnp" type="submit">Apply PNP</button>
-              <button id="reset-pnp" type="button">Reset PNP</button>
-            </div>
-          </form>
-          <details>
-            <summary>Resolved PNP debug</summary>
-            <pre id="debug-pnp">{}</pre>
-          </details>
-        </section>
-        <div id="score-panel" class="score-panel" data-status="idle" aria-live="polite">
-          <h2>Score result</h2>
-          <p id="score-status">Not scored yet.</p>
-          <dl class="score-kpis">
-            <div>
-              <dt>SCORE</dt>
-              <dd id="score-value">-</dd>
-            </div>
-            <div>
-              <dt>Responses</dt>
-              <dd id="response-count">0</dd>
-            </div>
-            <div>
-              <dt>Validation</dt>
-              <dd id="validation-count">0</dd>
-            </div>
-          </dl>
-          <details>
-            <summary>Responses and outcomes</summary>
-            <pre id="score-details">{}</pre>
-          </details>
-        </div>
-        <h2>Debug actions</h2>
-        <div class="debug-actions">
-          <button id="debug-score" type="button">Score attempt</button>
-          <button id="debug-suspend" type="button">Suspend</button>
-          <button id="debug-end" type="button">End attempt</button>
-          <button id="debug-reset" type="button">Reset</button>
-        </div>
-        <h2>Debug panels</h2>
-        <div class="debug-grid">
-          <details class="debug-panel" open>
-            <summary>Responses</summary>
-            <pre id="debug-responses">{}</pre>
-          </details>
-          <details class="debug-panel" open>
-            <summary>Outcomes</summary>
-            <pre id="debug-outcomes">{}</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Template values</summary>
-            <pre id="debug-template-values">{}</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Catalogs</summary>
-            <pre id="debug-catalogs">[]</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Stylesheets</summary>
-            <pre id="debug-stylesheets">[]</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Companion materials</summary>
-            <pre id="debug-companion-materials">null</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Package</summary>
-            <pre id="debug-package">{}</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Validation messages</summary>
-            <pre id="debug-validation">[]</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Diagnostics</summary>
-            <pre id="debug-diagnostics">[]</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Serialized state</summary>
-            <pre id="debug-state">{}</pre>
-          </details>
-          <details class="debug-panel" open>
-            <summary>Action log</summary>
-            <pre id="debug-action-log" aria-live="polite">[]</pre>
-          </details>
-          <details class="debug-panel">
-            <summary>Accessibility proof</summary>
-            <div id="debug-a11y-proof" class="a11y-proof">No interaction loaded.</div>
-          </details>
-          <details class="debug-panel">
-            <summary>Manual AT scripts</summary>
-            <div id="debug-at-scripts" class="at-scripts">No interaction loaded.</div>
-          </details>
-        </div>
-        <h2>Latest event</h2>
-        <pre id="events" aria-live="polite"></pre>
-      </aside>
-      <section>
-        <qti-assessment-item-player id="player"></qti-assessment-item-player>
       </section>
     </main>
+    <footer class="site-footer">
+      <div class="content-width site-footer-inner">
+        <p>
+          qti3 is MIT-licensed open-source software maintained by
+          <a href="https://www.longsight.com/">Longsight</a>.
+        </p>
+        <p>
+          <a href="https://github.com/LongsightGroup/qti3">Source and releases</a> ·
+          <a href="https://github.com/LongsightGroup/qti3/issues">Report an issue</a>
+        </p>
+      </div>
+    </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
