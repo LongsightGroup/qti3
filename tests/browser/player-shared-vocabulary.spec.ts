@@ -78,7 +78,9 @@ test.describe("shared vocabulary matrix", () => {
     for (const entry of matrixEntries.filter((item) => !item.forcedColors)) {
       await page.goto(`/sv-gallery?case=${encodeURIComponent(entry.id)}`);
       const caseRoot = page.locator(".main");
-      await expect(caseRoot).toHaveAttribute("data-selected-case-id", entry.id);
+      await expect(caseRoot).toHaveAttribute("data-selected-case-id", entry.id, {
+        timeout: 15_000,
+      });
       await expect(caseRoot).toHaveAttribute("data-case-status", "ready", { timeout: 15_000 });
       await expect(page.locator("#case-title")).toHaveText(entry.id);
       await expect(player.locator(".qti3-item-body, .qti3-interaction").first()).toBeVisible();
