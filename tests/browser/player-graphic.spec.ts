@@ -361,6 +361,7 @@ test.describe("player graphic interactions", () => {
     await loadFixture(page, "drawing");
 
     const surface = page.locator("qti-assessment-item-player .qti3-drawing-surface");
+    await surface.scrollIntoViewIfNeeded();
     const box = await surface.boundingBox();
     if (!box) throw new Error("Missing drawing surface box.");
     expect(box.width).toBe(480);

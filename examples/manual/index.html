@@ -55,25 +55,18 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f5f6f7;
+        --bg: #f7f7f7;
         --panel: #fff;
-        --panel-alt: #f9fafb;
-        --ink: #111827;
-        --muted: #4b5563;
-        --line: #d7dce2;
-        --accent: #245f9f;
-        --accent-bg: #e7f0fb;
+        --panel-alt: #fafafa;
+        --ink: #202124;
+        --muted: #5f6368;
+        --line: #cfd3d7;
+        --accent: #165ea8;
         --warning: #9d5c00;
         --warning-bg: #fff6e8;
         --success: #23643a;
         --success-bg: #edf7ef;
-        --brand: #10243e;
-        --brand-deep: #0b182a;
-        --brand-text: #eaf3fa;
-        --brand-muted: #b8cad9;
-        --signal: #4fae9d;
-        --signal-light: #66c7b5;
-        --page-width: 74rem;
+        --page-width: 86rem;
       }
 
       body {
@@ -101,7 +94,7 @@
         z-index: 20;
         padding: 0.65rem 0.85rem;
         background: var(--panel);
-        color: var(--brand);
+        color: var(--ink);
         font-weight: 700;
         transform: translateY(-160%);
       }
@@ -111,9 +104,8 @@
       }
 
       .site-header {
-        background: var(--brand-deep);
-        color: var(--brand-text);
-        border-block-end: 1px solid #28435f;
+        background: var(--panel);
+        border-block-end: 1px solid var(--line);
       }
 
       .site-header-inner,
@@ -126,15 +118,14 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 1.5rem;
-        min-block-size: 4rem;
+        gap: 1rem;
+        min-block-size: 3.5rem;
       }
 
       .wordmark {
-        color: #fff;
-        font-size: 1.2rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        color: var(--ink);
+        font-size: 1.1rem;
+        font-weight: 700;
         text-decoration: none;
       }
 
@@ -149,233 +140,72 @@
       .site-nav a {
         display: inline-flex;
         align-items: center;
-        min-block-size: 2.75rem;
-        padding-inline: 0.7rem;
-        color: var(--brand-muted);
+        min-block-size: 2.5rem;
+        padding-inline: 0.6rem;
+        color: var(--muted);
         font-size: 0.9rem;
-        font-weight: 650;
-        text-decoration: none;
+        text-underline-offset: 0.2em;
       }
 
       .site-nav a:hover,
       .site-nav a:focus-visible {
-        color: #fff;
+        color: var(--ink);
       }
 
-      .hero {
-        padding-block: clamp(4rem, 9vw, 7.5rem);
-        color: var(--brand-text);
-        background:
-          radial-gradient(circle at 84% 20%, rgb(79 174 157 / 24%), transparent 28rem),
-          var(--brand-deep);
+      .project-intro {
+        padding-block: 3rem;
+        background: var(--panel);
+        border-block-end: 1px solid var(--line);
       }
 
-      .hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.55fr);
-        gap: clamp(3rem, 8vw, 7rem);
-        align-items: end;
-      }
-
-      .hero-kicker {
-        margin: 0 0 1rem;
-        color: var(--signal-light);
-        font-weight: 750;
-      }
-
-      .hero h1 {
-        max-inline-size: 13ch;
+      .project-intro h1 {
         margin: 0;
-        color: #fff;
-        font-size: clamp(2.6rem, 5vw, 5.4rem);
-        line-height: 0.98;
-        letter-spacing: -0.04em;
-        text-wrap: balance;
-      }
-
-      .hero-copy {
-        max-inline-size: 66ch;
-        margin-block: 1.6rem 0;
-        color: var(--brand-muted);
-        font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-        line-height: 1.65;
-        text-wrap: pretty;
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-block-start: 2rem;
-      }
-
-      .action-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-block-size: 3rem;
-        padding-inline: 1.1rem;
-        border: 1px solid #42617e;
-        color: #fff;
-        font-weight: 750;
-        text-decoration: none;
-      }
-
-      .action-link-primary {
-        border-color: var(--signal-light);
-        background: var(--signal-light);
-        color: var(--brand-deep);
-      }
-
-      .hero-facts {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        border-block-start: 1px solid #315274;
-      }
-
-      .hero-facts li {
-        padding-block: 1rem;
-        border-block-end: 1px solid #315274;
-      }
-
-      .hero-facts strong,
-      .hero-facts span {
-        display: block;
-      }
-
-      .hero-facts strong {
-        color: #fff;
-        font-size: 1.05rem;
-      }
-
-      .hero-facts span {
-        margin-block-start: 0.15rem;
-        color: var(--brand-muted);
-        font-size: 0.9rem;
-      }
-
-      .project-overview,
-      .ecosystem,
-      .manual-section {
-        padding-block: clamp(3.5rem, 7vw, 6rem);
-      }
-
-      .section-heading {
-        display: grid;
-        grid-template-columns: minmax(0, 0.7fr) minmax(20rem, 1.3fr);
-        gap: clamp(2rem, 7vw, 6rem);
-        align-items: start;
-        margin-block-end: 2.5rem;
-      }
-
-      .section-heading h2,
-      .ecosystem h2,
-      .manual-intro h2 {
-        margin: 0;
-        color: var(--brand);
-        font-size: clamp(1.8rem, 3vw, 3rem);
+        color: var(--ink);
+        font-size: clamp(2rem, 4vw, 3rem);
         line-height: 1.1;
-        letter-spacing: -0.035em;
-        text-wrap: balance;
+        letter-spacing: -0.025em;
       }
 
-      .section-heading p,
-      .ecosystem-copy,
-      .manual-intro p {
-        max-inline-size: 68ch;
-        margin: 0;
-        color: var(--muted);
-        font-size: 1.05rem;
-        line-height: 1.7;
-        text-wrap: pretty;
-      }
-
-      .package-list {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        margin: 0;
-        padding: 0;
-        border-block: 1px solid var(--line);
-        list-style: none;
-      }
-
-      .package-list li {
-        padding: 1.4rem;
-        border-inline-start: 1px solid var(--line);
-      }
-
-      .package-list li:first-child {
-        border-inline-start: 0;
-      }
-
-      .package-list strong {
-        display: block;
-        color: var(--brand);
-        font-size: 1.05rem;
-      }
-
-      .package-list span {
-        display: block;
-        margin-block-start: 0.45rem;
-        color: var(--muted);
-      }
-
-      .ecosystem {
-        color: var(--brand-text);
-        background: var(--brand);
-      }
-
-      .ecosystem-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: clamp(2rem, 8vw, 7rem);
-        align-items: center;
-      }
-
-      .ecosystem h2 {
-        color: #fff;
-      }
-
-      .ecosystem-copy {
+      .project-summary {
+        max-inline-size: 66ch;
         margin-block-start: 1rem;
-        color: var(--brand-muted);
+        color: var(--ink);
+        font-size: 1.1rem;
       }
 
-      .ecosystem-links {
-        display: grid;
-        border-block-start: 1px solid #42617e;
-      }
-
-      .ecosystem-links a {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        padding-block: 1rem;
-        border-block-end: 1px solid #42617e;
-        color: #fff;
-        font-weight: 700;
-        text-decoration: none;
+      .project-detail {
+        max-inline-size: 72ch;
+        margin-block-start: 0.75rem;
+        color: var(--muted);
       }
 
       .manual-section {
-        background: var(--bg);
+        padding-block: 2.5rem 4rem;
       }
 
       .manual-intro {
-        display: grid;
-        grid-template-columns: minmax(0, 0.75fr) minmax(20rem, 1.25fr);
-        gap: clamp(2rem, 7vw, 6rem);
-        margin-block-end: 2rem;
+        margin-block-end: 1.5rem;
+      }
+
+      .manual-intro h2 {
+        margin: 0;
+        color: var(--ink);
+        font-size: 1.5rem;
+        line-height: 1.25;
+      }
+
+      .manual-intro p {
+        max-inline-size: 72ch;
+        margin-block-start: 0.5rem;
+        color: var(--muted);
       }
 
       .manual-shell {
         display: grid;
-        grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+        grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
         min-block-size: 44rem;
         border: 1px solid var(--line);
         background: var(--panel);
-        box-shadow: 0 1.5rem 4rem rgb(16 36 62 / 10%);
         font-size: 0.875rem;
       }
 
@@ -695,9 +525,9 @@
 
       .site-footer {
         padding-block: 2rem;
-        color: var(--brand-muted);
-        background: var(--brand-deep);
-        border-block-start: 1px solid #28435f;
+        color: var(--muted);
+        background: var(--panel);
+        border-block-start: 1px solid var(--line);
       }
 
       .site-footer-inner {
@@ -712,29 +542,7 @@
       }
 
       .site-footer a {
-        color: #fff;
-      }
-
-      @media (max-width: 62rem) {
-        .hero-grid,
-        .section-heading,
-        .ecosystem-grid,
-        .manual-intro {
-          grid-template-columns: 1fr;
-        }
-
-        .package-list {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .package-list li:nth-child(3) {
-          border-inline-start: 0;
-          border-block-start: 1px solid var(--line);
-        }
-
-        .package-list li:nth-child(4) {
-          border-block-start: 1px solid var(--line);
-        }
+        color: var(--accent);
       }
 
       @media (max-width: 48rem) {
@@ -762,31 +570,12 @@
         }
       }
 
-      @media (max-width: 34rem) {
-        .package-list {
-          grid-template-columns: 1fr;
-        }
-
-        .package-list li,
-        .package-list li:nth-child(4) {
-          border-inline-start: 0;
-          border-block-start: 1px solid var(--line);
-        }
-
-        .package-list li:first-child {
-          border-block-start: 0;
-        }
-      }
-
       @media (forced-colors: active) {
-        .hero,
-        .ecosystem,
         .site-header,
         .site-footer {
           border-color: CanvasText;
         }
 
-        .action-link,
         .manual-shell {
           box-shadow: none;
         }
@@ -808,117 +597,27 @@
     </header>
 
     <main id="content">
-      <section class="hero">
-        <div class="content-width hero-grid">
-          <div>
-            <p class="hero-kicker">Open-source QTI 3 implementation</p>
-            <h1>Build QTI 3 item workflows on inspectable TypeScript.</h1>
-            <p class="hero-copy">
-              qti3 parses, validates, renders, scores, serializes, authors, and migrates assessment
-              items without tying the item engine to a UI framework. Run the reference fixtures,
-              inspect state and diagnostics, or embed the packages in a host product.
-            </p>
-            <div class="hero-actions">
-              <a class="action-link action-link-primary" href="#manual"
-                >Open the interactive manual</a
-              >
-              <a class="action-link" href="https://github.com/LongsightGroup/qti3"
-                >Inspect the source</a
-              >
-            </div>
-          </div>
-          <ul class="hero-facts" aria-label="Project characteristics">
-            <li>
-              <strong>Framework-neutral core</strong
-              ><span>Adapters stay outside item semantics.</span>
-            </li>
-            <li>
-              <strong>Runnable conformance evidence</strong
-              ><span>Fixtures connect support claims to tests.</span>
-            </li>
-            <li>
-              <strong>Browser, Node, and Deno</strong
-              ><span>Core processing does not require a DOM.</span>
-            </li>
-            <li>
-              <strong>MIT licensed</strong
-              ><span>Published under the LongsightGroup organization.</span>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="project-overview">
+      <section class="project-intro">
         <div class="content-width">
-          <div class="section-heading">
-            <h2>One item engine, explicit package boundaries.</h2>
-            <p>
-              Host products retain assessment navigation, timing, attempts, analytics, proctoring,
-              rostering, and LMS integration. qti3 owns the portable item behavior those products
-              need to parse, render, score, inspect, and exchange.
-            </p>
-          </div>
-          <ul class="package-list">
-            <li>
-              <strong>Core and CLI</strong
-              ><span>Parse, validate, process, score, inspect, and serialize QTI item state.</span>
-            </li>
-            <li>
-              <strong>Player and adapters</strong
-              ><span
-                >Render native Web Components with thin React and Preact integration layers.</span
-              >
-            </li>
-            <li>
-              <strong>Fixtures and proof</strong
-              ><span
-                >Connect interaction support to conformance, browser, and accessibility
-                evidence.</span
-              >
-            </li>
-            <li>
-              <strong>Writer and migrator</strong
-              ><span
-                >Create QTI-shaped output and migrate QTI 1.2 or 2.x source content toward QTI
-                3.</span
-              >
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="ecosystem">
-        <div class="content-width ecosystem-grid">
-          <div>
-            <h2>Maintained in the open, used in assessment products.</h2>
-            <p class="ecosystem-copy">
-              Longsight maintains qti3 as reusable infrastructure. QFlowLearn uses the same open
-              standards direction for assessment authoring, migration, and delivery while keeping
-              product responsibilities outside this item-focused repository.
-            </p>
-          </div>
-          <div class="ecosystem-links">
-            <a href="https://www.qflowlearn.com/standards/qti-3/"
-              >QFlowLearn QTI 3 standards <span aria-hidden="true">↗</span></a
-            >
-            <a href="https://www.qflowlearn.com/migration/"
-              >QTI migration and fidelity review <span aria-hidden="true">↗</span></a
-            >
-            <a href="https://www.longsight.com/"
-              >Longsight open-source education software <span aria-hidden="true">↗</span></a
-            >
-          </div>
+          <h1>qti3</h1>
+          <p class="project-summary">
+            TypeScript packages for parsing, validating, rendering, scoring, writing, and migrating
+            QTI 3 assessment items.
+          </p>
+          <p class="project-detail">
+            The core is framework-neutral. The player uses Web Components, with React and Preact
+            adapters. The repository also includes a CLI, fixtures, and conformance tests.
+          </p>
         </div>
       </section>
 
       <section class="manual-section" id="manual" aria-labelledby="manual-heading">
         <div class="content-width">
           <div class="manual-intro">
-            <h2 id="manual-heading">Run the QTI 3 manual.</h2>
+            <h2 id="manual-heading">Interactive manual</h2>
             <p>
-              Load a synthetic reference fixture, open a QTI package archive, or paste item XML. The
-              panels expose rendering, response state, scoring, diagnostics, PNP resolution, package
-              contents, and accessibility evidence from the same implementation.
+              Load a reference fixture, open a QTI package, or paste item XML. The manual shows the
+              rendered item, response state, scoring, diagnostics, and serialized data.
             </p>
           </div>
           <div class="manual-shell">
@@ -1097,12 +796,10 @@
     </main>
     <footer class="site-footer">
       <div class="content-width site-footer-inner">
+        <p>MIT licensed. Maintained by <a href="https://www.longsight.com/">Longsight</a>.</p>
         <p>
-          qti3 is MIT-licensed open-source software maintained by
-          <a href="https://www.longsight.com/">Longsight</a>.
-        </p>
-        <p>
-          <a href="https://github.com/LongsightGroup/qti3">Source and releases</a> ·
+          <a href="https://github.com/LongsightGroup/qti3">Source</a> ·
+          <a href="https://www.qflowlearn.com/standards/qti-3/">QFlowLearn QTI 3 notes</a> ·
           <a href="https://github.com/LongsightGroup/qti3/issues">Report an issue</a>
         </p>
       </div>
