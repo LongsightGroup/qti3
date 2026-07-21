@@ -1,10 +1,9 @@
 export function isResolvableAssetUrl(value: string): boolean {
+  const normalized = value.trim();
   return (
-    !value.startsWith("#") &&
-    !value.startsWith("/") &&
-    !value.startsWith("data:") &&
-    !value.startsWith("blob:") &&
-    !value.startsWith("http://") &&
-    !value.startsWith("https://")
+    normalized.length > 0 &&
+    !normalized.startsWith("#") &&
+    !normalized.startsWith("/") &&
+    !/^[a-z][a-z\d+.-]*:/i.test(normalized)
   );
 }

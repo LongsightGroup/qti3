@@ -4,6 +4,7 @@ import {
   adaptiveFixtures,
   basicItemPlayerFixtures,
   basicItemPlayerToleranceFixtures,
+  catalogFixtures,
   canonicalFixtures,
   interactionFixtures,
   processingFixtures,
@@ -32,9 +33,25 @@ describe("@longsightgroup/qti3-fixtures", () => {
       "advanced-processing-reference",
     ]);
     expect(adaptiveFixtures.map((fixture) => fixture.id)).toEqual(["adaptive-feedback-reference"]);
+    expect(catalogFixtures.map((fixture) => fixture.id)).toEqual([
+      "catalog-glossary-inline",
+      "catalog-glossary-file",
+      "catalog-multilingual-supports",
+    ]);
     expect(canonicalFixtures).toHaveLength(
-      interactionFixtures.length + processingFixtures.length + adaptiveFixtures.length,
+      interactionFixtures.length +
+        processingFixtures.length +
+        adaptiveFixtures.length +
+        catalogFixtures.length,
     );
+  });
+
+  it.each(catalogFixtures)("parses and validates catalog fixture $id", (fixture) => {
+    const parsed = parseQtiXml(fixture.xml);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error(`Expected ${fixture.id} to parse.`);
+
+    expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);
   });
 
   it("keeps Basic item-player fixtures as explicit supplemental evidence", () => {

@@ -24,7 +24,7 @@ export function installAdapterContractHarness({
   }
 
   function componentProps(input = {}) {
-    const { diagnosticsLabel, loadErrorLabel, readyLabel, ...props } = input;
+    const { catalogLabel, diagnosticsLabel, loadErrorLabel, readyLabel, ...props } = input;
     return {
       ...props,
       onDiagnostics: (detail) =>
@@ -37,6 +37,13 @@ export function installAdapterContractHarness({
           name: error.name,
         }),
       onReady: (detail) => eventLog.push({ type: "ready", label: readyLabel ?? "", detail }),
+      onCatalogRequest: ({ reference, delivery, activation }) =>
+        eventLog.push({
+          type: "catalogRequest",
+          label: catalogLabel ?? "",
+          detail: { delivery, activation },
+          originText: reference.element.textContent?.trim() ?? "",
+        }),
     };
   }
 
@@ -64,6 +71,7 @@ export function installAdapterContractHarness({
       dataItemId: player?.getAttribute("data-item-id") ?? null,
       instanceOfPlayer: player instanceof PlayerElement,
       messageCatalog: player?.messageCatalog,
+      catalogRequestPolicy: player?.catalogRequestPolicy,
       serializedItemIdentifier: player?.serialize?.()?.itemIdentifier,
       textContent: player?.textContent ?? "",
     };
@@ -142,6 +150,42 @@ export function installAdapterContractHarness({
     };
   }
 
+  function handleCatalogSnapshot() {
+    const references = ref.current?.getRenderedCatalogReferences() ?? [];
+    const first = references[0];
+    return {
+      delivery: ref.current?.getCatalogDeliveryResolution({ supports: "glossary-on-screen" }),
+      referenceIds: references.map((reference) => reference.referenceId),
+      requested: first ? ref.current?.requestCatalog(first.referenceId) : false,
+    };
+  }
+
+  function catalogReferenceSnapshot() {
+    return {
+      buttonCount: element()?.querySelectorAll(".qti3-catalog-request").length ?? 0,
+      itemIdentifier: ref.current?.serialize()?.itemIdentifier,
+      referenceIds: (ref.current?.getRenderedCatalogReferences() ?? []).map(
+        (reference) => reference.referenceId,
+      ),
+    };
+  }
+
+  function catalogSuspendRestoreSnapshot() {
+    const state = ref.current?.serialize();
+    const reference = ref.current?.getRenderedCatalogReferences()[0];
+    if (!state || !reference) throw new Error("Missing catalog state.");
+    ref.current.suspend();
+    const disabledWhileSuspended = element()?.querySelector(".qti3-catalog-request")?.disabled;
+    const requestedWhileSuspended = ref.current.requestCatalog(reference.referenceId);
+    ref.current.restore(state);
+    return {
+      disabledAfterRestore: element()?.querySelector(".qti3-catalog-request")?.disabled,
+      disabledWhileSuspended,
+      requestedAfterRestore: ref.current.requestCatalog(reference.referenceId),
+      requestedWhileSuspended,
+    };
+  }
+
   async function flush() {
     await Promise.resolve();
     await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -150,10 +194,13 @@ export function installAdapterContractHarness({
 
   window.qti3AdapterHarness = {
     clearItemCallCount,
+    catalogReferenceSnapshot,
+    catalogSuspendRestoreSnapshot,
     dispatchReady,
     elementSnapshot,
     eventLogSnapshot,
     flush,
+    handleCatalogSnapshot,
     handleSnapshot,
     installClearItemSpy,
     installLoadXmlMock,

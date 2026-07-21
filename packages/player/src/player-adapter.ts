@@ -7,6 +7,7 @@ import type {
   QtiScoreResult,
   QtiTextToSpeechTraversal,
 } from "@longsightgroup/qti3-core";
+import type { QtiCatalogDeliveryResolution } from "./catalog-delivery.js";
 import type { PlayerMessageCatalog } from "./player-message-catalog.js";
 import type { QtiAssessmentItemPlayer } from "./player-element.js";
 import type { QtiInteractionRegion } from "./player/interaction-regions.js";
@@ -14,10 +15,13 @@ import type { QtiPlayerMessageOverrides } from "./player-message-resolver.js";
 import type {
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
+  QtiCatalogRequestActivation,
+  QtiCatalogRequestPolicy,
   QtiPlayerFetchXml,
   QtiPlayerLoadOptions,
   QtiPlayerResolveAsset,
   QtiScoreAttemptOptions,
+  QtiRenderedCatalogReference,
 } from "./player-types.js";
 
 export type QtiAssessmentItemPlayerAdapterEventPropName =
@@ -31,13 +35,15 @@ export type QtiAssessmentItemPlayerAdapterEventPropName =
   | "onPortableCustomMount"
   | "onDiagnostics"
   | "onReset"
-  | "onRestore";
+  | "onRestore"
+  | "onCatalogRequest";
 
 export type QtiAssessmentItemPlayerAdapterPropName =
   | "xml"
   | "loadOptions"
   | "languageOfInterface"
   | "keywordEmphasisEnabled"
+  | "catalogRequestPolicy"
   | "messageCatalog"
   | "messages"
   | "onLoadError"
@@ -59,6 +65,7 @@ export interface QtiAssessmentItemPlayerAdapterProps extends QtiAssessmentItemPl
   loadOptions?: QtiPlayerLoadOptions | undefined;
   languageOfInterface?: string | undefined;
   keywordEmphasisEnabled?: boolean | undefined;
+  catalogRequestPolicy?: QtiCatalogRequestPolicy | undefined;
   messageCatalog?: PlayerMessageCatalog | undefined;
   messages?: QtiPlayerMessageOverrides | undefined;
   onLoadError?: ((error: Error) => void) | undefined;
@@ -80,6 +87,11 @@ export interface QtiAssessmentItemPlayerHandle {
   getCatalogSupportResolution(
     options?: QtiCatalogSupportResolutionOptions,
   ): QtiCatalogSupportResolution | undefined;
+  getCatalogDeliveryResolution(
+    options?: QtiCatalogSupportResolutionOptions,
+  ): QtiCatalogDeliveryResolution | undefined;
+  getRenderedCatalogReferences(): QtiRenderedCatalogReference[];
+  requestCatalog(referenceId: string, activation?: QtiCatalogRequestActivation): boolean;
   getCompanionMaterialsResolution(
     options?: QtiCompanionMaterialsResolutionOptions,
   ): QtiCompanionMaterialsResolution | undefined;
@@ -97,6 +109,7 @@ export const qtiAssessmentItemPlayerAdapterEventEntries = [
   ["qti-diagnostics", "onDiagnostics"],
   ["qti-reset", "onReset"],
   ["qti-restore", "onRestore"],
+  ["qti-catalogrequest", "onCatalogRequest"],
 ] as const satisfies readonly (readonly [
   QtiAssessmentItemPlayerEventName,
   QtiAssessmentItemPlayerAdapterEventPropName,
@@ -107,6 +120,7 @@ export const qtiAssessmentItemPlayerAdapterPropNames = [
   "loadOptions",
   "languageOfInterface",
   "keywordEmphasisEnabled",
+  "catalogRequestPolicy",
   "messageCatalog",
   "messages",
   "onLoadError",
@@ -184,11 +198,16 @@ export function syncQtiAssessmentItemPlayerAdapterChrome(
   element: QtiAssessmentItemPlayer,
   props: Pick<
     QtiAssessmentItemPlayerAdapterProps,
-    "languageOfInterface" | "keywordEmphasisEnabled" | "messageCatalog" | "messages"
+    | "languageOfInterface"
+    | "keywordEmphasisEnabled"
+    | "catalogRequestPolicy"
+    | "messageCatalog"
+    | "messages"
   >,
 ): void {
   element.languageOfInterface = props.languageOfInterface;
   element.keywordEmphasisEnabled = props.keywordEmphasisEnabled;
+  element.catalogRequestPolicy = props.catalogRequestPolicy;
   element.messageCatalog = props.messageCatalog;
   element.messages = props.messages;
 }
@@ -254,6 +273,11 @@ export function createQtiAssessmentItemPlayerHandle(
     getInteractionRegions: () => requiredElement(getElement).getInteractionRegions(),
     getCatalogSupportResolution: (options) =>
       requiredElement(getElement).getCatalogSupportResolution(options),
+    getCatalogDeliveryResolution: (options) =>
+      requiredElement(getElement).getCatalogDeliveryResolution(options),
+    getRenderedCatalogReferences: () => requiredElement(getElement).getRenderedCatalogReferences(),
+    requestCatalog: (referenceId, activation) =>
+      requiredElement(getElement).requestCatalog(referenceId, activation),
     getCompanionMaterialsResolution: (options) =>
       requiredElement(getElement).getCompanionMaterialsResolution(options),
   };

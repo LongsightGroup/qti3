@@ -262,6 +262,51 @@ Region `label` values come from `aria-label`, `title`, and finally trimmed `text
 Tabular match interactions expose one `control` region per matrix cell toggle rather than separate
 `source` and `target` regions.
 
+## Catalog support (host chrome)
+
+Catalog cards are dormant metadata until the host opts into specific supports. The player does not
+choose a glossary popup, translation panel, audio player, or other presentation on the host's
+behalf.
+
+Use `getRenderedCatalogReferences()` to relate authored `data-catalog-idref` values to current live
+elements without querying private player markup. Each result has a stable `referenceId`, the
+`catalogId`, authored `qtiName`, source location, and current `element`. Re-query after a rerender;
+the identifier remains stable for the loaded item, while the element may be replaced.
+
+Use `getCatalogDeliveryResolution()` for sanitized, structured support content. Inline HTML is an
+allowlisted node tree rather than an HTML string. Package-relative URLs pass through the
+`resolveAsset` supplied at load time, while media fragments and authored MIME types are preserved.
+Unsafe elements, attributes, URLs, and unsafe resolver output are omitted.
+
+To expose candidate request controls, provide an explicit policy:
+
+```ts
+player.catalogRequestPolicy = {
+  supports: ["glossary-on-screen", "keyword-translation"],
+  languages: ["fr-CA", "fr"],
+  includeDefaultFallback: true,
+};
+
+player.addEventListener("qti-catalogrequest", (event) => {
+  const { reference, delivery, activation } = event.detail;
+  showSupportInHostChrome({
+    matches: delivery.matches,
+    origin: reference.element,
+    activation,
+  });
+});
+```
+
+The opt-in adds a localized native button adjacent to each matching rendered reference, giving
+pointer and keyboard requests the same event contract. `activation` is `"pointer"`, `"keyboard"`,
+or `"programmatic"`. Hosts can call `requestCatalog(referenceId)` for their own affordances. A
+request returns `false` when the reference is unavailable, has no policy match, or the attempt is
+suspended or completed.
+
+`getCatalogSupportResolution()` remains available when a host needs the raw parsed core model.
+React and Preact expose the same `catalogRequestPolicy`, `onCatalogRequest`, and imperative handle
+methods as the Web Component.
+
 ## Companion materials (host chrome)
 
 `qti-companion-materials-info` is item metadata, not item-body content. The player parses

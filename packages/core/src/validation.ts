@@ -635,7 +635,10 @@ function validateCatalogCard(
   }
 
   const entries = "entries" in card ? card.entries : [];
-  const hasContent = Boolean(card.htmlContent) || card.fileHrefs.length > 0 || entries.length > 0;
+  const hasHtmlContent = Boolean(card.htmlContent);
+  const hasFileHrefs = card.fileHrefs.length > 0;
+  const hasDirectContent = hasHtmlContent || hasFileHrefs;
+  const hasContent = hasDirectContent || entries.length > 0;
   if (!hasContent) {
     diagnostics.push({
       code: "catalog.card.content.required",
@@ -643,6 +646,37 @@ function validateCatalogCard(
       message: "qti-card or qti-card-entry requires qti-html-content or qti-file-href content.",
       path: card.source?.path,
       source: card.source,
+    });
+  }
+
+  if (hasHtmlContent && hasFileHrefs) {
+    diagnostics.push({
+      code: "catalog.card.content.choice",
+      severity: "error",
+      message: "qti-card or qti-card-entry must use qti-html-content or qti-file-href, not both.",
+      path: card.source?.path,
+      source: card.source,
+    });
+  }
+
+  if (entries.length > 0 && hasDirectContent) {
+    diagnostics.push({
+      code: "catalog.card.entries.choice",
+      severity: "error",
+      message: "qti-card must use direct content or qti-card-entry children, not both.",
+      path: card.source?.path,
+      source: card.source,
+    });
+  }
+
+  const defaultEntries = entries.filter((entry) => entry.default);
+  if (defaultEntries.length > 1) {
+    diagnostics.push({
+      code: "catalog.cardEntry.default.multiple",
+      severity: "error",
+      message: "Only one qti-card-entry in a qti-card may be designated as default.",
+      path: defaultEntries[1]?.source?.path ?? card.source?.path,
+      source: defaultEntries[1]?.source ?? card.source,
     });
   }
 

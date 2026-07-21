@@ -66,6 +66,7 @@ export const QtiAssessmentItemPlayer = forwardRef<
   }, [
     props.languageOfInterface,
     props.keywordEmphasisEnabled,
+    props.catalogRequestPolicy,
     props.messageCatalog,
     props.messages,
   ]);

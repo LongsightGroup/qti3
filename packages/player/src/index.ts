@@ -14,6 +14,9 @@ export type {
   QtiAssessmentItemPlayerEvent,
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
+  QtiCatalogRequestActivation,
+  QtiCatalogRequestEventDetail,
+  QtiCatalogRequestPolicy,
   QtiDiagnosticsEventDetail,
   QtiEndAttemptEventDetail,
   QtiPlayerFetchXml,
@@ -22,6 +25,7 @@ export type {
   QtiPlayerResolveStylesheet,
   QtiPlayerSessionControl,
   QtiResolvedStylesheet,
+  QtiRenderedCatalogReference,
   QtiPortableCustomMountEventDetail,
   QtiReadyEventDetail,
   QtiResponseChangeEventDetail,
@@ -33,6 +37,14 @@ export type {
   QtiSuspendEventDetail,
   QtiValidationEventDetail,
 } from "./player-types.js";
+export type {
+  QtiCatalogDeliveryFile,
+  QtiCatalogDeliveryNode,
+  QtiCatalogDeliveryReference,
+  QtiCatalogDeliveryResolution,
+  QtiCatalogDeliverySupport,
+} from "./catalog-delivery.js";
+export { createCatalogDeliveryResolution } from "./catalog-delivery.js";
 export type {
   QtiInteractionRegion,
   QtiInteractionRegionKind,

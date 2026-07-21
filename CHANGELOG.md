@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.9.9 - 2026-07-21
+
+### Added
+
+- Add catalog host delivery to `@longsightgroup/qti3-player`, including sanitized
+  `getCatalogDeliveryResolution()`, live `getRenderedCatalogReferences()`, opt-in
+  `catalogRequestPolicy`, native request controls, `requestCatalog()`, and the
+  `qti-catalogrequest` event with composed `{ reference, delivery, activation }` detail.
+- Add `createCatalogSupportResolution()` language ranking, stable catalog `referenceId`
+  identities, nested `data-catalog-idref` discovery inside catalog HTML, and card-level
+  language metadata in `@longsightgroup/qti3-core`.
+- Add catalog validation for mixed direct card content, card entries, and multiple default
+  entries.
+- Add synthetic catalog fixtures and browser coverage for request lifecycle, suspend/restore,
+  and safe content delivery.
+
+### Changed
+
+- Extract catalog host orchestration into `CatalogHost`, shared safe content projection, and
+  focused request-control modules in the player package.
+- Extend player content sanitization for catalog media elements and package-relative asset
+  resolution through `sanitizeContentAttributes()`.
+- Align all workspace package versions on `0.9.9`.
+
 ## 0.9.7 - 2026-07-06
 
 ### Added

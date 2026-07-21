@@ -9,6 +9,7 @@ export {
   createCatalogSupportResolution,
   type QtiCatalogSupportResolution,
   type QtiCatalogSupportResolutionOptions,
+  type QtiCatalogSelectionReason,
   type QtiResolvedCatalogReference,
   type QtiResolvedCatalogSupport,
 } from "./catalog.js";
@@ -306,6 +307,7 @@ export type {
   QtiResponseProcessing,
   QtiResponseRule,
   QtiScoreResult,
+  QtiSourceLocation,
   QtiStylesheet,
   QtiLookupOutcomeValue,
   QtiSetOutcomeValue,

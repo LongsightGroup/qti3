@@ -9,7 +9,11 @@ import {
   responseValidationPolicy,
   validateItemResponses,
 } from "./player-validation.js";
-import { isResolvableAssetUrl, isSafeUrl as contentIsSafeUrl } from "./content/content-dom.js";
+import {
+  isResolvableAssetUrl,
+  isSafeResolvedAssetUrl,
+  isSafeUrl as contentIsSafeUrl,
+} from "./content/content-dom.js";
 
 describe("player-validation", () => {
   it("detects empty and non-empty responses", () => {
@@ -251,5 +255,12 @@ describe("content-dom url policy", () => {
     expect(isResolvableAssetUrl("items/picture.png")).toBe(true);
     expect(isResolvableAssetUrl("https://example.com/x")).toBe(false);
     expect(isResolvableAssetUrl("data:image/png;base64,abc")).toBe(false);
+  });
+
+  it("accepts host-resolved blob assets without admitting executable urls", () => {
+    expect(isSafeResolvedAssetUrl("blob:https://example.com/id")).toBe(true);
+    expect(isSafeResolvedAssetUrl("data:image/png;base64,abc")).toBe(true);
+    expect(isSafeResolvedAssetUrl("data:text/html;base64,abc")).toBe(false);
+    expect(isSafeResolvedAssetUrl("javascript:alert(1)")).toBe(false);
   });
 });

@@ -13,6 +13,8 @@ describe("isResolvableAssetUrl", () => {
     expect(isResolvableAssetUrl("http://example.com/x")).toBe(false);
     expect(isResolvableAssetUrl("data:image/png;base64,abc")).toBe(false);
     expect(isResolvableAssetUrl("blob:https://example.com/x")).toBe(false);
+    expect(isResolvableAssetUrl("javascript:alert(1)")).toBe(false);
+    expect(isResolvableAssetUrl("MAILTO:test@example.com")).toBe(false);
     expect(isResolvableAssetUrl("#fragment")).toBe(false);
   });
 });

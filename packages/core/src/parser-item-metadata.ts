@@ -52,13 +52,18 @@ export function parseStylesheet(node: XmlNode): QtiStylesheet {
   };
 }
 
-export function parseCatalogReferences(node: XmlNode): QtiCatalogReference[] {
+export function parseCatalogReferences(
+  node: XmlNode,
+  itemIdentifier: string,
+): QtiCatalogReference[] {
   const references = [
     ...(node.attributes["data-catalog-idref"] ? [node] : []),
     ...descendants(node, (child) => Boolean(child.attributes["data-catalog-idref"])),
   ];
   return references.map((reference) => ({
+    referenceId: `catalog-reference:${itemIdentifier}:${reference.source.path}`,
     idref: reference.attributes["data-catalog-idref"] ?? "",
+    qtiName: reference.localName,
     source: reference.source,
   }));
 }
@@ -90,6 +95,7 @@ export function parseCatalogInfo(node: XmlNode | undefined): QtiCatalogInfo | un
 function parseCatalogCard(node: XmlNode): QtiCatalogCard {
   return {
     support: node.attributes.support ?? "",
+    language: node.attributes["xml:lang"] ?? node.attributes.lang,
     htmlContent: parseCatalogHtmlContent(childElements(node, "qti-html-content")[0]),
     fileHrefs: childElements(node, "qti-file-href").map(parseCatalogFileHref),
     entries: childElements(node, "qti-card-entry").map(parseCatalogCardEntry),

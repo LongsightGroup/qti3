@@ -21,7 +21,9 @@ export interface QtiCatalogSupportResolution {
 }
 
 export interface QtiResolvedCatalogReference {
+  referenceId: string;
   idref: string;
+  qtiName: string;
   catalog?: QtiCatalog | undefined;
   matches: QtiResolvedCatalogSupport[];
   source?: QtiSourceLocation | undefined;
@@ -31,6 +33,7 @@ export interface QtiResolvedCatalogSupport {
   catalogId: string;
   support: string;
   default: boolean;
+  selectionReason: QtiCatalogSelectionReason;
   fileHrefs: QtiCatalogFileHref[];
   attributes: Record<string, string>;
   cardAttributes: Record<string, string>;
@@ -42,6 +45,14 @@ export interface QtiResolvedCatalogSupport {
   catalogSource?: QtiSourceLocation | undefined;
 }
 
+/** Explains why a catalog card or card entry was returned by language resolution. */
+export type QtiCatalogSelectionReason =
+  | "available"
+  | "default"
+  | "exact-language"
+  | "primary-language"
+  | "unlanguaged";
+
 interface Candidate {
   card: QtiCatalogCard;
   default: boolean;
@@ -50,6 +61,7 @@ interface Candidate {
   language?: string | undefined;
   htmlContent?: QtiCatalogHtmlContent | undefined;
   source?: QtiSourceLocation | undefined;
+  selectionReason?: QtiCatalogSelectionReason | undefined;
 }
 
 export function createCatalogSupportResolution(
@@ -68,7 +80,9 @@ export function createCatalogSupportResolution(
     references: item.catalogReferences.map((reference) => {
       const catalog = catalogById.get(reference.idref);
       const resolved: QtiResolvedCatalogReference = {
+        referenceId: reference.referenceId,
         idref: reference.idref,
+        qtiName: reference.qtiName,
         matches: catalog ? matchingCatalogSupports(catalog, supportFilter, languages, options) : [],
       };
       if (catalog) resolved.catalog = catalog;
@@ -100,23 +114,48 @@ function selectedCandidates(
   const candidates = catalogCandidates(card);
   if (languages.length === 0) {
     const defaults = candidates.filter((candidate) => candidate.default);
-    return defaults.length > 0 ? defaults : candidates;
+    return withSelectionReason(
+      defaults.length > 0 ? defaults : candidates,
+      defaults.length > 0 ? "default" : "available",
+    );
   }
 
   const languageMatches = candidates
     .map((candidate, index) => ({
       candidate,
       index,
-      rank: languageMatchRank(candidate.language, languages),
+      match: languageMatch(candidate.language, languages),
     }))
-    .filter((entry): entry is { candidate: Candidate; index: number; rank: number } =>
-      Number.isInteger(entry.rank),
+    .filter(
+      (
+        entry,
+      ): entry is {
+        candidate: Candidate;
+        index: number;
+        match: LanguageMatch;
+      } => entry.match !== undefined,
     )
-    .toSorted((a, b) => a.rank - b.rank || a.index - b.index);
-  if (languageMatches.length > 0) return languageMatches.map((entry) => entry.candidate);
+    .toSorted((a, b) => a.match.rank - b.match.rank || a.index - b.index);
+  const bestLanguageRank = languageMatches[0]?.match.rank;
+  if (bestLanguageRank !== undefined) {
+    return languageMatches
+      .filter((entry) => entry.match.rank === bestLanguageRank)
+      .map((entry) => ({ ...entry.candidate, selectionReason: entry.match.reason }));
+  }
   if (options.includeDefaultFallback === false) return [];
   const defaults = candidates.filter((candidate) => candidate.default);
-  return defaults.length > 0 ? defaults : candidates.filter((candidate) => !candidate.language);
+  if (defaults.length > 0) return withSelectionReason(defaults, "default");
+  return withSelectionReason(
+    candidates.filter((candidate) => !candidate.language),
+    "unlanguaged",
+  );
+}
+
+function withSelectionReason(
+  candidates: Candidate[],
+  selectionReason: QtiCatalogSelectionReason,
+): Candidate[] {
+  return candidates.map((candidate) => ({ ...candidate, selectionReason }));
 }
 
 function catalogCandidates(card: QtiCatalogCard): Candidate[] {
@@ -129,6 +168,7 @@ function catalogCandidates(card: QtiCatalogCard): Candidate[] {
       default: true,
       fileHrefs: card.fileHrefs,
       attributes: card.attributes,
+      language: card.language,
       htmlContent: card.htmlContent,
       source: card.source,
     },
@@ -153,6 +193,7 @@ function resolvedSupport(catalog: QtiCatalog, candidate: Candidate): QtiResolved
     catalogId: catalog.id,
     support: candidate.card.support,
     default: candidate.default,
+    selectionReason: candidate.selectionReason ?? "available",
     fileHrefs: candidate.fileHrefs,
     attributes: candidate.attributes,
     cardAttributes: candidate.card.attributes,
@@ -166,17 +207,29 @@ function resolvedSupport(catalog: QtiCatalog, candidate: Candidate): QtiResolved
   return resolved;
 }
 
-function languageMatchRank(
+interface LanguageMatch {
+  rank: number;
+  reason: Extract<QtiCatalogSelectionReason, "exact-language" | "primary-language">;
+}
+
+function languageMatch(
   language: string | undefined,
   requestedLanguages: string[],
-): number | undefined {
+): LanguageMatch | undefined {
   if (!language) return undefined;
   const normalizedLanguage = language.toLowerCase();
   const primaryLanguage = normalizedLanguage.split("-")[0] ?? normalizedLanguage;
   for (const [index, requestedLanguage] of requestedLanguages.entries()) {
-    if (normalizedLanguage === requestedLanguage) return index * 2;
+    if (normalizedLanguage === requestedLanguage) {
+      return { rank: index * 3, reason: "exact-language" };
+    }
     const requestedPrimary = requestedLanguage.split("-")[0] ?? requestedLanguage;
-    if (primaryLanguage === requestedPrimary) return index * 2 + 1;
+    if (primaryLanguage === requestedPrimary) {
+      return {
+        rank: index * 3 + (normalizedLanguage === requestedPrimary ? 1 : 2),
+        reason: "primary-language",
+      };
+    }
   }
   return undefined;
 }

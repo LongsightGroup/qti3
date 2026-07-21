@@ -1,4 +1,9 @@
-import type { QtiContentNode, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
+import type {
+  QtiContentNode,
+  QtiInteraction,
+  QtiSourceLocation,
+  QtiValue,
+} from "@longsightgroup/qti3-core";
 import { isInlineFlowInteraction } from "../interactions/interaction-inline-embedding.js";
 import {
   contentElementName,
@@ -16,6 +21,8 @@ export interface PlayerContentContext {
   mathTemplateValue(node: Extract<QtiContentNode, { kind: "element" }>): string | undefined;
   isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean;
   isTemplateContentVisible(element: HTMLElement): boolean;
+  /** Reports exact parsed-source provenance for each concrete element this renderer creates. */
+  observeRenderedElement(source: QtiSourceLocation | undefined, element: Element): void;
 }
 
 export function renderContentNodes(nodes: QtiContentNode[], context: PlayerContentContext): Node[] {
@@ -35,6 +42,7 @@ function staticMarkupContentContext(): PlayerContentContext {
     mathTemplateValue: () => undefined,
     isFeedbackVisible: () => false,
     isTemplateContentVisible: () => false,
+    observeRenderedElement: () => {},
   };
 }
 
@@ -44,12 +52,18 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
     const interaction = context.interactionAt(node.interactionIndex);
     if (!interaction) return [];
     if (isInlineFlowInteraction(interaction)) {
-      return [context.renderEmbeddedInteraction(interaction)];
+      const element = context.renderEmbeddedInteraction(interaction);
+      context.observeRenderedElement(node.source, element);
+      return [element];
     }
-    return [context.renderBlockInteraction(interaction)];
+    const element = context.renderBlockInteraction(interaction);
+    context.observeRenderedElement(node.source, element);
+    return [element];
   }
   if (node.kind === "printedVariable") {
-    return [renderPrintedVariable(node.identifier, node.format, context)];
+    const element = renderPrintedVariable(node.identifier, node.format, context);
+    context.observeRenderedElement(node.source, element);
+    return [element];
   }
   if (node.kind === "feedback") return renderFeedbackContent(node, context);
   if (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline") {
@@ -68,6 +82,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
     copySafeAttributes(prompt, node.attributes);
     prompt.classList.add("qti3-item-prompt");
     prompt.append(...renderContentNodes(node.children, context));
+    context.observeRenderedElement(node.source, prompt);
     return [prompt];
   }
 
@@ -82,6 +97,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   } else {
     element.textContent = mathTemplateValue;
   }
+  context.observeRenderedElement(node.source, element);
   return [element];
 }
 
@@ -99,6 +115,7 @@ function renderTemplateContent(
   element.dataset.showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
   element.hidden = !context.isTemplateContentVisible(element);
   element.append(...renderContentNodes(node.children, context));
+  context.observeRenderedElement(node.source, element);
   return element;
 }
 
@@ -127,5 +144,6 @@ function renderFeedbackContent(
   element.dataset.showHide = node.showHide;
   element.hidden = !context.isFeedbackVisible(node);
   element.append(...renderContentNodes(node.children, context));
+  context.observeRenderedElement(node.source, element);
   return [element];
 }

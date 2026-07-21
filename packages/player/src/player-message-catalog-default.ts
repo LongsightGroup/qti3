@@ -131,5 +131,7 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
     textResponseLabel: "Text response",
     patternMaskMismatch: "Response does not match the required pattern.",
     sliderResponseLabel: "Slider response",
+    catalogSupportTrigger: "Support",
+    catalogSupportTriggerLabel: "Show support for {label}",
   },
 };

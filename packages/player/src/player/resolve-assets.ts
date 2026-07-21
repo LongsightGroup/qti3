@@ -1,4 +1,4 @@
-import { isResolvableAssetUrl } from "../content/content-dom.js";
+import { isResolvableAssetUrl, isSafeResolvedAssetUrl } from "../content/content-dom.js";
 import type { QtiPlayerResolveAsset } from "../player-types.js";
 
 export function resolveRenderedAssets(root: ParentNode, resolveAsset: QtiPlayerResolveAsset): void {
@@ -24,5 +24,9 @@ export function resolveElementAssetAttribute(
   const value = element.getAttribute(attribute);
   if (!value || !isResolvableAssetUrl(value)) return;
   const resolved = resolveAsset(value);
+  if (!isSafeResolvedAssetUrl(resolved)) {
+    element.removeAttribute(attribute);
+    return;
+  }
   if (resolved !== value) element.setAttribute(attribute, resolved);
 }

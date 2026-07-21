@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-multilingual-supports" title="catalog-multilingual-supports" time-dependent="false" xml:lang="en">
+  <qti-item-body><p>Choose the <span data-catalog-idref="precise">precise</span> measurement.</p></qti-item-body>
+  <qti-catalog-info><qti-catalog id="precise">
+      <qti-card support="glossary-on-screen" xml:lang="en">
+        <qti-html-content><p><strong>Precise:</strong> exact and accurate.</p></qti-html-content>
+      </qti-card>
+      <qti-card support="keyword-translation">
+        <qti-card-entry xml:lang="es" default="true">
+          <qti-html-content><p>preciso</p></qti-html-content>
+        </qti-card-entry>
+        <qti-card-entry xml:lang="de">
+          <qti-html-content><p>genau</p></qti-html-content>
+        </qti-card-entry>
+        <qti-card-entry xml:lang="fr-CA">
+          <qti-html-content><p>précis</p></qti-html-content>
+        </qti-card-entry>
+      </qti-card>
+      <qti-card support="spoken">
+        <qti-card-entry xml:lang="en" default="true" data-reading-type="computer-read-aloud">
+          <qti-html-content>
+            <audio controls="controls">
+              <source src="audio/precise.mp3#t=0,2.5" type="audio/mpeg"/>
+              <source src="audio/precise.ogg#t=0,2.5" type="audio/ogg"/>
+            </audio>
+          </qti-html-content>
+        </qti-card-entry>
+      </qti-card>
+    </qti-catalog></qti-catalog-info>
+</qti-assessment-item>

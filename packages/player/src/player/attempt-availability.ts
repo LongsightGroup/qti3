@@ -1,3 +1,5 @@
+import { isCatalogRequestDisabled } from "../catalog-request-state.js";
+
 export function syncAttemptAvailability(
   root: ParentNode,
   options: { completed: boolean; status: string; host?: HTMLElement },
@@ -8,6 +10,11 @@ export function syncAttemptAvailability(
 
   const article = root.querySelector<HTMLElement>(".qti3-player");
   if (article) article.dataset.status = options.status;
+
+  const catalogRequestsDisabled = isCatalogRequestDisabled(options.status, options.completed);
+  for (const control of root.querySelectorAll<HTMLButtonElement>(".qti3-catalog-request")) {
+    control.disabled = catalogRequestsDisabled;
+  }
 
   for (const control of root.querySelectorAll<
     HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement

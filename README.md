@@ -237,10 +237,10 @@ player.addEventListener("qti-validation", (event) => {
 
 `resolveAsset` is a host hook for package or virtual-file environments. The player calls it
 for relative `src`, `href`, and `data` asset URLs after rendering the item, and also when hosts
-resolve companion-material file references through `getCompanionMaterialsResolution()`. Items whose
-assets are already reachable by normal browser URLs can omit it. Package-backed media, graphic, and
-drawing assets should use this hook so rendered controls and serialized response exports can resolve
-authored asset references.
+resolve companion-material file references through `getCompanionMaterialsResolution()` or catalog
+support content through `getCatalogDeliveryResolution()`. Items whose assets are already reachable
+by normal browser URLs can omit it. Package-backed media, graphic, and drawing assets should use
+this hook so rendered controls and serialized response exports can resolve authored asset references.
 
 `qti-stylesheet` delivery is a separate host contract. Core preserves stylesheet metadata, and the
 browser player attaches item stylesheets only when `loadXml` / `loadUrl` receives

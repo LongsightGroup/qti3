@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-glossary-file" title="catalog-glossary-file" time-dependent="false" xml:lang="en">
+  <qti-item-body><p>She practiced the <span data-catalog-idref="harmonica">harmonica</span>.</p></qti-item-body>
+  <qti-catalog-info><qti-catalog id="harmonica">
+      <qti-card support="glossary-on-screen" xml:lang="en">
+        <qti-file-href mime-type="text/html">glossary/grades5_9/harmonica.html</qti-file-href>
+      </qti-card>
+    </qti-catalog></qti-catalog-info>
+</qti-assessment-item>

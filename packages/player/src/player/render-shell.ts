@@ -1,5 +1,6 @@
 import type { QtiDocument, QtiInteraction } from "@longsightgroup/qti3-core";
 import { renderContentNodes, type PlayerContentContext } from "../content/content-renderer.js";
+import { copySafeAttributes } from "../content/content-dom.js";
 import { playerStyleElement } from "../player-styles.js";
 import type { QtiResolvedStylesheet } from "../player-types.js";
 import { stylesheetLinkElement } from "./stylesheet-delivery.js";
@@ -38,6 +39,8 @@ export function renderPlayerShell(options: {
   if (documentModel.item.body.length > 0) {
     const body = document.createElement("div");
     body.className = "qti3-item-body";
+    copySafeAttributes(body, documentModel.item.itemBodyAttributes ?? {});
+    contentContext.observeRenderedElement(documentModel.item.itemBodySource, body);
     body.append(...renderContentNodes(documentModel.item.body, contentContext));
     root.append(body);
   } else {

@@ -141,14 +141,21 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     );
   }
   const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
-  const catalogInfo = parseCatalogInfo(
-    firstChildElement(node, "qti-catalog-info", diagnostics, "item.child.duplicate"),
+  const catalogInfoNode = firstChildElement(
+    node,
+    "qti-catalog-info",
+    diagnostics,
+    "item.child.duplicate",
   );
+  const catalogInfo = parseCatalogInfo(catalogInfoNode);
   const companionMaterials = parseCompanionMaterialsInfo(
     firstChildElement(node, "qti-companion-materials-info", diagnostics, "item.child.duplicate"),
     diagnostics,
   );
-  const catalogReferences = itemBody ? parseCatalogReferences(itemBody) : [];
+  const catalogReferences = [
+    ...(itemBody ? parseCatalogReferences(itemBody, identifier) : []),
+    ...(catalogInfoNode ? parseCatalogReferences(catalogInfoNode, identifier) : []),
+  ];
   const stylesheets = childElements(node, "qti-stylesheet").map(parseStylesheet);
   const prompt = itemBody ? childElements(itemBody, "qti-prompt")[0] : undefined;
 
@@ -160,6 +167,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     timeDependent: parseXmlBoolean(node.attributes["time-dependent"]),
     attributes: node.attributes,
     prompt: prompt ? textContent(prompt) : undefined,
+    itemBodyAttributes: itemBody?.attributes,
     itemBodySource: itemBody?.source,
     responseDeclarations,
     outcomeDeclarations,

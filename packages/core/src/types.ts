@@ -385,6 +385,7 @@ export interface QtiCatalog {
 
 export interface QtiCatalogCard {
   support: string;
+  language?: string | undefined;
   htmlContent?: QtiCatalogHtmlContent | undefined;
   fileHrefs: QtiCatalogFileHref[];
   entries: QtiCatalogCardEntry[];
@@ -416,7 +417,9 @@ export interface QtiCatalogFileHref {
 }
 
 export interface QtiCatalogReference {
+  referenceId: string;
   idref: string;
+  qtiName: string;
   source?: QtiSourceLocation | undefined;
 }
 
@@ -437,6 +440,7 @@ export interface QtiAssessmentItem {
   timeDependent?: boolean | undefined;
   attributes: Record<string, string>;
   prompt?: string | undefined;
+  itemBodyAttributes?: Record<string, string> | undefined;
   itemBodySource?: QtiSourceLocation | undefined;
   responseDeclarations: QtiResponseDeclaration[];
   outcomeDeclarations: QtiOutcomeDeclaration[];

@@ -7,6 +7,7 @@ const htmlContentElements = new Set([
   "a",
   "abbr",
   "article",
+  "audio",
   "b",
   "bdi",
   "bdo",
@@ -36,6 +37,7 @@ const htmlContentElements = new Set([
   "li",
   "ol",
   "p",
+  "picture",
   "pre",
   "q",
   "rb",
@@ -49,6 +51,7 @@ const htmlContentElements = new Set([
   "small",
   "span",
   "strong",
+  "source",
   "sub",
   "sup",
   "table",
@@ -58,8 +61,10 @@ const htmlContentElements = new Set([
   "th",
   "thead",
   "tr",
+  "track",
   "ul",
   "var",
+  "video",
 ]);
 
 export const unsafeContentElements = new Set(["script", "style"]);
@@ -127,14 +132,37 @@ export function createContentElement(name: string): HTMLElement | MathMLElement 
 }
 
 export function copySafeAttributes(element: Element, attributes: Record<string, string>): void {
-  for (const [name, value] of Object.entries(attributes)) {
-    if (!isSafeContentAttribute(name, value)) continue;
+  for (const [name, value] of Object.entries(sanitizeContentAttributes(attributes))) {
     element.setAttribute(name, value);
     if (name === "xml:lang" && !Object.hasOwn(attributes, "lang")) {
       element.setAttribute("lang", value);
     }
   }
   applySharedAccessibilityVocabulary(element, attributes);
+}
+
+/** Produces an allowlisted attribute record and optionally resolves package-relative asset URLs. */
+export function sanitizeContentAttributes(
+  attributes: Record<string, string>,
+  resolveAsset?: (url: string) => string,
+): Record<string, string> {
+  const sanitized: Record<string, string> = {};
+  for (const [name, value] of Object.entries(attributes)) {
+    if (!isSafeContentAttribute(name, value)) continue;
+    const normalizedName = name.toLowerCase();
+    if (
+      resolveAsset &&
+      (normalizedName === "href" || normalizedName === "src" || normalizedName === "data") &&
+      isResolvableAssetUrl(value)
+    ) {
+      const resolved = resolveAsset(value);
+      if (!isSafeResolvedAssetUrl(resolved)) continue;
+      sanitized[name] = resolved;
+      continue;
+    }
+    sanitized[name] = value;
+  }
+  return sanitized;
 }
 
 export function applySharedAccessibilityVocabulary(
@@ -192,20 +220,26 @@ function isSafeContentAttribute(name: string, value: string): boolean {
   if (normalizedName.startsWith("on")) return false;
   if (normalizedName === "style") return false;
   if (normalizedName === "href" || normalizedName === "src" || normalizedName === "data") {
-    return isSafeUrl(value);
+    return isSafeContentUrl(value);
   }
   return (
     normalizedName === "alt" ||
+    normalizedName === "controls" ||
     normalizedName === "class" ||
     normalizedName === "colspan" ||
     normalizedName === "dir" ||
     normalizedName === "headers" ||
     normalizedName === "height" ||
     normalizedName === "id" ||
+    normalizedName === "kind" ||
+    normalizedName === "label" ||
     normalizedName === "lang" ||
+    normalizedName === "poster" ||
+    normalizedName === "preload" ||
     normalizedName === "role" ||
     normalizedName === "rowspan" ||
     normalizedName === "scope" ||
+    normalizedName === "srclang" ||
     normalizedName === "title" ||
     normalizedName === "type" ||
     normalizedName === "width" ||
@@ -249,6 +283,16 @@ export function isSafeUrl(value: string): boolean {
     value.startsWith("data:audio/") ||
     value.startsWith("data:video/")
   );
+}
+
+/** Returns whether a URL is safe to retain as rendered content or a package-relative asset. */
+export function isSafeContentUrl(value: string): boolean {
+  return isSafeUrl(value) || isResolvableAssetUrl(value);
+}
+
+/** Returns whether a trusted host resolver produced a renderable asset URL. */
+export function isSafeResolvedAssetUrl(value: string): boolean {
+  return isSafeContentUrl(value) || /^blob:/i.test(value.trim());
 }
 
 export function formatPrintedValue(value: QtiValue, format?: string): string {

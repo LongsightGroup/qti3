@@ -1,7 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { interactionFixtures } from "../../packages/fixtures/src/index.js";
+import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/src/index.js";
 
 const validItemXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+const catalogItemXml = catalogFixtures.find(
+  (fixture) => fixture.id === "catalog-glossary-inline",
+)!.xml;
 
 const keywordEmphasisItemXml = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="content-keyword-emphasis" title="content-keyword-emphasis" time-dependent="false" xml:lang="en">
@@ -22,11 +25,14 @@ const adapterPages = [
 
 type HarnessMethod =
   | "clearItemCallCount"
+  | "catalogReferenceSnapshot"
+  | "catalogSuspendRestoreSnapshot"
   | "dispatchReady"
   | "elementSnapshot"
   | "eventLogSnapshot"
   | "flush"
   | "handleSnapshot"
+  | "handleCatalogSnapshot"
   | "installClearItemSpy"
   | "installLoadXmlMock"
   | "loadXmlCallSnapshot"
@@ -213,6 +219,88 @@ for (const adapter of adapterPages) {
         serialized: { schema: "qti3.attempt-state.v1" },
       });
     });
+
+    test("exposes the same catalog policy, event, and imperative APIs", async ({ page }) => {
+      await callHarness(page, "render", {
+        catalogLabel: "catalog",
+        catalogRequestPolicy: { supports: "glossary-on-screen", languages: "en" },
+        xml: catalogItemXml,
+      });
+      await expect
+        .poll(
+          async () =>
+            ((await callHarness(page, "elementSnapshot")) as ElementSnapshot).childElementCount,
+        )
+        .toBeGreaterThan(0);
+
+      expect(await callHarness(page, "elementSnapshot")).toMatchObject({
+        catalogRequestPolicy: { supports: "glossary-on-screen", languages: "en" },
+      });
+      const snapshot = (await callHarness(page, "handleCatalogSnapshot")) as {
+        delivery: { references: Array<{ matches: unknown[] }> };
+        referenceIds: string[];
+        requested: boolean;
+      };
+      expect(snapshot.referenceIds).toHaveLength(1);
+      expect(snapshot.delivery.references[0]?.matches).toHaveLength(1);
+      expect(snapshot.requested).toBe(true);
+      expect(await callHarness(page, "eventLogSnapshot")).toContainEqual(
+        expect.objectContaining({
+          type: "catalogRequest",
+          label: "catalog",
+          originText: "accurate",
+          detail: expect.objectContaining({
+            activation: "programmatic",
+            delivery: expect.objectContaining({
+              catalogId: "accurate",
+              availableSupports: ["glossary-on-screen"],
+            }),
+          }),
+        }),
+      );
+
+      const firstReference = (await callHarness(page, "catalogReferenceSnapshot")) as {
+        referenceIds: string[];
+      };
+      await callHarness(page, "rerender", {
+        catalogLabel: "catalog-rerendered",
+        catalogRequestPolicy: { supports: "glossary-on-screen", languages: "en" },
+        xml: catalogItemXml,
+      });
+      expect(await callHarness(page, "catalogReferenceSnapshot")).toMatchObject({
+        buttonCount: 1,
+        itemIdentifier: "catalog-glossary-inline",
+        referenceIds: firstReference.referenceIds,
+      });
+      expect(await callHarness(page, "catalogSuspendRestoreSnapshot")).toMatchObject({
+        disabledAfterRestore: false,
+        disabledWhileSuspended: true,
+        requestedAfterRestore: true,
+        requestedWhileSuspended: false,
+      });
+
+      const nextCatalogXml = catalogFixtures.find(
+        (fixture) => fixture.id === "catalog-glossary-file",
+      )!.xml;
+      await callHarness(page, "rerender", {
+        catalogRequestPolicy: { supports: "glossary-on-screen", languages: "en" },
+        xml: nextCatalogXml,
+      });
+      await expect
+        .poll(
+          async () =>
+            (
+              (await callHarness(page, "catalogReferenceSnapshot")) as {
+                itemIdentifier?: string;
+              }
+            ).itemIdentifier,
+        )
+        .toBe("catalog-glossary-file");
+      const nextReference = (await callHarness(page, "catalogReferenceSnapshot")) as {
+        referenceIds: string[];
+      };
+      expect(nextReference.referenceIds[0]).not.toBe(firstReference.referenceIds[0]);
+    });
   });
 }
 
@@ -224,6 +312,7 @@ interface ElementSnapshot {
   dataItemId: string | null;
   instanceOfPlayer: boolean;
   messageCatalog?: unknown;
+  catalogRequestPolicy?: unknown;
   serializedItemIdentifier?: string;
   textContent: string;
 }

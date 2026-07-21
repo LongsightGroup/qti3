@@ -39,6 +39,24 @@ export const BASE_PLAYER_STYLES = `
   display: block;
 }
 
+.qti3-catalog-request {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  margin-inline: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  background: Canvas;
+  color: CanvasText;
+  cursor: pointer;
+}
+
+.qti3-catalog-request:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .qti3-item-body > * {
   margin-block: 0 1rem;
 }

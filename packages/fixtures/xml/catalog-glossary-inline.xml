@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="catalog-glossary-inline" title="catalog-glossary-inline" time-dependent="false" xml:lang="en">
+  <qti-item-body><p>Choose the <span data-catalog-idref="accurate">accurate</span> statement.</p></qti-item-body>
+  <qti-catalog-info><qti-catalog id="accurate">
+      <qti-card support="glossary-on-screen" xml:lang="en">
+        <qti-html-content>
+          <p class="glossary-term"><strong>Accurate</strong></p>
+          <p class="glossary-definition">Correct in all details.</p>
+        </qti-html-content>
+      </qti-card>
+    </qti-catalog></qti-catalog-info>
+</qti-assessment-item>

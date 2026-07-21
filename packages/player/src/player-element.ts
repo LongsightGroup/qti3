@@ -19,6 +19,9 @@ import {
   type QtiTextToSpeechTraversal,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
+import { CatalogHost } from "./catalog-host.js";
+import type { QtiCatalogDeliveryResolution } from "./catalog-delivery.js";
+import { isCatalogRequestDisabled } from "./catalog-request-state.js";
 import { renderContentNodes, type PlayerContentContext } from "./content/content-renderer.js";
 import { contentNodeText } from "./content/content-dom.js";
 import {
@@ -60,10 +63,13 @@ import { resolvePlayerStylesheets } from "./player/stylesheet-delivery.js";
 import type {
   QtiAssessmentItemPlayerEventDetailMap,
   QtiAssessmentItemPlayerEventName,
+  QtiCatalogRequestActivation,
+  QtiCatalogRequestPolicy,
   QtiPlayerLoadOptions,
   QtiPlayerResolveAsset,
   QtiPlayerSessionControl,
   QtiResolvedStylesheet,
+  QtiRenderedCatalogReference,
   QtiScoreAttemptOptions,
 } from "./player-types.js";
 import {
@@ -124,6 +130,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   private authoringDiagnostics: QtiDiagnostic[] = [];
   private languageOfInterfaceOverride: string | undefined;
   private keywordEmphasisOverride: boolean | undefined;
+  private readonly catalogHost = new CatalogHost();
   private messageCatalogOverride: PlayerMessageCatalog | undefined;
   private messageOverrides: QtiPlayerMessageOverrides = {};
   private resolvedMessagesCache: PlayerMessageResolver | undefined;
@@ -190,6 +197,17 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.syncKeywordEmphasisPresentation();
   }
 
+  /** Returns the host-owned policy used to expose candidate catalog request controls. */
+  get catalogRequestPolicy(): QtiCatalogRequestPolicy | undefined {
+    return this.catalogHost.requestPolicy;
+  }
+
+  /** Configures which catalog supports candidates may request without choosing host presentation. */
+  set catalogRequestPolicy(value: QtiCatalogRequestPolicy | undefined) {
+    this.catalogHost.setRequestPolicy(value);
+    this.rerenderIfLoaded();
+  }
+
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     if (oldValue === newValue) return;
     if (name === "data-keyword-emphasis") {
@@ -245,6 +263,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.resolvedStylesheets = [];
     this.validationMessages = [];
     this.authoringDiagnostics = [];
+    this.catalogHost.clearItemState();
     this.replaceChildren();
   }
 
@@ -430,6 +449,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   suspend(): void {
     if (!this.session) return;
     this.session.setStatus("suspended");
+    this.updateAttemptAvailability();
     const state = this.serialize();
     if (!state) return;
     this.dispatchPlayerEvent("qti-suspend", { state });
@@ -472,6 +492,35 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   ): QtiCatalogSupportResolution | undefined {
     if (!this.documentModel) return undefined;
     return createCatalogSupportResolution(this.documentModel, options);
+  }
+
+  /** Returns sanitized, asset-resolved catalog data for explicit support and language options. */
+  getCatalogDeliveryResolution(
+    options: QtiCatalogSupportResolutionOptions = {},
+  ): QtiCatalogDeliveryResolution | undefined {
+    if (!this.documentModel) return undefined;
+    return this.catalogHost.getDeliveryResolution(this.documentModel, this.resolveAsset, options);
+  }
+
+  /** Returns exact live element bindings for rendered authored catalog references. */
+  getRenderedCatalogReferences(): QtiRenderedCatalogReference[] {
+    if (!this.documentModel) return [];
+    return this.catalogHost.getRenderedReferences(this.documentModel);
+  }
+
+  /** Requests host presentation for one live reference when it matches the configured policy. */
+  requestCatalog(
+    referenceId: string,
+    activation: QtiCatalogRequestActivation = "programmatic",
+  ): boolean {
+    if (!this.documentModel || this.catalogRequestsDisabled()) return false;
+    return this.catalogHost.requestCatalog(
+      this.documentModel,
+      this.resolveAsset,
+      referenceId,
+      activation,
+      (detail) => this.dispatchPlayerEvent("qti-catalogrequest", detail),
+    );
   }
 
   getCompanionMaterialsResolution(
@@ -526,6 +575,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     const documentModel = this.documentModel;
     if (!documentModel) return;
 
+    this.catalogHost.beginRender(documentModel);
     this.applyDefaultStyles();
     const root = renderPlayerShell({
       documentModel,
@@ -534,6 +584,15 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       keywordEmphasisEnabled: this.keywordEmphasisEnabled,
       stylesheets: this.resolvedStylesheets,
     });
+    this.catalogHost.installRequestControls(
+      documentModel,
+      this.resolveAsset,
+      this.playerMessages(),
+      (detail) => {
+        if (this.catalogRequestsDisabled()) return;
+        this.dispatchPlayerEvent("qti-catalogrequest", detail);
+      },
+    );
     this.disconnectAssetObserver();
     if (this.resolveAsset) {
       resolveRenderedAssets(root, this.resolveAsset);
@@ -613,7 +672,14 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
           templateIdentifier ? currentTemplateValue(sessionState(), templateIdentifier) : null,
         );
       },
+      observeRenderedElement: (source, element) =>
+        this.catalogHost.registerRenderedElement(source, element),
     };
+  }
+
+  private catalogRequestsDisabled(): boolean {
+    const status = this.session?.serialize().status ?? "unloaded";
+    return isCatalogRequestDisabled(status, this.attemptIsCompleted());
   }
 
   private renderPortableCustomResponse(

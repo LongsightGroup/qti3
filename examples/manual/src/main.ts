@@ -245,7 +245,7 @@ const samplePnpXml = `<access-for-all-pnp identifier="synthetic-candidate">
 
 pnpXmlInput.value = samplePnpXml;
 
-for (const category of ["interaction", "processing", "adaptive"] as const) {
+for (const category of ["interaction", "processing", "adaptive", "catalog"] as const) {
   const fixtures = canonicalFixtures.filter((fixture) => fixture.category === category);
   if (fixtures.length === 0) continue;
   const group = document.createElement("optgroup");
@@ -381,6 +381,7 @@ void loadSelectedFixture();
 function categoryLabel(category: (typeof canonicalFixtures)[number]["category"]): string {
   if (category === "processing") return "Processing references";
   if (category === "adaptive") return "Adaptive references";
+  if (category === "catalog") return "Catalog references";
   return "Interaction references";
 }
 

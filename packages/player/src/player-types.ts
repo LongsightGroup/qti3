@@ -2,14 +2,23 @@ import type {
   QtiAssessmentItem,
   QtiAttemptStateV1,
   QtiAttemptStatus,
+  QtiCatalogSupportResolutionOptions,
   QtiDiagnostic,
   QtiInteraction,
   QtiPortableCustomDefinition,
   QtiPortableCustomStateValue,
   QtiScoreResult,
+  QtiSourceLocation,
   QtiStylesheet,
   QtiValue,
 } from "@longsightgroup/qti3-core";
+import type { QtiCatalogDeliveryReference } from "./catalog-delivery.js";
+
+/** Host policy that makes selected catalog supports candidate-requestable. */
+export type QtiCatalogRequestPolicy = QtiCatalogSupportResolutionOptions & {
+  readonly supports: string | readonly string[];
+};
+
 export interface QtiPlayerSessionControl {
   validateResponses?: boolean | undefined;
   showFeedback?: boolean | undefined;
@@ -40,6 +49,25 @@ export interface QtiPlayerLoadOptions {
   fetchXml?: QtiPlayerFetchXml | undefined;
   resolveAsset?: QtiPlayerResolveAsset | undefined;
   resolveStylesheet?: QtiPlayerResolveStylesheet | undefined;
+}
+
+/** How a catalog request reached the player event boundary. */
+export type QtiCatalogRequestActivation = "keyboard" | "pointer" | "programmatic";
+
+/** Stable relationship between an authored catalog reference and its current rendered element. */
+export interface QtiRenderedCatalogReference {
+  readonly referenceId: string;
+  readonly catalogId: string;
+  readonly qtiName: string;
+  readonly element: Element;
+  readonly source?: QtiSourceLocation | undefined;
+}
+
+/** Candidate catalog request emitted for host-owned presentation. */
+export interface QtiCatalogRequestEventDetail {
+  readonly reference: QtiRenderedCatalogReference;
+  readonly delivery: QtiCatalogDeliveryReference;
+  readonly activation: QtiCatalogRequestActivation;
 }
 
 export interface QtiReadyEventDetail {
@@ -110,6 +138,7 @@ export interface QtiAssessmentItemPlayerEventDetailMap {
   "qti-diagnostics": QtiDiagnosticsEventDetail;
   "qti-reset": QtiResetEventDetail;
   "qti-restore": QtiRestoreEventDetail;
+  "qti-catalogrequest": QtiCatalogRequestEventDetail;
 }
 
 export type QtiAssessmentItemPlayerEventName = keyof QtiAssessmentItemPlayerEventDetailMap;
