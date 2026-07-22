@@ -4,12 +4,12 @@ import {
   isDeclarationDefaultValue,
   normalizedQtiElementName,
   parseDeliveryXml,
-  parseXmlBoolean,
   redactDeliveryXml,
   type DeliveryRedactionPolicy,
   type QtiDeliverySecurityAnalysis,
   type QtiDeliverySecurityFindingKind,
 } from "./delivery-redaction.js";
+import { parseXmlBoolean } from "./parser-values.js";
 import type { XmlNode } from "./xml.js";
 
 export type {

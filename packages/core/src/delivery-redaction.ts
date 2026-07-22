@@ -244,14 +244,6 @@ export function normalizedQtiElementName(localName: string): string {
   return lower.startsWith("qti-") ? lower.slice("qti-".length) : lower;
 }
 
-export function parseXmlBoolean(value: string | undefined): boolean | undefined {
-  if (value === undefined) return undefined;
-  const normalized = value.trim().toLowerCase();
-  if (normalized === "true" || normalized === "1") return true;
-  if (normalized === "false" || normalized === "0") return false;
-  return undefined;
-}
-
 export function isDeclarationDefaultValue(node: XmlNode, normalizedName: string): boolean {
   return (
     normalizedName === "default-value" &&

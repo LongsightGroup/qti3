@@ -5,6 +5,7 @@ import {
   parseCardinality,
   parseCoords,
   parseShape,
+  parseXmlBoolean,
 } from "./parser-values.js";
 import type {
   QtiBaseType,
@@ -163,7 +164,7 @@ function parseInterpolationTable(
     entries: childElements(node, "qti-interpolation-table-entry").map((entry) => ({
       sourceValue: Number(entry.attributes["source-value"]),
       targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
-      includeBoundary: entry.attributes["include-boundary"] !== "false",
+      includeBoundary: parseXmlBoolean(entry.attributes["include-boundary"]) ?? true,
       attributes: entry.attributes,
       source: entry.source,
     })),

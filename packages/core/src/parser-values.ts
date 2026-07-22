@@ -46,8 +46,8 @@ export function coerceValue(value: string, baseType: string | undefined): QtiSca
   if (baseType === "integer") return Number.parseInt(value, 10);
   if (baseType === "float") return Number.parseFloat(value);
   if (baseType === "boolean") {
-    if (value === "true") return true;
-    if (value === "false") return false;
+    const parsed = parseXmlBoolean(value);
+    if (parsed !== undefined) return parsed;
   }
   return value;
 }
@@ -58,8 +58,10 @@ export function parseCardinality(value: string | undefined): QtiCardinality {
 }
 
 export function parseXmlBoolean(value: string | undefined): boolean | undefined {
-  if (value === "true" || value === "1") return true;
-  if (value === "false" || value === "0") return false;
+  if (value === undefined) return undefined;
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "true" || normalized === "1") return true;
+  if (normalized === "false" || normalized === "0") return false;
   return undefined;
 }
 
