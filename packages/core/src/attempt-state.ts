@@ -16,6 +16,7 @@ import {
   COMPLETION_UNKNOWN,
 } from "./attempt-state-constants.js";
 import { isQtiPortableCustomStateValue, isQtiValue, qtiValueToString } from "./value-format.js";
+import { parseXmlBoolean } from "./parser-values.js";
 import { isRecordValue } from "./processing-values.js";
 import { isPair, isPoint } from "./validation-primitives.js";
 
@@ -161,8 +162,11 @@ function restoredScalarMatchesBaseType(
   if (baseType === "float") {
     return typeof value === "number" ? Number.isFinite(value) : Number.isFinite(Number(value));
   }
-  if (baseType === "boolean")
-    return typeof value === "boolean" || value === "true" || value === "false";
+  if (baseType === "boolean") {
+    if (typeof value === "boolean") return true;
+    if (typeof value === "string") return parseXmlBoolean(value) !== undefined;
+    return false;
+  }
   if (baseType === "point") return isPoint(String(value));
   if (baseType === "pair" || baseType === "directedPair") return isPair(String(value));
   if (baseType === "identifier")

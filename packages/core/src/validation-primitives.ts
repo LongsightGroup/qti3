@@ -1,4 +1,5 @@
 import type { QtiBaseType, QtiCardinality, QtiDiagnostic } from "./types.js";
+import { parseXmlBoolean } from "./parser-values.js";
 
 export function requireIdentifier(
   qtiName: string,
@@ -54,7 +55,7 @@ export function parseNonNegativeInteger(value: string | undefined): number | und
 }
 
 export function isBooleanAttribute(value: string): boolean {
-  return value === "true" || value === "false" || value === "1" || value === "0";
+  return parseXmlBoolean(value) !== undefined;
 }
 
 export function isPoint(value: string): boolean {

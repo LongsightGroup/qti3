@@ -1,4 +1,4 @@
-import { coerceValue, parseCoords, parseShape } from "./parser-values.js";
+import { coerceValue, parseCoords, parseShape, parseXmlBoolean } from "./parser-values.js";
 import { responseConditionsFromRules } from "./processing-rules.js";
 import type {
   QtiLookupOutcomeValue,
@@ -528,8 +528,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
         type: "stringMatch",
         left,
         right,
-        caseSensitive: node.attributes["case-sensitive"] !== "false",
-        substring: node.attributes.substring === "true",
+        caseSensitive: parseXmlBoolean(node.attributes["case-sensitive"]) ?? true,
+        substring: parseXmlBoolean(node.attributes.substring) === true,
         source: node.source,
       };
     }
@@ -544,7 +544,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
         type: "substring",
         left,
         right,
-        caseSensitive: node.attributes["case-sensitive"] !== "false",
+        caseSensitive: parseXmlBoolean(node.attributes["case-sensitive"]) ?? true,
         source: node.source,
       };
     }

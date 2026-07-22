@@ -19,6 +19,7 @@ import {
   type ParsedCompanionMaterialChildQtiName,
   pushCompanionMaterialParseWarning,
 } from "./companion-materials.js";
+import { parseXmlBoolean } from "./parser-values.js";
 import { childElements, descendants, textContent, type XmlNode } from "./xml.js";
 
 export function firstChildElement(
@@ -107,7 +108,7 @@ function parseCatalogCard(node: XmlNode): QtiCatalogCard {
 function parseCatalogCardEntry(node: XmlNode): QtiCatalogCardEntry {
   return {
     language: node.attributes["xml:lang"] ?? node.attributes.lang,
-    default: node.attributes.default === "true",
+    default: parseXmlBoolean(node.attributes.default) === true,
     htmlContent: parseCatalogHtmlContent(childElements(node, "qti-html-content")[0]),
     fileHrefs: childElements(node, "qti-file-href").map(parseCatalogFileHref),
     attributes: node.attributes,

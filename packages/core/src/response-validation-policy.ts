@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiDiagnostic, QtiInteraction, QtiValue } from "./types.js";
+import { parseXmlBoolean } from "./parser-values.js";
 import { parseNonNegativeInteger } from "./validation-primitives.js";
 import { qtiValueToIdentifierList } from "./value-format.js";
 
@@ -36,7 +37,7 @@ export function responseLimitAttribute(
 }
 
 function interactionRequiresResponse(interaction: QtiInteraction): boolean {
-  return interaction.attributes.required === "true";
+  return parseXmlBoolean(interaction.attributes.required) === true;
 }
 
 export function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {

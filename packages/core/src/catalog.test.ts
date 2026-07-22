@@ -50,14 +50,17 @@ describe("QTI catalog contracts", () => {
       catalogItem(`
         <qti-catalog id="term">
           <qti-card support="keyword-translation">
-            <qti-card-entry xml:lang="fr" default="true"><qti-html-content>générique</qti-html-content></qti-card-entry>
+            <qti-card-entry xml:lang="fr" default="1"><qti-html-content>générique</qti-html-content></qti-card-entry>
             <qti-card-entry xml:lang="fr-CA"><qti-html-content>canadien</qti-html-content></qti-card-entry>
-            <qti-card-entry xml:lang="es"><qti-html-content>español</qti-html-content></qti-card-entry>
+            <qti-card-entry xml:lang="es" default="0"><qti-html-content>español</qti-html-content></qti-card-entry>
           </qti-card>
         </qti-catalog>
       `),
     );
     if (!result.document) throw new Error("Expected parsed catalog item.");
+
+    const entries = result.document.item.catalogInfo?.catalogs[0]?.cards[0]?.entries;
+    expect(entries?.map((entry) => entry.default)).toEqual([true, false, false]);
 
     const exact = createCatalogSupportResolution(result.document, {
       supports: "keyword-translation",
@@ -105,6 +108,25 @@ describe("QTI catalog contracts", () => {
         languages: "en-US",
       }).references[0]?.matches,
     ).toEqual([expect.objectContaining({ language: "en", selectionReason: "primary-language" })]);
+  });
+
+  it("rejects invalid default attribute values on catalog entries", () => {
+    const result = parseQtiXml(
+      catalogItem(`
+        <qti-catalog id="term">
+          <qti-card support="glossary-on-screen">
+            <qti-card-entry xml:lang="fr" default="maybe"><qti-html-content>Définition.</qti-html-content></qti-card-entry>
+          </qti-card>
+        </qti-catalog>
+      `),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "catalog.cardEntry.default.boolean" }),
+      ]),
+    );
   });
 
   it("rejects mixed card selections and multiple defaults", () => {

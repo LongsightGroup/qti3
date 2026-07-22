@@ -23,6 +23,7 @@ import {
 } from "./validation-geometry.js";
 import {
   isBaseType,
+  isBooleanAttribute,
   isCardinality,
   isFiniteNumber,
   isInteger,
@@ -82,7 +83,7 @@ function validateAssessmentItemRoot(item: QtiAssessmentItem, diagnostics: QtiDia
       path: item.source?.path,
       source: item.source,
     });
-  } else if (!isXmlBoolean(timeDependent)) {
+  } else if (!isBooleanAttribute(timeDependent)) {
     diagnostics.push({
       code: "assessmentItem.timeDependent.boolean",
       severity: "error",
@@ -91,10 +92,6 @@ function validateAssessmentItemRoot(item: QtiAssessmentItem, diagnostics: QtiDia
       source: item.source,
     });
   }
-}
-
-function isXmlBoolean(value: string): boolean {
-  return value === "true" || value === "false" || value === "1" || value === "0";
 }
 
 function validateItemBody(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
@@ -219,7 +216,7 @@ function isValidDeclarationBaseValue(value: string, baseType: QtiBaseType): bool
     case "float":
       return isFiniteNumber(value);
     case "boolean":
-      return value === "true" || value === "false";
+      return isBooleanAttribute(value);
     case "point":
       return isPoint(value);
     case "pair":
@@ -667,6 +664,19 @@ function validateCatalogCard(
       path: card.source?.path,
       source: card.source,
     });
+  }
+
+  if (!("entries" in card)) {
+    const defaultAttribute = card.attributes.default;
+    if (defaultAttribute !== undefined && !isBooleanAttribute(defaultAttribute)) {
+      diagnostics.push({
+        code: "catalog.cardEntry.default.boolean",
+        severity: "error",
+        message: `qti-card-entry default must be an XML boolean, found ${defaultAttribute}.`,
+        path: card.source?.path,
+        source: card.source,
+      });
+    }
   }
 
   const defaultEntries = entries.filter((entry) => entry.default);

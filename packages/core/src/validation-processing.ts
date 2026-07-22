@@ -13,7 +13,12 @@ import {
   responseProcessingTemplateKind,
   type ResponseProcessingTemplateKind,
 } from "./processing-templates.js";
-import { isBaseType, isFiniteNumber, isInteger } from "./validation-primitives.js";
+import {
+  isBaseType,
+  isBooleanAttribute,
+  isFiniteNumber,
+  isInteger,
+} from "./validation-primitives.js";
 import { COMPLETION_STATUS } from "./attempt-state-constants.js";
 
 export function validateResponseProcessingTemplate(
@@ -640,7 +645,7 @@ function validateBaseValueExpression(
       source: expression.source,
     });
   }
-  if (expression.baseType === "boolean" && value !== "true" && value !== "false") {
+  if (expression.baseType === "boolean" && !isBooleanAttribute(value)) {
     diagnostics.push({
       code: "processing.baseValue.boolean",
       severity: "error",
