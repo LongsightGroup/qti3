@@ -36,22 +36,30 @@ import {
 import type { QtiDiagnostic } from "./types.js";
 
 export { decodeUtf8, readQtiPackageZipEntries };
+export { discoverQtiPackageContentAssets } from "./qti-package-assets.js";
 export { normalizePackagePath } from "./qti-package-paths.js";
 export { QTI_ITEM_RESOURCE_TYPE, QTI_PACKAGE_MANIFEST_PATH } from "./qti-package-manifest.js";
 export type { QtiPackageEntry };
 
 export type {
+  QtiAssessmentSectionPackageModel,
   QtiAssessmentTestItemRef,
   QtiAssessmentTestPackageModel,
   QtiManifestFile,
   QtiManifestResource,
   QtiPackageAsset,
+  QtiPackageContentAssetDiscovery,
   QtiPackageAssetSource,
   QtiPackageItem,
   QtiPackageItemSource,
   QtiPackageParseResult,
   QtiPackageShape,
+  QtiItemSessionControl,
   QtiStandardAlignment,
+  QtiTestPartNavigationMode,
+  QtiTestPartPackageModel,
+  QtiTestPartSubmissionMode,
+  QtiTimeLimits,
   QtiTimingMetadata,
 } from "./qti-package-types.js";
 
@@ -159,6 +167,7 @@ function parseQtiPackageEntries(
   return {
     ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
     title,
+    entries,
     packageShape,
     items,
     assets,

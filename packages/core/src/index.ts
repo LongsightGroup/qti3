@@ -52,31 +52,40 @@ export {
 } from "./package-xml.js";
 export {
   decodeUtf8,
+  discoverQtiPackageContentAssets,
   normalizePackagePath,
   QTI_ITEM_RESOURCE_TYPE,
   QTI_PACKAGE_MANIFEST_PATH,
   parseQtiPackage,
   readQtiPackageZipEntries,
+  type QtiAssessmentSectionPackageModel,
   type QtiAssessmentTestItemRef,
   type QtiAssessmentTestPackageModel,
   type QtiManifestFile,
   type QtiManifestResource,
   type QtiPackageAsset,
+  type QtiPackageContentAssetDiscovery,
   type QtiPackageAssetSource,
   type QtiPackageEntry,
   type QtiPackageInflateContext,
   type QtiPackageInflateRaw,
+  type QtiItemSessionControl,
   type QtiPackageItem,
   type QtiPackageItemSource,
   type QtiPackageParseOptions,
   type QtiPackageParseResult,
   type QtiPackageShape,
   type QtiStandardAlignment,
+  type QtiTestPartNavigationMode,
+  type QtiTestPartPackageModel,
+  type QtiTestPartSubmissionMode,
+  type QtiTimeLimits,
   type QtiTimingMetadata,
 } from "./qti-package.js";
 export { detectPackageMediaType } from "./qti-package-assets.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4 } from "./parser-values.js";
+export { collectQtiResponseProcessingExpressions } from "./processing-expression-collection.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
 export {
   scoreQtiItemServerSide,

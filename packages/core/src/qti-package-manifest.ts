@@ -1,5 +1,6 @@
 import type { QtiPackageXmlNode } from "./package-xml.js";
 import { normalizePackagePath, pushPackageDiagnostic } from "./qti-package-paths.js";
+import { parseStandardAlignments } from "./qti-package-metadata.js";
 import type { QtiManifestFile, QtiManifestResource, QtiPackageShape } from "./qti-package-types.js";
 import { childPackageElements, packageDescendants, stripHrefSuffix } from "./qti-package-xml.js";
 import type { QtiPackageEntry } from "./qti-package-zip.js";
@@ -56,6 +57,7 @@ export function parseManifestResources(
       href,
       files,
       dependencies,
+      standards: parseStandardAlignments(node, QTI_PACKAGE_MANIFEST_PATH),
       attributes: { ...node.attributes },
     });
   }

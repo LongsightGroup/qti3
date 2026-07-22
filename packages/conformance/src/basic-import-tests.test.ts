@@ -79,7 +79,10 @@ describe("QTI 3 Basic IMPORT test certification runner", () => {
 
       expect(report.rows.find((row) => row.acId === "T4-L1-I2")).toMatchObject({
         status: "failed",
-        diagnostics: [expect.objectContaining({ code: "certification.evidence.testPart" })],
+        diagnostics: expect.arrayContaining([
+          expect.objectContaining({ code: "package.testPart.navigationMode.invalid" }),
+          expect.objectContaining({ code: "package.testPart.submissionMode.invalid" }),
+        ]),
       });
     } finally {
       await rm(root, { recursive: true, force: true });

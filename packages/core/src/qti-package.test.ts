@@ -1,6 +1,10 @@
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import { parseQtiPackage } from "./index.js";
+import {
+  detectPackageMediaType,
+  discoverQtiPackageContentAssets,
+  parseQtiPackage,
+} from "./index.js";
 
 describe("QTI package parser", () => {
   it("parses manifest item-resource packages with dependencies, assets, timing, and standards", () => {
@@ -34,6 +38,13 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(result.entries.map((entry) => entry.path)).toEqual([
+      "imsmanifest.xml",
+      "items/choice.xml",
+      "stimuli/stimulus.xml",
+      "styles/item.css",
+      "media/prompt.png",
+    ]);
     expect(result.title).toBe("Manifest package");
     expect(result.packageShape).toBe("manifest-item-resources");
     expect(result.manifestResources).toEqual([
@@ -60,7 +71,7 @@ describe("QTI package parser", () => {
         timing: expect.objectContaining({
           sourcePath: "items/choice.xml",
           timeDependent: true,
-          maxTime: "PT2M",
+          maxTime: "120",
         }),
       }),
     ]);
@@ -109,10 +120,17 @@ describe("QTI package parser", () => {
 </manifest>`,
         "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Assessment Package">
-  <qti-time-limits max-time="PT30M" allow-late-submission="false"/>
+  <qti-time-limits min-time="60" max-time="1800" allow-late-submission="false"/>
   <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
+    <qti-time-limits max-time="1200"/>
     <qti-assessment-section identifier="section-1" visible="true">
-      <qti-assessment-item-ref identifier="choice-ref" href="items/choice.xml"/>
+      <qti-assessment-section identifier="section-2" title="Nested" visible="false">
+        <qti-time-limits min-time="30" max-time="60"/>
+        <qti-assessment-item-ref identifier="choice-ref" href="items/choice.xml">
+          <qti-time-limits min-time="10" max-time="60" allow-late-submission="true"/>
+          <qti-item-session-control max-attempts="2" allow-skipping="false" show-feedback="false" validate-responses="true"/>
+        </qti-assessment-item-ref>
+      </qti-assessment-section>
     </qti-assessment-section>
   </qti-test-part>
 </qti-assessment-test>`,
@@ -142,11 +160,55 @@ describe("QTI package parser", () => {
         ],
         timing: expect.objectContaining({
           sourcePath: "assessment.xml",
-          maxTime: "PT30M",
+          maxTime: "1800",
           allowLateSubmission: false,
         }),
       }),
     );
+    expect(result.assessmentTest?.testParts).toEqual([
+      expect.objectContaining({
+        identifier: "part-1",
+        navigationMode: "nonlinear",
+        submissionMode: "individual",
+        timeLimits: expect.objectContaining({ maxTimeSeconds: 1200 }),
+        sections: [
+          expect.objectContaining({
+            identifier: "section-1",
+            visible: true,
+            sections: [
+              expect.objectContaining({
+                identifier: "section-2",
+                title: "Nested",
+                visible: false,
+                parentSectionIdentifier: "section-1",
+                timeLimits: expect.objectContaining({
+                  minTimeSeconds: 30,
+                  maxTimeSeconds: 60,
+                }),
+                itemRefs: [
+                  expect.objectContaining({
+                    identifier: "choice-ref",
+                    testPartIdentifier: "part-1",
+                    sectionIdentifier: "section-2",
+                    timeLimits: expect.objectContaining({
+                      minTimeSeconds: 10,
+                      maxTimeSeconds: 60,
+                      allowLateSubmission: true,
+                    }),
+                    itemSessionControl: expect.objectContaining({
+                      maxAttempts: 2,
+                      allowSkipping: false,
+                      showFeedback: false,
+                      validateResponses: true,
+                    }),
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ]);
     expect(result.items).toEqual([
       expect.objectContaining({
         href: "items/choice.xml",
@@ -158,7 +220,7 @@ describe("QTI package parser", () => {
     expect(result.timing).toEqual(
       expect.objectContaining({
         sourcePath: "assessment.xml",
-        maxTime: "PT30M",
+        maxTime: "1800",
       }),
     );
   });
@@ -308,6 +370,127 @@ describe("QTI package parser", () => {
       }),
     ]);
   });
+
+  it("parses resource-scoped IMS curriculum standards metadata onto matching items", () => {
+    const result = parseQtiPackage(
+      createStoredZip({
+        "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1"
+          xmlns:csm="http://www.imsglobal.org/xsd/imsccv1p3/imscsmd_v1p0"
+          identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <metadata>
+        <csm:curriculumStandardsMetadataSet resourcePartId="choice" resourceLabel="Question" weight="0.5">
+          <csm:curriculumStandardsMetadata providerId="CASE">
+            <csm:setOfGUIDs>
+              <csm:labelledGUID>
+                <csm:GUID>standard-1</csm:GUID>
+                <csm:label>MA.5.FR.1.1 Add fractions.</csm:label>
+                <csm:caseItemURI>https://case.example/standard-1</csm:caseItemURI>
+              </csm:labelledGUID>
+            </csm:setOfGUIDs>
+          </csm:curriculumStandardsMetadata>
+        </csm:curriculumStandardsMetadataSet>
+      </metadata>
+      <file href="items/choice.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+        "items/choice.xml": simpleChoiceItemXml(),
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.items[0]?.standards).toEqual([
+      expect.objectContaining({
+        identifier: "standard-1",
+        targetName: "MA.5.FR.1.1 Add fractions.",
+        targetUrl: "https://case.example/standard-1",
+        providerIdentifier: "CASE",
+        resourceLabel: "Question",
+        resourcePartIdentifier: "choice",
+        weight: 0.5,
+      }),
+    ]);
+  });
+
+  it("diagnoses invalid assessment-test timing and control attributes", () => {
+    const result = parseQtiPackage(
+      createStoredZip({
+        "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="test" type="imsqti_test_xmlv3p0" href="assessment.xml"/>
+  </resources>
+</manifest>`,
+        "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Invalid">
+  <qti-time-limits min-time="90" max-time="60" allow-late-submission="maybe"/>
+  <qti-test-part identifier="part" navigation-mode="sideways" submission-mode="later">
+    <qti-assessment-section identifier="section" visible="sometimes">
+      <qti-assessment-item-ref identifier="ref" href="items/choice.xml">
+        <qti-item-session-control max-attempts="many" allow-skipping="perhaps"/>
+      </qti-assessment-item-ref>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`,
+        "items/choice.xml": simpleChoiceItemXml(),
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "package.timing.range.invalid", severity: "error" }),
+        expect.objectContaining({
+          code: "package.attribute.allow-late-submission.boolean",
+          severity: "error",
+        }),
+        expect.objectContaining({
+          code: "package.testPart.navigationMode.invalid",
+          severity: "error",
+        }),
+        expect.objectContaining({
+          code: "package.testPart.submissionMode.invalid",
+          severity: "error",
+        }),
+        expect.objectContaining({ code: "package.attribute.visible.boolean", severity: "error" }),
+        expect.objectContaining({
+          code: "package.attribute.max-attempts.number",
+          severity: "error",
+        }),
+        expect.objectContaining({
+          code: "package.attribute.allow-skipping.boolean",
+          severity: "error",
+        }),
+      ]),
+    );
+  });
+});
+
+describe("QTI package asset utilities", () => {
+  it("discovers resolved package-local references without regex traversal", () => {
+    const discovery = discoverQtiPackageContentAssets(
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="item" title="Item" adaptive="false" time-dependent="false">
+        <qti-stylesheet href="../styles/item.css"/>
+        <qti-item-body><img src="../media/prompt.png" alt=""/></qti-item-body>
+      </qti-assessment-item>`,
+      "items/item.xml",
+    );
+
+    expect(discovery.diagnostics).toEqual([]);
+    expect(discovery.hrefs).toEqual(["styles/item.css", "media/prompt.png"]);
+  });
+
+  it.each([
+    ["page.html", "text/html"],
+    ["page.htm", "text/html"],
+    ["metadata.json", "application/json"],
+    ["audio.m4a", "audio/mp4"],
+  ])("detects importer media type for %s", (href, mediaType) => {
+    expect(detectPackageMediaType(href)).toBe(mediaType);
+  });
 });
 
 function choiceItemXml(): string {
@@ -321,7 +504,7 @@ function choiceItemXml(): string {
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-assessment-stimulus-ref identifier="stimulus" href="../stimuli/stimulus.xml"/>
   <qti-stylesheet href="../styles/item.css" type="text/css"/>
-  <qti-time-limits max-time="PT2M"/>
+  <qti-time-limits max-time="120"/>
   <qti-item-body>
     <p><img src="../media/prompt.png" alt="Prompt"/></p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">

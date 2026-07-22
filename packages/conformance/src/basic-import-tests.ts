@@ -1,11 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  parseQtiPackageXmlTree,
+  type QtiAssessmentSectionPackageModel,
   type QtiAssessmentTestItemRef,
   type QtiAssessmentTestPackageModel,
   type QtiDiagnostic,
-  type QtiPackageXmlNode,
+  type QtiTestPartPackageModel,
 } from "@longsightgroup/qti3-core";
 import {
   certificationDiagnostic,
@@ -13,7 +13,6 @@ import {
   manifestResourceHrefs,
   parseOfficialQtiTestPackage,
   primaryManifestResourceHref,
-  packageXmlDescendant,
   scopePackageDiagnostics,
 } from "./certification-package.js";
 
@@ -122,8 +121,8 @@ export async function runQti3BasicImportTestCertification(
 interface BasicImportTestPackageModel {
   readonly evidence: QtiBasicImportTestPackageEvidence;
   readonly assessmentTest: QtiAssessmentTestPackageModel | undefined;
-  readonly testPart: QtiPackageXmlNode | undefined;
-  readonly assessmentSection: QtiPackageXmlNode | undefined;
+  readonly testPart: QtiTestPartPackageModel | undefined;
+  readonly assessmentSection: QtiAssessmentSectionPackageModel | undefined;
   readonly itemRefs: readonly QtiAssessmentTestItemRef[];
   readonly importableItemHrefs: ReadonlySet<string>;
 }
@@ -212,18 +211,8 @@ async function readBasicImportTestPackage(
     );
   }
 
-  const testRoot = assessmentTest ? parseQtiPackageXmlTree(assessmentTest.xml).root : undefined;
-  if (testRoot && testRoot.localName !== "qti-assessment-test") {
-    diagnostics.push(
-      certificationDiagnostic(
-        "certification.test.root",
-        `Expected qti-assessment-test root, found ${testRoot.localName}.`,
-      ),
-    );
-  }
-
-  const testPart = packageXmlDescendant(testRoot, "qti-test-part");
-  const assessmentSection = packageXmlDescendant(testPart, "qti-assessment-section");
+  const testPart = assessmentTest?.testParts[0];
+  const assessmentSection = testPart?.sections[0];
   const itemRefs = assessmentTest?.itemRefs ?? [];
   const itemRefHrefs = itemRefs.map((itemRef) => itemRef.href);
   const importableItemHrefs = collectImportableItemHrefs(

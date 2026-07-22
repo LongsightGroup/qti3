@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.10 - 2026-07-21
+
+### Added
+
+- Retain raw package entry bytes on `QtiPackageParseResult` for single-pass importer workflows.
+- Parse typed assessment-test parts, nested sections, item references, time limits, item session
+  controls, and IMS curriculum-standards metadata with structured diagnostics.
+- Add public package-content asset discovery and response-processing expression collection helpers.
+
+### Changed
+
+- Evaluate Basic IMPORT conformance from the typed assessment-test hierarchy.
+- Expand package media-type detection for HTML, JSON, and M4A importer assets.
+- Align all workspace package versions on `0.9.10`.
+
 ## 0.9.9 - 2026-07-21
 
 ### Added

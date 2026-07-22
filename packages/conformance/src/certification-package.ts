@@ -7,7 +7,6 @@ import {
   type QtiPackageItem,
   type QtiPackageParseOptions,
   type QtiPackageParseResult,
-  type QtiPackageXmlNode,
 } from "@longsightgroup/qti3-core";
 
 export const nodeQtiPackageParseOptions = {
@@ -53,19 +52,6 @@ export function primaryManifestResourceHref(
   resourceTypePrefix: string,
 ): string | undefined {
   return manifestResourceHrefs(manifestResources, resourceTypePrefix)[0];
-}
-
-export function packageXmlDescendant(
-  node: QtiPackageXmlNode | undefined,
-  localName: string,
-): QtiPackageXmlNode | undefined {
-  if (!node) return undefined;
-  for (const child of node.children) {
-    if (child.localName === localName) return child;
-    const nested = packageXmlDescendant(child, localName);
-    if (nested) return nested;
-  }
-  return undefined;
 }
 
 export function scopePackageDiagnostics(

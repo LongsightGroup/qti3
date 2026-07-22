@@ -21,6 +21,10 @@ export function parseResponseProcessing(
     template: node.attributes.template,
     rules,
     conditions: responseConditionsFromRules(rules),
+    expressions: node.children.flatMap((child) => {
+      const expression = parseExpression(child);
+      return expression ? [expression] : [];
+    }),
   };
 }
 

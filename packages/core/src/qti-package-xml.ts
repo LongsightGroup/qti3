@@ -88,7 +88,8 @@ export function scopeDiagnosticToPackagePath(
   diagnostic: QtiDiagnostic,
 ): QtiDiagnostic {
   const localPath = diagnostic.path ?? diagnostic.source?.path;
-  const path = localPath ? joinPackagePath(packagePath, localPath) : packagePath;
+  const path =
+    !localPath || localPath === packagePath ? packagePath : joinPackagePath(packagePath, localPath);
   return {
     ...diagnostic,
     path,

@@ -494,6 +494,8 @@ export interface QtiResponseProcessing {
   template?: string | undefined;
   rules: QtiResponseRule[];
   conditions: QtiResponseCondition[];
+  /** Direct processing expressions retained even when they are not wrapped in a response rule. */
+  expressions?: QtiProcessingExpression[] | undefined;
 }
 
 export interface QtiResponseCondition {

@@ -1,9 +1,11 @@
 import { pushPackageDiagnostic } from "./qti-package-paths.js";
+import { parseQtiPackageXmlTree } from "./package-xml.js";
 import type {
   QtiAssessmentTestPackageModel,
   QtiManifestResource,
   QtiPackageAsset,
   QtiPackageAssetSource,
+  QtiPackageContentAssetDiscovery,
   QtiPackageItem,
 } from "./qti-package-types.js";
 import {
@@ -19,6 +21,27 @@ interface PendingAssetReference {
   readonly href: string;
   readonly source: QtiPackageAssetSource;
   readonly referencedBy: string;
+}
+
+/** Discover and resolve package-local asset references in one QTI XML document. */
+export function discoverQtiPackageContentAssets(
+  xml: string,
+  sourcePath: string,
+): QtiPackageContentAssetDiscovery {
+  const parsed = parseQtiPackageXmlTree(xml);
+  const diagnostics: QtiDiagnostic[] = [];
+  for (const message of parsed.errors) {
+    pushPackageDiagnostic(diagnostics, "xml.parse", "error", message, sourcePath);
+  }
+  if (!parsed.root) return { hrefs: [], diagnostics };
+
+  return {
+    hrefs: discoverContentAssetHrefs(
+      { path: sourcePath, xml, root: parsed.root, errors: parsed.errors },
+      diagnostics,
+    ),
+    diagnostics,
+  };
 }
 
 type PackageAssetRefSpec =
@@ -232,6 +255,8 @@ export function detectPackageMediaType(href: string): string | undefined {
       return "image/jpeg";
     case "mp3":
       return "audio/mpeg";
+    case "m4a":
+      return "audio/mp4";
     case "mp4":
       return "video/mp4";
     case "ogg":
@@ -250,6 +275,11 @@ export function detectPackageMediaType(href: string): string | undefined {
       return "image/webp";
     case "xml":
       return "application/xml";
+    case "html":
+    case "htm":
+      return "text/html";
+    case "json":
+      return "application/json";
     default:
       return undefined;
   }
