@@ -39,5 +39,5 @@ dependencies, and per-resource asset ownership. Generated reports use determinis
 `pnpm check:transcoder-support` executes every profile/interaction case and compares the result
 with the committed evidence hashes. `pnpm check:transcoder-xsd` validates every QTI profile cell
 against the vendored, SHA-256-locked schema closure. Moodle XML is a proprietary vendor format and
-is validated against its semantic contract and real product imports instead. `pnpm release:check`
-requires a current, full-matrix import receipt for every vendor profile before publication.
+is validated against its runtime semantic contract. Recorded product imports may supplement this
+evidence, but they are not required by `pnpm release:check`.

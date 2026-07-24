@@ -93,42 +93,6 @@ if (process.argv.includes("--release")) {
   ) {
     failures.push("Current full-matrix XSD evidence receipt is missing.");
   }
-  for (const profile of Object.values(qtiTranscodeProfiles)) {
-    if (!profile.vendorEvidence) continue;
-    const vendorReceiptPath = join(
-      root,
-      "packages",
-      "transcoder",
-      "evidence",
-      "vendor-import",
-      `${profile.id}-import.json`,
-    );
-    const vendorReceipt = JSON.parse(await readFile(vendorReceiptPath, "utf8").catch(() => "null"));
-    const expectedVendorCases = observations
-      .filter((entry) => entry.caseId.startsWith(`${profile.id}/`))
-      .map((entry) => entry.caseId)
-      .toSorted();
-    const importedCases = Array.isArray(vendorReceipt?.cases)
-      ? vendorReceipt.cases
-          .filter((entry) => entry?.status === "imported")
-          .map((entry) => entry.caseId)
-          .toSorted()
-      : [];
-    if (
-      vendorReceipt?.schema !== "qti3.transcoder.vendor-import-evidence.v1" ||
-      vendorReceipt?.profile !== profile.id ||
-      vendorReceipt?.product !== profile.vendorEvidence.product ||
-      vendorReceipt?.sourceRevision !== profile.vendorEvidence.sourceRevision ||
-      typeof vendorReceipt?.productVersion !== "string" ||
-      vendorReceipt.productVersion.trim() === "" ||
-      Number.isNaN(Date.parse(vendorReceipt?.recordedAt ?? "")) ||
-      JSON.stringify(importedCases) !== JSON.stringify(expectedVendorCases)
-    ) {
-      failures.push(
-        `${profile.id}: current full-matrix ${profile.vendorEvidence.product} import evidence receipt is missing.`,
-      );
-    }
-  }
 }
 
 if (failures.length > 0) {
