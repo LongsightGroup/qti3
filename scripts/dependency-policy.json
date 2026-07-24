@@ -73,6 +73,17 @@
         "@xmldom/xmldom": "^0.8.11",
         "fflate": "^0.8.2"
       },
+      "devDependencies": {
+        "@longsightgroup/qti3-transcoder": "workspace:*"
+      }
+    },
+    "packages/transcoder": {
+      "dependencies": {
+        "@longsightgroup/qti3-core": "workspace:*",
+        "@longsightgroup/qti3-writer": "workspace:*",
+        "@xmldom/xmldom": "^0.8.11",
+        "fflate": "^0.8.2"
+      },
       "devDependencies": {}
     },
     "packages/player": {

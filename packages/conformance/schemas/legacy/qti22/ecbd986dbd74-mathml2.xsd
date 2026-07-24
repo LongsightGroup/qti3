@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.w3.org/1998/Math/MathML"
+  targetNamespace="http://www.w3.org/1998/Math/MathML"
+  elementFormDefault="qualified"
+ >
+<xs:annotation>
+  <xs:documentation>
+  This is an XML Schema for MathML.
+  Author: St&#233;phane Dalmas, INRIA.
+  </xs:documentation>
+</xs:annotation>
+
+<!-- common stuff -->
+
+<xs:include schemaLocation="02a2041b9fa2-math.xsd"/>
+<xs:include schemaLocation="3104f3c63111-common-attribs.xsd"/>
+
+<!-- Presentation -->
+<xs:include schemaLocation="526f9bca1638-common-types.xsd"/>
+<xs:include schemaLocation="44294e29f0cf-common-attribs.xsd"/>
+<xs:include schemaLocation="88d1d7f55c2e-characters.xsd"/>
+<xs:include schemaLocation="6de9be4446f6-tokens.xsd"/>
+<xs:include schemaLocation="b17dd4d698bc-scripts.xsd"/>
+<xs:include schemaLocation="7745e611b29d-space.xsd"/>
+<xs:include schemaLocation="f8aebe07e48b-layout.xsd"/>
+<xs:include schemaLocation="15f259b1e066-table.xsd"/>
+<xs:include schemaLocation="720dcbad0cd0-style.xsd"/>
+<xs:include schemaLocation="e5769d64a321-error.xsd"/>
+<xs:include schemaLocation="7414e661f10f-action.xsd"/>
+
+<!-- Content -->
+
+<xs:include schemaLocation="ad4afcb156a8-common-attrib.xsd"/>
+<xs:include schemaLocation="d676e8b31764-tokens.xsd"/>
+<xs:include schemaLocation="baba535b990c-arith.xsd"/>
+<xs:include schemaLocation="a087cf941c9c-functions.xsd"/>
+<xs:include schemaLocation="618b07ceb7ba-logic.xsd"/>
+<xs:include schemaLocation="e90bd08adb68-constructs.xsd"/>
+<xs:include schemaLocation="349e17864914-constants.xsd"/>
+<xs:include schemaLocation="03ff96f5ec04-elementary-functions.xsd"/>
+<xs:include schemaLocation="9496c65b00bd-relations.xsd"/>
+<xs:include schemaLocation="b05fb62afddf-semantics.xsd"/>
+<xs:include schemaLocation="52a6cbe9487f-sets.xsd"/>
+<xs:include schemaLocation="e5e245e58419-linear-algebra.xsd"/>
+<xs:include schemaLocation="9f7e4e5839dc-calculus.xsd"/>
+<xs:include schemaLocation="fb745f60ac10-vector-calculus.xsd"/>
+<xs:include schemaLocation="74c6debb3288-statistics.xsd"/>
+
+
+</xs:schema>
+<!--
+  Copyright &#251; 2002 World Wide Web Consortium, (Massachusetts Institute
+  of Technology, Institut National de Recherche en Informatique et en
+  Automatique, Keio University). All Rights Reserved. See
+  http://www.w3.org/Consortium/Legal/.
+  -->

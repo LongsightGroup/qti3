@@ -48,6 +48,7 @@ export function coerceValue(value: string, baseType: string | undefined): QtiSca
   if (baseType === "boolean") {
     const parsed = parseXmlBoolean(value);
     if (parsed !== undefined) return parsed;
+    // Invalid boolean literals fall through to the raw string; validation rejects them separately.
   }
   return value;
 }

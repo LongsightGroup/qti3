@@ -666,7 +666,7 @@ function validateCatalogCard(
     });
   }
 
-  if (!("entries" in card)) {
+  if (isCatalogCardEntry(card)) {
     const defaultAttribute = card.attributes.default;
     if (defaultAttribute !== undefined && !isBooleanAttribute(defaultAttribute)) {
       diagnostics.push({
@@ -706,6 +706,12 @@ function validateCatalogCard(
   for (const entry of entries) {
     validateCatalogCard(entry, diagnostics);
   }
+}
+
+function isCatalogCardEntry(
+  card: QtiCatalogCard | QtiCatalogCardEntry,
+): card is QtiCatalogCardEntry {
+  return !("entries" in card);
 }
 
 function validateCatalogHtmlContent(nodes: QtiContentNode[], diagnostics: QtiDiagnostic[]): void {

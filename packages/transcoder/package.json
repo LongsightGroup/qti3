@@ -1,0 +1,60 @@
+{
+  "name": "@longsightgroup/qti3-transcoder",
+  "version": "0.9.10",
+  "description": "Framework-neutral, profile-driven QTI 3 to QTI 1.2 and QTI 2.x transcoding.",
+  "keywords": [
+    "assessment",
+    "interoperability",
+    "qti",
+    "qti3",
+    "transcoding",
+    "typescript"
+  ],
+  "homepage": "https://github.com/LongsightGroup/qti3/tree/main/packages/transcoder#readme",
+  "bugs": {
+    "url": "https://github.com/LongsightGroup/qti3/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Sam Ottenhoff",
+    "url": "https://github.com/ottenhoff"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LongsightGroup/qti3.git",
+    "directory": "packages/transcoder"
+  },
+  "files": [
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "!dist/**/*.test.*",
+    "src/**/*.ts",
+    "!src/**/*.test.ts"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./evidence": {
+      "types": "./dist/evidence.d.ts",
+      "import": "./dist/evidence.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm --dir ../.. release:check"
+  },
+  "dependencies": {
+    "@longsightgroup/qti3-core": "workspace:*",
+    "@longsightgroup/qti3-writer": "workspace:*",
+    "@xmldom/xmldom": "^0.8.11",
+    "fflate": "^0.8.2"
+  }
+}
