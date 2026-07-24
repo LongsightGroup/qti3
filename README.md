@@ -45,16 +45,19 @@ flowchart LR
     pnp["pnp<br/>normalize and resolve<br/>candidate preferences"]
     writer["writer<br/>QTI-shaped authoring<br/>XML output"]
     migrator["migrator<br/>QTI 1.2 and 2.x<br/>to QTI 3 authoring"]
+    transcoder["transcoder<br/>QTI 3 to versioned<br/>standard and LMS profiles"]
   end
 
   content --> core
   content --> cli
   content --> migrator
+  content --> transcoder
   core --> player
   core --> cli
   core --> pnp
   core --> writer
   writer --> migrator
+  writer --> transcoder
   fixtures --> conformance
   fixtures --> cli
   conformance --> review
@@ -63,6 +66,7 @@ flowchart LR
   pnp --> host
   writer --> host
   migrator --> host
+  transcoder --> host
   player --> host
   core --> host
 ```
@@ -136,6 +140,8 @@ node packages/cli/dist/index.js support-matrix
 - Provide an accessible, style-neutral web component player that can be embedded in any product.
 - Publish a reusable conformance test suite.
 - Load QTI package zips and assessment-test item references where useful for item-focused testing.
+- Transcode QTI 3 items and packages to explicit, versioned QTI 1.2, QTI 2.1, QTI 2.2, and
+  product-specific import profiles.
 - Resolve host-provided QTI 3 PNP data into player-neutral delivery intents without taking over
   identity, storage, authorization, or institutional policy.
 - Keep dependencies as small as possible, with `qti3-core` and `qti3-cli` remaining
@@ -173,11 +179,16 @@ node packages/cli/dist/index.js support-matrix
 | `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                         |
 | `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML and item-bank package writer with typed diagnostics  |
 | `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items, XML, and package input   |
+| `@longsightgroup/qti3-transcoder`    | `packages/transcoder`    | Profile-driven QTI 3 output for QTI 1.2, QTI 2.1, QTI 2.2, Canvas Classic, and Moodle XML       |
 | `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI        |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
 inspection, validation, and item loading. The browser player intentionally renders one assessment
 item at a time.
+
+The transcoder converts QTI 3 items and packages only through explicit, versioned profiles. Standard
+QTI output and product-specific compatibility modes remain distinct, and each conversion returns
+typed mapping diagnostics instead of silently choosing an LMS dialect or fallback.
 
 Framework adapters should stay thin wrappers around the native web component or core API. React and
 Preact adapters are included; Vue, Svelte, or other adapters can be added when there is host demand
