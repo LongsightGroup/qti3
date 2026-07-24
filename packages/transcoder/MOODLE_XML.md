@@ -36,9 +36,9 @@ import in Moodle.
 Moodle XML is not QTI and has no applicable IMS QTI XSD or QTI reverse-migration check. Those gates
 are explicitly marked not applicable instead of being reported as false passes.
 
-## Release evidence
+## Product compatibility evidence
 
-`release:check` refuses publication until
-`packages/transcoder/evidence/vendor-import/moodle-xml@1-import.json` records successful imports of
-all registry interactions in a named Moodle version. Do not create that receipt until the product
-run has occurred.
+A real import run may be recorded at
+`packages/transcoder/evidence/vendor-import/moodle-xml@1-import.json`. Do not create a receipt until
+the product run has occurred. Import receipts are useful compatibility evidence, but
+`release:check` does not require them.

@@ -47,13 +47,12 @@ therefore applies explicit, diagnosed fallbacks:
 No fallback promises automatic scoring unless the emitted response and scoring rule are
 deterministically equivalent. Referenced assets and safe source paths are retained.
 
-## Release evidence
+## Product compatibility evidence
 
 Source analysis, semantic checks, reverse migration, stable goldens, accessibility/keyboard
 contracts, and XSD validation are necessary but do not prove that a Canvas release imports every
-case. `release:check` therefore refuses publication until
-`packages/transcoder/evidence/vendor-import/canvas-classic-quizzes@1-import.json` contains a
-reviewed, committed successful-import receipt for all 22 registry interactions:
+case. A reviewed import run may be recorded at
+`packages/transcoder/evidence/vendor-import/canvas-classic-quizzes@1-import.json` using this shape:
 
 ```json
 {
@@ -72,6 +71,5 @@ reviewed, committed successful-import receipt for all 22 registry interactions:
 }
 ```
 
-Do not create or commit the receipt until the recorded Canvas run has occurred. Once committed, the
-receipt becomes durable release evidence available to clean CI checkouts; reviewers should verify
-the Canvas version, source revision, date, and complete case list.
+Do not create or commit a receipt until the recorded Canvas run has occurred. Import receipts are
+useful compatibility evidence, but `release:check` does not require them.
