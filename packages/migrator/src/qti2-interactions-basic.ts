@@ -22,7 +22,7 @@ import {
   extendedTextFormat,
   responseCardinality,
 } from "./qti2-context.js";
-import { repairOrThrow } from "./repair-policy.js";
+import { applyRepairPolicy } from "./repair-policy.js";
 import {
   hasMapping,
   orderedIdentifierValues,
@@ -41,7 +41,10 @@ import {
   type XmlElement,
 } from "./xml.js";
 
-export function mapChoice(interaction: XmlElement, context: Qti2Context): Qti3AuthoringItem {
+export function mapChoice(
+  interaction: XmlElement,
+  context: Qti2Context,
+): Qti3AuthoringItem | undefined {
   const responseIdentifier = responseIdentifierFor(interaction);
   const declaration = context.responseDeclMap.get(responseIdentifier);
   const cardinality = (attr(declaration, "cardinality") ?? "").toLowerCase();
@@ -70,7 +73,7 @@ export function mapChoice(interaction: XmlElement, context: Qti2Context): Qti3Au
   const correctResponse = correctValues.filter((value) =>
     choices.some((choice) => choice.identifier === value),
   );
-  repairOrThrow({
+  const repair = applyRepairPolicy({
     needed: !correctResponse.length,
     context,
     code: "qti2_choice_correct_response_missing",
@@ -78,6 +81,10 @@ export function mapChoice(interaction: XmlElement, context: Qti2Context): Qti3Au
     repairMessage:
       "QTI 2.x choice response was missing or invalid; using the first declared choice.",
   });
+  if (repair.action === "blocked") {
+    context.blocked = repair.diagnostics;
+    return undefined;
+  }
   return {
     interactionType: "choice",
     identifier: context.identifier,
@@ -151,7 +158,7 @@ export function mapAssociate(interaction: XmlElement, context: Qti2Context): Qti
   };
 }
 
-export function mapTextEntryItem(context: Qti2Context): Qti3AuthoringItem {
+export function mapTextEntryItem(context: Qti2Context): Qti3AuthoringItem | undefined {
   const interactions = findAllDescendantsByLocalName(context.body, "textentryinteraction");
   const responses = interactions.map((entry, index): Qti3TextEntryResponse => {
     const responseIdentifier = responseIdentifierFor(entry, `RESPONSE_${index + 1}`);
@@ -160,6 +167,7 @@ export function mapTextEntryItem(context: Qti2Context): Qti3AuthoringItem {
       answers: textEntryAnswers(context.responseDeclMap.get(responseIdentifier), context),
     };
   });
+  if (context.blocked) return undefined;
   return {
     interactionType: "textEntry",
     identifier: context.identifier,
@@ -272,7 +280,7 @@ export function mapGapMatch(interaction: XmlElement, context: Qti2Context): Qti3
 
 function textEntryAnswers(declaration: XmlElement | undefined, context: Qti2Context) {
   const correctValues = responseValues(declaration);
-  repairOrThrow({
+  const repair = applyRepairPolicy({
     needed: !correctValues.length,
     context,
     code: "qti2_text_entry_correct_response_missing",
@@ -280,6 +288,10 @@ function textEntryAnswers(declaration: XmlElement | undefined, context: Qti2Cont
     repairMessage:
       "QTI 2.x text entry response did not declare a correct value; using an empty answer.",
   });
+  if (repair.action === "blocked") {
+    context.blocked = repair.diagnostics;
+    return [];
+  }
   if (!correctValues.length) return [{ value: "", score: 1, caseSensitive: false }];
   return correctValues.map((value) => ({ value, score: 1, caseSensitive: false }));
 }

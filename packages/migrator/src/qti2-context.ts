@@ -18,14 +18,15 @@ export interface Qti2Context {
   readonly path: string;
   readonly options: ResolvedQtiMigrationOptions;
   readonly diagnostics: QtiMigrationDiagnostic[];
+  blocked?: readonly QtiMigrationDiagnostic[] | undefined;
 }
 
-export type Qti2ItemMapper = (context: Qti2Context) => Qti3AuthoringItem;
+export type Qti2ItemMapper = (context: Qti2Context) => Qti3AuthoringItem | undefined;
 
 export type Qti2InteractionMapper = (
   interaction: XmlElement,
   context: Qti2Context,
-) => Qti3AuthoringItem;
+) => Qti3AuthoringItem | undefined;
 
 export function responseIdentifierFor(interaction: XmlElement, fallback = "RESPONSE"): string {
   return normalizeIdentifier(
