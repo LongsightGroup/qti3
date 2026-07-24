@@ -40,6 +40,7 @@ jobs:
           pnpm --dir packages/pnp pack --pack-destination ../../.release
           pnpm --dir packages/writer pack --pack-destination ../../.release
           pnpm --dir packages/migrator pack --pack-destination ../../.release
+          pnpm --dir packages/transcoder pack --pack-destination ../../.release
           pnpm --dir packages/cli pack --pack-destination ../../.release
       - run: |
           VERSION=$(node -p "require('./package.json').version")
@@ -63,4 +64,5 @@ jobs:
           publish_package "@longsightgroup/qti3-pnp" ".release/longsightgroup-qti3-pnp-${VERSION}.tgz"
           publish_package "@longsightgroup/qti3-writer" ".release/longsightgroup-qti3-writer-${VERSION}.tgz"
           publish_package "@longsightgroup/qti3-migrator" ".release/longsightgroup-qti3-migrator-${VERSION}.tgz"
+          publish_package "@longsightgroup/qti3-transcoder" ".release/longsightgroup-qti3-transcoder-${VERSION}.tgz"
           publish_package "@longsightgroup/qti3-cli" ".release/longsightgroup-qti3-cli-${VERSION}.tgz"

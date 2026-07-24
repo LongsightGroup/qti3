@@ -131,6 +131,10 @@ importers:
       fflate:
         specifier: ^0.8.2
         version: 0.8.3
+    devDependencies:
+      '@longsightgroup/qti3-transcoder':
+        specifier: workspace:*
+        version: link:../transcoder
 
   packages/player:
     dependencies:
@@ -171,6 +175,21 @@ importers:
         version: 19.2.6(react@19.2.6)
 
   packages/pnp: {}
+
+  packages/transcoder:
+    dependencies:
+      '@longsightgroup/qti3-core':
+        specifier: workspace:*
+        version: link:../core
+      '@longsightgroup/qti3-writer':
+        specifier: workspace:*
+        version: link:../writer
+      '@xmldom/xmldom':
+        specifier: ^0.8.11
+        version: 0.8.13
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
 
   packages/writer:
     dependencies:

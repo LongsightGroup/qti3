@@ -21,6 +21,22 @@ export function prompt(
   return html ? trusted(html) : undefined;
 }
 
+export function interactionPresentation(
+  interaction: XmlElement,
+  body: XmlElement,
+  mode: "separate" | "prompt-only" = "separate",
+): {
+  readonly bodyHtml?: ReturnType<typeof qti3TrustedXmlFragment> | undefined;
+  readonly promptHtml?: ReturnType<typeof qti3TrustedXmlFragment> | undefined;
+} {
+  const promptHtml = prompt(interaction);
+  if (mode === "prompt-only") return { promptHtml };
+  return {
+    bodyHtml: bodyWithoutInteraction(body, interaction),
+    promptHtml,
+  };
+}
+
 export function bodyWithoutInteraction(
   body: XmlElement,
   interaction: XmlElement,
@@ -67,6 +83,8 @@ export function bodyWithHottextPlaceholders(
   hottexts: readonly XmlElement[],
 ): ReturnType<typeof qti3TrustedXmlFragment> {
   const replacements = new Map<XmlElement, string>();
+  const promptElement = findDescendantByLocalName(interaction, "prompt");
+  if (promptElement) replacements.set(promptElement, "");
   for (const [index, hottext] of hottexts.entries()) {
     const identifier = normalizeIdentifier(attr(hottext, "identifier"), `H${index + 1}`);
     replacements.set(hottext, `<qti-hottext identifier="${escapeText(identifier)}"/>`);
@@ -78,6 +96,8 @@ export function bodyWithGapPlaceholders(
   interaction: XmlElement,
 ): ReturnType<typeof qti3TrustedXmlFragment> {
   const replacements = new Map<XmlElement, string>();
+  const promptElement = findDescendantByLocalName(interaction, "prompt");
+  if (promptElement) replacements.set(promptElement, "");
   for (const choice of findAllDescendantsByAnyLocalName(interaction, ["gaptext", "gapimg"])) {
     replacements.set(choice, "");
   }

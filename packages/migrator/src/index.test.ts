@@ -296,6 +296,50 @@ describe("@longsightgroup/qti3-migrator", () => {
     );
   });
 
+  it("does not invent a QTI 1.2 hotspot answer under strict policy", () => {
+    const strict = migrateQtiItemToQti3({
+      filename: "bad-hotspot.xml",
+      xml: qti12HotspotWithoutKey(),
+    });
+    expect(strict.xml).toBeUndefined();
+    expect(strict.diagnostics[0]?.code).toBe("qti12_hotspot_correct_response_missing");
+
+    const safe = migrateQtiItemToQti3(
+      { filename: "bad-hotspot.xml", xml: qti12HotspotWithoutKey() },
+      { repairPolicy: "safe" },
+    );
+    expect(safe.authoringItem?.interactionType).toBe("hotspot");
+    if (safe.authoringItem?.interactionType !== "hotspot") {
+      throw new Error("Expected safely repaired hotspot authoring item.");
+    }
+    expect(safe.authoringItem.correctResponse).toEqual(["A"]);
+    expect(safe.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "qti12_hotspot_correct_response_missing_repaired",
+    );
+  });
+
+  it("does not treat the first response_xy region as an implicit answer", () => {
+    const strict = migrateQtiItemToQti3({
+      filename: "bad-hotspot-xy.xml",
+      xml: qti12ResponseXyHotspotWithoutKey(),
+    });
+    expect(strict.xml).toBeUndefined();
+    expect(strict.diagnostics[0]?.code).toBe("qti12_hotspot_correct_response_missing");
+
+    const safe = migrateQtiItemToQti3(
+      { filename: "bad-hotspot-xy.xml", xml: qti12ResponseXyHotspotWithoutKey() },
+      { repairPolicy: "safe" },
+    );
+    expect(safe.authoringItem?.interactionType).toBe("hotspot");
+    if (safe.authoringItem?.interactionType !== "hotspot") {
+      throw new Error("Expected safely repaired response_xy hotspot authoring item.");
+    }
+    expect(safe.authoringItem.correctResponse).toEqual(["A"]);
+    expect(safe.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "qti12_hotspot_correct_response_missing_repaired",
+    );
+  });
+
   it("migrates QTI 2.x inline, hottext, gap, and graphic interactions", async () => {
     const items = [
       qti21InlineChoiceItem(),
@@ -488,7 +532,7 @@ function graphicItem(
 
 function unsupportedQti21Item(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="bad" title="Bad"><itemBody><drawingInteraction responseIdentifier="RESPONSE"/></itemBody></assessmentItem>`;
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="bad" title="Bad"><itemBody><unknownInteraction responseIdentifier="RESPONSE"/></itemBody></assessmentItem>`;
 }
 
 function qti12Items(): string {
@@ -544,6 +588,16 @@ function canvasQti12MatchingItem(): string {
 function qti12ChoiceWithoutKey(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <item ident="choice12" title="Choice 12"><presentation><material><mattext>Pick.</mattext></material><response_lid ident="RESPONSE" rcardinality="Single"><render_choice><response_label ident="A"><material><mattext>A</mattext></material></response_label><response_label ident="B"><material><mattext>B</mattext></material></response_label></render_choice></response_lid></presentation></item>`;
+}
+
+function qti12HotspotWithoutKey(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<item ident="hotspot12" title="Hotspot 12"><presentation><material><matimage uri="map.png" imagtype="image/png" width="100" height="100"/></material><response_lid ident="HOT" rcardinality="Single"><render_hotspot><response_label ident="A" rarea="Rectangle">0,0,10,10</response_label><response_label ident="B" rarea="Rectangle">20,20,30,30</response_label></render_hotspot></response_lid></presentation><resprocessing/></item>`;
+}
+
+function qti12ResponseXyHotspotWithoutKey(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<item ident="hotspot12" title="Hotspot 12"><presentation><material><matimage uri="map.png" imagtype="image/png" width="100" height="100"/></material><response_xy ident="HOT" rcardinality="Single"><render_hotspot><response_label ident="A" rarea="Rectangle">0,0,10,10</response_label><response_label ident="B" rarea="Rectangle">20,20,30,30</response_label></render_hotspot></response_xy></presentation><resprocessing/></item>`;
 }
 
 function compositeQti21Item(): string {

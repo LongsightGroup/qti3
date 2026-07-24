@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        xmlns:m="http://www.w3.org/2010/Math/MathML"
+           elementFormDefault="qualified"
+           targetNamespace="http://www.w3.org/2010/Math/MathML">
+   <xs:include schemaLocation="dcfd0a87569e-mathml3-content.xsd"/>
+   <xs:include schemaLocation="800d18a179b3-mathml3-presentation.xsd"/>
+   <xs:include schemaLocation="875fb035191a-mathml3-common.xsd"/>
+</xs:schema>
