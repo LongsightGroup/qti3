@@ -86,6 +86,19 @@ describe("@longsightgroup/qti3-migrator", () => {
     for (const item of result.items) expectValidXml(item.xml ?? "");
   });
 
+  it("honors Sakai essay metadata before placeholder choice markup", () => {
+    const result = migrateQtiItemToQti3({
+      filename: "sakai-essay.xml",
+      xml: sakaiQti12EssayItem(),
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.authoringItem?.interactionType).toBe("extendedText");
+    expect(result.xml).toContain("<qti-extended-text-interaction");
+    expect(result.xml).not.toContain("<qti-choice-interaction");
+    expectValidXml(result.xml ?? "");
+  });
+
   it("migrates Canvas QTI 1.2 multi-response matching items", () => {
     const result = migrateQtiItemToQti3({
       filename: "canvas_matching.xml",
@@ -575,6 +588,33 @@ function qti12Items(): string {
   <item ident="essay12" title="Essay question"><presentation><material><mattext>Write.</mattext></material></presentation></item>
   <item ident="hotspot12" title="Hotspot 12"><presentation><material><mattext>Click.</mattext></material><response_lid ident="RESPONSE"><render_hotspot><response_label ident="H1" rarea="Rectangle" coords="0,0,10,10"/></render_hotspot></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">H1</varequal></conditionvar></respcondition></resprocessing></item>
 </questestinterop>`;
+}
+
+function sakaiQti12EssayItem(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<item ident="sakai_essay" title="Essay Question">
+  <itemmetadata>
+    <qtimetadata>
+      <qtimetadatafield>
+        <fieldlabel>qmd_itemtype</fieldlabel>
+        <fieldentry>Essay</fieldentry>
+      </qtimetadatafield>
+    </qtimetadata>
+  </itemmetadata>
+  <presentation>
+    <flow>
+      <material><mattext texttype="text/html">Explain your reasoning.</mattext></material>
+      <response_lid ident="LID01" rcardinality="Single">
+        <render_choice shuffle="No">
+          <response_label ident="A"><material><mattext/></material></response_label>
+        </render_choice>
+      </response_lid>
+    </flow>
+  </presentation>
+  <resprocessing>
+    <outcomes><decvar defaultval="0" maxvalue="0" minvalue="0" varname="SCORE"/></outcomes>
+  </resprocessing>
+</item>`;
 }
 
 function canvasQti12MatchingItem(): string {

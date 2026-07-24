@@ -14,6 +14,8 @@
   packages.
 - Keep QTI 1.2 assessment containers out of migrated item results by resolving `itemref` entries
   through manifest resource identifiers.
+- Honor Sakai QTI 1.2 `qmd_itemtype=Essay` metadata before inferring an interaction from placeholder
+  choice markup.
 - Use the same slider mapping for packaged and standalone QTI 2.1 migration, including integer
   bounds, steps, correct responses, and mapped scoring values.
 

@@ -35,6 +35,9 @@ export function classifyQti12Item(item: XmlElement): Qti12ItemClassification {
   const responseGrps = findAllDescendantsByLocalName(item, "response_grp");
   const responseXys = findAllDescendantsByLocalName(item, "response_xy");
   const canvasQuestionType = qti12MetadataField(item, "question_type");
+  const sakaiItemType = qti12MetadataField(item, "qmd_itemtype")?.toLowerCase();
+
+  if (sakaiItemType === "essay") return { kind: "essay" };
 
   const hotspotResponse = [...responseLids, ...responseXys].find((response) =>
     findDescendantByLocalName(response, "render_hotspot"),
