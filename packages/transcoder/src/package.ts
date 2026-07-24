@@ -1,15 +1,9 @@
 import { strToU8, zipSync } from "fflate";
 
 import { aggregateFidelity, transcodeQti3Item } from "./item.js";
-import { serializeCanvasClassicPackage } from "./package-canvas.js";
 import { loadPackage } from "./package-load.js";
-import {
-  findCollision,
-  generatedAssetPath,
-  packageManifest,
-  validatePaths,
-} from "./package-manifest.js";
-import { serializeTargetAssessmentTest } from "./package-assessment-test.js";
+import { findCollision, generatedAssetPath, validatePaths } from "./package-manifest.js";
+import { assembleTargetPackage } from "./package-target.js";
 import { qtiTranscodeProfile } from "./profiles.js";
 import type {
   Qti3TranscodePackageSource,
@@ -56,48 +50,16 @@ export async function transcodeQti3Package(
     itemFiles.push({ path: item.path, data: result.xml });
     reports.push(result.report);
   }
-  let canvasPackage;
-  if (profile.packageDialect === "canvas-classic-quiz") {
-    try {
-      canvasPackage = serializeCanvasClassicPackage(
-        loaded.package.identifier,
-        loaded.package.title,
-        itemFiles,
-        loaded.package.assets,
-        loaded.package.assetOwners,
-      );
-    } catch {
-      return {
-        ok: false,
-        profile: options.profile,
-        code: "target_generation_failed",
-        diagnostics: [
-          ...diagnostics,
-          {
-            code: "target.canvas_classic.package_generation",
-            severity: "error",
-            message: "Canvas Classic package assembly failed after item transcoding.",
-          },
-        ],
-      };
-    }
+  const assembly = assembleTargetPackage(profile, loaded.package, itemFiles);
+  if (!assembly.ok) {
+    return {
+      ok: false,
+      profile: options.profile,
+      code: "target_generation_failed",
+      diagnostics: [...diagnostics, assembly.diagnostic],
+    };
   }
-  const assessmentTestFile =
-    !canvasPackage && loaded.package.assessmentTest
-      ? {
-          path: loaded.package.assessmentTest.href,
-          data: serializeTargetAssessmentTest(loaded.package.assessmentTest, profile.target),
-        }
-      : undefined;
-
-  const targetItemFiles = canvasPackage ? [canvasPackage.assessment] : itemFiles;
-  const supplementalFiles = canvasPackage
-    ? [canvasPackage.metadata]
-    : assessmentTestFile
-      ? [assessmentTestFile]
-      : [];
-  const primaryFiles = [...targetItemFiles, ...supplementalFiles];
-  const pathFailure = validatePaths([...primaryFiles, ...loaded.package.assets]);
+  const pathFailure = validatePaths(assembly.files);
   if (pathFailure) {
     return {
       ok: false,
@@ -106,7 +68,7 @@ export async function transcodeQti3Package(
       diagnostics: [...diagnostics, pathFailure],
     };
   }
-  const collision = findCollision([...primaryFiles, ...loaded.package.assets]);
+  const collision = findCollision(assembly.files);
   if (collision) {
     return {
       ok: false,
@@ -141,8 +103,7 @@ export async function transcodeQti3Package(
   );
   const reportPath = await generatedAssetPath(reportData, "json");
   const generatedCollision = findCollision([
-    ...primaryFiles,
-    ...loaded.package.assets,
+    ...assembly.files,
     { path: reportPath, data: reportData },
   ]);
   if (generatedCollision) {
@@ -161,26 +122,7 @@ export async function transcodeQti3Package(
       ],
     };
   }
-  const files: QtiTranscodeFile[] = [
-    {
-      path: "imsmanifest.xml",
-      data:
-        canvasPackage?.manifest ??
-        packageManifest(
-          profile.manifestResourceType,
-          profile.schemaVersion,
-          itemFiles,
-          loaded.package.assets,
-          loaded.package.assetOwners,
-          assessmentTestFile,
-          profile.target,
-        ),
-    },
-    ...targetItemFiles,
-    ...supplementalFiles,
-    ...loaded.package.assets,
-    { path: reportPath, data: reportData },
-  ];
+  const files: QtiTranscodeFile[] = [...assembly.files, { path: reportPath, data: reportData }];
   const zipEntries: Record<string, Uint8Array> = {};
   for (const file of files) {
     zipEntries[file.path] = typeof file.data === "string" ? strToU8(file.data) : file.data;

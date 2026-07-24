@@ -20,14 +20,16 @@ import {
   transcodeQti3Package,
   type QtiTranscodeProfileId,
 } from "./index.js";
+import { validateGeneratedTargetXml } from "./xml.js";
 
 const profiles = Object.keys(qtiTranscodeProfiles) as QtiTranscodeProfileId[];
 const interactions = [...interactionSupport, ...deprecatedInteractionSupport];
 
 describe("qti3 transcoder evidence matrix", () => {
-  it("declares the standards and Canvas Classic profiles with all registry interactions", () => {
+  it("declares standards and vendor profiles with all registry interactions", () => {
     expect(profiles).toEqual([
       "canvas-classic-quizzes@1",
+      "moodle-xml@1",
       "qti12-standard@1",
       "qti21-standard@1",
       "qti22-standard@1",
@@ -38,6 +40,13 @@ describe("qti3 transcoder evidence matrix", () => {
         interactions.map((entry) => entry.interactionType).toSorted(),
       );
     }
+    expect(qtiTranscodeProfiles["moodle-xml@1"]).toMatchObject({
+      kind: "moodle-xml",
+      evidence: { xsd: "not-applicable", reverseMigration: "not-applicable" },
+    });
+    expect(qtiTranscodeProfiles["moodle-xml@1"]).not.toHaveProperty("namespace");
+    expect(qtiTranscodeProfiles["moodle-xml@1"]).not.toHaveProperty("schemaVersion");
+    expect(qtiTranscodeProfiles["moodle-xml@1"]).not.toHaveProperty("manifestResourceType");
   });
 
   describe.each(profiles)("%s", (profile) => {
@@ -59,7 +68,10 @@ describe("qti3 transcoder evidence matrix", () => {
         expect(result.assets).toEqual([]);
         expect(result.xml).not.toContain("qti-portable-custom-interaction");
         expect(result.diagnostics.some((entry) => entry.severity === "error")).toBe(false);
-        if (profile === "qti12-standard@1" || profile === "canvas-classic-quizzes@1") {
+        if (profile === "moodle-xml@1") {
+          expect(result.xml).toContain("<quiz>");
+          expect(result.xml).toContain("<question ");
+        } else if (profile === "qti12-standard@1" || profile === "canvas-classic-quizzes@1") {
           expect(result.xml).toContain("<questestinterop");
         } else {
           expect(result.xml).toContain("<assessmentItem");
@@ -86,6 +98,9 @@ describe("qti3 transcoder package output", () => {
           interactionType: "choice",
           identifier: "CHOICE",
           title: "Choice",
+          bodyHtml: qti3TrustedXmlFragment(
+            '<p>Keep media/source.txt visible. <a href="../media/source.txt">Read the source</a></p>',
+          ),
           responseCardinality: "single",
           choices: [
             { identifier: "A", text: "Alpha" },
@@ -154,6 +169,27 @@ describe("qti3 transcoder package output", () => {
     expect(assessment).toContain('<setvar action="Set" varname="SCORE">100</setvar>');
     expect(metadata).toEqual(expect.any(String));
     expect(metadata).toContain('xmlns="http://canvas.instructure.com/xsd/cccv1p0"');
+  });
+
+  it("emits one importable Moodle XML question bank with embedded assets", async () => {
+    const result = await transcodeQti3Package(
+      { kind: "authoringPackage", package: sourcePackage },
+      { profile: "moodle-xml@1" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.files.some((file) => file.path === "imsmanifest.xml")).toBe(false);
+    expect(result.files.some((file) => file.path === "media/source.txt")).toBe(false);
+    const questions = result.files.find((file) => file.path === "moodle_questions.xml")?.data;
+    expect(questions).toEqual(expect.any(String));
+    expect(questions).toContain('<question type="multichoice">');
+    expect(questions).toContain('<answer fraction="100"');
+    expect(questions).toContain('href="@@PLUGINFILE@@/media/source.txt"');
+    expect(questions).toContain("Keep media/source.txt visible.");
+    expect(questions).not.toContain("@@PLUGINFILE@@/@@PLUGINFILE@@/");
+    expect(questions).toContain(
+      '<file name="source.txt" path="/media/" encoding="base64">c291cmNl</file>',
+    );
   });
 
   it("preserves an assessment-test hierarchy and emits a test resource graph", async () => {
@@ -274,8 +310,85 @@ describe("qti3 transcoder package output", () => {
   });
 });
 
+describe("Moodle XML profile", () => {
+  it("uses native multichoice with automatic scoring for a single-choice item", () => {
+    const result = transcodeQti3Item(
+      { kind: "xml", xml: fixtureXml("choice") },
+      { profile: "moodle-xml@1" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.xml).toContain('<question type="multichoice">');
+    expect(result.xml).toContain("<single>true</single>");
+    expect(result.xml).toContain('<answer fraction="100"');
+    expect(result.report.mappings[0]).toMatchObject({
+      emittedInteraction: "multichoice",
+      scoring: "automatic",
+      fidelity: "exact",
+    });
+  });
+
+  it("uses native matching and preserves every accessible label", () => {
+    const result = transcodeQti3Item(
+      { kind: "xml", xml: fixtureXml("match") },
+      { profile: "moodle-xml@1" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.xml).toContain('<question type="matching">');
+    expect(result.xml).toContain("<subquestion");
+    expect(result.xml).toContain("Beds near the fence received less afternoon sun.");
+    expect(result.report.mappings[0]).toMatchObject({
+      emittedInteraction: "matching",
+      scoring: "automatic",
+    });
+  });
+
+  it("maps upload to an essay with a required Moodle attachment", () => {
+    const result = transcodeQti3Item(
+      { kind: "xml", xml: fixtureXml("upload") },
+      { profile: "moodle-xml@1" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.xml).toContain('<question type="essay">');
+    expect(result.xml).toContain("<attachments>1</attachments>");
+    expect(result.xml).toContain("<attachmentsrequired>1</attachmentsrequired>");
+    expect(result.report.mappings[0]).toMatchObject({
+      emittedInteraction: "essay",
+      scoring: "manual",
+      fidelity: "normalized",
+    });
+  });
+
+  it("preserves an explicit source maximum score as defaultgrade", () => {
+    const xml = fixtureXml("choice").replace(
+      '<qti-outcome-declaration identifier="SCORE"',
+      '<qti-outcome-declaration identifier="SCORE" normal-maximum="7.5"',
+    );
+    const result = transcodeQti3Item({ kind: "xml", xml }, { profile: "moodle-xml@1" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.xml).toContain("<defaultgrade>7.5</defaultgrade>");
+    expect(result.report.fidelity).toBe("exact");
+  });
+
+  it("rejects malformed type-specific Moodle question structures", () => {
+    const diagnostics = validateGeneratedTargetXml(
+      `<?xml version="1.0"?><quiz><question type="multichoice"><name><text>Bad</text></name><questiontext format="html"><text>Prompt</text></questiontext><defaultgrade>1</defaultgrade><penalty>0</penalty><hidden>0</hidden><single>true</single><answer fraction="100"><text>Only one</text></answer></question></quiz>`,
+      "moodle-xml",
+    );
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: "target.moodle_xml.semantic",
+        message: expect.stringContaining("requires at least two answers"),
+      }),
+    ]);
+  });
+});
+
 describe("qti3 transcoder composite items", () => {
-  it.each(["qti12-standard@1", "qti21-standard@1", "qti22-standard@1"] as const)(
+  it.each(["moodle-xml@1", "qti12-standard@1", "qti21-standard@1", "qti22-standard@1"] as const)(
     "maps every interaction through %s",
     (profile) => {
       const result = transcodeQti3Item(
@@ -299,7 +412,12 @@ describe("qti3 transcoder composite items", () => {
         "choice",
         "textEntry",
       ]);
-      const expectedScoring = profile === "qti12-standard@1" ? "automatic" : "unscored";
+      const expectedScoring =
+        profile === "qti12-standard@1"
+          ? "automatic"
+          : profile === "moodle-xml@1"
+            ? "manual"
+            : "unscored";
       expect(result.report.mappings.every((mapping) => mapping.scoring === expectedScoring)).toBe(
         true,
       );

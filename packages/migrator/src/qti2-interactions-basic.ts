@@ -22,7 +22,7 @@ import {
   extendedTextFormat,
   responseCardinality,
 } from "./qti2-context.js";
-import { applyRepairPolicy } from "./repair-policy.js";
+import { applyRepairPolicy, blockMigrationOnRepair } from "./repair-policy.js";
 import {
   hasMapping,
   orderedIdentifierValues,
@@ -81,10 +81,7 @@ export function mapChoice(
     repairMessage:
       "QTI 2.x choice response was missing or invalid; using the first declared choice.",
   });
-  if (repair.action === "blocked") {
-    context.blocked = repair.diagnostics;
-    return undefined;
-  }
+  if (blockMigrationOnRepair(context, repair)) return undefined;
   return {
     interactionType: "choice",
     identifier: context.identifier,
@@ -288,10 +285,7 @@ function textEntryAnswers(declaration: XmlElement | undefined, context: Qti2Cont
     repairMessage:
       "QTI 2.x text entry response did not declare a correct value; using an empty answer.",
   });
-  if (repair.action === "blocked") {
-    context.blocked = repair.diagnostics;
-    return [];
-  }
+  if (blockMigrationOnRepair(context, repair)) return [];
   if (!correctValues.length) return [{ value: "", score: 1, caseSensitive: false }];
   return correctValues.map((value) => ({ value, score: 1, caseSensitive: false }));
 }

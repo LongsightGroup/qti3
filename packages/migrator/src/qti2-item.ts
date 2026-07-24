@@ -116,8 +116,7 @@ export function migrateQti2ItemXml(
       };
     }
     const authoringItem = mapper(context);
-    if (context.blocked) return { diagnostics: context.blocked };
-    return { authoringItem, diagnostics };
+    return finishQti2ItemMigration(context, authoringItem, diagnostics);
   }
   const mapper = qti2InteractionMappers[localName(dispatch.interaction)];
   if (!mapper) {
@@ -133,7 +132,30 @@ export function migrateQti2ItemXml(
     };
   }
   const authoringItem = mapper(dispatch.interaction, context);
+  return finishQti2ItemMigration(context, authoringItem, diagnostics);
+}
+
+function finishQti2ItemMigration(
+  context: Qti2Context,
+  authoringItem: Qti3AuthoringItem | undefined,
+  diagnostics: QtiMigrationDiagnostic[],
+): {
+  authoringItem?: Qti3AuthoringItem | undefined;
+  diagnostics: readonly QtiMigrationDiagnostic[];
+} {
   if (context.blocked) return { diagnostics: context.blocked };
+  if (!authoringItem) {
+    return {
+      diagnostics: [
+        diagnostic(
+          "qti2_migration_internal",
+          "error",
+          "QTI 2.x mapper completed without an item or repair block.",
+          { path: context.path, sourceFormat: context.sourceFormat },
+        ),
+      ],
+    };
+  }
   return { authoringItem, diagnostics };
 }
 

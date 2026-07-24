@@ -3,7 +3,7 @@ import { parseQtiXml } from "@longsightgroup/qti3-core";
 import { createHash } from "node:crypto";
 
 import { transcodeQti3Item } from "./item.js";
-import { qtiTranscodeProfiles } from "./profiles.js";
+import { qtiTranscodeProfiles, requiresReverseMigrationEvidence } from "./profiles.js";
 import type { QtiTranscodeItemResult, QtiTranscodeProfileId } from "./types.js";
 import { escapeXml } from "./xml.js";
 
@@ -115,7 +115,9 @@ export function observeTranscoderEvidenceCase(
       "source-semantic",
       "target-semantic",
       "golden-fixture",
-      "reverse-migration",
+      ...(requiresReverseMigrationEvidence(qtiTranscodeProfiles[evidenceCase.profile])
+        ? ["reverse-migration"]
+        : []),
       "behavior",
       "visible-content",
       "assets",
@@ -152,7 +154,9 @@ export function runTranscoderEvidenceMatrix(input: {
     failures.push(...validateTranscoderEvidenceCase(evidenceCase, run.result, run.source));
     if (run.result.ok) {
       observations.push(observeTranscoderEvidenceCase(evidenceCase, run.result));
-      const reverse = input.reverseMigration?.(run.result.xml, run.result.report.fidelity);
+      const reverse = requiresReverseMigrationEvidence(qtiTranscodeProfiles[evidenceCase.profile])
+        ? input.reverseMigration?.(run.result.xml, run.result.report.fidelity)
+        : undefined;
       if (reverse && !reverse.ok) {
         failures.push({
           caseId: evidenceCase.caseId,
@@ -192,16 +196,26 @@ function assertScoring(
     ) {
       push("QTI 1.2 promises automatic scoring without scoring rules.");
     }
-    if (result.target !== "qti12" && !result.xml.includes("<responseProcessing")) {
+    if (
+      (result.target === "qti21" || result.target === "qti22") &&
+      !result.xml.includes("<responseProcessing")
+    ) {
       push("QTI 2.x promises automatic scoring without response processing.");
+    }
+    if (
+      result.target === "moodle-xml" &&
+      !/<question type="(?:matching|multichoice|numerical|shortanswer)">/.test(result.xml)
+    ) {
+      push("Moodle XML promises automatic scoring without a gradable question type.");
     }
   }
   if (
-    result.target === "qti12" &&
+    (result.target === "qti12" || result.target === "moodle-xml") &&
     (evidenceCase.caseId.endsWith("/selectPoint") ||
       evidenceCase.caseId.endsWith("/positionObject")) &&
     (!result.xml.includes("x,y coordinates") ||
-      /\b\d+\s+\d+\b/.test(result.xml.match(/<varequal[^>]*>([^<]+)<\/varequal>/)?.[1] ?? ""))
+      (result.target === "qti12" &&
+        /\b\d+\s+\d+\b/.test(result.xml.match(/<varequal[^>]*>([^<]+)<\/varequal>/)?.[1] ?? "")))
   ) {
     push("learner point encoding and scoring encoding disagree.");
   }
@@ -253,7 +267,8 @@ function assertCustomPayload(
     (interaction === "custom" || interaction === "portableCustom") &&
     !(
       xml.includes("qti3-transcoder:custom:v1") ||
-      (xml.includes("response_str") && xml.includes("Provide the requested response"))
+      ((xml.includes("response_str") || xml.includes('<question type="essay">')) &&
+        xml.includes("Provide the requested response"))
     )
   ) {
     push("custom configuration or usable manual fallback is missing.");
@@ -331,7 +346,16 @@ function assertKeyboardRepresentation(
       push("QTI 1.2 fallback lacks a standard keyboard-operable control.");
     }
     if (
+      result.target === "moodle-xml" &&
+      !["essay", "matching", "multichoice", "numerical", "shortanswer"].includes(
+        mapping.emittedInteraction,
+      )
+    ) {
+      push("Moodle XML fallback lacks a core keyboard-operable question type.");
+    }
+    if (
       result.target !== "qti12" &&
+      result.target !== "moodle-xml" &&
       !(
         mapping.emittedInteraction.endsWith("Interaction") ||
         mapping.emittedInteraction === "customInteraction"

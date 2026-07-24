@@ -1,5 +1,6 @@
 import { DOMParser } from "@xmldom/xmldom";
 
+import { validateMoodleXmlDocument } from "./moodle-validation.js";
 import type { QtiTranscodeDiagnostic, QtiTranscodeTarget } from "./types.js";
 
 const parser = new DOMParser({
@@ -39,6 +40,10 @@ export function validateGeneratedTargetXml(
         message: "Generated target XML is not well formed.",
       },
     ];
+  }
+
+  if (target === "moodle-xml") {
+    return validateMoodleXmlDocument(root);
   }
 
   if (target === "qti12") {

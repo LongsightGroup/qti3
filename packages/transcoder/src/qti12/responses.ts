@@ -1,7 +1,8 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
 
 import type { QtiTranscodeDiagnostic } from "../types.js";
-import { canvasHotspotResponse, serializeCanvasChoiceContent } from "../qti12-canvas.js";
+import { canvasHotspotResponse } from "../qti12-canvas.js";
+import { serializeRichChoiceContent } from "../rich-content-html.js";
 import { escapeXml } from "../xml.js";
 import { serializeQti12Asset } from "./assets.js";
 import { choiceCondition, condition, conditions } from "./scoring.js";
@@ -349,7 +350,7 @@ export function serializeCanvasHotspot(
 
 function serializeChoiceContent(choice: QtiChoice, dialect: Qti12WireDialect): string {
   return dialect === "canvas-classic"
-    ? serializeCanvasChoiceContent(choice)
+    ? serializeRichChoiceContent(choice)
     : escapeXml(choiceLabel(choice));
 }
 

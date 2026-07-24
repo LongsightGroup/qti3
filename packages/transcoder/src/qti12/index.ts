@@ -1,7 +1,8 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
 import type { QtiTranscodeInteractionPolicy } from "../profiles.js";
-import { serializeCanvasBody, serializeCanvasItemMetadata } from "../qti12-canvas.js";
+import { serializeCanvasItemMetadata } from "../qti12-canvas.js";
+import { serializeRichContentBody } from "../rich-content-html.js";
 import type { NormalizedQti3Item } from "../source.js";
 import { escapeXml } from "../xml.js";
 import {
@@ -48,7 +49,8 @@ export function writeQti12Item(
     .join(" ");
   const prompt =
     dialect === "canvas-classic"
-      ? serializeCanvasBody(source.item.body, source.item.interactions) || escapeXml(plainPrompt)
+      ? serializeRichContentBody(source.item.body, source.item.interactions) ||
+        escapeXml(plainPrompt)
       : escapeXml(plainPrompt);
   const retainedAssets = source.item.interactions
     .flatMap((interaction) => [
