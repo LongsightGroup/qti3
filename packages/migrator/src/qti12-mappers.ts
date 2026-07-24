@@ -12,7 +12,7 @@ import {
   qti12AreaToShape,
   qti12ResponseIdentifiers,
 } from "./qti12-classify.js";
-import { repairOrBlock } from "./repair-policy.js";
+import { applyRepairPolicy, isRepairBlocked, repairDiagnostics } from "./repair-policy.js";
 import { escapeText, normalizeIdentifier } from "./text.js";
 import type { QtiMigrationDiagnostic, ResolvedQtiMigrationOptions } from "./types.js";
 import {
@@ -56,7 +56,7 @@ export function mapQti12CanvasMatch(
       .find((entry) => targetIdentifiers.has(entry));
     return targetIdentifier ? [{ sourceIdentifier: source.identifier, targetIdentifier }] : [];
   });
-  const repair = repairOrBlock({
+  const repair = applyRepairPolicy({
     needed: correctResponse.length === 0,
     context: { options, path, sourceFormat: "qti12" },
     code: "qti12_canvas_match_correct_response_incomplete",
@@ -64,7 +64,7 @@ export function mapQti12CanvasMatch(
     repairMessage:
       "Canvas QTI 1.2 matching item has no valid correct pairs; migrating an empty answer key for review.",
   });
-  if (repair.blocked) return { diagnostics: repair.diagnostics };
+  if (isRepairBlocked(repair)) return { diagnostics: repair.diagnostics };
   return {
     authoringItem: {
       interactionType: "match",
@@ -77,7 +77,7 @@ export function mapQti12CanvasMatch(
       correctResponse,
       shuffle: false,
     },
-    diagnostics: repair.diagnostics,
+    diagnostics: repairDiagnostics(repair),
   };
 }
 
@@ -97,7 +97,7 @@ export function mapQti12Choice(
   const correctResponse = rawCorrect
     .map((value) => normalizeIdentifier(value))
     .filter((value) => choices.some((choice) => choice.identifier === value));
-  const repair = repairOrBlock({
+  const repair = applyRepairPolicy({
     needed: !correctResponse.length,
     context: { options, path, sourceFormat: "qti12" },
     code: "qti12_choice_correct_response_missing",
@@ -106,7 +106,7 @@ export function mapQti12Choice(
       ? "QTI 1.2 choice correct response referenced unknown labels; using the first declared choice."
       : "QTI 1.2 choice response did not declare a correct response; using the first declared choice.",
   });
-  if (repair.blocked) return { diagnostics: repair.diagnostics };
+  if (isRepairBlocked(repair)) return { diagnostics: repair.diagnostics };
   const isMultiple =
     (attr(response, "rcardinality") ?? "").toLowerCase() === "multiple" ||
     correctResponse.length > 1;
@@ -124,7 +124,7 @@ export function mapQti12Choice(
         : choices.slice(0, 1).map((choice) => choice.identifier),
       maxChoices: isMultiple ? undefined : 1,
     },
-    diagnostics: repair.diagnostics,
+    diagnostics: repairDiagnostics(repair),
   };
 }
 
@@ -149,7 +149,7 @@ export function mapQti12Associate(
       };
     })
     .filter((pair) => pair.sourceIdentifier && pair.targetIdentifier);
-  const repair = repairOrBlock({
+  const repair = applyRepairPolicy({
     needed: !pairs.length,
     context: { options, path, sourceFormat: "qti12" },
     code: "qti12_associate_correct_response_missing",
@@ -157,7 +157,7 @@ export function mapQti12Associate(
     repairMessage:
       "QTI 1.2 associate response did not declare a valid pair; using the first two choices.",
   });
-  if (repair.blocked) return { diagnostics: repair.diagnostics };
+  if (isRepairBlocked(repair)) return { diagnostics: repair.diagnostics };
   return {
     authoringItem: {
       interactionType: "associate",
@@ -172,7 +172,7 @@ export function mapQti12Associate(
           ? [{ sourceIdentifier: choices[0]!.identifier, targetIdentifier: choices[1]!.identifier }]
           : [],
     },
-    diagnostics: repair.diagnostics,
+    diagnostics: repairDiagnostics(repair),
   };
 }
 
@@ -205,7 +205,7 @@ export function mapQti12TextEntry(
     };
   }
   const values = correct.get(source) ?? [];
-  const repair = repairOrBlock({
+  const repair = applyRepairPolicy({
     needed: !values.length,
     context: { options, path, sourceFormat: "qti12" },
     code: "qti12_text_entry_correct_response_missing",
@@ -213,7 +213,7 @@ export function mapQti12TextEntry(
     repairMessage:
       "QTI 1.2 text entry response did not declare a correct value; using an empty answer.",
   });
-  if (repair.blocked) return { diagnostics: repair.diagnostics };
+  if (isRepairBlocked(repair)) return { diagnostics: repair.diagnostics };
   return {
     authoringItem: {
       interactionType: "textEntry",
@@ -231,7 +231,7 @@ export function mapQti12TextEntry(
         },
       ],
     },
-    diagnostics: repair.diagnostics,
+    diagnostics: repairDiagnostics(repair),
   };
 }
 
@@ -257,7 +257,7 @@ export function mapQti12Hotspot(
   const dimensions = inferImageDimensions(choices.map((choice) => choice.coords));
   const image = presentation ? findDescendantByLocalName(presentation, "matimage") : null;
   const correctResponse = (correct.get(source) ?? []).map((value) => normalizeIdentifier(value));
-  const correctRepair = repairOrBlock({
+  const correctRepair = applyRepairPolicy({
     needed: !correctResponse.length,
     context: { options, path, sourceFormat: "qti12" },
     code: "qti12_hotspot_correct_response_missing",
@@ -265,8 +265,8 @@ export function mapQti12Hotspot(
     repairMessage:
       "QTI 1.2 hotspot response did not declare a correct hotspot; using the first hotspot.",
   });
-  if (correctRepair.blocked) return { diagnostics: correctRepair.diagnostics };
-  const imageRepair = repairOrBlock({
+  if (isRepairBlocked(correctRepair)) return { diagnostics: correctRepair.diagnostics };
+  const imageRepair = applyRepairPolicy({
     needed: !image,
     context: { options, path, sourceFormat: "qti12" },
     code: "qti12_hotspot_image_missing",
@@ -274,9 +274,9 @@ export function mapQti12Hotspot(
     repairMessage:
       "QTI 1.2 hotspot source image was not identified; using review placeholder image.png.",
   });
-  if (imageRepair.blocked) return { diagnostics: imageRepair.diagnostics };
+  if (isRepairBlocked(imageRepair)) return { diagnostics: imageRepair.diagnostics };
   const object = qti12ImageObject(image, dimensions);
-  const diagnostics = [...correctRepair.diagnostics, ...imageRepair.diagnostics];
+  const diagnostics = [...repairDiagnostics(correctRepair), ...repairDiagnostics(imageRepair)];
   if (attr(response, "rcardinality")?.toLowerCase() === "ordered") {
     return {
       authoringItem: {

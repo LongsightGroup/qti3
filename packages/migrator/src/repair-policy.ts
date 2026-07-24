@@ -43,43 +43,13 @@ export function applyRepairPolicy(input: {
   };
 }
 
-export class QtiMigrationBlocked extends Error {
-  constructor(readonly diagnostics: readonly QtiMigrationDiagnostic[]) {
-    super("QTI migration blocked by strict policy.");
-  }
+export function repairDiagnostics(result: RepairPolicyResult): readonly QtiMigrationDiagnostic[] {
+  return result.action === "repaired" ? result.diagnostics : [];
 }
 
-/** QTI 2.x path: record safe repairs and throw when strict policy blocks migration. */
-export function repairOrThrow(input: {
-  readonly needed: boolean;
-  readonly context: RepairPolicyContext;
-  readonly code: string;
-  readonly message: string;
-  readonly repairMessage: string;
-}): void {
-  const result = applyRepairPolicy(input);
-  if (result.action === "blocked") {
-    throw new QtiMigrationBlocked(result.diagnostics);
-  }
-}
-
-/** QTI 1.2 path: return whether migration should stop and any emitted diagnostics. */
-export function repairOrBlock(input: {
-  readonly needed: boolean;
-  readonly context: RepairPolicyContext;
-  readonly code: string;
-  readonly message: string;
-  readonly repairMessage: string;
-}): {
-  readonly blocked: boolean;
+export function isRepairBlocked(result: RepairPolicyResult): result is {
+  readonly action: "blocked";
   readonly diagnostics: readonly QtiMigrationDiagnostic[];
 } {
-  const result = applyRepairPolicy(input);
-  if (result.action === "blocked") {
-    return { blocked: true, diagnostics: result.diagnostics };
-  }
-  return {
-    blocked: false,
-    diagnostics: result.action === "repaired" ? result.diagnostics : [],
-  };
+  return result.action === "blocked";
 }

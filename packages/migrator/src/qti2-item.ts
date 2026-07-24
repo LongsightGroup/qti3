@@ -1,7 +1,6 @@
 import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 
 import { diagnostic } from "./diagnostics.js";
-import { QtiMigrationBlocked } from "./repair-policy.js";
 import { collectInteractionElements } from "./qti2-body.js";
 import { type Qti2Context } from "./qti2-context.js";
 import {
@@ -102,43 +101,40 @@ export function migrateQti2ItemXml(
       ],
     };
   }
-  try {
-    if (dispatch.kind === "item") {
-      const mapper = qti2ItemMappers[dispatch.interactionName];
-      if (!mapper) {
-        return {
-          diagnostics: [
-            diagnostic(
-              "qti2_interaction_unsupported",
-              "error",
-              `Unsupported QTI 2.x interaction ${dispatch.interactionName}.`,
-              { path, sourceFormat },
-            ),
-          ],
-        };
-      }
-      return { authoringItem: mapper(context), diagnostics };
-    }
-    const mapper = qti2InteractionMappers[localName(dispatch.interaction)];
+  if (dispatch.kind === "item") {
+    const mapper = qti2ItemMappers[dispatch.interactionName];
     if (!mapper) {
       return {
         diagnostics: [
           diagnostic(
             "qti2_interaction_unsupported",
             "error",
-            `Unsupported QTI 2.x interaction ${localName(dispatch.interaction)}.`,
+            `Unsupported QTI 2.x interaction ${dispatch.interactionName}.`,
             { path, sourceFormat },
           ),
         ],
       };
     }
-    return { authoringItem: mapper(dispatch.interaction, context), diagnostics };
-  } catch (error) {
-    if (error instanceof QtiMigrationBlocked) {
-      return { diagnostics: error.diagnostics };
-    }
-    throw error;
+    const authoringItem = mapper(context);
+    if (context.blocked) return { diagnostics: context.blocked };
+    return { authoringItem, diagnostics };
   }
+  const mapper = qti2InteractionMappers[localName(dispatch.interaction)];
+  if (!mapper) {
+    return {
+      diagnostics: [
+        diagnostic(
+          "qti2_interaction_unsupported",
+          "error",
+          `Unsupported QTI 2.x interaction ${localName(dispatch.interaction)}.`,
+          { path, sourceFormat },
+        ),
+      ],
+    };
+  }
+  const authoringItem = mapper(dispatch.interaction, context);
+  if (context.blocked) return { diagnostics: context.blocked };
+  return { authoringItem, diagnostics };
 }
 
 function resolveInteractionDispatch(

@@ -1,8 +1,13 @@
+import type { QtiInteractionType, QtiValue } from "@longsightgroup/qti3-core";
+
+import { writeMoodleXmlItem } from "./moodle-xml.js";
 import { writeQti12Item } from "./qti12.js";
+import type { Qti12WireDialect } from "./qti12/types.js";
 import { writeQti21Item } from "./qti21.js";
 import { writeQti22Item } from "./qti22.js";
+import type { QtiTranscodeProfile } from "./profiles.js";
 import { qtiTranscodeProfile } from "./profiles.js";
-import { normalizeQti3Item } from "./source.js";
+import { normalizeQti3Item, type NormalizedQti3Item } from "./source.js";
 import type {
   Qti3TranscodeItemSource,
   QtiTranscodeDiagnostic,
@@ -10,9 +15,24 @@ import type {
   QtiTranscodeInteractionReport,
   QtiTranscodeItemResult,
   QtiTranscodeOptions,
+  QtiTranscodeScoringDisposition,
 } from "./types.js";
 import { validateGeneratedTargetXml } from "./xml.js";
-import type { QtiValue } from "@longsightgroup/qti3-core";
+
+interface TranscodedInteractionMapping {
+  readonly source: QtiInteractionType;
+  readonly emitted: string;
+  readonly diagnostics: readonly QtiTranscodeDiagnostic[];
+  readonly scoring?: QtiTranscodeScoringDisposition | undefined;
+  readonly fallback?: string | undefined;
+}
+
+interface TranscodedItemWriteResult {
+  readonly xml: string;
+  readonly diagnostics: readonly QtiTranscodeDiagnostic[];
+  readonly mappings: readonly TranscodedInteractionMapping[];
+  readonly responseProcessingEmitted?: boolean | undefined;
+}
 
 /** Transcode one typed or XML QTI 3 assessment item through an explicit profile. */
 export function transcodeQti3Item(
@@ -30,66 +50,115 @@ export function transcodeQti3Item(
     };
   }
 
-  if (profile.target === "qti12") {
-    const written = writeQti12Item(
-      normalized.item,
-      profile.interactions,
-      profile.wireDialect === "canvas-classic" ? "canvas-classic" : "standard",
-    );
-    const diagnostics = [
-      ...normalized.diagnostics,
-      ...written.diagnostics,
-      ...validateGeneratedTargetXml(written.xml, profile.target),
-    ];
-    if (hasErrors(diagnostics)) return generationFailure(options, diagnostics);
-    const mappings = written.mappings.map<QtiTranscodeInteractionReport>((mapping, index) => {
-      const policy = profile.interactions[mapping.source];
-      return {
-        index,
-        sourceInteraction: mapping.source,
-        emittedInteraction: mapping.emitted,
-        fidelity: mapping.fallback ? "lossy" : policy.fidelity,
-        scoring: mapping.scoring,
-        fallback: mapping.fallback,
-        affectedPaths: affectedPaths(mapping.diagnostics),
-        diagnosticCodes: mapping.diagnostics.map((diagnostic) => diagnostic.code),
-      };
-    });
-    return successResult(options, normalized.item, written.xml, mappings, diagnostics);
-  }
-
-  const written =
-    profile.target === "qti21"
-      ? writeQti21Item(normalized.item.item)
-      : writeQti22Item(normalized.item.item);
+  const written = writeTranscodedItem(normalized.item, profile);
   const diagnostics = [
     ...normalized.diagnostics,
     ...written.diagnostics,
-    ...validateGeneratedTargetXml(written.xml, profile.target),
+    ...validateTranscodedXml(written.xml, profile),
   ];
   if (hasErrors(diagnostics)) return generationFailure(options, diagnostics);
-  const mappings = written.mappings.map<QtiTranscodeInteractionReport>((mapping, index) => {
-    const policy = profile.interactions[mapping.source];
-    const interaction = normalized.item.item.interactions[index];
-    const declaration = normalized.item.item.responseDeclarations.find(
-      (candidate) => candidate.identifier === interaction?.responseIdentifier,
-    );
-    return {
+
+  const mappings = written.mappings.map((mapping, index) =>
+    buildInteractionReport({
+      mapping,
       index,
-      sourceInteraction: mapping.source,
-      emittedInteraction: mapping.emitted,
-      fidelity: aggregateFidelity([policy.fidelity], mapping.diagnostics),
-      scoring:
-        policy.scoring === "automatic" &&
-        (!hasCorrectResponse(declaration?.correctResponse) || !written.responseProcessingEmitted)
-          ? "unscored"
-          : policy.scoring,
-      fallback: policy.fallback,
-      affectedPaths: affectedPaths(mapping.diagnostics),
-      diagnosticCodes: mapping.diagnostics.map((diagnostic) => diagnostic.code),
-    };
-  });
+      profile,
+      normalized: normalized.item,
+      responseProcessingEmitted: written.responseProcessingEmitted === true,
+    }),
+  );
   return successResult(options, normalized.item, written.xml, mappings, diagnostics);
+}
+
+function writeTranscodedItem(
+  normalized: NormalizedQti3Item,
+  profile: QtiTranscodeProfile,
+): TranscodedItemWriteResult {
+  switch (profile.target) {
+    case "qti12":
+      return writeQti12Item(normalized, profile.interactions, qti12WireDialect(profile));
+    case "qti21": {
+      const written = writeQti21Item(normalized.item);
+      return {
+        xml: written.xml,
+        diagnostics: written.diagnostics,
+        mappings: written.mappings,
+        responseProcessingEmitted: written.responseProcessingEmitted,
+      };
+    }
+    case "qti22": {
+      const written = writeQti22Item(normalized.item);
+      return {
+        xml: written.xml,
+        diagnostics: written.diagnostics,
+        mappings: written.mappings,
+        responseProcessingEmitted: written.responseProcessingEmitted,
+      };
+    }
+    case "moodle-xml":
+      return writeMoodleXmlItem(normalized, profile.interactions);
+    default: {
+      const unexpected: never = profile.target;
+      throw new Error(`Unsupported transcoder target: ${String(unexpected)}`);
+    }
+  }
+}
+
+function qti12WireDialect(profile: QtiTranscodeProfile): Qti12WireDialect {
+  return profile.wireDialect === "canvas-classic" ? "canvas-classic" : "standard";
+}
+
+function validateTranscodedXml(
+  xml: string,
+  profile: QtiTranscodeProfile,
+): readonly QtiTranscodeDiagnostic[] {
+  if (profile.target === "moodle-xml") return [];
+  if (profile.target === "qti12") {
+    return validateGeneratedTargetXml(xml, profile.target, qti12WireDialect(profile));
+  }
+  return validateGeneratedTargetXml(xml, profile.target);
+}
+
+function buildInteractionReport(input: {
+  readonly mapping: TranscodedInteractionMapping;
+  readonly index: number;
+  readonly profile: QtiTranscodeProfile;
+  readonly normalized: NormalizedQti3Item;
+  readonly responseProcessingEmitted: boolean;
+}): QtiTranscodeInteractionReport {
+  const { mapping, index, profile, normalized, responseProcessingEmitted } = input;
+  const policy = profile.interactions[mapping.source];
+  const base = {
+    index,
+    sourceInteraction: mapping.source,
+    emittedInteraction: mapping.emitted,
+    affectedPaths: affectedPaths(mapping.diagnostics),
+    diagnosticCodes: mapping.diagnostics.map((diagnostic) => diagnostic.code),
+  };
+
+  if (profile.target === "qti12" || profile.target === "moodle-xml") {
+    return {
+      ...base,
+      fidelity: mapping.fallback ? "lossy" : policy.fidelity,
+      scoring: mapping.scoring ?? policy.scoring,
+      fallback: mapping.fallback,
+    };
+  }
+
+  const interaction = normalized.item.interactions[index];
+  const declaration = normalized.item.responseDeclarations.find(
+    (candidate) => candidate.identifier === interaction?.responseIdentifier,
+  );
+  return {
+    ...base,
+    fidelity: aggregateFidelity([policy.fidelity], mapping.diagnostics),
+    scoring:
+      policy.scoring === "automatic" &&
+      (!hasCorrectResponse(declaration?.correctResponse) || !responseProcessingEmitted)
+        ? "unscored"
+        : policy.scoring,
+    fallback: policy.fallback,
+  };
 }
 
 function hasCorrectResponse(value: QtiValue | null | undefined): boolean {
