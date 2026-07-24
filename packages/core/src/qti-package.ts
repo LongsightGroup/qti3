@@ -21,11 +21,7 @@ import {
   primaryTiming,
   uniqueStandards,
 } from "./qti-package-metadata.js";
-import type {
-  QtiManifestResource,
-  QtiPackageParseResult,
-  QtiPackageShape,
-} from "./qti-package-types.js";
+import type { QtiPackageParseResult } from "./qti-package-types.js";
 import { parseXmlFiles, pushXmlDiagnostics } from "./qti-package-xml.js";
 import {
   decodeUtf8,
@@ -126,12 +122,7 @@ function parseQtiPackageEntries(
   );
   diagnosePrimaryResourceHrefs([...itemResources, ...assessmentTestResources], diagnostics);
 
-  const packageShape = resolvePackageShape(
-    itemResources,
-    assessmentTestResources,
-    options,
-    diagnostics,
-  );
+  const packageShape = detectPackageShape(itemResources, assessmentTestResources, diagnostics);
   const assessmentTest = parseAssessmentTestPackageModel(
     packageShape,
     assessmentTestResources,
@@ -198,20 +189,4 @@ function indexEntries(
     entriesByPath.set(entry.path, entry);
   }
   return entriesByPath;
-}
-
-function resolvePackageShape(
-  itemResources: readonly QtiManifestResource[],
-  assessmentTestResources: readonly QtiManifestResource[],
-  options: QtiPackageParseOptions,
-  diagnostics: QtiDiagnostic[],
-): QtiPackageShape {
-  if (
-    options.manifestShapePolicy === "prefer-assessment-test" &&
-    assessmentTestResources.length > 0
-  ) {
-    return "assessment-test-resource";
-  }
-
-  return detectPackageShape(itemResources, assessmentTestResources, diagnostics);
 }

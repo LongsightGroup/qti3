@@ -2,7 +2,13 @@ import { strToU8, zipSync } from "fflate";
 
 import { aggregateFidelity, transcodeQti3Item } from "./item.js";
 import { loadPackage } from "./package-load.js";
-import { findCollision, generatedAssetPath, validatePaths } from "./package-manifest.js";
+import {
+  findCollision,
+  generatedAssetPath,
+  manifestItemResourceIdentifier,
+  validatePaths,
+  type TargetPackageItemResource,
+} from "./package-manifest.js";
 import { assembleTargetPackage } from "./package-target.js";
 import { qtiTranscodeProfile } from "./profiles.js";
 import type {
@@ -31,9 +37,9 @@ export async function transcodeQti3Package(
   }
   const profile = qtiTranscodeProfile(options.profile);
   const diagnostics: QtiTranscodeDiagnostic[] = [...loaded.package.diagnostics];
-  const itemFiles: QtiTranscodeFile[] = [];
+  const itemResources: TargetPackageItemResource[] = [];
   const reports = [];
-  for (const item of loaded.package.itemFiles) {
+  for (const [index, item] of loaded.package.items.entries()) {
     const result = transcodeQti3Item(
       { kind: "xml", xml: item.xml, sourcePath: item.path },
       options,
@@ -47,10 +53,15 @@ export async function transcodeQti3Package(
         diagnostics,
       };
     }
-    itemFiles.push({ path: item.path, data: result.xml });
+    itemResources.push({
+      identifier: item.manifestResourceIdentifier ?? manifestItemResourceIdentifier(index),
+      path: item.path,
+      data: result.xml,
+      standards: item.standards,
+    });
     reports.push(result.report);
   }
-  const assembly = assembleTargetPackage(profile, loaded.package, itemFiles);
+  const assembly = assembleTargetPackage(profile, loaded.package, itemResources);
   if (!assembly.ok) {
     return {
       ok: false,

@@ -17,11 +17,9 @@ export function parseOfficialQtiPackage(bytes: Uint8Array): QtiPackageParseResul
   return parseQtiPackage(bytes, nodeQtiPackageParseOptions);
 }
 
+/** Certification alias for assessment packages; behavior matches {@link parseOfficialQtiPackage}. */
 export function parseOfficialQtiTestPackage(bytes: Uint8Array): QtiPackageParseResult {
-  return parseQtiPackage(bytes, {
-    ...nodeQtiPackageParseOptions,
-    manifestShapePolicy: "prefer-assessment-test",
-  });
+  return parseOfficialQtiPackage(bytes);
 }
 
 export function certificationDiagnostic(

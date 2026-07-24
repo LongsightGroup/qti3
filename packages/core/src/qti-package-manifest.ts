@@ -189,17 +189,6 @@ export function detectPackageShape(
   assessmentTestResources: readonly QtiManifestResource[],
   diagnostics: QtiDiagnostic[],
 ): QtiPackageShape {
-  if (assessmentTestResources.length > 0 && itemResources.length > 0) {
-    pushPackageDiagnostic(
-      diagnostics,
-      "package.shape.ambiguous",
-      "error",
-      "Manifest contains both QTI item resources and QTI assessment-test resources.",
-      QTI_PACKAGE_MANIFEST_PATH,
-    );
-    return "unknown";
-  }
-
   if (assessmentTestResources.length > 0) return "assessment-test-resource";
   if (itemResources.length > 0) return "manifest-item-resources";
 

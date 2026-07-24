@@ -2,6 +2,7 @@ import {
   discoverQtiPackageContentAssets,
   parseQtiPackage,
   type QtiAssessmentTestPackageModel,
+  type QtiStandardAlignment,
 } from "@longsightgroup/qti3-core";
 import { writeQti3PackageFilesResult } from "@longsightgroup/qti3-writer";
 
@@ -14,11 +15,18 @@ import type {
 export interface LoadedPackageInput {
   readonly identifier: string;
   readonly title: string;
-  readonly itemFiles: readonly { readonly path: string; readonly xml: string }[];
+  readonly items: readonly LoadedPackageItem[];
   readonly assets: readonly QtiTranscodeFile[];
   readonly assetOwners: ReadonlyMap<string, readonly string[]>;
   readonly assessmentTest?: QtiAssessmentTestPackageModel | undefined;
   readonly diagnostics: readonly QtiTranscodeDiagnostic[];
+}
+
+export interface LoadedPackageItem {
+  readonly path: string;
+  readonly xml: string;
+  readonly manifestResourceIdentifier?: string | undefined;
+  readonly standards: readonly QtiStandardAlignment[];
 }
 
 export function loadPackage(source: Qti3TranscodePackageSource):
@@ -68,9 +76,9 @@ export function loadPackage(source: Qti3TranscodePackageSource):
       package: {
         identifier: source.package.identifier,
         title: source.package.title ?? source.package.identifier,
-        itemFiles: written.files.flatMap((file) =>
+        items: written.files.flatMap((file) =>
           itemPaths.has(file.path) && typeof file.data === "string"
-            ? [{ path: file.path, xml: file.data }]
+            ? [{ path: file.path, xml: file.data, standards: [] }]
             : [],
         ),
         assets: written.files.filter(
@@ -91,7 +99,9 @@ export function loadPackage(source: Qti3TranscodePackageSource):
     };
   }
 
-  const parsed = parseQtiPackage(source.bytes, { inflateRaw: source.inflateRaw });
+  const parsed = parseQtiPackage(source.bytes, {
+    inflateRaw: source.inflateRaw,
+  });
   const diagnostics = parsed.diagnostics.map<QtiTranscodeDiagnostic>((entry) => ({
     code: `source.${entry.code}`,
     severity: entry.severity,
@@ -108,7 +118,12 @@ export function loadPackage(source: Qti3TranscodePackageSource):
         parsed.assessmentTest?.title ??
         parsed.assessmentTest?.identifier ??
         "Transcoded assessment",
-      itemFiles: parsed.items.map((item) => ({ path: item.href, xml: item.xml })),
+      items: parsed.items.map((item) => ({
+        path: item.href,
+        xml: item.xml,
+        manifestResourceIdentifier: item.manifestResourceIdentifier,
+        standards: item.standards,
+      })),
       assets: parsed.assets.flatMap((asset) => {
         const bytes = entriesByPath.get(asset.href);
         return bytes ? [{ path: asset.href, data: bytes }] : [];

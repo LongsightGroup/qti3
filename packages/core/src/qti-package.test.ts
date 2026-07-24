@@ -291,7 +291,7 @@ describe("QTI package parser", () => {
     );
   });
 
-  it("diagnoses duplicate and ambiguous manifest resources", () => {
+  it("diagnoses duplicate manifest resource identifiers", () => {
     const result = parseQtiPackage(
       createStoredZip({
         "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
@@ -310,15 +310,11 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.packageShape).toBe("unknown");
+    expect(result.packageShape).toBe("assessment-test-resource");
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: "package.manifest.resource.identifier.duplicate",
-          severity: "error",
-        }),
-        expect.objectContaining({
-          code: "package.shape.ambiguous",
           severity: "error",
         }),
       ]),
@@ -329,9 +325,23 @@ describe("QTI package parser", () => {
     const result = parseQtiPackage(
       createStoredZip({
         "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1"
+          xmlns:csm="http://www.imsglobal.org/xsd/imsccv1p3/imscsmd_v1p0"
+          identifier="pkg">
   <resources>
     <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <metadata>
+        <csm:curriculumStandardsMetadataSet resourcePartId="choice" resourceLabel="Question">
+          <csm:curriculumStandardsMetadata providerId="CASE">
+            <csm:setOfGUIDs>
+              <csm:labelledGUID>
+                <csm:GUID>standard-1</csm:GUID>
+                <csm:label>Use evidence.</csm:label>
+              </csm:labelledGUID>
+            </csm:setOfGUIDs>
+          </csm:curriculumStandardsMetadata>
+        </csm:curriculumStandardsMetadataSet>
+      </metadata>
       <file href="items/choice.xml"/>
     </resource>
     <resource identifier="test" type="imsqti_test_xmlv3p0" href="assessment.xml">
@@ -354,7 +364,6 @@ describe("QTI package parser", () => {
   </qti-test-part>
 </qti-assessment-test>`,
       }),
-      { manifestShapePolicy: "prefer-assessment-test" },
     );
 
     expect(result.ok).toBe(true);
@@ -366,9 +375,56 @@ describe("QTI package parser", () => {
       expect.objectContaining({
         href: "items/choice.xml",
         source: "assessment-test",
+        manifestResourceIdentifier: "choice",
         assessmentItemRefIdentifier: "choice-ref",
+        standards: [
+          expect.objectContaining({
+            identifier: "standard-1",
+            providerIdentifier: "CASE",
+          }),
+        ],
       }),
     ]);
+  });
+
+  it("diagnoses duplicate item resource hrefs when resolving assessment-test item refs", () => {
+    const result = parseQtiPackage(
+      createStoredZip({
+        "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice-a" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <file href="items/choice.xml"/>
+    </resource>
+    <resource identifier="choice-b" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <file href="items/choice.xml"/>
+    </resource>
+    <resource identifier="test" type="imsqti_test_xmlv3p0" href="assessment.xml">
+      <file href="assessment.xml"/>
+    </resource>
+  </resources>
+</manifest>`,
+        "items/choice.xml": choiceItemXml(),
+        "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Assessment">
+  <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
+    <qti-assessment-section identifier="section-1" title="Section" visible="true">
+      <qti-assessment-item-ref identifier="choice-ref" href="items/choice.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`,
+      }),
+    );
+
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "package.manifest.itemResource.href.duplicate",
+          severity: "error",
+          path: "items/choice.xml",
+        }),
+      ]),
+    );
   });
 
   it("parses resource-scoped IMS curriculum standards metadata onto matching items", () => {

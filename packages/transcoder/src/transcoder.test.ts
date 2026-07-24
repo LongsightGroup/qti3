@@ -192,14 +192,23 @@ describe("qti3 transcoder package output", () => {
     );
   });
 
-  it("preserves an assessment-test hierarchy and emits a test resource graph", async () => {
+  it("accepts a canonical assessment package and emits a test resource graph", async () => {
     const sourceItem = fixtureXml("choice");
     const bytes = zipSync(
       Object.fromEntries(
         Object.entries({
           "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
-  <resources><resource identifier="test" type="imsqti_test_xmlv3p0" href="tests/assessment.xml"><file href="tests/assessment.xml"/></resource></resources>
+  <resources>
+    <resource identifier="test" type="imsqti_test_xmlv3p0" href="tests/assessment.xml">
+      <file href="tests/assessment.xml"/>
+      <dependency identifierref="choice"/>
+    </resource>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml">
+      <metadata><standard-alignment standard-id="standard-1">Use evidence.</standard-alignment></metadata>
+      <file href="items/choice.xml"/>
+    </resource>
+  </resources>
 </manifest>`,
           "tests/assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Assessment">
@@ -222,6 +231,10 @@ describe("qti3 transcoder package output", () => {
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    expect(result.diagnostics).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "source.package.shape.ambiguous" })]),
+    );
+    expect(result.reports).toHaveLength(1);
     const assessment = result.files.find((file) => file.path === "tests/assessment.xml")?.data;
     const manifest = result.files.find((file) => file.path === "imsmanifest.xml")?.data;
     expect(assessment).toEqual(expect.any(String));
@@ -231,7 +244,10 @@ describe("qti3 transcoder package output", () => {
     expect(manifest).toEqual(expect.any(String));
     expect(manifest).toContain("<schemaversion>2.1</schemaversion>");
     expect(manifest).toContain('type="imsqti_test_xmlv2p1"');
-    expect(manifest).toContain('<dependency identifierref="RESOURCE_1"/>');
+    expect(manifest).toContain('<dependency identifierref="choice"/>');
+    expect(manifest).toContain('identifier="choice"');
+    expect(manifest).toContain('identifier="standard-1"');
+    expect(manifest).toContain(">Use evidence.</standard-alignment>");
   });
 
   it("rejects invalid source before conversion", () => {

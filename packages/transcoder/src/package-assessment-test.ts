@@ -4,13 +4,13 @@ import type {
 } from "@longsightgroup/qti3-core";
 
 import { relativePackagePath } from "./package-manifest.js";
-import { serializeQti12Section } from "./package-canvas.js";
 import { escapeXml } from "./xml.js";
 
 /** Internal conformance seam for validating the assessment-test wire serializers. */
 export function serializeTargetAssessmentTest(
   test: QtiAssessmentTestPackageModel,
   target: "qti12" | "qti21" | "qti22",
+  manifestIdentifiersByHref: ReadonlyMap<string, string> = new Map(),
 ): string {
   if (target === "qti12") {
     return `<?xml version="1.0" encoding="UTF-8"?>
@@ -18,7 +18,7 @@ export function serializeTargetAssessmentTest(
   <assessment ident="${escapeXml(test.identifier)}" title="${escapeXml(test.title ?? test.identifier)}">
     ${test.testParts
       .flatMap((part) => part.sections)
-      .map(serializeQti12Section)
+      .map((section) => serializeQti12Section(section, manifestIdentifiersByHref))
       .join("\n    ")}
   </assessment>
 </questestinterop>`;
@@ -43,6 +43,27 @@ export function serializeTargetAssessmentTest(
     )
     .join("\n  ")}
 </assessmentTest>`;
+}
+
+function serializeQti12Section(
+  section: QtiAssessmentSectionPackageModel,
+  manifestIdentifiersByHref: ReadonlyMap<string, string>,
+): string {
+  return `<section ident="${escapeXml(section.identifier)}" title="${escapeXml(
+    section.title ?? section.identifier,
+  )}">
+${section.itemRefs
+  .map(
+    (itemRef) =>
+      `  <itemref linkrefid="${escapeXml(
+        manifestIdentifiersByHref.get(itemRef.href) ?? itemRef.identifier ?? itemRef.href,
+      )}"></itemref>`,
+  )
+  .join("\n")}
+${section.sections
+  .map((child) => serializeQti12Section(child, manifestIdentifiersByHref))
+  .join("\n")}
+</section>`;
 }
 
 function serializeQti2Section(section: QtiAssessmentSectionPackageModel, testPath: string): string {

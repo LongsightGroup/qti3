@@ -1,6 +1,6 @@
 import type { LoadedPackageInput } from "./package-load.js";
 import { serializeCanvasClassicPackage } from "./package-canvas.js";
-import { packageManifest } from "./package-manifest.js";
+import { packageManifest, type TargetPackageItemResource } from "./package-manifest.js";
 import { serializeMoodleXmlPackage } from "./package-moodle-xml.js";
 import { serializeTargetAssessmentTest } from "./package-assessment-test.js";
 import type { QtiTranscodeProfile } from "./profiles.js";
@@ -16,16 +16,16 @@ export type TargetPackageAssemblyResult =
 export function assembleTargetPackage(
   profile: QtiTranscodeProfile,
   source: LoadedPackageInput,
-  itemFiles: readonly QtiTranscodeFile[],
+  itemResources: readonly TargetPackageItemResource[],
 ): TargetPackageAssemblyResult {
   try {
     switch (profile.kind) {
       case "canvas-classic":
-        return assembleCanvasPackage(source, itemFiles);
+        return assembleCanvasPackage(source, itemResources);
       case "moodle-xml":
-        return assembleMoodlePackage(source, itemFiles);
+        return assembleMoodlePackage(source, itemResources);
       case "qti-standard":
-        return assembleStandardPackage(profile, source, itemFiles);
+        return assembleStandardPackage(profile, source, itemResources);
       default: {
         const unexpected: never = profile;
         throw new Error(`Unsupported package profile: ${JSON.stringify(unexpected)}`);
@@ -45,8 +45,9 @@ export function assembleTargetPackage(
 
 function assembleMoodlePackage(
   source: LoadedPackageInput,
-  itemFiles: readonly QtiTranscodeFile[],
+  itemResources: readonly TargetPackageItemResource[],
 ): TargetPackageAssemblyResult {
+  const itemFiles = itemResources.map(({ path, data }) => ({ path, data }));
   const file = serializeMoodleXmlPackage(itemFiles, source.assets, source.assetOwners);
   if (typeof file.data !== "string") {
     throw new Error("Moodle XML package assembly produced non-text data.");
@@ -58,8 +59,9 @@ function assembleMoodlePackage(
 
 function assembleCanvasPackage(
   source: LoadedPackageInput,
-  itemFiles: readonly QtiTranscodeFile[],
+  itemResources: readonly TargetPackageItemResource[],
 ): TargetPackageAssemblyResult {
+  const itemFiles = itemResources.map(({ path, data }) => ({ path, data }));
   const canvas = serializeCanvasClassicPackage(
     source.identifier,
     source.title,
@@ -81,18 +83,27 @@ function assembleCanvasPackage(
 function assembleStandardPackage(
   profile: Extract<QtiTranscodeProfile, { kind: "qti-standard" }>,
   source: LoadedPackageInput,
-  itemFiles: readonly QtiTranscodeFile[],
+  itemResources: readonly TargetPackageItemResource[],
 ): TargetPackageAssemblyResult {
+  const itemFiles = itemResources.map(({ path, data }) => ({ path, data }));
+  const identifiersByHref = new Map(
+    itemResources.map((resource) => [resource.path, resource.identifier]),
+  );
   const assessmentTest = source.assessmentTest
     ? {
+        identifier: source.assessmentTest.manifestResourceIdentifier ?? "ASSESSMENT_TEST",
         path: source.assessmentTest.href,
-        data: serializeTargetAssessmentTest(source.assessmentTest, profile.target),
+        data: serializeTargetAssessmentTest(
+          source.assessmentTest,
+          profile.target,
+          identifiersByHref,
+        ),
       }
     : undefined;
   const manifest = packageManifest(
     profile.package.manifestResourceType,
     profile.package.schemaVersion,
-    itemFiles,
+    itemResources,
     source.assets,
     source.assetOwners,
     assessmentTest,

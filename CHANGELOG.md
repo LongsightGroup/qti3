@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.10.1 - 2026-07-24
+
+### Changed
+
+- Treat QTI 3 manifests that declare an assessment-test resource and its dependent item resources
+  as assessment packages and resolve their items from the assessment-test structure.
+- Align all workspace package versions on `0.10.1`.
+
+### Fixed
+
+- Preserve declared item-resource identifiers and standards metadata when transcoding assessment
+  packages.
+- Keep QTI 1.2 assessment containers out of migrated item results by resolving `itemref` entries
+  through manifest resource identifiers.
+- Use the same slider mapping for packaged and standalone QTI 2.1 migration, including integer
+  bounds, steps, correct responses, and mapped scoring values.
+
 ## 0.10.0 - 2026-07-24
 
 ### Added

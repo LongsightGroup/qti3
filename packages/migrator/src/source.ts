@@ -116,22 +116,23 @@ export function detectMigrationSource(source: MigrationSource): QtiMigrationDete
   return detectItemXml(source.xml);
 }
 
-export interface LegacyManifest {
+export interface MigratableManifest {
   readonly title: string;
-  readonly resources: readonly LegacyManifestResource[];
-  readonly itemHrefs: readonly string[];
-  readonly testHrefs: readonly string[];
+  readonly resources: readonly MigratableManifestResource[];
   readonly diagnostics: readonly QtiMigrationDiagnostic[];
 }
 
-export interface LegacyManifestResource {
+export type MigratableManifestResourceKind = "item" | "test" | "qti12-container" | "other";
+
+export interface MigratableManifestResource {
   readonly identifier: string;
   readonly type: string;
+  readonly kind: MigratableManifestResourceKind;
   readonly href?: string | undefined;
   readonly files: readonly string[];
 }
 
-export function parseLegacyManifest(xml: string): LegacyManifest {
+export function parseMigratableManifest(xml: string): MigratableManifest {
   const diagnostics: QtiMigrationDiagnostic[] = [];
   const doc = parseXml(xml, "imsmanifest.xml");
   const root = doc.documentElement;
@@ -144,22 +145,16 @@ export function parseLegacyManifest(xml: string): LegacyManifest {
     const files = findAllDescendantsByLocalName(resource, "file")
       .map((file) => attr(file, "href"))
       .filter((href): href is string => Boolean(href));
+    const type = attr(resource, "type") ?? "";
     return {
       identifier: attr(resource, "identifier") ?? `RESOURCE_${index + 1}`,
-      type: attr(resource, "type") ?? "",
+      type,
+      kind: classifyMigratableResource(type),
       href: attr(resource, "href") ?? files.find((file) => file.toLowerCase().endsWith(".xml")),
       files,
     };
   });
-  const itemHrefs = resources
-    .filter((resource) => isLegacyItemResource(resource.type))
-    .map((resource) => resource.href)
-    .filter((href): href is string => Boolean(href));
-  const testHrefs = resources
-    .filter((resource) => isLegacyTestResource(resource.type))
-    .map((resource) => resource.href)
-    .filter((href): href is string => Boolean(href));
-  if (!itemHrefs.length && !testHrefs.length) {
+  if (!resources.some((resource) => resource.kind !== "other")) {
     diagnostics.push(
       diagnostic(
         "manifest_items_missing",
@@ -169,11 +164,11 @@ export function parseLegacyManifest(xml: string): LegacyManifest {
       ),
     );
   }
-  return { title, resources, itemHrefs, testHrefs, diagnostics };
+  return { title, resources, diagnostics };
 }
 
 function detectManifest(xml: string): QtiMigrationDetectionResult {
-  const manifest = parseLegacyManifest(xml);
+  const manifest = parseMigratableManifest(xml);
   const typeText = manifest.resources.map((resource) => resource.type.toLowerCase()).join(" ");
   if (typeText.includes("v2p2")) {
     return {
@@ -203,11 +198,14 @@ function detectManifest(xml: string): QtiMigrationDetectionResult {
     };
   }
   return {
-    supported: manifest.itemHrefs.length > 0,
-    sourceFormat: manifest.itemHrefs.length > 0 ? "qti21" : undefined,
-    confidence: manifest.itemHrefs.length > 0 ? 0.45 : 0.1,
-    reason:
-      manifest.itemHrefs.length > 0 ? "manifest-legacy-item-resource" : "manifest-unsupported",
+    supported: manifest.resources.some((resource) => resource.kind === "item"),
+    sourceFormat: manifest.resources.some((resource) => resource.kind === "item")
+      ? "qti21"
+      : undefined,
+    confidence: manifest.resources.some((resource) => resource.kind === "item") ? 0.45 : 0.1,
+    reason: manifest.resources.some((resource) => resource.kind === "item")
+      ? "manifest-migratable-item-resource"
+      : "manifest-unsupported",
     isPackage: true,
   };
 }
@@ -261,19 +259,16 @@ function detectItemXml(xml: string): QtiMigrationDetectionResult {
   };
 }
 
-function isLegacyItemResource(type: string): boolean {
+function classifyMigratableResource(type: string): MigratableManifestResourceKind {
   const value = type.toLowerCase();
-  return (
-    value.includes("imsqti_item_xmlv2") ||
-    value.includes("imsqti_item_xmlv1p2") ||
-    value.includes("imsqti_xmlv1p2") ||
-    value.includes("qti_xmlv1p2")
-  );
-}
-
-function isLegacyTestResource(type: string): boolean {
-  const value = type.toLowerCase();
-  return value.includes("imsqti_test_xmlv2");
+  if (value.includes("imsqti_item_xmlv2") || value.includes("imsqti_item_xmlv1p2")) {
+    return "item";
+  }
+  if (value.includes("imsqti_test_xmlv2")) return "test";
+  if (value.includes("imsqti_xmlv1p2") || value.includes("qti_xmlv1p2")) {
+    return "qti12-container";
+  }
+  return "other";
 }
 
 function isZip(bytes: Uint8Array): boolean {

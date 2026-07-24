@@ -6,10 +6,11 @@ import {
   type QtiInteractionType,
 } from "@longsightgroup/qti3-core";
 import { qti3TrustedXmlFragment, writeQti3AssessmentItem } from "@longsightgroup/qti3-writer";
-import { transcodeQti3Item } from "@longsightgroup/qti3-transcoder";
+import { transcodeQti3Item, transcodeQti3Package } from "@longsightgroup/qti3-transcoder";
 import { describe, expect, it } from "vitest";
 
-import { migrateQtiItemToQti3 } from "./index.js";
+import { migrateQtiItemToQti3, migrateQtiToQti3 } from "./index.js";
+import { assessmentPackageZip } from "./test-helpers.js";
 
 const interactions = [...interactionSupport, ...deprecatedInteractionSupport];
 
@@ -89,6 +90,92 @@ describe("qti3 transcoder reverse-migration evidence", () => {
     expect(reverse.authoringItem.choices[0]).toMatchObject({
       coords: "184,52,296,124",
       hotspotLabel: undefined,
+    });
+  });
+
+  it.each(["qti12-standard@1", "qti21-standard@1"] as const)(
+    "%s assessment package preserves exactly its three referenced items",
+    async (profile) => {
+      const transcoded = await transcodeQti3Package(
+        { kind: "zip", bytes: assessmentPackageZip() },
+        { profile },
+      );
+      expect(transcoded.ok).toBe(true);
+      if (!transcoded.ok) return;
+
+      const reverse = await migrateQtiToQti3(
+        { filename: `${profile}.zip`, bytes: transcoded.zip },
+        { repairPolicy: "safe" },
+      );
+
+      expect(reverse.items.map((item) => item.authoringItem?.interactionType)).toEqual(
+        profile === "qti12-standard@1"
+          ? ["choice", "choice", "textEntry"]
+          : ["choice", "order", "slider"],
+      );
+      expect(reverse.items.map((item) => item.identifier)).toEqual([
+        "choice_reference",
+        "order_reference",
+        "slider_reference",
+      ]);
+      expect(reverse.items.some((item) => item.identifier === "ITEM_1")).toBe(false);
+      expect(reverse.items.flatMap((item) => item.diagnostics)).toEqual([]);
+      if (profile === "qti21-standard@1") {
+        const slider = reverse.items[2]?.authoringItem;
+        expect(slider).toMatchObject({
+          interactionType: "slider",
+          baseType: "integer",
+          correctResponse: 2024,
+          lowerBound: 2010,
+          upperBound: 2030,
+          step: 1,
+        });
+      }
+    },
+  );
+
+  it("migrates a mapped QTI 2.1 slider identically standalone and from a package", async () => {
+    const mappedSlider = fixtureXml("slider")
+      .replace(
+        "</qti-response-declaration>",
+        `  <qti-mapping default-value="0">
+          <qti-map-entry map-key="2024" mapped-value="1"/>
+        </qti-mapping>
+      </qti-response-declaration>`,
+      )
+      .replace("/match_correct", "/map_response");
+    const transcoded = await transcodeQti3Package(
+      {
+        kind: "zip",
+        bytes: assessmentPackageZip(["slider"], { slider: mappedSlider }),
+      },
+      { profile: "qti21-standard@1" },
+    );
+    expect(transcoded.ok).toBe(true);
+    if (!transcoded.ok) return;
+
+    const sliderXml = transcoded.files.find((file) => file.path === "items/slider.xml")?.data;
+    expect(sliderXml).toEqual(expect.any(String));
+    if (typeof sliderXml !== "string") return;
+    expect(sliderXml).toContain('<mapEntry mapKey="2024" mappedValue="1"></mapEntry>');
+
+    const standalone = migrateQtiItemToQti3(
+      { filename: "items/slider.xml", xml: sliderXml },
+      { repairPolicy: "safe" },
+    );
+    const packaged = await migrateQtiToQti3(
+      { filename: "mapped-slider.zip", bytes: transcoded.zip },
+      { repairPolicy: "safe" },
+    );
+
+    expect(packaged.items).toHaveLength(1);
+    expect(packaged.items[0]?.authoringItem).toEqual(standalone.authoringItem);
+    expect(packaged.items[0]?.authoringItem).toMatchObject({
+      interactionType: "slider",
+      baseType: "integer",
+      correctResponse: 2024,
+      mappings: [{ mapKey: 2024, mappedValue: 1 }],
+      scoring: "map_response",
     });
   });
 });

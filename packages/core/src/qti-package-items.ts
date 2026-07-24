@@ -284,12 +284,34 @@ export function itemReferencesForPackageShape(
   diagnostics: QtiDiagnostic[],
 ): PackageItemReference[] {
   if (packageShape === "assessment-test-resource") {
-    return (assessmentTest?.itemRefs ?? []).map((itemRef) => ({
-      href: itemRef.href,
-      source: "assessment-test",
-      assessmentItemRefIdentifier: itemRef.identifier,
-      standards: assessmentTest?.standards ?? [],
-    }));
+    const itemResourcesByHref = new Map<string, QtiManifestResource>();
+    for (const resource of itemResources) {
+      if (resource.href === undefined) continue;
+      if (itemResourcesByHref.has(resource.href)) {
+        pushPackageDiagnostic(
+          diagnostics,
+          "package.manifest.itemResource.href.duplicate",
+          "error",
+          `Multiple manifest item resources point to ${resource.href}.`,
+          resource.href,
+        );
+        continue;
+      }
+      itemResourcesByHref.set(resource.href, resource);
+    }
+    return (assessmentTest?.itemRefs ?? []).map((itemRef) => {
+      const itemResource = itemResourcesByHref.get(itemRef.href);
+      return {
+        href: itemRef.href,
+        source: "assessment-test",
+        manifestResourceIdentifier: itemResource?.identifier,
+        assessmentItemRefIdentifier: itemRef.identifier,
+        standards: uniqueStandards([
+          ...(assessmentTest?.standards ?? []),
+          ...(itemResource?.standards ?? []),
+        ]),
+      };
+    });
   }
 
   if (packageShape !== "manifest-item-resources") return [];

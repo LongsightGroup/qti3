@@ -1,5 +1,3 @@
-import type { QtiAssessmentSectionPackageModel } from "@longsightgroup/qti3-core";
-
 import type { QtiTranscodeFile } from "./types.js";
 import { relativePackagePath } from "./package-manifest.js";
 import { escapeXml } from "./xml.js";
@@ -140,18 +138,4 @@ function canvasAssessmentMetadata(identifier: string, title: string, points: num
   <only_visible_to_overrides>false</only_visible_to_overrides>
   <module_locked>false</module_locked>
 </quiz>`;
-}
-
-export function serializeQti12Section(section: QtiAssessmentSectionPackageModel): string {
-  return `<section ident="${escapeXml(section.identifier)}" title="${escapeXml(
-    section.title ?? section.identifier,
-  )}">
-${section.itemRefs
-  .map(
-    (itemRef) =>
-      `  <itemref linkrefid="${escapeXml(itemRef.identifier ?? itemRef.href)}"></itemref>`,
-  )
-  .join("\n")}
-${section.sections.map(serializeQti12Section).join("\n")}
-</section>`;
 }

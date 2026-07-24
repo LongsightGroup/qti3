@@ -121,6 +121,17 @@ export function mapSlider(interaction: XmlElement, context: Qti2Context): Qti3Au
   const declaration = context.responseDeclMap.get(responseIdentifier);
   const lowerBound = toNumber(attr(interaction, "lowerBound")) ?? 0;
   const correctResponse = Number(responseValues(declaration)[0] ?? lowerBound);
+  const mappings = declaration
+    ? findAllDescendantsByLocalName(declaration, "mapentry")
+        .map((entry) => ({
+          mapKey: toNumber(attr(entry, "mapKey")),
+          mappedValue: toNumber(attr(entry, "mappedValue")),
+        }))
+        .filter(
+          (entry): entry is { mapKey: number; mappedValue: number } =>
+            entry.mapKey !== undefined && entry.mappedValue !== undefined,
+        )
+    : [];
   return {
     interactionType: "slider",
     identifier: context.identifier,
@@ -135,6 +146,7 @@ export function mapSlider(interaction: XmlElement, context: Qti2Context): Qti3Au
     orientation: attr(interaction, "orientation") === "vertical" ? "vertical" : "horizontal",
     reverse: xmlBooleanAttribute(attr(interaction, "reverse")),
     baseType: attr(declaration, "baseType") === "float" ? "float" : "integer",
+    ...(mappings.length > 0 ? { mappings } : {}),
     scoring: hasMapping(declaration) ? "map_response" : "match_correct",
   };
 }

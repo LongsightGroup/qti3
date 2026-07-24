@@ -5,11 +5,12 @@ import { migrateItemXml } from "./migrate-items.js";
 import { migrationPackageAssets } from "./assets.js";
 import { resolveOptions } from "./options.js";
 import { migrationResultToPackage } from "./package-result.js";
+import { selectPackageItemHrefs } from "./package-item-hrefs.js";
 import { migrateQtiResourceToQti3 } from "./resource-migration.js";
 import {
   detectMigrationSource,
   detectQtiMigrationSource,
-  parseLegacyManifest,
+  parseMigratableManifest,
   readMigrationSource,
   type MigrationSource,
 } from "./source.js";
@@ -164,9 +165,13 @@ function migratePackageSource(
     };
   }
 
-  const manifest = parseLegacyManifest(manifestEntry.text);
+  const manifest = parseMigratableManifest(manifestEntry.text);
   diagnostics.push(...manifest.diagnostics.map((entry) => ({ ...entry, sourceFormat })));
-  if (manifest.testHrefs.length) {
+  if (
+    manifest.resources.some(
+      (resource) => resource.kind === "test" || resource.kind === "qti12-container",
+    )
+  ) {
     diagnostics.push(
       diagnostic(
         "assessment_test_structure_not_migrated",
@@ -187,13 +192,7 @@ function migratePackageSource(
       ),
     );
   }
-  const itemHrefs = manifest.itemHrefs.length
-    ? manifest.itemHrefs
-    : source.entries
-        .filter(
-          (entry) => entry.path.toLowerCase().endsWith(".xml") && entry.path !== "imsmanifest.xml",
-        )
-        .map((entry) => entry.path);
+  const itemHrefs = selectPackageItemHrefs(sourceFormat, manifest, entriesByPath);
   const items: QtiMigrationItemResult[] = [];
   for (const href of itemHrefs) {
     const entry = entriesByPath.get(href) ?? entriesByPath.get(href.replace(/^\.\//, ""));

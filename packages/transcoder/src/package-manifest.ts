@@ -1,31 +1,48 @@
+import type { QtiStandardAlignment } from "@longsightgroup/qti3-core";
+
 import type { QtiTranscodeDiagnostic, QtiTranscodeFile } from "./types.js";
 import { escapeXml, safePackagePath } from "./xml.js";
+
+export interface TargetPackageItemResource extends QtiTranscodeFile {
+  readonly identifier: string;
+  readonly data: string;
+  readonly standards: readonly QtiStandardAlignment[];
+}
+
+export interface TargetPackageAssessmentResource extends QtiTranscodeFile {
+  readonly identifier: string;
+  readonly data: string;
+}
+
+export function manifestItemResourceIdentifier(index: number): string {
+  return `RESOURCE_${index + 1}`;
+}
 
 export function packageManifest(
   resourceType: string,
   schemaVersion: string,
-  items: readonly QtiTranscodeFile[],
+  items: readonly TargetPackageItemResource[],
   assets: readonly QtiTranscodeFile[],
   assetOwners: ReadonlyMap<string, readonly string[]>,
-  assessmentTest: QtiTranscodeFile | undefined,
+  assessmentTest: TargetPackageAssessmentResource | undefined,
   target: "qti12" | "qti21" | "qti22",
 ): string {
   const itemResources = items
     .map(
       (
         item,
-        index,
-      ) => `    <resource identifier="RESOURCE_${index + 1}" type="${resourceType}" href="${escapeXml(item.path)}">
+      ) => `    <resource identifier="${escapeXml(item.identifier)}" type="${resourceType}" href="${escapeXml(item.path)}">
       <file href="${escapeXml(item.path)}"/>
 ${assets
   .filter((asset) => assetOwners.get(asset.path)?.includes(item.path))
   .map((asset) => `      <file href="${escapeXml(asset.path)}"/>`)
   .join("\n")}
+${serializeStandardsMetadata(item.standards)}
     </resource>`,
     )
     .join("\n");
   const testResource = assessmentTest
-    ? `    <resource identifier="ASSESSMENT_TEST" type="${
+    ? `    <resource identifier="${escapeXml(assessmentTest.identifier)}" type="${
         target === "qti12"
           ? "imsqti_xmlv1p2"
           : `imsqti_test_xmlv${target === "qti21" ? "2p1" : "2p2"}`
@@ -36,7 +53,7 @@ ${assets
   .map((asset) => `      <file href="${escapeXml(asset.path)}"/>`)
   .join("\n")}
 ${items
-  .map((_item, index) => `      <dependency identifierref="RESOURCE_${index + 1}"/>`)
+  .map((item) => `      <dependency identifierref="${escapeXml(item.identifier)}"/>`)
   .join("\n")}
     </resource>`
     : "";
@@ -49,6 +66,31 @@ ${testResource}
 ${itemResources}
   </resources>
 </manifest>`;
+}
+
+function serializeStandardsMetadata(standards: readonly QtiStandardAlignment[]): string {
+  if (standards.length === 0) return "";
+  const alignments = standards
+    .map((standard) => {
+      const attributes = [
+        ["identifier", standard.identifier],
+        ["framework", standard.framework],
+        ["target-name", standard.targetName],
+        ["href", standard.targetUrl],
+        ["provider-identifier", standard.providerIdentifier],
+        ["resource-label", standard.resourceLabel],
+        ["resource-part-identifier", standard.resourcePartIdentifier],
+        ["weight", standard.weight],
+      ]
+        .filter((pair): pair is [string, string | number] => pair[1] !== undefined)
+        .map(([name, value]) => ` ${name}="${escapeXml(String(value))}"`)
+        .join("");
+      return `        <standard-alignment${attributes}>${escapeXml(standard.text ?? "")}</standard-alignment>`;
+    })
+    .join("\n");
+  return `      <metadata>
+${alignments}
+      </metadata>`;
 }
 
 export function relativePackagePath(fromFile: string, toFile: string): string {
