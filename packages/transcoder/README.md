@@ -21,7 +21,9 @@ dependency.
 The standards profiles are `qti12-standard@1`, `qti21-standard@1`, and
 `qti22-standard@1`. `canvas-classic-quizzes@1` is a separate, source-backed Canvas Classic
 Quizzes dialect; it is never selected implicitly. See [Canvas Classic profile](./CANVAS_CLASSIC.md)
-for its package conventions, interaction policies, and release evidence contract. QTI 1.2
+for its package conventions, interaction policies, and release evidence contract. `moodle-xml@1`
+targets Moodle's first-party question-bank XML importer rather than its legacy Blackboard
+compatibility path. See [Moodle XML profile](./MOODLE_XML.md). QTI 1.2
 conversions use declared, diagnosed fallbacks when the older standard or selected product dialect
 cannot represent an interaction natively.
 
@@ -35,6 +37,7 @@ dependencies, and per-resource asset ownership. Generated reports use determinis
 `assets/generated/<sha256>.json` paths.
 
 `pnpm check:transcoder-support` executes every profile/interaction case and compares the result
-with the committed evidence hashes. `pnpm check:transcoder-xsd` validates all 88 cells against the
-vendored, SHA-256-locked schema closure. `pnpm release:check` also requires a current, full-matrix
-Canvas import receipt before a vendor profile can be published.
+with the committed evidence hashes. `pnpm check:transcoder-xsd` validates every QTI profile cell
+against the vendored, SHA-256-locked schema closure. Moodle XML is a proprietary vendor format and
+is validated against its semantic contract and real product imports instead. `pnpm release:check`
+requires a current, full-matrix import receipt for every vendor profile before publication.

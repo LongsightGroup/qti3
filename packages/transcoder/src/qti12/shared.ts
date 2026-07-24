@@ -1,6 +1,6 @@
 import type { QtiChoice, QtiInteraction, QtiValue } from "@longsightgroup/qti3-core";
 
-import { canvasAccessibleChoiceLabel } from "../qti12-canvas.js";
+import { accessibleChoiceLabel } from "../rich-content-html.js";
 
 export function values(value: QtiValue): string[] {
   if (Array.isArray(value)) return value.map(String);
@@ -53,7 +53,7 @@ export function manualInstruction(type: QtiInteraction["type"]): string {
 }
 
 export function manualInstructionFor(interaction: QtiInteraction): string {
-  const labels = interaction.choices.flatMap((choice) => canvasAccessibleChoiceLabel(choice) ?? []);
+  const labels = interaction.choices.flatMap((choice) => accessibleChoiceLabel(choice) ?? []);
   const instruction = manualInstruction(interaction.type);
   return labels.length === 0
     ? instruction

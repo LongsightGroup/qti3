@@ -53,3 +53,12 @@ export function isRepairBlocked(result: RepairPolicyResult): result is {
 } {
   return result.action === "blocked";
 }
+
+export function blockMigrationOnRepair(
+  context: { blocked?: readonly QtiMigrationDiagnostic[] | undefined },
+  result: RepairPolicyResult,
+): boolean {
+  if (!isRepairBlocked(result)) return false;
+  context.blocked = result.diagnostics;
+  return true;
+}

@@ -10,6 +10,7 @@ import { qti3TrustedXmlFragment, writeQti3AssessmentItem } from "../packages/wri
 import {
   qtiTranscodeProfiles,
   qtiTranscoderSupportMatrix,
+  requiresXsdEvidence,
 } from "../packages/transcoder/dist/index.js";
 import { runTranscoderEvidenceMatrix } from "../packages/transcoder/dist/evidence.js";
 
@@ -72,8 +73,14 @@ if (process.argv.includes("--write")) {
 if (process.argv.includes("--release")) {
   const receiptPath = join(root, ".cache", "transcoder-evidence", "xsd.json");
   const receipt = JSON.parse(await readFile(receiptPath, "utf8").catch(() => "null"));
-  const expectedCases = observations.map((entry) => entry.caseId).toSorted();
-  const expectedVariantCases = profiles
+  const xsdProfiles = Object.values(qtiTranscodeProfiles)
+    .filter(requiresXsdEvidence)
+    .map((profile) => profile.id);
+  const expectedCases = observations
+    .filter((entry) => xsdProfiles.some((profile) => entry.caseId.startsWith(`${profile}/`)))
+    .map((entry) => entry.caseId)
+    .toSorted();
+  const expectedVariantCases = xsdProfiles
     .map((profile) => `${profile}/variant/accessibility-choice`)
     .toSorted();
   if (
@@ -82,7 +89,7 @@ if (process.argv.includes("--release")) {
     JSON.stringify(receipt.cases?.toSorted()) !== JSON.stringify(expectedCases) ||
     JSON.stringify(receipt.variantCases?.toSorted()) !== JSON.stringify(expectedVariantCases) ||
     JSON.stringify(receipt.packageCases?.toSorted()) !==
-      JSON.stringify(profiles.map((profile) => `${profile}/assessment-test`).toSorted())
+      JSON.stringify(xsdProfiles.map((profile) => `${profile}/assessment-test`).toSorted())
   ) {
     failures.push("Current full-matrix XSD evidence receipt is missing.");
   }

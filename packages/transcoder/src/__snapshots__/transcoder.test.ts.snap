@@ -1432,6 +1432,1242 @@ exports[`qti3 transcoder evidence matrix > canvas-classic-quizzes@1 > transcodes
 }
 `;
 
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes associate 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted associate to a Moodle essay question for manual grading.",
+      "path": "associate.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "associate.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "associate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "associate.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "associate",
+      },
+    ],
+    "sourcePath": "associate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>associate-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A media-literacy item asks the student to connect a source detail with the reason it is useful.&lt;/p&gt;&lt;p&gt;Choose the two details that belong together in a source-evaluation note.&lt;/p&gt;&lt;p&gt;Provide a complete written response. Available task elements: Interview with the park ranger who led the restoration project; Firsthand source for project timeline; Anonymous comment on a neighborhood forum; Decorative map border; Weather forecast for next month.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes choice 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "choice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "multichoice",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "choice",
+      },
+    ],
+    "sourcePath": "choice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="multichoice">
+    <name><text>choice-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library&amp;apos;s weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>false</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <answer fraction="100" format="html"><text>Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>The library repainted the study room in a brighter color during spring break.</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>Several tutors said they enjoyed helping younger students with homework.</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>The tutoring flyers used the same logo as the summer reading program.</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>The library closes one hour earlier on Sundays than it does on Saturdays.</text><feedback format="html"><text></text></feedback></answer>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes custom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "source.interaction.deprecated",
+      "message": "qti-custom-interaction is deprecated. Deprecated in favor of qti-portable-custom-interaction.",
+      "path": "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted custom to a Moodle essay question for manual grading.",
+      "path": "custom.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "custom.xml",
+    ],
+    "diagnosticCodes": [
+      "source.interaction.deprecated",
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "custom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "custom.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "custom",
+      },
+    ],
+    "sourcePath": "custom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>Custom reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;Use the widget.&lt;/p&gt;&lt;p&gt;Provide the requested response in text.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes drawing 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted drawing to a Moodle essay question for manual grading.",
+      "path": "drawing.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "drawing.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "drawing-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "drawing.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "drawing",
+      },
+    ],
+    "sourcePath": "drawing.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>drawing-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A science item asks the student to annotate a field-study workflow diagram.&lt;/p&gt;&lt;p&gt;Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Describe the response you would draw.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes endAttempt 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted endAttempt to a Moodle essay question for manual grading.",
+      "path": "endAttempt.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "endAttempt.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "endAttempt-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "endAttempt.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "endAttempt",
+      },
+    ],
+    "sourcePath": "endAttempt.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>endAttempt-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;&lt;p&gt;Explain whether the attempt should end and why.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes extendedText 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "extendedText-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "essay",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "extendedText",
+      },
+    ],
+    "sourcePath": "extendedText.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>extendedText-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A constructed-response item asks for a recommendation based on garden moisture data.&lt;/p&gt;&lt;p&gt;Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.&lt;/p&gt;&lt;p&gt;Provide a complete written response.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes gapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices. Source interaction: gapMatch.",
+      "path": "gapMatch.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "gapMatch.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "gapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "gapMatch.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.choice",
+        ],
+        "emittedInteraction": "multichoice",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "gapMatch",
+      },
+    ],
+    "sourcePath": "gapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="multichoice">
+    <name><text>gapMatch-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A science vocabulary item asks the student to complete a field-notes sentence from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-notes sentence using the word bank.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <single>false</single>
+    <shuffleanswers>false</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <answer fraction="50" format="html"><text>evidence — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>evidence — G2</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>claim — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="50" format="html"><text>claim — G2</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>opinion — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>opinion — G2</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>caption — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>caption — G2</text><feedback format="html"><text></text></feedback></answer>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes graphicAssociate 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted graphicAssociate to a Moodle essay question for manual grading.",
+      "path": "graphicAssociate.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "graphicAssociate.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicAssociate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "graphicAssociate.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "graphicAssociate",
+      },
+    ],
+    "sourcePath": "graphicAssociate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>graphicAssociate-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to connect related parts of a field-study workflow.&lt;/p&gt;&lt;p&gt;Connect the two workflow regions that belong together: planning the route should be paired with collecting water data, and analyzing results should be paired with reporting recommendations.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow-unlabeled.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Provide a complete written response. Available task elements: Plan sampling route; Collect water data; Analyze results; Report recommendations; Community meeting.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes graphicGapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices. Source interaction: graphicGapMatch.",
+      "path": "graphicGapMatch.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "graphicGapMatch.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicGapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "graphicGapMatch.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.choice",
+        ],
+        "emittedInteraction": "multichoice",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicGapMatch",
+      },
+    ],
+    "sourcePath": "graphicGapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="multichoice">
+    <name><text>graphicGapMatch-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow-unlabeled.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <single>false</single>
+    <shuffleanswers>false</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <answer fraction="50" format="html"><text>Plan route — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Plan route — G2</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Collect data — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="50" format="html"><text>Collect data — G2</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Analyze results — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Analyze results — G2</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Hold celebration — G1</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Hold celebration — G2</text><feedback format="html"><text></text></feedback></answer>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes graphicOrder 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.matching",
+      "message": "Converted the ordered response to one Moodle matching row per sequence position. Source interaction: graphicOrder.",
+      "path": "graphicOrder.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "graphicOrder.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.matching",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicOrder-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "graphicOrder.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.matching",
+        ],
+        "emittedInteraction": "matching",
+        "fallback": "matching",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicOrder",
+      },
+    ],
+    "sourcePath": "graphicOrder.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="matching">
+    <name><text>graphicOrder-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A visual sequencing item asks the student to order field-study workflow regions.&lt;/p&gt;&lt;p&gt;Select the workflow regions in the order a field team should complete them: plan the sampling route, collect data, analyze the results, then write the recommendation report.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow-unlabeled.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <shuffleanswers>false</shuffleanswers>
+    <subquestion format="html"><text>Position 1</text><answer><text>Plan sampling route</text></answer></subquestion>
+    <subquestion format="html"><text>Position 2</text><answer><text>Collect water data</text></answer></subquestion>
+    <subquestion format="html"><text>Position 3</text><answer><text>Analyze results</text></answer></subquestion>
+    <subquestion format="html"><text>Position 4</text><answer><text>Report recommendations</text></answer></subquestion>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes hotspot 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.choice",
+      "message": "Converted the interaction to labeled Moodle choices. Source interaction: hotspot.",
+      "path": "hotspot.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "hotspot.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "hotspot-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "hotspot.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.choice",
+        ],
+        "emittedInteraction": "multichoice",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "hotspot",
+      },
+    ],
+    "sourcePath": "hotspot.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="multichoice">
+    <name><text>hotspot-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to select the workflow step where stream data are collected.&lt;/p&gt;&lt;p&gt;The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>false</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <answer fraction="100" format="html"><text>A</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>B</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>C</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>D</text><feedback format="html"><text></text></feedback></answer>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes hottext 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.choice",
+      "message": "Converted the interaction to labeled Moodle choices. Source interaction: hottext.",
+      "path": "hottext.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "hottext.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "hottext-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "hottext.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.choice",
+        ],
+        "emittedInteraction": "multichoice",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "hottext",
+      },
+    ],
+    "sourcePath": "hottext.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="multichoice">
+    <name><text>hottext-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A reading item asks the student to select the author&apos;s claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author&amp;apos;s claim.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <single>true</single>
+    <shuffleanswers>false</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <answer fraction="100" format="html"><text>A small green space would give nearby residents a shaded place to gather</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>The lot is 0.4 acres</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>The planning department posted the proposal last Tuesday</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="0" format="html"><text>Two benches are stored in a public works warehouse</text><feedback format="html"><text></text></feedback></answer>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes inlineChoice 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.multiple_interactions_manual",
+      "message": "Converted inlineChoice to a Moodle essay question for manual grading.",
+      "path": "inlineChoice.xml",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.moodle.xml.multiple_interactions_manual",
+      "message": "Converted inlineChoice to a Moodle essay question for manual grading.",
+      "path": "inlineChoice.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "inlineChoice.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.multiple_interactions_manual",
+      "profile.moodle.xml.multiple_interactions_manual",
+    ],
+    "fidelity": "lossy",
+    "identifier": "inlineChoice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "inlineChoice.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.multiple_interactions_manual",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "inlineChoice",
+      },
+      {
+        "affectedPaths": [
+          "inlineChoice.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.multiple_interactions_manual",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 1,
+        "scoring": "manual",
+        "sourceInteraction": "inlineChoice",
+      },
+    ],
+    "sourcePath": "inlineChoice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>inlineChoice-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;Read the sentence from a school-news article and choose the words that make the account accurate.&lt;/p&gt;&lt;p&gt;After a three-week pilot, the cafeteria team reported that the reusable tray program , and the strongest evidence was the .&lt;/p&gt;&lt;p&gt;Answer every part of the question in one complete response. Provide a complete written response. Available task elements: reduced lunchroom waste; increased disposable packaging; left trash levels unchanged; stopped food donations. Provide a complete written response. Available task elements: number of students who bought lunch; drop in bags collected after lunch; color of the new trays; menu posted on Monday.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes match 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "match-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "matching",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "match",
+      },
+    ],
+    "sourcePath": "match.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="matching">
+    <name><text>match-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A garden-data item asks the student to match observations with reasonable interpretations.&lt;/p&gt;&lt;p&gt;Match each observation from a community garden study with the most reasonable interpretation.&lt;/p&gt;&lt;p&gt;Match each prompt to an answer. Prompts: Mulched beds stayed moist two days longer after watering.; Uncovered beds had more weeds by the third week.; Beds near the fence received less afternoon sun.; The garden sign was repainted on Saturday.. Available answers: Mulch helped reduce water loss from the soil.; Bare soil may need more frequent weeding.; Light exposure was not identical across all beds.; This maintenance detail does not explain plant growth..&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <shuffleanswers>false</shuffleanswers>
+    <subquestion format="html"><text>Mulched beds stayed moist two days longer after watering.</text><answer><text>Mulch helped reduce water loss from the soil.</text></answer></subquestion>
+    <subquestion format="html"><text>Uncovered beds had more weeds by the third week.</text><answer><text>Bare soil may need more frequent weeding.</text></answer></subquestion>
+    <subquestion format="html"><text></text><answer><text>Light exposure was not identical across all beds.</text></answer></subquestion>
+    <subquestion format="html"><text></text><answer><text>This maintenance detail does not explain plant growth.</text></answer></subquestion>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes media 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted media to a Moodle essay question for manual grading.",
+      "path": "media.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "media.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "media-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "media.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "media",
+      },
+    ],
+    "sourcePath": "media.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>media-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker&amp;apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=&quot;&gt;Silent town-hall audio excerpt&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Describe your response after reviewing the media.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes order 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.matching",
+      "message": "Converted the ordered response to one Moodle matching row per sequence position. Source interaction: order.",
+      "path": "order.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "order.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.matching",
+    ],
+    "fidelity": "lossy",
+    "identifier": "order-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "order.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.matching",
+        ],
+        "emittedInteraction": "matching",
+        "fallback": "matching",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "order",
+      },
+    ],
+    "sourcePath": "order.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="matching">
+    <name><text>order-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A science-planning item asks the student to arrange investigation steps in order.&lt;/p&gt;&lt;p&gt;A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <shuffleanswers>false</shuffleanswers>
+    <subquestion format="html"><text>Position 1</text><answer><text>Set up identical trays with the same soil, seed type, and water schedule.</text></answer></subquestion>
+    <subquestion format="html"><text>Position 2</text><answer><text>Place one tray in full light and one tray in reduced light for the same number of days.</text></answer></subquestion>
+    <subquestion format="html"><text>Position 3</text><answer><text>Measure and compare seedling height at the end of the trial.</text></answer></subquestion>
+    <subquestion format="html"><text>Position 4</text><answer><text>Use the measurements to write a conclusion about how light affected growth.</text></answer></subquestion>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes portableCustom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted portableCustom to a Moodle essay question for manual grading.",
+      "path": "portableCustom.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "portableCustom.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.essay",
+    ],
+    "fidelity": "lossy",
+    "identifier": "portableCustom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "portableCustom.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.essay",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "portableCustom",
+      },
+    ],
+    "sourcePath": "portableCustom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>portableCustom-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A graphing-item placeholder exercises a custom interaction while presenting sample-data content.&lt;/p&gt;&lt;p&gt;Use the custom graphing tool to choose the claim best supported by the sample data. The fixture module returns A for the supported claim.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;modules/module_resolution.js&quot;&gt;Custom interaction dependency: modules/module_resolution.js&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;modules/fixture-portable-custom&quot;&gt;Custom interaction dependency: modules/fixture-portable-custom&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Provide the requested response in text.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes positionObject 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.text-entry",
+      "message": "Converted the interaction to a Moodle short-answer response. Source interaction: positionObject.",
+      "path": "positionObject.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "positionObject.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.text-entry",
+    ],
+    "fidelity": "lossy",
+    "identifier": "positionObject-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "positionObject.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.text-entry",
+        ],
+        "emittedInteraction": "shortanswer",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "positionObject",
+      },
+    ],
+    "sourcePath": "positionObject.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="shortanswer">
+    <name><text>positionObject-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data=&quot;hotspot-flow.svg&quot; type=&quot;image/svg+xml&quot; width=&quot;480&quot; height=&quot;300&quot;&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;data:image/svg+xml,%3Csvg%20xmlns=&amp;apos;http://www.w3.org/2000/svg&amp;apos;%20viewBox=&amp;apos;0%200%2064%2048&amp;apos;%3E%3Crect%20x=&amp;apos;4&amp;apos;%20y=&amp;apos;4&amp;apos;%20width=&amp;apos;56&amp;apos;%20height=&amp;apos;40&amp;apos;%20rx=&amp;apos;8&amp;apos;%20fill=&amp;apos;%23fff3bf&amp;apos;%20stroke=&amp;apos;%23212529&amp;apos;%20stroke-width=&amp;apos;4&amp;apos;/%3E%3Cpath%20d=&amp;apos;M32%2044%20L24%2058%20L40%2058%20Z&amp;apos;%20fill=&amp;apos;%23fff3bf&amp;apos;%20stroke=&amp;apos;%23212529&amp;apos;%20stroke-width=&amp;apos;4&amp;apos;/%3E%3C/svg%3E&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Enter the response as x,y coordinates.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <usecase>1</usecase>
+    <answer fraction="100" format="html"><text>240,88</text><feedback format="html"><text></text></feedback></answer>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes selectPoint 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.text-entry",
+      "message": "Converted the interaction to a Moodle short-answer response. Source interaction: selectPoint.",
+      "path": "selectPoint.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "selectPoint.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.text-entry",
+    ],
+    "fidelity": "lossy",
+    "identifier": "selectPoint-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "selectPoint.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.text-entry",
+        ],
+        "emittedInteraction": "shortanswer",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "selectPoint",
+      },
+    ],
+    "sourcePath": "selectPoint.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="shortanswer">
+    <name><text>selectPoint-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A coordinate item asks the student to mark the center of the data-collection workflow step.&lt;/p&gt;&lt;p&gt;Mark the center of the Collect water data step, where students record the stream measurements.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Enter the response as x,y coordinates.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <usecase>1</usecase>
+    <answer fraction="100" format="html"><text>240,88</text><feedback format="html"><text></text></feedback></answer>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes slider 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.moodle.xml.fallback.text-entry",
+      "message": "Converted the interaction to a Moodle numerical response. Source interaction: slider.",
+      "path": "slider.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "slider.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.moodle.xml.fallback.text-entry",
+    ],
+    "fidelity": "lossy",
+    "identifier": "slider-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "slider.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.fallback.text-entry",
+        ],
+        "emittedInteraction": "numerical",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "slider",
+      },
+    ],
+    "sourcePath": "slider.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="numerical">
+    <name><text>slider-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A timeline item asks the student to choose the opening year of a restored rail-trail.&lt;/p&gt;&lt;p&gt;A community archive asks students to place the opening year of the restored rail-trail on a timeline. The project opened in 2024 after fourteen years of planning. Select the opening year.&lt;/p&gt;&lt;p&gt;Enter a value within the stated range.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <answer fraction="100"><text>2024</text><tolerance>0</tolerance><feedback format="html"><text></text></feedback></answer>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes textEntry 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "textEntry-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "shortanswer",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "textEntry",
+      },
+    ],
+    "sourcePath": "textEntry.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="shortanswer">
+    <name><text>textEntry-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A geography vocabulary item asks the student to type the name of a coastal feature.&lt;/p&gt;&lt;p&gt;A river meets the ocean in a partly enclosed area where fresh water and salt water mix. Type the vocabulary word for this coastal feature: .&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <usecase>1</usecase>
+    <answer fraction="100" format="html"><text>estuary</text><feedback format="html"><text></text></feedback></answer>
+  </question>
+</quiz>",
+}
+`;
+
+exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes upload 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "normalized",
+    "identifier": "upload-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "essay",
+        "fallback": undefined,
+        "fidelity": "normalized",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "upload",
+      },
+    ],
+    "sourcePath": "upload.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<quiz>
+  <question type="essay">
+    <name><text>upload-reference</text></name>
+    <questiontext format="html"><text>&lt;p&gt;A constructed-response item asks the student to upload a field-notes text file.&lt;/p&gt;&lt;p&gt;Upload a text file named upload.txt containing your one-page field notes from the water-quality investigation.&lt;/p&gt;&lt;p&gt;Describe the file or work you would submit.&lt;/p&gt;</text></questiontext>
+    <generalfeedback format="html"><text></text></generalfeedback>
+    <defaultgrade>1</defaultgrade>
+    <penalty>0</penalty>
+    <hidden>0</hidden>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>1</attachments>
+    <attachmentsrequired>1</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
+  </question>
+</quiz>",
+}
+`;
+
 exports[`qti3 transcoder evidence matrix > qti12-standard@1 > transcodes associate 1`] = `
 {
   "diagnostics": [

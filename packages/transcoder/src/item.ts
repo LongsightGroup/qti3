@@ -2,9 +2,9 @@ import type { QtiInteractionType, QtiValue } from "@longsightgroup/qti3-core";
 
 import { writeMoodleXmlItem } from "./moodle-xml.js";
 import { writeQti12Item } from "./qti12.js";
-import type { Qti12WireDialect } from "./qti12/types.js";
 import { writeQti21Item } from "./qti21.js";
 import { writeQti22Item } from "./qti22.js";
+import type { Qti2WriteResult } from "./qti2-semantic.js";
 import type { QtiTranscodeProfile } from "./profiles.js";
 import { qtiTranscodeProfile } from "./profiles.js";
 import { normalizeQti3Item, type NormalizedQti3Item } from "./source.js";
@@ -54,7 +54,7 @@ export function transcodeQti3Item(
   const diagnostics = [
     ...normalized.diagnostics,
     ...written.diagnostics,
-    ...validateTranscodedXml(written.xml, profile),
+    ...validateGeneratedTargetXml(written.xml, profile.target),
   ];
   if (hasErrors(diagnostics)) return generationFailure(options, diagnostics);
 
@@ -67,56 +67,41 @@ export function transcodeQti3Item(
       responseProcessingEmitted: written.responseProcessingEmitted === true,
     }),
   );
-  return successResult(options, normalized.item, written.xml, mappings, diagnostics);
+  return successResult(profile, normalized.item, written.xml, mappings, diagnostics);
 }
 
 function writeTranscodedItem(
   normalized: NormalizedQti3Item,
   profile: QtiTranscodeProfile,
 ): TranscodedItemWriteResult {
-  switch (profile.target) {
-    case "qti12":
-      return writeQti12Item(normalized, profile.interactions, qti12WireDialect(profile));
-    case "qti21": {
-      const written = writeQti21Item(normalized.item);
-      return {
-        xml: written.xml,
-        diagnostics: written.diagnostics,
-        mappings: written.mappings,
-        responseProcessingEmitted: written.responseProcessingEmitted,
-      };
-    }
-    case "qti22": {
-      const written = writeQti22Item(normalized.item);
-      return {
-        xml: written.xml,
-        diagnostics: written.diagnostics,
-        mappings: written.mappings,
-        responseProcessingEmitted: written.responseProcessingEmitted,
-      };
-    }
+  switch (profile.kind) {
     case "moodle-xml":
       return writeMoodleXmlItem(normalized, profile.interactions);
+    case "canvas-classic":
+      return writeQti12Item(normalized, profile.interactions, "canvas-classic");
+    case "qti-standard":
+      switch (profile.target) {
+        case "qti12":
+          return writeQti12Item(normalized, profile.interactions);
+        case "qti21":
+          return normalizeQti2WriteResult(writeQti21Item(normalized.item));
+        case "qti22":
+          return normalizeQti2WriteResult(writeQti22Item(normalized.item));
+      }
     default: {
-      const unexpected: never = profile.target;
-      throw new Error(`Unsupported transcoder target: ${String(unexpected)}`);
+      const unexpected: never = profile;
+      throw new Error(`Unsupported transcoder profile: ${JSON.stringify(unexpected)}`);
     }
   }
 }
 
-function qti12WireDialect(profile: QtiTranscodeProfile): Qti12WireDialect {
-  return profile.wireDialect === "canvas-classic" ? "canvas-classic" : "standard";
-}
-
-function validateTranscodedXml(
-  xml: string,
-  profile: QtiTranscodeProfile,
-): readonly QtiTranscodeDiagnostic[] {
-  if (profile.target === "moodle-xml") return [];
-  if (profile.target === "qti12") {
-    return validateGeneratedTargetXml(xml, profile.target, qti12WireDialect(profile));
-  }
-  return validateGeneratedTargetXml(xml, profile.target);
+function normalizeQti2WriteResult(written: Qti2WriteResult): TranscodedItemWriteResult {
+  return {
+    xml: written.xml,
+    diagnostics: written.diagnostics,
+    mappings: written.mappings,
+    responseProcessingEmitted: written.responseProcessingEmitted,
+  };
 }
 
 function buildInteractionReport(input: {
@@ -139,7 +124,9 @@ function buildInteractionReport(input: {
   if (profile.target === "qti12" || profile.target === "moodle-xml") {
     return {
       ...base,
-      fidelity: mapping.fallback ? "lossy" : policy.fidelity,
+      fidelity: mapping.fallback
+        ? "lossy"
+        : aggregateFidelity([policy.fidelity], mapping.diagnostics),
       scoring: mapping.scoring ?? policy.scoring,
       fallback: mapping.fallback,
     };
@@ -182,7 +169,7 @@ export function aggregateFidelity(
 }
 
 function successResult(
-  options: QtiTranscodeOptions,
+  profile: QtiTranscodeProfile,
   normalized: {
     readonly item: { readonly identifier: string };
     readonly sourcePath?: string | undefined;
@@ -197,8 +184,8 @@ function successResult(
   );
   return {
     ok: true,
-    profile: options.profile,
-    target: qtiTranscodeProfile(options.profile).target,
+    profile: profile.id,
+    target: profile.target,
     fidelity,
     xml,
     assets: [],

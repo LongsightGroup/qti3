@@ -296,6 +296,24 @@ describe("@longsightgroup/qti3-migrator", () => {
     );
   });
 
+  it("rejects QTI 2.x choice repairs by default and allows them only under safe policy", () => {
+    const strict = migrateQtiItemToQti3({
+      filename: "bad-choice.xml",
+      xml: qti21ChoiceWithoutKey(),
+    });
+    expect(strict.xml).toBeUndefined();
+    expect(strict.diagnostics[0]?.code).toBe("qti2_choice_correct_response_missing");
+
+    const safe = migrateQtiItemToQti3(
+      { filename: "bad-choice.xml", xml: qti21ChoiceWithoutKey() },
+      { repairPolicy: "safe" },
+    );
+    expect(safe.authoringItem?.interactionType).toBe("choice");
+    expect(safe.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
+      "qti2_choice_correct_response_missing_repaired",
+    );
+  });
+
   it("does not invent a QTI 1.2 hotspot answer under strict policy", () => {
     const strict = migrateQtiItemToQti3({
       filename: "bad-hotspot.xml",
@@ -450,6 +468,20 @@ function qti21ChoiceItem(): string {
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
     <correctResponse><value>B</value></correctResponse>
   </responseDeclaration>
+  <itemBody>
+    <p>Pick one.</p>
+    <choiceInteraction responseIdentifier="RESPONSE" maxChoices="1">
+      <simpleChoice identifier="A">Alpha</simpleChoice>
+      <simpleChoice identifier="B">Beta</simpleChoice>
+    </choiceInteraction>
+  </itemBody>
+</assessmentItem>`;
+}
+
+function qti21ChoiceWithoutKey(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="choice_item" title="Choice">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"/>
   <itemBody>
     <p>Pick one.</p>
     <choiceInteraction responseIdentifier="RESPONSE" maxChoices="1">

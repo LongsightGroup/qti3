@@ -4,11 +4,12 @@ import type { Qti3AuthoringItem, Qti3PackageAuthoringInput } from "@longsightgro
 /** Versioned output contract selected explicitly by every caller. */
 export type QtiTranscodeProfileId =
   | "canvas-classic-quizzes@1"
+  | "moodle-xml@1"
   | "qti12-standard@1"
   | "qti21-standard@1"
   | "qti22-standard@1";
 
-export type QtiTranscodeTarget = "qti12" | "qti21" | "qti22";
+export type QtiTranscodeTarget = "moodle-xml" | "qti12" | "qti21" | "qti22";
 
 export type QtiTranscodeFidelity = "exact" | "normalized" | "lossy";
 

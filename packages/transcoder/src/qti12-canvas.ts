@@ -1,5 +1,6 @@
-import type { QtiChoice, QtiContentNode, QtiInteraction } from "@longsightgroup/qti3-core";
+import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
+import { itemMaximumScore } from "./item-score.js";
 import type { NormalizedQti3Item } from "./source.js";
 import type { QtiTranscodeScoringDisposition } from "./types.js";
 import { escapeXml } from "./xml.js";
@@ -43,37 +44,6 @@ export function serializeCanvasItemMetadata(
         )}
       </qtimetadata>
     </itemmetadata>`;
-}
-
-export function serializeCanvasBody(
-  nodes: readonly QtiContentNode[],
-  interactions: readonly QtiInteraction[],
-): string {
-  const body = serializeCanvasContent(nodes);
-  const interactionPrompts = interactions
-    .map((interaction) => interaction.prompt?.trim())
-    .filter((prompt): prompt is string => Boolean(prompt))
-    .filter((prompt) => !body.includes(prompt))
-    .map((prompt) => `<p>${escapeXml(prompt)}</p>`)
-    .join("");
-  return escapeXml(`${body}${interactionPrompts}`);
-}
-
-export function serializeCanvasChoiceContent(choice: QtiChoice): string {
-  if (!choice.content || choice.content.length === 0) {
-    return escapeXml(choiceLabel(choice));
-  }
-  return escapeXml(serializeCanvasContent(choice.content));
-}
-
-export function canvasAccessibleChoiceLabel(choice: QtiChoice): string | undefined {
-  const explicit =
-    choice.attributes["hotspot-label"] ??
-    choice.attributes["aria-label"] ??
-    choice.attributes.label;
-  if (explicit?.trim()) return explicit.trim();
-  const text = choice.text.trim();
-  return text && text !== choice.identifier ? text : undefined;
 }
 
 export function canvasHotspotResponse(
@@ -147,50 +117,6 @@ function canvasQuestionType(
     : "multiple_choice_question";
 }
 
-function serializeCanvasContent(nodes: readonly QtiContentNode[]): string {
-  return nodes
-    .map((node) => {
-      switch (node.kind) {
-        case "text":
-          return node.text;
-        case "interaction":
-          return "";
-        case "printedVariable":
-          return `<span data-qti-variable="${escapeXml(node.identifier)}">[${escapeXml(
-            node.identifier,
-          )}]</span>`;
-        case "feedback":
-          return serializeCanvasContent(node.children);
-        case "element": {
-          const name = canvasHtmlElementName(node.qtiName);
-          const children = serializeCanvasContent(node.children);
-          if (!name) return children;
-          const attributes = Object.entries(node.attributes)
-            .filter(([attribute]) => attribute !== "xmlns")
-            .map(([attribute, value]) => ` ${attribute.replace(/^qti-/, "")}="${escapeXml(value)}"`)
-            .join("");
-          return `<${name}${attributes}>${children}</${name}>`;
-        }
-      }
-      throw new Error(`Unreachable Canvas content node: ${JSON.stringify(node)}`);
-    })
-    .join("");
-}
-
-function canvasHtmlElementName(qtiName: string): string {
-  if (qtiName === "qti-prompt") return "div";
-  return qtiName.startsWith("qti-") ? "" : qtiName;
-}
-
-function choiceLabel(choice: QtiChoice): string {
-  return (
-    choice.attributes["hotspot-label"] ??
-    choice.attributes["aria-label"] ??
-    choice.attributes.label ??
-    choice.text
-  );
-}
-
 function canvasMetadataField(label: string, value: string): string {
   return `<qtimetadatafield><fieldlabel>${escapeXml(label)}</fieldlabel><fieldentry>${escapeXml(
     value,
@@ -198,11 +124,7 @@ function canvasMetadataField(label: string, value: string): string {
 }
 
 function canvasPointsPossible(source: NormalizedQti3Item): number {
-  const maximum = source.item.outcomeDeclarations.find(
-    (declaration) => declaration.identifier === "MAXSCORE",
-  )?.defaultValue;
-  const value = Array.isArray(maximum) ? maximum[0] : maximum;
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 1;
+  return itemMaximumScore(source.item);
 }
 
 function qti12Identifier(value: string): string {

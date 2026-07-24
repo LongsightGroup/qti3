@@ -1,6 +1,6 @@
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
-import { canvasAccessibleChoiceLabel } from "../qti12-canvas.js";
+import { accessibleChoiceLabel } from "../rich-content-html.js";
 import { choiceCondition } from "./scoring.js";
 import {
   choiceResponse,
@@ -59,7 +59,7 @@ export function applyCanvasClassicHotspotPolicy(
   const hotspotChoices = context.interaction.choices.filter((choice) => choice.role === "hotspot");
   if (
     hotspotChoices.length === 0 ||
-    hotspotChoices.some((choice) => canvasAccessibleChoiceLabel(choice) === undefined)
+    hotspotChoices.some((choice) => accessibleChoiceLabel(choice) === undefined)
   ) {
     return manualExtendedTextResponse(context, "Describe all regions that satisfy the question.");
   }
