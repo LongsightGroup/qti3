@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.10.0 - 2026-07-24
+
+### Added
+
+- Add `@longsightgroup/qti3-transcoder`, a profile-driven package for converting QTI 3 items and
+  packages to QTI 1.2, QTI 2.1, QTI 2.2, Canvas Classic Quizzes, and Moodle XML.
+- Add explicit, versioned standard and product profiles with typed per-interaction mapping reports,
+  deterministic generated assets, package and assessment-test preservation, and declared fallback
+  behavior.
+- Add executable profile/interaction evidence, SHA-256-locked legacy schema closures, XSD
+  validation for QTI targets, and release checks that keep published support claims synchronized
+  with generated output.
+- Add native Moodle XML question-bank output and a source-backed Canvas Classic Quizzes
+  compatibility profile.
+
+### Changed
+
+- Expand legacy QTI migration coverage and share explicit repair-policy handling across the
+  migrator and transcoder.
+- Normalize XML boolean parsing across core declarations, processing, catalogs, validation, and
+  attempt-state handling.
+- Align all workspace package versions on `0.10.0`.
+
 ## 0.9.10 - 2026-07-21
 
 ### Added

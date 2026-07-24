@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-player-react",
-  "version": "0.9.10",
+  "version": "0.10.0",
   "description": "React TSX adapter for the qti3 QTI 3 assessment item player web component.",
   "keywords": [
     "assessment",

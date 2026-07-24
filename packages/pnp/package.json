@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-pnp",
-  "version": "0.9.10",
+  "version": "0.10.0",
   "description": "Dependency-free TypeScript resolver for QTI 3 Personal Needs and Preferences records.",
   "keywords": [
     "accessibility",
