@@ -2,7 +2,7 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
 import { serializeMoodleInteractionAssets } from "./moodle-assets.js";
 import { planMoodleItem, type MoodleItemPlan } from "./moodle-question-plan.js";
-import type { QtiTranscodeInteractionPolicy } from "./profiles.js";
+import type { MoodleInteractionPolicy } from "./profiles.js";
 import { serializeRichContentBody } from "./rich-content-html.js";
 import type { NormalizedQti3Item } from "./source.js";
 import type { QtiTranscodeDiagnostic, QtiTranscodeScoringDisposition } from "./types.js";
@@ -27,7 +27,7 @@ export interface MoodleXmlWriteResult {
 /** Serialize one QTI 3 item as Moodle's first-party question-bank XML format. */
 export function writeMoodleXmlItem(
   source: NormalizedQti3Item,
-  policies: Readonly<Record<QtiInteraction["type"], QtiTranscodeInteractionPolicy>>,
+  policies: Readonly<Record<QtiInteraction["type"], MoodleInteractionPolicy>>,
 ): MoodleXmlWriteResult {
   const plan = planMoodleItem(source, policies);
   const body = serializeRichContentBody(source.item.body, source.item.interactions);

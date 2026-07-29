@@ -88,7 +88,7 @@ export function validateTranscoderEvidenceCase(
   assertAccessibility(evidenceCase, result.xml, sourceItem, push);
   assertAssets(result, sourceItem, push);
   assertKeyboardRepresentation(evidenceCase, result, push);
-  assertCustomPayload(evidenceCase, result.xml, push);
+  assertCustomPayload(evidenceCase, result, push);
 
   return failures;
 }
@@ -259,20 +259,21 @@ function assertAccessibility(
 
 function assertCustomPayload(
   evidenceCase: TranscoderEvidenceCase,
-  xml: string,
+  result: Extract<QtiTranscodeItemResult, { ok: true }>,
   push: (message: string) => void,
 ): void {
   const interaction = evidenceCase.interaction;
+  if (interaction !== "custom" && interaction !== "portableCustom") return;
+  const mapping = result.report.mappings.find((entry) => entry.sourceInteraction === interaction);
+  if (mapping?.fallback === "extended-text") return;
   if (
-    (interaction === "custom" || interaction === "portableCustom") &&
-    !(
-      xml.includes("qti3-transcoder:custom:v1") ||
-      ((xml.includes("response_str") || xml.includes('<question type="essay">')) &&
-        xml.includes("Provide the requested response"))
-    )
+    result.xml.includes("qti3-transcoder:custom:v1") ||
+    ((result.xml.includes("response_str") || result.xml.includes('<question type="essay">')) &&
+      result.xml.includes("Provide the requested response"))
   ) {
-    push("custom configuration or usable manual fallback is missing.");
+    return;
   }
+  push("custom configuration or usable manual fallback is missing.");
 }
 
 function assertAssets(
@@ -281,18 +282,26 @@ function assertAssets(
   push: (message: string) => void,
 ): void {
   const hrefs = item.interactions
-    .flatMap((interaction) => [
-      interaction.object?.data,
-      interaction.positionObjectStage?.data,
-      ...interaction.choices.map((choice) => choice.asset?.data),
-      interaction.portableCustom?.interactionModules?.primaryConfiguration,
-      interaction.portableCustom?.interactionModules?.secondaryConfiguration,
-      ...(interaction.portableCustom?.interactionModules?.modules.flatMap((module) => [
-        module.primaryPath,
-        module.fallbackPath,
-      ]) ?? []),
-      ...(interaction.portableCustom?.stylesheets.map((stylesheet) => stylesheet.href) ?? []),
-    ])
+    .flatMap((interaction, index) => {
+      const manualFallback = result.report.mappings[index]?.fallback === "extended-text";
+      return [
+        interaction.object?.data,
+        interaction.positionObjectStage?.data,
+        ...interaction.choices.map((choice) => choice.asset?.data),
+        ...(manualFallback
+          ? []
+          : [
+              interaction.portableCustom?.interactionModules?.primaryConfiguration,
+              interaction.portableCustom?.interactionModules?.secondaryConfiguration,
+              ...(interaction.portableCustom?.interactionModules?.modules.flatMap((module) => [
+                module.primaryPath,
+                module.fallbackPath,
+              ]) ?? []),
+              ...(interaction.portableCustom?.stylesheets.map((stylesheet) => stylesheet.href) ??
+                []),
+            ]),
+      ];
+    })
     .concat(contentAssetHrefs(item.body));
   for (const href of hrefs.filter((value): value is string =>
     Boolean(value && !value.startsWith("data:")),
@@ -329,15 +338,13 @@ function contentAssetHrefs(nodes: QtiAssessmentItem["body"]): (string | undefine
 }
 
 function assertKeyboardRepresentation(
-  evidenceCase: TranscoderEvidenceCase,
+  _evidenceCase: TranscoderEvidenceCase,
   result: Extract<QtiTranscodeItemResult, { ok: true }>,
   push: (message: string) => void,
 ): void {
   const qti12Controls = new Set(["response_lid", "response_str", "response_grp"]);
   for (const mapping of result.report.mappings) {
-    const canvasUpload =
-      evidenceCase.caseId === "canvas-classic-quizzes@1/upload" &&
-      mapping.emittedInteraction === "presentation";
+    const canvasUpload = mapping.emittedInteraction === "presentation";
     if (
       result.target === "qti12" &&
       !canvasUpload &&

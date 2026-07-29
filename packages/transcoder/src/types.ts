@@ -3,7 +3,10 @@ import type { Qti3AuthoringItem, Qti3PackageAuthoringInput } from "@longsightgro
 
 /** Versioned output contract selected explicitly by every caller. */
 export type QtiTranscodeProfileId =
+  | "blackboard-question-banks@1"
+  | "brightspace-course-import@1"
   | "canvas-classic-quizzes@1"
+  | "canvas-new-quizzes@1"
   | "moodle-xml@1"
   | "qti12-standard@1"
   | "qti21-standard@1"

@@ -7,14 +7,17 @@ import { fileURLToPath } from "node:url";
 
 import { deprecatedInteractionSupport, interactionSupport } from "../packages/core/dist/index.js";
 import { qti3TrustedXmlFragment, writeQti3AssessmentItem } from "../packages/writer/dist/index.js";
-import { transcodeQti3Item } from "../packages/transcoder/dist/index.js";
+import { qtiTranscodeProfiles, transcodeQti3Item } from "../packages/transcoder/dist/index.js";
 import { serializeTargetAssessmentTest } from "../packages/transcoder/dist/package.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const schemaRoot = join(root, "packages", "conformance", "schemas", "legacy");
 const temporaryRoot = await mkdtemp(join(tmpdir(), "qti3-transcoder-xsd-"));
 const targets = [
+  ["blackboard-question-banks@1", join(schemaRoot, "qti21", "main.xsd")],
+  ["brightspace-course-import@1", join(schemaRoot, "qti21", "main.xsd")],
   ["canvas-classic-quizzes@1", join(schemaRoot, "qti12", "main.xsd")],
+  ["canvas-new-quizzes@1", join(schemaRoot, "qti12", "main.xsd")],
   ["qti12-standard@1", join(schemaRoot, "qti12", "main.xsd")],
   ["qti21-standard@1", join(schemaRoot, "qti21", "main.xsd")],
   ["qti22-standard@1", join(schemaRoot, "qti22", "main.xsd")],
@@ -85,11 +88,7 @@ try {
         passedVariantCases.push(accessibilityCase);
       }
     }
-    const target = profile.includes("qti21")
-      ? "qti21"
-      : profile.includes("qti22")
-        ? "qti22"
-        : "qti12";
+    const target = qtiTranscodeProfiles[profile].target;
     const assessmentInstance = join(
       temporaryRoot,
       `${profile.replaceAll(/[^a-z0-9]/gi, "_")}-assessment-test.xml`,

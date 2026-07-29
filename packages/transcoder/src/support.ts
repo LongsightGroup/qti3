@@ -4,7 +4,7 @@ import {
   type QtiInteractionType,
 } from "@longsightgroup/qti3-core";
 
-import { qtiTranscodeProfiles } from "./profiles.js";
+import { interactionPolicyFallback, qtiTranscodeProfiles } from "./profiles.js";
 import type {
   QtiTranscodeFidelity,
   QtiTranscodeProfileId,
@@ -44,7 +44,7 @@ export const qtiTranscoderSupportMatrix: readonly QtiTranscoderSupportEntry[] = 
       interaction: interaction.interactionType,
       fidelity: policy.fidelity,
       scoring: policy.scoring,
-      fallback: policy.fallback,
+      fallback: interactionPolicyFallback(policy),
       evidenceCaseId: `${profile.id}/${interaction.interactionType}`,
     };
   }),

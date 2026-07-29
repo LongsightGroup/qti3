@@ -1,6 +1,6 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
-import type { QtiTranscodeInteractionPolicy } from "../profiles.js";
+import type { Qti12InteractionPolicy } from "../profiles.js";
 import { serializeCanvasItemMetadata } from "../qti12-canvas.js";
 import { serializeRichContentBody } from "../rich-content-html.js";
 import type { NormalizedQti3Item } from "../source.js";
@@ -11,13 +11,18 @@ import {
   serializeQti12ContentAssets,
 } from "./assets.js";
 import { declarationFor, mapQti12Interaction } from "./mappers.js";
-import type { Qti12MappedInteraction, Qti12WireDialect, Qti12WriteResult } from "./types.js";
+import {
+  isCanvasQti12Dialect,
+  type Qti12MappedInteraction,
+  type Qti12WireDialect,
+  type Qti12WriteResult,
+} from "./types.js";
 
 export type { Qti12MappedInteraction, Qti12WireDialect, Qti12WriteResult } from "./types.js";
 
 export function writeQti12Item(
   source: NormalizedQti3Item,
-  policies: Readonly<Record<QtiInteraction["type"], QtiTranscodeInteractionPolicy>>,
+  policies: Readonly<Record<QtiInteraction["type"], Qti12InteractionPolicy>>,
   dialect: Qti12WireDialect = "standard",
 ): Qti12WriteResult {
   const responses = source.item.interactions.map((interaction, index) =>
@@ -47,11 +52,9 @@ export function writeQti12Item(
     .filter((value): value is string => Boolean(value))
     .filter((value, index, all) => all.indexOf(value) === index)
     .join(" ");
-  const prompt =
-    dialect === "canvas-classic"
-      ? serializeRichContentBody(source.item.body, source.item.interactions) ||
-        escapeXml(plainPrompt)
-      : escapeXml(plainPrompt);
+  const prompt = isCanvasQti12Dialect(dialect)
+    ? serializeRichContentBody(source.item.body, source.item.interactions) || escapeXml(plainPrompt)
+    : escapeXml(plainPrompt);
   const retainedAssets = source.item.interactions
     .flatMap((interaction) => [
       interaction.object,
@@ -62,14 +65,15 @@ export function writeQti12Item(
     .filter((asset): asset is NonNullable<typeof asset> => asset !== undefined)
     .map(serializeQti12Asset)
     .join("\n      ");
-  const retainedBodyAssets =
-    dialect === "canvas-classic" ? "" : serializeQti12ContentAssets(source.item.body);
+  const retainedBodyAssets = isCanvasQti12Dialect(dialect)
+    ? ""
+    : serializeQti12ContentAssets(source.item.body);
   const responseProcessing = responses.map((response) => response.processingXml).join("\n      ");
-  const canvasMetadata =
-    dialect === "canvas-classic" ? serializeCanvasItemMetadata(source, responses) : "";
+  const canvasMetadata = isCanvasQti12Dialect(dialect)
+    ? serializeCanvasItemMetadata(source, responses)
+    : "";
 
-  return {
-    xml: `<?xml version="1.0" encoding="UTF-8"?>
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
@@ -83,12 +87,15 @@ export function writeQti12Item(
     </presentation>
     <resprocessing>
       <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0"${
-        dialect === "canvas-classic" ? ' minvalue="0" maxvalue="100"' : ""
+        isCanvasQti12Dialect(dialect) ? ' minvalue="0" maxvalue="100"' : ""
       }/></outcomes>
       ${responseProcessing || '<respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>'}
     </resprocessing>
   </item>
-</questestinterop>`,
+</questestinterop>`.replace(/^[\t ]+$/gm, "");
+
+  return {
+    xml,
     mappings,
     diagnostics,
   };

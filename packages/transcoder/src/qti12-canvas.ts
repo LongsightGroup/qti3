@@ -9,6 +9,7 @@ export interface CanvasQti12ResponseSummary {
   readonly emitted: string;
   readonly correct: readonly string[];
   readonly scoring: QtiTranscodeScoringDisposition;
+  readonly fallback?: string | undefined;
 }
 
 export function serializeCanvasItemMetadata(
@@ -78,7 +79,7 @@ function canvasQuestionType(
     response?.scoring === "automatic" &&
     response.emitted === "response_lid"
   ) {
-    return "matching_question";
+    return response.fallback === "matching" ? "matching_question" : "ordering_question";
   }
   if (interaction.type === "hotspot" && response?.emitted === "response_xy") {
     return "hot_spot_question";

@@ -21,11 +21,18 @@ dependency.
 The standards profiles are `qti12-standard@1`, `qti21-standard@1`, and
 `qti22-standard@1`. `canvas-classic-quizzes@1` is a separate, source-backed Canvas Classic
 Quizzes dialect; it is never selected implicitly. See [Canvas Classic profile](./CANVAS_CLASSIC.md)
-for its package conventions, interaction policies, and release evidence contract. `moodle-xml@1`
-targets Moodle's first-party question-bank XML importer rather than its legacy Blackboard
-compatibility path. See [Moodle XML profile](./MOODLE_XML.md). QTI 1.2
-conversions use declared, diagnosed fallbacks when the older standard or selected product dialect
-cannot represent an interaction natively.
+for its package conventions, interaction policies, and release evidence contract.
+`canvas-new-quizzes@1` is a distinct source-derived Canvas New Quizzes direct-import profile whose
+live product-import status is explicitly unverified. See
+[Canvas New Quizzes profile](./CANVAS_NEW_QUIZZES.md). `moodle-xml@1` targets Moodle's first-party
+question-bank XML importer rather than its legacy Blackboard compatibility path. See
+[Moodle XML profile](./MOODLE_XML.md).
+`blackboard-question-banks@1` targets Blackboard Learn's QTI 2.1 question-bank importer. See the
+[Blackboard question-bank profile](./BLACKBOARD_QTI21.md).
+`brightspace-course-import@1` targets the QTI 2.1 path under Brightspace course import. See the
+[Brightspace course-import profile](./BRIGHTSPACE_QTI21.md). QTI 1.2 and vendor conversions use
+declared, diagnosed fallbacks when the selected destination cannot represent an interaction
+natively.
 
 Typed authoring input and parsed XML both normalize through the core `QtiAssessmentItem` semantic
 model. Interaction mappers are executable and exhaustive over the core registry. QTI 2.1 and 2.2

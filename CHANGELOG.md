@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add a source-derived `canvas-new-quizzes@1` transcoder profile for direct Canvas New Quizzes QTI
+  import, with native ordered responses and an explicit unverified product-import evidence status.
+- Add `blackboard-question-banks@1` and `brightspace-course-import@1` QTI 2.1 transcoder profiles
+  with conservative native mappings, diagnosed manual and text-entry fallbacks, executable support
+  evidence, and explicit unverified product-import status.
+
 ## 0.10.1 - 2026-07-24
 
 ### Changed

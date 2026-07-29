@@ -1,5 +1,5 @@
 import { escapeXml } from "../xml.js";
-import type { Qti12WireDialect } from "./types.js";
+import { isCanvasQti12Dialect, type Qti12WireDialect } from "./types.js";
 import { formatScore } from "./shared.js";
 
 export function conditions(
@@ -14,16 +14,16 @@ export function condition(
   identifier: string,
   correct: readonly string[],
   dialect: Qti12WireDialect = "standard",
-  score = dialect === "canvas-classic" ? 100 : 1,
+  score = isCanvasQti12Dialect(dialect) ? 100 : 1,
 ): string {
   const comparisons = correct
     .map((value) => `<varequal respident="${escapeXml(identifier)}">${escapeXml(value)}</varequal>`)
     .join("");
   const expression = correct.length > 1 ? `<and>${comparisons}</and>` : comparisons;
   return `<respcondition continue="${
-    dialect === "canvas-classic" && score === 100 ? "No" : "Yes"
+    isCanvasQti12Dialect(dialect) && score === 100 ? "No" : "Yes"
   }"><conditionvar>${expression}</conditionvar><setvar action="${
-    dialect === "canvas-classic" && score === 100 ? "Set" : "Add"
+    isCanvasQti12Dialect(dialect) && score === 100 ? "Set" : "Add"
   }" varname="SCORE">${formatScore(score)}</setvar></respcondition>`;
 }
 
@@ -76,17 +76,17 @@ export function areaCondition(
   coords: string,
   dialect: Qti12WireDialect,
 ): string {
-  return `<respcondition continue="${dialect === "canvas-classic" ? "No" : "Yes"}"><conditionvar><varinside respident="${escapeXml(
+  return `<respcondition continue="${isCanvasQti12Dialect(dialect) ? "No" : "Yes"}"><conditionvar><varinside respident="${escapeXml(
     identifier,
   )}" areatype="${escapeXml(areaType)}">${escapeXml(
     coords,
   )}</varinside></conditionvar><setvar action="${
-    dialect === "canvas-classic" ? "Set" : "Add"
-  }" varname="SCORE">${dialect === "canvas-classic" ? "100" : "1"}</setvar></respcondition>`;
+    isCanvasQti12Dialect(dialect) ? "Set" : "Add"
+  }" varname="SCORE">${isCanvasQti12Dialect(dialect) ? "100" : "1"}</setvar></respcondition>`;
 }
 
 function scoringCondition(expression: string, dialect: Qti12WireDialect): string {
-  return `<respcondition continue="${dialect === "canvas-classic" ? "No" : "Yes"}"><conditionvar>${expression}</conditionvar><setvar action="${
-    dialect === "canvas-classic" ? "Set" : "Add"
-  }" varname="SCORE">${dialect === "canvas-classic" ? "100" : "1"}</setvar></respcondition>`;
+  return `<respcondition continue="${isCanvasQti12Dialect(dialect) ? "No" : "Yes"}"><conditionvar>${expression}</conditionvar><setvar action="${
+    isCanvasQti12Dialect(dialect) ? "Set" : "Add"
+  }" varname="SCORE">${isCanvasQti12Dialect(dialect) ? "100" : "1"}</setvar></respcondition>`;
 }

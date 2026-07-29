@@ -1,16 +1,5 @@
-import { readFileSync } from "node:fs";
-
-import {
-  deprecatedInteractionSupport,
-  interactionSupport,
-  type QtiInteractionType,
-} from "@longsightgroup/qti3-core";
-import {
-  qti3TrustedXmlFragment,
-  type Qti3PackageAuthoringInput,
-  writeQti3AssessmentItem,
-  writeQti3PackageZip,
-} from "@longsightgroup/qti3-writer";
+import { deprecatedInteractionSupport, interactionSupport } from "@longsightgroup/qti3-core";
+import { writeQti3PackageZip } from "@longsightgroup/qti3-writer";
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
@@ -20,6 +9,7 @@ import {
   transcodeQti3Package,
   type QtiTranscodeProfileId,
 } from "./index.js";
+import { choiceAuthoringPackage, fixtureXml } from "./transcoder.test-helpers.js";
 import { validateGeneratedTargetXml } from "./xml.js";
 
 const profiles = Object.keys(qtiTranscodeProfiles) as QtiTranscodeProfileId[];
@@ -28,7 +18,10 @@ const interactions = [...interactionSupport, ...deprecatedInteractionSupport];
 describe("qti3 transcoder evidence matrix", () => {
   it("declares standards and vendor profiles with all registry interactions", () => {
     expect(profiles).toEqual([
+      "blackboard-question-banks@1",
+      "brightspace-course-import@1",
       "canvas-classic-quizzes@1",
+      "canvas-new-quizzes@1",
       "moodle-xml@1",
       "qti12-standard@1",
       "qti21-standard@1",
@@ -47,6 +40,48 @@ describe("qti3 transcoder evidence matrix", () => {
     expect(qtiTranscodeProfiles["moodle-xml@1"]).not.toHaveProperty("namespace");
     expect(qtiTranscodeProfiles["moodle-xml@1"]).not.toHaveProperty("schemaVersion");
     expect(qtiTranscodeProfiles["moodle-xml@1"]).not.toHaveProperty("manifestResourceType");
+    expect(qtiTranscodeProfiles["canvas-new-quizzes@1"]).toMatchObject({
+      kind: "canvas",
+      target: "qti12",
+      evidence: { xsd: "required", reverseMigration: "required" },
+      vendorEvidence: {
+        product: "Canvas New Quizzes",
+        compatibility: { basis: "source-derived", productImport: "unverified" },
+      },
+    });
+    expect(qtiTranscodeProfiles["canvas-classic-quizzes@1"]).toMatchObject({
+      kind: "canvas",
+      interactions: {
+        upload: {
+          transformation: "presentation",
+          diagnostic: { code: "profile.canvas.classic.upload" },
+        },
+        order: {
+          transformation: "matching-fallback",
+          diagnostic: { code: "profile.canvas.classic.sequence_matching" },
+        },
+      },
+    });
+    for (const profile of [
+      qtiTranscodeProfiles["blackboard-question-banks@1"],
+      qtiTranscodeProfiles["brightspace-course-import@1"],
+    ]) {
+      expect(profile).toMatchObject({
+        kind: "qti-standard",
+        target: "qti21",
+        package: {
+          schemaVersion: "2.1",
+          manifestResourceType: "imsqti_item_xmlv2p1",
+        },
+        evidence: { xsd: "required", reverseMigration: "required" },
+        vendorEvidence: {
+          compatibility: {
+            basis: "vendor-documentation",
+            productImport: "unverified",
+          },
+        },
+      });
+    }
   });
 
   describe.each(profiles)("%s", (profile) => {
@@ -71,7 +106,11 @@ describe("qti3 transcoder evidence matrix", () => {
         if (profile === "moodle-xml@1") {
           expect(result.xml).toContain("<quiz>");
           expect(result.xml).toContain("<question ");
-        } else if (profile === "qti12-standard@1" || profile === "canvas-classic-quizzes@1") {
+        } else if (
+          profile === "qti12-standard@1" ||
+          profile === "canvas-classic-quizzes@1" ||
+          profile === "canvas-new-quizzes@1"
+        ) {
           expect(result.xml).toContain("<questestinterop");
         } else {
           expect(result.xml).toContain("<assessmentItem");
@@ -87,39 +126,13 @@ describe("qti3 transcoder evidence matrix", () => {
 });
 
 describe("qti3 transcoder package output", () => {
-  const sourcePackage: Qti3PackageAuthoringInput = {
-    identifier: "PACKAGE",
-    title: "Transcoder package",
-    items: [
-      {
-        kind: "authoringItem",
-        path: "items/choice.xml",
-        item: {
-          interactionType: "choice",
-          identifier: "CHOICE",
-          title: "Choice",
-          bodyHtml: qti3TrustedXmlFragment(
-            '<p>Keep media/source.txt visible. <a href="../media/source.txt">Read the source</a></p>',
-          ),
-          responseCardinality: "single",
-          choices: [
-            { identifier: "A", text: "Alpha" },
-            { identifier: "B", text: "Beta" },
-          ],
-          correctResponse: ["A"],
-        },
-        assets: [{ path: "media/source.txt", data: "source" }],
-      },
-    ],
-  };
-
   it("preserves safe source paths, content-addresses its report, and emits deterministic ZIPs", async () => {
     const first = await transcodeQti3Package(
-      { kind: "authoringPackage", package: sourcePackage },
+      { kind: "authoringPackage", package: choiceAuthoringPackage },
       { profile: "qti21-standard@1" },
     );
     const second = await transcodeQti3Package(
-      { kind: "authoringPackage", package: sourcePackage },
+      { kind: "authoringPackage", package: choiceAuthoringPackage },
       { profile: "qti21-standard@1" },
     );
     expect(first.ok).toBe(true);
@@ -136,7 +149,7 @@ describe("qti3 transcoder package output", () => {
 
   it("accepts QTI 3 ZIP bytes through the package parser seam", async () => {
     const result = await transcodeQti3Package(
-      { kind: "zip", bytes: writeQti3PackageZip(sourcePackage) },
+      { kind: "zip", bytes: writeQti3PackageZip(choiceAuthoringPackage) },
       { profile: "qti22-standard@1" },
     );
     expect(result.ok).toBe(true);
@@ -148,7 +161,7 @@ describe("qti3 transcoder package output", () => {
 
   it("emits a Canvas Classic quiz assessment, metadata dependency, HTML, and percentage scoring", async () => {
     const result = await transcodeQti3Package(
-      { kind: "authoringPackage", package: sourcePackage },
+      { kind: "authoringPackage", package: choiceAuthoringPackage },
       { profile: "canvas-classic-quizzes@1" },
     );
     expect(result.ok).toBe(true);
@@ -173,7 +186,7 @@ describe("qti3 transcoder package output", () => {
 
   it("emits one importable Moodle XML question bank with embedded assets", async () => {
     const result = await transcodeQti3Package(
-      { kind: "authoringPackage", package: sourcePackage },
+      { kind: "authoringPackage", package: choiceAuthoringPackage },
       { profile: "moodle-xml@1" },
     );
     expect(result.ok).toBe(true);
@@ -289,7 +302,7 @@ describe("qti3 transcoder package output", () => {
 
   it("rejects source content that collides with a generated content address", async () => {
     const baseline = await transcodeQti3Package(
-      { kind: "authoringPackage", package: sourcePackage },
+      { kind: "authoringPackage", package: choiceAuthoringPackage },
       { profile: "qti21-standard@1" },
     );
     expect(baseline.ok).toBe(true);
@@ -304,8 +317,8 @@ describe("qti3 transcoder package output", () => {
       {
         kind: "authoringPackage",
         package: {
-          ...sourcePackage,
-          items: sourcePackage.items.map((item) => ({
+          ...choiceAuthoringPackage,
+          items: choiceAuthoringPackage.items.map((item) => ({
             ...item,
             assets: [...(item.assets ?? []), { path: generatedPath, data: "different" }],
           })),
@@ -505,139 +518,6 @@ describe("qti3 transcoder scoring and custom payload contracts", () => {
     },
   );
 
-  it("preserves Canvas HTML stems and rich choices instead of flattening them", () => {
-    const result = transcodeQti3Item(
-      {
-        kind: "xml",
-        xml: `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rich" title="Rich" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"><qti-correct-response><qti-value>A</qti-value></qti-correct-response></qti-response-declaration>
-  <qti-item-body>
-    <p>Read <strong>carefully</strong>. <img src="media/chart.png" alt="Growth chart"/></p>
-    <qti-choice-interaction response-identifier="RESPONSE">
-      <qti-prompt>Pick the <strong>best</strong> answer.</qti-prompt>
-      <qti-simple-choice identifier="A"><em>Alpha</em></qti-simple-choice>
-      <qti-simple-choice identifier="B">Beta</qti-simple-choice>
-    </qti-choice-interaction>
-  </qti-item-body>
-</qti-assessment-item>`,
-      },
-      { profile: "canvas-classic-quizzes@1" },
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain(
-      "&lt;p&gt;Read &lt;strong&gt;carefully&lt;/strong&gt;. &lt;img src=&quot;media/chart.png&quot; alt=&quot;Growth chart&quot;&gt;&lt;/img&gt;&lt;/p&gt;",
-    );
-    expect(result.xml).toContain("&lt;p&gt;Pick the best answer.&lt;/p&gt;");
-    expect(result.xml).toContain("&lt;em&gt;Alpha&lt;/em&gt;");
-    expect(result.xml).toContain('<response_lid ident="response1"');
-  });
-
-  it("emits executable region scoring for a Canvas Classic hotspot", () => {
-    const result = transcodeQti3Item(
-      { kind: "xml", xml: fixtureXml("hotspot") },
-      { profile: "canvas-classic-quizzes@1" },
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain(
-      '<varinside respident="response1" areatype="Rectangle">184,52,296,124</varinside>',
-    );
-    expect(result.xml).toContain('<setvar action="Set" varname="SCORE">100</setvar>');
-    expect(result.report.mappings[0]?.scoring).toBe("automatic");
-  });
-
-  it("degrades multi-region Canvas hotspots to an exactly scored multiple-answer question", () => {
-    const xml = fixtureXml("hotspot")
-      .replace('cardinality="single"', 'cardinality="multiple"')
-      .replace("<qti-value>A</qti-value>", "<qti-value>A</qti-value><qti-value>B</qti-value>")
-      .replace(
-        /<qti-hotspot-choice identifier="([A-D])"/g,
-        '<qti-hotspot-choice identifier="$1" hotspot-label="Region $1"',
-      );
-    const result = transcodeQti3Item({ kind: "xml", xml }, { profile: "canvas-classic-quizzes@1" });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain("<fieldentry>multiple_answers_question</fieldentry>");
-    expect(result.xml).toContain('<response_lid ident="response1" rcardinality="Multiple">');
-    expect(result.xml).not.toContain("<response_xy");
-    expect(result.xml).toContain("<not><varequal");
-    expect(result.report.mappings[0]).toMatchObject({
-      emittedInteraction: "response_lid",
-      scoring: "automatic",
-      fidelity: "lossy",
-      fallback: "choice",
-    });
-  });
-
-  it("uses manual grading when a multi-region hotspot lacks accessible region labels", () => {
-    const xml = fixtureXml("hotspot")
-      .replace('cardinality="single"', 'cardinality="multiple"')
-      .replace("<qti-value>A</qti-value>", "<qti-value>A</qti-value><qti-value>B</qti-value>");
-    const result = transcodeQti3Item({ kind: "xml", xml }, { profile: "canvas-classic-quizzes@1" });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain("<fieldentry>essay_question</fieldentry>");
-    expect(result.xml).toContain("Describe all regions that satisfy the question.");
-    expect(result.report.mappings[0]).toMatchObject({
-      emittedInteraction: "response_str",
-      scoring: "manual",
-      fidelity: "lossy",
-      fallback: "extended-text",
-    });
-  });
-
-  it("maps Canvas sequencing tasks to matching questions with partial credit", () => {
-    const result = transcodeQti3Item(
-      { kind: "xml", xml: fixtureXml("order") },
-      { profile: "canvas-classic-quizzes@1" },
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain("<fieldentry>matching_question</fieldentry>");
-    expect(result.xml).toContain('ident="response_POS_1"');
-    expect(result.xml).toContain("Set up identical trays");
-    expect(result.xml).toContain('<respcondition continue="Yes">');
-    expect(result.report.mappings[0]).toMatchObject({
-      emittedInteraction: "response_lid",
-      scoring: "automatic",
-      fidelity: "lossy",
-      sourceInteraction: "order",
-    });
-    expect(result.report.diagnosticCodes).toContain("profile.canvas.classic.sequence_matching");
-  });
-
-  it("uses Canvas matching identifiers, a shared target pool, and additive partial credit", () => {
-    const result = transcodeQti3Item(
-      { kind: "xml", xml: fixtureXml("match") },
-      { profile: "canvas-classic-quizzes@1" },
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain("<fieldentry>matching_question</fieldentry>");
-    expect(result.xml).toMatch(/<response_lid ident="response_[^"]+"/);
-    expect(result.xml.match(/<response_label ident="[^"]+">/g)?.length).toBeGreaterThan(4);
-    expect(result.xml).toContain('<respcondition continue="Yes">');
-    expect(result.xml).toMatch(/<setvar action="Add" varname="SCORE">\d+(?:\.\d+)?<\/setvar>/);
-  });
-
-  it("maps upload to Canvas file-upload metadata without a fake text response", () => {
-    const result = transcodeQti3Item(
-      { kind: "xml", xml: fixtureXml("upload") },
-      { profile: "canvas-classic-quizzes@1" },
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.xml).toContain("<fieldentry>file_upload_question</fieldentry>");
-    expect(result.xml).not.toContain("<response_str");
-    expect(result.report.mappings[0]).toMatchObject({
-      emittedInteraction: "presentation",
-      scoring: "manual",
-      fidelity: "normalized",
-    });
-  });
-
   it("scores relationship fallbacks using emitted identifiers", () => {
     const result = transcodeQti3Item(
       { kind: "xml", xml: fixtureXml("gapMatch") },
@@ -693,16 +573,3 @@ describe("qti3 transcoder scoring and custom payload contracts", () => {
     },
   );
 });
-
-function fixtureXml(interactionType: QtiInteractionType): string {
-  if (interactionType === "custom") {
-    return writeQti3AssessmentItem({
-      interactionType: "custom",
-      identifier: "custom-reference",
-      title: "Custom reference",
-      bodyHtml: qti3TrustedXmlFragment("<p>Use the widget.</p>"),
-      interactionMarkupHtml: qti3TrustedXmlFragment('<div class="widget">Ready</div>'),
-    });
-  }
-  return readFileSync(`packages/fixtures/xml/${interactionType}-reference.xml`, "utf8");
-}

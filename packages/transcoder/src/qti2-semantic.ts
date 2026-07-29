@@ -1,27 +1,27 @@
 import {
   serializeResponseProcessing,
   type QtiAssessmentItem,
-  type QtiChoice,
-  type QtiContentNode,
   type QtiInteraction,
   type QtiInteractionType,
-  type QtiObjectAsset,
   type QtiResponseDeclaration,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 
-import type { QtiTranscodeDiagnostic } from "./types.js";
+import {
+  resolveFallbackResponseProcessing,
+  serializeFallbackResponseDeclaration,
+  tryPolicyFallback,
+} from "./qti2-fallbacks.js";
+import { serializeQti2Choice, serializeQti2Content } from "./qti2-content.js";
+import type { Qti2MappedInteraction } from "./qti2-mapped-interaction.js";
 import { mapTypedProcessingXml, type Qti2Revision } from "./qti2-processing-dialect.js";
+import type { Qti2InteractionPolicy } from "./profiles.js";
+import { attributes, semanticAttributes, serializeObject } from "./qti2-wire.js";
+import type { QtiTranscodeDiagnostic } from "./types.js";
 import { escapeXml } from "./xml.js";
 
 export type { Qti2Revision } from "./qti2-processing-dialect.js";
-
-export interface Qti2MappedInteraction {
-  readonly source: QtiInteractionType;
-  readonly emitted: string;
-  readonly xml: string;
-  readonly diagnostics: readonly QtiTranscodeDiagnostic[];
-}
+export type { Qti2MappedInteraction } from "./qti2-mapped-interaction.js";
 
 export interface Qti2WriteResult {
   readonly xml: string;
@@ -30,22 +30,59 @@ export interface Qti2WriteResult {
   readonly responseProcessingEmitted: boolean;
 }
 
+export type Qti2ResponseProcessingPolicy =
+  | { readonly mode: "preserve" }
+  | {
+      readonly mode: "omit";
+      readonly diagnostic: {
+        readonly code: string;
+        readonly message: string;
+      };
+    };
+
+export interface Qti2WritePolicy {
+  readonly interactionPolicies: Readonly<Record<QtiInteractionType, Qti2InteractionPolicy>>;
+  readonly responseProcessing?: Qti2ResponseProcessingPolicy;
+}
+
 /**
- * Serialize the parsed semantic item. This deliberately does not inspect or rename
- * the source XML tree: interaction mapping is selected from the typed registry.
+ * Serialize the parsed semantic item. Interaction fallbacks are applied at the mapping
+ * boundary; this writer stays a wire serializer plus content projection.
  */
 export function writeSemanticQti2Item(
   item: QtiAssessmentItem,
   revision: Qti2Revision,
+  policy: Qti2WritePolicy,
 ): Qti2WriteResult {
   const diagnostics: QtiTranscodeDiagnostic[] = [];
-  const mappings = item.interactions.map((interaction, index) =>
-    mapInteraction(interaction, index, revision),
-  );
+  const mappings = item.interactions.map((interaction, index) => {
+    const interactionPolicy = policy.interactionPolicies[interaction.type];
+    return (
+      tryPolicyFallback(interaction, index, revision, interactionPolicy) ??
+      INTERACTION_MAPPERS[interaction.type](
+        interaction,
+        revision,
+        `/itemBody/interactions/${String(index)}`,
+      )
+    );
+  });
   diagnostics.push(...mappings.flatMap((mapping) => mapping.diagnostics));
 
+  const declarationByIdentifier = new Map(
+    item.interactions.flatMap((interaction, index) =>
+      interaction.responseIdentifier
+        ? [[interaction.responseIdentifier, mappings[index]] as const]
+        : [],
+    ),
+  );
   const declarations = [
-    ...item.responseDeclarations.map(serializeResponseDeclaration),
+    ...item.responseDeclarations.map((declaration) => {
+      const fallbackXml = serializeFallbackResponseDeclaration(
+        declaration,
+        declarationByIdentifier.get(declaration.identifier),
+      );
+      return fallbackXml ?? serializeResponseDeclaration(declaration);
+    }),
     ...item.outcomeDeclarations.map((declaration) =>
       serializeVariableDeclaration("outcomeDeclaration", declaration),
     ),
@@ -64,8 +101,14 @@ export function writeSemanticQti2Item(
         })}></stylesheet>`,
     )
     .join("\n  ");
-  const body = serializeContent(item.body, mappings, revision, diagnostics);
-  const processing = serializeProcessing(item, revision, diagnostics);
+  const body = serializeQti2Content(item.body, mappings, revision, diagnostics);
+  const processing = resolveFallbackResponseProcessing(
+    item,
+    mappings,
+    diagnostics,
+    policy.responseProcessing?.mode === "omit" ? policy.responseProcessing.diagnostic : undefined,
+    () => serializeProcessing(item, revision, diagnostics),
+  );
   const rootAttributes = attributes({
     identifier: item.identifier,
     title: item.title ?? item.identifier,
@@ -74,14 +117,16 @@ export function writeSemanticQti2Item(
     "xml:lang": item.language,
   });
 
-  return {
-    xml: `<?xml version="1.0" encoding="UTF-8"?>
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="${revision.namespace}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="${escapeXml(revision.schemaLocation)}"${rootAttributes}>
   ${declarations}
   ${stylesheets}
   <itemBody${semanticAttributes(item.itemBodyAttributes, revision, diagnostics, "/itemBody")}>${body}</itemBody>
   ${processing}
-</assessmentItem>`,
+</assessmentItem>`.replace(/^[\t ]+$/gm, "");
+
+  return {
+    xml,
     mappings,
     diagnostics,
     responseProcessingEmitted: processing.length > 0,
@@ -119,18 +164,6 @@ const INTERACTION_MAPPERS: Readonly<Record<QtiInteractionType, InteractionMapper
   upload: mapped("uploadInteraction", emptyBody),
 };
 
-function mapInteraction(
-  interaction: QtiInteraction,
-  index: number,
-  revision: Qti2Revision,
-): Qti2MappedInteraction {
-  return INTERACTION_MAPPERS[interaction.type](
-    interaction,
-    revision,
-    `/itemBody/interactions/${String(index)}`,
-  );
-}
-
 function mapped(
   emitted: string,
   body: (
@@ -148,7 +181,7 @@ function mapped(
       interaction.type !== "portableCustom";
     const prompt =
       admitsPrompt && interaction.promptContent && interaction.promptContent.length > 0
-        ? `<prompt>${serializeContent(interaction.promptContent, [], revision, diagnostics)}</prompt>`
+        ? `<prompt>${serializeQti2Content(interaction.promptContent, [], revision, diagnostics)}</prompt>`
         : admitsPrompt && interaction.prompt
           ? `<prompt>${escapeXml(interaction.prompt)}</prompt>`
           : "";
@@ -166,6 +199,7 @@ function mapped(
       ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
       : "";
     return {
+      kind: "native",
       source: interaction.type,
       emitted,
       xml:
@@ -246,6 +280,7 @@ function customInteraction(
   const source = `<qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">${escapeXml(payload)}</qti3t:source>`;
   void revision;
   return {
+    kind: "native",
     source: interaction.type,
     emitted: "customInteraction",
     xml: `<customInteraction${responseIdentifier}>${source}</customInteraction>`,
@@ -270,7 +305,13 @@ function simpleChoices(
   return interaction.choices
     .filter((choice) => choice.role === "simpleChoice")
     .map((choice, index) =>
-      serializeChoice(choice, "simpleChoice", revision, diagnostics, `${path}/choices/${index}`),
+      serializeQti2Choice(
+        choice,
+        "simpleChoice",
+        revision,
+        diagnostics,
+        `${path}/choices/${index}`,
+      ),
     )
     .join("");
 }
@@ -284,7 +325,7 @@ function associationChoices(
   return interaction.choices
     .filter((choice) => choice.role === "associableChoice")
     .map((choice, index) =>
-      serializeChoice(
+      serializeQti2Choice(
         choice,
         "simpleAssociableChoice",
         revision,
@@ -308,7 +349,7 @@ function matchBody(
       (set) =>
         `<simpleMatchSet>${set
           .map((choice, index) =>
-            serializeChoice(
+            serializeQti2Choice(
               choice,
               "simpleAssociableChoice",
               revision,
@@ -330,7 +371,13 @@ function inlineChoices(
   return interaction.choices
     .filter((choice) => choice.role === "inlineChoice")
     .map((choice, index) =>
-      serializeChoice(choice, "inlineChoice", revision, diagnostics, `${path}/choices/${index}`),
+      serializeQti2Choice(
+        choice,
+        "inlineChoice",
+        revision,
+        diagnostics,
+        `${path}/choices/${index}`,
+      ),
     )
     .join("");
 }
@@ -373,7 +420,7 @@ function gapMatchBody(
             `${path}/choices/${index}`,
             new Set(["identifier"]),
           )}>${serializeObject(choice.asset)}</gapImg>`
-        : serializeChoice(choice, "gapText", revision, diagnostics, `${path}/choices/${index}`),
+        : serializeQti2Choice(choice, "gapText", revision, diagnostics, `${path}/choices/${index}`),
     )
     .join("");
   const content = (interaction.gapMatchSegments ?? [])
@@ -457,7 +504,7 @@ function graphicGapMatchInteraction(
   }
   const prompt =
     interaction.promptContent && interaction.promptContent.length > 0
-      ? `<prompt>${serializeContent(interaction.promptContent, [], revision, diagnostics)}</prompt>`
+      ? `<prompt>${serializeQti2Content(interaction.promptContent, [], revision, diagnostics)}</prompt>`
       : interaction.prompt
         ? `<prompt>${escapeXml(interaction.prompt)}</prompt>`
         : "";
@@ -472,6 +519,7 @@ function graphicGapMatchInteraction(
     ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
     : "";
   return {
+    kind: "native",
     source: interaction.type,
     emitted,
     xml: `<${emitted}${responseIdentifier}${interactionAttributes}>${prompt}${
@@ -538,7 +586,7 @@ function textualGraphicGapFallbackBody(
             `${path}/choices/${index}`,
             new Set(["identifier"]),
           )}>${serializeObject(choice.asset)}</gapImg>`
-        : serializeChoice(choice, "gapText", revision, diagnostics, `${path}/choices/${index}`),
+        : serializeQti2Choice(choice, "gapText", revision, diagnostics, `${path}/choices/${index}`),
     )
     .join("");
   const segments = interaction.gapMatchSegments ?? [];
@@ -568,96 +616,6 @@ function textualGraphicGapFallbackBody(
     ? `<div>${serializeObject(interaction.object)}</div>`
     : "";
   return `${choices}${contextObject}<p>${content}</p>`;
-}
-
-function serializeChoice(
-  choice: QtiChoice,
-  element: string,
-  revision: Qti2Revision,
-  diagnostics: QtiTranscodeDiagnostic[],
-  path: string,
-): string {
-  const content =
-    choice.content && choice.content.length > 0
-      ? serializeContent(choice.content, [], revision, [])
-      : escapeXml(choice.text);
-  return `<${element} identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
-    choice.attributes,
-    revision,
-    diagnostics,
-    path,
-    new Set(["identifier"]),
-  )}>${content}</${element}>`;
-}
-
-function serializeObject(object: QtiObjectAsset): string {
-  const sources = object.sources
-    .map((source) => `<source${attributes({ src: source.src, type: source.type })}></source>`)
-    .join("");
-  const tracks = object.tracks
-    .map(
-      (track) =>
-        `<track${attributes({
-          kind: track.kind,
-          src: track.src,
-          srclang: track.srclang,
-          label: track.label,
-          default: track.default ? "default" : undefined,
-        })}></track>`,
-    )
-    .join("");
-  return `<object${attributes({
-    data: object.data,
-    type: object.type,
-    width: object.width,
-    height: object.height,
-  })}>${sources}${tracks}${escapeXml(object.text)}</object>`;
-}
-
-function serializeContent(
-  nodes: readonly QtiContentNode[],
-  mappings: readonly Qti2MappedInteraction[],
-  revision: Qti2Revision,
-  diagnostics: QtiTranscodeDiagnostic[],
-): string {
-  return nodes
-    .map((node) => {
-      switch (node.kind) {
-        case "text":
-          return escapeXml(node.text);
-        case "interaction":
-          return mappings[node.interactionIndex]?.xml ?? "";
-        case "printedVariable":
-          return `<printedVariable identifier="${escapeXml(node.identifier)}"${attributes({
-            format: node.format,
-          })}></printedVariable>`;
-        case "feedback":
-          return `<feedback${node.feedbackType === "block" ? "Block" : "Inline"} identifier="${escapeXml(
-            node.identifier,
-          )}" outcomeIdentifier="${escapeXml(node.outcomeIdentifier)}" showHide="${node.showHide}">${serializeContent(
-            node.children,
-            mappings,
-            revision,
-            diagnostics,
-          )}</feedback${node.feedbackType === "block" ? "Block" : "Inline"}>`;
-        case "element": {
-          const name = contentElementName(node.qtiName);
-          return `<${name}${semanticAttributes(
-            node.attributes,
-            revision,
-            diagnostics,
-            `/itemBody/${name}`,
-          )}>${serializeContent(node.children, mappings, revision, diagnostics)}</${name}>`;
-        }
-      }
-      throw new Error(`Unreachable QTI content node: ${JSON.stringify(node)}`);
-    })
-    .join("");
-}
-
-function contentElementName(name: string): string {
-  const qti = name.startsWith("qti-") ? name.slice(4) : name;
-  return qti.replace(/-([a-z])/g, (_match, character: string) => character.toUpperCase());
 }
 
 function serializeResponseDeclaration(declaration: QtiResponseDeclaration): string {
@@ -739,55 +697,4 @@ function serializeProcessing(
   );
   if (!serialized.ok || !serialized.xml) return "";
   return mapTypedProcessingXml(serialized.xml, revision);
-}
-
-function semanticAttributes(
-  source: Readonly<Record<string, string>> | undefined,
-  revision: Qti2Revision,
-  diagnostics: QtiTranscodeDiagnostic[],
-  path: string,
-  omitted: ReadonlySet<string> = new Set(),
-): string {
-  if (!source) return "";
-  const target: Record<string, string> = {};
-  for (const [name, value] of Object.entries(source)) {
-    if (omitted.has(name) || name === "xmlns" || name.startsWith("xmlns:")) continue;
-    if (name === "aria-label" && revision.target === "qti21") {
-      target.label = value;
-      diagnostics.push({
-        code: "profile.qti21.attribute.aria_label_normalized",
-        severity: "info",
-        message: "Mapped aria-label to the QTI 2.1 label attribute.",
-        path,
-      });
-      continue;
-    }
-    if ((name.startsWith("aria-") || name.startsWith("data-")) && revision.target === "qti21") {
-      diagnostics.push({
-        code: "profile.qti21.attribute.semantic_not_representable",
-        severity: "warning",
-        message: `QTI 2.1 cannot carry ${name}="${value}"; visible prompt and label content is preserved.`,
-        path,
-      });
-      continue;
-    }
-    target[targetAttributeName(name, revision)] = value;
-  }
-  return attributes(target);
-}
-
-function targetAttributeName(name: string, revision: Qti2Revision): string {
-  if (revision.target === "qti22" && (name.startsWith("aria-") || name.startsWith("data-"))) {
-    return name;
-  }
-  return name.replace(/-([a-z])/g, (_match, character: string) => character.toUpperCase());
-}
-
-function attributes(source: Readonly<Record<string, string | undefined>>): string {
-  const entries = Object.entries(source).filter(
-    (entry): entry is [string, string] => entry[1] !== undefined,
-  );
-  return entries.length === 0
-    ? ""
-    : ` ${entries.map(([name, value]) => `${name}="${escapeXml(value)}"`).join(" ")}`;
 }

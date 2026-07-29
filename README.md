@@ -167,20 +167,20 @@ node packages/cli/dist/index.js support-matrix
 
 ## Packages
 
-| Package                              | Path                     | Purpose                                                                                         |
-| ------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------- |
-| `@longsightgroup/qti3-core`          | `packages/core`          | Zero-third-party-runtime-dependency parser, typed model, validation, processing, scoring, state |
-| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                                                            |
-| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                                                      |
-| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                                                     |
-| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                                                       |
-| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                    |
-| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                         |
-| `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                         |
-| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML and item-bank package writer with typed diagnostics  |
-| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items, XML, and package input   |
-| `@longsightgroup/qti3-transcoder`    | `packages/transcoder`    | Profile-driven QTI 3 output for QTI 1.2, QTI 2.1, QTI 2.2, Canvas Classic, and Moodle XML       |
-| `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI        |
+| Package                              | Path                     | Purpose                                                                                               |
+| ------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `@longsightgroup/qti3-core`          | `packages/core`          | Zero-third-party-runtime-dependency parser, typed model, validation, processing, scoring, state       |
+| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                                                                  |
+| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                                                            |
+| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                                                           |
+| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                                                             |
+| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                          |
+| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                               |
+| `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                               |
+| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML and item-bank package writer with typed diagnostics        |
+| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items, XML, and package input         |
+| `@longsightgroup/qti3-transcoder`    | `packages/transcoder`    | Profile-driven QTI 3 output for QTI 1.2, QTI 2.1, QTI 2.2, Canvas Classic/New Quizzes, and Moodle XML |
+| `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, scoring, fixture, and support-matrix CLI              |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
 inspection, validation, and item loading. The browser player intentionally renders one assessment

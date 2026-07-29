@@ -8,7 +8,13 @@ export {
 } from "./profiles.js";
 export { qtiTranscoderSupportMatrix } from "./support.js";
 export type { QtiTranscoderEvidenceKind, QtiTranscoderSupportEntry } from "./support.js";
-export type { QtiTranscodeInteractionPolicy, QtiTranscodeProfile } from "./profiles.js";
+export type {
+  MoodleInteractionPolicy,
+  Qti12InteractionPolicy,
+  Qti2InteractionPolicy,
+  QtiTranscodeInteractionPolicy,
+  QtiTranscodeProfile,
+} from "./profiles.js";
 export type {
   Qti3TranscodeItemSource,
   Qti3TranscodePackageSource,

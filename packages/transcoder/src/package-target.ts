@@ -1,5 +1,5 @@
 import type { LoadedPackageInput } from "./package-load.js";
-import { serializeCanvasClassicPackage } from "./package-canvas.js";
+import { serializeCanvasQti12Package } from "./package-canvas.js";
 import { packageManifest, type TargetPackageItemResource } from "./package-manifest.js";
 import { serializeMoodleXmlPackage } from "./package-moodle-xml.js";
 import { serializeTargetAssessmentTest } from "./package-assessment-test.js";
@@ -20,7 +20,7 @@ export function assembleTargetPackage(
 ): TargetPackageAssemblyResult {
   try {
     switch (profile.kind) {
-      case "canvas-classic":
+      case "canvas":
         return assembleCanvasPackage(source, itemResources);
       case "moodle-xml":
         return assembleMoodlePackage(source, itemResources);
@@ -62,7 +62,7 @@ function assembleCanvasPackage(
   itemResources: readonly TargetPackageItemResource[],
 ): TargetPackageAssemblyResult {
   const itemFiles = itemResources.map(({ path, data }) => ({ path, data }));
-  const canvas = serializeCanvasClassicPackage(
+  const canvas = serializeCanvasQti12Package(
     source.identifier,
     source.title,
     itemFiles,

@@ -1,6 +1,7 @@
-import type { QtiAssessmentItem } from "@longsightgroup/qti3-core";
+import type { QtiAssessmentItem, QtiInteractionType } from "@longsightgroup/qti3-core";
 
-import { writeSemanticQti2Item } from "./qti2-semantic.js";
+import type { Qti2InteractionPolicy } from "./profiles.js";
+import { type Qti2ResponseProcessingPolicy, writeSemanticQti2Item } from "./qti2-semantic.js";
 
 const REVISION = {
   target: "qti21",
@@ -11,6 +12,13 @@ const REVISION = {
 } as const;
 
 /** QTI 2.1 owns a distinct wire serializer even where semantic mappers are shared. */
-export function writeQti21Item(item: QtiAssessmentItem) {
-  return writeSemanticQti2Item(item, REVISION);
+export function writeQti21Item(
+  item: QtiAssessmentItem,
+  interactionPolicies: Readonly<Record<QtiInteractionType, Qti2InteractionPolicy>>,
+  responseProcessing: Qti2ResponseProcessingPolicy,
+) {
+  return writeSemanticQti2Item(item, REVISION, {
+    interactionPolicies,
+    responseProcessing,
+  });
 }

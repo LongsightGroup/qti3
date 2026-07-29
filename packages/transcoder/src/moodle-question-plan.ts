@@ -1,7 +1,7 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
 
 import { itemMaximumScore } from "./item-score.js";
-import type { QtiTranscodeInteractionPolicy } from "./profiles.js";
+import { interactionPolicyFallback, type MoodleInteractionPolicy } from "./profiles.js";
 import { declarationFor } from "./qti12/mappers.js";
 import {
   choiceLabel,
@@ -72,7 +72,7 @@ export interface MoodleItemPlan {
 /** Map one normalized QTI item into a Moodle question plan. */
 export function planMoodleItem(
   source: NormalizedQti3Item,
-  policies: Readonly<Record<QtiInteraction["type"], QtiTranscodeInteractionPolicy>>,
+  policies: Readonly<Record<QtiInteraction["type"], MoodleInteractionPolicy>>,
 ): MoodleItemPlan {
   const interactions = source.item.interactions;
   const primaryInteraction = interactions[0];
@@ -121,7 +121,7 @@ export function planMoodleItem(
 function mapSingleInteraction(
   source: NormalizedQti3Item,
   interaction: QtiInteraction,
-  policies: Readonly<Record<QtiInteraction["type"], QtiTranscodeInteractionPolicy>>,
+  policies: Readonly<Record<QtiInteraction["type"], MoodleInteractionPolicy>>,
 ): MoodleQuestion {
   const policy = policies[interaction.type];
   const correct = values(declarationFor(source, interaction)?.correctResponse ?? null);
@@ -142,7 +142,7 @@ function mapSingleInteraction(
   ) {
     return scalarQuestion(interaction, correct, policy, source.sourcePath);
   }
-  if (policy.fallback === "choice" || interaction.type === "choice") {
+  if (policy.transformation === "choice-fallback" || interaction.type === "choice") {
     return choiceQuestion(interaction, correct, policy, source.sourcePath);
   }
   return manualQuestion(interaction, source.sourcePath);
@@ -151,7 +151,7 @@ function mapSingleInteraction(
 function choiceQuestion(
   interaction: QtiInteraction,
   correct: readonly string[],
-  policy: QtiTranscodeInteractionPolicy,
+  policy: MoodleInteractionPolicy,
   sourcePath: string | undefined,
 ): MoodleQuestion {
   const choices = usableChoices(interaction);
@@ -183,7 +183,7 @@ function choiceQuestion(
     })),
     scoring: "automatic",
     emitted: "multichoice",
-    fallback: policy.fallback,
+    fallback: interactionPolicyFallback(policy),
     diagnostics: diagnostic ? [diagnostic] : [],
   };
 }
@@ -233,7 +233,7 @@ function relationshipChoiceQuestion(
 function scalarQuestion(
   interaction: QtiInteraction,
   correct: readonly string[],
-  policy: QtiTranscodeInteractionPolicy,
+  policy: MoodleInteractionPolicy,
   sourcePath: string | undefined,
 ): MoodleQuestion {
   if (correct.length === 0) return manualQuestion(interaction, sourcePath);
@@ -258,7 +258,7 @@ function scalarQuestion(
       : undefined;
   const common = {
     scoring: "automatic" as const,
-    fallback: policy.fallback,
+    fallback: interactionPolicyFallback(policy),
     instruction,
     diagnostics: diagnostic ? [diagnostic] : [],
   };

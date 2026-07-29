@@ -1,10 +1,802 @@
 [
   {
+    "caseId": "blackboard-question-banks@1/associate",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "c77a44134241f62d8ab323a21993681a956531fc6feedaa1f8f1821bdc324ddb",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/choice",
+    "fidelity": "lossy",
+    "scoring": "unscored",
+    "fallback": "—",
+    "sha256": "26eadc0e5203841428264c5049869cf953908947e4f962e226a7befe01ff1abb",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/custom",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "f1f38600dedfaf3c9439e95cd1da8fa56179cc39c0b48226493ba0dd17686e9d",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/drawing",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "b874dffb729bd0bfbc7237bedbf25fb48717940d72ed678b4aa1efece05d54e7",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/endAttempt",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "918860ff0268dc9dbefe583563204e57a00910261f83fee0d36ecb9111d7f519",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/extendedText",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "—",
+    "sha256": "39c0cd5d23d2682255f3063b1776766b0b04b6775db125de50aba0d2dccc05a2",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/gapMatch",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "f25ad88dfb4292ef74d1aa4eaa564796546c391f2c6a8527b5a6b01f6d63feab",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/graphicAssociate",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "32ec8dcfa7bacbba4d1cd91500127e10ea19db046691d3c509d40d3db4e9877a",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/graphicGapMatch",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "b1366de09c649023218eac15ce418680639293ee2c11df1dc9a232217aadaeb3",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/graphicOrder",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "9930d5516eac65948f8989a2d5920decacff000c5d373d1369505e020bd6bada",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/hotspot",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "0f7cb94045fd0f82bea401bb27e4f7e13f870f22ad19c860b36a512707d99f79",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/hottext",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "1c01209881d3e116a79c18ce9b4b09428c7b46b434708d23ec5a8d9f7bcdacdd",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/inlineChoice",
+    "fidelity": "lossy",
+    "scoring": "unscored",
+    "fallback": "text-entry",
+    "sha256": "12a78dfe4b82600f6ac7c9da9859b45a76567d69f24b5a247e0cd8c49933bdd9",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/match",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "83851fd68170f08d178260c2ddeece681688c2759dc1b8a895621a40358dfdfe",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/media",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "ec06ac2cf9e560cd2861be1c7f0657652318b10b5d6a41ae8564d04ff4d91163",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/order",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "7f2a5847500e5714c72b9a239d74bed18fbacf74d809d4f4eb3d16b4ac33b148",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/portableCustom",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "e3cfb62902b207e967589e2c3a5b10c5f280560181837d54fa6213f706e79f33",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/positionObject",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "d6b352ef1cc47abbf7e500a798aed07dea60820737d541e824757d25fa55b757",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/selectPoint",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "c523cd393b00e261bbf1abf0df0d3be746d9d590ace517c980f6915a41439c08",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/slider",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "3bb8b72020c947baf2ade977a8245b27451b33bd2adb113d18c4c8749b9d6822",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/textEntry",
+    "fidelity": "lossy",
+    "scoring": "unscored",
+    "fallback": "—",
+    "sha256": "b67f8c79764b9acf41dc784fb1363df59c79bb2589d08d0be45812d09e2510db",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "blackboard-question-banks@1/upload",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "727a809962de687862f9e4a9149fcf2e6a90a2ebacdb9c3afdd905731c4d39a8",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/associate",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "9eb557c973b66105bcdfe94bf42ff33e387de4230b586f5f7650680bcc29145a",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/choice",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "7ff257c7fea38a213d56db2101f3143cb004f8d7b8018cc53803d83a8a6b6adb",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/custom",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "ec0b9191921185b6e4829068e807fab09d215c5804cf443b54b0bc2fed2f6f92",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/drawing",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "4d81f3b4c54bbb08cafcf5a1d5d84b489ecef53c53e791b18b7e9ef4c8c7ca2b",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/endAttempt",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "5dae873192c79cc0ce369d457a2183dedc822317a6f6bb4d7dc3d086bdfd4163",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/extendedText",
+    "fidelity": "exact",
+    "scoring": "manual",
+    "fallback": "—",
+    "sha256": "f676b170d9d87b2cb5cd5031bb8e1bf7bd526c2449a366c84921d84427c3669f",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/gapMatch",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "aefb47e5055c7b3c300cf665d6eb1a3caee163330d4b24f39b98b85896ca400d",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/graphicAssociate",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "bb26868e06bb9565798d9d4161c42314c5e84680b252077ebc1800a8d5c5dcf1",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/graphicGapMatch",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "5c1ad6039ae406f761f904eccd5ebde11d6e8e2acd0d9f4afc8fc3c7c16af295",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/graphicOrder",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "2cd0fa8e49c0f09557ece9b043a9144b2cde98a8c0c7488dbb1d377c952be632",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/hotspot",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "c2de69c509499c8f61f653c9b56bbdc459e578cc24933001e60bd4ed2313dcf5",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/hottext",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "4de491a9b07b1b642134dd97f663c67034a18e24c8bf8933db71a00108311f9a",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/inlineChoice",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "text-entry",
+    "sha256": "01bca2b6b15829a9824aa647dcee1ede50f69fad59220b647ce049a4639bcfbb",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/match",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "6810f3a059366d35e431be5f09ad602f9e6d9cea932cd61b2b8686dac5c82c7b",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/media",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "df1c65b770c269d1336e6d0912e82876e447a6b0a797aa8d3553437b27913a91",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/order",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "fd6126a482162034f9a3f6db8abc3b10ac1963e6c91e57abb56aee495eab4826",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/portableCustom",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "461cd4b114a4ac599e637eb1ea6f2c44b5231fcfa2f30903b8e49d052dd6df1f",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/positionObject",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "f0b3c0490090c33f90ea1d68c6c361d1da40cbcd0931716ecebaf6029ecb7e73",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/selectPoint",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "520c254d8abce4d606a2823dcebc2619cd8016501d59d94f0f21da7603542b9d",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/slider",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "d24f59e7e4e07f518c6547ad33745e8f44f9c97fa0a4fdb9ea3e7b88862ba1e8",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/textEntry",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "d7aad8a4ab5c5e6532ab6986e1f869d042a4299c894b8a359e2fbe8e3e3ac3e4",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "brightspace-course-import@1/upload",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "a1da2d221cdc3f2d3b43e35585a9afbd3e550df14a104bc047d7de7d3b55bd39",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
     "caseId": "canvas-classic-quizzes@1/associate",
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "d9f45f9a28164e854397eabbf84542372b84ee51f4ce2008fcbb486ccbcdb892",
+    "sha256": "dcae34b90716026e0427a7dc1577dacc8be4f5be61f87b0bcb8483a32db89959",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -22,7 +814,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "5c814d0343c45fbd1ed7945126d0ca29af3831a5a616e45560aeb56a5e3f7f9c",
+    "sha256": "48208da2d894c703cf2908ea1dd606e0a2e8cc2e97db89a533dc1259936e5249",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -40,7 +832,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "499887eafe4367cd5dde2efc7494554de887c6dd7e83db7507c75f31c0b12ec9",
+    "sha256": "3453fc9d58aa834fa8f4fd5df25bdf0fc3afe13c189ee08e5d657068c94a695a",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -58,7 +850,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "ae53ec49937667af5d309c305cbb66dda04ea4371c829a3249d8ca00faa742e1",
+    "sha256": "eadf91ad7e37a8145f16e86b0d97ce36410548b558c7b92dd341a0ad2c42303c",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -76,7 +868,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "b8f699179249480fa557fbb2e2cc1763ddae6813fcac9290720c69b11a9e9cc0",
+    "sha256": "455a912c52906c4d0ae17ce0068a839389813d2bb0288e8bc93e7b9ab5076c9f",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -94,7 +886,7 @@
     "fidelity": "exact",
     "scoring": "manual",
     "fallback": "—",
-    "sha256": "09ed34be2825687c6ad023f7bc2166d2e7e65310ae9c732da92eacf542cec9e8",
+    "sha256": "9cc10dfc4849ad7f3aace21283e131ac91b7d1baa7b04d890315727beda0a916",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -112,7 +904,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "1e713bef0d0d610bbb2ebfedda166f99c36a944e441354b2f5f053f5607f38bd",
+    "sha256": "93c640bdc4f563e4b55c42189a1835ffba415e90a515bbc53ec17832a2b0d124",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -130,7 +922,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "ca41997d3d3a91a3492c61b4bca97bbfa44e3eb03f3ece7a1466449216b16b2e",
+    "sha256": "2027dc863828baa8bda7e70656f66484c64e728318a91fa383f1c3d44b414421",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -148,7 +940,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "2cb0907138a40d3da0402820699298be741d59068ac2e0a0d3b903eb36322355",
+    "sha256": "619432f1fa4a0784f8425abb66e0ba386c4b9e9a78b280ec05126e18f07adb05",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -165,8 +957,8 @@
     "caseId": "canvas-classic-quizzes@1/graphicOrder",
     "fidelity": "lossy",
     "scoring": "automatic",
-    "fallback": "—",
-    "sha256": "1ff266f0680ceed6c5f5340889a69cad2ddbb0cac0805319173f8f1a88d267e2",
+    "fallback": "matching",
+    "sha256": "fa96c240326bcd2d40224fb7c1965178af331c3eaca3c9a5fdee70b5901dcdbe",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -184,7 +976,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "6898b0f9e0162312a7864899698eee07406e66203d3c16db781feba2993f9154",
+    "sha256": "cbf4bdb17204539bbb55c2e04a5257f9c82f618d6e25c0ac4d2fba18b1a36f38",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -202,7 +994,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "f61a7722994e3844737a586018c1cdc723c064118fb959025da0861c82e0e8e3",
+    "sha256": "9e7f4bb768cfac25688f7d45f484fc50fa36004f3171a8c696aadb313eaa68aa",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -220,7 +1012,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "a069a54dcd8bc5b179b397946d5d084768e7c6d92711ed6ecdfc3cf83a7cd9ff",
+    "sha256": "d88fce57089b045636967db959cca90166088348cbad468f761371808c54e5fc",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -238,7 +1030,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "6f85a87760766cb1a6a1a828f8544477df3265a244939a88315d48f4ae9b9bdd",
+    "sha256": "ec4e23619a08a4652bc854d3b7d4d9640f473fd283973d9cfd474de2c18d98b6",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -256,7 +1048,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "94d6db5d05690b16539acead2147cac56936658c0b3e1eeb6c1a47f9ede2f258",
+    "sha256": "6fc4940e40d7310256e7b18c434d6accda33d3b01414c3a870008d0487727b91",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -273,8 +1065,8 @@
     "caseId": "canvas-classic-quizzes@1/order",
     "fidelity": "lossy",
     "scoring": "automatic",
-    "fallback": "—",
-    "sha256": "7be5269ddb57a2308f4fe95ac9d3930831777c799bff21d26824f43efd0bb10e",
+    "fallback": "matching",
+    "sha256": "b0c3dbabae46642cbca7cfda04cf83538c8dd6f6bed8a108d2526ea8cc0b86a0",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -292,7 +1084,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "703e18520e506e68748df4ebd2d278a615fc9292426540598240baca863dd413",
+    "sha256": "23eeb48dead2b8a3ee04228c059dc452a84e84eb591a6508b8b1ed2885a6b748",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -310,7 +1102,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "0c3ab98b6886318436f1f1c2d47301872bfe15a3ad3a24b7418351fb60a4dc1b",
+    "sha256": "03e357697d2f79dbcf0ba2d717fb82549ef562af76f46b6db9c86aedb877174b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -328,7 +1120,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "ec3cb9862cf3a27bb3d090c0d72ff21d20f17b8cda274b6e656e57293060f44c",
+    "sha256": "52960297b47872c09b6705d2d933071f2cab37ab3d591ffd3ff15b3291161799",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -346,7 +1138,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "ec8ca18e06d93783aadb3e9189a74b00855a4532349d02f2bdeffecf57c7dee1",
+    "sha256": "9091909d35244babf71e853ca2703f7aebdf3936abbe16333a30425cae49ad4c",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -364,7 +1156,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "0d0b2e7a79732558e2af9302ad41a6daea9a9e47c9ce42fe1d3d5cfc0c7dc9eb",
+    "sha256": "d0ed43af5a3c9ed6a1352b4965033afbb6dae01b351696c16ad9607189195bbb",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -382,7 +1174,403 @@
     "fidelity": "normalized",
     "scoring": "manual",
     "fallback": "—",
-    "sha256": "e8f9fecee90073771bd1ce09395c5dd18c4c24da450e0d835b4b6df9822aada5",
+    "sha256": "93183bf5d485e1a78c16f4e88174cc3f5aabbe67dc7babe61604e025e5e514d0",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/associate",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "dcae34b90716026e0427a7dc1577dacc8be4f5be61f87b0bcb8483a32db89959",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/choice",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "48208da2d894c703cf2908ea1dd606e0a2e8cc2e97db89a533dc1259936e5249",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/custom",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "3453fc9d58aa834fa8f4fd5df25bdf0fc3afe13c189ee08e5d657068c94a695a",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/drawing",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "eadf91ad7e37a8145f16e86b0d97ce36410548b558c7b92dd341a0ad2c42303c",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/endAttempt",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "455a912c52906c4d0ae17ce0068a839389813d2bb0288e8bc93e7b9ab5076c9f",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/extendedText",
+    "fidelity": "exact",
+    "scoring": "manual",
+    "fallback": "—",
+    "sha256": "9cc10dfc4849ad7f3aace21283e131ac91b7d1baa7b04d890315727beda0a916",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/gapMatch",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "choice",
+    "sha256": "93c640bdc4f563e4b55c42189a1835ffba415e90a515bbc53ec17832a2b0d124",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/graphicAssociate",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "choice",
+    "sha256": "2027dc863828baa8bda7e70656f66484c64e728318a91fa383f1c3d44b414421",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/graphicGapMatch",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "choice",
+    "sha256": "619432f1fa4a0784f8425abb66e0ba386c4b9e9a78b280ec05126e18f07adb05",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/graphicOrder",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "matching",
+    "sha256": "d402e2096f68ec22da8341d3b680b40fe1214353359817ffd64eaeaa3be1c6b2",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/hotspot",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "cbf4bdb17204539bbb55c2e04a5257f9c82f618d6e25c0ac4d2fba18b1a36f38",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/hottext",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "choice",
+    "sha256": "9e7f4bb768cfac25688f7d45f484fc50fa36004f3171a8c696aadb313eaa68aa",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/inlineChoice",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "choice",
+    "sha256": "d88fce57089b045636967db959cca90166088348cbad468f761371808c54e5fc",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/match",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "ec4e23619a08a4652bc854d3b7d4d9640f473fd283973d9cfd474de2c18d98b6",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/media",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "6fc4940e40d7310256e7b18c434d6accda33d3b01414c3a870008d0487727b91",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/order",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "0423ad0669e1aedb4d09ba771dd4d242817aa9b3dc5a19bfd87a24e72049dcf7",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/portableCustom",
+    "fidelity": "lossy",
+    "scoring": "manual",
+    "fallback": "extended-text",
+    "sha256": "23eeb48dead2b8a3ee04228c059dc452a84e84eb591a6508b8b1ed2885a6b748",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/positionObject",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "text-entry",
+    "sha256": "03e357697d2f79dbcf0ba2d717fb82549ef562af76f46b6db9c86aedb877174b",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/selectPoint",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "text-entry",
+    "sha256": "52960297b47872c09b6705d2d933071f2cab37ab3d591ffd3ff15b3291161799",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/slider",
+    "fidelity": "lossy",
+    "scoring": "automatic",
+    "fallback": "text-entry",
+    "sha256": "9091909d35244babf71e853ca2703f7aebdf3936abbe16333a30425cae49ad4c",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/textEntry",
+    "fidelity": "exact",
+    "scoring": "automatic",
+    "fallback": "—",
+    "sha256": "d0ed43af5a3c9ed6a1352b4965033afbb6dae01b351696c16ad9607189195bbb",
+    "evidence": [
+      "source-semantic",
+      "target-semantic",
+      "golden-fixture",
+      "reverse-migration",
+      "behavior",
+      "visible-content",
+      "assets",
+      "keyboard",
+      "accessibility"
+    ]
+  },
+  {
+    "caseId": "canvas-new-quizzes@1/upload",
+    "fidelity": "normalized",
+    "scoring": "manual",
+    "fallback": "—",
+    "sha256": "b0f452d44750218015b7c8fdcfba3a1098425fd9b8ffeae0954aca09179291f3",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -774,7 +1962,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "—",
-    "sha256": "bd7722b73d7507b8655ffd4b498df9ae0c4e14094c86f59d017221cf5f97ef9b",
+    "sha256": "ed5a820e740aa559e86b2ec37dc36eb44940972aa15186e4758ecfc4d3cefba3",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -792,7 +1980,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "00143cafb17122e15c03295a30bdbeb918a5f637117e3ca835f9577fc48ddfd4",
+    "sha256": "e72f5e772305fe306cbb86b3f0708c1bcb6350a800599d4ae25ec1572394b339",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -810,7 +1998,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "58c1f2bcfac315aa595dd5c890f24f15a04e66dc0f3aa5c1be359b19ced45712",
+    "sha256": "56d17731158b6e105ca9ca14340a8b58ee052401a1d310e72d9bff7bd9a0cb74",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -828,7 +2016,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "73178cb37e0bd1343225d9e7b222d55f31db7fd14d07008538e8a0b81aa10d6b",
+    "sha256": "6c1efe937dd19322f8870ea86d9f0bb1bff970df4d9732d1428b4030520fabe0",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -846,7 +2034,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "d4259af18bff01a7b3610cc2167fdcd3295336db41d5bf0d2631816a0c2f1a8f",
+    "sha256": "34740720493232d4971d7957d4b201625fde811974eae48e20064d5f0cffd8d6",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -864,7 +2052,7 @@
     "fidelity": "exact",
     "scoring": "manual",
     "fallback": "—",
-    "sha256": "1838d241c62d7ac23f43336f1147488c360f586a9a787390562af14330368d1a",
+    "sha256": "ab151a632daf1b045e372b409a90639594b4d46e8ada6db4d9ca65323c767853",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -882,7 +2070,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "8f66b996dc047a49850676765d2a679f4769867b0aea9ad44ca9e9807cc8b3e7",
+    "sha256": "793f6b0b02de3827f6098153bff3ed7d1c1aacd45f88768fa7404695f4b220fd",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -900,7 +2088,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "af35ff993904529b6c6885f979ad0226557fe15c0e9af79657a0ded98806418c",
+    "sha256": "449c7d904ba9574617e6c4b7329ab082669edf22a9aef4eb1bb524ed55ecc8db",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -918,7 +2106,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "3b185c65383682c153547a5c8338340c58e4f09a0d76c75d0905e78097475991",
+    "sha256": "d1baaf2c14d6cf63d41c9d6ae6ad5aa65798e4dd50b76516cbf93a783c93da67",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -936,7 +2124,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "f1f80ac5414e9234872698043f7a90598a603beb6936b327fc037a83f30bab13",
+    "sha256": "1677126677542eded26676f95fff287a825fa44183e8b7d6f92c4f7e491251c9",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -954,7 +2142,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "aad60df870a33f1dba3b68822e913bd80ffb807b4701b2b4f1d01063e67e72e6",
+    "sha256": "e592807ebae55dffea9f0953dc0f482d1eb7479c87620a2c916e7001005e1848",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -972,7 +2160,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "cf3dd87148b8a78fbf59c3e58334a1fe71561a3f8c6517b1813df1401e204966",
+    "sha256": "63cf7c8a8077192f3a7892518e32758c0bcc19e1b86e2c85ca161daabef6bc32",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -990,7 +2178,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "350bbcabd53fafe7a4a584078dde6ccc75e383bededc558e09b4e5a8eed91533",
+    "sha256": "f2368651ec999732a01e228afd2c3429bb1a2fd3ddcb33fb504685f6f2d15580",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1008,7 +2196,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "ca87318a27edd1fb23c3d5f05a1183fb2e221f53a1e924d7d7a25981f922a528",
+    "sha256": "3be7b7a94d1b6f793d2f6d0687176a3c8f64c14951913ef43d850f9053c835d2",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1026,7 +2214,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "d6e19f154dbd6c67cfad903f6ff23f4f8c88d84c84ad8741bc3b692fd2e253f5",
+    "sha256": "d835e0011b84da302f58bf2cd882ac27a7376f6e17a5e4ce9ef69446a5b4f256",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1044,7 +2232,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "16bdde6fd605b37fe3571db927f47037b44caf03bbd599245436f75e20c5e8fa",
+    "sha256": "f9f2e210dee0ce4387949faf8aaf2d720dade1d3157aed4bfaa8b5a620cfbae3",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1062,7 +2250,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "1e58a5b426c318084e0d80748dd8d9b4f833b0e031f9db3409f2851bb93d6e09",
+    "sha256": "ee4fd5e987b62cd95778e19cb43302f7d1fb08381b60a96ba94585119f61d08b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1080,7 +2268,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "2f26563674f27c583483ad62ec7ee0c8fb20941ce7f533110717bdb4216d0aa5",
+    "sha256": "39b6f32073f5763961b40c1c9701cf862cf0bce2ee540c9223a19af59a48f69b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1098,7 +2286,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "73a29c071dff4fc9b328410f6ce73c29dffd668f26e3a4c34ed0a37cf5dc0950",
+    "sha256": "d9850b6f7d035daa4a18d2d73b4acfd02332d18a04e65dccf85da93ee8f0efd9",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1116,7 +2304,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "4419bbd8f16d3b88a0c7af0336313cc860a76e1f47a73b6531ef706a0b616b99",
+    "sha256": "30e0535fdd13ca940509ce308f6ff55d0e5197ac4c65d15920ff8878c8352972",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1134,7 +2322,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "be7589d47a3348931adf6cfd01d2fa3f6ae0aef41ec3440965da4f3feb519a90",
+    "sha256": "b0d89b83845ab680db3c840895cd3754282a04f5d84e2f0c0f69ba30108a2db3",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1152,7 +2340,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "4290f21ab98b7503b683a22a4a0abad8b0b507395621fc75146f5f3fc3eb9d05",
+    "sha256": "43c49b98144defe296192207758ea08b2f7a77a9126c3258635ec2c75a604acd",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1170,7 +2358,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "379228865cc321ecb58bc666c1eb0170969e11c92ccd6efc9cd9223a6371713d",
+    "sha256": "2713df7ef7efeef9efa3503df928fefd7d3dded47f741e61f2163315de917ed2",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1188,7 +2376,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "ae4e0e9a71beac10330a3b48b9686d9e7fdb882fa8d97962539dd75c8d9b0d6c",
+    "sha256": "7ff257c7fea38a213d56db2101f3143cb004f8d7b8018cc53803d83a8a6b6adb",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1206,7 +2394,7 @@
     "fidelity": "lossy",
     "scoring": "unscored",
     "fallback": "—",
-    "sha256": "af70b527d2e4f65a295c415154b0112c6ed0d0655a0156422e4b47e12430e20c",
+    "sha256": "ad127ae00a015ac88d5ead97002b23a8a4870e7babe22fcc2d538ff1b685682b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1224,7 +2412,7 @@
     "fidelity": "exact",
     "scoring": "unscored",
     "fallback": "—",
-    "sha256": "fa6456de8250149d0ae68e47c99d9639998acdb73d7242def498b511fe793ba6",
+    "sha256": "ef1a0742566200586e1dc44881eabd93186234630de0622136da277f253ac838",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1242,7 +2430,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "202a3b8ec576e82db1913f50c3c201e87e43e298216c703934d66e51516d5cc8",
+    "sha256": "9ad2314157ae46b9e6cbc7426e7a524123643932c0094f8a5f8c5fdf8032d934",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1260,7 +2448,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "44bafaa2b5e2cf90dc4b8010deed760f5f3bb2b4c9f9d7f8bc475d45e073475b",
+    "sha256": "d7ee95085e6693a78002dab4086a80c464a148d01c47716db62fa3cfec34400b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1278,7 +2466,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "851247c710d4c5f8d42d0b5dd0c7c7b0829aafc609f1f7d57381ba33eb773abc",
+    "sha256": "3710b8f71015495cbaf9866dacced028111f59332ce528322ae791fc4154034b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1296,7 +2484,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "104da4c797f696e6404e8023df0450b165318067cc6ef1fa907da9178fd544d6",
+    "sha256": "43770750e6fb69cbfd7bbc750a4929e1edaa426af7344ccacf47471ef28445e4",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1314,7 +2502,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "037bc0f942d5e153a36365b8acb6c3796e40787fa86f06de7e67fbb3287cc1d0",
+    "sha256": "669f97e93f664d7d64b4fe1434044d007e951e57de9ff80413f31bd71ea36500",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1332,7 +2520,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "5badd9c0ce5f927f714f0831a87d2f96d748d8cc5512b5c96e2812370584b81e",
+    "sha256": "a69f685bccbb518ab6863b78320d3b3379930a2c3dbad88713faf08210dc8861",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1350,7 +2538,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "46aee248616ddde792fca2c1a6da1c2d64cf0ec97f838447c56bb334eaf13abd",
+    "sha256": "94042e5e6a422593c182bd27c0d9a0c6bc8125759a53c091f3615fa886742822",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1368,7 +2556,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "e216c6c8215afa350f50cd656f9caed89629a772d12cfeafa4c64701bc6be171",
+    "sha256": "b5122464f4f797a12f16bb708bbe5428026095d4d33ca8617c26b04a0fd665f4",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1386,7 +2574,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "c195592ba9816c6547577beafbc9b2fa4f2e7628b018f620abf7c21ddda91d8a",
+    "sha256": "aa76286fbe81c98ff219ca64e2bc0e322362a43af07436b66da731994816145c",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1404,7 +2592,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "b669f59ff528a12c9bc710ab9334eca672ea1e5bd4ddd03ba48c6794f5bceacc",
+    "sha256": "d52e77574c3ed83c284fcc81abe6cbe4ca737c715b93ea2189ac634f27138b28",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1422,7 +2610,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "1a5435e7a632e804a7db08440653300d97dc37c667ef247229a5792d09c8bb18",
+    "sha256": "887363f9c919d170a7754e187b75cb7384b032fae00f60f00479f76251b9ac98",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1440,7 +2628,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "a459dd0391a51b2515269b686efab9421cfda3c1d48283cd9bc49d5c608e1286",
+    "sha256": "7a1fe755e9e4634573c5213e2a3facaf2153a75fc12ca8d188765a668c03014d",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1458,7 +2646,7 @@
     "fidelity": "normalized",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "2e563ba995a3d56b00366e6d8dc04cff2047716864d23ad1aeff03ce5c63b2aa",
+    "sha256": "77fa962ca6ffca0bd2358306ea3226784ad6b805d4a4fbe06936f120c35e90bd",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1476,7 +2664,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "91396a222261047674c98142df5e581e19a9d4624f9422c653f5ab9dfd586231",
+    "sha256": "bad8bb8a34659651473b98ee127acf5f1417ba3e1faae7f31e4c3202e3e2932e",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1494,7 +2682,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "a2888164c613242394ba2410f07cf2c04f2ef224dcec5cf28d0bd013cbe7cdf5",
+    "sha256": "c4dbdb0a68a4bf6187caa3456c140e74366423d8d1c04c505edd6e1644f63151",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1512,7 +2700,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "d89a38f572f8a7367bda0211059c5c5fae1d9f74d7dbcc6f8aca827418f9b834",
+    "sha256": "f7ccfb2449f7cf9dd34263a2463a5659a7c86c3a3152e54b0ccad606283913ce",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1530,7 +2718,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "f6bde68f33d7a5d1e5bd76559a6c578d738bd4c96016e471e5948bc87a5efc17",
+    "sha256": "d7aad8a4ab5c5e6532ab6986e1f869d042a4299c894b8a359e2fbe8e3e3ac3e4",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1548,7 +2736,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "de4fd0b46b462d0fd62ae02f75961fe06054f9a5668a660b39241cf6a840cd78",
+    "sha256": "d3720e84ee215b89ad5597e1b94202e42174d3a37ec153fe875d87120afbd3c9",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1566,7 +2754,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "c28da74cb322fbeb7fca8a5d416a24922c1fe5c00c524096c7dc12eaea973046",
+    "sha256": "68613bacb0c16f861ff579b831f609330c901ad6c47a14de9570981a5090b7fb",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1584,7 +2772,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "9f559faff6e13f5eccd251a0f3f7d2f96128b0c7686fe41f761bf17ddc7598a1",
+    "sha256": "5c83a47bfddf92e36d2287b00216f576c7e67b6914a120a4b042de790f1b4be8",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1602,7 +2790,7 @@
     "fidelity": "lossy",
     "scoring": "unscored",
     "fallback": "—",
-    "sha256": "282bd18c29469031832cb5258afdd704547e757a7f16e93ea40b4fbfd8ead4cf",
+    "sha256": "e5b99852aec2fd29816b5b0b5f4e28601c085da652393c35616f466dfe4369b8",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1620,7 +2808,7 @@
     "fidelity": "exact",
     "scoring": "unscored",
     "fallback": "—",
-    "sha256": "a2b18436bc689df1e3d01301ed7d15f493dddad7fce7fd266f49f542e9557cd6",
+    "sha256": "346b762be08f1dad94d7677326d17307c5e5186e39cca4eee54644794cdc2e69",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1638,7 +2826,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "7b36a6bca4f37fdad58009cf9cce2a97b02a445561ce69fe4d3063bc218055e3",
+    "sha256": "981be050e80f967d24a9841054ecda2dbd7adf63f4b0eab8e02c135859c90957",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1656,7 +2844,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "cd0a0c6fa0907d30ffb01bcfe5a0091e051445e92c4b283b64ed5a552ed05514",
+    "sha256": "f69f68a24103431a74f441b3adcd81aaca618704e80772795f936e39309ec071",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1674,7 +2862,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "ce9f8d075b3ed22efaee6fbb66ed19726698a6188135695609864f4fac048de6",
+    "sha256": "ce65b53435217b320f4faf01174bf7284671d4c64a8231aa1d65a479f32d8fa0",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1692,7 +2880,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "97c1282150f448cbfcd0c30b6b363e28a5ae680830259954b5d33cc1b8daf8e8",
+    "sha256": "1e4f6d58ce2611e5d7fe19a666f575c2faa54c9a04529fe9b1069990423b31c3",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1710,7 +2898,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "6650ef1883c35066e37554e8bf5e67ad46325aeef36f880e423e83ff7b65a753",
+    "sha256": "cbbd8324c9ae3ccb68b52550095816fa474933d2c52b66816de5178df7317f31",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1728,7 +2916,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "c7c1432d8844967d6551428c82f8090c50c9bfc7a26a73f867f4d77fff729cd8",
+    "sha256": "9c6169eacb1c6de3792e2885d084a789f37ea5603ebd67f1b20af59b18d4b112",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1746,7 +2934,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "8e0bdc05be4e70f3ad598d2880bed7cd0c4e8fae806248bb1f4abdde5e643da6",
+    "sha256": "78985d7ed323662c71ac9d09cc06eb3513194aba376711504b0f0e5aef8e970f",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1764,7 +2952,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "9612e29f133596e66fdac9370343ed0faa685a1eac8b0341d003356e7e15bf66",
+    "sha256": "55785e6ea4271a6efd80369395341c17755ff5ee042f2265787a2f86cb7bc51f",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1782,7 +2970,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "7cb482ecb519f4c01b4f3691bcd571c72d2114bab05c8b95b7ea9e24b26682ee",
+    "sha256": "ce05ea3c50a790a410285f01aac3d7c7a3fc64a78b786f3f8ee70947c13a43dc",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1800,7 +2988,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "5b9f37a04d1b668781e553f695c50494da045540ba066c3a38f36ad5a3f8615d",
+    "sha256": "c43b41c874ec590a89d3b05ea7efa87ae0e949c9e766bfc7672ce476cc782b7d",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1818,7 +3006,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "ce4f0f1f492568e3608bd3cff6e8ad49c93078c4ea86f122e32bc7c5969d47cb",
+    "sha256": "c6b415f92dead61528579b00f58d21003b6ed1bc65943f414168ea1055077af9",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1836,7 +3024,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "5f2b3af50cbc73d6aa8493d5c63bc4c2a11215c4232b3c98800c4dda881a2756",
+    "sha256": "05c4c58252e7b60546871cc5df052d8316c02c3488ae05a20a7354105fb69c3c",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1854,7 +3042,7 @@
     "fidelity": "normalized",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "1e4c1bddcc12f8a7018866de47b8fb44a6373a73d351a7cb4b44071ed3b0b1c5",
+    "sha256": "5e4b4ec6fbeeb16cf3206955d7caafadc9cd7e1d6f630a028f9bfc3fd6bcbcd4",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1872,7 +3060,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "77130469e2fdd84be753e5743547de934cf9f865d1e1302a75be7965ee3289bb",
+    "sha256": "82bb874adebc402e3d07291543c556b4937ad39f783b56764c70de326af64dd2",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1890,7 +3078,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "25f96d7601de4f370cd9d898ddba09ef02fa24d65d7237b9817710e083f2d95c",
+    "sha256": "7b4b96d51ba37fd309964b5ca30799e0c2782120b50674117765fe27335a8f75",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1908,7 +3096,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "24853cb50c6a24a01a39182d92a796e0c20b188cc9d0f07228462d5db0a729de",
+    "sha256": "f86912438de6b04d75b601bfbb64e0fa8efdc0aba885f443bf606e5e37736174",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1926,7 +3114,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "0c43bdfaba0552123fa5eb0376fa4a7e28a6d44d13d594998953ce62d5b8ff32",
+    "sha256": "72016d98e70e6383ec82b56e2552a947913ba081aa807f1f8897717cbbd2fa1e",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1944,7 +3132,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "2b7c9d31931531f1a3f7cf9fe3506d51af3e96bf4c7318e33553d69c134891f0",
+    "sha256": "b9b4ae32f4e72e51b0f565b0af6b9f1a7a998312e4ca887678d4ac8945f5d142",
     "evidence": [
       "source-semantic",
       "target-semantic",

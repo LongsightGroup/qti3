@@ -1,5 +1,6 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
+import type { Qti12InteractionPolicy } from "../profiles.js";
 import type { QtiTranscodeDiagnostic, QtiTranscodeScoringDisposition } from "../types.js";
 
 export interface Qti12MappedInteraction {
@@ -29,14 +30,20 @@ export interface Qti12Response {
   readonly diagnostics: readonly QtiTranscodeDiagnostic[];
 }
 
-export type Qti12WireDialect = "canvas-classic" | "standard";
+/** Shared QTI 1.2 wire conventions. Product deltas live on interaction policies. */
+export type Qti12WireDialect = "canvas" | "standard";
 
 export interface Qti12MapContext {
   readonly interaction: QtiInteraction;
   readonly identifier: string;
   readonly correct: readonly string[];
-  readonly policy: import("../profiles.js").QtiTranscodeInteractionPolicy;
+  readonly policy: Qti12InteractionPolicy;
   readonly sourcePath: string | undefined;
   readonly dialect: Qti12WireDialect;
   readonly fallbackDiagnostic: (fallback: string) => QtiTranscodeDiagnostic;
+}
+
+/** Whether a QTI 1.2 dialect uses Canvas metadata and percentage-scoring conventions. */
+export function isCanvasQti12Dialect(dialect: Qti12WireDialect): dialect is "canvas" {
+  return dialect === "canvas";
 }

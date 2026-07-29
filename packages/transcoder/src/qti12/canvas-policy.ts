@@ -1,29 +1,25 @@
-import type { QtiInteractionType } from "@longsightgroup/qti3-core";
-
 import { accessibleChoiceLabel } from "../rich-content-html.js";
 import { choiceCondition } from "./scoring.js";
 import {
   choiceResponse,
-  extendedTextResponse,
-  manualExtendedTextResponse,
+  manualExtendedTextQti12Response,
   sequenceAsMatchResponse,
 } from "./responses.js";
-import { manualInstructionFor, qti12Identifier } from "./shared.js";
-import type { Qti12MapContext, Qti12Response } from "./types.js";
+import { qti12Identifier } from "./shared.js";
+import { isCanvasQti12Dialect, type Qti12MapContext, type Qti12Response } from "./types.js";
 
-/** Canvas Classic overrides applied before the interaction registry. */
-export function applyCanvasClassicPolicy(context: Qti12MapContext): Qti12Response | undefined {
-  if (context.dialect !== "canvas-classic") return undefined;
+/**
+ * Policy-driven Canvas wire overrides applied before the native interaction registry.
+ * Matching and presentation are encoded on the interaction policy, not a product overlay.
+ */
+export function applyCanvasPolicy(context: Qti12MapContext): Qti12Response | undefined {
+  if (!isCanvasQti12Dialect(context.dialect)) return undefined;
 
-  if (context.interaction.type === "associate") {
-    return manualExtendedTextResponse(context);
-  }
-
-  if (context.interaction.type === "graphicOrder" || context.interaction.type === "order") {
+  if (context.policy.transformation === "matching-fallback") {
     return sequenceAsMatchResponse(context);
   }
 
-  if (context.interaction.type === "upload") {
+  if (context.policy.transformation === "presentation") {
     return {
       identifier: context.identifier,
       xml: "",
@@ -31,25 +27,24 @@ export function applyCanvasClassicPolicy(context: Qti12MapContext): Qti12Respons
       scoring: "manual",
       emitted: "presentation",
       processingXml: "",
-      diagnostics: [
-        {
-          code: "profile.canvas.classic.upload",
-          severity: "info",
-          message: "Mapped the QTI upload task to a Canvas Classic file-upload question.",
-          path: context.sourcePath,
-        },
-      ],
+      diagnostics: context.policy.diagnostic
+        ? [
+            {
+              ...context.policy.diagnostic,
+              severity: "info",
+              path: context.sourcePath,
+            },
+          ]
+        : [],
     };
   }
 
   return undefined;
 }
 
-export function applyCanvasClassicHotspotPolicy(
-  context: Qti12MapContext,
-): Qti12Response | undefined {
+export function applyCanvasHotspotPolicy(context: Qti12MapContext): Qti12Response | undefined {
   if (
-    context.dialect !== "canvas-classic" ||
+    !isCanvasQti12Dialect(context.dialect) ||
     context.interaction.type !== "hotspot" ||
     context.correct.length <= 1
   ) {
@@ -61,7 +56,10 @@ export function applyCanvasClassicHotspotPolicy(
     hotspotChoices.length === 0 ||
     hotspotChoices.some((choice) => accessibleChoiceLabel(choice) === undefined)
   ) {
-    return manualExtendedTextResponse(context, "Describe all regions that satisfy the question.");
+    return manualExtendedTextQti12Response(
+      context,
+      "Describe all regions that satisfy the question.",
+    );
   }
 
   return {
@@ -81,32 +79,3 @@ export function applyCanvasClassicHotspotPolicy(
     diagnostics: [context.fallbackDiagnostic("choice")],
   };
 }
-
-export function manualFallbackResponse(context: Qti12MapContext): Qti12Response {
-  return {
-    identifier: context.identifier,
-    xml:
-      context.dialect === "canvas-classic" && context.interaction.type === "upload"
-        ? ""
-        : extendedTextResponse(
-            context.identifier,
-            manualInstructionFor(context.interaction),
-            context.dialect,
-          ),
-    correct: [],
-    scoring: "manual",
-    fallback: context.policy.fallback ?? "extended-text",
-    emitted: "response_str",
-    processingXml: "",
-    diagnostics: [context.fallbackDiagnostic(context.policy.fallback ?? "extended-text")],
-  };
-}
-
-export const MANUAL_FALLBACK_TYPES = new Set<QtiInteractionType>([
-  "custom",
-  "drawing",
-  "endAttempt",
-  "media",
-  "portableCustom",
-  "upload",
-]);

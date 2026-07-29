@@ -1,5 +1,6 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
 
+import { interactionPolicyFallback } from "../profiles.js";
 import type { QtiTranscodeDiagnostic } from "../types.js";
 import { canvasHotspotResponse } from "../qti12-canvas.js";
 import { serializeRichChoiceContent } from "../rich-content-html.js";
@@ -15,7 +16,12 @@ import {
   qti12Area,
   qti12Identifier,
 } from "./shared.js";
-import type { Qti12MapContext, Qti12Response, Qti12WireDialect } from "./types.js";
+import {
+  isCanvasQti12Dialect,
+  type Qti12MapContext,
+  type Qti12Response,
+  type Qti12WireDialect,
+} from "./types.js";
 
 export function choiceResponse(
   identifier: string,
@@ -34,7 +40,7 @@ export function choiceResponse(
           .map(
             (choice) =>
               `<response_label ident="${escapeXml(qti12Identifier(choice.identifier))}"><material><mattext texttype="${
-                dialect === "canvas-classic" ? "text/html" : "text/plain"
+                isCanvasQti12Dialect(dialect) ? "text/html" : "text/plain"
               }">${serializeChoiceContent(choice, dialect)}</mattext></material></response_label>`,
           )
           .join("")}</render_choice>
@@ -49,7 +55,7 @@ export function extendedTextResponse(
   return `<response_str ident="${escapeXml(identifier)}" rcardinality="Single"><material><mattext texttype="text/plain">${escapeXml(
     instruction,
   )}</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72">${
-    dialect === "canvas-classic"
+    isCanvasQti12Dialect(dialect)
       ? '<response_label ident="answer1" rshuffle="No"></response_label>'
       : ""
   }</render_fib></response_str>`;
@@ -71,7 +77,7 @@ export function textResponse(
   )}</mattext></material><render_fib fibtype="${
     interaction.type === "slider" ? "Decimal" : "String"
   }" prompt="Box" rows="1" columns="30">${
-    dialect === "canvas-classic"
+    isCanvasQti12Dialect(dialect)
       ? '<response_label ident="answer1" rshuffle="No"></response_label>'
       : ""
   }</render_fib></response_str>`;
@@ -232,11 +238,11 @@ export function matchResponse(
 export function sequenceAsMatchResponse(context: Qti12MapContext): Qti12Response {
   const targets = sequenceTargetChoices(context.interaction);
   if (targets.length === 0) {
-    return manualExtendedTextResponse(context);
+    return manualExtendedTextQti12Response(context);
   }
   const ordered = resolveSequenceCorrect(context.correct, targets);
   if (ordered.length === 0) {
-    return manualExtendedTextResponse(context);
+    return manualExtendedTextQti12Response(context);
   }
   const sources = ordered.map((_, index) => ({
     identifier: `POS_${String(index + 1)}`,
@@ -251,13 +257,14 @@ export function sequenceAsMatchResponse(context: Qti12MapContext): Qti12Response
     correctBySource,
     sourcePath: context.sourcePath,
     dialect: context.dialect,
-    diagnostic: {
-      code: "profile.canvas.classic.sequence_matching",
-      severity: "warning",
-      message:
-        "Converted the sequencing task to a Canvas Classic matching question with one row per position.",
-      path: context.sourcePath,
-    },
+    fallback: "matching",
+    diagnostic: context.policy.diagnostic
+      ? {
+          ...context.policy.diagnostic,
+          severity: "warning",
+          path: context.sourcePath,
+        }
+      : context.fallbackDiagnostic("matching"),
   });
 }
 
@@ -292,12 +299,13 @@ function buildMatchResponse(input: {
   readonly correctBySource: ReadonlyMap<string, string>;
   readonly sourcePath: string | undefined;
   readonly dialect: Qti12WireDialect;
+  readonly fallback?: "matching" | undefined;
   readonly diagnostic?: QtiTranscodeDiagnostic | undefined;
 }): Qti12Response {
   const controls = input.sources
     .map(
       (source) => `<response_lid ident="${escapeXml(
-        input.dialect === "canvas-classic"
+        isCanvasQti12Dialect(input.dialect)
           ? `response_${qti12Identifier(source.identifier)}`
           : qti12Identifier(source.identifier),
       )}" rcardinality="Single">
@@ -314,7 +322,7 @@ function buildMatchResponse(input: {
   const score = input.correctBySource.size === 0 ? 0 : 100 / input.correctBySource.size;
   const processing = [...input.correctBySource].map(([source, target]) =>
     condition(
-      input.dialect === "canvas-classic"
+      isCanvasQti12Dialect(input.dialect)
         ? `response_${qti12Identifier(source)}`
         : qti12Identifier(source),
       [qti12Identifier(target)],
@@ -328,6 +336,7 @@ function buildMatchResponse(input: {
     xml: controls,
     correct: correctPairs,
     scoring: processing.length > 0 ? "automatic" : "unscored",
+    fallback: input.fallback,
     emitted: "response_lid",
     processingXml: processing.join(""),
     diagnostics: input.diagnostic ? [input.diagnostic] : [],
@@ -349,7 +358,7 @@ export function serializeCanvasHotspot(
 }
 
 function serializeChoiceContent(choice: QtiChoice, dialect: Qti12WireDialect): string {
-  return dialect === "canvas-classic"
+  return isCanvasQti12Dialect(dialect)
     ? serializeRichChoiceContent(choice)
     : escapeXml(choiceLabel(choice));
 }
@@ -362,9 +371,11 @@ export function choiceCardinality(interaction: QtiInteraction): "single" | "mult
       : "single";
 }
 
-export function manualExtendedTextResponse(
+/** Canonical manual written-response envelope for QTI 1.2 policy fallbacks. */
+export function manualExtendedTextQti12Response(
   context: Qti12MapContext,
   instruction = manualInstructionFor(context.interaction),
+  diagnosticSeverity: "info" | "warning" = "warning",
 ): Qti12Response {
   return {
     identifier: context.identifier,
@@ -374,7 +385,15 @@ export function manualExtendedTextResponse(
     fallback: "extended-text",
     emitted: "response_str",
     processingXml: "",
-    diagnostics: [context.fallbackDiagnostic("extended-text")],
+    diagnostics: context.policy.diagnostic
+      ? [
+          {
+            ...context.policy.diagnostic,
+            severity: diagnosticSeverity,
+            path: context.sourcePath,
+          },
+        ]
+      : [context.fallbackDiagnostic("extended-text")],
   };
 }
 
@@ -388,12 +407,12 @@ export function textEntryResponse(context: Qti12MapContext): Qti12Response {
     xml: textResponse(context.identifier, context.interaction, context.dialect),
     correct: normalizedCorrect,
     scoring: normalizedCorrect.length > 0 ? "automatic" : "unscored",
-    fallback: context.policy.fallback,
+    fallback: interactionPolicyFallback(context.policy),
     emitted: "response_str",
     processingXml: conditions(context.identifier, normalizedCorrect, context.dialect),
     diagnostics:
       context.policy.fidelity === "lossy"
-        ? [context.fallbackDiagnostic(context.policy.fallback ?? "text-entry")]
+        ? [context.fallbackDiagnostic(interactionPolicyFallback(context.policy) ?? "text-entry")]
         : [],
   };
 }

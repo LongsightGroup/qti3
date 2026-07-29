@@ -5,6 +5,7 @@ import { writeQti12Item } from "./qti12.js";
 import { writeQti21Item } from "./qti21.js";
 import { writeQti22Item } from "./qti22.js";
 import type { Qti2WriteResult } from "./qti2-semantic.js";
+import { qti2MappingFallback } from "./qti2-mapped-interaction.js";
 import type { QtiTranscodeProfile } from "./profiles.js";
 import { qtiTranscodeProfile } from "./profiles.js";
 import { normalizeQti3Item, type NormalizedQti3Item } from "./source.js";
@@ -77,16 +78,18 @@ function writeTranscodedItem(
   switch (profile.kind) {
     case "moodle-xml":
       return writeMoodleXmlItem(normalized, profile.interactions);
-    case "canvas-classic":
-      return writeQti12Item(normalized, profile.interactions, "canvas-classic");
+    case "canvas":
+      return writeQti12Item(normalized, profile.interactions, "canvas");
     case "qti-standard":
       switch (profile.target) {
         case "qti12":
           return writeQti12Item(normalized, profile.interactions);
         case "qti21":
-          return normalizeQti2WriteResult(writeQti21Item(normalized.item));
+          return normalizeQti2WriteResult(
+            writeQti21Item(normalized.item, profile.interactions, profile.responseProcessing),
+          );
         case "qti22":
-          return normalizeQti2WriteResult(writeQti22Item(normalized.item));
+          return normalizeQti2WriteResult(writeQti22Item(normalized.item, profile.interactions));
       }
     default: {
       const unexpected: never = profile;
@@ -99,7 +102,13 @@ function normalizeQti2WriteResult(written: Qti2WriteResult): TranscodedItemWrite
   return {
     xml: written.xml,
     diagnostics: written.diagnostics,
-    mappings: written.mappings,
+    mappings: written.mappings.map((mapping) => ({
+      source: mapping.source,
+      emitted: mapping.emitted,
+      diagnostics: mapping.diagnostics,
+      scoring: mapping.kind === "extended-text-fallback" ? "manual" : undefined,
+      fallback: qti2MappingFallback(mapping),
+    })),
     responseProcessingEmitted: written.responseProcessingEmitted,
   };
 }
@@ -144,7 +153,7 @@ function buildInteractionReport(input: {
       (!hasCorrectResponse(declaration?.correctResponse) || !responseProcessingEmitted)
         ? "unscored"
         : policy.scoring,
-    fallback: policy.fallback,
+    fallback: mapping.fallback,
   };
 }
 

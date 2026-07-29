@@ -2,19 +2,20 @@ import type { QtiTranscodeFile } from "./types.js";
 import { relativePackagePath } from "./package-manifest.js";
 import { escapeXml } from "./xml.js";
 
-export interface CanvasClassicPackageFiles {
+export interface CanvasQti12PackageFiles {
   readonly assessment: QtiTranscodeFile;
   readonly metadata: QtiTranscodeFile;
   readonly manifest: string;
 }
 
-export function serializeCanvasClassicPackage(
+/** Serialize the shared Canvas QTI 1.2 package boundary used by explicit product profiles. */
+export function serializeCanvasQti12Package(
   identifier: string,
   title: string,
   items: readonly QtiTranscodeFile[],
   assets: readonly QtiTranscodeFile[],
   assetOwners: ReadonlyMap<string, readonly string[]>,
-): CanvasClassicPackageFiles {
+): CanvasQti12PackageFiles {
   const assessmentPath = "assessment_qti.xml";
   const metadataPath = "assessment_meta.xml";
   const itemXml = items
