@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-transcoder",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Framework-neutral, profile-driven QTI 3 to QTI 1.2 and QTI 2.x transcoding.",
   "keywords": [
     "assessment",

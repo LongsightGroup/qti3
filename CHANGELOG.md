@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.10.2 - 2026-07-28
+
 ### Added
 
 - Add a source-derived `canvas-new-quizzes@1` transcoder profile for direct Canvas New Quizzes QTI
@@ -9,6 +11,14 @@
 - Add `blackboard-question-banks@1` and `brightspace-course-import@1` QTI 2.1 transcoder profiles
   with conservative native mappings, diagnosed manual and text-entry fallbacks, executable support
   evidence, and explicit unverified product-import status.
+
+### Changed
+
+- Make target-specific interaction policies the canonical serializer contract for QTI 1.2, QTI
+  2.1, QTI 2.2, Canvas, and Moodle output.
+- Split generated transcoder support evidence into per-profile reports while retaining a concise
+  generated support index.
+- Align all workspace package versions on `0.10.2`.
 
 ## 0.10.1 - 2026-07-24
 
