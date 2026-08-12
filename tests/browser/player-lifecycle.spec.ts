@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { interactionFixtures } from "../../packages/fixtures/src/index.js";
+import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { loadFixture, pasteXml } from "./player-helpers.js";
 
 test.describe("player lifecycle", () => {
   test("ignores stale loadUrl completions after a newer load starts", async ({ page }) => {
-    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+    const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
+    if (!choiceFixture) throw new Error("Missing choice-reference fixture.");
 
     await page.goto("/");
     await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
@@ -34,17 +35,19 @@ test.describe("player lifecycle", () => {
 
       const snapshot = {
         childElementCount: player.childElementCount,
+        itemIdentifier: player.serialize()?.itemIdentifier,
         readyAfterSecondLoad,
         readyTotal: readyEvents.length,
         textContent: player.textContent ?? "",
       };
       player.remove();
       return snapshot;
-    }, choiceXml);
+    }, choiceFixture.xml);
 
     expect(result.readyAfterSecondLoad).toBe(1);
     expect(result.readyTotal).toBe(1);
     expect(result.childElementCount).toBeGreaterThan(0);
+    expect(result.itemIdentifier).toBe(choiceFixture.id);
     expect(result.textContent).not.toContain("Unable to parse QTI item.");
   });
 
@@ -74,16 +77,28 @@ test.describe("player lifecycle", () => {
     expect(result.serializedAfterClear).toBeUndefined();
   });
 
-  test("reports loadUrl fetch failures as diagnostics instead of rejecting", async ({ page }) => {
+  test("unloads the current item when loadUrl fetch fails", async ({ page }) => {
+    const catalogFixture = catalogFixtures.find(
+      (fixture) => fixture.id === "catalog-glossary-inline",
+    );
+    if (!catalogFixture) throw new Error("Missing catalog-glossary-inline fixture.");
+
     await page.goto("/");
     await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
-    const result = await page.evaluate(async () => {
+    const result = await page.evaluate(async (xml) => {
       const player = document.createElement("qti-assessment-item-player");
       document.body.append(player);
+      await player.loadXml(xml);
+      const renderedCatalogReferencesBeforeFailure = player.getRenderedCatalogReferences().length;
+
       const diagnostics: Array<{
         diagnostics: Array<{ code: string; message: string; severity: string }>;
       }> = [];
+      let serializedInDiagnostic: ReturnType<typeof player.serialize>;
+      let textContentInDiagnostic: string | undefined;
       player.addEventListener("qti-diagnostics", (event) => {
+        serializedInDiagnostic = player.serialize();
+        textContentInDiagnostic = player.textContent ?? "";
         diagnostics.push(
           (
             event as CustomEvent<{
@@ -101,11 +116,18 @@ test.describe("player lifecycle", () => {
 
       const snapshot = {
         diagnostics,
+        renderedCatalogReferences: player.getRenderedCatalogReferences().length,
+        renderedCatalogReferencesBeforeFailure,
+        score: player.scoreAttempt({ validateResponses: false }),
+        serialized: player.serialize(),
+        serializedInDiagnostic,
         textContent: player.textContent ?? "",
+        textContentInDiagnostic,
+        textToSpeechTraversal: player.getTextToSpeechTraversal(),
       };
       player.remove();
       return snapshot;
-    });
+    }, catalogFixture.xml);
 
     expect(result.diagnostics.at(-1)).toEqual({
       diagnostics: [
@@ -116,11 +138,58 @@ test.describe("player lifecycle", () => {
         }),
       ],
     });
+    expect(result.serializedInDiagnostic).toBeUndefined();
+    expect(result.textContentInDiagnostic).toContain("Unable to load QTI item.");
+    expect(result.serialized).toBeUndefined();
+    expect(result.score).toBeUndefined();
+    expect(result.textToSpeechTraversal).toBeUndefined();
+    expect(result.renderedCatalogReferencesBeforeFailure).toBe(1);
+    expect(result.renderedCatalogReferences).toBe(0);
     expect(result.textContent).toContain("Unable to load QTI item.");
   });
 
+  test("unloads the current item when loadXml cannot parse a document", async ({ page }) => {
+    const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
+    if (!choiceFixture) throw new Error("Missing choice-reference fixture.");
+
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async (xml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+      await player.loadXml(xml);
+
+      const diagnosticCodes: string[] = [];
+      player.addEventListener("qti-diagnostics", (event) => {
+        const detail = (event as CustomEvent<{ diagnostics: Array<{ code: string }> }>).detail;
+        diagnosticCodes.push(...detail.diagnostics.map((diagnostic) => diagnostic.code));
+      });
+
+      await player.loadXml("<not-valid-qti/>");
+
+      const snapshot = {
+        diagnosticCodes,
+        renderedCatalogReferences: player.getRenderedCatalogReferences().length,
+        score: player.scoreAttempt({ validateResponses: false }),
+        serialized: player.serialize(),
+        textContent: player.textContent ?? "",
+        textToSpeechTraversal: player.getTextToSpeechTraversal(),
+      };
+      player.remove();
+      return snapshot;
+    }, choiceFixture.xml);
+
+    expect(result.diagnosticCodes).toContain("qti.root");
+    expect(result.serialized).toBeUndefined();
+    expect(result.score).toBeUndefined();
+    expect(result.textToSpeechTraversal).toBeUndefined();
+    expect(result.renderedCatalogReferences).toBe(0);
+    expect(result.textContent).toContain("Unable to parse QTI item.");
+  });
+
   test("reports restore misuse as diagnostics instead of throwing", async ({ page }) => {
-    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+    const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
+    if (!choiceFixture) throw new Error("Missing choice-reference fixture.");
 
     await page.goto("/");
     await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
@@ -163,10 +232,11 @@ test.describe("player lifecycle", () => {
         beforeLoadDiagnostic,
         incompatibleStateDiagnostic: diagnostics.at(-1),
         restoreEvents,
+        serializedAfterIncompatibleRestore: player.serialize(),
       };
       player.remove();
       return snapshot;
-    }, choiceXml);
+    }, choiceFixture.xml);
 
     expect(result.beforeLoadDiagnostic).toEqual({
       diagnostics: [
@@ -187,53 +257,66 @@ test.describe("player lifecycle", () => {
       ],
     });
     expect(result.restoreEvents).toBe(0);
+    expect(result.serializedAfterIncompatibleRestore?.itemIdentifier).toBe(choiceFixture.id);
   });
 
   test("reports incompatible loadXml restored state as diagnostics instead of rejecting", async ({
     page,
   }) => {
-    const choiceXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
+    const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
+    if (!choiceFixture) throw new Error("Missing choice-reference fixture.");
+    const textEntryFixture = interactionFixtures.find(
+      (fixture) => fixture.id === "textEntry-reference",
+    );
+    if (!textEntryFixture) throw new Error("Missing textEntry-reference fixture.");
 
     await page.goto("/");
     await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
-    const result = await page.evaluate(async (xml) => {
-      const player = document.createElement("qti-assessment-item-player");
-      document.body.append(player);
-      await player.loadXml(xml);
-      const state = player.serialize();
-      if (!state) throw new Error("Expected loaded player state.");
+    const result = await page.evaluate(
+      async ({ firstXml, secondXml }) => {
+        const player = document.createElement("qti-assessment-item-player");
+        document.body.append(player);
+        await player.loadXml(firstXml);
+        const state = player.serialize();
+        if (!state) throw new Error("Expected loaded player state.");
 
-      const diagnostics: Array<{
-        diagnostics: Array<{ code: string; message: string; severity: string }>;
-      }> = [];
-      player.addEventListener("qti-diagnostics", (event) => {
-        diagnostics.push(
-          (
-            event as CustomEvent<{
-              diagnostics: Array<{ code: string; message: string; severity: string }>;
-            }>
-          ).detail,
-        );
-      });
-      await player.loadXml(xml, { state: { ...state, itemIdentifier: "other-item" } });
+        const diagnostics: Array<{
+          diagnostics: Array<{ code: string; message: string; severity: string }>;
+        }> = [];
+        player.addEventListener("qti-diagnostics", (event) => {
+          diagnostics.push(
+            (
+              event as CustomEvent<{
+                diagnostics: Array<{ code: string; message: string; severity: string }>;
+              }>
+            ).detail,
+          );
+        });
+        await player.loadXml(secondXml, { state });
 
-      const snapshot = {
-        diagnostic: diagnostics.at(-1),
-        textContent: player.textContent ?? "",
-      };
-      player.remove();
-      return snapshot;
-    }, choiceXml);
+        const snapshot = {
+          diagnostic: diagnostics.at(-1),
+          serialized: player.serialize(),
+          textContent: player.textContent ?? "",
+          textToSpeechTraversal: player.getTextToSpeechTraversal(),
+        };
+        player.remove();
+        return snapshot;
+      },
+      { firstXml: choiceFixture.xml, secondXml: textEntryFixture.xml },
+    );
 
     expect(result.diagnostic).toEqual({
       diagnostics: [
         expect.objectContaining({
           code: "player.restoreState",
-          message: "Cannot restore state for other-item into choice-reference.",
+          message: "Cannot restore state for choice-reference into textEntry-reference.",
           severity: "error",
         }),
       ],
     });
+    expect(result.serialized).toBeUndefined();
+    expect(result.textToSpeechTraversal).toBeUndefined();
     expect(result.textContent).toContain("Unable to restore QTI state.");
   });
 

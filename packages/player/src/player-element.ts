@@ -254,16 +254,21 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     }
   }
 
-  /** Clears the loaded item. Does not emit player events; declarative hosts control this via `xml`. */
-  clearItem(): void {
-    this.loadGeneration += 1;
+  private clearLoadedItemState(): void {
     this.disconnectAssetObserver();
     delete this.documentModel;
     delete this.session;
+    this.resolveAsset = undefined;
     this.resolvedStylesheets = [];
     this.validationMessages = [];
     this.authoringDiagnostics = [];
     this.catalogHost.clearItemState();
+  }
+
+  /** Clears the loaded item. Does not emit player events; declarative hosts control this via `xml`. */
+  clearItem(): void {
+    this.loadGeneration += 1;
+    this.clearLoadedItemState();
     this.replaceChildren();
   }
 
@@ -279,9 +284,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     try {
       xml = await fetchXml(url);
     } catch (error) {
-      if (!this.isCurrentLoad(generation)) return;
-      this.emitDiagnostics([playerErrorDiagnostic("player.loadUrl", error)]);
-      this.replaceChildren(errorView("Unable to load QTI item."));
+      this.transitionCurrentLoadToError(
+        generation,
+        [playerErrorDiagnostic("player.loadUrl", error)],
+        "Unable to load QTI item.",
+      );
       return;
     }
     if (!this.isCurrentLoad(generation)) return;
@@ -297,6 +304,17 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     return generation === this.loadGeneration;
   }
 
+  private transitionCurrentLoadToError(
+    generation: number,
+    diagnostics: QtiDiagnostic[],
+    message: string,
+  ): void {
+    if (!this.isCurrentLoad(generation)) return;
+    this.clearLoadedItemState();
+    this.replaceChildren(errorView(message));
+    this.emitDiagnostics(diagnostics);
+  }
+
   private async applyLoadedXml(
     generation: number,
     xml: string,
@@ -304,30 +322,35 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   ): Promise<void> {
     if (!this.isCurrentLoad(generation)) return;
 
-    this.sessionControl = {
+    const nextSessionControl: Required<QtiPlayerSessionControl> = {
       validateResponses: options.sessionControl?.validateResponses ?? true,
       showFeedback: options.sessionControl?.showFeedback ?? true,
     };
-    this.resolveAsset = options.resolveAsset;
+    const nextResolveAsset = options.resolveAsset;
 
     const result = parseQtiXml(xml);
-    const stylesheetResolution = result.document
-      ? resolvePlayerStylesheets(result.document.item.stylesheets, options.resolveStylesheet)
-      : { links: [], diagnostics: [] };
-    const playerDiagnostics = result.document
-      ? [
-          ...collectInteractionRenderDiagnostics(result.document.item.interactions),
-          ...collectEmbeddedInteractionDiagnostics(result.document.item),
-          ...stylesheetResolution.diagnostics,
-        ]
-      : [];
+    if (!this.isCurrentLoad(generation)) return;
+    if (!result.document) {
+      this.transitionCurrentLoadToError(
+        generation,
+        result.diagnostics,
+        "Unable to parse QTI item.",
+      );
+      return;
+    }
+
+    const nextDocumentModel = result.document;
+    const stylesheetResolution = resolvePlayerStylesheets(
+      nextDocumentModel.item.stylesheets,
+      options.resolveStylesheet,
+    );
+    const playerDiagnostics = [
+      ...collectInteractionRenderDiagnostics(nextDocumentModel.item.interactions),
+      ...collectEmbeddedInteractionDiagnostics(nextDocumentModel.item),
+      ...stylesheetResolution.diagnostics,
+    ];
     if (!this.isCurrentLoad(generation)) return;
 
-    this.dispatchEvent(
-      new CustomEvent("qti-diagnostics", {
-        detail: { diagnostics: [...result.diagnostics, ...playerDiagnostics] },
-      }),
-    );
     const loadTimeAuthoringDiagnostics = [
       ...result.diagnostics.filter(
         (diagnostic) => diagnostic.severity === "error" && isAuthoringDiagnostic(diagnostic),
@@ -337,39 +360,45 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     const serializedValidation = options.state?.validationMessages.length
       ? splitSerializedValidationMessages(options.state.validationMessages)
       : undefined;
-    this.authoringDiagnostics = cloneDiagnostics(
+    const nextAuthoringDiagnostics = cloneDiagnostics(
       serializedValidation
         ? [...loadTimeAuthoringDiagnostics, ...serializedValidation.authoringDiagnostics]
         : loadTimeAuthoringDiagnostics,
     );
-    if (!result.document) {
-      if (!this.isCurrentLoad(generation)) return;
-      this.replaceChildren(errorView("Unable to parse QTI item."));
-      return;
-    }
-
-    if (!this.isCurrentLoad(generation)) return;
-
-    this.documentModel = result.document;
-    this.resolvedStylesheets = stylesheetResolution.links;
-    try {
-      this.session = createItemSession(result.document, options.state);
-    } catch (error) {
-      if (!this.isCurrentLoad(generation)) return;
-      this.emitDiagnostics([playerErrorDiagnostic("player.restoreState", error)]);
-      this.replaceChildren(errorView("Unable to restore QTI state."));
-      return;
-    }
-    this.validationMessages = cloneDiagnostics(
+    const nextValidationMessages = cloneDiagnostics(
       serializedValidation
         ? serializedValidation.validationMessages
         : responseValidationMessages(options.state?.validationMessages ?? []),
     );
-    if (options.status) this.session.setStatus(options.status);
+
+    let nextSession: QtiItemSession;
+    try {
+      nextSession = createItemSession(nextDocumentModel, options.state);
+    } catch (error) {
+      this.transitionCurrentLoadToError(
+        generation,
+        [playerErrorDiagnostic("player.restoreState", error)],
+        "Unable to restore QTI state.",
+      );
+      return;
+    }
+    if (options.status) nextSession.setStatus(options.status);
+    if (!this.isCurrentLoad(generation)) return;
+
+    this.emitDiagnostics([...result.diagnostics, ...playerDiagnostics]);
+    if (!this.isCurrentLoad(generation)) return;
+
+    this.sessionControl = nextSessionControl;
+    this.resolveAsset = nextResolveAsset;
+    this.documentModel = nextDocumentModel;
+    this.session = nextSession;
+    this.resolvedStylesheets = stylesheetResolution.links;
+    this.authoringDiagnostics = nextAuthoringDiagnostics;
+    this.validationMessages = nextValidationMessages;
     this.render();
     this.renderValidationMessages();
     this.updateAttemptAvailability();
-    this.dispatchPlayerEvent("qti-ready", { item: result.document.item });
+    this.dispatchPlayerEvent("qti-ready", { item: nextDocumentModel.item });
     this.emitStateChange();
   }
 
