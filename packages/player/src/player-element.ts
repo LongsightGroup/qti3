@@ -116,28 +116,29 @@ function observeResolvedAssets(
   return observer;
 }
 
+interface LoadedPlayerItem {
+  readonly document: QtiDocument;
+  session: QtiItemSession;
+  readonly resolveAsset: QtiPlayerResolveAsset | undefined;
+  readonly stylesheets: QtiResolvedStylesheet[];
+  readonly sessionControl: Required<QtiPlayerSessionControl>;
+  readonly authoringDiagnostics: QtiDiagnostic[];
+  validationMessages: QtiDiagnostic[];
+}
+
 export class QtiAssessmentItemPlayer extends PlayerElementHost {
   static get observedAttributes(): string[] {
     return ["data-keyword-emphasis", "language-of-interface", "locale"];
   }
 
-  private documentModel?: QtiDocument;
-  private session?: QtiItemSession;
-  private resolveAsset: QtiPlayerResolveAsset | undefined;
-  private resolvedStylesheets: QtiResolvedStylesheet[] = [];
+  private loadedItem: LoadedPlayerItem | undefined;
   private assetObserver: MutationObserver | undefined;
-  private validationMessages: QtiDiagnostic[] = [];
-  private authoringDiagnostics: QtiDiagnostic[] = [];
   private languageOfInterfaceOverride: string | undefined;
   private keywordEmphasisOverride: boolean | undefined;
   private readonly catalogHost = new CatalogHost();
   private messageCatalogOverride: PlayerMessageCatalog | undefined;
   private messageOverrides: QtiPlayerMessageOverrides = {};
   private resolvedMessagesCache: PlayerMessageResolver | undefined;
-  private sessionControl: Required<QtiPlayerSessionControl> = {
-    validateResponses: true,
-    showFeedback: true,
-  };
   private loadGeneration = 0;
 
   get languageOfInterface(): string {
@@ -256,12 +257,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
 
   private clearLoadedItemState(): void {
     this.disconnectAssetObserver();
-    delete this.documentModel;
-    delete this.session;
-    this.resolveAsset = undefined;
-    this.resolvedStylesheets = [];
-    this.validationMessages = [];
-    this.authoringDiagnostics = [];
+    this.loadedItem = undefined;
     this.catalogHost.clearItemState();
   }
 
@@ -326,8 +322,6 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       validateResponses: options.sessionControl?.validateResponses ?? true,
       showFeedback: options.sessionControl?.showFeedback ?? true,
     };
-    const nextResolveAsset = options.resolveAsset;
-
     const result = parseQtiXml(xml);
     if (!this.isCurrentLoad(generation)) return;
     if (!result.document) {
@@ -371,6 +365,9 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         : responseValidationMessages(options.state?.validationMessages ?? []),
     );
 
+    this.emitDiagnostics([...result.diagnostics, ...playerDiagnostics]);
+    if (!this.isCurrentLoad(generation)) return;
+
     let nextSession: QtiItemSession;
     try {
       nextSession = createItemSession(nextDocumentModel, options.state);
@@ -385,16 +382,15 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     if (options.status) nextSession.setStatus(options.status);
     if (!this.isCurrentLoad(generation)) return;
 
-    this.emitDiagnostics([...result.diagnostics, ...playerDiagnostics]);
-    if (!this.isCurrentLoad(generation)) return;
-
-    this.sessionControl = nextSessionControl;
-    this.resolveAsset = nextResolveAsset;
-    this.documentModel = nextDocumentModel;
-    this.session = nextSession;
-    this.resolvedStylesheets = stylesheetResolution.links;
-    this.authoringDiagnostics = nextAuthoringDiagnostics;
-    this.validationMessages = nextValidationMessages;
+    this.loadedItem = {
+      document: nextDocumentModel,
+      session: nextSession,
+      resolveAsset: options.resolveAsset,
+      stylesheets: stylesheetResolution.links,
+      sessionControl: nextSessionControl,
+      authoringDiagnostics: nextAuthoringDiagnostics,
+      validationMessages: nextValidationMessages,
+    };
     this.render();
     this.renderValidationMessages();
     this.updateAttemptAvailability();
@@ -403,14 +399,14 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   scoreAttempt(options: QtiScoreAttemptOptions = {}): QtiScoreResult | undefined {
-    const session = this.session;
-    if (!session) return undefined;
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return undefined;
     const shouldValidateResponses =
-      options.validateResponses ?? this.sessionControl.validateResponses;
+      options.validateResponses ?? loadedItem.sessionControl.validateResponses;
     const responseValidation = shouldValidateResponses ? this.validateResponses() : [];
-    const validationMessages = [...this.authoringDiagnostics, ...responseValidation];
+    const validationMessages = [...loadedItem.authoringDiagnostics, ...responseValidation];
     if (validationMessages.length > 0) {
-      this.validationMessages = cloneDiagnostics(responseValidation);
+      loadedItem.validationMessages = cloneDiagnostics(responseValidation);
       this.renderValidationMessages();
       const state = this.serialize();
       if (!state) return undefined;
@@ -421,21 +417,22 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       this.emitStateChange(state);
       return undefined;
     }
-    this.validationMessages = [];
+    loadedItem.validationMessages = [];
     this.renderValidationMessages();
-    const result = session.score();
+    const result = loadedItem.session.score();
     this.dispatchPlayerEvent("qti-score", result);
     this.updateDynamicBodyState();
     this.updateAttemptAvailability();
-    if (this.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
+    if (loadedItem.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
     this.emitStateChange(result.state);
     return result;
   }
 
   reset(): void {
-    if (!this.documentModel) return;
-    this.session = createItemSession(this.documentModel);
-    this.validationMessages = [];
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
+    loadedItem.session = createItemSession(loadedItem.document);
+    loadedItem.validationMessages = [];
     this.render();
     this.updateAttemptAvailability();
     this.dispatchEvent(new CustomEvent("qti-reset", { detail: { state: this.serialize() } }));
@@ -443,7 +440,8 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   restore(state: QtiAttemptStateV1): void {
-    if (!this.documentModel) {
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) {
       this.emitDiagnostics([
         {
           code: "player.restoreState",
@@ -455,17 +453,17 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     }
     try {
       assertQtiAttemptStateV1(state);
-      if (state.itemIdentifier !== this.documentModel.item.identifier) {
+      if (state.itemIdentifier !== loadedItem.document.item.identifier) {
         throw new Error(
-          `Cannot restore state for ${state.itemIdentifier} into ${this.documentModel.item.identifier}.`,
+          `Cannot restore state for ${state.itemIdentifier} into ${loadedItem.document.item.identifier}.`,
         );
       }
-      this.session = createItemSession(this.documentModel, state);
+      loadedItem.session = createItemSession(loadedItem.document, state);
     } catch (error) {
       this.emitDiagnostics([playerErrorDiagnostic("player.restoreState", error)]);
       return;
     }
-    this.validationMessages = cloneDiagnostics(
+    loadedItem.validationMessages = cloneDiagnostics(
       responseValidationMessages(state.validationMessages),
     );
     this.render();
@@ -476,8 +474,9 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   suspend(): void {
-    if (!this.session) return;
-    this.session.setStatus("suspended");
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
+    loadedItem.session.setStatus("suspended");
     this.updateAttemptAvailability();
     const state = this.serialize();
     if (!state) return;
@@ -488,11 +487,13 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   endAttempt(options: QtiScoreAttemptOptions = {}): void {
     const result = this.scoreAttempt(options);
     if (!result) return;
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
     if (
-      !this.documentModel?.item.adaptive ||
+      !loadedItem.document.item.adaptive ||
       result.state.outcomes.completionStatus === "completed"
     ) {
-      this.session?.setStatus("completed");
+      loadedItem.session.setStatus("completed");
     }
     this.updateAttemptAvailability();
     const state = this.serialize();
@@ -502,39 +503,47 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   serialize(): QtiAttemptStateV1 | undefined {
-    const state = this.session?.serialize();
-    if (state) {
-      state.validationMessages = cloneDiagnostics(
-        mergeVisibleValidationMessages(this.authoringDiagnostics, this.validationMessages),
-      );
-    }
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return undefined;
+    const state = loadedItem.session.serialize();
+    state.validationMessages = cloneDiagnostics(
+      mergeVisibleValidationMessages(
+        loadedItem.authoringDiagnostics,
+        loadedItem.validationMessages,
+      ),
+    );
     return state;
   }
 
   getTextToSpeechTraversal(): QtiTextToSpeechTraversal | undefined {
-    if (!this.documentModel) return undefined;
-    return createTextToSpeechTraversal(this.documentModel);
+    if (!this.loadedItem) return undefined;
+    return createTextToSpeechTraversal(this.loadedItem.document);
   }
 
   getCatalogSupportResolution(
     options: QtiCatalogSupportResolutionOptions = {},
   ): QtiCatalogSupportResolution | undefined {
-    if (!this.documentModel) return undefined;
-    return createCatalogSupportResolution(this.documentModel, options);
+    if (!this.loadedItem) return undefined;
+    return createCatalogSupportResolution(this.loadedItem.document, options);
   }
 
   /** Returns sanitized, asset-resolved catalog data for explicit support and language options. */
   getCatalogDeliveryResolution(
     options: QtiCatalogSupportResolutionOptions = {},
   ): QtiCatalogDeliveryResolution | undefined {
-    if (!this.documentModel) return undefined;
-    return this.catalogHost.getDeliveryResolution(this.documentModel, this.resolveAsset, options);
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return undefined;
+    return this.catalogHost.getDeliveryResolution(
+      loadedItem.document,
+      loadedItem.resolveAsset,
+      options,
+    );
   }
 
   /** Returns exact live element bindings for rendered authored catalog references. */
   getRenderedCatalogReferences(): QtiRenderedCatalogReference[] {
-    if (!this.documentModel) return [];
-    return this.catalogHost.getRenderedReferences(this.documentModel);
+    if (!this.loadedItem) return [];
+    return this.catalogHost.getRenderedReferences(this.loadedItem.document);
   }
 
   /** Requests host presentation for one live reference when it matches the configured policy. */
@@ -542,10 +551,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     referenceId: string,
     activation: QtiCatalogRequestActivation = "programmatic",
   ): boolean {
-    if (!this.documentModel || this.catalogRequestsDisabled()) return false;
+    const loadedItem = this.loadedItem;
+    if (!loadedItem || this.catalogRequestsDisabled()) return false;
     return this.catalogHost.requestCatalog(
-      this.documentModel,
-      this.resolveAsset,
+      loadedItem.document,
+      loadedItem.resolveAsset,
       referenceId,
       activation,
       (detail) => this.dispatchPlayerEvent("qti-catalogrequest", detail),
@@ -555,10 +565,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   getCompanionMaterialsResolution(
     options: QtiCompanionMaterialsResolutionOptions = {},
   ): QtiCompanionMaterialsResolution | undefined {
-    if (!this.documentModel) return undefined;
-    return createCompanionMaterialsResolution(this.documentModel, {
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return undefined;
+    return createCompanionMaterialsResolution(loadedItem.document, {
       ...options,
-      resolveAsset: options.resolveAsset ?? this.resolveAsset,
+      resolveAsset: options.resolveAsset ?? loadedItem.resolveAsset,
     });
   }
 
@@ -594,28 +605,28 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private rerenderIfLoaded(): void {
-    if (!this.documentModel) return;
+    if (!this.loadedItem) return;
     this.render();
     this.renderValidationMessages();
     this.updateAttemptAvailability();
   }
 
   private render(): void {
-    const documentModel = this.documentModel;
-    if (!documentModel) return;
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
 
-    this.catalogHost.beginRender(documentModel);
+    this.catalogHost.beginRender(loadedItem.document);
     this.applyDefaultStyles();
     const root = renderPlayerShell({
-      documentModel,
+      documentModel: loadedItem.document,
       contentContext: this.contentContext(),
       renderStandaloneInteraction: (interaction) => this.renderInteraction(interaction),
       keywordEmphasisEnabled: this.keywordEmphasisEnabled,
-      stylesheets: this.resolvedStylesheets,
+      stylesheets: loadedItem.stylesheets,
     });
     this.catalogHost.installRequestControls(
-      documentModel,
-      this.resolveAsset,
+      loadedItem.document,
+      loadedItem.resolveAsset,
       this.playerMessages(),
       (detail) => {
         if (this.catalogRequestsDisabled()) return;
@@ -623,9 +634,9 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       },
     );
     this.disconnectAssetObserver();
-    if (this.resolveAsset) {
-      resolveRenderedAssets(root, this.resolveAsset);
-      this.assetObserver = observeResolvedAssets(root, this.resolveAsset);
+    if (loadedItem.resolveAsset) {
+      resolveRenderedAssets(root, loadedItem.resolveAsset);
+      this.assetObserver = observeResolvedAssets(root, loadedItem.resolveAsset);
     }
     this.replaceChildren(root);
   }
@@ -651,7 +662,8 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   ): (value: QtiValue) => void {
     return (value) => {
       if (this.attemptIsCompleted()) return;
-      if (!responseIdentifier || !this.session) return;
+      const loadedItem = this.loadedItem;
+      if (!responseIdentifier || !loadedItem) return;
       const maximum = maximumAllowedResponses(interaction);
       if (maximum !== undefined && responseCount(value) > maximum) {
         this.applyInlineValidation(
@@ -661,7 +673,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         );
         return;
       }
-      this.session.respond(responseIdentifier, value);
+      loadedItem.session.respond(responseIdentifier, value);
       this.applyInlineValidation(responseIdentifier, undefined);
       this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
       this.emitStateChange();
@@ -669,9 +681,9 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private contentContext(): PlayerContentContext {
-    const sessionState = () => this.session?.serialize();
+    const sessionState = () => this.loadedItem?.session.serialize();
     return {
-      interactionAt: (index) => this.documentModel?.item.interactions[index],
+      interactionAt: (index) => this.loadedItem?.document.item.interactions[index],
       renderBlockInteraction: (interaction) => this.renderInteraction(interaction),
       renderEmbeddedInteraction: (embeddedInteraction) => {
         const responseIdentifier = embeddedInteraction.responseIdentifier;
@@ -688,7 +700,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         const identifier = contentNodeText(node).trim();
         return mathTemplateValue(
           node,
-          this.documentModel,
+          this.loadedItem?.document,
           identifier ? currentTemplateValue(sessionState(), identifier) : null,
         );
       },
@@ -707,7 +719,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private catalogRequestsDisabled(): boolean {
-    const status = this.session?.serialize().status ?? "unloaded";
+    const status = this.loadedItem?.session.serialize().status ?? "unloaded";
     return isCatalogRequestDisabled(status, this.attemptIsCompleted());
   }
 
@@ -726,7 +738,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         : undefined,
       renderMarkup: (nodes) => renderContentNodes(nodes, this.contentContext()),
       setInteractionState: (identifier, state) =>
-        this.session?.setInteractionState(identifier, state),
+        this.loadedItem?.session.setInteractionState(identifier, state),
       setValidity: (identifier, valid, message) => {
         const diagnostic = portableCustomValidityDiagnostic(identifier, valid, message);
         this.applyInlineValidation(identifier, diagnostic);
@@ -737,7 +749,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private updateDynamicBodyState(): void {
-    const sessionState = this.session?.serialize();
+    const sessionState = this.loadedItem?.session.serialize();
     syncDynamicBodyState(this, {
       variableValue: (identifier) => currentVariableValue(sessionState, identifier),
       templateValue: (identifier) => currentTemplateValue(sessionState, identifier),
@@ -747,21 +759,21 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   private updateAttemptAvailability(): void {
     syncAttemptAvailability(this, {
       completed: this.attemptIsCompleted(),
-      status: this.session?.serialize().status ?? "unloaded",
+      status: this.loadedItem?.session.serialize().status ?? "unloaded",
       host: this,
     });
   }
 
   private attemptIsCompleted(): boolean {
-    return this.session?.serialize().status === "completed";
+    return this.loadedItem?.session.serialize().status === "completed";
   }
 
   private currentResponseValue(identifier: string): QtiValue {
-    return this.session?.serialize().responses[identifier] ?? null;
+    return this.loadedItem?.session.serialize().responses[identifier] ?? null;
   }
 
   private currentInteractionState(identifier: string): QtiPortableCustomStateValue | undefined {
-    return this.session?.serialize().interactionStates?.[identifier];
+    return this.loadedItem?.session.serialize().interactionStates?.[identifier];
   }
 
   private applyInlineValidation(
@@ -774,8 +786,10 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       if (options.emitState) this.emitStateChange();
       return;
     }
-    this.validationMessages = [
-      ...this.validationMessages.filter((entry) => entry.path !== responseIdentifier),
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
+    loadedItem.validationMessages = [
+      ...loadedItem.validationMessages.filter((entry) => entry.path !== responseIdentifier),
       { ...diagnostic, path: responseIdentifier },
     ];
     this.renderValidationMessages();
@@ -789,9 +803,9 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private validateResponses(): QtiDiagnostic[] {
-    const state = this.session?.serialize();
-    if (!state || !this.documentModel) return [];
-    return validateItemResponses(this.documentModel, state, {
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return [];
+    return validateItemResponses(loadedItem.document, loadedItem.session.serialize(), {
       responseIdentifiers: this.visibleInteractionResponseIdentifiers(),
     });
   }
@@ -808,7 +822,12 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private visibleValidationMessages(): QtiDiagnostic[] {
-    return mergeVisibleValidationMessages(this.authoringDiagnostics, this.validationMessages);
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return [];
+    return mergeVisibleValidationMessages(
+      loadedItem.authoringDiagnostics,
+      loadedItem.validationMessages,
+    );
   }
 
   private renderValidationMessages(): void {
@@ -816,19 +835,21 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private clearValidationMessage(responseIdentifier: string): void {
-    const before = this.validationMessages.length;
-    this.validationMessages = this.validationMessages.filter(
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
+    const before = loadedItem.validationMessages.length;
+    loadedItem.validationMessages = loadedItem.validationMessages.filter(
       (message) => message.path !== responseIdentifier,
     );
-    if (this.validationMessages.length !== before) this.renderValidationMessages();
+    if (loadedItem.validationMessages.length !== before) this.renderValidationMessages();
   }
 
   private renderFeedback(outcomes: Record<string, QtiValue>): void {
-    const documentModel = this.documentModel;
-    if (!documentModel) return;
+    const loadedItem = this.loadedItem;
+    if (!loadedItem) return;
     syncFeedbackPanel(
       this.querySelector<HTMLElement>(".qti3-feedback"),
-      documentModel.item,
+      loadedItem.document.item,
       outcomes,
     );
   }

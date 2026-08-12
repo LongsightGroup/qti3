@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/src/index.js";
+import { UNSUPPORTED_INTERACTION_ITEM } from "./fixtures/dom-behavior-items.js";
 import { loadFixture, pasteXml } from "./player-helpers.js";
 
 test.describe("player lifecycle", () => {
@@ -265,10 +266,6 @@ test.describe("player lifecycle", () => {
   }) => {
     const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
     if (!choiceFixture) throw new Error("Missing choice-reference fixture.");
-    const textEntryFixture = interactionFixtures.find(
-      (fixture) => fixture.id === "textEntry-reference",
-    );
-    if (!textEntryFixture) throw new Error("Missing textEntry-reference fixture.");
 
     await page.goto("/");
     await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
@@ -295,7 +292,7 @@ test.describe("player lifecycle", () => {
         await player.loadXml(secondXml, { state });
 
         const snapshot = {
-          diagnostic: diagnostics.at(-1),
+          diagnostics,
           serialized: player.serialize(),
           textContent: player.textContent ?? "",
           textToSpeechTraversal: player.getTextToSpeechTraversal(),
@@ -303,14 +300,23 @@ test.describe("player lifecycle", () => {
         player.remove();
         return snapshot;
       },
-      { firstXml: choiceFixture.xml, secondXml: textEntryFixture.xml },
+      { firstXml: choiceFixture.xml, secondXml: UNSUPPORTED_INTERACTION_ITEM },
     );
 
-    expect(result.diagnostic).toEqual({
+    expect(result.diagnostics).toHaveLength(2);
+    expect(result.diagnostics.at(0)).toEqual({
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({
+          code: "interaction.unsupported",
+          severity: "warning",
+        }),
+      ]),
+    });
+    expect(result.diagnostics.at(1)).toEqual({
       diagnostics: [
         expect.objectContaining({
           code: "player.restoreState",
-          message: "Cannot restore state for choice-reference into textEntry-reference.",
+          message: "Cannot restore state for choice-reference into unsupported-interaction.",
           severity: "error",
         }),
       ],
