@@ -13,19 +13,6 @@ import { scalarString } from "./text-value.js";
 import { wireTextControlConstraints } from "./text-control-constraints.js";
 import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
 
-function coerceResponseInputValue(
-  value: string,
-  baseType: QtiInteraction["responseBaseType"],
-): QtiValue {
-  if (baseType === "integer") return Number.parseInt(value, 10);
-  if (baseType === "float") return Number.parseFloat(value);
-  if (baseType === "boolean") {
-    if (value === "true") return true;
-    if (value === "false") return false;
-  }
-  return value;
-}
-
 function applyExpectedTextEntryWidth(
   control: HTMLInputElement | HTMLTextAreaElement,
   expectedLength: number,
@@ -130,36 +117,5 @@ export function renderInlineTextEntry(
   input.addEventListener("change", () => sync());
   sync(false);
   appendInOrder(group, input, patternMaskMessage);
-  return group;
-}
-
-export function renderSliderResponse(
-  interaction: QtiInteraction,
-  update: (value: QtiValue) => void,
-  currentValue: QtiValue,
-  messages: PlayerMessageResolver,
-): HTMLElement {
-  const regions = createQtiInteractionRegionMarkers(interaction);
-  const group = document.createElement("div");
-  group.className = "qti3-slider-response";
-  const input = document.createElement("input");
-  input.type = "range";
-  input.min = interaction.attributes["lower-bound"] ?? "0";
-  input.max = interaction.attributes["upper-bound"] ?? "100";
-  input.step = interaction.attributes.step ?? "1";
-  input.value = scalarString(currentValue) || interaction.attributes["lower-bound"] || "0";
-  regions.control(input);
-  input.setAttribute("aria-label", interaction.prompt ?? messages.message("sliderResponseLabel"));
-  const output = document.createElement("output");
-  output.className = "qti3-slider-output";
-  output.value = input.value;
-  output.textContent = input.value;
-  const sync = () => {
-    output.value = input.value;
-    output.textContent = input.value;
-    update(coerceResponseInputValue(input.value, interaction.responseBaseType));
-  };
-  input.addEventListener("input", sync);
-  group.append(input, output);
   return group;
 }

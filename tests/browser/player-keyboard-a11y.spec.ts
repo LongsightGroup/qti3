@@ -10,6 +10,7 @@ import {
 } from "./player-helpers.js";
 import { loadSvMatrixItem } from "./shared-vocabulary-matrix/load.js";
 import { sharedVocabularyManifest } from "./shared-vocabulary-matrix/manifest.js";
+import { sliderItem } from "./fixtures/slider-items.js";
 
 const MATCH_TABULAR_SHARED_VOCABULARY_ITEM = `
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="keyboard-match-tabular-shared-vocabulary" title="keyboard-match-tabular-shared-vocabulary" time-dependent="false">
@@ -104,6 +105,71 @@ test.describe("player keyboard and accessibility", () => {
     await page.locator("qti-assessment-item-player .qti3-drawing-surface").focus();
     await page.keyboard.press("Enter");
     await expectStringResponse(page, /^data:image\/svg\+xml;charset=utf-8,/);
+  });
+
+  test("uses physical keyboard direction for vertical and reversed sliders", async ({ page }) => {
+    await page.goto("/");
+
+    await pasteXml(
+      page,
+      sliderItem({
+        identifier: "vertical-slider-keyboard",
+        attributes: 'lower-bound="0" upper-bound="8" step="1" orientation="vertical"',
+        prompt: "Choose a level.",
+      }),
+    );
+    let slider = page.locator('qti-assessment-item-player input[type="range"]');
+    await slider.focus();
+    await page.keyboard.press("ArrowUp");
+    await expectResponse(page, 1);
+    await expect(page.locator("qti-assessment-item-player output")).toHaveText("1");
+
+    await pasteXml(
+      page,
+      sliderItem({
+        identifier: "vertical-reversed-slider-keyboard",
+        attributes:
+          'lower-bound="0" upper-bound="8" step="1" orientation="vertical" reverse="true"',
+        prompt: "Choose a reversed level.",
+      }),
+    );
+    slider = page.locator('qti-assessment-item-player input[type="range"]');
+    await slider.focus();
+    await page.keyboard.press("ArrowDown");
+    await expectResponse(page, 1);
+
+    await pasteXml(
+      page,
+      sliderItem({
+        identifier: "horizontal-reversed-slider-keyboard",
+        attributes: 'lower-bound="0" upper-bound="8" step="1" reverse="true"',
+        prompt: "Choose a reversed value.",
+      }),
+    );
+    slider = page.locator('qti-assessment-item-player input[type="range"]');
+    await slider.focus();
+    await page.keyboard.press("ArrowLeft");
+    await expectResponse(page, 1);
+  });
+
+  test("commits a boundary value even when the native range does not move", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      sliderItem({
+        identifier: "slider-lower-bound",
+        attributes: 'lower-bound="0" upper-bound="8" step="1"',
+        prompt: "Choose a value, including zero.",
+      }),
+    );
+
+    const slider = page.locator('qti-assessment-item-player input[type="range"]');
+    await expectResponse(page, undefined);
+    await slider.focus();
+    await page.keyboard.press("Home");
+    await expectResponse(page, 0);
+    await expect(slider).not.toHaveAttribute("aria-valuetext");
+    await expect(page.locator("qti-assessment-item-player output")).toHaveText("0");
   });
 
   test("supports keyboard-only response entry for remaining fixture controls", async ({ page }) => {

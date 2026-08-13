@@ -9,6 +9,7 @@ import type {
 } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import { isValidQtiPatternMask } from "./pattern-mask.js";
+import { parseQtiSliderDefinition } from "./slider-definition.js";
 import { validateInteractionSharedVocabulary } from "./shared-vocabulary-interaction-validation.js";
 import { qtiValueToStringList } from "./value-format.js";
 import {
@@ -17,7 +18,6 @@ import {
 } from "./validation-geometry.js";
 import {
   isBooleanAttribute,
-  isFiniteNumber,
   isNonNegativeInteger,
   requireIdentifier,
 } from "./validation-primitives.js";
@@ -104,7 +104,11 @@ function validateInteractionResponseShape(
     });
   }
 
-  if (interaction.responseBaseType && !expected.baseTypes.includes(interaction.responseBaseType)) {
+  if (
+    interaction.type !== "slider" &&
+    interaction.responseBaseType &&
+    !expected.baseTypes.includes(interaction.responseBaseType)
+  ) {
     diagnostics.push({
       code: "interaction.baseType",
       severity: "error",
@@ -305,46 +309,8 @@ function validateInteractionRequiredAttributes(
   }
 
   if (interaction.type === "slider") {
-    const lower = interaction.attributes["lower-bound"];
-    const upper = interaction.attributes["upper-bound"];
-    requireInteractionAttribute(
-      interaction,
-      "lower-bound",
-      "interaction.slider.lowerBound",
-      diagnostics,
-    );
-    requireInteractionAttribute(
-      interaction,
-      "upper-bound",
-      "interaction.slider.upperBound",
-      diagnostics,
-    );
-    if (lower !== undefined && !isFiniteNumber(lower)) {
-      invalidNumber(interaction, "lower-bound", lower, diagnostics);
-    }
-    if (upper !== undefined && !isFiniteNumber(upper)) {
-      invalidNumber(interaction, "upper-bound", upper, diagnostics);
-    }
-    if (
-      lower !== undefined &&
-      upper !== undefined &&
-      isFiniteNumber(lower) &&
-      isFiniteNumber(upper)
-    ) {
-      if (Number(lower) >= Number(upper)) {
-        diagnostics.push({
-          code: "interaction.slider.bounds",
-          severity: "error",
-          message: `${interaction.qtiName} requires lower-bound to be less than upper-bound.`,
-          path: interaction.source?.path,
-          source: interaction.source,
-        });
-      }
-    }
-    const step = interaction.attributes.step;
-    if (step !== undefined && (!isFiniteNumber(step) || Number(step) <= 0)) {
-      invalidNumber(interaction, "step", step, diagnostics);
-    }
+    const definition = parseQtiSliderDefinition(interaction);
+    if (!definition.ok) diagnostics.push(...definition.diagnostics);
   }
 }
 
@@ -494,21 +460,6 @@ function warnExternalPortableCustomUrl(
     message: `Portable custom interaction module URL ${url} requires host delivery policy approval.`,
     path: source?.path,
     source,
-  });
-}
-
-function invalidNumber(
-  interaction: QtiInteraction,
-  attribute: string,
-  value: string,
-  diagnostics: QtiDiagnostic[],
-): void {
-  diagnostics.push({
-    code: "interaction.numericAttribute",
-    severity: "error",
-    message: `${interaction.qtiName} requires numeric ${attribute}, got ${value}.`,
-    path: interaction.source?.path,
-    source: interaction.source,
   });
 }
 

@@ -1,6 +1,5 @@
-export const TEXT_SLIDER_PLAYER_STYLES = `
-.qti3-text-response,
-.qti3-slider-response {
+export const TEXT_PLAYER_STYLES = `
+.qti3-text-response {
   display: grid;
   gap: 0.4rem;
   max-inline-size: 42rem;
@@ -28,7 +27,6 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
 }
 
 .qti3-counter,
-.qti3-slider-output,
 .qti3-pattern-mask-message {
   margin: 0;
   font-size: 0.9rem;
@@ -42,8 +40,4 @@ export const TEXT_SLIDER_PLAYER_STYLES = `
   display: block;
 }
 
-.qti3-slider-response {
-  grid-template-columns: minmax(8rem, 1fr) auto;
-  align-items: center;
-}
 `.trim();

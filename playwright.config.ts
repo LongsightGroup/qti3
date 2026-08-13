@@ -20,5 +20,15 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "firefox-slider",
+      testMatch: "**/player-slider-cross-browser.spec.ts",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit-slider",
+      testMatch: "**/player-slider-cross-browser.spec.ts",
+      use: { ...devices["Desktop Safari"] },
+    },
   ],
 });

@@ -85,6 +85,13 @@ export {
 export { detectPackageMediaType } from "./qti-package-assets.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4, parseXmlBoolean } from "./parser-values.js";
+export {
+  parseQtiSliderDefinition,
+  type QtiSliderDefinition,
+  type QtiSliderDefinitionResult,
+  type QtiSliderOrientation,
+  type QtiSliderStep,
+} from "./slider-definition.js";
 export { collectQtiResponseProcessingExpressions } from "./processing-expression-collection.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
 export {
