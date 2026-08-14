@@ -9,6 +9,7 @@ import type {
 } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import { isValidQtiPatternMask } from "./pattern-mask.js";
+import { parseQtiMediaDefinition } from "./media-definition.js";
 import { parseQtiSliderDefinition } from "./slider-definition.js";
 import { validateInteractionSharedVocabulary } from "./shared-vocabulary-interaction-validation.js";
 import { qtiValueToStringList } from "./value-format.js";
@@ -312,6 +313,11 @@ function validateInteractionRequiredAttributes(
     const definition = parseQtiSliderDefinition(interaction);
     if (!definition.ok) diagnostics.push(...definition.diagnostics);
   }
+
+  if (interaction.type === "media") {
+    const definition = parseQtiMediaDefinition(interaction);
+    if (!definition.ok) diagnostics.push(...definition.diagnostics);
+  }
 }
 
 function requiresObject(interaction: QtiInteraction): boolean {
@@ -493,13 +499,6 @@ function validateInteractionLimitAttributes(
   validateMinMaxPair(interaction, "min-choices", "max-choices", diagnostics);
   validateMinMaxPair(interaction, "min-associations", "max-associations", diagnostics);
   validateBooleanAttribute(interaction, "required", diagnostics);
-  if (interaction.type === "media") {
-    validateNonNegativeIntegerAttribute(interaction, "max-plays", diagnostics);
-    validateNonNegativeIntegerAttribute(interaction, "min-plays", diagnostics);
-    validateBooleanAttribute(interaction, "autostart", diagnostics);
-    validateBooleanAttribute(interaction, "loop", diagnostics);
-    validateMinMaxPair(interaction, "min-plays", "max-plays", diagnostics);
-  }
 }
 
 function validateChoiceLimitAttributes(choice: QtiChoice, diagnostics: QtiDiagnostic[]): void {

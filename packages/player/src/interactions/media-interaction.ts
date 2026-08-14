@@ -1,18 +1,18 @@
 import {
+  applyQtiMediaPlaybackEvent,
   mediaPlayerControlsTokens,
+  parseQtiMediaDefinition,
+  qtiMediaAllowsNativeLoop,
   type QtiInteraction,
+  type QtiMediaDefinition,
+  type QtiMediaPlaySession,
   type QtiObjectAsset,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 import { objectIsImage } from "../interaction-support.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
-import { maximumMediaPlays, mediaPlayCount } from "../response-limits.js";
-
-function parseBooleanAttribute(value: string | undefined): boolean | undefined {
-  if (value === "true" || value === "1") return true;
-  if (value === "false" || value === "0") return false;
-  return undefined;
-}
+import { errorView } from "../player-validation.js";
+import { mediaPlayCount } from "../response-limits.js";
 
 export interface MediaResponseBinding {
   currentValue?: QtiValue | undefined;
@@ -20,10 +20,23 @@ export interface MediaResponseBinding {
   isCompleted?: (() => boolean) | undefined;
 }
 
-export function renderObjectAsset(
+function invalidMediaView(interaction: QtiInteraction): HTMLElement {
+  const alert = errorView(
+    interaction.responseIdentifier
+      ? `Media interaction (${interaction.responseIdentifier}) has invalid authored attributes.`
+      : "Media interaction has invalid authored attributes.",
+  );
+  alert.classList.add("qti3-media-invalid");
+  return alert;
+}
+
+export function renderMediaResponse(
   interaction: QtiInteraction,
   mediaResponse: MediaResponseBinding = {},
 ): HTMLElement {
+  const definition = parseQtiMediaDefinition(interaction);
+  if (!definition.ok) return invalidMediaView(interaction);
+
   const regions = createQtiInteractionRegionMarkers(interaction);
   const object = interaction.object;
   const label = interaction.prompt ?? object?.text ?? "Media interaction";
@@ -31,7 +44,7 @@ export function renderObjectAsset(
 
   if (object && mediaType === "audio") {
     const audio = document.createElement("audio");
-    configureMediaElement(audio, interaction, object, label, mediaResponse);
+    configureMediaElement(audio, interaction, object, label, definition.value, mediaResponse);
     regions.control(audio);
     audio.style.inlineSize = "100%";
     return audio;
@@ -39,7 +52,7 @@ export function renderObjectAsset(
 
   if (object && mediaType === "video") {
     const video = document.createElement("video");
-    configureMediaElement(video, interaction, object, label, mediaResponse);
+    configureMediaElement(video, interaction, object, label, definition.value, mediaResponse);
     regions.control(video);
     if (object.width) video.width = Number(object.width);
     if (object.height) video.height = Number(object.height);
@@ -79,12 +92,13 @@ function configureMediaElement(
   interaction: QtiInteraction,
   object: QtiObjectAsset,
   label: string,
+  definition: QtiMediaDefinition,
   mediaResponse: MediaResponseBinding,
 ): void {
   media.controls = mediaControlsMode(interaction, object) !== "none";
   media.preload = "none";
-  media.autoplay = parseBooleanAttribute(interaction.attributes.autostart) ?? false;
-  media.loop = parseBooleanAttribute(interaction.attributes.loop) ?? false;
+  media.autoplay = definition.autostart;
+  media.loop = qtiMediaAllowsNativeLoop(definition);
   media.setAttribute("aria-label", label);
   media.style.maxInlineSize = "100%";
   copyMediaDataAttributes(media, interaction.attributes);
@@ -112,7 +126,7 @@ function configureMediaElement(
   }
 
   bindMediaPauseTiming(media, interaction, object);
-  bindMediaPlayCount(media, interaction, mediaResponse);
+  bindMediaPlayCount(media, definition, mediaResponse);
 }
 
 function copyMediaDataAttributes(element: HTMLElement, attributes: Record<string, string>): void {
@@ -305,20 +319,33 @@ function bindMediaPauseTiming(
   });
 }
 
+function mediaPauseState(
+  media: HTMLAudioElement | HTMLVideoElement,
+): "delay" | "pause" | undefined {
+  const value = media.dataset.qtiMediaPlayerPauseState;
+  if (value === "delay" || value === "pause") return value;
+  return undefined;
+}
+
 function bindMediaPlayCount(
   media: HTMLAudioElement | HTMLVideoElement,
-  interaction: QtiInteraction,
+  definition: QtiMediaDefinition,
   mediaResponse: MediaResponseBinding,
 ): void {
   if (!mediaResponse.update) return;
-  let playCount = mediaPlayCount(mediaResponse.currentValue ?? null);
-  let activePlaySession = false;
-  let readyAfterEnded = false;
-  const maximum = maximumMediaPlays(interaction);
+  let session: QtiMediaPlaySession = {
+    playCount: mediaPlayCount(mediaResponse.currentValue ?? null),
+    active: false,
+    readyAfterEnded: false,
+  };
 
   const syncState = () => {
-    media.dataset.playCount = String(playCount);
-    if (maximum !== undefined && playCount >= maximum && !activePlaySession) {
+    media.dataset.playCount = String(session.playCount);
+    if (
+      definition.maxPlays !== undefined &&
+      session.playCount >= definition.maxPlays &&
+      !session.active
+    ) {
       media.dataset.maxPlaysReached = "true";
     } else {
       delete media.dataset.maxPlaysReached;
@@ -326,38 +353,34 @@ function bindMediaPlayCount(
   };
 
   media.addEventListener("play", () => {
-    if (media.dataset.qtiMediaPlayerPauseState === "delay") return;
-    if (mediaResponse.isCompleted?.()) {
-      return;
-    }
-    if (!activePlaySession && maximum !== undefined && playCount >= maximum) {
-      media.pause();
-      syncState();
-      return;
-    }
-    if (!activePlaySession && (readyAfterEnded || media.currentTime <= 0.25)) {
-      playCount += 1;
-      mediaResponse.update?.(playCount);
-      activePlaySession = true;
-      readyAfterEnded = false;
-      syncState();
-      return;
-    }
-    activePlaySession = true;
-    readyAfterEnded = false;
+    if (mediaResponse.isCompleted?.()) return;
+    const pauseState = mediaPauseState(media);
+    const result = applyQtiMediaPlaybackEvent(
+      session,
+      pauseState === undefined
+        ? { kind: "play", currentTime: media.currentTime }
+        : { kind: "play", currentTime: media.currentTime, pauseState },
+      definition,
+    );
+    session = result.session;
+    if (result.increment) mediaResponse.update?.(session.playCount);
+    if (result.blockPlay) media.pause();
     syncState();
   });
 
   media.addEventListener("ended", () => {
-    activePlaySession = false;
-    readyAfterEnded = true;
+    const result = applyQtiMediaPlaybackEvent(session, { kind: "ended" }, definition);
+    session = result.session;
     syncState();
   });
 
   media.addEventListener("seeked", () => {
-    if (!media.paused || media.currentTime > 0.25) return;
-    activePlaySession = false;
-    readyAfterEnded = false;
+    const result = applyQtiMediaPlaybackEvent(
+      session,
+      { kind: "seeked", currentTime: media.currentTime, paused: media.paused },
+      definition,
+    );
+    session = result.session;
     syncState();
   });
 

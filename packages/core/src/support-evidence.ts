@@ -95,6 +95,9 @@ export function interactionSupportTests(interactionType: QtiInteractionType): st
   if (interactionType === "extendedText" || interactionType === "textEntry") {
     return [...browserTestsFor(interactionType), "packages/core/src/pattern-mask.test.ts"];
   }
+  if (interactionType === "media") {
+    return [...browserTestsFor(interactionType), "packages/core/src/media-definition.test.ts"];
+  }
   return browserTestsFor(interactionType);
 }
 

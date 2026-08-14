@@ -86,6 +86,17 @@ export { detectPackageMediaType } from "./qti-package-assets.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4, parseXmlBoolean } from "./parser-values.js";
 export {
+  applyQtiMediaPlaybackEvent,
+  parseQtiMediaDefinition,
+  qtiMediaAllowsNativeLoop,
+  QTI_MEDIA_RESTART_THRESHOLD_SECONDS,
+  type QtiMediaDefinition,
+  type QtiMediaDefinitionResult,
+  type QtiMediaPlaybackEvent,
+  type QtiMediaPlaybackResult,
+  type QtiMediaPlaySession,
+} from "./media-definition.js";
+export {
   parseQtiSliderDefinition,
   type QtiSliderDefinition,
   type QtiSliderDefinitionResult,

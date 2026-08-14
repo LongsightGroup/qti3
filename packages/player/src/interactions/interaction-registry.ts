@@ -11,7 +11,7 @@ import { renderHotspotResponse } from "./hotspot-interaction.js";
 import { renderHottextResponse } from "./hottext-interaction.js";
 import { renderInlineChoice } from "./inline-choice-interaction.js";
 import { renderMatchResponse } from "./match-interaction.js";
-import { renderObjectAsset } from "./object-asset.js";
+import { renderMediaResponse } from "./media-interaction.js";
 import { renderPairResponse } from "./pair-interaction.js";
 import { renderPositionObjectResponse } from "./position-object-interaction.js";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
@@ -236,7 +236,7 @@ const baseInteractionRegistry: InteractionRegistryEntry[] = [
     id: "media",
     matches: (interaction) => interaction.type === "media",
     render: ({ interaction, update, currentValue, isCompleted }) =>
-      renderObjectAsset(interaction, {
+      renderMediaResponse(interaction, {
         currentValue,
         update,
         isCompleted,

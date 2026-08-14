@@ -184,6 +184,15 @@ non-operable authoring error. Integer bounds follow the QTI floor/ceiling rules,
 no authored step remain approximately continuous, and an upper bound outside the regular step
 sequence remains an explicitly selectable endpoint.
 
+## Media behavior
+
+The media presentation is a native `<audio>` or `<video>` element. That is the only operable
+control; the QTI response is a play-experience count, not media time.
+
+Native HTML `loop` is used only when `max-plays` is unlimited. A finite play limit keeps looping
+off so each play experience can be counted. Invalid play-domain attributes render a non-operable
+authoring error.
+
 ## Portable Custom Interactions
 
 For `qti-portable-custom-interaction`, the player renders a
