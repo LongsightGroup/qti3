@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   applyQtiMediaPlaybackEvent,
   parseQtiMediaDefinition,
-  qtiMediaAllowsNativeLoop,
-  type QtiMediaDefinition,
   type QtiMediaPlaySession,
 } from "./media-definition.js";
 import { parseQtiXml } from "./parser.js";
@@ -27,24 +25,16 @@ function parsedMedia(attributes: string): QtiInteraction {
   return interaction;
 }
 
-function mediaDefinition(overrides: Partial<QtiMediaDefinition> = {}): QtiMediaDefinition {
-  return {
-    minPlays: 0,
-    maxPlays: undefined,
-    autostart: false,
-    loop: false,
-    required: false,
-    ...overrides,
-  };
+function idle(playCount = 0): QtiMediaPlaySession {
+  return { status: "idle", playCount };
 }
 
-function session(overrides: Partial<QtiMediaPlaySession> = {}): QtiMediaPlaySession {
-  return {
-    playCount: 0,
-    active: false,
-    readyAfterEnded: false,
-    ...overrides,
-  };
+function playing(playCount: number): QtiMediaPlaySession {
+  return { status: "playing", playCount };
+}
+
+function ended(playCount: number): QtiMediaPlaySession {
+  return { status: "ended", playCount };
 }
 
 describe("QTI media definition", () => {
@@ -57,8 +47,7 @@ describe("QTI media definition", () => {
         minPlays: 0,
         maxPlays: undefined,
         autostart: false,
-        loop: false,
-        required: false,
+        nativeLoop: false,
       },
     });
   });
@@ -68,8 +57,25 @@ describe("QTI media definition", () => {
 
     expect(result).toEqual({
       ok: true,
-      value: expect.objectContaining({ minPlays: 1, required: true }),
+      value: expect.objectContaining({ minPlays: 1, autostart: false, nativeLoop: false }),
     });
+  });
+
+  it("leaves invalid required to the generic boolean check", () => {
+    const parsed = parseQtiMediaDefinition(parsedMedia('required="maybe"'));
+    const result = parseQtiXml(mediaXml('required="maybe"'));
+
+    expect(parsed).toEqual({
+      ok: true,
+      value: expect.objectContaining({ minPlays: 0 }),
+    });
+    expect(
+      result.diagnostics.filter((entry) => entry.code === "interaction.booleanAttribute"),
+    ).toEqual([
+      expect.objectContaining({
+        message: "qti-media-interaction requires boolean required, got maybe.",
+      }),
+    ]);
   });
 
   it("treats authored max-plays 0 as unlimited", () => {
@@ -77,19 +83,22 @@ describe("QTI media definition", () => {
 
     expect(result).toEqual({
       ok: true,
-      value: expect.objectContaining({ maxPlays: undefined }),
+      value: expect.objectContaining({ maxPlays: undefined, nativeLoop: false }),
     });
   });
 
-  it("allows native loop only when looping is unlimited", () => {
+  it("enables native loop only when looping is unlimited", () => {
     const unlimited = parseQtiMediaDefinition(parsedMedia('loop="true"'));
     const limited = parseQtiMediaDefinition(parsedMedia('loop="true" max-plays="2"'));
 
-    expect(unlimited.ok).toBe(true);
-    expect(limited.ok).toBe(true);
-    if (!unlimited.ok || !limited.ok) return;
-    expect(qtiMediaAllowsNativeLoop(unlimited.value)).toBe(true);
-    expect(qtiMediaAllowsNativeLoop(limited.value)).toBe(false);
+    expect(unlimited).toEqual({
+      ok: true,
+      value: expect.objectContaining({ nativeLoop: true, maxPlays: undefined }),
+    });
+    expect(limited).toEqual({
+      ok: true,
+      value: expect.objectContaining({ nativeLoop: false, maxPlays: 2 }),
+    });
   });
 
   it("returns every invalid playback attribute as a focused diagnostic", () => {
@@ -162,92 +171,58 @@ describe("QTI media definition", () => {
 });
 
 describe("QTI media play session", () => {
-  const limited = mediaDefinition({ maxPlays: 2 });
-
-  it("skips increment during a pause-delay play event", () => {
-    expect(
-      applyQtiMediaPlaybackEvent(
-        session(),
-        { kind: "play", currentTime: 0, pauseState: "delay" },
-        limited,
-      ),
-    ).toEqual({
-      session: session(),
-      increment: false,
-      blockPlay: false,
-    });
-  });
+  const maxPlays = 2;
 
   it("blocks a new play once the maximum has been reached", () => {
-    expect(
-      applyQtiMediaPlaybackEvent(
-        session({ playCount: 2 }),
-        { kind: "play", currentTime: 0 },
-        limited,
-      ),
-    ).toEqual({
-      session: session({ playCount: 2 }),
-      increment: false,
-      blockPlay: true,
-    });
+    expect(applyQtiMediaPlaybackEvent(idle(2), { kind: "play", currentTime: 0 }, maxPlays)).toEqual(
+      {
+        kind: "blocked",
+        session: idle(2),
+      },
+    );
   });
 
-  it("increments at the start of a play experience", () => {
-    expect(
-      applyQtiMediaPlaybackEvent(session(), { kind: "play", currentTime: 0 }, limited),
-    ).toEqual({
-      session: { playCount: 1, active: true, readyAfterEnded: false },
-      increment: true,
-      blockPlay: false,
+  it("counts a play that starts from idle near the beginning", () => {
+    expect(applyQtiMediaPlaybackEvent(idle(), { kind: "play", currentTime: 0 }, maxPlays)).toEqual({
+      kind: "applied",
+      session: playing(1),
     });
   });
 
   it("does not count a resume of the same play experience", () => {
     expect(
-      applyQtiMediaPlaybackEvent(
-        session({ playCount: 1, active: true }),
-        { kind: "play", currentTime: 12 },
-        limited,
-      ),
+      applyQtiMediaPlaybackEvent(playing(1), { kind: "play", currentTime: 12 }, maxPlays),
     ).toEqual({
-      session: { playCount: 1, active: true, readyAfterEnded: false },
-      increment: false,
-      blockPlay: false,
+      kind: "applied",
+      session: playing(1),
     });
   });
 
-  it("increments again after ended when under the maximum", () => {
-    const afterEnded = applyQtiMediaPlaybackEvent(
-      session({ playCount: 1, active: true }),
-      { kind: "ended" },
-      limited,
-    );
+  it("counts again after ended when under the maximum", () => {
+    const afterEnded = applyQtiMediaPlaybackEvent(playing(1), { kind: "ended" }, maxPlays);
 
     expect(afterEnded).toEqual({
-      session: { playCount: 1, active: false, readyAfterEnded: true },
-      increment: false,
-      blockPlay: false,
+      kind: "applied",
+      session: ended(1),
     });
     expect(
-      applyQtiMediaPlaybackEvent(afterEnded.session, { kind: "play", currentTime: 0 }, limited),
+      applyQtiMediaPlaybackEvent(afterEnded.session, { kind: "play", currentTime: 0 }, maxPlays),
     ).toEqual({
-      session: { playCount: 2, active: true, readyAfterEnded: false },
-      increment: true,
-      blockPlay: false,
+      kind: "applied",
+      session: playing(2),
     });
   });
 
-  it("resets the session when seeking back to the start while paused", () => {
+  it("resets to idle when seeking back to the start while paused", () => {
     expect(
       applyQtiMediaPlaybackEvent(
-        session({ playCount: 1, active: true, readyAfterEnded: true }),
+        playing(1),
         { kind: "seeked", currentTime: 0.1, paused: true },
-        limited,
+        maxPlays,
       ),
     ).toEqual({
-      session: { playCount: 1, active: false, readyAfterEnded: false },
-      increment: false,
-      blockPlay: false,
+      kind: "applied",
+      session: idle(1),
     });
   });
 });

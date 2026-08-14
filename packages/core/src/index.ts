@@ -88,7 +88,6 @@ export { numericTuple3, numericTuple4, parseXmlBoolean } from "./parser-values.j
 export {
   applyQtiMediaPlaybackEvent,
   parseQtiMediaDefinition,
-  qtiMediaAllowsNativeLoop,
   QTI_MEDIA_RESTART_THRESHOLD_SECONDS,
   type QtiMediaDefinition,
   type QtiMediaDefinitionResult,

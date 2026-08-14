@@ -2,9 +2,9 @@ import {
   applyQtiMediaPlaybackEvent,
   mediaPlayerControlsTokens,
   parseQtiMediaDefinition,
-  qtiMediaAllowsNativeLoop,
   type QtiInteraction,
   type QtiMediaDefinition,
+  type QtiMediaPlaybackEvent,
   type QtiMediaPlaySession,
   type QtiObjectAsset,
   type QtiValue,
@@ -13,6 +13,7 @@ import { objectIsImage } from "../interaction-support.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { errorView } from "../player-validation.js";
 import { mediaPlayCount } from "../response-limits.js";
+import { createMediaPauseTiming, mediaPauseTimingConfigured } from "./media-pause-timing.js";
 
 export interface MediaResponseBinding {
   currentValue?: QtiValue | undefined;
@@ -98,7 +99,7 @@ function configureMediaElement(
   media.controls = mediaControlsMode(interaction, object) !== "none";
   media.preload = "none";
   media.autoplay = definition.autostart;
-  media.loop = qtiMediaAllowsNativeLoop(definition);
+  media.loop = definition.nativeLoop;
   media.setAttribute("aria-label", label);
   media.style.maxInlineSize = "100%";
   copyMediaDataAttributes(media, interaction.attributes);
@@ -125,8 +126,7 @@ function configureMediaElement(
     media.append(trackElement);
   }
 
-  bindMediaPauseTiming(media, interaction, object);
-  bindMediaPlayCount(media, definition, mediaResponse);
+  bindMediaPlayback(media, interaction, object, definition, mediaResponse);
 }
 
 function copyMediaDataAttributes(element: HTMLElement, attributes: Record<string, string>): void {
@@ -194,157 +194,36 @@ function mediaTimingSeconds(
   return seconds;
 }
 
-function bindMediaPauseTiming(
+function bindMediaPlayback(
   media: HTMLAudioElement | HTMLVideoElement,
   interaction: QtiInteraction,
   object: QtiObjectAsset,
-): void {
-  const pauseDelaySeconds = mediaTimingSeconds(
-    "data-qti-media-player-pause-delay",
-    interaction,
-    object,
-  );
-  const pauseDurationSeconds = mediaTimingSeconds(
-    "data-qti-media-player-pause-duration",
-    interaction,
-    object,
-  );
-  if (pauseDelaySeconds === undefined && pauseDurationSeconds === undefined) return;
-
-  let internalPause = false;
-  let qtiTimerResume = false;
-  let delayTimer: number | undefined;
-  let durationTimer: number | undefined;
-  let pauseWindowActive = false;
-  let resumeAfterPauseWindow = false;
-  let playbackHasStarted = false;
-
-  const clearDelayTimer = () => {
-    if (delayTimer === undefined) return;
-    window.clearTimeout(delayTimer);
-    delayTimer = undefined;
-  };
-
-  const clearDurationTimer = () => {
-    if (durationTimer === undefined) return;
-    window.clearTimeout(durationTimer);
-    durationTimer = undefined;
-  };
-
-  const resumePlayback = () => {
-    qtiTimerResume = true;
-    delete media.dataset.qtiMediaPlayerPauseState;
-    try {
-      void media.play().catch(() => {
-        qtiTimerResume = false;
-      });
-    } catch {
-      qtiTimerResume = false;
-    }
-  };
-
-  const resumeAfterDelay = () => {
-    if (pauseDelaySeconds === undefined || pauseDelaySeconds === 0) {
-      resumePlayback();
-      return;
-    }
-    media.dataset.qtiMediaPlayerPauseState = "delay";
-    delayTimer = window.setTimeout(() => {
-      delayTimer = undefined;
-      resumePlayback();
-    }, pauseDelaySeconds * 1000);
-  };
-
-  const pauseForDelay = () => {
-    internalPause = true;
-    media.pause();
-    internalPause = false;
-    resumeAfterDelay();
-  };
-
-  media.addEventListener(
-    "play",
-    () => {
-      if (qtiTimerResume) {
-        qtiTimerResume = false;
-        playbackHasStarted = true;
-        return;
-      }
-
-      if (pauseWindowActive) {
-        resumeAfterPauseWindow = true;
-        internalPause = true;
-        media.pause();
-        internalPause = false;
-        return;
-      }
-
-      if (pauseDelaySeconds === undefined || pauseDelaySeconds === 0) {
-        playbackHasStarted = true;
-        return;
-      }
-
-      clearDelayTimer();
-      pauseForDelay();
-    },
-    { capture: true },
-  );
-
-  media.addEventListener("pause", () => {
-    if (internalPause || !playbackHasStarted || pauseDurationSeconds === undefined) return;
-    if (media.ended) return;
-    clearDurationTimer();
-    pauseWindowActive = true;
-    resumeAfterPauseWindow = true;
-    media.dataset.qtiMediaPlayerPauseState = "pause";
-    durationTimer = window.setTimeout(() => {
-      durationTimer = undefined;
-      pauseWindowActive = false;
-      if (!resumeAfterPauseWindow) {
-        delete media.dataset.qtiMediaPlayerPauseState;
-        return;
-      }
-      resumeAfterPauseWindow = false;
-      resumeAfterDelay();
-    }, pauseDurationSeconds * 1000);
-  });
-
-  media.addEventListener("ended", () => {
-    playbackHasStarted = false;
-    pauseWindowActive = false;
-    resumeAfterPauseWindow = false;
-    clearDelayTimer();
-    clearDurationTimer();
-    delete media.dataset.qtiMediaPlayerPauseState;
-  });
-}
-
-function mediaPauseState(
-  media: HTMLAudioElement | HTMLVideoElement,
-): "delay" | "pause" | undefined {
-  const value = media.dataset.qtiMediaPlayerPauseState;
-  if (value === "delay" || value === "pause") return value;
-  return undefined;
-}
-
-function bindMediaPlayCount(
-  media: HTMLAudioElement | HTMLVideoElement,
   definition: QtiMediaDefinition,
   mediaResponse: MediaResponseBinding,
 ): void {
-  if (!mediaResponse.update) return;
+  const pauseTimingSeconds = {
+    delaySeconds: mediaTimingSeconds("data-qti-media-player-pause-delay", interaction, object),
+    durationSeconds: mediaTimingSeconds(
+      "data-qti-media-player-pause-duration",
+      interaction,
+      object,
+    ),
+  };
+  const pauseTiming = mediaPauseTimingConfigured(pauseTimingSeconds)
+    ? createMediaPauseTiming(media, pauseTimingSeconds)
+    : undefined;
+  const update = mediaResponse.update;
   let session: QtiMediaPlaySession = {
+    status: "idle",
     playCount: mediaPlayCount(mediaResponse.currentValue ?? null),
-    active: false,
-    readyAfterEnded: false,
   };
 
-  const syncState = () => {
+  const syncPlayCount = () => {
     media.dataset.playCount = String(session.playCount);
     if (
       definition.maxPlays !== undefined &&
       session.playCount >= definition.maxPlays &&
-      !session.active
+      session.status !== "playing"
     ) {
       media.dataset.maxPlaysReached = "true";
     } else {
@@ -352,37 +231,44 @@ function bindMediaPlayCount(
     }
   };
 
-  media.addEventListener("play", () => {
-    if (mediaResponse.isCompleted?.()) return;
-    const pauseState = mediaPauseState(media);
-    const result = applyQtiMediaPlaybackEvent(
-      session,
-      pauseState === undefined
-        ? { kind: "play", currentTime: media.currentTime }
-        : { kind: "play", currentTime: media.currentTime, pauseState },
-      definition,
-    );
+  const applyPlaybackEvent = (event: QtiMediaPlaybackEvent) => {
+    if (!update) return;
+    if (event.kind === "play" && mediaResponse.isCompleted?.()) return;
+    const previousCount = session.playCount;
+    const result = applyQtiMediaPlaybackEvent(session, event, definition.maxPlays);
     session = result.session;
-    if (result.increment) mediaResponse.update?.(session.playCount);
-    if (result.blockPlay) media.pause();
-    syncState();
-  });
+    if (session.playCount !== previousCount) update(session.playCount);
+    if (result.kind === "blocked") media.pause();
+    syncPlayCount();
+  };
+
+  media.addEventListener(
+    "play",
+    () => {
+      if (pauseTiming?.interceptPlay() === "suppress") return;
+      applyPlaybackEvent({ kind: "play", currentTime: media.currentTime });
+    },
+    pauseTiming ? { capture: true } : undefined,
+  );
+
+  if (pauseTiming) {
+    media.addEventListener("pause", () => pauseTiming.onPause());
+  }
 
   media.addEventListener("ended", () => {
-    const result = applyQtiMediaPlaybackEvent(session, { kind: "ended" }, definition);
-    session = result.session;
-    syncState();
+    pauseTiming?.onEnded();
+    applyPlaybackEvent({ kind: "ended" });
   });
+
+  if (!update) return;
 
   media.addEventListener("seeked", () => {
-    const result = applyQtiMediaPlaybackEvent(
-      session,
-      { kind: "seeked", currentTime: media.currentTime, paused: media.paused },
-      definition,
-    );
-    session = result.session;
-    syncState();
+    applyPlaybackEvent({
+      kind: "seeked",
+      currentTime: media.currentTime,
+      paused: media.paused,
+    });
   });
 
-  syncState();
+  syncPlayCount();
 }

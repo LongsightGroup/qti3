@@ -29,7 +29,8 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
   committed item during the pending fetch avoids unnecessary blanking; the generation guard and
   terminal transition define the commit boundary.
 - Moving media pause-delay/duration timers into core was rejected. Those attributes are shared
-  vocabulary presentation; the play-session machine only needs the player's `pauseState` flag.
+  vocabulary presentation; the player does not feed delay-synthetic play events into the
+  play-session machine.
 - Routing the media writer through `QtiInteraction` / `QtiMediaDefinition` was rejected. Writer
   keeps its own builder input, same as slider.
 - Building custom media chrome for `data-qti-media-player-controls` tokens other than `none` was

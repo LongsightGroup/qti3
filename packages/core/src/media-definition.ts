@@ -1,15 +1,14 @@
+import { assertNever } from "./assert-never.js";
 import { parseXmlBoolean } from "./parser-values.js";
 import type { QtiDiagnostic, QtiInteraction } from "./types.js";
 import { isNonNegativeInteger } from "./validation-primitives.js";
-import { assertNever } from "./assert-never.js";
 
-/** A validated media play-count domain and playback policy. */
+/** A validated media play-count domain and native playback policy. */
 export interface QtiMediaDefinition {
   readonly minPlays: number;
   readonly maxPlays: number | undefined;
   readonly autostart: boolean;
-  readonly loop: boolean;
-  readonly required: boolean;
+  readonly nativeLoop: boolean;
 }
 
 /** The typed result of refining raw media interaction attributes. */
@@ -17,37 +16,25 @@ export type QtiMediaDefinitionResult =
   | { readonly ok: true; readonly value: QtiMediaDefinition }
   | { readonly ok: false; readonly diagnostics: readonly QtiDiagnostic[] };
 
-/** Native HTML loop is allowed only when QTI looping is unlimited. */
-export function qtiMediaAllowsNativeLoop(definition: QtiMediaDefinition): boolean {
-  return definition.loop && definition.maxPlays === undefined;
-}
-
 /** Seconds from the start within which a play event counts as a new play experience. */
 export const QTI_MEDIA_RESTART_THRESHOLD_SECONDS = 0.25;
 
 /** The play-experience session used to decide whether a native media event counts. */
-export interface QtiMediaPlaySession {
-  readonly playCount: number;
-  readonly active: boolean;
-  readonly readyAfterEnded: boolean;
-}
+export type QtiMediaPlaySession =
+  | { readonly status: "idle"; readonly playCount: number }
+  | { readonly status: "playing"; readonly playCount: number }
+  | { readonly status: "ended"; readonly playCount: number };
 
 /** A native media event projected into the QTI play-count machine. */
 export type QtiMediaPlaybackEvent =
-  | {
-      readonly kind: "play";
-      readonly currentTime: number;
-      readonly pauseState?: "delay" | "pause";
-    }
+  | { readonly kind: "play"; readonly currentTime: number }
   | { readonly kind: "ended" }
   | { readonly kind: "seeked"; readonly currentTime: number; readonly paused: boolean };
 
-/** The session update and player-side effects of one playback event. */
-export interface QtiMediaPlaybackResult {
-  readonly session: QtiMediaPlaySession;
-  readonly increment: boolean;
-  readonly blockPlay: boolean;
-}
+/** The session update and any player-side block from one playback event. */
+export type QtiMediaPlaybackResult =
+  | { readonly kind: "applied"; readonly session: QtiMediaPlaySession }
+  | { readonly kind: "blocked"; readonly session: QtiMediaPlaySession };
 
 function diagnostic(interaction: QtiInteraction, code: string, message: string): QtiDiagnostic {
   return {
@@ -61,7 +48,7 @@ function diagnostic(interaction: QtiInteraction, code: string, message: string):
 
 function optionalBoolean(
   interaction: QtiInteraction,
-  attribute: "autostart" | "loop" | "required",
+  attribute: "autostart" | "loop",
   diagnostics: QtiDiagnostic[],
 ): boolean {
   const raw = interaction.attributes[attribute];
@@ -98,26 +85,8 @@ function optionalNonNegativeInteger(
   return Number(raw);
 }
 
-function validatePlayLimits(interaction: QtiInteraction, diagnostics: QtiDiagnostic[]): void {
-  const min = interaction.attributes["min-plays"];
-  const max = interaction.attributes["max-plays"];
-  if (
-    min === undefined ||
-    max === undefined ||
-    !isNonNegativeInteger(min) ||
-    !isNonNegativeInteger(max) ||
-    max === "0"
-  ) {
-    return;
-  }
-  if (Number(min) <= Number(max)) return;
-  diagnostics.push(
-    diagnostic(
-      interaction,
-      "interaction.minMax",
-      `${interaction.qtiName} requires min-plays to be less than or equal to max-plays, unless max-plays is 0 for unlimited.`,
-    ),
-  );
+function atMaximumPlays(session: QtiMediaPlaySession, maxPlays: number | undefined): boolean {
+  return maxPlays !== undefined && session.playCount >= maxPlays;
 }
 
 /**
@@ -129,8 +98,19 @@ export function parseQtiMediaDefinition(interaction: QtiInteraction): QtiMediaDe
   const maxPlaysAttribute = optionalNonNegativeInteger(interaction, "max-plays", diagnostics);
   const autostart = optionalBoolean(interaction, "autostart", diagnostics);
   const loop = optionalBoolean(interaction, "loop", diagnostics);
-  const required = optionalBoolean(interaction, "required", diagnostics);
-  validatePlayLimits(interaction, diagnostics);
+  const required = parseXmlBoolean(interaction.attributes.required) === true;
+  const maxPlays =
+    maxPlaysAttribute === undefined || maxPlaysAttribute <= 0 ? undefined : maxPlaysAttribute;
+
+  if (minPlaysAttribute !== undefined && maxPlays !== undefined && minPlaysAttribute > maxPlays) {
+    diagnostics.push(
+      diagnostic(
+        interaction,
+        "interaction.minMax",
+        `${interaction.qtiName} requires min-plays to be less than or equal to max-plays, unless max-plays is 0 for unlimited.`,
+      ),
+    );
+  }
 
   if (diagnostics.length > 0) return { ok: false, diagnostics };
 
@@ -138,50 +118,30 @@ export function parseQtiMediaDefinition(interaction: QtiInteraction): QtiMediaDe
     ok: true,
     value: {
       minPlays: minPlaysAttribute ?? (required ? 1 : 0),
-      maxPlays:
-        maxPlaysAttribute === undefined || maxPlaysAttribute <= 0 ? undefined : maxPlaysAttribute,
+      maxPlays,
       autostart,
-      loop,
-      required,
+      nativeLoop: loop && maxPlays === undefined,
     },
   };
-}
-
-function unchanged(session: QtiMediaPlaySession): QtiMediaPlaybackResult {
-  return { session, increment: false, blockPlay: false };
 }
 
 function applyPlayEvent(
   session: QtiMediaPlaySession,
   event: Extract<QtiMediaPlaybackEvent, { kind: "play" }>,
-  definition: QtiMediaDefinition,
+  maxPlays: number | undefined,
 ): QtiMediaPlaybackResult {
-  if (event.pauseState === "delay") return unchanged(session);
-  if (
-    !session.active &&
-    definition.maxPlays !== undefined &&
-    session.playCount >= definition.maxPlays
-  ) {
-    return { session, increment: false, blockPlay: true };
+  if (session.status !== "playing" && atMaximumPlays(session, maxPlays)) {
+    return { kind: "blocked", session };
   }
-  if (
-    !session.active &&
-    (session.readyAfterEnded || event.currentTime <= QTI_MEDIA_RESTART_THRESHOLD_SECONDS)
-  ) {
-    return {
-      session: {
-        playCount: session.playCount + 1,
-        active: true,
-        readyAfterEnded: false,
-      },
-      increment: true,
-      blockPlay: false,
-    };
-  }
+  const counts =
+    session.status === "ended" ||
+    (session.status === "idle" && event.currentTime <= QTI_MEDIA_RESTART_THRESHOLD_SECONDS);
   return {
-    session: { ...session, active: true, readyAfterEnded: false },
-    increment: false,
-    blockPlay: false,
+    kind: "applied",
+    session: {
+      status: "playing",
+      playCount: session.playCount + (counts ? 1 : 0),
+    },
   };
 }
 
@@ -190,30 +150,22 @@ function applySeekedEvent(
   event: Extract<QtiMediaPlaybackEvent, { kind: "seeked" }>,
 ): QtiMediaPlaybackResult {
   if (!event.paused || event.currentTime > QTI_MEDIA_RESTART_THRESHOLD_SECONDS) {
-    return unchanged(session);
+    return { kind: "applied", session };
   }
-  return {
-    session: { ...session, active: false, readyAfterEnded: false },
-    increment: false,
-    blockPlay: false,
-  };
+  return { kind: "applied", session: { status: "idle", playCount: session.playCount } };
 }
 
 /** Applies one native media event to the QTI play-experience session. */
 export function applyQtiMediaPlaybackEvent(
   session: QtiMediaPlaySession,
   event: QtiMediaPlaybackEvent,
-  definition: QtiMediaDefinition,
+  maxPlays: number | undefined,
 ): QtiMediaPlaybackResult {
   switch (event.kind) {
     case "play":
-      return applyPlayEvent(session, event, definition);
+      return applyPlayEvent(session, event, maxPlays);
     case "ended":
-      return {
-        session: { ...session, active: false, readyAfterEnded: true },
-        increment: false,
-        blockPlay: false,
-      };
+      return { kind: "applied", session: { status: "ended", playCount: session.playCount } };
     case "seeked":
       return applySeekedEvent(session, event);
     default:
