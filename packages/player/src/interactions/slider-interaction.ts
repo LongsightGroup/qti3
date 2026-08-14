@@ -1,5 +1,8 @@
 import {
   parseQtiSliderDefinition,
+  parseQtiSliderValue,
+  qtiSliderRatio,
+  snapQtiSliderValue,
   type QtiInteraction,
   type QtiSliderDefinition,
   type QtiValue,
@@ -7,25 +10,8 @@ import {
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { errorView } from "../player-validation.js";
-import {
-  sliderHasUnalignedUpper,
-  sliderKeyboardValue,
-  sliderRatio,
-  sliderTicks,
-  snapSliderValue,
-} from "./slider-scale.js";
+import { sliderKeyboardValue, sliderTicks } from "./slider-scale.js";
 import { scalarString } from "./text-value.js";
-
-const SLIDER_SELECTION_KEYS = new Set([
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "ArrowUp",
-  "End",
-  "Home",
-  "PageDown",
-  "PageUp",
-]);
 
 function createSliderVisual(definition: QtiSliderDefinition): HTMLElement {
   const visual = document.createElement("div");
@@ -78,6 +64,16 @@ function invalidSliderView(interaction: QtiInteraction): HTMLElement {
   return alert;
 }
 
+function invalidSliderValueView(interaction: QtiInteraction): HTMLElement {
+  const alert = errorView(
+    interaction.responseIdentifier
+      ? `Slider interaction (${interaction.responseIdentifier}) has a response outside its authored value domain.`
+      : "Slider interaction has a response outside its authored value domain.",
+  );
+  alert.classList.add("qti3-slider-invalid");
+  return alert;
+}
+
 /** Renders a native range input beneath the QTI slider presentation layer. */
 export function renderSliderResponse(
   interaction: QtiInteraction,
@@ -88,6 +84,13 @@ export function renderSliderResponse(
   const parsedDefinition = parseQtiSliderDefinition(interaction);
   if (!parsedDefinition.ok) return invalidSliderView(interaction);
   const definition = parsedDefinition.value;
+  const hasCurrentResponse = hasCurrentSliderResponse(currentValue);
+  const parsedCurrentValue = hasCurrentResponse
+    ? parseQtiSliderValue(currentValue, definition)
+    : undefined;
+  if (parsedCurrentValue !== undefined && !parsedCurrentValue.ok) {
+    return invalidSliderValueView(interaction);
+  }
   const noResponseMessage = messages.message("sliderNoResponse");
   const regions = createQtiInteractionRegionMarkers(interaction);
 
@@ -105,28 +108,22 @@ export function renderSliderResponse(
   input.type = "range";
   input.min = String(definition.lowerBound);
   input.max = String(definition.upperBound);
-  const hasUnalignedUpper = sliderHasUnalignedUpper(definition);
-  input.step =
-    definition.step.kind === "continuous" || hasUnalignedUpper
-      ? "any"
-      : String(definition.step.value);
-  input.value = hasCurrentSliderResponse(currentValue)
-    ? scalarString(currentValue)
-    : String(definition.lowerBound);
+  input.step = definition.step.kind === "aligned" ? String(definition.step.value) : "any";
+  input.value = String(parsedCurrentValue?.value ?? definition.lowerBound);
   input.setAttribute("aria-label", interaction.prompt ?? messages.message("sliderResponseLabel"));
   if (definition.orientation === "vertical") input.setAttribute("aria-orientation", "vertical");
   regions.control(input);
 
   const output = document.createElement("output");
   output.className = "qti3-slider-output";
-  let committedValue = hasCurrentSliderResponse(currentValue) ? input.value : undefined;
+  let committedValue = parsedCurrentValue?.ok ? input.value : undefined;
 
   const present = (value: string | undefined): void => {
     const isSet = value !== undefined;
     const presentedValue = value ?? input.value;
     group.style.setProperty(
       "--qti3-slider-ratio",
-      `${sliderRatio(Number(presentedValue), definition) * 100}%`,
+      `${qtiSliderRatio(Number(presentedValue), definition) * 100}%`,
     );
     group.dataset.responseState = isSet ? "set" : "unset";
     output.dataset.responseState = isSet ? "set" : "unset";
@@ -140,12 +137,13 @@ export function renderSliderResponse(
   };
 
   const commit = (): void => {
-    if (hasUnalignedUpper) input.value = String(snapSliderValue(input.valueAsNumber, definition));
+    const snapped = snapQtiSliderValue(input.valueAsNumber, definition);
+    input.value = String(snapped);
     const nextValue = input.value;
     if (committedValue === nextValue) return;
     committedValue = nextValue;
     present(committedValue);
-    update(Number(nextValue));
+    update(snapped);
   };
 
   input.addEventListener("input", commit);
@@ -159,9 +157,6 @@ export function renderSliderResponse(
   });
   input.addEventListener("pointerup", (event) => {
     if (event.isPrimary) commit();
-  });
-  input.addEventListener("keyup", (event) => {
-    if (SLIDER_SELECTION_KEYS.has(event.key)) commit();
   });
 
   present(committedValue);

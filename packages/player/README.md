@@ -175,14 +175,19 @@ An interaction without a default or restored response remains null: the thumb an
 and the localized `sliderNoResponse` message is shown until the candidate acts. Boundary keys and
 pointer release still commit the lower bound when the native range value itself does not move.
 
+Aligned discrete sliders preserve the authored native range step. Continuous sliders and sliders
+whose upper bound sits outside the regular step sequence use `step="any"`, with core snapping
+pointer and keyboard values onto the authored domain. Arrow keys on either axis move along that
+domain; reverse only flips physical direction. Restored responses outside the authored domain are
+rejected before rendering.
+
 Lower and upper labels are always shown. With `step-label="true"`, the player shows every step when
 there are at most nine positions; denser ranges are sampled to at most nine evenly distributed
 labels, including both bounds, to avoid overlapping text and unbounded DOM growth.
 
 Slider attributes are refined by the core before rendering. Invalid value domains render a
-non-operable authoring error. Integer bounds follow the QTI floor/ceiling rules, float sliders with
-no authored step remain approximately continuous, and an upper bound outside the regular step
-sequence remains an explicitly selectable endpoint.
+non-operable authoring error. Integer bounds follow the QTI floor/ceiling rules, and float sliders
+with no authored step remain approximately continuous.
 
 ## Media behavior
 

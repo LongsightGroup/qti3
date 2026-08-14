@@ -98,10 +98,16 @@ export {
 } from "./media-definition.js";
 export {
   parseQtiSliderDefinition,
+  parseQtiSliderValue,
+  qtiSliderDiscreteValue,
+  qtiSliderRatio,
+  snapQtiSliderValue,
   type QtiSliderDefinition,
   type QtiSliderDefinitionResult,
   type QtiSliderOrientation,
   type QtiSliderStep,
+  type QtiSliderValueFailureReason,
+  type QtiSliderValueResult,
 } from "./slider-definition.js";
 export { collectQtiResponseProcessingExpressions } from "./processing-expression-collection.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";

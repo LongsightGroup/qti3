@@ -107,51 +107,6 @@ test.describe("player keyboard and accessibility", () => {
     await expectStringResponse(page, /^data:image\/svg\+xml;charset=utf-8,/);
   });
 
-  test("uses physical keyboard direction for vertical and reversed sliders", async ({ page }) => {
-    await page.goto("/");
-
-    await pasteXml(
-      page,
-      sliderItem({
-        identifier: "vertical-slider-keyboard",
-        attributes: 'lower-bound="0" upper-bound="8" step="1" orientation="vertical"',
-        prompt: "Choose a level.",
-      }),
-    );
-    let slider = page.locator('qti-assessment-item-player input[type="range"]');
-    await slider.focus();
-    await page.keyboard.press("ArrowUp");
-    await expectResponse(page, 1);
-    await expect(page.locator("qti-assessment-item-player output")).toHaveText("1");
-
-    await pasteXml(
-      page,
-      sliderItem({
-        identifier: "vertical-reversed-slider-keyboard",
-        attributes:
-          'lower-bound="0" upper-bound="8" step="1" orientation="vertical" reverse="true"',
-        prompt: "Choose a reversed level.",
-      }),
-    );
-    slider = page.locator('qti-assessment-item-player input[type="range"]');
-    await slider.focus();
-    await page.keyboard.press("ArrowDown");
-    await expectResponse(page, 1);
-
-    await pasteXml(
-      page,
-      sliderItem({
-        identifier: "horizontal-reversed-slider-keyboard",
-        attributes: 'lower-bound="0" upper-bound="8" step="1" reverse="true"',
-        prompt: "Choose a reversed value.",
-      }),
-    );
-    slider = page.locator('qti-assessment-item-player input[type="range"]');
-    await slider.focus();
-    await page.keyboard.press("ArrowLeft");
-    await expectResponse(page, 1);
-  });
-
   test("commits a boundary value even when the native range does not move", async ({ page }) => {
     await page.goto("/");
     await pasteXml(

@@ -30,6 +30,7 @@ test.describe("slider interaction", () => {
 
     expect(await currentResponse(page)).toBeUndefined();
     await expect(group).toHaveAttribute("data-response-state", "unset");
+    await expect(input).toHaveAttribute("step", "1");
     await expect(input).toHaveAttribute("aria-valuetext", "No response selected");
     await expect(output).toHaveText("No response selected");
     await expect(thumb).toHaveCSS("visibility", "hidden");
@@ -75,6 +76,27 @@ test.describe("slider interaction", () => {
     await expect(input).toHaveAttribute("step", "1e-15");
   });
 
+  test("preserves native increment mechanics for aligned discrete sliders", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      sliderItem({
+        identifier: "native-step-slider",
+        attributes: 'lower-bound="0" upper-bound="9" step="3"',
+      }),
+    );
+
+    const input = page.locator('qti-assessment-item-player input[type="range"]');
+    await expect(input).toHaveAttribute("step", "3");
+    await input.evaluate((element) => {
+      element.stepUp();
+      element.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await expect(input).toHaveValue("3");
+    expect(await currentResponse(page)).toBe(3);
+  });
+
   test("keeps an unaligned authored upper bound reachable", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
@@ -87,6 +109,7 @@ test.describe("slider interaction", () => {
 
     const group = page.locator("qti-assessment-item-player .qti3-slider-response");
     const input = group.locator('input[type="range"]');
+    await expect(input).toHaveAttribute("step", "any");
     await expect(group.locator(".qti3-slider-tick-label")).toHaveText(["0", "3", "6", "9", "10"]);
     await input.focus();
     await page.keyboard.press("End");
