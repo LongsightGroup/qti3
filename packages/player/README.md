@@ -82,6 +82,7 @@ Example entries:
     "removePair": "Ta bort {label}",
     "associationPairLabel": "{source} med {target}",
     "extendedTextCounter": "{count} av {expectedLength}",
+    "sliderNoResponse": "Inget svar valt",
     "associationsMade.one": "{count} koppling skapad.",
     "associationsMade.other": "{count} kopplingar skapade."
   },
@@ -163,6 +164,39 @@ text) are easy to break.
 Do not copy item `xml:lang` onto `<qti-assessment-item-player lang="...">` unless you
 intentionally want the player element's `lang` attribute to influence
 `defaultPlayerLocale()`. Prefer `player.messageCatalog` for UI chrome.
+
+## Slider behavior
+
+The slider presentation is custom, but its only operable element is a native
+`<input type="range">`. This preserves browser pointer, touch, keyboard, and accessibility
+semantics while supporting QTI `orientation`, `reverse`, and `step-label` presentation.
+
+An interaction without a default or restored response remains null: the thumb and fill are hidden,
+and the localized `sliderNoResponse` message is shown until the candidate acts. Boundary keys and
+pointer release still commit the lower bound when the native range value itself does not move.
+
+Aligned discrete sliders preserve the authored native range step. Continuous sliders and sliders
+whose upper bound sits outside the regular step sequence use `step="any"`, with core snapping
+pointer and keyboard values onto the authored domain. Arrow keys on either axis move along that
+domain; reverse only flips physical direction. Restored responses outside the authored domain are
+rejected before rendering.
+
+Lower and upper labels are always shown. With `step-label="true"`, the player shows every step when
+there are at most nine positions; denser ranges are sampled to at most nine evenly distributed
+labels, including both bounds, to avoid overlapping text and unbounded DOM growth.
+
+Slider attributes are refined by the core before rendering. Invalid value domains render a
+non-operable authoring error. Integer bounds follow the QTI floor/ceiling rules, and float sliders
+with no authored step remain approximately continuous.
+
+## Media behavior
+
+The media presentation is a native `<audio>` or `<video>` element. That is the only operable
+control; the QTI response is a play-experience count, not media time.
+
+Native HTML `loop` is used only when `max-plays` is unlimited. A finite play limit keeps looping
+off so each play experience can be counted. Invalid play-domain attributes render a non-operable
+authoring error.
 
 ## Portable Custom Interactions
 

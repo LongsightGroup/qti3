@@ -142,6 +142,19 @@ test.describe("player DOM behavior", () => {
     await expect(input).toBeVisible();
   });
 
+  test("keeps a native range control under the custom slider presentation", async ({ page }) => {
+    await page.goto("/");
+    await loadFixture(page, "slider");
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator('input[type="range"]')).toHaveCount(1);
+    await expect(player.locator(".qti3-slider-visual")).toHaveCount(1);
+    await expect(player.locator(".qti3-slider-response")).toHaveAttribute(
+      "data-response-state",
+      "unset",
+    );
+  });
+
   test("renders end-attempt controls with authored labels", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "endAttempt");

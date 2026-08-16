@@ -72,7 +72,12 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
     portableCustom: ["tests/browser/player-portable-custom.spec.ts"],
     positionObject: ["tests/browser/player-graphic.spec.ts", ...browserKeyboardA11yTests],
     selectPoint: ["tests/browser/player-graphic.spec.ts"],
-    slider: browserKeyboardA11yTests,
+    slider: [
+      "tests/browser/player-dom-behavior.spec.ts",
+      "tests/browser/player-slider.spec.ts",
+      "tests/browser/player-slider-cross-browser.spec.ts",
+      ...browserKeyboardA11yTests,
+    ],
     textEntry: ["tests/browser/player-dom-behavior.spec.ts"],
     upload: ["tests/browser/player-dom-behavior.spec.ts"],
   };
@@ -89,6 +94,9 @@ export function interactionSupportFixtures(interactionType: QtiInteractionType):
 export function interactionSupportTests(interactionType: QtiInteractionType): string[] {
   if (interactionType === "extendedText" || interactionType === "textEntry") {
     return [...browserTestsFor(interactionType), "packages/core/src/pattern-mask.test.ts"];
+  }
+  if (interactionType === "media") {
+    return [...browserTestsFor(interactionType), "packages/core/src/media-definition.test.ts"];
   }
   return browserTestsFor(interactionType);
 }

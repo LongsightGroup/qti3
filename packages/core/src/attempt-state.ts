@@ -18,6 +18,7 @@ import {
 import { isQtiPortableCustomStateValue, isQtiValue, qtiValueToString } from "./value-format.js";
 import { parseXmlBoolean } from "./parser-values.js";
 import { isRecordValue } from "./processing-values.js";
+import { parseQtiSliderDefinition, parseQtiSliderValue } from "./slider-definition.js";
 import { isPair, isPoint } from "./validation-primitives.js";
 
 export function isQtiAttemptStateV1(value: unknown): value is QtiAttemptStateV1 {
@@ -71,6 +72,7 @@ export function assertCompatiblePriorState(
   for (const declaration of document.item.responseDeclarations) {
     assertRestoredValueMatchesDeclaration("response", declaration, priorState.responses);
   }
+  assertRestoredSliderResponses(document, priorState.responses);
   for (const declaration of document.item.outcomeDeclarations) {
     assertRestoredValueMatchesDeclaration("outcome", declaration, priorState.outcomes);
   }
@@ -87,6 +89,24 @@ export function assertCompatiblePriorState(
   ) {
     throw new Error(
       `Cannot restore unsupported completionStatus ${qtiValueToString(completionStatus)}.`,
+    );
+  }
+}
+
+function assertRestoredSliderResponses(
+  document: QtiDocument,
+  responses: Record<string, QtiValue>,
+): void {
+  for (const interaction of document.item.interactions) {
+    if (interaction.type !== "slider" || !interaction.responseIdentifier) continue;
+    const restoredValue = responses[interaction.responseIdentifier];
+    if (restoredValue === undefined || restoredValue === null) continue;
+    const definition = parseQtiSliderDefinition(interaction);
+    if (!definition.ok) continue;
+    const parsedValue = parseQtiSliderValue(restoredValue, definition.value);
+    if (parsedValue.ok) continue;
+    throw new Error(
+      `Cannot restore response ${interaction.responseIdentifier}: value ${qtiValueToString(restoredValue)} is not in the authored slider domain.`,
     );
   }
 }

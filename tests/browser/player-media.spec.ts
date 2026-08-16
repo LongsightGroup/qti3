@@ -281,6 +281,66 @@ test.describe("player media", () => {
     await expect(audio).toHaveAttribute("data-max-plays-reached", "true");
   });
 
+  test("does not set native loop when max-plays is finite", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="media-loop-limited" title="media-loop-limited" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" autostart="false" loop="true" max-plays="2">
+            <object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent audio</object>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const audio = page.locator("qti-assessment-item-player audio");
+    await expect(audio).toBeVisible();
+    await expect(audio).not.toHaveAttribute("loop");
+
+    await audio.evaluate((element) => element.dispatchEvent(new Event("play")));
+    await expectResponse(page, 1);
+
+    await audio.evaluate((element) => {
+      element.dispatchEvent(new Event("ended"));
+      element.dispatchEvent(new Event("play"));
+    });
+    await expectResponse(page, 2);
+
+    await audio.evaluate((element) => {
+      element.dispatchEvent(new Event("ended"));
+      element.dispatchEvent(new Event("play"));
+    });
+    await expectResponse(page, 2);
+    await expect(audio).toHaveAttribute("data-max-plays-reached", "true");
+  });
+
+  test("renders no operable media when authored attributes are invalid", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-media" title="invalid-media" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE" autostart="maybe" min-plays="3" max-plays="2">
+            <object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent audio</object>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `,
+    );
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player.locator("audio, video")).toHaveCount(0);
+    await expect(player.locator(".qti3-media-invalid")).toHaveText(
+      "Media interaction (RESPONSE) has invalid authored attributes.",
+    );
+  });
+
   test("blocks scoring until media minimum plays are met", async ({ page }) => {
     await page.goto("/");
     await pasteXml(

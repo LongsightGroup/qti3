@@ -85,6 +85,29 @@ export {
 export { detectPackageMediaType } from "./qti-package-assets.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4, parseXmlBoolean } from "./parser-values.js";
+export {
+  applyQtiMediaPlaybackEvent,
+  parseQtiMediaDefinition,
+  QTI_MEDIA_RESTART_THRESHOLD_SECONDS,
+  type QtiMediaDefinition,
+  type QtiMediaDefinitionResult,
+  type QtiMediaPlaybackEvent,
+  type QtiMediaPlaybackResult,
+  type QtiMediaPlaySession,
+} from "./media-definition.js";
+export {
+  parseQtiSliderDefinition,
+  parseQtiSliderValue,
+  qtiSliderDiscreteValue,
+  qtiSliderRatio,
+  snapQtiSliderValue,
+  type QtiSliderDefinition,
+  type QtiSliderDefinitionResult,
+  type QtiSliderOrientation,
+  type QtiSliderStep,
+  type QtiSliderValueFailureReason,
+  type QtiSliderValueResult,
+} from "./slider-definition.js";
 export { collectQtiResponseProcessingExpressions } from "./processing-expression-collection.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
 export {

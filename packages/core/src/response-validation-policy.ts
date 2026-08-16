@@ -1,4 +1,5 @@
 import type { QtiChoice, QtiDiagnostic, QtiInteraction, QtiValue } from "./types.js";
+import { parseQtiMediaDefinition } from "./media-definition.js";
 import { parseXmlBoolean } from "./parser-values.js";
 import { parseNonNegativeInteger } from "./validation-primitives.js";
 import { qtiValueToIdentifierList } from "./value-format.js";
@@ -75,14 +76,13 @@ export function mediaPlayCount(value: QtiValue): number {
 }
 
 function minimumMediaPlays(interaction: QtiInteraction): number {
-  const parsed = parseNonNegativeInteger(interaction.attributes["min-plays"]);
-  if (parsed !== undefined) return parsed;
-  return interactionRequiresResponse(interaction) ? 1 : 0;
+  const definition = parseQtiMediaDefinition(interaction);
+  return definition.ok ? definition.value.minPlays : 0;
 }
 
 function maximumMediaPlays(interaction: QtiInteraction): number | undefined {
-  const parsed = parseNonNegativeInteger(interaction.attributes["max-plays"]);
-  return parsed === undefined || parsed <= 0 ? undefined : parsed;
+  const definition = parseQtiMediaDefinition(interaction);
+  return definition.ok ? definition.value.maxPlays : undefined;
 }
 
 export { maximumMediaPlays, minimumMediaPlays };

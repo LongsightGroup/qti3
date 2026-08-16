@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { UNSUPPORTED_INTERACTION_ITEM } from "./fixtures/dom-behavior-items.js";
+import { sliderItem } from "./fixtures/slider-items.js";
 import { loadFixture, pasteXml } from "./player-helpers.js";
 
 test.describe("player lifecycle", () => {
@@ -259,6 +260,56 @@ test.describe("player lifecycle", () => {
     });
     expect(result.restoreEvents).toBe(0);
     expect(result.serializedAfterIncompatibleRestore?.itemIdentifier).toBe(choiceFixture.id);
+  });
+
+  test("rejects a restored response outside the authored slider domain", async ({ page }) => {
+    const xml = sliderItem({
+      identifier: "restored-slider-domain",
+      attributes: 'lower-bound="0" upper-bound="10" step="3"',
+    });
+
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+    const result = await page.evaluate(async (sliderXml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+      const diagnostics: Array<{
+        diagnostics: Array<{ code: string; message: string; severity: string }>;
+      }> = [];
+      player.addEventListener("qti-diagnostics", (event) => {
+        diagnostics.push(
+          (
+            event as CustomEvent<{
+              diagnostics: Array<{ code: string; message: string; severity: string }>;
+            }>
+          ).detail,
+        );
+      });
+
+      await player.loadXml(sliderXml);
+      const state = player.serialize();
+      if (!state) throw new Error("Expected loaded slider state.");
+      player.restore({ ...state, responses: { RESPONSE: 4 } });
+      const serialized = player.serialize();
+      const snapshot = {
+        diagnostic: diagnostics.at(-1),
+        response: serialized?.responses.RESPONSE,
+      };
+      player.remove();
+      return snapshot;
+    }, xml);
+
+    expect(result.diagnostic).toEqual({
+      diagnostics: [
+        expect.objectContaining({
+          code: "player.restoreState",
+          message:
+            "Cannot restore response RESPONSE: value 4 is not in the authored slider domain.",
+          severity: "error",
+        }),
+      ],
+    });
+    expect(result.response).toBeUndefined();
   });
 
   test("reports incompatible loadXml restored state as diagnostics instead of rejecting", async ({

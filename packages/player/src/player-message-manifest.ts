@@ -121,6 +121,7 @@ export const PLAYER_MESSAGE_MANIFEST = [
   { key: "textResponseLabel", resolver: "plain" },
   { key: "patternMaskMismatch", resolver: "plain" },
   { key: "sliderResponseLabel", resolver: "plain" },
+  { key: "sliderNoResponse", resolver: "plain" },
   { key: "catalogSupportTrigger", resolver: "plain" },
   { key: "catalogSupportTriggerLabel", resolver: "template", params: ["label"] },
 ] as const satisfies readonly PlayerMessageManifestEntry[];
