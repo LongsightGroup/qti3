@@ -227,6 +227,15 @@ Local manual proof for the React adapter: from the repo root run
 session state. It does not emit `qti-statechange` or other player events because no item is loaded.
 Hosts should treat the prop transition or imperative call as the source of truth.
 
+The last committed item remains available while a replacement `loadUrl()` request is pending. If
+the latest load reaches a handled fetch, parse, or restored-state error, the player displays its
+error alert and transitions to an unloaded state. `serialize()` and item getters then return
+`undefined` or an empty collection according to their existing return types. A failure from a
+superseded load cannot clear a newer item.
+
+This error transition does not emit `qti-statechange`. Hosts can observe the typed `qti-diagnostics`
+event and the rendered alert when coordinating load-error UI.
+
 Framework adapters treat `xml={undefined}` as a clear and `xml=""` as a load attempt. An empty
 string shows the parse error view when the XML is invalid.
 
