@@ -6,6 +6,8 @@
 
 - Export context-specific `escapeXmlText` and `escapeXmlAttribute` helpers from
   `@longsightgroup/qti3-core` for dependency-free XML serialization.
+- Add `qti3 score` and `qti3 prepare-delivery` commands for server-trusted scoring inputs and
+  candidate-safe static or server-materialized adaptive XML.
 
 ## 0.10.2 - 2026-07-28
 

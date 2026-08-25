@@ -16,7 +16,10 @@ npm install -D @longsightgroup/qti3-cli
 
 ```sh
 qti3 validate item.xml
+qti3 score item.xml --responses trusted-responses.json
 qti3 score-correct item.xml
+qti3 prepare-delivery item.xml --out candidate.xml
+qti3 prepare-delivery adaptive.xml --mode server-materialized-adaptive --state trusted-state.json --out candidate.xml
 qti3 inspect-package package.zip
 qti3 validate-package package.zip
 qti3 certification import-basic-items --qti-root /path/to/qti-conformance/qti3.0
@@ -30,7 +33,14 @@ qti3 run-fixtures
 
 - `parse <item.xml>` emits the parsed item model as JSON.
 - `validate <item.xml>` emits validation diagnostics as JSON.
+- `score <item.xml> --responses <responses.json>` applies a server-trusted response object and
+  emits the complete scoring result, including diagnostics, state, responses, outcomes, and score.
 - `score-correct <item.xml>` scores an item using its authored correct response.
+- `prepare-delivery <item.xml> [--mode static|server-materialized-adaptive] [--state <state.json>]
+[--out <candidate.xml>]` prepares candidate-safe XML. Static mode is the default and rejects a
+  state file. Adaptive mode requires a state object containing `outcomes` and optional
+  `templateValues`. Without `--out`, the command emits the complete preparation result; with
+  `--out`, it writes XML only after successful preparation and emits a JSON summary.
 - `inspect-package <package.zip>` inspects a QTI package zip and item references.
 - `validate-package <package.zip>` performs strict package validation for conformance
   checks.
@@ -45,6 +55,9 @@ qti3 run-fixtures
 - `a11y-proof` emits accessibility proof metadata.
 - `assert-support` checks release support evidence.
 - `run-fixtures` runs the canonical fixture suite.
+
+The response and adaptive-state JSON files are trusted server inputs. Do not pass browser-submitted
+outcomes or template values to these commands without validating them at the host trust boundary.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

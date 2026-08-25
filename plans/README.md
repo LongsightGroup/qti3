@@ -25,7 +25,7 @@ honor its stop conditions, and update its status when complete.
 | 024  | Capture actionable Playwright failure artifacts with one CI retry      | P2       | S      | 020               | DONE   |
 | 026  | Remove duplicate stages from pnpm verify                               | P2       | S      | 020               | DONE   |
 | 030  | Consolidate XML escaping with explicit text and attribute APIs         | P2       | M      | —                 | DONE   |
-| 037  | Add CLI commands for trusted scoring and candidate-safe delivery XML   | P2       | M      | —                 | TODO   |
+| 037  | Add CLI commands for trusted scoring and candidate-safe delivery XML   | P2       | M      | —                 | DONE   |
 | 012  | Require qti-any-n min/max attributes with validation                   | P3       | S      | —                 | TODO   |
 | 013  | Diagnose mixed fielded and unfielded declaration values                | P3       | M      | —                 | TODO   |
 | 021  | Decide and execute the xmldom 0.9 migration                            | P3       | M      | —                 | TODO   |

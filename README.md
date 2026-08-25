@@ -427,8 +427,25 @@ It can also score each item by applying its declared correct responses:
 node packages/cli/dist/index.js score-correct-dir /path/to/items
 ```
 
-Delivery-safe XML generation, server-style scoring, and secure adaptive turn handling are
-library APIs. Dedicated CLI commands for those operations are planned separately.
+Use a server-trusted response file to score one item through the same core API used by trusted
+hosts:
+
+```sh
+node packages/cli/dist/index.js score item.xml --responses trusted-responses.json
+```
+
+Prepare static or server-materialized adaptive candidate XML with:
+
+```sh
+node packages/cli/dist/index.js prepare-delivery item.xml --out candidate.xml
+node packages/cli/dist/index.js prepare-delivery adaptive.xml \
+  --mode server-materialized-adaptive \
+  --state trusted-state.json \
+  --out candidate.xml
+```
+
+Response and state JSON are server-trusted inputs, not raw browser submissions. Secure adaptive
+turn handling remains a library API for hosts that manage the versioned attempt-state contract.
 
 For package-level inspection without creating an open-source runner, use:
 

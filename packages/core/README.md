@@ -219,8 +219,10 @@ console.log(materialized.outcomeVariables);
 these dispositions to product-specific finalization statuses, grading queues, result
 aggregation, and external exports.
 
-Delivery redaction, server-style scoring, and secure adaptive turn handling are library
-APIs. Dedicated CLI commands for those operations are planned separately.
+The `qti3 score` and `qti3 prepare-delivery` CLI commands expose file-oriented server scoring and
+candidate-safe delivery preparation. Their response and state JSON files are server-trusted inputs,
+not raw browser submissions. Secure adaptive turn handling remains a library API for hosts that
+manage the versioned attempt-state contract.
 
 ### Secure adaptive turns
 

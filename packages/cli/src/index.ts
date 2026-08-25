@@ -21,10 +21,13 @@ import {
   elementSupport,
   interactionSupport,
   itemMetadataSupport,
+  isQtiValue,
   parseQtiPackageXmlTree,
   parseQtiXml,
+  prepareQtiDeliveryXml,
   processingSupport,
   readQtiPackageZipEntries,
+  scoreQtiItemServerSide,
   isEnforcedSharedVocabularyLevel,
   sharedVocabularyClassSupport,
   validateAssessmentItem,
@@ -45,6 +48,10 @@ interface PackageXmlFile {
   root: QtiPackageXmlNode | undefined;
   errors: string[];
 }
+
+const SCORE_USAGE = "Usage: qti3 score <item.xml> --responses <responses.json>";
+const PREPARE_DELIVERY_USAGE =
+  "Usage: qti3 prepare-delivery <item.xml> [--mode static|server-materialized-adaptive] [--state <state.json>] [--out <candidate.xml>]";
 
 export async function main(args = process.argv.slice(2)): Promise<number> {
   const [command, file] = args;
@@ -109,6 +116,14 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
     const report = await scoreCorrectDirectory(file);
     console.log(JSON.stringify(report, null, 2));
     return report.failed === 0 ? 0 : 1;
+  }
+
+  if (command === "score") {
+    return scoreFile(args.slice(1));
+  }
+
+  if (command === "prepare-delivery") {
+    return prepareDeliveryFile(args.slice(1));
   }
 
   if (command === "inspect-package" && file) {
@@ -188,9 +203,275 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
   }
 
   console.log(
-    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 inspect-package <package.zip|directory> | qti3 validate-package <package.zip|directory> | qti3 basic-item-player-report [package.zip|directory ...] | qti3 certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>] | qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 assert-support | qti3 run-fixtures",
+    "Usage: qti3 parse <item.xml> | qti3 parse-dir <directory> | qti3 validate <item.xml> | qti3 validate-dir <directory> | qti3 score <item.xml> --responses <responses.json> | qti3 score-correct <item.xml> | qti3 score-correct-dir <directory> | qti3 prepare-delivery <item.xml> [--mode static|server-materialized-adaptive] [--state <state.json>] [--out <candidate.xml>] | qti3 inspect-package <package.zip|directory> | qti3 validate-package <package.zip|directory> | qti3 basic-item-player-report [package.zip|directory ...] | qti3 certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>] | qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0> | qti3 write-fixtures <directory> | qti3 support-matrix | qti3 a11y-proof | qti3 assert-support | qti3 run-fixtures",
   );
   return 1;
+}
+
+interface ScoreCommandOptions {
+  itemFile: string;
+  responsesFile: string;
+}
+
+type PrepareDeliveryCommandOptions =
+  | {
+      itemFile: string;
+      mode: "static";
+      outputFile?: string | undefined;
+    }
+  | {
+      itemFile: string;
+      mode: "server-materialized-adaptive";
+      stateFile: string;
+      outputFile?: string | undefined;
+    };
+
+type CommandOptionsResult<T> =
+  | { readonly ok: true; readonly options: T }
+  | { readonly ok: false; readonly message: string };
+
+function parseScoreArgs(args: string[]): CommandOptionsResult<ScoreCommandOptions> {
+  const [itemFile, ...flags] = args;
+  if (itemFile === undefined || itemFile.length === 0 || itemFile.startsWith("--")) {
+    return { ok: false, message: SCORE_USAGE };
+  }
+
+  let responsesFile: string | undefined;
+  for (let index = 0; index < flags.length; index += 1) {
+    const flag = flags[index];
+    const value = flags[index + 1];
+    if (
+      flag !== "--responses" ||
+      value === undefined ||
+      value.length === 0 ||
+      value.startsWith("--") ||
+      responsesFile !== undefined
+    ) {
+      return { ok: false, message: SCORE_USAGE };
+    }
+    responsesFile = value;
+    index += 1;
+  }
+
+  return responsesFile === undefined
+    ? { ok: false, message: SCORE_USAGE }
+    : { ok: true, options: { itemFile, responsesFile } };
+}
+
+function parsePrepareDeliveryArgs(
+  args: string[],
+): CommandOptionsResult<PrepareDeliveryCommandOptions> {
+  const [itemFile, ...flags] = args;
+  if (itemFile === undefined || itemFile.length === 0 || itemFile.startsWith("--")) {
+    return { ok: false, message: PREPARE_DELIVERY_USAGE };
+  }
+
+  let mode: PrepareDeliveryCommandOptions["mode"] = "static";
+  let modeSeen = false;
+  let stateFile: string | undefined;
+  let outputFile: string | undefined;
+  for (let index = 0; index < flags.length; index += 1) {
+    const flag = flags[index];
+    const value = flags[index + 1];
+    if (value === undefined || value.length === 0 || value.startsWith("--")) {
+      return { ok: false, message: PREPARE_DELIVERY_USAGE };
+    }
+    if (flag === "--mode" && !modeSeen) {
+      if (value !== "static" && value !== "server-materialized-adaptive") {
+        return { ok: false, message: PREPARE_DELIVERY_USAGE };
+      }
+      mode = value;
+      modeSeen = true;
+    } else if (flag === "--state" && stateFile === undefined) {
+      stateFile = value;
+    } else if (flag === "--out" && outputFile === undefined) {
+      outputFile = value;
+    } else {
+      return { ok: false, message: PREPARE_DELIVERY_USAGE };
+    }
+    index += 1;
+  }
+
+  if (mode === "static") {
+    return stateFile === undefined
+      ? { ok: true, options: { itemFile, mode, outputFile } }
+      : { ok: false, message: PREPARE_DELIVERY_USAGE };
+  }
+  if (stateFile === undefined) {
+    return { ok: false, message: PREPARE_DELIVERY_USAGE };
+  }
+  return { ok: true, options: { itemFile, mode, stateFile, outputFile } };
+}
+
+async function scoreFile(args: string[]): Promise<number> {
+  const parsed = parseScoreArgs(args);
+  if (!parsed.ok) {
+    console.error(parsed.message);
+    return 1;
+  }
+
+  const itemXml = await readTextInput(parsed.options.itemFile, "QTI item");
+  if (!itemXml.ok) {
+    console.error(itemXml.message);
+    return 1;
+  }
+  const responses = await readJsonObject(parsed.options.responsesFile, "Responses");
+  if (!responses.ok) {
+    console.error(responses.message);
+    return 1;
+  }
+
+  const result = scoreQtiItemServerSide({
+    itemXml: itemXml.value,
+    trustedResponses: responses.value,
+  });
+  console.log(JSON.stringify(result, null, 2));
+  return result.ok ? 0 : 1;
+}
+
+async function prepareDeliveryFile(args: string[]): Promise<number> {
+  const parsed = parsePrepareDeliveryArgs(args);
+  if (!parsed.ok) {
+    console.error(parsed.message);
+    return 1;
+  }
+
+  const itemXml = await readTextInput(parsed.options.itemFile, "QTI item");
+  if (!itemXml.ok) {
+    console.error(itemXml.message);
+    return 1;
+  }
+
+  const prepared =
+    parsed.options.mode === "static"
+      ? { ok: true as const, value: prepareQtiDeliveryXml(itemXml.value, { mode: "static" }) }
+      : await prepareAdaptiveDelivery(itemXml.value, parsed.options.stateFile);
+  if (!prepared.ok) {
+    console.error(prepared.message);
+    return 1;
+  }
+  const result = prepared.value;
+
+  if (parsed.options.outputFile === undefined) {
+    console.log(JSON.stringify(result, null, 2));
+    return result.ok ? 0 : 1;
+  }
+
+  const { candidateSafeXml: _candidateSafeXml, ...summary } = result;
+  if (!result.ok || result.candidateSafeXml === undefined) {
+    console.log(JSON.stringify(summary, null, 2));
+    return 1;
+  }
+  try {
+    await writeFile(parsed.options.outputFile, result.candidateSafeXml, "utf8");
+  } catch (error) {
+    console.error(
+      fileErrorMessage("Candidate XML output", parsed.options.outputFile, "write", error),
+    );
+    return 1;
+  }
+  console.log(JSON.stringify({ ...summary, outputFile: parsed.options.outputFile }, null, 2));
+  return 0;
+}
+
+async function prepareAdaptiveDelivery(
+  itemXml: string,
+  stateFile: string,
+): Promise<
+  | { readonly ok: true; readonly value: ReturnType<typeof prepareQtiDeliveryXml> }
+  | { readonly ok: false; readonly message: string }
+> {
+  const state = await readJsonObject(stateFile, "Adaptive delivery state");
+  if (!state.ok) return state;
+  const keys = Object.keys(state.value);
+  if (keys.some((key) => key !== "outcomes" && key !== "templateValues")) {
+    return {
+      ok: false,
+      message: `Adaptive delivery state file "${stateFile}" may contain only outcomes and templateValues.`,
+    };
+  }
+  const outcomes = readQtiValueRecord(state.value.outcomes);
+  if (outcomes === undefined) {
+    return {
+      ok: false,
+      message: `Adaptive delivery state file "${stateFile}" must contain an outcomes object of QTI values.`,
+    };
+  }
+  const templateValues =
+    state.value.templateValues === undefined
+      ? undefined
+      : readQtiValueRecord(state.value.templateValues);
+  if (state.value.templateValues !== undefined && templateValues === undefined) {
+    return {
+      ok: false,
+      message: `Adaptive delivery state file "${stateFile}" templateValues must be an object of QTI values.`,
+    };
+  }
+  return {
+    ok: true,
+    value: prepareQtiDeliveryXml(itemXml, {
+      mode: "server-materialized-adaptive",
+      outcomes,
+      ...(templateValues === undefined ? {} : { templateValues }),
+    }),
+  };
+}
+
+function readQtiValueRecord(value: unknown): Record<string, QtiValue> | undefined {
+  if (!isJsonObject(value)) return undefined;
+  const result: Record<string, QtiValue> = {};
+  for (const [identifier, entry] of Object.entries(value)) {
+    if (!isQtiValue(entry)) return undefined;
+    result[identifier] = entry;
+  }
+  return result;
+}
+
+async function readJsonObject(
+  file: string,
+  label: string,
+): Promise<
+  | { readonly ok: true; readonly value: Record<string, unknown> }
+  | { readonly ok: false; readonly message: string }
+> {
+  const text = await readTextInput(file, `${label} JSON`);
+  if (!text.ok) return text;
+  let value: unknown;
+  try {
+    value = JSON.parse(text.value);
+  } catch {
+    return { ok: false, message: `${label} file "${file}" is not valid JSON.` };
+  }
+  return isJsonObject(value)
+    ? { ok: true, value }
+    : { ok: false, message: `${label} file "${file}" must contain a JSON object.` };
+}
+
+async function readTextInput(
+  file: string,
+  label: string,
+): Promise<
+  { readonly ok: true; readonly value: string } | { readonly ok: false; readonly message: string }
+> {
+  try {
+    return { ok: true, value: await readFile(file, "utf8") };
+  } catch (error) {
+    return { ok: false, message: fileErrorMessage(label, file, "read", error) };
+  }
+}
+
+function fileErrorMessage(
+  label: string,
+  file: string,
+  action: "read" | "write",
+  error: unknown,
+): string {
+  const detail = error instanceof Error ? error.message : String(error);
+  return `${label} file "${file}" could not be ${action}: ${detail}`;
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function parseCertificationImportBasicItemsArgs(

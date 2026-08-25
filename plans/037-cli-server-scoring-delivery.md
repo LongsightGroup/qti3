@@ -2,7 +2,13 @@
 
 ## Status
 
-TODO — P2, M effort.
+DONE — P2, M effort. Completed 2026-08-25.
+
+The CLI now delegates server-trusted scoring and candidate-safe delivery preparation to the core
+APIs with strict command-specific argument parsing and filename-specific JSON/I/O errors. Static
+and adaptive result/output behavior, malformed inputs, core diagnostics, QTI value validation, and
+write-failure safety are covered through `main`; full verification passes without dependency
+changes.
 
 ## Why
 
