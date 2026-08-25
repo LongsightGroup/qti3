@@ -4,6 +4,7 @@ import {
   interactionRegistryDiagnostics,
   interactionRegistryStatus,
   interactionSupport,
+  itemMetadataSupport,
   processingSupport,
 } from "./support.js";
 import {
@@ -13,7 +14,7 @@ import {
   processingSupportTests,
 } from "./support-evidence.js";
 
-describe("interaction registry helpers", () => {
+describe("support registry helpers", () => {
   it("reports supported status for registered current interactions", () => {
     expect(interactionRegistryStatus("qti-choice-interaction")).toBe("supported");
     expect(
@@ -86,5 +87,24 @@ describe("interaction registry helpers", () => {
 
     const variable = processingSupport.find((entry) => entry.qtiName === "qti-variable");
     expect(variable?.tests).toEqual(processingSupportTests("qti-variable"));
+  });
+
+  it("requires browser evidence for rendered item metadata", () => {
+    for (const support of itemMetadataSupport.filter((entry) => entry.render)) {
+      expect(support.tests).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^tests\/browser\/.+\.spec\.ts$/)]),
+      );
+    }
+
+    expect(
+      itemMetadataSupport.find((entry) => entry.qtiName === "qti-modal-feedback"),
+    ).toMatchObject({
+      support: "rendered",
+      parse: true,
+      validate: true,
+      render: true,
+      process: true,
+      tests: expect.arrayContaining(["tests/browser/player-feedback.spec.ts"]),
+    });
   });
 });

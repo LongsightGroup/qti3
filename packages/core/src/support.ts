@@ -266,12 +266,12 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
   {
     qtiName: "qti-modal-feedback",
     category: "itemMetadata",
-    support: "parsed",
+    support: "rendered",
     specReference: "QTI 3.0.1 ASI",
     parse: true,
     validate: true,
-    render: false,
-    process: false,
+    render: true,
+    process: true,
     fixtures: ["packages/fixtures/src/index.ts"],
     tests: [
       "packages/core/src/core.test.ts",
@@ -279,7 +279,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       ...browserFeedbackTests,
     ],
     notes:
-      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Player renders outcome-gated modal feedback in player-feedback.spec.ts.",
+      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Response processing supplies the outcome value used for visibility, and the player renders the matching feedback in player-feedback.spec.ts.",
   },
   {
     qtiName: "qti-companion-materials-info",

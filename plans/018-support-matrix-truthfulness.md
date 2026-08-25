@@ -12,6 +12,12 @@
 - **Depends on**: none
 - **Category**: conformance evidence
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+The support registry now marks `qti-modal-feedback` rendered and records its parsing, validation,
+outcome-processing dependency, and player rendering flags. Registry tests require direct browser
+evidence for every rendered item-metadata entry. CLI support checks, full verification, and the
+feedback browser suite pass.
 
 ## Why this matters
 
