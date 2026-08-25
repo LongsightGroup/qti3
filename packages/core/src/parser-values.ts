@@ -66,6 +66,13 @@ export function parseXmlBoolean(value: string | undefined): boolean | undefined 
   return undefined;
 }
 
+/** Parse a non-empty finite numeric XML attribute value. */
+export function parseFiniteNumber(value: string | undefined): number | undefined {
+  if (value === undefined || value.trim().length === 0) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export function normalizeValueForCardinality(
   value: QtiValue,
   cardinality: QtiCardinality,

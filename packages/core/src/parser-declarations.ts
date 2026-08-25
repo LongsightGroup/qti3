@@ -4,11 +4,11 @@ import {
   parseBaseType,
   parseCardinality,
   parseCoords,
+  parseFiniteNumber,
   parseShape,
   parseXmlBoolean,
 } from "./parser-values.js";
 import type {
-  QtiAssessmentItem,
   QtiBaseType,
   QtiDiagnostic,
   QtiLookupTable,
@@ -18,6 +18,11 @@ import type {
   QtiTemplateDeclaration,
   QtiValue,
 } from "./types.js";
+import {
+  validateAreaMapEntryAttributes,
+  validateLookupTableEntryAttributes,
+  validateMapEntryAttributes,
+} from "./validation-declaration-entries.js";
 import { childElements, textContent, type XmlNode } from "./xml.js";
 
 export function parseResponseDeclaration(
@@ -40,8 +45,16 @@ export function parseResponseDeclaration(
       parseVariableValue(childElements(node, "qti-correct-response")[0], baseType, diagnostics),
       cardinality,
     ),
-    mapping: parseMapping(childElements(node, "qti-mapping")[0]),
-    areaMapping: parseAreaMapping(childElements(node, "qti-area-mapping")[0]),
+    mapping: parseMapping(
+      childElements(node, "qti-mapping")[0],
+      node.attributes.identifier ?? "",
+      diagnostics,
+    ),
+    areaMapping: parseAreaMapping(
+      childElements(node, "qti-area-mapping")[0],
+      node.attributes.identifier ?? "",
+      diagnostics,
+    ),
     attributes: node.attributes,
     source: node.source,
   };
@@ -62,7 +75,7 @@ export function parseOutcomeDeclaration(
       baseType,
       diagnostics,
     ),
-    lookupTable: parseLookupTable(node, baseType),
+    lookupTable: parseLookupTable(node, baseType, diagnostics),
     attributes: node.attributes,
     source: node.source,
   };
@@ -124,84 +137,103 @@ function parseVariableValue(
   return entries.map((entry) => entry.value);
 }
 
-function parseMapping(node: XmlNode | undefined): QtiResponseDeclaration["mapping"] | undefined {
+function parseMapping(
+  node: XmlNode | undefined,
+  declarationIdentifier: string,
+  diagnostics: QtiDiagnostic[],
+): QtiResponseDeclaration["mapping"] | undefined {
   if (!node) return undefined;
+  const defaultValue = parseFiniteNumber(node.attributes["default-value"]);
   return {
-    defaultValue: parseFiniteNumber(node.attributes["default-value"]) ?? 0,
+    defaultValue: defaultValue ?? 0,
     attributes: node.attributes,
     source: node.source,
-    entries: childElements(node, "qti-map-entry").map((entry) => ({
-      mapKey: entry.attributes["map-key"],
-      mappedValue: parseFiniteNumber(entry.attributes["mapped-value"]) ?? 0,
-      attributes: entry.attributes,
-      source: entry.source,
-    })),
+    entries: childElements(node, "qti-map-entry").flatMap((entry) => {
+      const rawMappedValue = entry.attributes["mapped-value"];
+      const mappedValue = parseFiniteNumber(rawMappedValue);
+      if (mappedValue === undefined) {
+        validateMapEntryAttributes(declarationIdentifier, entry, diagnostics);
+        return [];
+      }
+      return [
+        {
+          mapKey: entry.attributes["map-key"],
+          mappedValue,
+          attributes: entry.attributes,
+          source: entry.source,
+        },
+      ];
+    }),
   };
 }
 
 function parseAreaMapping(
   node: XmlNode | undefined,
+  declarationIdentifier: string,
+  diagnostics: QtiDiagnostic[],
 ): QtiResponseDeclaration["areaMapping"] | undefined {
   if (!node) return undefined;
+  const defaultValue = parseFiniteNumber(node.attributes["default-value"]);
   return {
-    defaultValue: parseFiniteNumber(node.attributes["default-value"]) ?? 0,
+    defaultValue: defaultValue ?? 0,
     attributes: node.attributes,
     source: node.source,
-    entries: childElements(node, "qti-area-map-entry").map((entry) => ({
-      shape: parseShape(entry.attributes.shape),
-      coords: parseCoords(entry.attributes.coords),
-      mappedValue: parseFiniteNumber(entry.attributes["mapped-value"]) ?? 0,
-      attributes: entry.attributes,
-      source: entry.source,
-    })),
+    entries: childElements(node, "qti-area-map-entry").flatMap((entry) => {
+      const mappedValue = parseFiniteNumber(entry.attributes["mapped-value"]);
+      if (mappedValue === undefined) {
+        validateAreaMapEntryAttributes(declarationIdentifier, entry, diagnostics);
+        return [];
+      }
+      return [
+        {
+          shape: parseShape(entry.attributes.shape),
+          coords: parseCoords(entry.attributes.coords),
+          mappedValue,
+          attributes: entry.attributes,
+          source: entry.source,
+        },
+      ];
+    }),
   };
 }
 
 function parseLookupTable(
   node: XmlNode,
   baseType: QtiOutcomeDeclaration["baseType"],
+  diagnostics: QtiDiagnostic[],
 ): QtiLookupTable | undefined {
   const matchTable = childElements(node, "qti-match-table")[0];
-  if (matchTable) return parseMatchTable(matchTable, baseType);
+  if (matchTable) return parseMatchTable(matchTable, baseType, diagnostics);
   const interpolationTable = childElements(node, "qti-interpolation-table")[0];
-  if (interpolationTable) return parseInterpolationTable(interpolationTable, baseType);
+  if (interpolationTable) return parseInterpolationTable(interpolationTable, baseType, diagnostics);
   return undefined;
 }
 
 function parseMatchTable(
   node: XmlNode,
   baseType: QtiOutcomeDeclaration["baseType"],
+  diagnostics: QtiDiagnostic[],
 ): QtiLookupTable {
   return {
     type: "match",
     defaultValue: parseLookupValue(node.attributes["default-value"], baseType),
     attributes: node.attributes,
     source: node.source,
-    entries: childElements(node, "qti-match-table-entry").map((entry) => ({
-      sourceValue: parseFiniteNumber(entry.attributes["source-value"]) ?? 0,
-      targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
-      attributes: entry.attributes,
-      source: entry.source,
-    })),
+    entries: parseLookupEntries(node, "match", baseType, diagnostics),
   };
 }
 
 function parseInterpolationTable(
   node: XmlNode,
   baseType: QtiOutcomeDeclaration["baseType"],
+  diagnostics: QtiDiagnostic[],
 ): QtiLookupTable {
   return {
     type: "interpolation",
     defaultValue: parseLookupValue(node.attributes["default-value"], baseType),
     attributes: node.attributes,
     source: node.source,
-    entries: childElements(node, "qti-interpolation-table-entry").map((entry) => ({
-      sourceValue: parseFiniteNumber(entry.attributes["source-value"]) ?? 0,
-      targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
-      includeBoundary: parseXmlBoolean(entry.attributes["include-boundary"]) ?? true,
-      attributes: entry.attributes,
-      source: entry.source,
-    })),
+    entries: parseLookupEntries(node, "interpolation", baseType, diagnostics),
   };
 }
 
@@ -209,30 +241,32 @@ function parseLookupValue(value: string | undefined, baseType: string | undefine
   return value === undefined ? null : coerceValue(value, baseType);
 }
 
-function parseFiniteNumber(value: string | undefined): number | undefined {
-  if (value === undefined) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-/** Remove entries that retained raw invalid attributes only long enough for validation. */
-export function finalizeParsedDeclarationNumbers(item: QtiAssessmentItem): void {
-  for (const declaration of item.responseDeclarations) {
-    if (declaration.mapping) {
-      declaration.mapping.entries = declaration.mapping.entries.filter(
-        (entry) => parseFiniteNumber(entry.attributes["mapped-value"]) !== undefined,
-      );
+function parseLookupEntries(
+  node: XmlNode,
+  tableType: QtiLookupTable["type"],
+  baseType: QtiOutcomeDeclaration["baseType"],
+  diagnostics: QtiDiagnostic[],
+): QtiLookupTable["entries"] {
+  const entryName =
+    tableType === "match" ? "qti-match-table-entry" : "qti-interpolation-table-entry";
+  return childElements(node, entryName).flatMap((entry) => {
+    const rawSourceValue = entry.attributes["source-value"];
+    const sourceValue = parseFiniteNumber(rawSourceValue);
+    if (sourceValue === undefined) {
+      validateLookupTableEntryAttributes(tableType, entry, diagnostics);
+      return [];
     }
-    if (declaration.areaMapping) {
-      declaration.areaMapping.entries = declaration.areaMapping.entries.filter(
-        (entry) => parseFiniteNumber(entry.attributes["mapped-value"]) !== undefined,
-      );
-    }
-  }
-  for (const declaration of item.outcomeDeclarations) {
-    if (!declaration.lookupTable) continue;
-    declaration.lookupTable.entries = declaration.lookupTable.entries.filter(
-      (entry) => parseFiniteNumber(entry.attributes["source-value"]) !== undefined,
-    );
-  }
+    return [
+      {
+        sourceValue,
+        targetValue: parseLookupValue(entry.attributes["target-value"], baseType),
+        includeBoundary:
+          tableType === "interpolation"
+            ? (parseXmlBoolean(entry.attributes["include-boundary"]) ?? true)
+            : undefined,
+        attributes: entry.attributes,
+        source: entry.source,
+      },
+    ];
+  });
 }

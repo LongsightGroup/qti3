@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createItemSession, parseQtiXml } from "./index.js";
+import { createItemSession, parseQtiXml, validateAssessmentItem } from "./index.js";
 
 const MALFORMED_DECLARATION_NUMBERS = `
   <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="malformed-declaration-numbers" title="malformed-declaration-numbers" time-dependent="false">
@@ -82,6 +82,73 @@ describe("declaration numeric parsing", () => {
     const score = session.score();
     expect(score.outcomes.SCORE).toBe(0);
     expectFiniteNumbers(score.state);
+  });
+
+  it("rejects empty numeric attributes without losing diagnostics on omitted entries", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="empty-declaration-numbers" title="empty-declaration-numbers" time-dependent="false">
+        <qti-response-declaration identifier="MAP" cardinality="single" base-type="identifier">
+          <qti-mapping default-value="">
+            <qti-map-entry mapped-value=""/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="AREA" cardinality="single" base-type="point">
+          <qti-area-mapping default-value="">
+            <qti-area-map-entry mapped-value=""/>
+          </qti-area-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="LOOKUP" cardinality="single" base-type="identifier">
+          <qti-match-table default-value="fallback">
+            <qti-match-table-entry source-value=""/>
+          </qti-match-table>
+        </qti-outcome-declaration>
+        <qti-item-body/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    for (const code of [
+      "mapping.defaultValue",
+      "mapEntry.mapKey.required",
+      "mapEntry.mappedValue",
+      "areaMapping.defaultValue",
+      "areaMapEntry.shape.required",
+      "areaMapEntry.coords.required",
+      "areaMapEntry.mappedValue",
+      "lookupTable.entry.sourceValue",
+      "lookupTable.entry.targetValue",
+      "lookupTable.match.sourceValue",
+    ]) {
+      expect(
+        result.diagnostics.filter((diagnostic) => diagnostic.code === code),
+        `${code} should be reported once`,
+      ).toHaveLength(1);
+    }
+
+    const [mapping, areaMapping] = result.document?.item.responseDeclarations ?? [];
+    expect(mapping?.mapping).toMatchObject({ defaultValue: 0, entries: [] });
+    expect(areaMapping?.areaMapping).toMatchObject({ defaultValue: 0, entries: [] });
+    expect(result.document?.item.outcomeDeclarations[0]?.lookupTable?.entries).toEqual([]);
+  });
+
+  it("retains independent validation for caller-constructed declaration entries", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="validation-seam" title="validation-seam" time-dependent="false">
+        <qti-response-declaration identifier="MAP" cardinality="single" base-type="identifier">
+          <qti-mapping><qti-map-entry map-key="A" mapped-value="1"/></qti-mapping>
+        </qti-response-declaration>
+        <qti-item-body/>
+      </qti-assessment-item>
+    `);
+    const document = result.document;
+    const entry = document?.item.responseDeclarations[0]?.mapping?.entries[0];
+    if (!document || !entry) throw new Error("Expected a parsed mapping entry.");
+
+    entry.attributes["mapped-value"] = "";
+
+    expect(validateAssessmentItem(document).diagnostics).toContainEqual(
+      expect.objectContaining({ code: "mapEntry.mappedValue" }),
+    );
   });
 });
 

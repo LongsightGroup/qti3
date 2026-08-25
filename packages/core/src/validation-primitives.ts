@@ -1,5 +1,5 @@
 import type { QtiBaseType, QtiCardinality, QtiDiagnostic } from "./types.js";
-import { parseXmlBoolean } from "./parser-values.js";
+import { parseFiniteNumber, parseXmlBoolean } from "./parser-values.js";
 
 export function requireIdentifier(
   qtiName: string,
@@ -38,7 +38,7 @@ export function isBaseType(value: string): value is QtiBaseType {
 }
 
 export function isFiniteNumber(value: string): boolean {
-  return Number.isFinite(Number(value));
+  return parseFiniteNumber(value) !== undefined;
 }
 
 export function isInteger(value: string): boolean {

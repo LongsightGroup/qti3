@@ -16,11 +16,10 @@ import { assertNever } from "./assert-never.js";
 import { validateQtiDataSsmlMetadata } from "./tts.js";
 import { validateCompanionMaterials } from "./validation-companion-materials.js";
 import {
-  hasValidShapeCoordinateCount,
-  isAreaShape,
-  isNumericCsv,
-  numericCsv,
-} from "./validation-geometry.js";
+  validateAreaMapEntryAttributes,
+  validateLookupTableEntryAttributes,
+  validateMapEntryAttributes,
+} from "./validation-declaration-entries.js";
 import {
   isBaseType,
   isBooleanAttribute,
@@ -250,42 +249,7 @@ function validateMapping(declaration: QtiResponseDeclaration, diagnostics: QtiDi
   validateMappingBounds(declaration, mapping.attributes, mapping.source, "mapping", diagnostics);
 
   for (const entry of mapping.entries) {
-    validateMapEntry(declaration, entry, diagnostics);
-  }
-}
-
-function validateMapEntry(
-  declaration: QtiResponseDeclaration,
-  entry: NonNullable<QtiResponseDeclaration["mapping"]>["entries"][number],
-  diagnostics: QtiDiagnostic[],
-): void {
-  if (!entry.attributes["map-key"]) {
-    diagnostics.push({
-      code: "mapEntry.mapKey.required",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} map entry requires map-key.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  }
-
-  const mappedValue = entry.attributes["mapped-value"];
-  if (mappedValue === undefined) {
-    diagnostics.push({
-      code: "mapEntry.mappedValue.required",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} map entry requires mapped-value.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  } else if (!isFiniteNumber(mappedValue)) {
-    diagnostics.push({
-      code: "mapEntry.mappedValue",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} map entry requires numeric mapped-value.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
+    validateMapEntryAttributes(declaration.identifier, entry, diagnostics);
   }
 }
 
@@ -314,7 +278,7 @@ function validateAreaMapping(
   );
 
   for (const entry of areaMapping.entries) {
-    validateAreaMapEntry(declaration, entry, diagnostics);
+    validateAreaMapEntryAttributes(declaration.identifier, entry, diagnostics);
   }
 }
 
@@ -358,82 +322,6 @@ function validateMappingBounds(
       message: `Response declaration ${declaration.identifier} ${codePrefix} requires lower-bound to be less than or equal to upper-bound.`,
       path: source?.path ?? declaration.source?.path,
       source: source ?? declaration.source,
-    });
-  }
-}
-
-function validateAreaMapEntry(
-  declaration: QtiResponseDeclaration,
-  entry: NonNullable<QtiResponseDeclaration["areaMapping"]>["entries"][number],
-  diagnostics: QtiDiagnostic[],
-): void {
-  const shape = entry.attributes.shape;
-  const coords = entry.attributes.coords;
-  const mappedValue = entry.attributes["mapped-value"];
-
-  if (!shape) {
-    diagnostics.push({
-      code: "areaMapEntry.shape.required",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry requires shape.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  } else if (!isAreaShape(shape)) {
-    diagnostics.push({
-      code: "areaMapEntry.shape",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry has unsupported shape ${shape}.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  }
-
-  if (!coords) {
-    diagnostics.push({
-      code: "areaMapEntry.coords.required",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry requires coords.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  } else if (!isNumericCsv(coords)) {
-    diagnostics.push({
-      code: "areaMapEntry.coords",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry requires comma-separated numeric coords.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  } else if (
-    shape &&
-    isAreaShape(shape) &&
-    !hasValidShapeCoordinateCount(shape, numericCsv(coords))
-  ) {
-    diagnostics.push({
-      code: "areaMapEntry.coords.shape",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry shape ${shape} has invalid coords arity.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  }
-
-  if (mappedValue === undefined) {
-    diagnostics.push({
-      code: "areaMapEntry.mappedValue.required",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry requires mapped-value.`,
-      path: entry.source?.path,
-      source: entry.source,
-    });
-  } else if (!isFiniteNumber(mappedValue)) {
-    diagnostics.push({
-      code: "areaMapEntry.mappedValue",
-      severity: "error",
-      message: `Response declaration ${declaration.identifier} area map entry requires numeric mapped-value.`,
-      path: entry.source?.path,
-      source: entry.source,
     });
   }
 }
@@ -504,37 +392,7 @@ function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDi
       });
     }
     for (const entry of lookupTable.entries) {
-      if (!isFiniteNumber(entry.attributes["source-value"] ?? "")) {
-        diagnostics.push({
-          code: "lookupTable.entry.sourceValue",
-          severity: "error",
-          message: "Lookup table entry requires numeric source-value.",
-          path: entry.source?.path,
-          source: entry.source,
-        });
-      }
-      if (entry.attributes["target-value"] === undefined) {
-        diagnostics.push({
-          code: "lookupTable.entry.targetValue",
-          severity: "error",
-          message: "Lookup table entry requires target-value.",
-          path: entry.source?.path,
-          source: entry.source,
-        });
-      }
-      if (
-        lookupTable.type === "match" &&
-        entry.attributes["source-value"] !== undefined &&
-        !isInteger(entry.attributes["source-value"])
-      ) {
-        diagnostics.push({
-          code: "lookupTable.match.sourceValue",
-          severity: "error",
-          message: "qti-match-table-entry source-value must be an integer.",
-          path: entry.source?.path,
-          source: entry.source,
-        });
-      }
+      validateLookupTableEntryAttributes(lookupTable.type, entry, diagnostics);
     }
   }
 }
