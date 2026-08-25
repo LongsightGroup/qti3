@@ -2,7 +2,13 @@
 
 ## Status
 
-TODO — P2, S effort. Depends on plan 020 only if both edit `package.json`.
+DONE — P2, S effort. Completed 2026-08-25 after plan 020.
+
+The full Vitest run still discovers 1,693 tests (1,690 passing and 3 skipped), while `verify` no
+longer repeats the 47-test conformance subset and 51-test accessibility subset. A same-worktree
+comparison measured the revised gate at 14.432 seconds versus 15.790 seconds for the previous
+command. Both focused scripts remain available, and the release and certification gate chain is
+unchanged.
 
 ## Why
 
