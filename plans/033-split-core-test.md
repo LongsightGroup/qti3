@@ -2,7 +2,13 @@
 
 ## Status
 
-TODO — P3, L effort.
+DONE — P3, L effort. Completed 2026-08-25.
+
+The original 4,596-line suite's 117 tests were moved without omissions or title changes into
+seven ownership-focused suites. The largest resulting file is `core-parsing.test.ts` at 1,097
+lines. Named evidence-path constants now route processing support entries to the relevant suite,
+and a registry regression verifies that every evidence path exists and every split core suite
+contains assertions. Focused tests retained all 117 baseline cases, and full verification passes.
 
 ## Why
 

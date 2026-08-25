@@ -34,7 +34,7 @@ honor its stop conditions, and update its status when complete.
 | 028  | Add an EditorConfig matching repository formatting                     | P3       | S      | —                 | DONE                            |
 | 029  | Mark delivered design notes and supersede discredited docs             | P3       | S      | —                 | DONE                            |
 | 032  | Reuse core package-path normalization in the CLI                       | P3       | S      | —                 | DONE                            |
-| 033  | Split core.test.ts with stable support-evidence paths                  | P3       | L      | correctness plans | TODO                            |
+| 033  | Split core.test.ts with stable support-evidence paths                  | P3       | L      | correctness plans | DONE                            |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED
 (with one-line rationale).

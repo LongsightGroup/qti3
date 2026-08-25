@@ -11,9 +11,13 @@ import type {
 import {
   browserFeedbackTests,
   browserHarnessTests,
+  coreIntegrationTest,
+  coreParsingTest,
   interactionSupportFixtures,
   interactionSupportTests,
+  processingCoreTestFor,
   processingBrowserEvidence,
+  processingResponseTest,
 } from "./support-evidence.js";
 
 export const interactionSupport: QtiInteractionElementSupport[] = [
@@ -52,7 +56,7 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
     render: false,
     process: false,
     fixtures: [],
-    tests: ["packages/core/src/core.test.ts"],
+    tests: [coreIntegrationTest],
     notes: "Deprecated in favor of qti-portable-custom-interaction.",
   },
 ];
@@ -60,7 +64,6 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
 export const processingSupport: QtiProcessingElementSupport[] = [
   processingEntry(
     "qti-template-processing",
-    "packages/core/src/core.test.ts",
     [
       "packages/fixtures/xml/template-processing-reference.xml",
       "packages/fixtures/xml/random-integer-template-reference.xml",
@@ -70,7 +73,6 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   ),
   processingEntry(
     "qti-response-processing",
-    "packages/core/src/core.test.ts",
     [
       "packages/fixtures/xml/mapping-processing-reference.xml",
       "packages/fixtures/xml/generic-match-processing-reference.xml",
@@ -79,64 +81,64 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     ],
     [...processingBrowserEvidence["qti-response-processing"]],
   ),
-  processingEntry("qti-set-template-value", "packages/core/src/core.test.ts", [
+  processingEntry("qti-set-template-value", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
     "packages/fixtures/xml/template-content-reference.xml",
   ]),
-  processingEntry("qti-set-default-value", "packages/core/src/core.test.ts"),
-  processingEntry("qti-set-correct-response", "packages/core/src/core.test.ts", [
+  processingEntry("qti-set-default-value"),
+  processingEntry("qti-set-correct-response", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
   ]),
-  processingEntry("qti-template-condition", "packages/core/src/core.test.ts"),
-  processingEntry("qti-template-if", "packages/core/src/core.test.ts"),
-  processingEntry("qti-template-else-if", "packages/core/src/core.test.ts"),
-  processingEntry("qti-template-else", "packages/core/src/core.test.ts"),
-  processingEntry("qti-template-constraint", "packages/core/src/core.test.ts"),
-  processingEntry("qti-response-condition", "packages/core/src/core.test.ts", [
+  processingEntry("qti-template-condition"),
+  processingEntry("qti-template-if"),
+  processingEntry("qti-template-else-if"),
+  processingEntry("qti-template-else"),
+  processingEntry("qti-template-constraint"),
+  processingEntry("qti-response-condition", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-response-if", "packages/core/src/core.test.ts", [
+  processingEntry("qti-response-if", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-response-else-if", "packages/core/src/core.test.ts"),
-  processingEntry("qti-response-else", "packages/core/src/core.test.ts", [
+  processingEntry("qti-response-else-if"),
+  processingEntry("qti-response-else", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
   ]),
-  processingEntry("qti-set-outcome-value", "packages/core/src/core.test.ts", [
+  processingEntry("qti-set-outcome-value", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-lookup-outcome-value", "packages/core/src/core.test.ts"),
-  processingEntry("qti-exit-response", "packages/core/src/core.test.ts"),
-  processingEntry("qti-exit-template", "packages/core/src/core.test.ts"),
-  processingEntry("qti-response-processing-fragment", "packages/core/src/core.test.ts"),
-  processingEntry("qti-base-value", "packages/core/src/core.test.ts", [
+  processingEntry("qti-lookup-outcome-value"),
+  processingEntry("qti-exit-response"),
+  processingEntry("qti-exit-template"),
+  processingEntry("qti-response-processing-fragment"),
+  processingEntry("qti-base-value", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-null", "packages/core/src/core.test.ts"),
-  processingEntry("qti-match-table", "packages/core/src/core.test.ts"),
-  processingEntry("qti-match-table-entry", "packages/core/src/core.test.ts"),
-  processingEntry("qti-interpolation-table", "packages/core/src/core.test.ts"),
-  processingEntry("qti-interpolation-table-entry", "packages/core/src/core.test.ts"),
-  processingEntry("qti-is-null", "packages/core/src/core.test.ts"),
-  processingEntry("qti-match", "packages/core/src/core.test.ts", [
+  processingEntry("qti-null"),
+  processingEntry("qti-match-table"),
+  processingEntry("qti-match-table-entry"),
+  processingEntry("qti-interpolation-table"),
+  processingEntry("qti-interpolation-table-entry"),
+  processingEntry("qti-is-null"),
+  processingEntry("qti-match", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-correct", "packages/core/src/core.test.ts"),
-  processingEntry("qti-default", "packages/core/src/core.test.ts"),
-  processingEntry("qti-map-response", "packages/core/src/core.test.ts"),
-  processingEntry("qti-map-response-point", "packages/core/src/core.test.ts"),
-  processingEntry("qti-variable", "packages/core/src/core.test.ts", [
+  processingEntry("qti-correct"),
+  processingEntry("qti-default"),
+  processingEntry("qti-map-response"),
+  processingEntry("qti-map-response-point"),
+  processingEntry("qti-variable", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
@@ -146,79 +148,62 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   ]),
   processingEntry(
     "qti-random-integer",
-    "packages/core/src/core.test.ts",
     ["packages/fixtures/xml/random-integer-template-reference.xml"],
     [...processingBrowserEvidence["qti-random-integer"]],
   ),
-  processingEntry("qti-random-float", "packages/core/src/core.test.ts"),
-  processingEntry("qti-random", "packages/core/src/core.test.ts"),
-  processingEntry("qti-multiple", "packages/core/src/core.test.ts", [
+  processingEntry("qti-random-float"),
+  processingEntry("qti-random"),
+  processingEntry("qti-multiple", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-ordered", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-index"),
+  processingEntry("qti-contains"),
+  processingEntry("qti-container-size", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-ordered", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-index", "packages/core/src/core.test.ts"),
-  processingEntry("qti-contains", "packages/core/src/core.test.ts"),
-  processingEntry("qti-container-size", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-sum", "packages/core/src/core.test.ts", [
+  processingEntry("qti-sum", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
   ]),
-  processingEntry("qti-product", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-  ]),
-  processingEntry("qti-min", "packages/core/src/core.test.ts"),
-  processingEntry("qti-max", "packages/core/src/core.test.ts"),
-  processingEntry("qti-subtract", "packages/core/src/core.test.ts"),
-  processingEntry("qti-divide", "packages/core/src/core.test.ts"),
-  processingEntry("qti-power", "packages/core/src/core.test.ts"),
-  processingEntry("qti-integer-divide", "packages/core/src/core.test.ts"),
-  processingEntry("qti-integer-modulus", "packages/core/src/core.test.ts"),
-  processingEntry("qti-round", "packages/core/src/core.test.ts"),
-  processingEntry("qti-round-to", "packages/core/src/core.test.ts"),
-  processingEntry("qti-truncate", "packages/core/src/core.test.ts"),
-  processingEntry("qti-integer-to-float", "packages/core/src/core.test.ts"),
-  processingEntry("qti-and", "packages/core/src/core.test.ts"),
-  processingEntry("qti-any-n", "packages/core/src/core.test.ts"),
-  processingEntry("qti-or", "packages/core/src/core.test.ts"),
-  processingEntry("qti-not", "packages/core/src/core.test.ts"),
-  processingEntry("qti-equal", "packages/core/src/core.test.ts"),
-  processingEntry("qti-equal-rounded", "packages/core/src/core.test.ts", [
+  processingEntry("qti-product", ["packages/fixtures/xml/random-integer-template-reference.xml"]),
+  processingEntry("qti-min"),
+  processingEntry("qti-max"),
+  processingEntry("qti-subtract"),
+  processingEntry("qti-divide"),
+  processingEntry("qti-power"),
+  processingEntry("qti-integer-divide"),
+  processingEntry("qti-integer-modulus"),
+  processingEntry("qti-round"),
+  processingEntry("qti-round-to"),
+  processingEntry("qti-truncate"),
+  processingEntry("qti-integer-to-float"),
+  processingEntry("qti-and"),
+  processingEntry("qti-any-n"),
+  processingEntry("qti-or"),
+  processingEntry("qti-not"),
+  processingEntry("qti-equal"),
+  processingEntry("qti-equal-rounded", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-field-value"),
+  processingEntry("qti-lt"),
+  processingEntry("qti-lte"),
+  processingEntry("qti-gt"),
+  processingEntry("qti-gte"),
+  processingEntry("qti-string-match"),
+  processingEntry("qti-substring"),
+  processingEntry("qti-pattern-match"),
+  processingEntry("qti-member"),
+  processingEntry("qti-delete"),
+  processingEntry("qti-duration-gte"),
+  processingEntry("qti-duration-lt"),
+  processingEntry("qti-gcd", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-inside", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-lcm", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-math-constant"),
+  processingEntry("qti-math-operator"),
+  processingEntry("qti-repeat", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  processingEntry("qti-stats-operator", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-field-value", "packages/core/src/core.test.ts"),
-  processingEntry("qti-lt", "packages/core/src/core.test.ts"),
-  processingEntry("qti-lte", "packages/core/src/core.test.ts"),
-  processingEntry("qti-gt", "packages/core/src/core.test.ts"),
-  processingEntry("qti-gte", "packages/core/src/core.test.ts"),
-  processingEntry("qti-string-match", "packages/core/src/core.test.ts"),
-  processingEntry("qti-substring", "packages/core/src/core.test.ts"),
-  processingEntry("qti-pattern-match", "packages/core/src/core.test.ts"),
-  processingEntry("qti-member", "packages/core/src/core.test.ts"),
-  processingEntry("qti-delete", "packages/core/src/core.test.ts"),
-  processingEntry("qti-duration-gte", "packages/core/src/core.test.ts"),
-  processingEntry("qti-duration-lt", "packages/core/src/core.test.ts"),
-  processingEntry("qti-gcd", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-inside", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-lcm", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-math-constant", "packages/core/src/core.test.ts"),
-  processingEntry("qti-math-operator", "packages/core/src/core.test.ts"),
-  processingEntry("qti-repeat", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-stats-operator", "packages/core/src/core.test.ts", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
-  processingEntry("qti-custom-operator", "packages/core/src/core.test.ts"),
+  processingEntry("qti-custom-operator"),
 ];
 
 export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
@@ -235,7 +220,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
     ],
     tests: [
-      "packages/core/src/core.test.ts",
+      coreParsingTest,
       "packages/core/src/parser-item-metadata.test.ts",
       ...browserHarnessTests,
     ],
@@ -255,7 +240,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
     ],
     tests: [
-      "packages/core/src/core.test.ts",
+      coreParsingTest,
       "packages/core/src/parser-item-metadata.test.ts",
       "tests/browser/player-package.spec.ts",
       ...browserHarnessTests,
@@ -274,7 +259,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     process: true,
     fixtures: ["packages/fixtures/src/index.ts"],
     tests: [
-      "packages/core/src/core.test.ts",
+      processingResponseTest,
       "packages/core/src/parser-item-metadata.test.ts",
       ...browserFeedbackTests,
     ],
@@ -432,7 +417,6 @@ function pciEntry(): QtiInteractionElementSupport {
 
 function processingEntry(
   qtiName: string,
-  test: string,
   fixtures: string[] = [],
   extraTests: string[] = [],
 ): QtiProcessingElementSupport {
@@ -446,6 +430,6 @@ function processingEntry(
     render: false,
     process: true,
     fixtures,
-    tests: [test, ...extraTests],
+    tests: [processingCoreTestFor(qtiName), ...extraTests],
   };
 }

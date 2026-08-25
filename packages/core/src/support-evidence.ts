@@ -1,6 +1,51 @@
 import type { QtiInteractionType } from "./types.js";
 
-const coreProcessingTest = "packages/core/src/core.test.ts";
+export const coreIntegrationTest = "packages/core/src/core.test.ts";
+export const coreParsingTest = "packages/core/src/core-parsing.test.ts";
+export const coreSessionStateTest = "packages/core/src/core-session-state.test.ts";
+export const processingResponseTest = "packages/core/src/processing-response.test.ts";
+export const processingTemplateTest = "packages/core/src/processing-template.test.ts";
+export const processingOperatorsTest = "packages/core/src/processing-operators.test.ts";
+export const processingMappingTest = "packages/core/src/processing-mapping.test.ts";
+
+const templateProcessingNames = new Set([
+  "qti-template-processing",
+  "qti-set-template-value",
+  "qti-set-default-value",
+  "qti-set-correct-response",
+  "qti-template-condition",
+  "qti-template-if",
+  "qti-template-else-if",
+  "qti-template-else",
+  "qti-template-constraint",
+  "qti-exit-template",
+  "qti-random-integer",
+]);
+const responseProcessingNames = new Set([
+  "qti-response-processing",
+  "qti-response-condition",
+  "qti-response-if",
+  "qti-response-else-if",
+  "qti-response-else",
+  "qti-set-outcome-value",
+  "qti-exit-response",
+  "qti-response-processing-fragment",
+  "qti-variable",
+]);
+const mappingProcessingNames = new Set([
+  "qti-lookup-outcome-value",
+  "qti-match-table",
+  "qti-match-table-entry",
+  "qti-interpolation-table",
+  "qti-interpolation-table-entry",
+  "qti-match",
+  "qti-correct",
+  "qti-default",
+  "qti-map-response",
+  "qti-map-response-point",
+  "qti-field-value",
+  "qti-inside",
+]);
 
 export const browserProcessingTests = ["tests/browser/player-processing.spec.ts"];
 export const browserFeedbackTests = ["tests/browser/player-feedback.spec.ts"];
@@ -108,8 +153,16 @@ function isProcessingBrowserEvidenceName(
 }
 
 export function processingSupportTests(qtiName: string): string[] {
+  const coreTest = processingCoreTestFor(qtiName);
   if (!isProcessingBrowserEvidenceName(qtiName)) {
-    return [coreProcessingTest];
+    return [coreTest];
   }
-  return [coreProcessingTest, ...processingBrowserEvidence[qtiName]];
+  return [coreTest, ...processingBrowserEvidence[qtiName]];
+}
+
+export function processingCoreTestFor(qtiName: string): string {
+  if (templateProcessingNames.has(qtiName)) return processingTemplateTest;
+  if (responseProcessingNames.has(qtiName)) return processingResponseTest;
+  if (mappingProcessingNames.has(qtiName)) return processingMappingTest;
+  return processingOperatorsTest;
 }

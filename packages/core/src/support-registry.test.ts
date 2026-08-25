@@ -1,17 +1,27 @@
+import { existsSync, readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 import { testInteraction } from "./interaction-test-fixtures.js";
 import {
   interactionRegistryDiagnostics,
   interactionRegistryStatus,
+  deprecatedInteractionSupport,
   interactionSupport,
   itemMetadataSupport,
   processingSupport,
 } from "./support.js";
 import {
+  coreIntegrationTest,
+  coreParsingTest,
+  coreSessionStateTest,
   interactionSupportFixtures,
   interactionSupportTests,
+  processingMappingTest,
   processingBrowserEvidence,
+  processingOperatorsTest,
+  processingResponseTest,
   processingSupportTests,
+  processingTemplateTest,
 } from "./support-evidence.js";
 
 describe("support registry helpers", () => {
@@ -87,6 +97,42 @@ describe("support registry helpers", () => {
 
     const variable = processingSupport.find((entry) => entry.qtiName === "qti-variable");
     expect(variable?.tests).toEqual(processingSupportTests("qti-variable"));
+  });
+
+  it("points support evidence at existing test suites with assertions", () => {
+    for (const support of [
+      ...interactionSupport,
+      ...deprecatedInteractionSupport,
+      ...processingSupport,
+      ...itemMetadataSupport,
+    ]) {
+      for (const path of support.tests) {
+        expect(existsSync(path), `${support.qtiName} evidence must exist: ${path}`).toBe(true);
+      }
+    }
+
+    const splitCoreTests = [
+      coreIntegrationTest,
+      coreParsingTest,
+      coreSessionStateTest,
+      processingResponseTest,
+      processingTemplateTest,
+      processingOperatorsTest,
+      processingMappingTest,
+    ];
+    for (const coreTest of splitCoreTests) {
+      expect(existsSync(coreTest), `core evidence must exist: ${coreTest}`).toBe(true);
+      expect(readFileSync(coreTest, "utf8"), `${coreTest} must contain assertions`).toMatch(
+        /\b(?:it|test)\(/,
+      );
+    }
+
+    for (const support of processingSupport) {
+      const coreTest = processingSupportTests(support.qtiName)[0];
+      expect(coreTest).toMatch(/^packages\/core\/src\/.+\.test\.ts$/);
+      if (!coreTest) continue;
+      expect(splitCoreTests).toContain(coreTest);
+    }
   });
 
   it("requires browser evidence for rendered item metadata", () => {
