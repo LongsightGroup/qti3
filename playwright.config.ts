@@ -6,9 +6,13 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   timeout: 30_000,
   workers: 4,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["dot"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: "http://127.0.0.1:4179",
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "on-first-retry",
   },
   webServer: {
     command: "pnpm exec vite --host 127.0.0.1 --port 4179 examples/manual",

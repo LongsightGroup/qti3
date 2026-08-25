@@ -12,6 +12,12 @@
 - **Depends on**: none
 - **Category**: tests / dx
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+CI now performs one retry and publishes a seven-day, failure-only artifact containing the HTML
+report and Playwright test results. A forced-failure probe confirmed that the first attempt retains
+a screenshot and trace while the retry retains a screenshot, trace, and video; the temporary probe
+and its generated output were removed before completion.
 
 ## Why this matters
 

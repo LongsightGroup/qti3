@@ -22,7 +22,7 @@ honor its stop conditions, and update its status when complete.
 | 017  | Separate XML textContent semantics from visible-text flattening        | P2       | M      | —                 | DONE   |
 | 018  | Mark modal feedback as rendered in the support matrix                  | P2       | S      | —                 | DONE   |
 | 022  | Add characterization tests to the highest-risk migrator seams          | P2       | M      | —                 | DONE   |
-| 024  | Capture actionable Playwright failure artifacts with one CI retry      | P2       | S      | 020               | TODO   |
+| 024  | Capture actionable Playwright failure artifacts with one CI retry      | P2       | S      | 020               | DONE   |
 | 026  | Remove duplicate stages from pnpm verify                               | P2       | S      | 020               | TODO   |
 | 030  | Consolidate XML escaping with explicit text and attribute APIs         | P2       | M      | —                 | TODO   |
 | 037  | Add CLI commands for trusted scoring and candidate-safe delivery XML   | P2       | M      | —                 | TODO   |

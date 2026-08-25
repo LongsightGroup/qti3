@@ -21,3 +21,13 @@ jobs:
       - run: pnpm audit --audit-level high
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
       - run: pnpm release:check
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-failure-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
