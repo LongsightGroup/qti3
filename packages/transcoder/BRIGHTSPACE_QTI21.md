@@ -41,7 +41,7 @@ conversion report marks the mapping as `lossy`, sets scoring to `manual`, and in
 diagnostic. If an item contains a manual fallback, the serializer removes automatic response
 processing for that item.
 
-Qflow preflight must show and approve the fallback before export.
+QFlow preflight must show and approve the fallback before export.
 
 ## Synthetic package evidence
 

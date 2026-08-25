@@ -41,7 +41,7 @@ conversion report marks the mapping as `lossy`, sets scoring to `manual`, and in
 diagnostic.
 
 This policy prefers a reviewable question over a package that Blackboard may skip or reinterpret.
-The author must review and approve the fallback in Qflow preflight.
+The author must review and approve the fallback in QFlow preflight.
 
 ## Synthetic package evidence
 

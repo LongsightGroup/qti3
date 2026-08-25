@@ -3,7 +3,7 @@ import type { QtiPlayerMovementDirection } from "./player-messages.js";
 
 export { defaultPlayerMessageCatalog } from "./player-message-catalog-default.js";
 
-/** JSON-serializable chrome strings for Harbor/LMS locale files. */
+/** JSON-serializable chrome strings for host and LMS locale files. */
 export interface PlayerMessageCatalog {
   /** BCP 47 tag (metadata only). */
   locale?: string;
