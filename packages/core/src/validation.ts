@@ -237,7 +237,8 @@ function isValidDeclarationBaseValue(value: string, baseType: QtiBaseType): bool
 function validateMapping(declaration: QtiResponseDeclaration, diagnostics: QtiDiagnostic[]): void {
   const mapping = declaration.mapping;
   if (!mapping) return;
-  if (!Number.isFinite(mapping.defaultValue)) {
+  const defaultValue = mapping.attributes["default-value"];
+  if (defaultValue !== undefined && !isFiniteNumber(defaultValue)) {
     diagnostics.push({
       code: "mapping.defaultValue",
       severity: "error",
@@ -294,7 +295,8 @@ function validateAreaMapping(
 ): void {
   const areaMapping = declaration.areaMapping;
   if (!areaMapping) return;
-  if (!Number.isFinite(areaMapping.defaultValue)) {
+  const defaultValue = areaMapping.attributes["default-value"];
+  if (defaultValue !== undefined && !isFiniteNumber(defaultValue)) {
     diagnostics.push({
       code: "areaMapping.defaultValue",
       severity: "error",

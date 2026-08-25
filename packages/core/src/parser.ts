@@ -1,5 +1,6 @@
 import { appendContentTextNode, flatTextFromContent } from "./content-text.js";
 import {
+  finalizeParsedDeclarationNumbers,
   parseOutcomeDeclaration,
   parseResponseDeclaration,
   parseTemplateDeclaration,
@@ -99,6 +100,7 @@ export function parseQtiXml(xml: string): QtiParseResult {
   const document: QtiDocument = { item, diagnostics };
   const validation = validateAssessmentItem(document);
   diagnostics.push(...validation.diagnostics);
+  finalizeParsedDeclarationNumbers(item);
   return {
     ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
     document,

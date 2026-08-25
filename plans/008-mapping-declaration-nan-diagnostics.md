@@ -12,6 +12,14 @@
 - **Depends on**: none
 - **Category**: bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Declaration-side mapping, area-mapping, and lookup source numbers now pass through one finite
+parser. Invalid or missing optional defaults use the QTI zero default; entries with invalid required
+numeric values remain through validation and are then removed before the document is returned.
+Existing diagnostics are preserved without duplication. Recursive model and defensive-session
+tests prove malformed documents contain and produce no non-finite numbers, and full verification
+passes.
 
 ## Why this matters
 
