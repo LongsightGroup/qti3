@@ -6,7 +6,8 @@ on:
     branches: [main]
 
 jobs:
-  release-check:
+  minimum-node:
+    name: Minimum Node 22 (full verification)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -20,7 +21,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level high
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      - run: pnpm release:check
+      - name: Run full release check (includes pnpm verify and browser matrix)
+        run: pnpm release:check
       - name: Upload Playwright failure artifacts
         if: failure()
         uses: actions/upload-artifact@v7
@@ -31,3 +33,20 @@ jobs:
             test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+  current-node:
+    name: Current Node 24 (compatibility)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.30.1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build

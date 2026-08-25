@@ -2,7 +2,12 @@
 
 ## Status
 
-TODO — P3, S effort.
+DONE — P3, S effort. Completed 2026-08-25.
+
+CI now exposes a full `minimum-node` Node 22 release check (including `pnpm verify` and the sole
+browser matrix) and a non-browser `current-node` Node 24 compatibility job running typecheck,
+tests, and build. Publish and Pages retain Node 24 with rationale comments. Local Node 22 full
+verification and the exact Node 24 compatibility commands pass; the `>=22` engine remains valid.
 
 ## Why
 
