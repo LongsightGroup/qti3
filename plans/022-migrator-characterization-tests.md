@@ -12,6 +12,12 @@
 - **Depends on**: none
 - **Category**: tests
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Three focused sibling suites now characterize QTI 1.2 classification and detection, strict/safe
+repair-policy transitions and diagnostic preservation, and the QTI 2 choice/match/text-entry mapper
+branches. All fixtures are inline synthetic data, assertions target structured fields, and full
+verification passes. No incorrect current behavior was discovered.
 
 ## Why this matters
 
