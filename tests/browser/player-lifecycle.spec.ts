@@ -4,6 +4,32 @@ import { UNSUPPORTED_INTERACTION_ITEM } from "./fixtures/dom-behavior-items.js";
 import { sliderItem } from "./fixtures/slider-items.js";
 import { loadFixture, pasteXml } from "./player-helpers.js";
 
+const SEEDED_TEMPLATE_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="seeded-player-session" title="seeded-player-session" time-dependent="false">
+  <qti-template-declaration identifier="VALUE" cardinality="single" base-type="integer"/>
+  <qti-template-processing>
+    <qti-set-template-value identifier="VALUE">
+      <qti-random-integer min="1" max="1000000000"/>
+    </qti-set-template-value>
+  </qti-template-processing>
+  <qti-item-body><p>Variant <qti-printed-variable identifier="VALUE"/></p></qti-item-body>
+</qti-assessment-item>`;
+
+const CUSTOM_OPERATOR_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="custom-operator-player-session" title="custom-operator-player-session" time-dependent="false">
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body><p>Custom operator lifecycle test.</p></qti-item-body>
+  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-custom-operator definition="double">
+        <qti-base-value base-type="integer">4</qti-base-value>
+      </qti-custom-operator>
+    </qti-set-outcome-value>
+  </qti-response-processing>
+</qti-assessment-item>`;
+
 test.describe("player lifecycle", () => {
   test("ignores stale loadUrl completions after a newer load starts", async ({ page }) => {
     const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
@@ -427,6 +453,71 @@ test.describe("player lifecycle", () => {
     });
     expect(restoredState.responses.RESPONSE).toBe("A");
     expect(restoredState.outcomes.SCORE).toBe(1);
+  });
+
+  test("preserves a seeded template variant across reset", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+
+    const values = await page.evaluate(async (xml) => {
+      const loadVariant = async (randomSeed: string) => {
+        const player = document.createElement("qti-assessment-item-player");
+        document.body.append(player);
+        await player.loadXml(xml, { sessionOptions: { randomSeed } });
+        const value = player.serialize()?.templateValues?.VALUE;
+        return { player, value };
+      };
+
+      const seeded = await loadVariant("variant-a");
+      const stateContainsCapabilities = Object.hasOwn(
+        seeded.player.serialize() ?? {},
+        "sessionOptions",
+      );
+      seeded.player.reset();
+      const resetValue = seeded.player.serialize()?.templateValues?.VALUE;
+      const other = await loadVariant("variant-b");
+      seeded.player.remove();
+      other.player.remove();
+      return {
+        initialValue: seeded.value,
+        otherSeedValue: other.value,
+        resetValue,
+        stateContainsCapabilities,
+      };
+    }, SEEDED_TEMPLATE_ITEM);
+
+    expect(values.initialValue).toBeDefined();
+    expect(values.initialValue).toBe(737531934);
+    expect(values.resetValue).toBe(values.initialValue);
+    expect(values.otherSeedValue).toBe(358426569);
+    expect(values.stateContainsCapabilities).toBe(false);
+  });
+
+  test("preserves custom operators across restore", async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => customElements.whenDefined("qti-assessment-item-player"));
+
+    const scores = await page.evaluate(async (xml) => {
+      const player = document.createElement("qti-assessment-item-player");
+      document.body.append(player);
+      await player.loadXml(xml, {
+        sessionOptions: {
+          customOperators: {
+            double: ({ values }) => Number(values[0]) * 2,
+          },
+        },
+      });
+      const initialState = player.serialize();
+      if (!initialState) throw new Error("Expected initial player state.");
+      const initialScore = player.scoreAttempt({ validateResponses: false })?.outcomes.SCORE;
+      player.restore(initialState);
+      const restoredScore = player.scoreAttempt({ validateResponses: false })?.outcomes.SCORE;
+      player.remove();
+      return { initialScore, restoredScore };
+    }, CUSTOM_OPERATOR_ITEM);
+
+    expect(scores.initialScore).toBe(8);
+    expect(scores.restoredScore).toBe(8);
   });
 
   test("end-attempt interaction writes its boolean response and reveals adaptive feedback", async ({

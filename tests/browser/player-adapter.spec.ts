@@ -87,19 +87,39 @@ for (const adapter of adapterPages) {
     }) => {
       await callHarness(page, "installLoadXmlMock", "resolve");
       await callHarness(page, "render", {
-        loadOptions: { sessionControl: { showFeedback: false }, status: "interacting" },
+        loadOptions: {
+          sessionControl: { showFeedback: false },
+          sessionOptions: { randomSeed: "variant-a" },
+          status: "interacting",
+        },
         xml: "<item/>",
       });
       await callHarness(page, "rerender", {
-        loadOptions: { sessionControl: { showFeedback: false }, status: "interacting" },
+        loadOptions: {
+          sessionControl: { showFeedback: false },
+          sessionOptions: { randomSeed: "variant-a" },
+          status: "interacting",
+        },
         xml: "<item/>",
       });
       await callHarness(page, "rerender", {
-        loadOptions: { sessionControl: { showFeedback: false }, status: "completed" },
+        loadOptions: {
+          sessionControl: { showFeedback: false },
+          sessionOptions: { randomSeed: "variant-b" },
+          status: "interacting",
+        },
+        xml: "<item/>",
+      });
+      await callHarness(page, "rerender", {
+        loadOptions: {
+          sessionControl: { showFeedback: false },
+          sessionOptions: { randomSeed: "variant-b" },
+          status: "completed",
+        },
         xml: "<item/>",
       });
 
-      expect(await callHarness(page, "loadXmlCallSnapshot")).toHaveLength(2);
+      expect(await callHarness(page, "loadXmlCallSnapshot")).toHaveLength(3);
     });
 
     test("does not reload for equivalent restored state with a new object reference", async ({

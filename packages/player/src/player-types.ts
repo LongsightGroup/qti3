@@ -5,6 +5,7 @@ import type {
   QtiCatalogSupportResolutionOptions,
   QtiDiagnostic,
   QtiInteraction,
+  QtiItemSessionOptions,
   QtiPortableCustomDefinition,
   QtiPortableCustomStateValue,
   QtiScoreResult,
@@ -46,6 +47,12 @@ export interface QtiPlayerLoadOptions {
   state?: QtiAttemptStateV1 | undefined;
   status?: QtiAttemptStatus | undefined;
   sessionControl?: QtiPlayerSessionControl | undefined;
+  /**
+   * Host-owned core session capabilities retained by reference across reset and restore.
+   * These capabilities are not serialized into `QtiAttemptStateV1`; the host must provide them
+   * again when loading a saved attempt in a new player instance.
+   */
+  sessionOptions?: QtiItemSessionOptions | undefined;
   fetchXml?: QtiPlayerFetchXml | undefined;
   resolveAsset?: QtiPlayerResolveAsset | undefined;
   resolveStylesheet?: QtiPlayerResolveStylesheet | undefined;

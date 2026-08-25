@@ -5,6 +5,7 @@ export type {
   QtiCatalogSupportResolutionOptions,
   QtiCompanionMaterialsResolution,
   QtiCompanionMaterialsResolutionOptions,
+  QtiItemSessionOptions,
   QtiResolvedCompanionMaterialUnparsedChild,
   QtiScoreResult,
   QtiTextToSpeechTraversal,

@@ -12,6 +12,13 @@
 - **Depends on**: none
 - **Category**: feature / bug-prevention
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+The player load API now accepts and publicly re-exports `QtiItemSessionOptions`, retaining the
+exact host-owned options object for initial load, reset, and restore without adding capabilities to
+attempt JSON. Native lifecycle tests cover seeded reset and custom-operator restore. React and
+Preact reload effects track session-option members without changing their public dependency tuple.
+The full verification suite and all 473 browser tests pass.
 
 ## Why this matters
 

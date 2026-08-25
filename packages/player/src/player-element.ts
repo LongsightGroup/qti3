@@ -10,6 +10,7 @@ import {
   type QtiDocument,
   type QtiInteraction,
   type QtiItemSession,
+  type QtiItemSessionOptions,
   type QtiPortableCustomStateValue,
   type QtiScoreResult,
   type QtiCatalogSupportResolution,
@@ -119,6 +120,7 @@ function observeResolvedAssets(
 interface LoadedPlayerItem {
   readonly document: QtiDocument;
   session: QtiItemSession;
+  readonly sessionOptions: QtiItemSessionOptions | undefined;
   readonly resolveAsset: QtiPlayerResolveAsset | undefined;
   readonly stylesheets: QtiResolvedStylesheet[];
   readonly sessionControl: Required<QtiPlayerSessionControl>;
@@ -370,7 +372,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
 
     let nextSession: QtiItemSession;
     try {
-      nextSession = createItemSession(nextDocumentModel, options.state);
+      nextSession = createItemSession(nextDocumentModel, options.state, options.sessionOptions);
     } catch (error) {
       this.transitionCurrentLoadToError(
         generation,
@@ -385,6 +387,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.loadedItem = {
       document: nextDocumentModel,
       session: nextSession,
+      sessionOptions: options.sessionOptions,
       resolveAsset: options.resolveAsset,
       stylesheets: stylesheetResolution.links,
       sessionControl: nextSessionControl,
@@ -431,7 +434,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   reset(): void {
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
-    loadedItem.session = createItemSession(loadedItem.document);
+    loadedItem.session = createItemSession(
+      loadedItem.document,
+      undefined,
+      loadedItem.sessionOptions,
+    );
     loadedItem.validationMessages = [];
     this.render();
     this.updateAttemptAvailability();
@@ -458,7 +465,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
           `Cannot restore state for ${state.itemIdentifier} into ${loadedItem.document.item.identifier}.`,
         );
       }
-      loadedItem.session = createItemSession(loadedItem.document, state);
+      loadedItem.session = createItemSession(loadedItem.document, state, loadedItem.sessionOptions);
     } catch (error) {
       this.emitDiagnostics([playerErrorDiagnostic("player.restoreState", error)]);
       return;

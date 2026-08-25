@@ -206,11 +206,18 @@ const player = document.getElementById("player");
 
 await player.loadXml(xml, {
   status: "interacting",
+  sessionOptions: {
+    randomSeed: "candidate-42-item-1",
+  },
   sessionControl: {
     validateResponses: true,
     showFeedback: false,
   },
 });
+
+// Attempt JSON stores QTI state, not host functions or capability registries. Pass the same
+// sessionOptions again when loading saved state into a new player instance. reset() and restore()
+// on this player retain the options object supplied above.
 
 await player.loadUrl("/items/item-1.xml", {
   fetchXml: async (url) => {

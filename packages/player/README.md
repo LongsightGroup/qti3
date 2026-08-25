@@ -28,11 +28,18 @@ const player = document.querySelector("qti-assessment-item-player");
 
 await player?.loadXml(xml, {
   status: "interacting",
+  sessionOptions: {
+    randomSeed: "candidate-42-item-1",
+  },
   sessionControl: {
     validateResponses: true,
     showFeedback: true,
   },
 });
+
+// Attempt JSON does not serialize host functions or capability registries. Supply sessionOptions
+// again when a saved attempt is loaded into a new player. This player's reset() and restore()
+// methods retain the options object from loadXml().
 
 player?.addEventListener("qti-statechange", (event) => {
   console.log(event.detail.state);
