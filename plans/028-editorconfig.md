@@ -2,7 +2,12 @@
 
 ## Status
 
-TODO — P3, S effort.
+DONE — P3, S effort. Completed 2026-08-25.
+
+The root `.editorconfig` now declares UTF-8, LF line endings, final newlines, trailing-whitespace
+trimming, spaces, and two-space indentation. An inventory found no tracked Makefiles or other
+formats requiring an exception; the existing Java utility also uses two spaces. Formatting and
+whitespace checks pass without changing source files.
 
 ## Why
 
