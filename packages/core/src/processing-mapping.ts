@@ -49,6 +49,7 @@ export function scoreAreaMapping(
     : response === null
       ? []
       : qtiValueToStringList(response);
+  const matchedAreaIndexes = new Set<number>();
   let score = 0;
   for (const point of points) {
     const parsed = parsePoint(point);
@@ -56,8 +57,15 @@ export function scoreAreaMapping(
       score += areaMapping.defaultValue;
       continue;
     }
-    const entry = areaMapping.entries.find((candidate) => pointInsideArea(parsed, candidate));
-    score += entry?.mappedValue ?? areaMapping.defaultValue;
+    let matchedArea = false;
+    for (const [index, entry] of areaMapping.entries.entries()) {
+      if (!pointInsideArea(parsed, entry)) continue;
+      matchedArea = true;
+      if (matchedAreaIndexes.has(index)) continue;
+      matchedAreaIndexes.add(index);
+      score += entry.mappedValue;
+    }
+    if (!matchedArea) score += areaMapping.defaultValue;
   }
   return clampMappedScore(score, areaMapping.attributes);
 }

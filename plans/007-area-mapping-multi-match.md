@@ -12,6 +12,13 @@
 - **Depends on**: none
 - **Category**: bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Confirmed against the official [QTI 3.0.1 ASI Information Model, section
+2.11.1.6](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/imsqti_asi_v3p0p1_infomodel_v1p0.html):
+each point is tested against every area, and each area contributes at most once for a container
+response. The scorer now follows that rule, with focused coverage for overlapping, repeated,
+distinct, unmatched, and mixed points. The conformance and full verification suites pass.
 
 ## Why this matters
 
