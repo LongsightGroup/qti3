@@ -8,6 +8,7 @@ import type {
   QtiTemplateRule,
 } from "./types.js";
 import { expressionChildren } from "./processing-expression-children.js";
+import { MAX_QTI_REPEAT_RESULT_ELEMENTS } from "./processing-limits.js";
 import { MATH_OPERATOR_NAMES, STATS_OPERATOR_NAMES } from "./processing-operators.js";
 import {
   responseProcessingTemplateKind,
@@ -540,7 +541,31 @@ function validateRepeatExpression(
   variables: Set<string>,
   diagnostics: QtiDiagnostic[],
 ): void {
-  if (isInteger(expression.numberRepeats)) return;
+  if (isInteger(expression.numberRepeats)) {
+    const repeats = BigInt(expression.numberRepeats);
+    if (repeats < 0n) {
+      diagnostics.push(repeatCountDiagnostic(expression));
+      return;
+    }
+    const minimumPerRepeat = minimumProducedElements(expression.expressions);
+    if (
+      repeats > BigInt(MAX_QTI_REPEAT_RESULT_ELEMENTS) ||
+      repeats * BigInt(minimumPerRepeat) > BigInt(MAX_QTI_REPEAT_RESULT_ELEMENTS)
+    ) {
+      diagnostics.push({
+        code: "processing.repeat.limit",
+        severity: "error",
+        message: `qti-repeat cannot exceed ${MAX_QTI_REPEAT_RESULT_ELEMENTS} iterations or produced elements.`,
+        path: expression.source?.path,
+        source: expression.source,
+      });
+    }
+    return;
+  }
+  if (Number.isFinite(Number(expression.numberRepeats))) {
+    diagnostics.push(repeatCountDiagnostic(expression));
+    return;
+  }
   validateProcessingIdentifier(
     expression.numberRepeats,
     "processing.repeat.numberRepeats",
@@ -556,6 +581,51 @@ function validateRepeatExpression(
       source: expression.source,
     });
   }
+}
+
+function repeatCountDiagnostic(
+  expression: Extract<QtiProcessingExpression, { type: "repeat" }>,
+): QtiDiagnostic {
+  return {
+    code: "processing.repeat.numberRepeats",
+    severity: "error",
+    message: "qti-repeat requires a non-negative integer or a declared variable.",
+    path: expression.source?.path,
+    source: expression.source,
+  };
+}
+
+function minimumProducedElements(expressions: QtiProcessingExpression[]): number {
+  let total = 0;
+  for (const expression of expressions) {
+    total = cappedElementCount(total + minimumExpressionElements(expression));
+  }
+  return total;
+}
+
+function minimumExpressionElements(expression: QtiProcessingExpression): number {
+  if (expression.type === "baseValue") return 1;
+  if (expression.type === "multiple" || expression.type === "ordered") {
+    return minimumProducedElements(expression.expressions);
+  }
+  if (expression.type === "random") {
+    if (expression.values.length === 0) return 0;
+    let minimum = MAX_QTI_REPEAT_RESULT_ELEMENTS + 1;
+    for (const value of expression.values) {
+      minimum = Math.min(minimum, minimumExpressionElements(value));
+    }
+    return minimum;
+  }
+  if (expression.type !== "repeat" || !/^\d+$/.test(expression.numberRepeats)) return 0;
+  const perRepeat = minimumProducedElements(expression.expressions);
+  const projected = BigInt(expression.numberRepeats) * BigInt(perRepeat);
+  return projected > BigInt(MAX_QTI_REPEAT_RESULT_ELEMENTS)
+    ? MAX_QTI_REPEAT_RESULT_ELEMENTS + 1
+    : Number(projected);
+}
+
+function cappedElementCount(value: number): number {
+  return Math.min(value, MAX_QTI_REPEAT_RESULT_ELEMENTS + 1);
 }
 
 function validateInsideExpression(

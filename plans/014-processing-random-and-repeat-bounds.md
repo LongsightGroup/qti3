@@ -12,6 +12,12 @@
 - **Depends on**: none
 - **Category**: security / availability
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+`qti-repeat` now has a public 10,000-element safety limit. Validation rejects invalid literal
+counts and statically provable over-limit expansion; evaluation also bounds variable-driven
+iteration and growth without returning partial containers. Boundary, expansion, and timing tests
+pass, as does full repository verification.
 
 ## Why this matters
 

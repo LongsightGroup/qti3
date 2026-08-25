@@ -1,6 +1,7 @@
 import type { QtiProcessingExpression, QtiScalarValue, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { EvaluationContext } from "./processing-evaluator.js";
+import { MAX_QTI_REPEAT_RESULT_ELEMENTS } from "./processing-limits.js";
 import { valueContainer } from "./processing-values.js";
 
 type CollectionExpression = Extract<
@@ -39,11 +40,15 @@ export function evaluateRepeatExpression(
   context: EvaluationContext,
 ): QtiValue {
   const repeats = context.indexValue(expression.numberRepeats);
-  if (repeats === undefined || repeats < 1) return null;
+  if (repeats === undefined || repeats < 1 || repeats > MAX_QTI_REPEAT_RESULT_ELEMENTS) {
+    return null;
+  }
   const container: QtiScalarValue[] = [];
   for (let repeat = 0; repeat < repeats; repeat += 1) {
     for (const item of expression.expressions) {
-      container.push(...valueContainer(context.evaluate(item)));
+      const values = valueContainer(context.evaluate(item));
+      if (values.length > MAX_QTI_REPEAT_RESULT_ELEMENTS - container.length) return null;
+      for (const value of values) container.push(value);
     }
   }
   return container.length > 0 ? container : null;

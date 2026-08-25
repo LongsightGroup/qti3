@@ -17,7 +17,7 @@ honor its stop conditions, and update its status when complete.
 | 009  | Exact decimal rounding for roundTo/equalRounded                        | P2       | M      | —                 | DONE   |
 | 005  | Add player session options and preserve them across lifecycle rebuilds | P2       | M      | —                 | DONE   |
 | 008  | Keep invalid declaration numbers out of the parsed runtime model       | P2       | M      | —                 | DONE   |
-| 014  | Bound repeat expansion in processing                                   | P2       | M      | —                 | TODO   |
+| 014  | Bound repeat expansion in processing                                   | P2       | M      | —                 | DONE   |
 | 015  | Validate numeric-operator arity and define empty stats results         | P2       | M      | —                 | TODO   |
 | 017  | Separate XML textContent semantics from visible-text flattening        | P2       | M      | —                 | TODO   |
 | 018  | Mark modal feedback as rendered in the support matrix                  | P2       | S      | —                 | TODO   |

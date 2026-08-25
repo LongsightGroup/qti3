@@ -109,6 +109,7 @@ export {
   type QtiSliderValueResult,
 } from "./slider-definition.js";
 export { collectQtiResponseProcessingExpressions } from "./processing-expression-collection.js";
+export { MAX_QTI_REPEAT_RESULT_ELEMENTS } from "./processing-limits.js";
 export { isConformanceParseDiagnostic } from "./parse-diagnostics.js";
 export {
   scoreQtiItemServerSide,

@@ -48,6 +48,11 @@ store(state);
 const resumed = createItemSession(parsed.document, state, { randomSeed: "different-seed" });
 ```
 
+For availability safety, one `qti-repeat` expression can produce at most
+`MAX_QTI_REPEAT_RESULT_ELEMENTS` (10,000) scalar values. Literal counts that necessarily exceed the
+limit are authoring errors. Variable counts are checked at evaluation time; invalid or excessive
+counts return `null` without a partial container or console output.
+
 Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt exists,
 saved `templateValues` are authoritative; they are restored before generated correct
 responses are derived, so resuming does not depend on the original seed.
