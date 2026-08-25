@@ -141,6 +141,7 @@ importers:
       '@longsightgroup/qti3-core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
       '@longsightgroup/qti3-fixtures':
         specifier: workspace:*
         version: link:../fixtures

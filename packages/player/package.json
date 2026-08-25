@@ -48,7 +48,9 @@
     "prepublishOnly": "pnpm --dir ../.. release:check"
   },
   "dependencies": {
-    "@longsightgroup/qti3-core": "workspace:*",
+    "@longsightgroup/qti3-core": "workspace:*"
+  },
+  "devDependencies": {
     "@longsightgroup/qti3-fixtures": "workspace:*"
   }
 }

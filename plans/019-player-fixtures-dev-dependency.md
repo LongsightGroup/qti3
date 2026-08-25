@@ -13,6 +13,12 @@
 - **Depends on**: none
 - **Category**: packaging / tech-debt
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+`@longsightgroup/qti3-fixtures` is now a player-only development dependency. The lockfile importer
+and exact dependency-policy mirror were updated together; no package or version allowance changed.
+Runtime source and packed-file review found no fixture-package import, and dependency, build,
+exports, source-map, unit-test, and dry-run pack checks pass.
 
 ## Why this matters
 
