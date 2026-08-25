@@ -12,12 +12,13 @@ import {
   browserFeedbackTests,
   browserHarnessTests,
   coreIntegrationTest,
-  coreParsingTest,
   interactionSupportFixtures,
   interactionSupportTests,
-  processingCoreTestFor,
   processingBrowserEvidence,
+  processingMappingTest,
+  processingOperatorsTest,
   processingResponseTest,
+  processingTemplateTest,
 } from "./support-evidence.js";
 
 export const interactionSupport: QtiInteractionElementSupport[] = [
@@ -61,8 +62,13 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
   },
 ];
 
+const templateProcessingEntry = processingEntryFor(processingTemplateTest);
+const responseProcessingEntry = processingEntryFor(processingResponseTest);
+const mappingProcessingEntry = processingEntryFor(processingMappingTest);
+const operatorProcessingEntry = processingEntryFor(processingOperatorsTest);
+
 export const processingSupport: QtiProcessingElementSupport[] = [
-  processingEntry(
+  templateProcessingEntry(
     "qti-template-processing",
     [
       "packages/fixtures/xml/template-processing-reference.xml",
@@ -71,7 +77,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     ],
     [...processingBrowserEvidence["qti-template-processing"]],
   ),
-  processingEntry(
+  responseProcessingEntry(
     "qti-response-processing",
     [
       "packages/fixtures/xml/mapping-processing-reference.xml",
@@ -81,64 +87,64 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     ],
     [...processingBrowserEvidence["qti-response-processing"]],
   ),
-  processingEntry("qti-set-template-value", [
+  templateProcessingEntry("qti-set-template-value", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
     "packages/fixtures/xml/template-content-reference.xml",
   ]),
-  processingEntry("qti-set-default-value"),
-  processingEntry("qti-set-correct-response", [
+  templateProcessingEntry("qti-set-default-value"),
+  templateProcessingEntry("qti-set-correct-response", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
   ]),
-  processingEntry("qti-template-condition"),
-  processingEntry("qti-template-if"),
-  processingEntry("qti-template-else-if"),
-  processingEntry("qti-template-else"),
-  processingEntry("qti-template-constraint"),
-  processingEntry("qti-response-condition", [
+  templateProcessingEntry("qti-template-condition"),
+  templateProcessingEntry("qti-template-if"),
+  templateProcessingEntry("qti-template-else-if"),
+  templateProcessingEntry("qti-template-else"),
+  templateProcessingEntry("qti-template-constraint"),
+  responseProcessingEntry("qti-response-condition", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-response-if", [
+  responseProcessingEntry("qti-response-if", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-response-else-if"),
-  processingEntry("qti-response-else", [
+  responseProcessingEntry("qti-response-else-if"),
+  responseProcessingEntry("qti-response-else", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
   ]),
-  processingEntry("qti-set-outcome-value", [
+  responseProcessingEntry("qti-set-outcome-value", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry("qti-lookup-outcome-value"),
-  processingEntry("qti-exit-response"),
-  processingEntry("qti-exit-template"),
-  processingEntry("qti-response-processing-fragment"),
-  processingEntry("qti-base-value", [
+  mappingProcessingEntry("qti-lookup-outcome-value"),
+  responseProcessingEntry("qti-exit-response"),
+  templateProcessingEntry("qti-exit-template"),
+  responseProcessingEntry("qti-response-processing-fragment"),
+  operatorProcessingEntry("qti-base-value", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-null"),
-  processingEntry("qti-match-table"),
-  processingEntry("qti-match-table-entry"),
-  processingEntry("qti-interpolation-table"),
-  processingEntry("qti-interpolation-table-entry"),
-  processingEntry("qti-is-null"),
-  processingEntry("qti-match", [
+  operatorProcessingEntry("qti-null"),
+  mappingProcessingEntry("qti-match-table"),
+  mappingProcessingEntry("qti-match-table-entry"),
+  mappingProcessingEntry("qti-interpolation-table"),
+  mappingProcessingEntry("qti-interpolation-table-entry"),
+  operatorProcessingEntry("qti-is-null"),
+  mappingProcessingEntry("qti-match", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-correct"),
-  processingEntry("qti-default"),
-  processingEntry("qti-map-response"),
-  processingEntry("qti-map-response-point"),
-  processingEntry("qti-variable", [
+  mappingProcessingEntry("qti-correct"),
+  mappingProcessingEntry("qti-default"),
+  mappingProcessingEntry("qti-map-response"),
+  mappingProcessingEntry("qti-map-response-point"),
+  responseProcessingEntry("qti-variable", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
@@ -146,64 +152,74 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  processingEntry(
+  templateProcessingEntry(
     "qti-random-integer",
     ["packages/fixtures/xml/random-integer-template-reference.xml"],
     [...processingBrowserEvidence["qti-random-integer"]],
   ),
-  processingEntry("qti-random-float"),
-  processingEntry("qti-random"),
-  processingEntry("qti-multiple", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-ordered", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-index"),
-  processingEntry("qti-contains"),
-  processingEntry("qti-container-size", [
+  operatorProcessingEntry("qti-random-float"),
+  operatorProcessingEntry("qti-random"),
+  operatorProcessingEntry("qti-multiple", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-sum", [
+  operatorProcessingEntry("qti-ordered", [
+    "packages/fixtures/xml/advanced-processing-reference.xml",
+  ]),
+  operatorProcessingEntry("qti-index"),
+  operatorProcessingEntry("qti-contains"),
+  operatorProcessingEntry("qti-container-size", [
+    "packages/fixtures/xml/advanced-processing-reference.xml",
+  ]),
+  operatorProcessingEntry("qti-sum", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
   ]),
-  processingEntry("qti-product", ["packages/fixtures/xml/random-integer-template-reference.xml"]),
-  processingEntry("qti-min"),
-  processingEntry("qti-max"),
-  processingEntry("qti-subtract"),
-  processingEntry("qti-divide"),
-  processingEntry("qti-power"),
-  processingEntry("qti-integer-divide"),
-  processingEntry("qti-integer-modulus"),
-  processingEntry("qti-round"),
-  processingEntry("qti-round-to"),
-  processingEntry("qti-truncate"),
-  processingEntry("qti-integer-to-float"),
-  processingEntry("qti-and"),
-  processingEntry("qti-any-n"),
-  processingEntry("qti-or"),
-  processingEntry("qti-not"),
-  processingEntry("qti-equal"),
-  processingEntry("qti-equal-rounded", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-field-value"),
-  processingEntry("qti-lt"),
-  processingEntry("qti-lte"),
-  processingEntry("qti-gt"),
-  processingEntry("qti-gte"),
-  processingEntry("qti-string-match"),
-  processingEntry("qti-substring"),
-  processingEntry("qti-pattern-match"),
-  processingEntry("qti-member"),
-  processingEntry("qti-delete"),
-  processingEntry("qti-duration-gte"),
-  processingEntry("qti-duration-lt"),
-  processingEntry("qti-gcd", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-inside", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-lcm", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-math-constant"),
-  processingEntry("qti-math-operator"),
-  processingEntry("qti-repeat", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  processingEntry("qti-stats-operator", [
+  operatorProcessingEntry("qti-product", [
+    "packages/fixtures/xml/random-integer-template-reference.xml",
+  ]),
+  operatorProcessingEntry("qti-min"),
+  operatorProcessingEntry("qti-max"),
+  operatorProcessingEntry("qti-subtract"),
+  operatorProcessingEntry("qti-divide"),
+  operatorProcessingEntry("qti-power"),
+  operatorProcessingEntry("qti-integer-divide"),
+  operatorProcessingEntry("qti-integer-modulus"),
+  operatorProcessingEntry("qti-round"),
+  operatorProcessingEntry("qti-round-to"),
+  operatorProcessingEntry("qti-truncate"),
+  operatorProcessingEntry("qti-integer-to-float"),
+  operatorProcessingEntry("qti-and"),
+  operatorProcessingEntry("qti-any-n"),
+  operatorProcessingEntry("qti-or"),
+  operatorProcessingEntry("qti-not"),
+  operatorProcessingEntry("qti-equal"),
+  operatorProcessingEntry("qti-equal-rounded", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  processingEntry("qti-custom-operator"),
+  mappingProcessingEntry("qti-field-value"),
+  operatorProcessingEntry("qti-lt"),
+  operatorProcessingEntry("qti-lte"),
+  operatorProcessingEntry("qti-gt"),
+  operatorProcessingEntry("qti-gte"),
+  operatorProcessingEntry("qti-string-match"),
+  operatorProcessingEntry("qti-substring"),
+  operatorProcessingEntry("qti-pattern-match"),
+  operatorProcessingEntry("qti-member"),
+  operatorProcessingEntry("qti-delete"),
+  operatorProcessingEntry("qti-duration-gte"),
+  operatorProcessingEntry("qti-duration-lt"),
+  operatorProcessingEntry("qti-gcd", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  mappingProcessingEntry("qti-inside", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  operatorProcessingEntry("qti-lcm", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  operatorProcessingEntry("qti-math-constant"),
+  operatorProcessingEntry("qti-math-operator"),
+  operatorProcessingEntry("qti-repeat", [
+    "packages/fixtures/xml/advanced-processing-reference.xml",
+  ]),
+  operatorProcessingEntry("qti-stats-operator", [
+    "packages/fixtures/xml/advanced-processing-reference.xml",
+  ]),
+  operatorProcessingEntry("qti-custom-operator"),
 ];
 
 export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
@@ -219,11 +235,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     fixtures: [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
     ],
-    tests: [
-      coreParsingTest,
-      "packages/core/src/parser-item-metadata.test.ts",
-      ...browserHarnessTests,
-    ],
+    tests: ["packages/core/src/parser-item-metadata.test.ts", ...browserHarnessTests],
     notes:
       "Parsed by parser-item-metadata.ts and validated by validateCatalogInfo. Duplicate containers emit item.child.duplicate. Manual harness debugger coverage is in player-harness.spec.ts.",
   },
@@ -240,7 +252,6 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
     ],
     tests: [
-      coreParsingTest,
       "packages/core/src/parser-item-metadata.test.ts",
       "tests/browser/player-package.spec.ts",
       ...browserHarnessTests,
@@ -415,7 +426,16 @@ function pciEntry(): QtiInteractionElementSupport {
   };
 }
 
+function processingEntryFor(coreTest: string) {
+  return (
+    qtiName: string,
+    fixtures: string[] = [],
+    extraTests: string[] = [],
+  ): QtiProcessingElementSupport => processingEntry(coreTest, qtiName, fixtures, extraTests);
+}
+
 function processingEntry(
+  coreTest: string,
   qtiName: string,
   fixtures: string[] = [],
   extraTests: string[] = [],
@@ -430,6 +450,6 @@ function processingEntry(
     render: false,
     process: true,
     fixtures,
-    tests: [processingCoreTestFor(qtiName), ...extraTests],
+    tests: [coreTest, ...extraTests],
   };
 }

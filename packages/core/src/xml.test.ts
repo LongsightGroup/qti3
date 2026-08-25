@@ -327,3 +327,21 @@ function sourceSlice(
   if (!node || node.sourceRange.endOffset === undefined) return undefined;
   return xml.slice(node.sourceRange.startOffset, node.sourceRange.endOffset);
 }
+
+describe("QTI XML parse diagnostics", () => {
+  it("diagnoses incomplete XML instead of materializing a partial tree as valid", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="incomplete" title="incomplete" time-dependent="false">
+        <qti-item-body>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "xml.parse",
+        severity: "error",
+        message: "Unexpected end of document. Missing closing tag for <qti-item-body>.",
+      }),
+    );
+  });
+});

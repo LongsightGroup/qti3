@@ -276,3 +276,195 @@ function expectFiniteNumbers(value: unknown, path = "document"): void {
   if (!value || typeof value !== "object") return;
   for (const [key, entry] of Object.entries(value)) expectFiniteNumbers(entry, `${path}.${key}`);
 }
+
+describe("declaration parsing and validation", () => {
+  it("coerces declaration values using declaration base-types", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="typed-defaults" title="typed-defaults" time-dependent="false">
+        <qti-template-declaration identifier="TEMPLATE_COUNT" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>4</qti-value></qti-default-value>
+        </qti-template-declaration>
+        <qti-response-declaration identifier="COUNT" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>2</qti-value></qti-default-value>
+          <qti-correct-response><qti-value>3</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="FLAGS" cardinality="multiple" base-type="boolean">
+          <qti-default-value>
+            <qti-value>true</qti-value>
+            <qti-value>false</qti-value>
+          </qti-default-value>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="MAXSCORE" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>1</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="ATTEMPTS" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-outcome-declaration identifier="PASSED" cardinality="single" base-type="boolean">
+          <qti-default-value><qti-value>false</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body><p>Typed defaults.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.document).toBeDefined();
+    const document = result.document!;
+    const countDeclaration = document.item.responseDeclarations.find(
+      (declaration) => declaration.identifier === "COUNT",
+    );
+    expect(countDeclaration?.defaultValue).toBe(2);
+    expect(countDeclaration?.correctResponse).toBe(3);
+
+    const session = createItemSession(document);
+    const state = session.serialize();
+    expect(state.responses.COUNT).toBeUndefined();
+    expect(state.responses.FLAGS).toBeUndefined();
+    expect(state.outcomes.MAXSCORE).toBe(1);
+    expect(state.outcomes.ATTEMPTS).toBe(0);
+    expect(state.outcomes.PASSED).toBe(false);
+
+    session.respond("COUNT", 3);
+    const startedState = session.serialize();
+    expect(startedState.responses.COUNT).toBe(3);
+    expect(startedState.responses.FLAGS).toEqual([true, false]);
+    expect(state.templateValues?.TEMPLATE_COUNT).toBe(4);
+  });
+
+  it("does not mask missing or unsupported declaration attributes with parser defaults", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" time-dependent="false">
+        <qti-response-declaration cardinality="many" base-type="nonsense"/>
+        <qti-outcome-declaration identifier="SCORE"/>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="RESPONSE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.identifier).toBe("");
+    expect(result.document?.item.responseDeclarations[0]?.identifier).toBe("");
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "identifier.required" }),
+        expect.objectContaining({ code: "declaration.cardinality" }),
+        expect.objectContaining({ code: "declaration.baseType" }),
+        expect.objectContaining({ code: "declaration.cardinality.required" }),
+        expect.objectContaining({ code: "declaration.baseType.required" }),
+      ]),
+    );
+  });
+
+  it("validates declaration default and correct response values against base types", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-declaration-values" title="bad-declaration-values" time-dependent="false">
+        <qti-response-declaration identifier="INT_RESPONSE" cardinality="single" base-type="integer">
+          <qti-correct-response>
+            <qti-value>abc</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="POINT_RESPONSE" cardinality="single" base-type="point">
+          <qti-correct-response>
+            <qti-value>10</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="PAIR_RESPONSE" cardinality="multiple" base-type="directedPair">
+          <qti-correct-response>
+            <qti-value>A</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="SINGLE_RESPONSE" cardinality="single" base-type="identifier">
+          <qti-correct-response>
+            <qti-value>A</qti-value>
+            <qti-value>B</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="BOOLEAN_OUTCOME" cardinality="single" base-type="boolean">
+          <qti-default-value>
+            <qti-value>yes</qti-value>
+          </qti-default-value>
+        </qti-outcome-declaration>
+        <qti-template-declaration identifier="FLOAT_TEMPLATE" cardinality="single" base-type="float">
+          <qti-default-value>
+            <qti-value>not-a-float</qti-value>
+          </qti-default-value>
+        </qti-template-declaration>
+        <qti-item-body>
+          <qti-custom-interaction response-identifier="INT_RESPONSE"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("INT_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("POINT_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("PAIR_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.correctResponse.cardinality",
+          message: expect.stringContaining("SINGLE_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("BOOLEAN_OUTCOME"),
+        }),
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("FLOAT_TEMPLATE"),
+        }),
+      ]),
+    );
+  });
+
+  it("validates correct response choice references", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs" title="bad-correct-response-refs" time-dependent="false">
+        <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>MISSING</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="MATCH" cardinality="multiple" base-type="directedPair">
+          <qti-correct-response><qti-value>A MISSING</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-item-body>
+          <qti-choice-interaction response-identifier="CHOICE">
+            <qti-simple-choice identifier="A">A</qti-simple-choice>
+          </qti-choice-interaction>
+          <qti-match-interaction response-identifier="MATCH">
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice>
+            </qti-simple-match-set>
+            <qti-simple-match-set>
+              <qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice>
+            </qti-simple-match-set>
+          </qti-match-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "response.correctResponse.reference",
+          path: "/qti-assessment-item/qti-response-declaration[1]",
+        }),
+        expect.objectContaining({
+          code: "response.correctResponse.reference",
+          path: "/qti-assessment-item/qti-response-declaration[2]",
+        }),
+      ]),
+    );
+  });
+});

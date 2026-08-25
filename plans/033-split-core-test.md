@@ -5,10 +5,13 @@
 DONE — P3, L effort. Completed 2026-08-25.
 
 The original 4,596-line suite's 117 tests were moved without omissions or title changes into
-seven ownership-focused suites. The largest resulting file is `core-parsing.test.ts` at 1,097
-lines. Named evidence-path constants now route processing support entries to the relevant suite,
-and a registry regression verifies that every evidence path exists and every split core suite
-contains assertions. Focused tests retained all 117 baseline cases, and full verification passes.
+ownership-focused suites. A follow-up decomposition removed the interim 1,097-line
+`core-parsing.test.ts` and placed its cases with declaration, content, interaction, metadata, XML,
+catalog, TTS, and assessment-validation owners. The largest resulting suite is the 979-line
+cross-cutting `core.test.ts`. Processing support entries now declare their evidence owner through
+owner-bound constructors instead of a parallel name-routing registry. Registry regressions verify
+that evidence paths exist and contain assertions. Focused tests retained all baseline cases, and
+full verification passes.
 
 ## Why
 
@@ -26,7 +29,12 @@ must move atomically with the tests.
 
 ## Target files
 
-- `core-parsing.test.ts`: parsing, declarations, validation, and diagnostics
+- `parser-declarations.test.ts`: declaration parsing and validation
+- `parser-content.test.ts`: item-body and rich-content parsing
+- `parser-interactions.test.ts`: cross-interaction parser integration
+- `parser-item-metadata.test.ts`: assessment-item metadata parsing
+- `validation-assessment-item.test.ts`: item-level validation and diagnostics
+- `tts-metadata.test.ts`: Data-SSML parsing and traversal
 - `core-session-state.test.ts`: session lifecycle, response state, serialization, and restore
 - `processing-response.test.ts`: response rules, conditions, outcomes, feedback, and exit rules
 - `processing-template.test.ts`: template rules, constraints, randomization, and materialization

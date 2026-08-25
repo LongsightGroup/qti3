@@ -12,7 +12,6 @@ import {
 } from "./support.js";
 import {
   coreIntegrationTest,
-  coreParsingTest,
   coreSessionStateTest,
   interactionSupportFixtures,
   interactionSupportTests,
@@ -20,7 +19,6 @@ import {
   processingBrowserEvidence,
   processingOperatorsTest,
   processingResponseTest,
-  processingSupportTests,
   processingTemplateTest,
 } from "./support-evidence.js";
 
@@ -90,13 +88,24 @@ describe("support registry helpers", () => {
   });
 
   it("exposes processing browser evidence on parent constructs only", () => {
-    for (const qtiName of Object.keys(processingBrowserEvidence)) {
+    for (const [qtiName, browserTests] of Object.entries(processingBrowserEvidence)) {
       const support = processingSupport.find((entry) => entry.qtiName === qtiName);
-      expect(support?.tests).toEqual(processingSupportTests(qtiName));
+      expect(support?.tests.slice(1)).toEqual(browserTests);
     }
 
     const variable = processingSupport.find((entry) => entry.qtiName === "qti-variable");
-    expect(variable?.tests).toEqual(processingSupportTests("qti-variable"));
+    expect(variable?.tests).toEqual([processingResponseTest]);
+  });
+
+  it("declares processing evidence ownership at canonical support entries", () => {
+    for (const [qtiName, coreTest] of [
+      ["qti-template-if", processingTemplateTest],
+      ["qti-response-if", processingResponseTest],
+      ["qti-map-response", processingMappingTest],
+      ["qti-sum", processingOperatorsTest],
+    ]) {
+      expect(processingSupport.find((entry) => entry.qtiName === qtiName)?.tests[0]).toBe(coreTest);
+    }
   });
 
   it("points support evidence at existing test suites with assertions", () => {
@@ -113,7 +122,6 @@ describe("support registry helpers", () => {
 
     const splitCoreTests = [
       coreIntegrationTest,
-      coreParsingTest,
       coreSessionStateTest,
       processingResponseTest,
       processingTemplateTest,
@@ -128,7 +136,7 @@ describe("support registry helpers", () => {
     }
 
     for (const support of processingSupport) {
-      const coreTest = processingSupportTests(support.qtiName)[0];
+      const coreTest = support.tests[0];
       expect(coreTest).toMatch(/^packages\/core\/src\/.+\.test\.ts$/);
       if (!coreTest) continue;
       expect(splitCoreTests).toContain(coreTest);
