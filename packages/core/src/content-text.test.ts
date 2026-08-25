@@ -4,8 +4,10 @@ import {
   choiceAccessibleLabel,
   flatTextFromContent,
   normalizeFlatText,
+  visibleTextContent,
 } from "./content-text.js";
 import type { QtiChoice, QtiContentNode } from "./types.js";
+import { parseXmlTree } from "./xml.js";
 
 describe("content-text", () => {
   it("drops block-layout indentation whitespace from QTI content", () => {
@@ -32,6 +34,26 @@ describe("content-text", () => {
 
   it("normalizes whitespace in flat text", () => {
     expect(normalizeFlatText("  one   two \n three ")).toBe("one two three");
+  });
+
+  it("preserves inline adjacency and authored inline spaces", () => {
+    expect(visibleXmlText("<p>bo<em>ld</em>ly</p>")).toBe("boldly");
+    expect(visibleXmlText("<p>one <em>two</em> three</p>")).toBe("one two three");
+  });
+
+  it("separates adjacent and nested visible blocks", () => {
+    expect(visibleXmlText("<div><p>one</p><p>two</p></div>")).toBe("one two");
+    expect(visibleXmlText("<section>before<div><p>nested</p></div>after</section>")).toBe(
+      "before nested after",
+    );
+  });
+
+  it("uses image and object labels while flattening XML", () => {
+    expect(
+      visibleXmlText(
+        '<p>See <img alt="shaded square" src="square.svg"/> and <object object-label="audio clip"/></p>',
+      ),
+    ).toBe("See shaded square and audio clip");
   });
 
   it("extracts flat text from mixed content", () => {
@@ -222,3 +244,9 @@ describe("content-text", () => {
     expect(flatTextFromContent(nodes)).toBe("audio clip");
   });
 });
+
+function visibleXmlText(xml: string): string {
+  const parsed = parseXmlTree(xml);
+  if (!parsed.root) throw new Error("Expected parsed XML root.");
+  return visibleTextContent(parsed.root);
+}

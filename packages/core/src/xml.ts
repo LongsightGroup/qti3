@@ -190,10 +190,9 @@ export function descendants(node: XmlNode, predicate: (node: XmlNode) => boolean
 }
 
 export function textContent(node: XmlNode): string {
-  const parts = node.content.map((entry) =>
-    typeof entry === "string" ? entry : textContent(entry),
-  );
-  return parts.join(" ").replace(/\s+/g, " ").trim();
+  return node.content
+    .map((entry) => (typeof entry === "string" ? entry : textContent(entry)))
+    .join("");
 }
 
 function openElement(

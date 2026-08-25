@@ -1,4 +1,4 @@
-import { appendContentTextNode, flatTextFromContent } from "./content-text.js";
+import { appendContentTextNode, flatTextFromContent, visibleTextContent } from "./content-text.js";
 import {
   finalizeParsedDeclarationNumbers,
   parseOutcomeDeclaration,
@@ -37,7 +37,7 @@ import type {
   QtiResponseDeclaration,
 } from "./types.js";
 import { validateAssessmentItem } from "./validation.js";
-import { childElements, descendants, parseXmlTree, textContent, type XmlNode } from "./xml.js";
+import { childElements, descendants, parseXmlTree, type XmlNode } from "./xml.js";
 
 const qtiAssessmentItemNamespace = "http://www.imsglobal.org/xsd/imsqtiasi_v3p0";
 const supportedProcessingNames = new Set(processingSupport.map((entry) => entry.qtiName));
@@ -168,7 +168,7 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     adaptive: parseXmlBoolean(node.attributes.adaptive) === true,
     timeDependent: parseXmlBoolean(node.attributes["time-dependent"]),
     attributes: node.attributes,
-    prompt: prompt ? textContent(prompt) : undefined,
+    prompt: prompt ? visibleTextContent(prompt) : undefined,
     itemBodyAttributes: itemBody?.attributes,
     itemBodySource: itemBody?.source,
     responseDeclarations,
@@ -183,7 +183,10 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
     catalogReferences,
     stylesheets,
     body,
-    bodyText: textContent(node),
+    bodyText: flatTextFromContent(body, {
+      excludeAnnotations: true,
+      interactionText: (interactionIndex) => interactions[interactionIndex]?.prompt ?? "",
+    }),
     source: node.source,
   };
 }
@@ -336,7 +339,7 @@ function parseInteraction(
     prompt: promptContent
       ? flatTextFromContent(promptContent, { excludeAnnotations: true }) || undefined
       : prompt
-        ? textContent(prompt)
+        ? visibleTextContent(prompt)
         : undefined,
     promptContent: promptContent && promptContent.length > 0 ? promptContent : undefined,
     promptAttributes: prompt?.attributes,
@@ -359,7 +362,7 @@ function parseInteraction(
       source: child.source,
     })),
     attributes: node.attributes,
-    text: textContent(node),
+    text: visibleTextContent(node),
     source: node.source,
   };
 }
@@ -419,7 +422,7 @@ function parseHottextSegments(node: XmlNode): QtiInteraction["hottextSegments"] 
       segments.push({
         kind: "hottext",
         identifier: entry.attributes.identifier ?? "",
-        text: textContent(entry),
+        text: visibleTextContent(entry),
         attributes: entry.attributes,
         source: entry.source,
       });
@@ -477,7 +480,7 @@ function inlineInteractionContext(
   if (interactionType !== "inlineChoice" && interactionType !== "textEntry") return undefined;
   const parent = node.parent;
   if (!parent) return undefined;
-  return normalizeInlineContext(parent.text) ?? normalizeInlineContext(textContent(parent));
+  return normalizeInlineContext(parent.text) ?? normalizeInlineContext(visibleTextContent(parent));
 }
 
 function normalizeInlineContext(value: string): string | undefined {
@@ -507,7 +510,7 @@ function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined
       node.attributes.height ?? pictureImage?.attributes.height ?? inferredSvgDimensions?.height,
     sources,
     tracks,
-    text: textContent(node) || node.attributes.alt || pictureImage?.attributes.alt || "",
+    text: visibleTextContent(node) || node.attributes.alt || pictureImage?.attributes.alt || "",
     attributes: node.attributes,
     source: node.source,
   };
@@ -672,7 +675,7 @@ function parseChoices(
     const flatChoiceText =
       content.length > 0
         ? flatTextFromContent(content, { excludeAnnotations: true })
-        : textContent(choice);
+        : visibleTextContent(choice);
     return {
       identifier,
       text:

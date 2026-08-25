@@ -12,6 +12,12 @@
 - **Depends on**: none
 - **Category**: bug / accessibility
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Literal XML text now concatenates exactly without invented separators. Visible text uses semantic
+block boundaries, preserves inline adjacency and authored whitespace, retains accessible asset and
+MathML labels, and keeps interaction prompts in body summaries without leaking scoring constants or
+duplicating choice labels. Focused, full, conformance, and 473 browser tests pass.
 
 ## Why this matters
 

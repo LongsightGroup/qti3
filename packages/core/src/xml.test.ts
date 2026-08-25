@@ -24,7 +24,7 @@ describe("parseXmlTree source ranges", () => {
     const parsed = parseXmlTree(xml);
     expect(parsed.errors).toEqual([]);
 
-    expect(textContent(parsed.root!)).toBe("Visible Text");
+    expect(textContent(parsed.root!)).toBe("VisibleText");
     expect(parsed.root?.content).toEqual([
       expect.objectContaining({ localName: "div" }),
       expect.objectContaining({ localName: "div" }),

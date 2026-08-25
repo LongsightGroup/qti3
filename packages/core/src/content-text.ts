@@ -1,8 +1,10 @@
 import type { QtiChoice, QtiContentNode, QtiSourceLocation } from "./types.js";
 import { assertNever } from "./assert-never.js";
+import type { XmlNode } from "./xml.js";
 
 export interface FlatTextFromContentOptions {
   excludeAnnotations?: boolean;
+  interactionText?: ((interactionIndex: number) => string) | undefined;
 }
 
 export function normalizeFlatText(text: string): string {
@@ -32,13 +34,14 @@ export function flatTextFromContent(
   nodes: QtiContentNode[],
   options: FlatTextFromContentOptions = {},
 ): string {
-  const excludeAnnotations = options.excludeAnnotations ?? false;
-  return normalizeFlatText(
-    nodes.map((node) => flatTextFromContentNode(node, excludeAnnotations)).join(" "),
-  );
+  return normalizeFlatText(nodes.map((node) => flatTextFromContentNode(node, options)).join(""));
 }
 
-function flatTextFromContentNode(node: QtiContentNode, excludeAnnotations: boolean): string {
+function flatTextFromContentNode(
+  node: QtiContentNode,
+  options: FlatTextFromContentOptions,
+): string {
+  const excludeAnnotations = options.excludeAnnotations ?? false;
   switch (node.kind) {
     case "text":
       return node.text;
@@ -54,20 +57,141 @@ function flatTextFromContentNode(node: QtiContentNode, excludeAnnotations: boole
       if (node.qtiName === "object" && node.attributes["object-label"]) {
         return node.attributes["object-label"];
       }
-      return node.children
-        .map((child) => flatTextFromContentNode(child, excludeAnnotations))
-        .join(" ");
+      if (node.qtiName === "math") {
+        return withVisibleBoundary(
+          node.qtiName,
+          node.children
+            .map((child) => flatMathText(child, excludeAnnotations))
+            .filter(Boolean)
+            .join(" "),
+        );
+      }
+      return withVisibleBoundary(
+        node.qtiName,
+        node.children.map((child) => flatTextFromContentNode(child, options)).join(""),
+      );
     case "feedback":
-      return node.children
-        .map((child) => flatTextFromContentNode(child, excludeAnnotations))
-        .join(" ");
+      return withVisibleBoundary(
+        node.feedbackType === "block" ? "qti-feedback-block" : "qti-feedback-inline",
+        node.children.map((child) => flatTextFromContentNode(child, options)).join(""),
+      );
     case "interaction":
+      return options.interactionText?.(node.interactionIndex) ?? "";
     case "printedVariable":
       return "";
     default:
       return assertNever(node);
   }
 }
+
+function flatMathText(node: QtiContentNode, excludeAnnotations: boolean): string {
+  if (
+    node.kind === "element" &&
+    excludeAnnotations &&
+    (node.qtiName === "annotation" || node.qtiName === "annotation-xml")
+  ) {
+    return "";
+  }
+  if (node.kind === "text") return node.text;
+  if (node.kind === "element" || node.kind === "feedback") {
+    return node.children
+      .map((child) => flatMathText(child, excludeAnnotations))
+      .filter(Boolean)
+      .join(" ");
+  }
+  return "";
+}
+
+/** Flatten rendered XML text without inventing separators at inline element boundaries. */
+export function visibleTextContent(node: XmlNode): string {
+  return normalizeFlatText(visibleTextFromXmlNode(node));
+}
+
+function visibleTextFromXmlNode(node: XmlNode): string {
+  const accessibleLabel = accessibleXmlLabel(node);
+  const text =
+    accessibleLabel ??
+    (node.localName === "math"
+      ? flatMathXmlText(node)
+      : node.content
+          .map((entry) => (typeof entry === "string" ? entry : visibleTextFromXmlNode(entry)))
+          .join(""));
+  return withVisibleBoundary(node.localName, text);
+}
+
+function flatMathXmlText(node: XmlNode): string {
+  return node.content
+    .map((entry) =>
+      typeof entry === "string"
+        ? entry
+        : entry.localName === "annotation" || entry.localName === "annotation-xml"
+          ? ""
+          : flatMathXmlText(entry),
+    )
+    .filter(Boolean)
+    .join(" ");
+}
+
+function accessibleXmlLabel(node: XmlNode): string | undefined {
+  if (node.localName === "math" && node.attributes.alttext) return node.attributes.alttext;
+  if (node.localName === "img" && node.attributes.alt) return node.attributes.alt;
+  if (node.localName === "object" && node.attributes["object-label"]) {
+    return node.attributes["object-label"];
+  }
+  return undefined;
+}
+
+function withVisibleBoundary(qtiName: string, text: string): string {
+  return visibleBoundaryNames.has(qtiName) ? ` ${text} ` : text;
+}
+
+const visibleBoundaryNames = new Set([
+  "address",
+  "article",
+  "aside",
+  "blockquote",
+  "br",
+  "dd",
+  "div",
+  "dl",
+  "dt",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "footer",
+  "form",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "header",
+  "hgroup",
+  "hr",
+  "li",
+  "main",
+  "math",
+  "nav",
+  "ol",
+  "p",
+  "pre",
+  "qti-feedback-block",
+  "qti-gap-img",
+  "qti-gap-text",
+  "qti-inline-choice",
+  "qti-simple-associable-choice",
+  "qti-simple-choice",
+  "section",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+]);
 
 export function choiceAccessibleLabel(
   choice: QtiChoice | undefined,

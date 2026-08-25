@@ -19,6 +19,7 @@ import {
   type ParsedCompanionMaterialChildQtiName,
   pushCompanionMaterialParseWarning,
 } from "./companion-materials.js";
+import { visibleTextContent } from "./content-text.js";
 import { parseXmlBoolean } from "./parser-values.js";
 import { childElements, descendants, textContent, type XmlNode } from "./xml.js";
 
@@ -75,7 +76,7 @@ export function parseModalFeedback(node: XmlNode): QtiModalFeedback {
     identifier: node.attributes.identifier ?? "",
     outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
     showHide,
-    text: textContent(node),
+    text: visibleTextContent(node),
     source: node.source,
   };
 }
@@ -119,7 +120,7 @@ function parseCatalogCardEntry(node: XmlNode): QtiCatalogCardEntry {
 function parseCatalogHtmlContent(node: XmlNode | undefined): QtiCatalogHtmlContent | undefined {
   if (!node) return undefined;
   return {
-    text: textContent(node),
+    text: visibleTextContent(node),
     children: parseCatalogHtmlChildren(node),
     attributes: node.attributes,
     source: node.source,
@@ -202,7 +203,7 @@ function parsePhysicalMaterial(
   node: XmlNode,
   diagnostics: QtiDiagnostic[],
 ): QtiPhysicalMaterial | undefined {
-  const text = textContent(node).trim();
+  const text = visibleTextContent(node);
   if (text.length === 0) {
     return pushCompanionMaterialParseWarning(
       diagnostics,
