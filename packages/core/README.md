@@ -53,6 +53,14 @@ For availability safety, one `qti-repeat` expression can produce at most
 limit are authoring errors. Variable counts are checked at evaluation time; invalid or excessive
 counts return `null` without a partial container or console output.
 
+The QTI 3.0.1 contracts for [`qti-sum`](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html#OpSum),
+[`qti-product`](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html#OpProduct),
+[`qti-min`](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html#OpMin), and
+[`qti-max`](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html#OpMax) require
+at least one child; [`qti-stats-operator`](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html#OpStatsOp)
+requires exactly one. The information model does not specify statistics for an empty numeric
+container, so the core conservatively returns `null` for that case.
+
 Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt exists,
 saved `templateValues` are authoritative; they are restored before generated correct
 responses are derived, so resuming does not depend on the original seed.

@@ -12,6 +12,12 @@
 - **Depends on**: none
 - **Category**: conformance bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Numeric aggregate validation now requires at least one child, and stats validation preserves and
+checks the authored child count. Defensive evaluation returns `null` for invalid arity, NULL
+operands, and empty stats containers; non-empty behavior is unchanged. The conservative empty
+container decision and official QTI 3.0.1 references are documented, and full verification passes.
 
 ## Why this matters
 

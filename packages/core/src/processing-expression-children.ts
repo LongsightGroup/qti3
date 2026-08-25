@@ -43,8 +43,9 @@ export function expressionChildren(expression: QtiProcessingExpression): QtiProc
     case "patternMatch":
     case "fieldValue":
     case "inside":
-    case "statsOperator":
       return [expression.expression];
+    case "statsOperator":
+      return expression.expressions ?? [expression.expression];
     case "member":
     case "delete":
       return [expression.value, expression.collection];

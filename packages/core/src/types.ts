@@ -687,7 +687,14 @@ export type QtiProcessingExpression = (
   | { type: "mathConstant"; name: string }
   | { type: "mathOperator"; name: string; expressions: QtiProcessingExpression[] }
   | { type: "repeat"; numberRepeats: string; expressions: QtiProcessingExpression[] }
-  | { type: "statsOperator"; name: string; expression: QtiProcessingExpression }
+  | {
+      type: "statsOperator";
+      name: string;
+      /** First child retained for compatibility with manually constructed expressions. */
+      expression: QtiProcessingExpression;
+      /** Authored children, including invalid zero- or multi-child forms, when parsed from XML. */
+      expressions?: QtiProcessingExpression[] | undefined;
+    }
   | {
       type: "customOperator";
       definition?: string | undefined;

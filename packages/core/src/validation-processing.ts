@@ -481,6 +481,35 @@ function validateExpressionReferences(
     });
   }
 
+  if (
+    (expression.type === "sum" ||
+      expression.type === "product" ||
+      expression.type === "min" ||
+      expression.type === "max") &&
+    expression.expressions.length === 0
+  ) {
+    diagnostics.push({
+      code: "processing.numeric.arity",
+      severity: "error",
+      message: `qti-${expression.type} requires at least one child expression.`,
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+
+  if (
+    expression.type === "statsOperator" &&
+    (expression.expressions ?? [expression.expression]).length !== 1
+  ) {
+    diagnostics.push({
+      code: "processing.statsOperator.arity",
+      severity: "error",
+      message: "qti-stats-operator requires exactly one child expression.",
+      path: expression.source?.path,
+      source: expression.source,
+    });
+  }
+
   if (expression.type === "repeat") {
     validateRepeatExpression(expression, variables, diagnostics);
   }

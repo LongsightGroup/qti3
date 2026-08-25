@@ -181,7 +181,10 @@ export function mathOperatorValue(name: string, values: number[]): QtiValue {
 }
 
 export function statsOperatorValue(name: string, values: number[]): QtiValue {
-  if (values.length === 0) return 0;
+  // QTI 3.0.1 defines the input as a numeric container but does not define empty-container
+  // results, so this implementation conservatively returns NULL.
+  // https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html#OpStatsOp
+  if (values.length === 0) return null;
   const meanValue = mean(values);
   const squareDiffs = values.map((value) => (value - meanValue) ** 2);
   switch (name) {

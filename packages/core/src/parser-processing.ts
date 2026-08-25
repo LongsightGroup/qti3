@@ -646,15 +646,16 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   }
 
   if (node.localName === "qti-stats-operator") {
-    const expression = parseFirstExpression(node);
-    if (expression) {
-      return {
-        type: "statsOperator",
-        name: node.attributes.name ?? "",
-        expression,
-        source: node.source,
-      };
-    }
+    const expressions = childElements(node)
+      .map(parseExpression)
+      .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
+    return {
+      type: "statsOperator",
+      name: node.attributes.name ?? "",
+      expression: expressions[0] ?? { type: "null", source: node.source },
+      expressions,
+      source: node.source,
+    };
   }
 
   if (node.localName === "qti-custom-operator") {

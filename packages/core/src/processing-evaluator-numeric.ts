@@ -47,10 +47,12 @@ export function evaluateNumericExpression(
 ): QtiValue {
   switch (expression.type) {
     case "sum": {
+      if (expression.expressions.length === 0) return null;
       const values = context.numericOperands(expression.expressions);
       return values ? values.reduce((sum, value) => sum + value, 0) : null;
     }
     case "product": {
+      if (expression.expressions.length === 0) return null;
       const values = context.numericOperands(expression.expressions);
       return values ? values.reduce((product, value) => product * value, 1) : null;
     }
@@ -127,7 +129,9 @@ export function evaluateNumericExpression(
       return mathOperatorValue(expression.name, values.map(numericValue));
     }
     case "statsOperator": {
-      const value = context.evaluate(expression.expression);
+      const expressions = expression.expressions ?? [expression.expression];
+      if (expressions.length !== 1) return null;
+      const value = context.evaluate(expressions[0]!);
       if (value === null) return null;
       return statsOperatorValue(expression.name, valueContainer(value).map(numericValue));
     }

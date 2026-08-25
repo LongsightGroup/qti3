@@ -262,7 +262,7 @@ export function serializeExpression(
       return renderExpressionContainer(
         "qti-stats-operator",
         [["name", expression.name]],
-        [expression.expression],
+        expression.expressions ?? [expression.expression],
         context,
         indent,
       );
