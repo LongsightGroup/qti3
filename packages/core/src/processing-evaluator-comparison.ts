@@ -48,6 +48,12 @@ export function evaluateComparisonExpression(
       return left === null || right === null ? null : valuesEqual(left, right);
     }
     case "equalRounded": {
+      const validRounding =
+        Number.isInteger(expression.figures) &&
+        (expression.roundingMode === "decimalPlaces"
+          ? expression.figures >= 0
+          : expression.roundingMode === "significantFigures" && expression.figures > 0);
+      if (!validRounding) return null;
       const left = context.evaluate(expression.left);
       const right = context.evaluate(expression.right);
       if (left === null || right === null) return null;

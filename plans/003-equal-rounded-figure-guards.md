@@ -13,6 +13,12 @@
 - **Depends on**: none
 - **Category**: bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Invalid `qti-equal-rounded` modes and figure domains now evaluate to `null` before evaluating or
+rounding operands. A defensive invalid-document regression proves zero significant figures cannot
+award credit and preserves the single existing `processing.roundingFigures` diagnostic. Valid
+decimal-place and significant-figure cases and the full verification suite pass.
 
 ## Why this matters
 
