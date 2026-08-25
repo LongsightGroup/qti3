@@ -776,6 +776,72 @@ describe("@longsightgroup/qti3-cli", () => {
     }
   });
 
+  it.each([
+    {
+      name: "a POSIX absolute path",
+      href: "/items/choice.xml",
+      error: "package reference /items/choice.xml must be a package-relative path.",
+    },
+    {
+      name: "a Windows absolute path",
+      href: "C:/items/choice.xml",
+      error: "package reference C:/items/choice.xml must be a package-relative path.",
+    },
+    {
+      name: "a URI-like path",
+      href: "https://example.com/choice.xml",
+      error: "package reference https://example.com/choice.xml must be a package-relative path.",
+    },
+    {
+      name: "a package-root escape",
+      href: "../items/choice.xml",
+      error: "package reference ../items/choice.xml escapes the package root.",
+    },
+    { name: "dot segments", href: "items/./choice.xml", normalized: "items/choice.xml" },
+    { name: "repeated separators", href: "items//choice.xml", normalized: "items/choice.xml" },
+    { name: "a valid relative path", href: "items/choice.xml", normalized: "items/choice.xml" },
+  ])("normalizes package references containing $name", async ({ href, error, normalized }) => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-package-normalization-"));
+    const file = join(directory, "package.zip");
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    if (!choice) throw new Error("Missing package fixture.");
+
+    try {
+      await writeFile(
+        file,
+        createStoredZip({
+          "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="${href}"/>
+  </resources>
+</manifest>`,
+          "items/choice.xml": choice.xml,
+        }),
+      );
+
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      if (error !== undefined) {
+        expect(code).toBe(1);
+        expect(report).toMatchObject({
+          checked: 0,
+          failed: 1,
+          packageErrors: [error],
+        });
+      } else {
+        expect(code).toBe(0);
+        expect(report).toMatchObject({
+          checked: 1,
+          failed: 0,
+          packageErrors: [],
+          discoveredReferences: [normalized],
+        });
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("rejects package zip entries that escape the package root", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-package-paths-"));
     const file = join(directory, "package.zip");

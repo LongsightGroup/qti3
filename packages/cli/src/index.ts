@@ -22,6 +22,7 @@ import {
   interactionSupport,
   itemMetadataSupport,
   isQtiValue,
+  normalizePackagePath,
   parseQtiPackageXmlTree,
   parseQtiXml,
   prepareQtiDeliveryXml,
@@ -1194,7 +1195,10 @@ async function collectDirectoryPackageEntries(
       continue;
     }
     if (!entry.isFile()) continue;
-    const name = normalizePackagePath(relative(root, path).replaceAll("\\", "/"), "package file");
+    const name = normalizeCliPackagePath(
+      relative(root, path).replaceAll("\\", "/"),
+      "package file",
+    );
     entries.push({ name, bytes: await readFile(path) });
   }
 }
@@ -1382,24 +1386,15 @@ function packageDescendants(
 
 function resolveRelativePath(from: string, href: string): string {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  return normalizePackagePath(`${base}${href}`, "package reference");
+  return normalizeCliPackagePath(`${base}${href}`, "package reference");
 }
 
-function normalizePackagePath(path: string, context: string): string {
-  if (path.startsWith("/") || /^[A-Za-z]:[\\/]/.test(path) || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
-    throw new Error(`${context} ${path} must be a package-relative path.`);
-  }
-  const parts: string[] = [];
-  for (const part of path.split("/")) {
-    if (!part || part === ".") continue;
-    if (part === "..") {
-      if (parts.length === 0) {
-        throw new Error(`${context} ${path} escapes the package root.`);
-      }
-      parts.pop();
-    } else {
-      parts.push(part);
-    }
-  }
-  return parts.join("/");
+function normalizeCliPackagePath(path: string, context: string): string {
+  const diagnostics: QtiDiagnostic[] = [];
+  const normalized = normalizePackagePath(path, context, diagnostics);
+  if (normalized !== undefined) return normalized;
+  throw new Error(
+    diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
+      `${context} ${path} is not a valid package-relative path.`,
+  );
 }

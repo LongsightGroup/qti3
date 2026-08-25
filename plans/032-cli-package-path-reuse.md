@@ -2,7 +2,13 @@
 
 ## Status
 
-TODO — P3, S effort.
+DONE — P3, S effort. Completed 2026-08-25.
+
+The CLI now imports core's public `normalizePackagePath` and converts its typed error diagnostic
+back into the existing CLI exception/reporting flow through a private adapter. Both directory
+collection and package-reference resolution use that adapter. Seven integration regressions cover
+absolute, URI-like, escaping, normalized, and valid paths while preserving messages, JSON report
+shapes, and exit codes; focused CLI tests and full verification pass.
 
 ## Why
 
