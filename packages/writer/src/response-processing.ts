@@ -3,7 +3,7 @@ import type {
   Qti3ResponseProcessingTemplate,
   Qti3TrustedXmlFragment,
 } from "./types.js";
-import { indentXml, xmlEscape } from "./xml.js";
+import { indentXml, escapeXmlAttribute } from "./xml.js";
 
 const RESPONSE_PROCESSING_TEMPLATE_URIS = {
   match_correct: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct",
@@ -24,7 +24,7 @@ export function responseProcessingTemplateXml(
 }
 
 export function mapResponsePointProcessingXml(responseIdentifier: string): string {
-  const identifier = xmlEscape(responseIdentifier);
+  const identifier = escapeXmlAttribute(responseIdentifier);
   return `  <qti-response-processing>
     <qti-set-outcome-value identifier="SCORE">
       <qti-map-response-point identifier="${identifier}"/>
@@ -33,7 +33,7 @@ export function mapResponsePointProcessingXml(responseIdentifier: string): strin
 }
 
 export function mapResponseProcessingXml(responseIdentifier: string): string {
-  const identifier = xmlEscape(responseIdentifier);
+  const identifier = escapeXmlAttribute(responseIdentifier);
   return `  <qti-response-processing>
     <qti-set-outcome-value identifier="SCORE">
       <qti-map-response identifier="${identifier}"/>
@@ -42,7 +42,7 @@ export function mapResponseProcessingXml(responseIdentifier: string): string {
 }
 
 export function matchCorrectProcessingXml(responseIdentifier: string): string {
-  const identifier = xmlEscape(responseIdentifier);
+  const identifier = escapeXmlAttribute(responseIdentifier);
   return `  <qti-response-processing>
     <qti-response-condition>
       <qti-response-if>
@@ -72,7 +72,7 @@ export function sumMappedResponsesProcessingXml(responseIdentifiers: readonly st
   if (!ids.length) return zeroScoreProcessingXml();
   const conditions = ids
     .map((id) => {
-      const responseIdentifier = xmlEscape(id);
+      const responseIdentifier = escapeXmlAttribute(id);
       return `  <qti-response-condition>
     <qti-response-if>
       <qti-not>
@@ -107,7 +107,7 @@ export function allOrNothingCorrectProcessingXml(
   if (!ids.length || scoreValue <= 0) return zeroScoreProcessingXml();
   const conditions = ids
     .map((id) => {
-      const responseIdentifier = xmlEscape(id);
+      const responseIdentifier = escapeXmlAttribute(id);
       return `      <qti-not>
         <qti-is-null>
           <qti-variable identifier="${responseIdentifier}"/>

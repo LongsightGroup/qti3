@@ -24,7 +24,7 @@ import {
   validatePairMatchMax,
   validatePairReferences,
 } from "./pair-declaration.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3AssociateItem(input: Qti3AssociateBuilderInput): string {
   const diagnostics = validateQti3AssociateItem(input);
@@ -37,7 +37,7 @@ export function renderQti3AssociateItem(input: Qti3AssociateBuilderInput): strin
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const scoring = input.scoring ?? "match_correct";
   const declarationsXml = pairResponseDeclarationXml({
     responseIdentifier: escapedResponseIdentifier,

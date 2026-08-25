@@ -11,11 +11,3 @@ export function stripTags(html: string): string {
 export function trustedFragment(html: string): string {
   return html.trim();
 }
-
-export function escapeText(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}

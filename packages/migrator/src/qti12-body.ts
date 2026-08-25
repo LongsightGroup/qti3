@@ -1,6 +1,7 @@
+import { escapeXmlAttribute, escapeXmlText } from "@longsightgroup/qti3-core";
 import { qti3TrustedXmlFragment } from "@longsightgroup/qti3-writer";
 
-import { escapeText, normalizeIdentifier } from "./text.js";
+import { normalizeIdentifier } from "./text.js";
 import {
   attr,
   findAllDescendantsByLocalName,
@@ -16,13 +17,13 @@ export function materialHtml(root: XmlElement): string {
   return materials
     .map((material) => {
       const mattext = findDescendantByLocalName(material, "mattext");
-      if (mattext) return `<p>${serializeChildren(mattext) || escapeText(textOf(mattext))}</p>`;
+      if (mattext) return `<p>${serializeChildren(mattext) || escapeXmlText(textOf(mattext))}</p>`;
       const matimage = findDescendantByLocalName(material, "matimage");
       if (matimage) {
         const src = attr(matimage, "uri") ?? "";
-        return `<p><img src="${escapeText(src)}"/></p>`;
+        return `<p><img src="${escapeXmlAttribute(src)}"/></p>`;
       }
-      return `<p>${escapeText(textOf(material))}</p>`;
+      return `<p>${escapeXmlText(textOf(material))}</p>`;
     })
     .join("\n");
 }

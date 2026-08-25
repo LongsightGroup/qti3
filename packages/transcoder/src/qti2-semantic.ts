@@ -18,7 +18,7 @@ import { mapTypedProcessingXml, type Qti2Revision } from "./qti2-processing-dial
 import type { Qti2InteractionPolicy } from "./profiles.js";
 import { attributes, semanticAttributes, serializeObject } from "./qti2-wire.js";
 import type { QtiTranscodeDiagnostic } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export type { Qti2Revision } from "./qti2-processing-dialect.js";
 export type { Qti2MappedInteraction } from "./qti2-mapped-interaction.js";
@@ -118,7 +118,7 @@ export function writeSemanticQti2Item(
   });
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<assessmentItem xmlns="${revision.namespace}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="${escapeXml(revision.schemaLocation)}"${rootAttributes}>
+<assessmentItem xmlns="${revision.namespace}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="${escapeXmlAttribute(revision.schemaLocation)}"${rootAttributes}>
   ${declarations}
   ${stylesheets}
   <itemBody${semanticAttributes(item.itemBodyAttributes, revision, diagnostics, "/itemBody")}>${body}</itemBody>
@@ -183,7 +183,7 @@ function mapped(
       admitsPrompt && interaction.promptContent && interaction.promptContent.length > 0
         ? `<prompt>${serializeQti2Content(interaction.promptContent, [], revision, diagnostics)}</prompt>`
         : admitsPrompt && interaction.prompt
-          ? `<prompt>${escapeXml(interaction.prompt)}</prompt>`
+          ? `<prompt>${escapeXmlText(interaction.prompt)}</prompt>`
           : "";
     const interactionAttributes = semanticAttributes(
       interaction.attributes,
@@ -196,7 +196,7 @@ function mapped(
       ]),
     );
     const responseIdentifier = interaction.responseIdentifier
-      ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
+      ? ` responseIdentifier="${escapeXmlAttribute(interaction.responseIdentifier)}"`
       : "";
     return {
       kind: "native",
@@ -275,9 +275,9 @@ function customInteraction(
     markup: definition?.interactionMarkupRaw,
   });
   const responseIdentifier = interaction.responseIdentifier
-    ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
+    ? ` responseIdentifier="${escapeXmlAttribute(interaction.responseIdentifier)}"`
     : "";
-  const source = `<qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">${escapeXml(payload)}</qti3t:source>`;
+  const source = `<qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">${escapeXmlText(payload)}</qti3t:source>`;
   void revision;
   return {
     kind: "native",
@@ -391,14 +391,14 @@ function hottextBody(
   return `<p>${(interaction.hottextSegments ?? [])
     .map((segment) =>
       segment.kind === "text"
-        ? escapeXml(segment.text)
-        : `<hottext identifier="${escapeXml(segment.identifier)}"${semanticAttributes(
+        ? escapeXmlText(segment.text)
+        : `<hottext identifier="${escapeXmlAttribute(segment.identifier)}"${semanticAttributes(
             segment.attributes,
             revision,
             diagnostics,
             `${path}/hottext/${segment.identifier}`,
             new Set(["identifier"]),
-          )}>${escapeXml(segment.text)}</hottext>`,
+          )}>${escapeXmlText(segment.text)}</hottext>`,
     )
     .join("")}</p>`;
 }
@@ -413,7 +413,7 @@ function gapMatchBody(
     .filter((choice) => choice.role === "gapChoice")
     .map((choice, index) =>
       choice.asset
-        ? `<gapImg identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
+        ? `<gapImg identifier="${escapeXmlAttribute(choice.identifier)}"${semanticAttributes(
             choice.attributes,
             revision,
             diagnostics,
@@ -426,8 +426,8 @@ function gapMatchBody(
   const content = (interaction.gapMatchSegments ?? [])
     .map((segment) =>
       segment.kind === "text"
-        ? escapeXml(segment.text)
-        : `<gap identifier="${escapeXml(segment.identifier)}"${semanticAttributes(
+        ? escapeXmlText(segment.text)
+        : `<gap identifier="${escapeXmlAttribute(segment.identifier)}"${semanticAttributes(
             segment.attributes,
             revision,
             diagnostics,
@@ -450,7 +450,7 @@ function hotspotBody(
     .filter((choice) => choice.role === "hotspot")
     .map(
       (choice, index) =>
-        `<hotspotChoice identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
+        `<hotspotChoice identifier="${escapeXmlAttribute(choice.identifier)}"${semanticAttributes(
           choice.attributes,
           revision,
           diagnostics,
@@ -472,7 +472,7 @@ function graphicAssociationBody(
     .filter((choice) => choice.role === "hotspot")
     .map(
       (choice, index) =>
-        `<associableHotspot identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
+        `<associableHotspot identifier="${escapeXmlAttribute(choice.identifier)}"${semanticAttributes(
           choice.attributes,
           revision,
           diagnostics,
@@ -506,7 +506,7 @@ function graphicGapMatchInteraction(
     interaction.promptContent && interaction.promptContent.length > 0
       ? `<prompt>${serializeQti2Content(interaction.promptContent, [], revision, diagnostics)}</prompt>`
       : interaction.prompt
-        ? `<prompt>${escapeXml(interaction.prompt)}</prompt>`
+        ? `<prompt>${escapeXmlText(interaction.prompt)}</prompt>`
         : "";
   const interactionAttributes = semanticAttributes(
     interaction.attributes,
@@ -516,7 +516,7 @@ function graphicGapMatchInteraction(
     new Set(["response-identifier", "max-associations", "min-associations"]),
   );
   const responseIdentifier = interaction.responseIdentifier
-    ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
+    ? ` responseIdentifier="${escapeXmlAttribute(interaction.responseIdentifier)}"`
     : "";
   return {
     kind: "native",
@@ -549,7 +549,7 @@ function graphicGapMatchBody(
         new Set(["identifier"]),
       );
       return choice.asset
-        ? `<gapImg identifier="${escapeXml(choice.identifier)}"${choiceAttributes}>${serializeObject(choice.asset)}</gapImg>`
+        ? `<gapImg identifier="${escapeXmlAttribute(choice.identifier)}"${choiceAttributes}>${serializeObject(choice.asset)}</gapImg>`
         : "";
     })
     .join("");
@@ -557,7 +557,7 @@ function graphicGapMatchBody(
     .filter((choice) => choice.role === "hotspot")
     .map(
       (choice, index) =>
-        `<associableHotspot identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
+        `<associableHotspot identifier="${escapeXmlAttribute(choice.identifier)}"${semanticAttributes(
           choice.attributes,
           revision,
           diagnostics,
@@ -579,7 +579,7 @@ function textualGraphicGapFallbackBody(
     .filter((choice) => choice.role === "gapChoice")
     .map((choice, index) =>
       choice.asset
-        ? `<gapImg identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
+        ? `<gapImg identifier="${escapeXmlAttribute(choice.identifier)}"${semanticAttributes(
             choice.attributes,
             revision,
             diagnostics,
@@ -595,8 +595,8 @@ function textualGraphicGapFallbackBody(
       ? segments
           .map((segment) =>
             segment.kind === "text"
-              ? escapeXml(segment.text)
-              : `<gap identifier="${escapeXml(segment.identifier)}"${semanticAttributes(
+              ? escapeXmlText(segment.text)
+              : `<gap identifier="${escapeXmlAttribute(segment.identifier)}"${semanticAttributes(
                   segment.attributes,
                   revision,
                   diagnostics,
@@ -609,7 +609,7 @@ function textualGraphicGapFallbackBody(
           .filter((choice) => choice.role === "hotspot")
           .map(
             (choice) =>
-              `${escapeXml(choice.text)} <gap identifier="${escapeXml(choice.identifier)}"></gap>`,
+              `${escapeXmlText(choice.text)} <gap identifier="${escapeXmlAttribute(choice.identifier)}"></gap>`,
           )
           .join(" ");
   const contextObject = interaction.object
@@ -623,13 +623,13 @@ function serializeResponseDeclaration(declaration: QtiResponseDeclaration): stri
     declaration.correctResponse === null
       ? ""
       : `<correctResponse>${values(declaration.correctResponse)
-          .map((value) => `<value>${escapeXml(String(value))}</value>`)
+          .map((value) => `<value>${escapeXmlText(String(value))}</value>`)
           .join("")}</correctResponse>`;
   const mapping = declaration.mapping
     ? `<mapping defaultValue="${String(declaration.mapping.defaultValue)}">${declaration.mapping.entries
         .map(
           (entry) =>
-            `<mapEntry mapKey="${escapeXml(entry.mapKey ?? "")}" mappedValue="${String(entry.mappedValue)}"></mapEntry>`,
+            `<mapEntry mapKey="${escapeXmlAttribute(entry.mapKey ?? "")}" mappedValue="${String(entry.mappedValue)}"></mapEntry>`,
         )
         .join("")}</mapping>`
     : "";
@@ -657,7 +657,7 @@ function serializeVariableDeclaration(
     declaration.defaultValue === null
       ? ""
       : `<defaultValue>${values(declaration.defaultValue)
-          .map((value) => `<value>${escapeXml(String(value))}</value>`)
+          .map((value) => `<value>${escapeXmlText(String(value))}</value>`)
           .join("")}</defaultValue>`;
   return `<${element}${variableAttributes(declaration)}>${defaults}</${element}>`;
 }

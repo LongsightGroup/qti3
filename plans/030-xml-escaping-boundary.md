@@ -2,7 +2,13 @@
 
 ## Status
 
-TODO — P2, M effort.
+DONE — P2, M effort. Completed 2026-08-25.
+
+Core now publicly exports context-specific text and double-quoted-attribute escaping helpers, and
+the fixtures, writer, migrator, and transcoder use them without generic local escape functions.
+The 47 updated serializer snapshots differ only in quote/apostrophe lexical normalization; all 176
+before/after snapshot XML documents are DOM-equivalent. Generated evidence hashes were refreshed
+without changing any non-hash support evidence, and full verification passes.
 
 ## Why
 

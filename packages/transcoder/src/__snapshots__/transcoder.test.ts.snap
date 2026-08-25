@@ -94,7 +94,7 @@ exports[`qti3 transcoder evidence matrix > blackboard-question-banks@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library&apos;s weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
+  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -370,7 +370,7 @@ exports[`qti3 transcoder evidence matrix > blackboard-question-banks@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.<div><p>Source options:</p><ul><li>evidence</li><li>claim</li><li>opinion</li><li>caption</li><li>G1</li><li>G2</li></ul></div><p>The water sample data are the  [response]  that supports the report&apos;s  [response]  about stream health.</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.<div><p>Source options:</p><ul><li>evidence</li><li>claim</li><li>opinion</li><li>caption</li><li>G1</li><li>G2</li></ul></div><p>The water sample data are the  [response]  that supports the report's  [response]  about stream health.</p></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -650,7 +650,7 @@ exports[`qti3 transcoder evidence matrix > blackboard-question-banks@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A reading item asks the student to select the author&apos;s claim inside a short paragraph.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author&apos;s claim.<div><p>Source options:</p><ul><li>A small green space would give nearby residents a shaded place to gather</li><li>The lot is 0.4 acres</li><li>The planning department posted the proposal last Tuesday</li><li>Two benches are stored in a public works warehouse</li></ul></div><p>The city should convert the vacant lot on Pine Street into a pocket park.  A small green space would give nearby residents a shaded place to gather , and volunteers have already offered to maintain native plants.  The lot is 0.4 acres  and sits next to a bus stop.  The planning department posted the proposal last Tuesday .  Two benches are stored in a public works warehouse .</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A reading item asks the student to select the author's claim inside a short paragraph.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author's claim.<div><p>Source options:</p><ul><li>A small green space would give nearby residents a shaded place to gather</li><li>The lot is 0.4 acres</li><li>The planning department posted the proposal last Tuesday</li><li>Two benches are stored in a public works warehouse</li></ul></div><p>The city should convert the vacant lot on Pine Street into a pocket park.  A small green space would give nearby residents a shaded place to gather , and volunteers have already offered to maintain native plants.  The lot is 0.4 acres  and sits next to a bus stop.  The planning department posted the proposal last Tuesday .  Two benches are stored in a public works warehouse .</p></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -841,7 +841,7 @@ exports[`qti3 transcoder evidence matrix > blackboard-question-banks@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker&apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.<object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object><p>Silent town-hall audio excerpt</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.<object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object><p>Silent town-hall audio excerpt</p></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -1009,7 +1009,7 @@ exports[`qti3 transcoder evidence matrix > blackboard-question-banks@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Drag the field-note marker onto the Collect water data step in the workflow.<object data="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Drag the field-note marker onto the Collect water data step in the workflow.<object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -1310,7 +1310,7 @@ exports[`qti3 transcoder evidence matrix > brightspace-course-import@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library&apos;s weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
+  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -1575,7 +1575,7 @@ exports[`qti3 transcoder evidence matrix > brightspace-course-import@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.<div><p>Source options:</p><ul><li>evidence</li><li>claim</li><li>opinion</li><li>caption</li><li>G1</li><li>G2</li></ul></div><p>The water sample data are the  [response]  that supports the report&apos;s  [response]  about stream health.</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.<div><p>Source options:</p><ul><li>evidence</li><li>claim</li><li>opinion</li><li>caption</li><li>G1</li><li>G2</li></ul></div><p>The water sample data are the  [response]  that supports the report's  [response]  about stream health.</p></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -1855,7 +1855,7 @@ exports[`qti3 transcoder evidence matrix > brightspace-course-import@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A reading item asks the student to select the author&apos;s claim inside a short paragraph.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author&apos;s claim.<div><p>Source options:</p><ul><li>A small green space would give nearby residents a shaded place to gather</li><li>The lot is 0.4 acres</li><li>The planning department posted the proposal last Tuesday</li><li>Two benches are stored in a public works warehouse</li></ul></div><p>The city should convert the vacant lot on Pine Street into a pocket park.  A small green space would give nearby residents a shaded place to gather , and volunteers have already offered to maintain native plants.  The lot is 0.4 acres  and sits next to a bus stop.  The planning department posted the proposal last Tuesday .  Two benches are stored in a public works warehouse .</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A reading item asks the student to select the author's claim inside a short paragraph.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author's claim.<div><p>Source options:</p><ul><li>A small green space would give nearby residents a shaded place to gather</li><li>The lot is 0.4 acres</li><li>The planning department posted the proposal last Tuesday</li><li>Two benches are stored in a public works warehouse</li></ul></div><p>The city should convert the vacant lot on Pine Street into a pocket park.  A small green space would give nearby residents a shaded place to gather , and volunteers have already offered to maintain native plants.  The lot is 0.4 acres  and sits next to a bus stop.  The planning department posted the proposal last Tuesday .  Two benches are stored in a public works warehouse .</p></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -2067,7 +2067,7 @@ exports[`qti3 transcoder evidence matrix > brightspace-course-import@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker&apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.<object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object><p>Silent town-hall audio excerpt</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.<object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object><p>Silent town-hall audio excerpt</p></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -2235,7 +2235,7 @@ exports[`qti3 transcoder evidence matrix > brightspace-course-import@1 > transco
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Drag the field-note marker onto the Collect water data step in the workflow.<object data="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Drag the field-note marker onto the Collect water data step in the workflow.<object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }
@@ -2543,7 +2543,7 @@ exports[`qti3 transcoder evidence matrix > canvas-classic-quizzes@1 > transcodes
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library&amp;apos;s weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</mattext></material>
 
 
       <response_lid ident="response1" rcardinality="Single">
@@ -3185,7 +3185,7 @@ exports[`qti3 transcoder evidence matrix > canvas-classic-quizzes@1 > transcodes
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A reading item asks the student to select the author&apos;s claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author&amp;apos;s claim.&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A reading item asks the student to select the author's claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author's claim.&lt;/p&gt;</mattext></material>
 
 
       <response_lid ident="response1" rcardinality="Single">
@@ -3406,7 +3406,7 @@ exports[`qti3 transcoder evidence matrix > canvas-classic-quizzes@1 > transcodes
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker&amp;apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;</mattext></material>
       <material><mataudio uri="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" audiotype="audio/wav" label="Silent town-hall audio excerpt"></mataudio></material>
 
       <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Describe your response after reviewing the media.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
@@ -3614,8 +3614,8 @@ exports[`qti3 transcoder evidence matrix > canvas-classic-quizzes@1 > transcodes
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data=&quot;hotspot-flow.svg&quot; type=&quot;image/svg+xml&quot; width=&quot;480&quot; height=&quot;300&quot;&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;</mattext></material>
-      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
       <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
 
       <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Enter the response as x,y coordinates.</mattext></material><render_fib fibtype="String" prompt="Box" rows="1" columns="30"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
@@ -3975,7 +3975,7 @@ exports[`qti3 transcoder evidence matrix > canvas-new-quizzes@1 > transcodes cho
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library&amp;apos;s weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</mattext></material>
 
 
       <response_lid ident="response1" rcardinality="Single">
@@ -4617,7 +4617,7 @@ exports[`qti3 transcoder evidence matrix > canvas-new-quizzes@1 > transcodes hot
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A reading item asks the student to select the author&apos;s claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author&amp;apos;s claim.&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A reading item asks the student to select the author's claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author's claim.&lt;/p&gt;</mattext></material>
 
 
       <response_lid ident="response1" rcardinality="Single">
@@ -4838,7 +4838,7 @@ exports[`qti3 transcoder evidence matrix > canvas-new-quizzes@1 > transcodes med
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker&amp;apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;</mattext></material>
       <material><mataudio uri="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" audiotype="audio/wav" label="Silent town-hall audio excerpt"></mataudio></material>
 
       <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Describe your response after reviewing the media.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
@@ -5021,8 +5021,8 @@ exports[`qti3 transcoder evidence matrix > canvas-new-quizzes@1 > transcodes pos
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data=&quot;hotspot-flow.svg&quot; type=&quot;image/svg+xml&quot; width=&quot;480&quot; height=&quot;300&quot;&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;</mattext></material>
-      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
       <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
 
       <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Enter the response as x,y coordinates.</mattext></material><render_fib fibtype="String" prompt="Box" rows="1" columns="30"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
@@ -5365,7 +5365,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes choice 1`] 
 <quiz>
   <question type="multichoice">
     <name><text>choice-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library&amp;apos;s weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -5493,7 +5493,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes drawing 1`]
 <quiz>
   <question type="essay">
     <name><text>drawing-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A science item asks the student to annotate a field-study workflow diagram.&lt;/p&gt;&lt;p&gt;Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Describe the response you would draw.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A science item asks the student to annotate a field-study workflow diagram.&lt;/p&gt;&lt;p&gt;Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow.svg" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;Describe the response you would draw.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -5717,7 +5717,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes graphicAsso
 <quiz>
   <question type="essay">
     <name><text>graphicAssociate-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to connect related parts of a field-study workflow.&lt;/p&gt;&lt;p&gt;Connect the two workflow regions that belong together: planning the route should be paired with collecting water data, and analyzing results should be paired with reporting recommendations.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow-unlabeled.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Provide a complete written response. Available task elements: Plan sampling route; Collect water data; Analyze results; Report recommendations; Community meeting.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to connect related parts of a field-study workflow.&lt;/p&gt;&lt;p&gt;Connect the two workflow regions that belong together: planning the route should be paired with collecting water data, and analyzing results should be paired with reporting recommendations.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;Provide a complete written response. Available task elements: Plan sampling route; Collect water data; Analyze results; Report recommendations; Community meeting.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -5775,7 +5775,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes graphicGapM
 <quiz>
   <question type="multichoice">
     <name><text>graphicGapMatch-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow-unlabeled.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -5840,7 +5840,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes graphicOrde
 <quiz>
   <question type="matching">
     <name><text>graphicOrder-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A visual sequencing item asks the student to order field-study workflow regions.&lt;/p&gt;&lt;p&gt;Select the workflow regions in the order a field team should complete them: plan the sampling route, collect data, analyze the results, then write the recommendation report.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow-unlabeled.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A visual sequencing item asks the student to order field-study workflow regions.&lt;/p&gt;&lt;p&gt;Select the workflow regions in the order a field team should complete them: plan the sampling route, collect data, analyze the results, then write the recommendation report.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -5899,7 +5899,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes hotspot 1`]
 <quiz>
   <question type="multichoice">
     <name><text>hotspot-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to select the workflow step where stream data are collected.&lt;/p&gt;&lt;p&gt;The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to select the workflow step where stream data are collected.&lt;/p&gt;&lt;p&gt;The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow.svg" alt="Question media"&gt;&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -5960,7 +5960,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes hottext 1`]
 <quiz>
   <question type="multichoice">
     <name><text>hottext-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A reading item asks the student to select the author&apos;s claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author&amp;apos;s claim.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A reading item asks the student to select the author's claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author's claim.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -6144,7 +6144,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes media 1`] =
 <quiz>
   <question type="essay">
     <name><text>media-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker&amp;apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=&quot;&gt;Silent town-hall audio excerpt&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Describe your response after reviewing the media.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;&lt;p&gt;&lt;a href="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="&gt;Silent town-hall audio excerpt&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Describe your response after reviewing the media.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -6261,7 +6261,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes portableCus
 <quiz>
   <question type="essay">
     <name><text>portableCustom-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A graphing-item placeholder exercises a custom interaction while presenting sample-data content.&lt;/p&gt;&lt;p&gt;Use the custom graphing tool to choose the claim best supported by the sample data. The fixture module returns A for the supported claim.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;modules/module_resolution.js&quot;&gt;Custom interaction dependency: modules/module_resolution.js&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;modules/fixture-portable-custom&quot;&gt;Custom interaction dependency: modules/fixture-portable-custom&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Provide the requested response in text.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A graphing-item placeholder exercises a custom interaction while presenting sample-data content.&lt;/p&gt;&lt;p&gt;Use the custom graphing tool to choose the claim best supported by the sample data. The fixture module returns A for the supported claim.&lt;/p&gt;&lt;p&gt;&lt;a href="modules/module_resolution.js"&gt;Custom interaction dependency: modules/module_resolution.js&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="modules/fixture-portable-custom"&gt;Custom interaction dependency: modules/fixture-portable-custom&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Provide the requested response in text.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -6319,7 +6319,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes positionObj
 <quiz>
   <question type="shortanswer">
     <name><text>positionObject-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data=&quot;hotspot-flow.svg&quot; type=&quot;image/svg+xml&quot; width=&quot;480&quot; height=&quot;300&quot;&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;data:image/svg+xml,%3Csvg%20xmlns=&amp;apos;http://www.w3.org/2000/svg&amp;apos;%20viewBox=&amp;apos;0%200%2064%2048&amp;apos;%3E%3Crect%20x=&amp;apos;4&amp;apos;%20y=&amp;apos;4&amp;apos;%20width=&amp;apos;56&amp;apos;%20height=&amp;apos;40&amp;apos;%20rx=&amp;apos;8&amp;apos;%20fill=&amp;apos;%23fff3bf&amp;apos;%20stroke=&amp;apos;%23212529&amp;apos;%20stroke-width=&amp;apos;4&amp;apos;/%3E%3Cpath%20d=&amp;apos;M32%2044%20L24%2058%20L40%2058%20Z&amp;apos;%20fill=&amp;apos;%23fff3bf&amp;apos;%20stroke=&amp;apos;%23212529&amp;apos;%20stroke-width=&amp;apos;4&amp;apos;/%3E%3C/svg%3E&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Enter the response as x,y coordinates.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;&lt;p&gt;&lt;img src="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow.svg" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;Enter the response as x,y coordinates.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -6372,7 +6372,7 @@ exports[`qti3 transcoder evidence matrix > moodle-xml@1 > transcodes selectPoint
 <quiz>
   <question type="shortanswer">
     <name><text>selectPoint-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A coordinate item asks the student to mark the center of the data-collection workflow step.&lt;/p&gt;&lt;p&gt;Mark the center of the Collect water data step, where students record the stream measurements.&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;hotspot-flow.svg&quot; alt=&quot;Question media&quot;&gt;&lt;/p&gt;&lt;p&gt;Enter the response as x,y coordinates.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A coordinate item asks the student to mark the center of the data-collection workflow step.&lt;/p&gt;&lt;p&gt;Mark the center of the Collect water data step, where students record the stream measurements.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow.svg" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;Enter the response as x,y coordinates.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -6604,7 +6604,7 @@ exports[`qti3 transcoder evidence matrix > qti12-standard@1 > transcodes choice 
   <item ident="choice-reference" title="choice-reference">
 
     <presentation>
-      <material><mattext texttype="text/html">A civics item asks the student to choose the strongest evidence for a local-news claim. A local newspaper reports that the library&apos;s weekend tutoring program improved attendance. Which detail would best support that claim?</mattext></material>
+      <material><mattext texttype="text/html">A civics item asks the student to choose the strongest evidence for a local-news claim. A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</mattext></material>
 
 
       <response_lid ident="RESPONSE" rcardinality="Single">
@@ -7149,7 +7149,7 @@ exports[`qti3 transcoder evidence matrix > qti12-standard@1 > transcodes hottext
   <item ident="hottext-reference" title="hottext-reference">
 
     <presentation>
-      <material><mattext texttype="text/html">A reading item asks the student to select the author&apos;s claim inside a short paragraph. Read the paragraph and select the phrase that best states the author&apos;s claim.</mattext></material>
+      <material><mattext texttype="text/html">A reading item asks the student to select the author's claim inside a short paragraph. Read the paragraph and select the phrase that best states the author's claim.</mattext></material>
 
 
       <response_lid ident="RESPONSE" rcardinality="Single">
@@ -7349,7 +7349,7 @@ exports[`qti3 transcoder evidence matrix > qti12-standard@1 > transcodes media 1
   <item ident="media-reference" title="media-reference">
 
     <presentation>
-      <material><mattext texttype="text/html">A listening item renders a town-hall audio excerpt through native browser media controls. Play the town-hall audio excerpt once before answering the follow-up question about the speaker&apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</mattext></material>
+      <material><mattext texttype="text/html">A listening item renders a town-hall audio excerpt through native browser media controls. Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</mattext></material>
       <material><mataudio uri="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" audiotype="audio/wav" label="Silent town-hall audio excerpt"></mataudio></material>
 
       <response_str ident="RESPONSE" rcardinality="Single"><material><mattext texttype="text/plain">Describe your response after reviewing the media.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"></render_fib></response_str>
@@ -7512,7 +7512,7 @@ exports[`qti3 transcoder evidence matrix > qti12-standard@1 > transcodes positio
 
     <presentation>
       <material><mattext texttype="text/html">A diagram item asks the student to move a field-note marker onto the data-collection step. Drag the field-note marker onto the Collect water data step in the workflow.</mattext></material>
-      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
+      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
       <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
       <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media"></matimage></material>
       <response_str ident="RESPONSE" rcardinality="Single"><material><mattext texttype="text/plain">Enter the response as x,y coordinates.</mattext></material><render_fib fibtype="String" prompt="Box" rows="1" columns="30"></render_fib></response_str>
@@ -7803,7 +7803,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes choice 
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library&apos;s weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
+  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -7859,7 +7859,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes custom 
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>Use the widget.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{&quot;sourceType&quot;:&quot;custom&quot;,&quot;dataAttributes&quot;:{},&quot;attributes&quot;:{&quot;response-identifier&quot;:&quot;RESPONSE&quot;},&quot;markup&quot;:&quot;\\n      &lt;div class=\\&quot;widget\\&quot;&gt;Ready&lt;/div&gt;\\n    &quot;}</qti3t:source></customInteraction></itemBody>
+  <itemBody><p>Use the widget.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{"sourceType":"custom","dataAttributes":{},"attributes":{"response-identifier":"RESPONSE"},"markup":"\\n      &lt;div class=\\"widget\\"&gt;Ready&lt;/div&gt;\\n    "}</qti3t:source></customInteraction></itemBody>
   <responseProcessing>
   <setOutcomeValue identifier="SCORE">
     <baseValue baseType="float">0</baseValue>
@@ -7995,7 +7995,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes gapMatc
   <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value><value>B G2</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report&apos;s <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report's <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -8175,7 +8175,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes hottext
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A reading item asks the student to select the author&apos;s claim inside a short paragraph.</p><hottextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author&apos;s claim.</prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <hottext identifier="A">A small green space would give nearby residents a shaded place to gather</hottext>, and volunteers have already offered to maintain native plants. <hottext identifier="B">The lot is 0.4 acres</hottext> and sits next to a bus stop. <hottext identifier="C">The planning department posted the proposal last Tuesday</hottext>. <hottext identifier="D">Two benches are stored in a public works warehouse</hottext>. </p></hottextInteraction></itemBody>
+  <itemBody><p>A reading item asks the student to select the author's claim inside a short paragraph.</p><hottextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author's claim.</prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <hottext identifier="A">A small green space would give nearby residents a shaded place to gather</hottext>, and volunteers have already offered to maintain native plants. <hottext identifier="B">The lot is 0.4 acres</hottext> and sits next to a bus stop. <hottext identifier="C">The planning department posted the proposal last Tuesday</hottext>. <hottext identifier="D">Two benches are stored in a public works warehouse</hottext>. </p></hottextInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -8314,7 +8314,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes media 1
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="integer"><correctResponse><value>1</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><mediaInteraction responseIdentifier="RESPONSE" autostart="false" minPlays="1"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker&apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</prompt><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object></mediaInteraction></itemBody>
+  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><mediaInteraction responseIdentifier="RESPONSE" autostart="false" minPlays="1"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</prompt><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object></mediaInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -8395,7 +8395,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes portabl
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{&quot;sourceType&quot;:&quot;portableCustom&quot;,&quot;customInteractionTypeIdentifier&quot;:&quot;urn:qti3:fixture:portable-custom&quot;,&quot;module&quot;:&quot;fixture-portable-custom&quot;,&quot;modules&quot;:{&quot;primaryConfiguration&quot;:&quot;modules/module_resolution.js&quot;,&quot;modules&quot;:[{&quot;id&quot;:&quot;fixture-portable-custom&quot;,&quot;primaryPath&quot;:&quot;modules/fixture-portable-custom&quot;,&quot;attributes&quot;:{&quot;id&quot;:&quot;fixture-portable-custom&quot;,&quot;primary-path&quot;:&quot;modules/fixture-portable-custom&quot;}}],&quot;attributes&quot;:{&quot;primary-configuration&quot;:&quot;modules/module_resolution.js&quot;}},&quot;templateVariables&quot;:[],&quot;contextVariables&quot;:[],&quot;stylesheets&quot;:[],&quot;dataAttributes&quot;:{},&quot;attributes&quot;:{&quot;response-identifier&quot;:&quot;RESPONSE&quot;,&quot;custom-interaction-type-identifier&quot;:&quot;urn:qti3:fixture:portable-custom&quot;,&quot;module&quot;:&quot;fixture-portable-custom&quot;},&quot;markup&quot;:&quot;&lt;div class=\\&quot;qti3-fixture-pci-markup\\&quot;&gt;Custom graphing widget placeholder for sample data&lt;/div&gt;&quot;}</qti3t:source></customInteraction></itemBody>
+  <itemBody><p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{"sourceType":"portableCustom","customInteractionTypeIdentifier":"urn:qti3:fixture:portable-custom","module":"fixture-portable-custom","modules":{"primaryConfiguration":"modules/module_resolution.js","modules":[{"id":"fixture-portable-custom","primaryPath":"modules/fixture-portable-custom","attributes":{"id":"fixture-portable-custom","primary-path":"modules/fixture-portable-custom"}}],"attributes":{"primary-configuration":"modules/module_resolution.js"}},"templateVariables":[],"contextVariables":[],"stylesheets":[],"dataAttributes":{},"attributes":{"response-identifier":"RESPONSE","custom-interaction-type-identifier":"urn:qti3:fixture:portable-custom","module":"fixture-portable-custom"},"markup":"&lt;div class=\\"qti3-fixture-pci-markup\\"&gt;Custom graphing widget placeholder for sample data&lt;/div&gt;"}</qti3t:source></customInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -8428,7 +8428,7 @@ exports[`qti3 transcoder evidence matrix > qti21-standard@1 > transcodes positio
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="point"><correctResponse><value>240 88</value></correctResponse><areaMapping defaultValue="0"><areaMapEntry shape="circle" coords="240,88,18" mappedValue="1"></areaMapEntry></areaMapping></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><positionObjectStage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object><positionObjectInteraction responseIdentifier="RESPONSE"><object data="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object></positionObjectInteraction></positionObjectStage></itemBody>
+  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><positionObjectStage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object><positionObjectInteraction responseIdentifier="RESPONSE"><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object></positionObjectInteraction></positionObjectStage></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/map_response_point"/>
 </assessmentItem>",
 }
@@ -8626,7 +8626,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes choice 
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library&apos;s weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
+  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -8682,7 +8682,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes custom 
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>Use the widget.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{&quot;sourceType&quot;:&quot;custom&quot;,&quot;dataAttributes&quot;:{},&quot;attributes&quot;:{&quot;response-identifier&quot;:&quot;RESPONSE&quot;},&quot;markup&quot;:&quot;\\n      &lt;div class=\\&quot;widget\\&quot;&gt;Ready&lt;/div&gt;\\n    &quot;}</qti3t:source></customInteraction></itemBody>
+  <itemBody><p>Use the widget.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{"sourceType":"custom","dataAttributes":{},"attributes":{"response-identifier":"RESPONSE"},"markup":"\\n      &lt;div class=\\"widget\\"&gt;Ready&lt;/div&gt;\\n    "}</qti3t:source></customInteraction></itemBody>
   <responseProcessing>
   <setOutcomeValue identifier="SCORE">
     <baseValue baseType="float">0</baseValue>
@@ -8818,7 +8818,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes gapMatc
   <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value><value>B G2</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report&apos;s <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report's <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -8998,7 +8998,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes hottext
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A reading item asks the student to select the author&apos;s claim inside a short paragraph.</p><hottextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author&apos;s claim.</prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <hottext identifier="A">A small green space would give nearby residents a shaded place to gather</hottext>, and volunteers have already offered to maintain native plants. <hottext identifier="B">The lot is 0.4 acres</hottext> and sits next to a bus stop. <hottext identifier="C">The planning department posted the proposal last Tuesday</hottext>. <hottext identifier="D">Two benches are stored in a public works warehouse</hottext>. </p></hottextInteraction></itemBody>
+  <itemBody><p>A reading item asks the student to select the author's claim inside a short paragraph.</p><hottextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author's claim.</prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <hottext identifier="A">A small green space would give nearby residents a shaded place to gather</hottext>, and volunteers have already offered to maintain native plants. <hottext identifier="B">The lot is 0.4 acres</hottext> and sits next to a bus stop. <hottext identifier="C">The planning department posted the proposal last Tuesday</hottext>. <hottext identifier="D">Two benches are stored in a public works warehouse</hottext>. </p></hottextInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -9137,7 +9137,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes media 1
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="integer"><correctResponse><value>1</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><mediaInteraction responseIdentifier="RESPONSE" autostart="false" minPlays="1"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker&apos;s claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</prompt><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object></mediaInteraction></itemBody>
+  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><mediaInteraction responseIdentifier="RESPONSE" autostart="false" minPlays="1"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</prompt><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object></mediaInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -9218,7 +9218,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes portabl
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{&quot;sourceType&quot;:&quot;portableCustom&quot;,&quot;customInteractionTypeIdentifier&quot;:&quot;urn:qti3:fixture:portable-custom&quot;,&quot;module&quot;:&quot;fixture-portable-custom&quot;,&quot;modules&quot;:{&quot;primaryConfiguration&quot;:&quot;modules/module_resolution.js&quot;,&quot;modules&quot;:[{&quot;id&quot;:&quot;fixture-portable-custom&quot;,&quot;primaryPath&quot;:&quot;modules/fixture-portable-custom&quot;,&quot;attributes&quot;:{&quot;id&quot;:&quot;fixture-portable-custom&quot;,&quot;primary-path&quot;:&quot;modules/fixture-portable-custom&quot;}}],&quot;attributes&quot;:{&quot;primary-configuration&quot;:&quot;modules/module_resolution.js&quot;}},&quot;templateVariables&quot;:[],&quot;contextVariables&quot;:[],&quot;stylesheets&quot;:[],&quot;dataAttributes&quot;:{},&quot;attributes&quot;:{&quot;response-identifier&quot;:&quot;RESPONSE&quot;,&quot;custom-interaction-type-identifier&quot;:&quot;urn:qti3:fixture:portable-custom&quot;,&quot;module&quot;:&quot;fixture-portable-custom&quot;},&quot;markup&quot;:&quot;&lt;div class=\\&quot;qti3-fixture-pci-markup\\&quot;&gt;Custom graphing widget placeholder for sample data&lt;/div&gt;&quot;}</qti3t:source></customInteraction></itemBody>
+  <itemBody><p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{"sourceType":"portableCustom","customInteractionTypeIdentifier":"urn:qti3:fixture:portable-custom","module":"fixture-portable-custom","modules":{"primaryConfiguration":"modules/module_resolution.js","modules":[{"id":"fixture-portable-custom","primaryPath":"modules/fixture-portable-custom","attributes":{"id":"fixture-portable-custom","primary-path":"modules/fixture-portable-custom"}}],"attributes":{"primary-configuration":"modules/module_resolution.js"}},"templateVariables":[],"contextVariables":[],"stylesheets":[],"dataAttributes":{},"attributes":{"response-identifier":"RESPONSE","custom-interaction-type-identifier":"urn:qti3:fixture:portable-custom","module":"fixture-portable-custom"},"markup":"&lt;div class=\\"qti3-fixture-pci-markup\\"&gt;Custom graphing widget placeholder for sample data&lt;/div&gt;"}</qti3t:source></customInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
 </assessmentItem>",
 }
@@ -9251,7 +9251,7 @@ exports[`qti3 transcoder evidence matrix > qti22-standard@1 > transcodes positio
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="point"><correctResponse><value>240 88</value></correctResponse><areaMapping defaultValue="0"><areaMapEntry shape="circle" coords="240,88,18" mappedValue="1"></areaMapEntry></areaMapping></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><positionObjectStage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object><positionObjectInteraction responseIdentifier="RESPONSE"><object data="data:image/svg+xml,%3Csvg%20xmlns=&apos;http://www.w3.org/2000/svg&apos;%20viewBox=&apos;0%200%2064%2048&apos;%3E%3Crect%20x=&apos;4&apos;%20y=&apos;4&apos;%20width=&apos;56&apos;%20height=&apos;40&apos;%20rx=&apos;8&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3Cpath%20d=&apos;M32%2044%20L24%2058%20L40%2058%20Z&apos;%20fill=&apos;%23fff3bf&apos;%20stroke=&apos;%23212529&apos;%20stroke-width=&apos;4&apos;/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object></positionObjectInteraction></positionObjectStage></itemBody>
+  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><positionObjectStage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object><positionObjectInteraction responseIdentifier="RESPONSE"><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object></positionObjectInteraction></positionObjectStage></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/map_response_point"/>
 </assessmentItem>",
 }

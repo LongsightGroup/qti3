@@ -1,6 +1,6 @@
 import type { QtiTranscodeFile } from "./types.js";
 import { relativePackagePath } from "./package-manifest.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface CanvasQti12PackageFiles {
   readonly assessment: QtiTranscodeFile;
@@ -34,7 +34,7 @@ export function serializeCanvasQti12Package(
 <questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2p1.xsd">
-  <assessment ident="${escapeXml(safeIdentifier)}" title="${escapeXml(title)}">
+  <assessment ident="${escapeXmlAttribute(safeIdentifier)}" title="${escapeXmlAttribute(title)}">
     <qtimetadata>
       <qtimetadatafield><fieldlabel>cc_maxattempts</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
     </qtimetadata>
@@ -59,16 +59,16 @@ export function serializeCanvasQti12Package(
   const assetResources = assets
     .map(
       (asset, index) =>
-        `    <resource identifier="WEB_CONTENT_${String(index + 1)}" type="webcontent" href="${escapeXml(
+        `    <resource identifier="WEB_CONTENT_${String(index + 1)}" type="webcontent" href="${escapeXmlAttribute(
           asset.path,
-        )}"><file href="${escapeXml(asset.path)}"/></resource>`,
+        )}"><file href="${escapeXmlAttribute(asset.path)}"/></resource>`,
     )
     .join("\n");
   return {
     assessment,
     metadata,
     manifest: `<?xml version="1.0" encoding="UTF-8"?>
-<manifest identifier="MANIFEST_${escapeXml(
+<manifest identifier="MANIFEST_${escapeXmlAttribute(
       safeIdentifier,
     )}" xmlns="http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1"
   xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_v1p2"
@@ -120,10 +120,10 @@ function rewriteCanvasAssetReferences(
 
 function canvasAssessmentMetadata(identifier: string, title: string, points: number): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<quiz identifier="${escapeXml(identifier)}" xmlns="http://canvas.instructure.com/xsd/cccv1p0"
+<quiz identifier="${escapeXmlAttribute(identifier)}" xmlns="http://canvas.instructure.com/xsd/cccv1p0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd">
-  <title>${escapeXml(title)}</title>
+  <title>${escapeXmlText(title)}</title>
   <description></description>
   <shuffle_answers>false</shuffle_answers>
   <scoring_policy>keep_highest</scoring_policy>

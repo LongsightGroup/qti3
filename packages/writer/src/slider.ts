@@ -25,7 +25,7 @@ import type {
   Qti3SliderScoring,
   Qti3WriterDiagnostic,
 } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3SliderItem(input: Qti3SliderBuilderInput): string {
   const diagnostics = validateQti3SliderItem(input);
@@ -38,7 +38,7 @@ export function renderQti3SliderItem(input: Qti3SliderBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Slider response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const baseType = sliderBaseType(input);
   const scoring = sliderScoring(input);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="single" base-type="${baseType}">

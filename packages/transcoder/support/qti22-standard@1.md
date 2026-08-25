@@ -13,7 +13,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `5c83a47bfddf92e36d2287b00216f576c7e67b6914a120a4b042de790f1b4be8`
+- Golden SHA-256: `ecc29dfdc2557862126fb9f813d55b8bae4296d419a5fa60de00d268850da252`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/custom`
@@ -21,7 +21,7 @@
 - Fidelity: lossy
 - Scoring policy: unscored
 - Fallback: —
-- Golden SHA-256: `e5b99852aec2fd29816b5b0b5f4e28601c085da652393c35616f466dfe4369b8`
+- Golden SHA-256: `a72d80d88e0cc747de4f21100de0f8c90b9f3984606163dff8ceb66d40c94e6f`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/drawing`
@@ -53,7 +53,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `ce65b53435217b320f4faf01174bf7284671d4c64a8231aa1d65a479f32d8fa0`
+- Golden SHA-256: `b3974b5bf617fa26a20ca5bee1f2b6bfc79023e8c212d3fbb044623499908be1`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/graphicAssociate`
@@ -93,7 +93,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `55785e6ea4271a6efd80369395341c17755ff5ee042f2265787a2f86cb7bc51f`
+- Golden SHA-256: `5030c638155218abe37854514e4e66ef89e9690724335e675632eeaff125d92e`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/inlineChoice`
@@ -117,7 +117,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `c6b415f92dead61528579b00f58d21003b6ed1bc65943f414168ea1055077af9`
+- Golden SHA-256: `af52b6873023288a16a5209b41e2800220174dc7f7b3eb3de4c55d7a0238dfa4`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/order`
@@ -133,7 +133,7 @@
 - Fidelity: normalized
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `5e4b4ec6fbeeb16cf3206955d7caafadc9cd7e1d6f630a028f9bfc3fd6bcbcd4`
+- Golden SHA-256: `6eea5d86bff0c0ebc98ba07a8fe78fa03263810b3e9cd8ccc57a37d79cefbba1`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/positionObject`
@@ -141,7 +141,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `82bb874adebc402e3d07291543c556b4937ad39f783b56764c70de326af64dd2`
+- Golden SHA-256: `307b00a9ccb978c51088f23b1f65e5a23108c3db311c5a1e7df4bcc3bbbfc9f1`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/selectPoint`

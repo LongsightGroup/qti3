@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Export context-specific `escapeXmlText` and `escapeXmlAttribute` helpers from
+  `@longsightgroup/qti3-core` for dependency-free XML serialization.
+
 ## 0.10.2 - 2026-07-28
 
 ### Added

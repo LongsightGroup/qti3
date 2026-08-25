@@ -1,6 +1,6 @@
 import { writerDiagnostic } from "./diagnostics.js";
 import type { Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 const BASE_TYPES = new Set([
   "identifier",
@@ -64,7 +64,7 @@ export function validateXmlAttributeName(
 
 export function classAttribute(classNames: readonly string[]): string {
   const tokens = uniqueTrimmed(classNames);
-  return tokens.length ? `class="${xmlEscape(tokens.join(" "))}"` : "";
+  return tokens.length ? `class="${escapeXmlAttribute(tokens.join(" "))}"` : "";
 }
 
 export function uniqueTrimmed(values: readonly string[]): string[] {

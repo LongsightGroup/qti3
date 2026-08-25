@@ -1,5 +1,6 @@
+import { escapeXmlAttribute } from "@longsightgroup/qti3-core";
 import { qti3TrustedXmlFragment } from "@longsightgroup/qti3-writer";
-import { escapeText, normalizeIdentifier } from "./text.js";
+import { normalizeIdentifier } from "./text.js";
 import {
   attr,
   childElements,
@@ -56,7 +57,7 @@ export function bodyWithInlineChoicePlaceholders(
     const responseIdentifier = responseIdentifierFor(interaction, `RESPONSE_${index + 1}`);
     replacements.set(
       interaction,
-      `<qti-inline-choice-interaction response-identifier="${escapeText(responseIdentifier)}"/>`,
+      `<qti-inline-choice-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"/>`,
     );
   }
   return trusted(serializeChildrenReplacing(body, replacements));
@@ -72,7 +73,7 @@ export function bodyWithTextEntryPlaceholders(
     const responseIdentifier = responseIdentifierFor(interaction, `RESPONSE_${index + 1}`);
     replacements.set(
       interaction,
-      `<qti-text-entry-interaction response-identifier="${escapeText(responseIdentifier)}"/>`,
+      `<qti-text-entry-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"/>`,
     );
   }
   return trusted(serializeChildrenReplacing(body, replacements));
@@ -87,7 +88,7 @@ export function bodyWithHottextPlaceholders(
   if (promptElement) replacements.set(promptElement, "");
   for (const [index, hottext] of hottexts.entries()) {
     const identifier = normalizeIdentifier(attr(hottext, "identifier"), `H${index + 1}`);
-    replacements.set(hottext, `<qti-hottext identifier="${escapeText(identifier)}"/>`);
+    replacements.set(hottext, `<qti-hottext identifier="${escapeXmlAttribute(identifier)}"/>`);
   }
   return trusted(serializeChildrenReplacing(interaction, replacements) || "<p></p>");
 }
@@ -103,7 +104,7 @@ export function bodyWithGapPlaceholders(
   }
   for (const gap of findAllDescendantsByLocalName(interaction, "gap")) {
     const identifier = normalizeIdentifier(attr(gap, "identifier"), "GAP");
-    replacements.set(gap, `<qti-gap identifier="${escapeText(identifier)}"/>`);
+    replacements.set(gap, `<qti-gap identifier="${escapeXmlAttribute(identifier)}"/>`);
   }
   return trusted(serializeChildrenReplacing(interaction, replacements) || "<p></p>");
 }
@@ -140,7 +141,7 @@ function attributesXml(element: XmlElement): string {
     const attribute = element.attributes.item(index);
     if (!attribute) continue;
     if (attribute.name === "xmlns" || attribute.name.startsWith("xmlns:")) continue;
-    attrs.push(`${attribute.name}="${escapeText(attribute.value)}"`);
+    attrs.push(`${attribute.name}="${escapeXmlAttribute(attribute.value)}"`);
   }
   return attrs.length ? ` ${attrs.join(" ")}` : "";
 }

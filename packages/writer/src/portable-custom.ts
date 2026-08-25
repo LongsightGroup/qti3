@@ -23,7 +23,7 @@ import type {
   Qti3PortableCustomInteractionModules,
   Qti3WriterDiagnostic,
 } from "./types.js";
-import { indentXml, xmlAttributeList, xmlEscape, xmlLines } from "./xml.js";
+import { indentXml, xmlAttributeList, escapeXmlAttribute, xmlLines } from "./xml.js";
 
 export function buildQti3PortableCustomItem(input: Qti3PortableCustomBuilderInput): string {
   const diagnostics = validateQti3PortableCustomItem(input);
@@ -36,7 +36,7 @@ export function renderQti3PortableCustomItem(input: Qti3PortableCustomBuilderInp
     resolveResponseIdentifier(input.responseIdentifier),
     "Portable custom response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="${
     input.responseCardinality ?? "single"
   }" base-type="${input.responseBaseType ?? "string"}"/>`;
@@ -92,16 +92,16 @@ function portableCustomAttributes(
 ): string {
   return xmlAttributeList([
     `response-identifier="${escapedResponseIdentifier}"`,
-    `custom-interaction-type-identifier="${xmlEscape(
+    `custom-interaction-type-identifier="${escapeXmlAttribute(
       input.customInteractionTypeIdentifier.trim(),
     )}"`,
     input.module?.trim()
-      ? `module="${xmlEscape(assertQtiIdentifier(input.module, "Portable custom module"))}"`
+      ? `module="${escapeXmlAttribute(assertQtiIdentifier(input.module, "Portable custom module"))}"`
       : "",
     classAttribute(input.classNames ?? []),
-    input.label?.trim() ? `label="${xmlEscape(input.label.trim())}"` : "",
+    input.label?.trim() ? `label="${escapeXmlAttribute(input.label.trim())}"` : "",
     ...(input.dataAttributes ?? []).map(
-      (attribute) => `${attribute.name.trim()}="${xmlEscape(attribute.value.trim())}"`,
+      (attribute) => `${attribute.name.trim()}="${escapeXmlAttribute(attribute.value.trim())}"`,
     ),
   ]);
 }
@@ -119,21 +119,23 @@ function interactionModulesXml(
   }
   const attrs = xmlAttributeList([
     interactionModules.primaryConfiguration?.trim()
-      ? `primary-configuration="${xmlEscape(interactionModules.primaryConfiguration.trim())}"`
+      ? `primary-configuration="${escapeXmlAttribute(interactionModules.primaryConfiguration.trim())}"`
       : "",
     interactionModules.secondaryConfiguration?.trim()
-      ? `secondary-configuration="${xmlEscape(interactionModules.secondaryConfiguration.trim())}"`
+      ? `secondary-configuration="${escapeXmlAttribute(interactionModules.secondaryConfiguration.trim())}"`
       : "",
   ]);
   const attrsText = attrs ? ` ${attrs}` : "";
   const modulesXml = interactionModules.modules
     .map((module) => {
-      const id = xmlEscape(assertQtiIdentifier(module.id, "Portable custom interaction module id"));
+      const id = escapeXmlAttribute(
+        assertQtiIdentifier(module.id, "Portable custom interaction module id"),
+      );
       const primaryPath = module.primaryPath?.trim()
-        ? ` primary-path="${xmlEscape(module.primaryPath.trim())}"`
+        ? ` primary-path="${escapeXmlAttribute(module.primaryPath.trim())}"`
         : "";
       const fallbackPath = module.fallbackPath?.trim()
-        ? ` fallback-path="${xmlEscape(module.fallbackPath.trim())}"`
+        ? ` fallback-path="${escapeXmlAttribute(module.fallbackPath.trim())}"`
         : "";
       return `        <qti-interaction-module id="${id}"${primaryPath}${fallbackPath}/>`;
     })

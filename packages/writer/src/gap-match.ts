@@ -25,7 +25,7 @@ import type {
   Qti3GapMatchChoice,
   Qti3WriterDiagnostic,
 } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3GapMatchItem(input: Qti3GapMatchBuilderInput): string {
   const diagnostics = validateQti3GapMatchItem(input);
@@ -38,7 +38,7 @@ export function renderQti3GapMatchItem(input: Qti3GapMatchBuilderInput): string 
     resolveResponseIdentifier(input.responseIdentifier),
     "Gap match response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = pairResponseDeclarationXml({
     responseIdentifier: escapedResponseIdentifier,
     baseType: "directedPair",
@@ -59,10 +59,10 @@ export function renderQti3GapMatchItem(input: Qti3GapMatchBuilderInput): string 
         ? `max-associations="${String(input.maxAssociations)}"`
         : "",
       input.minAssociationsMessage?.trim()
-        ? `data-min-selections-message="${xmlEscape(input.minAssociationsMessage.trim())}"`
+        ? `data-min-selections-message="${escapeXmlAttribute(input.minAssociationsMessage.trim())}"`
         : "",
       input.maxAssociationsMessage?.trim()
-        ? `data-max-selections-message="${xmlEscape(input.maxAssociationsMessage.trim())}"`
+        ? `data-max-selections-message="${escapeXmlAttribute(input.maxAssociationsMessage.trim())}"`
         : "",
     ],
   });
@@ -86,7 +86,7 @@ ${bodyFragment}
 }
 
 function gapChoiceXml(choice: Qti3GapMatchChoice): string {
-  const identifier = xmlEscape(
+  const identifier = escapeXmlAttribute(
     assertQtiIdentifier(choice.identifier, "Gap match choice identifier"),
   );
   const attrs = [
@@ -95,7 +95,7 @@ function gapChoiceXml(choice: Qti3GapMatchChoice): string {
     choice.fixed ? `fixed="true"` : "",
   ];
   if (choice.kind === "text") {
-    const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
+    const body = choice.contentHtml?.trim() ? choice.contentHtml : escapeXmlText(choice.text ?? "");
     return `      <qti-gap-text ${xmlAttributeList(attrs)}>${body}</qti-gap-text>`;
   }
   return `      <qti-gap-img ${xmlAttributeList(attrs)}>

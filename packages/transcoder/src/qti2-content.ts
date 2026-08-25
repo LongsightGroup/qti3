@@ -4,7 +4,7 @@ import type { Qti2MappedInteraction } from "./qti2-mapped-interaction.js";
 import type { Qti2Revision } from "./qti2-processing-dialect.js";
 import { attributes, semanticAttributes } from "./qti2-wire.js";
 import type { QtiTranscodeDiagnostic } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function serializeQti2Content(
   nodes: readonly QtiContentNode[],
@@ -16,17 +16,17 @@ export function serializeQti2Content(
     .map((node) => {
       switch (node.kind) {
         case "text":
-          return escapeXml(node.text);
+          return escapeXmlText(node.text);
         case "interaction":
           return mappings[node.interactionIndex]?.xml ?? "";
         case "printedVariable":
-          return `<printedVariable identifier="${escapeXml(node.identifier)}"${attributes({
+          return `<printedVariable identifier="${escapeXmlAttribute(node.identifier)}"${attributes({
             format: node.format,
           })}></printedVariable>`;
         case "feedback":
-          return `<feedback${node.feedbackType === "block" ? "Block" : "Inline"} identifier="${escapeXml(
+          return `<feedback${node.feedbackType === "block" ? "Block" : "Inline"} identifier="${escapeXmlAttribute(
             node.identifier,
-          )}" outcomeIdentifier="${escapeXml(node.outcomeIdentifier)}" showHide="${node.showHide}">${serializeQti2Content(
+          )}" outcomeIdentifier="${escapeXmlAttribute(node.outcomeIdentifier)}" showHide="${node.showHide}">${serializeQti2Content(
             node.children,
             mappings,
             revision,
@@ -61,8 +61,8 @@ export function serializeQti2Choice(
   const content =
     choice.content && choice.content.length > 0
       ? serializeQti2Content(choice.content, [], revision, [])
-      : escapeXml(choice.text);
-  return `<${element} identifier="${escapeXml(choice.identifier)}"${semanticAttributes(
+      : escapeXmlText(choice.text);
+  return `<${element} identifier="${escapeXmlAttribute(choice.identifier)}"${semanticAttributes(
     choice.attributes,
     revision,
     diagnostics,

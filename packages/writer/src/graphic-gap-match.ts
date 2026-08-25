@@ -30,7 +30,7 @@ import type {
   Qti3GraphicGapMatchBuilderInput,
   Qti3WriterDiagnostic,
 } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderInput): string {
   const diagnostics = validateQti3GraphicGapMatchItem(input);
@@ -43,7 +43,7 @@ export function renderQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderI
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic gap match response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = pairResponseDeclarationXml({
     responseIdentifier: escapedResponseIdentifier,
     baseType: "directedPair",
@@ -67,10 +67,10 @@ export function renderQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderI
         ? `max-associations="${String(input.maxAssociations)}"`
         : "",
       input.minAssociationsMessage?.trim()
-        ? `data-min-selections-message="${xmlEscape(input.minAssociationsMessage.trim())}"`
+        ? `data-min-selections-message="${escapeXmlAttribute(input.minAssociationsMessage.trim())}"`
         : "",
       input.maxAssociationsMessage?.trim()
-        ? `data-max-selections-message="${xmlEscape(input.maxAssociationsMessage.trim())}"`
+        ? `data-max-selections-message="${escapeXmlAttribute(input.maxAssociationsMessage.trim())}"`
         : "",
       longDescription.attributeXml,
     ],
@@ -79,13 +79,13 @@ export function renderQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderI
   const targetsXml = input.targets
     .flatMap((target) => {
       if (target.targetType === "inlineGap") return [];
-      const identifier = xmlEscape(
+      const identifier = escapeXmlAttribute(
         assertQtiIdentifier(target.identifier, "Graphic gap target identifier"),
       );
       const attrs = [
         `identifier="${identifier}"`,
         `shape="${target.shape}"`,
-        `coords="${xmlEscape(target.coords.trim())}"`,
+        `coords="${escapeXmlAttribute(target.coords.trim())}"`,
         `match-max="${String(target.matchMax ?? 1)}"`,
       ];
       return [`      <qti-associable-hotspot ${xmlAttributeList(attrs)}/>`];
@@ -147,7 +147,7 @@ export function validateQti3GraphicGapMatchItem(
 }
 
 function graphicGapChoiceXml(choice: Qti3GraphicGapChoice): string {
-  const identifier = xmlEscape(
+  const identifier = escapeXmlAttribute(
     assertQtiIdentifier(choice.identifier, "Graphic gap choice identifier"),
   );
   const attrs = [
@@ -156,7 +156,7 @@ function graphicGapChoiceXml(choice: Qti3GraphicGapChoice): string {
     choice.fixed ? `fixed="true"` : "",
   ];
   if (choice.kind === "text") {
-    const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
+    const body = choice.contentHtml?.trim() ? choice.contentHtml : escapeXmlText(choice.text ?? "");
     return `      <qti-gap-text ${xmlAttributeList(attrs)}>${body}</qti-gap-text>`;
   }
   return `      <qti-gap-img ${xmlAttributeList(attrs)}>

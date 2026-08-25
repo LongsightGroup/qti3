@@ -4,7 +4,7 @@ import type {
 } from "@longsightgroup/qti3-core";
 
 import { relativePackagePath } from "./package-manifest.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 /** Internal conformance seam for validating the assessment-test wire serializers. */
 export function serializeTargetAssessmentTest(
@@ -15,7 +15,7 @@ export function serializeTargetAssessmentTest(
   if (target === "qti12") {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2">
-  <assessment ident="${escapeXml(test.identifier)}" title="${escapeXml(test.title ?? test.identifier)}">
+  <assessment ident="${escapeXmlAttribute(test.identifier)}" title="${escapeXmlAttribute(test.title ?? test.identifier)}">
     ${test.testParts
       .flatMap((part) => part.sections)
       .map((section) => serializeQti12Section(section, manifestIdentifiersByHref))
@@ -28,13 +28,13 @@ export function serializeTargetAssessmentTest(
       ? "http://www.imsglobal.org/xsd/imsqti_v2p1"
       : "http://www.imsglobal.org/xsd/imsqti_v2p2";
   return `<?xml version="1.0" encoding="UTF-8"?>
-<assessmentTest xmlns="${namespace}" identifier="${escapeXml(test.identifier)}" title="${escapeXml(
+<assessmentTest xmlns="${namespace}" identifier="${escapeXmlAttribute(test.identifier)}" title="${escapeXmlAttribute(
     test.title ?? test.identifier,
   )}">
   ${serializeTimeLimits(test.timeLimits)}
   ${test.testParts
     .map(
-      (part) => `<testPart identifier="${escapeXml(part.identifier)}" navigationMode="${
+      (part) => `<testPart identifier="${escapeXmlAttribute(part.identifier)}" navigationMode="${
         part.navigationMode ?? "linear"
       }" submissionMode="${part.submissionMode ?? "individual"}">
     ${serializeTimeLimits(part.timeLimits)}
@@ -49,13 +49,13 @@ function serializeQti12Section(
   section: QtiAssessmentSectionPackageModel,
   manifestIdentifiersByHref: ReadonlyMap<string, string>,
 ): string {
-  return `<section ident="${escapeXml(section.identifier)}" title="${escapeXml(
+  return `<section ident="${escapeXmlAttribute(section.identifier)}" title="${escapeXmlAttribute(
     section.title ?? section.identifier,
   )}">
 ${section.itemRefs
   .map(
     (itemRef) =>
-      `  <itemref linkrefid="${escapeXml(
+      `  <itemref linkrefid="${escapeXmlAttribute(
         manifestIdentifiersByHref.get(itemRef.href) ?? itemRef.identifier ?? itemRef.href,
       )}"></itemref>`,
   )
@@ -67,16 +67,16 @@ ${section.sections
 }
 
 function serializeQti2Section(section: QtiAssessmentSectionPackageModel, testPath: string): string {
-  return `<assessmentSection identifier="${escapeXml(section.identifier)}" title="${escapeXml(
+  return `<assessmentSection identifier="${escapeXmlAttribute(section.identifier)}" title="${escapeXmlAttribute(
     section.title ?? section.identifier,
   )}" visible="${String(section.visible ?? true)}">
 ${serializeTimeLimits(section.timeLimits)}
 ${section.itemRefs
   .map(
     (itemRef) =>
-      `  <assessmentItemRef identifier="${escapeXml(
+      `  <assessmentItemRef identifier="${escapeXmlAttribute(
         itemRef.identifier ?? itemRef.href.replace(/[^A-Za-z0-9_.-]/g, "_"),
-      )}" href="${escapeXml(relativePackagePath(testPath, itemRef.href))}">${serializeTimeLimits(
+      )}" href="${escapeXmlAttribute(relativePackagePath(testPath, itemRef.href))}">${serializeTimeLimits(
         itemRef.timeLimits,
       )}${serializeItemSessionControl(itemRef.itemSessionControl)}</assessmentItemRef>`,
   )

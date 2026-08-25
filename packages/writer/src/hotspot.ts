@@ -24,7 +24,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3HotspotBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3HotspotItem(input: Qti3HotspotBuilderInput): string {
   const diagnostics = validateQti3HotspotItem(input);
@@ -37,7 +37,7 @@ export function renderQti3HotspotItem(input: Qti3HotspotBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Hotspot response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const maxChoices = input.maxChoices ?? 1;
   const minChoices = normalizeBound(input.minChoices, 0);
   const cardinality = maxChoices === 1 ? "single" : "multiple";
@@ -46,7 +46,7 @@ export function renderQti3HotspotItem(input: Qti3HotspotBuilderInput): string {
   );
   const correctXml = correctResponse.length
     ? `    <qti-correct-response>
-${correctResponse.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>`).join("\n")}
+${correctResponse.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-value>`).join("\n")}
     </qti-correct-response>\n`
     : "";
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="${cardinality}" base-type="identifier">
@@ -64,10 +64,10 @@ ${correctXml}  </qti-response-declaration>`;
       minChoices !== null ? `min-choices="${String(minChoices)}"` : "",
       `max-choices="${String(maxChoices)}"`,
       input.minChoicesMessage?.trim()
-        ? `data-min-selections-message="${xmlEscape(input.minChoicesMessage.trim())}"`
+        ? `data-min-selections-message="${escapeXmlAttribute(input.minChoicesMessage.trim())}"`
         : "",
       input.maxChoicesMessage?.trim()
-        ? `data-max-selections-message="${xmlEscape(input.maxChoicesMessage.trim())}"`
+        ? `data-max-selections-message="${escapeXmlAttribute(input.maxChoicesMessage.trim())}"`
         : "",
       longDescription.attributeXml,
     ],
@@ -75,9 +75,11 @@ ${correctXml}  </qti-response-declaration>`;
   const objectAttrs = renderGraphicObjectAttributes(input.object);
   const choicesXml = input.choices
     .map((choice) => {
-      const identifier = xmlEscape(assertQtiIdentifier(choice.identifier, "Hotspot identifier"));
+      const identifier = escapeXmlAttribute(
+        assertQtiIdentifier(choice.identifier, "Hotspot identifier"),
+      );
       const coords = choice.coords.trim();
-      return `      <qti-hotspot-choice identifier="${identifier}" shape="${choice.shape}" coords="${xmlEscape(coords)}"/>`;
+      return `      <qti-hotspot-choice identifier="${identifier}" shape="${choice.shape}" coords="${escapeXmlAttribute(coords)}"/>`;
     })
     .join("\n");
   const bodyXml = `${optionalBodySection(input.bodyHtml)}${longDescription.blockXml}    <qti-hotspot-interaction ${interactionAttrs}>

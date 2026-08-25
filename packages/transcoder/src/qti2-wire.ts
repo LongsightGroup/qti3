@@ -2,7 +2,7 @@ import type { QtiObjectAsset } from "@longsightgroup/qti3-core";
 
 import type { Qti2Revision } from "./qti2-processing-dialect.js";
 import type { QtiTranscodeDiagnostic } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function attributes(source: Readonly<Record<string, string | undefined>>): string {
   const entries = Object.entries(source).filter(
@@ -10,7 +10,7 @@ export function attributes(source: Readonly<Record<string, string | undefined>>)
   );
   return entries.length === 0
     ? ""
-    : ` ${entries.map(([name, value]) => `${name}="${escapeXml(value)}"`).join(" ")}`;
+    : ` ${entries.map(([name, value]) => `${name}="${escapeXmlAttribute(value)}"`).join(" ")}`;
 }
 
 export function semanticAttributes(
@@ -76,5 +76,5 @@ export function serializeObject(object: QtiObjectAsset): string {
     type: object.type,
     width: object.width,
     height: object.height,
-  })}>${sources}${tracks}${escapeXml(object.text)}</object>`;
+  })}>${sources}${tracks}${escapeXmlText(object.text)}</object>`;
 }

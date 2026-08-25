@@ -14,7 +14,7 @@ import {
 import { trustedResponseProcessingXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3DrawingBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3DrawingItem(input: Qti3DrawingBuilderInput): string {
   const diagnostics = validateQti3DrawingItem(input);
@@ -27,7 +27,7 @@ export function renderQti3DrawingItem(input: Qti3DrawingBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Drawing response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="single" base-type="file"/>`;
   const longDescription = optionalLongDescriptionBlock(
     input.identifier,

@@ -44,7 +44,7 @@ describe("Canvas transcoder profiles", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.xml).toContain(
-      "&lt;p&gt;Read &lt;strong&gt;carefully&lt;/strong&gt;. &lt;img src=&quot;media/chart.png&quot; alt=&quot;Growth chart&quot;&gt;&lt;/img&gt;&lt;/p&gt;",
+      '&lt;p&gt;Read &lt;strong&gt;carefully&lt;/strong&gt;. &lt;img src="media/chart.png" alt="Growth chart"&gt;&lt;/img&gt;&lt;/p&gt;',
     );
     expect(result.xml).toContain("&lt;p&gt;Pick the best answer.&lt;/p&gt;");
     expect(result.xml).toContain("&lt;em&gt;Alpha&lt;/em&gt;");

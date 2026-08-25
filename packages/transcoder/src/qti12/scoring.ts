@@ -1,4 +1,4 @@
-import { escapeXml } from "../xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "../xml.js";
 import { isCanvasQti12Dialect, type Qti12WireDialect } from "./types.js";
 import { formatScore } from "./shared.js";
 
@@ -17,7 +17,10 @@ export function condition(
   score = isCanvasQti12Dialect(dialect) ? 100 : 1,
 ): string {
   const comparisons = correct
-    .map((value) => `<varequal respident="${escapeXml(identifier)}">${escapeXml(value)}</varequal>`)
+    .map(
+      (value) =>
+        `<varequal respident="${escapeXmlAttribute(identifier)}">${escapeXmlText(value)}</varequal>`,
+    )
     .join("");
   const expression = correct.length > 1 ? `<and>${comparisons}</and>` : comparisons;
   return `<respcondition continue="${
@@ -39,9 +42,9 @@ export function choiceCondition(
     const ordered = correct
       .map(
         (value, index) =>
-          `<varequal respident="${escapeXml(identifier)}" index="${String(
+          `<varequal respident="${escapeXmlAttribute(identifier)}" index="${String(
             index + 1,
-          )}">${escapeXml(value)}</varequal>`,
+          )}">${escapeXmlText(value)}</varequal>`,
       )
       .join("");
     return scoringCondition(`<and>${ordered}</and>`, dialect);
@@ -49,7 +52,8 @@ export function choiceCondition(
   if (cardinality === "multiple") {
     const selected = correct
       .map(
-        (value) => `<varequal respident="${escapeXml(identifier)}">${escapeXml(value)}</varequal>`,
+        (value) =>
+          `<varequal respident="${escapeXmlAttribute(identifier)}">${escapeXmlText(value)}</varequal>`,
       )
       .join("");
     const correctSet = new Set(correct);
@@ -57,7 +61,7 @@ export function choiceCondition(
       .filter((value) => !correctSet.has(value))
       .map(
         (value) =>
-          `<not><varequal respident="${escapeXml(identifier)}">${escapeXml(
+          `<not><varequal respident="${escapeXmlAttribute(identifier)}">${escapeXmlText(
             value,
           )}</varequal></not>`,
       )
@@ -65,7 +69,7 @@ export function choiceCondition(
     return scoringCondition(`<and>${selected}${excluded}</and>`, dialect);
   }
   return scoringCondition(
-    `<varequal respident="${escapeXml(identifier)}">${escapeXml(correct[0] ?? "")}</varequal>`,
+    `<varequal respident="${escapeXmlAttribute(identifier)}">${escapeXmlText(correct[0] ?? "")}</varequal>`,
     dialect,
   );
 }
@@ -76,9 +80,9 @@ export function areaCondition(
   coords: string,
   dialect: Qti12WireDialect,
 ): string {
-  return `<respcondition continue="${isCanvasQti12Dialect(dialect) ? "No" : "Yes"}"><conditionvar><varinside respident="${escapeXml(
+  return `<respcondition continue="${isCanvasQti12Dialect(dialect) ? "No" : "Yes"}"><conditionvar><varinside respident="${escapeXmlAttribute(
     identifier,
-  )}" areatype="${escapeXml(areaType)}">${escapeXml(
+  )}" areatype="${escapeXmlAttribute(areaType)}">${escapeXmlText(
     coords,
   )}</varinside></conditionvar><setvar action="${
     isCanvasQti12Dialect(dialect) ? "Set" : "Add"

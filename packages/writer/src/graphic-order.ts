@@ -23,7 +23,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3GraphicOrderBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3GraphicOrderItem(input: Qti3GraphicOrderBuilderInput): string {
   const diagnostics = validateQti3GraphicOrderItem(input);
@@ -36,13 +36,13 @@ export function renderQti3GraphicOrderItem(input: Qti3GraphicOrderBuilderInput):
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic order response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const correctOrder = resolvedCorrectOrder(input).map((value) =>
     assertQtiIdentifier(value, "Graphic order correct identifier"),
   );
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="ordered" base-type="identifier">
     <qti-correct-response>
-${correctOrder.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>`).join("\n")}
+${correctOrder.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-value>`).join("\n")}
     </qti-correct-response>
   </qti-response-declaration>`;
   const longDescription = optionalLongDescriptionBlock(
@@ -62,15 +62,15 @@ ${correctOrder.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>`
   });
   const hotspotsXml = input.hotspots
     .map((hotspot) => {
-      const identifier = xmlEscape(
+      const identifier = escapeXmlAttribute(
         assertQtiIdentifier(hotspot.identifier, "Graphic order hotspot identifier"),
       );
       const attrs = [
         `identifier="${identifier}"`,
         `shape="${hotspot.shape}"`,
-        `coords="${xmlEscape(hotspot.coords.trim())}"`,
+        `coords="${escapeXmlAttribute(hotspot.coords.trim())}"`,
         hotspot.hotspotLabel?.trim()
-          ? `hotspot-label="${xmlEscape(hotspot.hotspotLabel.trim())}"`
+          ? `hotspot-label="${escapeXmlAttribute(hotspot.hotspotLabel.trim())}"`
           : "",
       ];
       return `      <qti-hotspot-choice ${xmlAttributeList(attrs)}/>`;

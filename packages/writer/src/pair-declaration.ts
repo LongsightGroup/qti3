@@ -1,6 +1,6 @@
 import { duplicateDiagnostics, validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
 import type { Qti3ResponseProcessingTemplate, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface Qti3PairLike {
   readonly sourceIdentifier: string;
@@ -49,7 +49,7 @@ export function pairValue(pair: Qti3PairLike): string {
 export function pairResponseDeclarationXml(input: PairResponseDeclarationInput): string {
   return `  <qti-response-declaration identifier="${input.responseIdentifier}" cardinality="multiple" base-type="${input.baseType}">
     <qti-correct-response>
-${input.pairs.map((pair) => `      <qti-value>${xmlEscape(pairValue(pair))}</qti-value>`).join("\n")}
+${input.pairs.map((pair) => `      <qti-value>${escapeXmlText(pairValue(pair))}</qti-value>`).join("\n")}
     </qti-correct-response>
 ${pairMappingXml(input.scoring ?? "match_correct", input.pairs)}  </qti-response-declaration>`;
 }
@@ -62,7 +62,10 @@ export function pairMappingXml(
   return `
   <qti-mapping default-value="0">
 ${pairs
-  .map((pair) => `    <qti-map-entry map-key="${xmlEscape(pairValue(pair))}" mapped-value="1"/>`)
+  .map(
+    (pair) =>
+      `    <qti-map-entry map-key="${escapeXmlAttribute(pairValue(pair))}" mapped-value="1"/>`,
+  )
   .join("\n")}
   </qti-mapping>
 `;

@@ -20,7 +20,7 @@ import {
 import { trustedResponseProcessingXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3CustomInteractionBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { indentXml, xmlAttributeList, xmlEscape } from "./xml.js";
+import { indentXml, xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 const RESERVED_ATTRS = new Set(["response-identifier", "class", "definition"]);
 
@@ -35,7 +35,7 @@ export function renderQti3CustomInteractionItem(input: Qti3CustomInteractionBuil
     resolveResponseIdentifier(input.responseIdentifier),
     "Custom interaction response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="${
     input.responseCardinality ?? "single"
   }" base-type="${input.responseBaseType ?? "string"}"/>`;
@@ -95,9 +95,9 @@ function customInteractionAttributes(
   return xmlAttributeList([
     `response-identifier="${escapedResponseIdentifier}"`,
     classAttribute(input.classNames ?? []),
-    input.definition?.trim() ? `definition="${xmlEscape(input.definition.trim())}"` : "",
+    input.definition?.trim() ? `definition="${escapeXmlAttribute(input.definition.trim())}"` : "",
     ...(input.attributes ?? []).map(
-      (attribute) => `${attribute.name.trim()}="${xmlEscape(attribute.value.trim())}"`,
+      (attribute) => `${attribute.name.trim()}="${escapeXmlAttribute(attribute.value.trim())}"`,
     ),
   ]);
 }

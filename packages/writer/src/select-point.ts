@@ -30,7 +30,7 @@ import {
 } from "./point-area.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3SelectPointBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3SelectPointItem(input: Qti3SelectPointBuilderInput): string {
   const diagnostics = validateQti3SelectPointItem(input);
@@ -43,7 +43,7 @@ export function renderQti3SelectPointItem(input: Qti3SelectPointBuilderInput): s
     resolveResponseIdentifier(input.responseIdentifier),
     "Select point response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = pointResponseDeclarationXml({
     responseIdentifier,
     cardinality: pointCardinality(input),

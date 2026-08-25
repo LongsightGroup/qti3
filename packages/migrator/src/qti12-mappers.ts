@@ -1,3 +1,4 @@
+import { escapeXmlAttribute } from "@longsightgroup/qti3-core";
 import {
   qti3TrustedXmlFragment,
   type Qti3AuthoringChoice,
@@ -13,7 +14,7 @@ import {
   qti12ResponseIdentifiers,
 } from "./qti12-classify.js";
 import { applyRepairPolicy, isRepairBlocked, repairDiagnostics } from "./repair-policy.js";
-import { escapeText, normalizeIdentifier } from "./text.js";
+import { normalizeIdentifier } from "./text.js";
 import type { QtiMigrationDiagnostic, ResolvedQtiMigrationOptions } from "./types.js";
 import {
   attr,
@@ -220,7 +221,7 @@ export function mapQti12TextEntry(
       identifier,
       title,
       bodyHtml: qti3TrustedXmlFragment(
-        `${presentation ? materialHtml(presentation) : "<p></p>"}<p><qti-text-entry-interaction response-identifier="${escapeText(responseIdentifier)}"/></p>`,
+        `${presentation ? materialHtml(presentation) : "<p></p>"}<p><qti-text-entry-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"/></p>`,
       ),
       responses: [
         {

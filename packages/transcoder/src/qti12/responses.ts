@@ -4,7 +4,7 @@ import { interactionPolicyFallback } from "../profiles.js";
 import type { QtiTranscodeDiagnostic } from "../types.js";
 import { canvasHotspotResponse } from "../qti12-canvas.js";
 import { serializeRichChoiceContent } from "../rich-content-html.js";
-import { escapeXml } from "../xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "../xml.js";
 import { serializeQti12Asset } from "./assets.js";
 import { choiceCondition, condition, conditions } from "./scoring.js";
 import {
@@ -35,11 +35,11 @@ export function choiceResponse(
       : interaction.responseCardinality === "multiple"
         ? "Multiple"
         : "Single";
-  return `<response_lid ident="${escapeXml(identifier)}" rcardinality="${cardinality}">
+  return `<response_lid ident="${escapeXmlAttribute(identifier)}" rcardinality="${cardinality}">
         <render_choice shuffle="No">${choices
           .map(
             (choice) =>
-              `<response_label ident="${escapeXml(qti12Identifier(choice.identifier))}"><material><mattext texttype="${
+              `<response_label ident="${escapeXmlAttribute(qti12Identifier(choice.identifier))}"><material><mattext texttype="${
                 isCanvasQti12Dialect(dialect) ? "text/html" : "text/plain"
               }">${serializeChoiceContent(choice, dialect)}</mattext></material></response_label>`,
           )
@@ -52,7 +52,7 @@ export function extendedTextResponse(
   instruction: string,
   dialect: Qti12WireDialect = "standard",
 ): string {
-  return `<response_str ident="${escapeXml(identifier)}" rcardinality="Single"><material><mattext texttype="text/plain">${escapeXml(
+  return `<response_str ident="${escapeXmlAttribute(identifier)}" rcardinality="Single"><material><mattext texttype="text/plain">${escapeXmlText(
     instruction,
   )}</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72">${
     isCanvasQti12Dialect(dialect)
@@ -72,7 +72,7 @@ export function textResponse(
       : interaction.type === "slider"
         ? "Enter a value within the stated range."
         : "";
-  return `<response_str ident="${escapeXml(identifier)}" rcardinality="Single"><material><mattext texttype="text/plain">${escapeXml(
+  return `<response_str ident="${escapeXmlAttribute(identifier)}" rcardinality="Single"><material><mattext texttype="text/plain">${escapeXmlText(
     instruction,
   )}</mattext></material><render_fib fibtype="${
     interaction.type === "slider" ? "Decimal" : "String"
@@ -89,14 +89,14 @@ export function hotspotResponse(identifier: string, interaction: QtiInteraction)
     .filter((choice) => choice.role === "hotspot")
     .map(
       (choice) =>
-        `<response_label ident="${escapeXml(qti12Identifier(choice.identifier))}" rarea="${qti12Area(
+        `<response_label ident="${escapeXmlAttribute(qti12Identifier(choice.identifier))}" rarea="${qti12Area(
           choice.attributes.shape,
-        )}">${escapeXml(choice.attributes.coords ?? "")}<material><mattext texttype="text/plain">${escapeXml(
+        )}">${escapeXmlText(choice.attributes.coords ?? "")}<material><mattext texttype="text/plain">${escapeXmlText(
           choiceLabel(choice),
         )}</mattext></material></response_label>`,
     )
     .join("");
-  return `<response_lid ident="${escapeXml(identifier)}" rcardinality="${
+  return `<response_lid ident="${escapeXmlAttribute(identifier)}" rcardinality="${
     ordered ? "Ordered" : interaction.responseCardinality === "multiple" ? "Multiple" : "Single"
   }"><render_hotspot>${labels}</render_hotspot></response_lid>`;
 }
@@ -109,10 +109,10 @@ export function associateResponse(
   const choices = interaction.choices.filter((choice) => choice.role === "associableChoice");
   return {
     identifier,
-    xml: `<response_grp ident="${escapeXml(identifier)}" rcardinality="Multiple"><render_choice shuffle="No">${choices
+    xml: `<response_grp ident="${escapeXmlAttribute(identifier)}" rcardinality="Multiple"><render_choice shuffle="No">${choices
       .map(
         (choice) =>
-          `<response_label ident="${escapeXml(qti12Identifier(choice.identifier))}"><material><mattext texttype="text/plain">${escapeXml(choiceLabel(choice))}</mattext></material></response_label>`,
+          `<response_label ident="${escapeXmlAttribute(qti12Identifier(choice.identifier))}"><material><mattext texttype="text/plain">${escapeXmlText(choiceLabel(choice))}</mattext></material></response_label>`,
       )
       .join("")}</render_choice></response_grp>`,
     correct: [],
@@ -171,14 +171,14 @@ export function pairChoiceResponse(
   const encodedCorrect = correctPairs.map(pairIdentifier);
   return {
     identifier,
-    xml: `<response_lid ident="${escapeXml(identifier)}" rcardinality="${
+    xml: `<response_lid ident="${escapeXmlAttribute(identifier)}" rcardinality="${
       encodedCorrect.length > 1 ? "Multiple" : "Single"
     }"><material><mattext texttype="text/plain">Select the correct relationship${
       encodedCorrect.length > 1 ? "s" : ""
     }.</mattext></material><render_choice shuffle="No">${pairChoices
       .map(
         (choice) =>
-          `<response_label ident="${choice.identifier}"><material><mattext texttype="text/plain">${escapeXml(choice.text)}</mattext></material></response_label>`,
+          `<response_label ident="${choice.identifier}"><material><mattext texttype="text/plain">${escapeXmlText(choice.text)}</mattext></material></response_label>`,
       )
       .join("")}</render_choice></response_lid>`,
     correct: encodedCorrect,
@@ -304,16 +304,16 @@ function buildMatchResponse(input: {
 }): Qti12Response {
   const controls = input.sources
     .map(
-      (source) => `<response_lid ident="${escapeXml(
+      (source) => `<response_lid ident="${escapeXmlAttribute(
         isCanvasQti12Dialect(input.dialect)
           ? `response_${qti12Identifier(source.identifier)}`
           : qti12Identifier(source.identifier),
       )}" rcardinality="Single">
-        <material><mattext texttype="text/plain">${escapeXml(source.label)}</mattext></material>
+        <material><mattext texttype="text/plain">${escapeXmlText(source.label)}</mattext></material>
         <render_choice shuffle="No">${input.targets
           .map(
             (target) =>
-              `<response_label ident="${escapeXml(qti12Identifier(target.identifier))}"><material><mattext texttype="text/plain">${escapeXml(target.label)}</mattext></material></response_label>`,
+              `<response_label ident="${escapeXmlAttribute(qti12Identifier(target.identifier))}"><material><mattext texttype="text/plain">${escapeXmlText(target.label)}</mattext></material></response_label>`,
           )
           .join("")}</render_choice>
       </response_lid>`,
@@ -360,7 +360,7 @@ export function serializeCanvasHotspot(
 function serializeChoiceContent(choice: QtiChoice, dialect: Qti12WireDialect): string {
   return isCanvasQti12Dialect(dialect)
     ? serializeRichChoiceContent(choice)
-    : escapeXml(choiceLabel(choice));
+    : escapeXmlText(choiceLabel(choice));
 }
 
 export function choiceCardinality(interaction: QtiInteraction): "single" | "multiple" | "ordered" {

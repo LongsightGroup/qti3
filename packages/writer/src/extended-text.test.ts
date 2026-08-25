@@ -83,11 +83,13 @@ describe("qti3 extended text writer", () => {
       bodyHtml: qti3TrustedXmlFragment("<p>Trusted <strong>body</strong>.</p>"),
       promptHtml: qti3TrustedXmlFragment("<p>Trusted prompt.</p>"),
       responseIdentifier: "RESPONSE",
-      placeholderText: `Use "quotes" & apostrophes`,
+      placeholderText: `Use "quotes" & apostrophe's <angle>`,
     });
 
     expect(xml).toContain('title="Essay &lt;unsafe&gt;"');
-    expect(xml).toContain('placeholder-text="Use &quot;quotes&quot; &amp; apostrophes"');
+    expect(xml).toContain(
+      'placeholder-text="Use &quot;quotes&quot; &amp; apostrophe\'s &lt;angle&gt;"',
+    );
     expect(xml).toContain("<strong>body</strong>");
     expectValidParsedItem(xml);
   });

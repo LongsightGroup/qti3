@@ -1,11 +1,6 @@
-export function xmlEscape(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-}
+import { escapeXmlAttribute, escapeXmlText } from "@longsightgroup/qti3-core";
+
+export { escapeXmlAttribute, escapeXmlText };
 
 export function xmlAttributes(
   attrs: Record<string, string | number | boolean | undefined>,
@@ -13,14 +8,14 @@ export function xmlAttributes(
   const parts: string[] = [];
   for (const [name, value] of Object.entries(attrs)) {
     if (value === undefined) continue;
-    parts.push(`${name}="${xmlEscape(String(value))}"`);
+    parts.push(`${name}="${escapeXmlAttribute(String(value))}"`);
   }
   return parts.length ? ` ${parts.join(" ")}` : "";
 }
 
 export function classAttribute(classNames: readonly string[]): string {
   const unique = uniqueTokens(classNames);
-  return unique.length ? ` class="${xmlEscape(unique.join(" "))}"` : "";
+  return unique.length ? ` class="${escapeXmlAttribute(unique.join(" "))}"` : "";
 }
 
 export function xmlAttributeList(attrs: readonly string[]): string {

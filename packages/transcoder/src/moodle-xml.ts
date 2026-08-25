@@ -6,7 +6,7 @@ import type { MoodleInteractionPolicy } from "./profiles.js";
 import { serializeRichContentBody } from "./rich-content-html.js";
 import type { NormalizedQti3Item } from "./source.js";
 import type { QtiTranscodeDiagnostic, QtiTranscodeScoringDisposition } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlText } from "./xml.js";
 
 /** Observable mapping produced by Moodle XML item serialization. */
 export interface MoodleXmlMappedInteraction {
@@ -31,15 +31,15 @@ export function writeMoodleXmlItem(
 ): MoodleXmlWriteResult {
   const plan = planMoodleItem(source, policies);
   const body = serializeRichContentBody(source.item.body, source.item.interactions);
-  const retainedAssets = escapeXml(serializeMoodleInteractionAssets(source.item.interactions));
+  const retainedAssets = escapeXmlText(serializeMoodleInteractionAssets(source.item.interactions));
   const instruction = plan.question.instruction
-    ? escapeXml(`<p>${escapeXml(plan.question.instruction)}</p>`)
+    ? escapeXmlText(`<p>${escapeXmlText(plan.question.instruction)}</p>`)
     : "";
   return {
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <quiz>
   <question type="${plan.question.type}">
-    <name><text>${escapeXml(plan.title)}</text></name>
+    <name><text>${escapeXmlText(plan.title)}</text></name>
     <questiontext format="html"><text>${body}${retainedAssets}${instruction}</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>${formatNumber(plan.defaultGrade)}</defaultgrade>
@@ -75,7 +75,7 @@ function serializeQuestionFields(plan: MoodleItemPlan): string {
       return question.answers
         .map(
           (answer) =>
-            `<answer fraction="100"><text>${escapeXml(answer.value)}</text><tolerance>${formatNumber(
+            `<answer fraction="100"><text>${escapeXmlText(answer.value)}</text><tolerance>${formatNumber(
               answer.tolerance,
             )}</tolerance><feedback format="html"><text></text></feedback></answer>`,
         )
@@ -96,15 +96,15 @@ function serializeQuestionFields(plan: MoodleItemPlan): string {
 }
 
 function moodleAnswer(text: string, fraction: number): string {
-  return `<answer fraction="${formatFraction(fraction)}" format="html"><text>${escapeXml(
+  return `<answer fraction="${formatFraction(fraction)}" format="html"><text>${escapeXmlText(
     text,
   )}</text><feedback format="html"><text></text></feedback></answer>`;
 }
 
 function moodleSubquestion(question: string, answer: string): string {
-  return `<subquestion format="html"><text>${escapeXml(
+  return `<subquestion format="html"><text>${escapeXmlText(
     question,
-  )}</text><answer><text>${escapeXml(answer)}</text></answer></subquestion>`;
+  )}</text><answer><text>${escapeXmlText(answer)}</text></answer></subquestion>`;
 }
 
 function combinedFeedback(): string {

@@ -1,6 +1,6 @@
 import type { QtiChoice, QtiContentNode, QtiInteraction } from "@longsightgroup/qti3-core";
 
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 /** Project QTI body content into escaped HTML suitable for an XML text node. */
 export function serializeRichContentBody(
@@ -12,17 +12,17 @@ export function serializeRichContentBody(
     .map((interaction) => interaction.prompt?.trim())
     .filter((prompt): prompt is string => Boolean(prompt))
     .filter((prompt) => !body.includes(prompt))
-    .map((prompt) => `<p>${escapeXml(prompt)}</p>`)
+    .map((prompt) => `<p>${escapeXmlText(prompt)}</p>`)
     .join("");
-  return escapeXml(`${body}${interactionPrompts}`);
+  return escapeXmlText(`${body}${interactionPrompts}`);
 }
 
 /** Project a choice's rich content into escaped HTML suitable for an XML text node. */
 export function serializeRichChoiceContent(choice: QtiChoice): string {
   if (!choice.content || choice.content.length === 0) {
-    return escapeXml(accessibleChoiceLabel(choice) ?? choice.identifier);
+    return escapeXmlText(accessibleChoiceLabel(choice) ?? choice.identifier);
   }
-  return escapeXml(serializeRichContent(choice.content));
+  return escapeXmlText(serializeRichContent(choice.content));
 }
 
 /** Return the best stable learner-facing label available for a choice. */
@@ -45,7 +45,7 @@ function serializeRichContent(nodes: readonly QtiContentNode[]): string {
         case "interaction":
           return "";
         case "printedVariable":
-          return `<span data-qti-variable="${escapeXml(node.identifier)}">[${escapeXml(
+          return `<span data-qti-variable="${escapeXmlAttribute(node.identifier)}">[${escapeXmlText(
             node.identifier,
           )}]</span>`;
         case "feedback":
@@ -56,7 +56,10 @@ function serializeRichContent(nodes: readonly QtiContentNode[]): string {
           if (!name) return children;
           const attributes = Object.entries(node.attributes)
             .filter(([attribute]) => attribute !== "xmlns")
-            .map(([attribute, value]) => ` ${attribute.replace(/^qti-/, "")}="${escapeXml(value)}"`)
+            .map(
+              ([attribute, value]) =>
+                ` ${attribute.replace(/^qti-/, "")}="${escapeXmlAttribute(value)}"`,
+            )
             .join("");
           return `<${name}${attributes}>${children}</${name}>`;
         }

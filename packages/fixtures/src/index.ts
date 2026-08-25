@@ -1,4 +1,5 @@
 import {
+  escapeXmlText,
   interactionSupport,
   qtiScalarToString,
   qtiValueToString,
@@ -1051,10 +1052,10 @@ function assessmentItem(
 function valuesXml(value: QtiValue): string {
   if (Array.isArray(value)) {
     return value
-      .map((item) => `<qti-value>${escapeXml(qtiScalarToString(item))}</qti-value>`)
+      .map((item) => `<qti-value>${escapeXmlText(qtiScalarToString(item))}</qti-value>`)
       .join("");
   }
-  return `<qti-value>${escapeXml(qtiValueToString(value))}</qti-value>`;
+  return `<qti-value>${escapeXmlText(qtiValueToString(value))}</qti-value>`;
 }
 
 function defaultResponse(interactionType: QtiInteractionType): {
@@ -1273,8 +1274,4 @@ function itemIntro(identifier: string): string {
       "A constructed-response item asks the student to upload a field-notes text file.",
   };
   return intros[identifier] ?? `${identifier} reference item.`;
-}
-
-function escapeXml(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }

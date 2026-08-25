@@ -1,6 +1,6 @@
 import type { Qti3AuthoringItemBase } from "./types.js";
 import { assertQtiIdentifier } from "./identifier.js";
-import { xmlEscape, xmlLines } from "./xml.js";
+import { escapeXmlAttribute, xmlLines } from "./xml.js";
 
 export interface AssessmentItemShellInput extends Qti3AuthoringItemBase {
   readonly declarationsXml: string;
@@ -11,9 +11,11 @@ export interface AssessmentItemShellInput extends Qti3AuthoringItemBase {
 }
 
 export function assessmentItemShell(input: AssessmentItemShellInput): string {
-  const identifier = xmlEscape(assertQtiIdentifier(input.identifier, "Assessment item identifier"));
-  const title = xmlEscape(input.title.trim() || "Untitled");
-  const lang = xmlEscape(input.lang ?? "en-US");
+  const identifier = escapeXmlAttribute(
+    assertQtiIdentifier(input.identifier, "Assessment item identifier"),
+  );
+  const title = escapeXmlAttribute(input.title.trim() || "Untitled");
+  const lang = escapeXmlAttribute(input.lang ?? "en-US");
   const outcomeDeclarationXml = input.scoreDefaultZero
     ? `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value>

@@ -1,6 +1,6 @@
 import type { QtiContentNode, QtiInteraction, QtiObjectAsset } from "@longsightgroup/qti3-core";
 
-import { escapeXml } from "../xml.js";
+import { escapeXmlAttribute } from "../xml.js";
 
 export function portableCustomAssets(interaction: QtiInteraction): QtiObjectAsset[] {
   if (!interaction.portableCustom) return [];
@@ -72,23 +72,23 @@ export function serializeQti12Asset(asset: QtiObjectAsset): string {
   return candidates
     .filter((candidate) => candidate.src)
     .map((candidate) => {
-      const src = escapeXml(candidate.src ?? "");
+      const src = escapeXmlAttribute(candidate.src ?? "");
       const type = candidate.type ?? asset.type ?? "application/octet-stream";
-      const label = escapeXml(asset.text || "Question media");
+      const label = escapeXmlAttribute(asset.text || "Question media");
       if (type.startsWith("image/")) {
-        return `<material><matimage uri="${src}" imagtype="${escapeXml(type)}" label="${label}"${
-          asset.width ? ` width="${escapeXml(asset.width)}"` : ""
-        }${asset.height ? ` height="${escapeXml(asset.height)}"` : ""}></matimage></material>`;
+        return `<material><matimage uri="${src}" imagtype="${escapeXmlAttribute(type)}" label="${label}"${
+          asset.width ? ` width="${escapeXmlAttribute(asset.width)}"` : ""
+        }${asset.height ? ` height="${escapeXmlAttribute(asset.height)}"` : ""}></matimage></material>`;
       }
       if (type.startsWith("audio/")) {
-        return `<material><mataudio uri="${src}" audiotype="${escapeXml(type)}" label="${label}"></mataudio></material>`;
+        return `<material><mataudio uri="${src}" audiotype="${escapeXmlAttribute(type)}" label="${label}"></mataudio></material>`;
       }
       if (type.startsWith("video/")) {
-        return `<material><matvideo uri="${src}" videotype="${escapeXml(type)}" label="${label}"${
-          asset.width ? ` width="${escapeXml(asset.width)}"` : ""
-        }${asset.height ? ` height="${escapeXml(asset.height)}"` : ""}></matvideo></material>`;
+        return `<material><matvideo uri="${src}" videotype="${escapeXmlAttribute(type)}" label="${label}"${
+          asset.width ? ` width="${escapeXmlAttribute(asset.width)}"` : ""
+        }${asset.height ? ` height="${escapeXmlAttribute(asset.height)}"` : ""}></matvideo></material>`;
       }
-      return `<material><matapplication uri="${src}" apptype="${escapeXml(type)}" label="${label}"></matapplication></material>`;
+      return `<material><matapplication uri="${src}" apptype="${escapeXmlAttribute(type)}" label="${label}"></matapplication></material>`;
     })
     .join("");
 }

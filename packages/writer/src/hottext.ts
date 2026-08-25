@@ -17,7 +17,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3HottextBuilderInput, Qti3HottextChoice, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3HottextItem(input: Qti3HottextBuilderInput): string {
   const diagnostics = validateQti3HottextItem(input);
@@ -30,14 +30,14 @@ export function renderQti3HottextItem(input: Qti3HottextBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Hottext response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const cardinality = input.maxChoices === 1 ? "single" : "multiple";
   const correctResponse = dedupeNonemptyTrimmed(input.correctResponse).map((value) =>
     assertQtiIdentifier(value, "Hottext correct response identifier"),
   );
   const correctXml = correctResponse.length
     ? `    <qti-correct-response>
-${correctResponse.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>`).join("\n")}
+${correctResponse.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-value>`).join("\n")}
     </qti-correct-response>
 `
     : "";
@@ -61,10 +61,10 @@ ${correctXml}  </qti-response-declaration>`;
       input.minChoices !== undefined ? `min-choices="${String(input.minChoices)}"` : "",
       input.maxChoices !== undefined ? `max-choices="${String(input.maxChoices)}"` : "",
       input.minChoicesMessage?.trim()
-        ? `data-min-selections-message="${xmlEscape(input.minChoicesMessage.trim())}"`
+        ? `data-min-selections-message="${escapeXmlAttribute(input.minChoicesMessage.trim())}"`
         : "",
       input.maxChoicesMessage?.trim()
-        ? `data-max-selections-message="${xmlEscape(input.maxChoicesMessage.trim())}"`
+        ? `data-max-selections-message="${escapeXmlAttribute(input.maxChoicesMessage.trim())}"`
         : "",
     ],
   });
@@ -80,8 +80,10 @@ ${optionalPromptSection(input.promptHtml)}${bodyContent}
 }
 
 function choiceXml(choice: Qti3HottextChoice): string {
-  const identifier = xmlEscape(assertQtiIdentifier(choice.identifier, "Hottext identifier"));
-  const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
+  const identifier = escapeXmlAttribute(
+    assertQtiIdentifier(choice.identifier, "Hottext identifier"),
+  );
+  const body = choice.contentHtml?.trim() ? choice.contentHtml : escapeXmlText(choice.text ?? "");
   return `<qti-hottext identifier="${identifier}">${body}</qti-hottext>`;
 }
 

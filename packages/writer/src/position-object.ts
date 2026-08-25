@@ -31,7 +31,7 @@ import {
 } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3PositionObjectBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3PositionObjectItem(input: Qti3PositionObjectBuilderInput): string {
   const diagnostics = validateQti3PositionObjectItem(input);
@@ -44,7 +44,7 @@ export function renderQti3PositionObjectItem(input: Qti3PositionObjectBuilderInp
     resolveResponseIdentifier(input.responseIdentifier),
     "Position object response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = pointResponseDeclarationXml({
     responseIdentifier,
     cardinality: pointCardinality(input),
@@ -63,7 +63,9 @@ export function renderQti3PositionObjectItem(input: Qti3PositionObjectBuilderInp
     extraAttributes: [
       input.minChoices !== undefined ? `min-choices="${String(input.minChoices)}"` : "",
       input.maxChoices !== undefined ? `max-choices="${String(input.maxChoices)}"` : "",
-      input.centerPoint?.trim() ? `center-point="${xmlEscape(input.centerPoint.trim())}"` : "",
+      input.centerPoint?.trim()
+        ? `center-point="${escapeXmlAttribute(input.centerPoint.trim())}"`
+        : "",
       longDescription.attributeXml,
     ],
   });

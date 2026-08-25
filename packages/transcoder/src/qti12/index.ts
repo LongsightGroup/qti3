@@ -4,7 +4,7 @@ import type { Qti12InteractionPolicy } from "../profiles.js";
 import { serializeCanvasItemMetadata } from "../qti12-canvas.js";
 import { serializeRichContentBody } from "../rich-content-html.js";
 import type { NormalizedQti3Item } from "../source.js";
-import { escapeXml } from "../xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "../xml.js";
 import {
   portableCustomAssets,
   serializeQti12Asset,
@@ -53,8 +53,9 @@ export function writeQti12Item(
     .filter((value, index, all) => all.indexOf(value) === index)
     .join(" ");
   const prompt = isCanvasQti12Dialect(dialect)
-    ? serializeRichContentBody(source.item.body, source.item.interactions) || escapeXml(plainPrompt)
-    : escapeXml(plainPrompt);
+    ? serializeRichContentBody(source.item.body, source.item.interactions) ||
+      escapeXmlText(plainPrompt)
+    : escapeXmlText(plainPrompt);
   const retainedAssets = source.item.interactions
     .flatMap((interaction) => [
       interaction.object,
@@ -77,7 +78,7 @@ export function writeQti12Item(
 <questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
-  <item ident="${escapeXml(identifier)}" title="${escapeXml(title)}">
+  <item ident="${escapeXmlAttribute(identifier)}" title="${escapeXmlAttribute(title)}">
     ${canvasMetadata}
     <presentation>
       <material><mattext texttype="text/html">${prompt}</mattext></material>

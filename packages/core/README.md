@@ -6,6 +6,10 @@ This package handles dependency-free XML parsing, validation, response processin
 support metadata, and serialized attempt state. It has zero third-party runtime dependencies,
 does not render UI, and does not depend on a browser framework.
 
+The public `escapeXmlText()` and `escapeXmlAttribute()` helpers support dependency-free XML
+serialization. Use the attribute helper only for values inside double-quoted attributes; it leaves
+apostrophes literal while additionally escaping double quotes.
+
 ## Install
 
 ```sh

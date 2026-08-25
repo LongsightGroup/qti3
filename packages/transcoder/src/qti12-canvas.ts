@@ -3,7 +3,7 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { itemMaximumScore } from "./item-score.js";
 import type { NormalizedQti3Item } from "./source.js";
 import type { QtiTranscodeScoringDisposition } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface CanvasQti12ResponseSummary {
   readonly emitted: string;
@@ -58,12 +58,12 @@ export function canvasHotspotResponse(
   const labels = (selected ? [selected] : [])
     .map(
       (choice) =>
-        `<response_label ident="${escapeXml(identifier)}" rarea="${qti12Area(
+        `<response_label ident="${escapeXmlAttribute(identifier)}" rarea="${qti12Area(
           choice.attributes.shape,
-        )}">${escapeXml(choice.attributes.coords ?? "")}</response_label>`,
+        )}">${escapeXmlText(choice.attributes.coords ?? "")}</response_label>`,
     )
     .join("");
-  return `<response_xy ident="${escapeXml(
+  return `<response_xy ident="${escapeXmlAttribute(
     identifier,
   )}" rcardinality="Single" rtiming="No"><render_hotspot>${imageXml}${labels}</render_hotspot></response_xy>`;
 }
@@ -119,7 +119,7 @@ function canvasQuestionType(
 }
 
 function canvasMetadataField(label: string, value: string): string {
-  return `<qtimetadatafield><fieldlabel>${escapeXml(label)}</fieldlabel><fieldentry>${escapeXml(
+  return `<qtimetadatafield><fieldlabel>${escapeXmlText(label)}</fieldlabel><fieldentry>${escapeXmlText(
     value,
   )}</fieldentry></qtimetadatafield>`;
 }

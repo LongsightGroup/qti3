@@ -13,7 +13,7 @@
 - Fidelity: lossy
 - Scoring policy: unscored
 - Fallback: —
-- Golden SHA-256: `26eadc0e5203841428264c5049869cf953908947e4f962e226a7befe01ff1abb`
+- Golden SHA-256: `5252c638292be7ba1e0e17c333b1b7df7507d0a951944adc4287c01aac7191bf`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/custom`
@@ -53,7 +53,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `f25ad88dfb4292ef74d1aa4eaa564796546c391f2c6a8527b5a6b01f6d63feab`
+- Golden SHA-256: `8185f3423ebcead7463c43d6576192192b66e8f4d13209e9676db8a18e33da71`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/graphicAssociate`
@@ -93,7 +93,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `1c01209881d3e116a79c18ce9b4b09428c7b46b434708d23ec5a8d9f7bcdacdd`
+- Golden SHA-256: `540c3e9664fee83bed4f1fbf7a54846736d225eaf7180d6d2dd891e33f59da3a`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/inlineChoice`
@@ -117,7 +117,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `ec06ac2cf9e560cd2861be1c7f0657652318b10b5d6a41ae8564d04ff4d91163`
+- Golden SHA-256: `462ab63ad0e9d6f188ddd0c490a5dfefa54614b9ecdc2a9b72ff171311deb8be`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/order`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `d6b352ef1cc47abbf7e500a798aed07dea60820737d541e824757d25fa55b757`
+- Golden SHA-256: `288a82121ee5119e81cace765720a4ea88ab1bfd4a62839a87f5c658acad2879`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/selectPoint`

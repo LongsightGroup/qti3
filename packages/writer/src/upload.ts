@@ -15,7 +15,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3UploadBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3UploadItem(input: Qti3UploadBuilderInput): string {
   const diagnostics = validateQti3UploadItem(input);
@@ -28,7 +28,7 @@ export function renderQti3UploadItem(input: Qti3UploadBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Upload response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const correctResponse = input.correctResponse?.trim();
   const declarationsXml = uploadResponseDeclarationXml(escapedResponseIdentifier, correctResponse);
   const interactionAttrs = interactionAttributeList({
@@ -38,7 +38,9 @@ export function renderQti3UploadItem(input: Qti3UploadBuilderInput): string {
     classNames: input.classNames,
     extraAttributes: [
       input.maxFileSize === undefined ? "" : `data-max-size="${String(input.maxFileSize)}"`,
-      input.fileTypes?.trim() ? `data-file-types="${xmlEscape(input.fileTypes.trim())}"` : "",
+      input.fileTypes?.trim()
+        ? `data-file-types="${escapeXmlAttribute(input.fileTypes.trim())}"`
+        : "",
       input.multiple ? `data-multiple="true"` : "",
     ],
   });
@@ -115,7 +117,7 @@ function uploadResponseDeclarationXml(
   ];
   if (correctResponse) {
     parts.push("    <qti-correct-response>");
-    parts.push(`      <qti-value>${xmlEscape(correctResponse)}</qti-value>`);
+    parts.push(`      <qti-value>${escapeXmlText(correctResponse)}</qti-value>`);
     parts.push("    </qti-correct-response>");
   }
   parts.push("  </qti-response-declaration>");

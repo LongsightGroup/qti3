@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { transcodeQti3Item } from "./item.js";
 import { qtiTranscodeProfiles, requiresReverseMigrationEvidence } from "./profiles.js";
 import type { QtiTranscodeItemResult, QtiTranscodeProfileId } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface TranscoderEvidenceCase {
   readonly caseId: string;
@@ -248,8 +248,11 @@ function assertAccessibility(
       .filter((word) => word.length >= 4)
       .slice(0, 4);
     const represented =
-      xml.includes(escapeXml(value.trim())) ||
-      significantWords.some((word) => xml.includes(escapeXml(word)));
+      xml.includes(escapeXmlText(value.trim())) ||
+      xml.includes(escapeXmlAttribute(value.trim())) ||
+      significantWords.some(
+        (word) => xml.includes(escapeXmlText(word)) || xml.includes(escapeXmlAttribute(word)),
+      );
     return !represented;
   });
   if (missing.length > 0) {
@@ -306,7 +309,7 @@ function assertAssets(
   for (const href of hrefs.filter((value): value is string =>
     Boolean(value && !value.startsWith("data:")),
   )) {
-    if (!result.xml.includes(escapeXml(href))) {
+    if (!result.xml.includes(escapeXmlAttribute(href))) {
       push(`referenced interaction asset ${href} was not preserved.`);
     }
   }
@@ -314,7 +317,7 @@ function assertAssets(
     if (!/^assets\/generated\/[a-f0-9]{64}\.[a-z0-9]+$/i.test(asset.path)) {
       push(`generated asset path is not content-addressed: ${asset.path}`);
     }
-    if (!result.xml.includes(escapeXml(asset.path))) {
+    if (!result.xml.includes(escapeXmlAttribute(asset.path))) {
       push(`generated asset ${asset.path} is not referenced by target XML.`);
     }
   }

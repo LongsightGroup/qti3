@@ -1,6 +1,6 @@
 import { writerDiagnostic } from "./diagnostics.js";
 import type { Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export type Qti3PointAreaShape = "circle" | "default" | "poly" | "rect";
 
@@ -36,11 +36,11 @@ export function pointResponseDeclarationXml(input: PointResponseDeclarationInput
   const correctResponse = input.correctResponse ?? [];
   const correctResponseXml = correctResponse.length
     ? `    <qti-correct-response>
-${correctResponse.map((point) => `      <qti-value>${xmlEscape(point.trim())}</qti-value>`).join("\n")}
+${correctResponse.map((point) => `      <qti-value>${escapeXmlText(point.trim())}</qti-value>`).join("\n")}
     </qti-correct-response>
 `
     : "";
-  return `  <qti-response-declaration identifier="${xmlEscape(input.responseIdentifier)}" cardinality="${input.cardinality}" base-type="point">
+  return `  <qti-response-declaration identifier="${escapeXmlAttribute(input.responseIdentifier)}" cardinality="${input.cardinality}" base-type="point">
 ${correctResponseXml}${areaMappingBlock(input.targets)}  </qti-response-declaration>`;
 }
 
@@ -50,7 +50,7 @@ export function areaMappingBlock(targets: readonly Qti3PointAreaTarget[] | undef
     .map((target) => {
       const attrs = [
         `shape="${target.shape}"`,
-        `coords="${xmlEscape(target.coords.trim())}"`,
+        `coords="${escapeXmlAttribute(target.coords.trim())}"`,
         `mapped-value="${String(target.mappedValue ?? 1)}"`,
       ];
       return `      <qti-area-map-entry ${xmlAttributeList(attrs)}/>`;

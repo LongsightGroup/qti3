@@ -14,7 +14,7 @@ import {
 } from "./interaction-shell.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3ExtendedTextBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { indentXml, xmlEscape } from "./xml.js";
+import { indentXml, escapeXmlAttribute } from "./xml.js";
 
 const FORMAT_VALUES = new Set(["plain", "preformatted", "xhtml"]);
 
@@ -29,7 +29,7 @@ export function renderQti3ExtendedTextItem(input: Qti3ExtendedTextBuilderInput):
     resolveResponseIdentifier(input.responseIdentifier),
     "Extended text response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="${
     input.responseCardinality ?? "single"
   }" base-type="${input.responseBaseType ?? "string"}"/>`;
@@ -41,7 +41,7 @@ export function renderQti3ExtendedTextItem(input: Qti3ExtendedTextBuilderInput):
     extraAttributes: [
       numberAttribute("base", input.base),
       input.stringIdentifier?.trim()
-        ? `string-identifier="${xmlEscape(
+        ? `string-identifier="${escapeXmlAttribute(
             assertQtiIdentifier(input.stringIdentifier, "Extended text string identifier"),
           )}"`
         : "",
@@ -50,11 +50,13 @@ export function renderQti3ExtendedTextItem(input: Qti3ExtendedTextBuilderInput):
       numberAttribute("min-strings", input.minStrings),
       numberAttribute("max-strings", input.maxStrings),
       input.placeholderText?.trim()
-        ? `placeholder-text="${xmlEscape(input.placeholderText.trim())}"`
+        ? `placeholder-text="${escapeXmlAttribute(input.placeholderText.trim())}"`
         : "",
-      input.patternMask?.trim() ? `pattern-mask="${xmlEscape(input.patternMask.trim())}"` : "",
+      input.patternMask?.trim()
+        ? `pattern-mask="${escapeXmlAttribute(input.patternMask.trim())}"`
+        : "",
       input.patternMessage?.trim()
-        ? `data-patternmask-message="${xmlEscape(input.patternMessage.trim())}"`
+        ? `data-patternmask-message="${escapeXmlAttribute(input.patternMessage.trim())}"`
         : "",
       `format="${input.format ?? "plain"}"`,
     ],

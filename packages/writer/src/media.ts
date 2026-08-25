@@ -16,7 +16,7 @@ import {
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3MediaBuilderInput, Qti3MediaSource, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 const MEDIA_KINDS = new Set(["audio", "video", "object"]);
 
@@ -31,11 +31,11 @@ export function renderQti3MediaItem(input: Qti3MediaBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Media response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="single" base-type="integer"/>`;
   const companionMaterialsXml = input.transcript?.trim()
     ? `  <qti-companion-materials-info>
-    <qti-physical-material>${xmlEscape(input.transcript.trim())}</qti-physical-material>
+    <qti-physical-material>${escapeXmlText(input.transcript.trim())}</qti-physical-material>
   </qti-companion-materials-info>`
     : "";
   const interactionAttrs = interactionAttributeList({
@@ -48,8 +48,10 @@ export function renderQti3MediaItem(input: Qti3MediaBuilderInput): string {
       `loop="${input.loop === true ? "true" : "false"}"`,
       numberAttribute("min-plays", input.minPlays),
       numberAttribute("max-plays", input.maxPlays),
-      input.coords?.trim() ? `coords="${xmlEscape(input.coords.trim())}"` : "",
-      input.interactionLabel?.trim() ? `label="${xmlEscape(input.interactionLabel.trim())}"` : "",
+      input.coords?.trim() ? `coords="${escapeXmlAttribute(input.coords.trim())}"` : "",
+      input.interactionLabel?.trim()
+        ? `label="${escapeXmlAttribute(input.interactionLabel.trim())}"`
+        : "",
     ],
   });
   const bodyXml = `${optionalBodySection(input.bodyHtml)}    <qti-media-interaction ${interactionAttrs}>
@@ -92,10 +94,10 @@ function mediaElementXml(input: Qti3MediaBuilderInput): string {
   if (input.kind === "object") {
     const first = input.sources[0];
     const attrs = [
-      `data="${xmlEscape(first?.src.trim() ?? "")}"`,
-      first?.type?.trim() ? `type="${xmlEscape(first.type.trim())}"` : "",
+      `data="${escapeXmlAttribute(first?.src.trim() ?? "")}"`,
+      first?.type?.trim() ? `type="${escapeXmlAttribute(first.type.trim())}"` : "",
       ...dimensions,
-      input.objectLabel?.trim() ? `label="${xmlEscape(input.objectLabel.trim())}"` : "",
+      input.objectLabel?.trim() ? `label="${escapeXmlAttribute(input.objectLabel.trim())}"` : "",
       sharedAttributes,
     ];
     return `      <object ${xmlAttributeList(attrs)}/>`;
@@ -105,7 +107,7 @@ function mediaElementXml(input: Qti3MediaBuilderInput): string {
   const mediaAttrs = xmlAttributeList([...dimensions, sharedAttributes ? sharedAttributes : ""]);
   const trackXml =
     tag === "video" && input.captionSrc?.trim()
-      ? `\n        <track kind="captions" src="${xmlEscape(input.captionSrc.trim())}" srclang="${xmlEscape(
+      ? `\n        <track kind="captions" src="${escapeXmlAttribute(input.captionSrc.trim())}" srclang="${escapeXmlAttribute(
           input.captionLang?.trim() || "en",
         )}"/>`
       : "";
@@ -116,8 +118,8 @@ ${sourcesXml}${trackXml}
 
 function sourceXml(source: Qti3MediaSource): string {
   const attrs = [
-    `src="${xmlEscape(source.src.trim())}"`,
-    source.type?.trim() ? `type="${xmlEscape(source.type.trim())}"` : "",
+    `src="${escapeXmlAttribute(source.src.trim())}"`,
+    source.type?.trim() ? `type="${escapeXmlAttribute(source.type.trim())}"` : "",
   ];
   return `        <source ${xmlAttributeList(attrs)}/>`;
 }

@@ -1,4 +1,4 @@
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 export interface Qti2Revision {
   readonly target: "qti21" | "qti22";
@@ -19,7 +19,7 @@ export function mapTypedProcessingXml(xml: string, revision: Qti2Revision): stri
     })
     .replaceAll(
       /template="([^"]+)"/g,
-      (_match, uri: string) => `template="${escapeXml(targetTemplateUri(uri, revision))}"`,
+      (_match, uri: string) => `template="${escapeXmlAttribute(targetTemplateUri(uri, revision))}"`,
     );
 }
 

@@ -23,7 +23,7 @@ import {
   validatePairMatchMax,
   validatePairReferences,
 } from "./pair-declaration.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3MatchItem(input: Qti3MatchBuilderInput): string {
   const diagnostics = validateQti3MatchItem(input);
@@ -36,7 +36,7 @@ export function renderQti3MatchItem(input: Qti3MatchBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = pairResponseDeclarationXml({
     responseIdentifier: escapedResponseIdentifier,
     baseType: "directedPair",

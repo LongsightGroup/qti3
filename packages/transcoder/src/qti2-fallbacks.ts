@@ -17,7 +17,7 @@ import type { Qti2Revision } from "./qti2-processing-dialect.js";
 import { accessibleChoiceLabel } from "./rich-content-html.js";
 import { serializeObject } from "./qti2-wire.js";
 import type { QtiTranscodeDiagnostic } from "./types.js";
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 /** Apply a profile fallback when policy requires rewriting the native QTI 2 interaction. */
 export function tryPolicyFallback(
@@ -109,7 +109,7 @@ function textEntryFallback(
 ): Qti2MappedInteraction {
   const diagnostics = policyDiagnostic(policy, path);
   const responseIdentifier = interaction.responseIdentifier
-    ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
+    ? ` responseIdentifier="${escapeXmlAttribute(interaction.responseIdentifier)}"`
     : "";
   const sourceOptions = interaction.choices.map(choiceAccessibleText).filter(Boolean).join("; ");
   return {
@@ -117,7 +117,7 @@ function textEntryFallback(
     source: interaction.type,
     emitted: "textEntryInteraction",
     xml: `<textEntryInteraction${responseIdentifier}></textEntryInteraction>${
-      sourceOptions ? ` <span>Source options: ${escapeXml(sourceOptions)}</span>` : ""
+      sourceOptions ? ` <span>Source options: ${escapeXmlText(sourceOptions)}</span>` : ""
     }`,
     diagnostics,
     responseValueMap: Object.fromEntries(
@@ -134,7 +134,7 @@ function manualExtendedTextFallback(
 ): Qti2MappedInteraction {
   const diagnostics = policyDiagnostic(policy, path);
   const responseIdentifier = interaction.responseIdentifier
-    ? ` responseIdentifier="${escapeXml(interaction.responseIdentifier)}"`
+    ? ` responseIdentifier="${escapeXmlAttribute(interaction.responseIdentifier)}"`
     : "";
   return {
     kind: "extended-text-fallback",
@@ -159,7 +159,7 @@ function manualFallbackPrompt(
     interaction.promptContent && interaction.promptContent.length > 0
       ? serializeQti2Content(interaction.promptContent, [], revision, diagnostics)
       : interaction.prompt
-        ? `<p>${escapeXml(interaction.prompt)}</p>`
+        ? `<p>${escapeXmlText(interaction.prompt)}</p>`
         : "";
   const choices =
     interaction.choices.length > 0
@@ -177,7 +177,7 @@ function manualFallbackPrompt(
       ? serializeQti2Content(custom.interactionMarkup, [], revision, diagnostics)
       : "";
   const sourceText = interactionSourceText(interaction);
-  const context = sourceText.length > 0 ? `<p>${escapeXml(sourceText)}</p>` : "";
+  const context = sourceText.length > 0 ? `<p>${escapeXmlText(sourceText)}</p>` : "";
   return prompt || choices || objects || customContent || context
     ? `${prompt}${choices}${objects}${customContent}${context}`
     : "<p>Enter your response.</p>";
@@ -191,8 +191,8 @@ function serializeChoiceContent(
   return choice.content && choice.content.length > 0
     ? serializeQti2Content(choice.content, [], revision, diagnostics)
     : choice.asset
-      ? `${serializeObject(choice.asset)}${choice.text ? `<p>${escapeXml(choice.text)}</p>` : ""}`
-      : escapeXml(choiceAccessibleText(choice));
+      ? `${serializeObject(choice.asset)}${choice.text ? `<p>${escapeXmlText(choice.text)}</p>` : ""}`
+      : escapeXmlText(choiceAccessibleText(choice));
 }
 
 function choiceAccessibleText(choice: QtiChoice): string {
@@ -225,7 +225,7 @@ function policyDiagnostic(policy: Qti2InteractionPolicy, path: string): QtiTrans
 }
 
 function serializeManualResponseDeclaration(identifier: string): string {
-  return `<responseDeclaration identifier="${escapeXml(identifier)}" cardinality="single" baseType="string"></responseDeclaration>`;
+  return `<responseDeclaration identifier="${escapeXmlAttribute(identifier)}" cardinality="single" baseType="string"></responseDeclaration>`;
 }
 
 function serializeTextEntryResponseDeclaration(
@@ -237,9 +237,9 @@ function serializeTextEntryResponseDeclaration(
       ? ""
       : `<correctResponse>${values(declaration.correctResponse)
           .map((value) => responseValueMap[String(value)] ?? String(value))
-          .map((value) => `<value>${escapeXml(value)}</value>`)
+          .map((value) => `<value>${escapeXmlText(value)}</value>`)
           .join("")}</correctResponse>`;
-  return `<responseDeclaration identifier="${escapeXml(declaration.identifier)}" cardinality="single" baseType="string">${correct}</responseDeclaration>`;
+  return `<responseDeclaration identifier="${escapeXmlAttribute(declaration.identifier)}" cardinality="single" baseType="string">${correct}</responseDeclaration>`;
 }
 
 function values(value: QtiValue): readonly (string | number | boolean)[] {

@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { buildQtiDeliverySafeXml } from "./delivery-security.js";
+import { escapeXmlAttribute, escapeXmlText } from "./index.js";
 import { parseQtiXml } from "./parser.js";
 import { parseXmlTree, textContent } from "./xml.js";
+
+describe("XML escaping", () => {
+  it("escapes XML text without rewriting quotes", () => {
+    expect(escapeXmlText(`A&B <tag> "quoted" 'apostrophe'`)).toBe(
+      `A&amp;B &lt;tag&gt; "quoted" 'apostrophe'`,
+    );
+  });
+
+  it("escapes double-quoted XML attributes without rewriting apostrophes", () => {
+    expect(escapeXmlAttribute(`A&B <tag> "quoted" 'apostrophe'`)).toBe(
+      `A&amp;B &lt;tag&gt; &quot;quoted&quot; 'apostrophe'`,
+    );
+  });
+});
 
 describe("parseXmlTree source ranges", () => {
   it("preserves boundary whitespace around inline child elements", () => {

@@ -1,6 +1,6 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
-import { escapeXml } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 /** Project retained interaction assets into HTML links and media elements for Moodle. */
 export function serializeMoodleInteractionAssets(interactions: readonly QtiInteraction[]): string {
@@ -26,10 +26,10 @@ export function serializeMoodleInteractionAssets(interactions: readonly QtiInter
     ])
     .map((asset) =>
       asset.type?.startsWith("image/")
-        ? `<p><img src="${escapeXml(asset.href)}" alt="${escapeXml(
+        ? `<p><img src="${escapeXmlAttribute(asset.href)}" alt="${escapeXmlAttribute(
             asset.label || "Question media",
           )}"></p>`
-        : `<p><a href="${escapeXml(asset.href)}">${escapeXml(
+        : `<p><a href="${escapeXmlAttribute(asset.href)}">${escapeXmlText(
             asset.label || "Question media",
           )}</a></p>`,
     );
@@ -48,7 +48,7 @@ export function serializeMoodleInteractionAssets(interactions: readonly QtiInter
       .filter((href): href is string => Boolean(href))
       .map(
         (href) =>
-          `<p><a href="${escapeXml(href)}">Custom interaction dependency: ${escapeXml(
+          `<p><a href="${escapeXmlAttribute(href)}">Custom interaction dependency: ${escapeXmlText(
             href,
           )}</a></p>`,
       );

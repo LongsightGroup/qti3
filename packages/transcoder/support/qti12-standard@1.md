@@ -13,7 +13,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `6d645cc8488fe2bfd6e2a76eec331a13368699609ba913a7536a550223b1f38f`
+- Golden SHA-256: `5d71054177d1756b8f357eb75b0569bf6c9e995a815d4008ff90096393d6fb64`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti12-standard@1/custom`
@@ -93,7 +93,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: choice
-- Golden SHA-256: `a12afbc9f93a268637e96425bfd4a416ffb211a392ebdbb82171b58c855049de`
+- Golden SHA-256: `80ec3ff1a5188f076e390654a29b7577967c9c86ccde9125a165487b227a2b20`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti12-standard@1/inlineChoice`
@@ -117,7 +117,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `c3fc4008236228c62af43b95904e626c8c41d01b0d6a0b3dafc65295210f3c54`
+- Golden SHA-256: `f6d5b468ed92adbb9db58d3cd9ec861a2224be9f8fcb6c8e37ab98e43062ec1a`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti12-standard@1/order`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: text-entry
-- Golden SHA-256: `5b3e66b88b5775e3506007ed366ce8df19b80740a9cb8e9370af055a94a37fe6`
+- Golden SHA-256: `d9bc8c1c39fbb956564de90969d5dc96367a301b1aa10fba4c91f1f41fc5b6d9`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti12-standard@1/selectPoint`

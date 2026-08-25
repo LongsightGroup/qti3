@@ -18,7 +18,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3OrderBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3OrderItem(input: Qti3OrderBuilderInput): string {
   const diagnostics = validateQti3OrderItem(input);
@@ -31,11 +31,11 @@ export function renderQti3OrderItem(input: Qti3OrderBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const correctValues = orderCorrectValues(input);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="ordered" base-type="identifier">
     <qti-correct-response>
-${correctValues.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>`).join("\n")}
+${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-value>`).join("\n")}
     </qti-correct-response>
   </qti-response-declaration>`;
 
@@ -48,22 +48,24 @@ ${correctValues.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>
       input.minChoices !== undefined ? `min-choices="${String(input.minChoices)}"` : "",
       input.maxChoices !== undefined ? `max-choices="${String(input.maxChoices)}"` : "",
       input.minChoicesMessage?.trim()
-        ? `data-min-selections-message="${xmlEscape(input.minChoicesMessage.trim())}"`
+        ? `data-min-selections-message="${escapeXmlAttribute(input.minChoicesMessage.trim())}"`
         : "",
       input.maxChoicesMessage?.trim()
-        ? `data-max-selections-message="${xmlEscape(input.maxChoicesMessage.trim())}"`
+        ? `data-max-selections-message="${escapeXmlAttribute(input.maxChoicesMessage.trim())}"`
         : "",
       booleanAttribute("shuffle", input.shuffle ?? false),
     ],
   });
   const choicesXml = input.choices
     .map((choice) => {
-      const identifier = xmlEscape(
+      const identifier = escapeXmlAttribute(
         assertQtiIdentifier(choice.identifier, "Order choice identifier"),
       );
       const fixedAttr = choice.fixed ? ' fixed="true"' : "";
       const visibilityAttr = input.choiceVisibility === "hide" ? ' show-hide="hide"' : "";
-      const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
+      const body = choice.contentHtml?.trim()
+        ? choice.contentHtml
+        : escapeXmlText(choice.text ?? "");
       return `      <qti-simple-choice identifier="${identifier}"${fixedAttr}${visibilityAttr}>${body}</qti-simple-choice>`;
     })
     .join("\n");

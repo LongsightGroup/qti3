@@ -13,7 +13,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `023cb6201e9d1e30a25f9a65cf7e9be535ed6e1d3c1a93cd20e31fabfac2e19d`
+- Golden SHA-256: `86fcbef239b5ca02fa6585361eeb1a91aa7e9bc9af4d62126ae65225487a3b2b`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/custom`
@@ -29,7 +29,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `9aa78109743fc0297c63538b89efe71379b11e1fc0041c6be2bc42c0d548259e`
+- Golden SHA-256: `ad6ad4f2a4d53292af0e516cf4694348824e655899287b719184457837d665bc`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/endAttempt`
@@ -61,7 +61,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `5aba4b36bac67d72f3036da2de408e48381bec7eb3c0ba682358702744dbd935`
+- Golden SHA-256: `78450f87864532d2f0a040c4d337d2e551675af809245fc524aa67ff635ab1fd`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/graphicGapMatch`
@@ -69,7 +69,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: choice
-- Golden SHA-256: `ac2d50c5f0e25b83e124c0172181c0d71633e1f31079d7275856392f501c0c67`
+- Golden SHA-256: `7e65d88f31c3584582b352f196d69dfbe3197a33081b4fbf8d21f94c325f0135`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/graphicOrder`
@@ -77,7 +77,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: matching
-- Golden SHA-256: `ec122b65a94f73294caf6c541c92d65ba98871b9abcb0c8e5eeb0e110f0f6ae4`
+- Golden SHA-256: `00a73aae4cf97b72ee6d2c4253c3b5b6abd52378c0bd1bbb75336df5a2d03131`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/hotspot`
@@ -85,7 +85,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: choice
-- Golden SHA-256: `6f8219c4139ef600aa40fea819096841f302c400d7a354a01f67092d9d810548`
+- Golden SHA-256: `ea9d5f61a29a70ab529b73237d70c9ce8f3d9cb563cc7d65356ea89c93d5b3a2`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/hottext`
@@ -93,7 +93,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: choice
-- Golden SHA-256: `2bc13e1fbcce022906c813bd5ae3efc9aa80733698d97274cd2d01b9a8f775ca`
+- Golden SHA-256: `9666b08b551ebe91318e252584eb0a9f3d6a413fb7bc74538496a2214456732d`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/inlineChoice`
@@ -117,7 +117,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `c0d4b50114907431c3103bc183fe9653839ccb6598af7051665015cf85d4cc50`
+- Golden SHA-256: `40fe4711ef4fc2299fff8245bb810e806a133fc33bc9bf3e937351535565ff1c`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/order`
@@ -133,7 +133,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `de4ea479c63fe9d01da12e655c81d408565f8a765c122799f34b1fee66e94711`
+- Golden SHA-256: `31b8e6e8c448c01d16174312c1b45610ce90aa80241318f07f95eb823dda47e2`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/positionObject`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: text-entry
-- Golden SHA-256: `e8f48bdc98b15108a529817196aab7b113c9975d0e05b025c39c972e8b4948e1`
+- Golden SHA-256: `fb3b77ce6064fa824b421d9bf9877b3c53fd7da97bbba19074980fa9ab389a46`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/selectPoint`
@@ -149,7 +149,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: text-entry
-- Golden SHA-256: `56b33f5d8f0194166507de4ed5a051054359d28997d593564f8a47788d070c06`
+- Golden SHA-256: `b229b8d8fe280f784ae9c62d8fc5bee689e8e03a5485bf12710ed52aa971b978`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, behavior, visible-content, assets, keyboard, accessibility
 
 ## `moodle-xml@1/slider`

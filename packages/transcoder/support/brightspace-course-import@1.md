@@ -13,7 +13,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `7ff257c7fea38a213d56db2101f3143cb004f8d7b8018cc53803d83a8a6b6adb`
+- Golden SHA-256: `ecce2054c83ab96361e98d1bd35cd4a6c4659e07167fb8a4563dcbcf683d101b`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/custom`
@@ -53,7 +53,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `aefb47e5055c7b3c300cf665d6eb1a3caee163330d4b24f39b98b85896ca400d`
+- Golden SHA-256: `d13690bddb8fb4e92c42ec48e14e9449689d296a9b3c16fe95fb5f5c2d96f25e`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/graphicAssociate`
@@ -93,7 +93,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `4de491a9b07b1b642134dd97f663c67034a18e24c8bf8933db71a00108311f9a`
+- Golden SHA-256: `f537cedcc35360b2feab267bac38b0e7bec95ddcd05d04a10e79b367a255cd85`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/inlineChoice`
@@ -117,7 +117,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `df1c65b770c269d1336e6d0912e82876e447a6b0a797aa8d3553437b27913a91`
+- Golden SHA-256: `c09c66772ab3ba2847bf18a32a735395cd4b54f9c3cc6aa8e4d953ef9a037c8c`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/order`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `f0b3c0490090c33f90ea1d68c6c361d1da40cbcd0931716ecebaf6029ecb7e73`
+- Golden SHA-256: `f3bfcab0bfab6f2d50dc187d3006b0c210ecb6b8d9097842c1578d9b57dbde16`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/selectPoint`

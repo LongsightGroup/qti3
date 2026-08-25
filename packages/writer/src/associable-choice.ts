@@ -1,7 +1,7 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import { isNonNegativeInteger, validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
 import type { Qti3TrustedXmlFragment, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface Qti3AssociableChoiceLike {
   readonly identifier: string;
@@ -27,10 +27,12 @@ export function associableChoiceXml(
   choice: Qti3AssociableChoiceLike,
   options: AssociableChoiceRenderOptions,
 ): string {
-  const identifier = xmlEscape(assertQtiIdentifier(choice.identifier, options.identifierLabel));
+  const identifier = escapeXmlAttribute(
+    assertQtiIdentifier(choice.identifier, options.identifierLabel),
+  );
   const matchMax = choice.matchMax ?? 1;
   const fixedAttr = choice.fixed ? ' fixed="true"' : "";
-  const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
+  const body = choice.contentHtml?.trim() ? choice.contentHtml : escapeXmlText(choice.text ?? "");
   return `${options.indent ?? ""}<qti-simple-associable-choice identifier="${identifier}" match-max="${String(matchMax)}"${fixedAttr}>${body}</qti-simple-associable-choice>`;
 }
 

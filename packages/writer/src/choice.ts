@@ -18,7 +18,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3ChoiceBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3ChoiceItem(input: Qti3ChoiceBuilderInput): string {
   const diagnostics = validateQti3ChoiceItem(input);
@@ -31,12 +31,12 @@ export function renderQti3ChoiceItem(input: Qti3ChoiceBuilderInput): string {
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const scoring = input.scoring ?? "match_correct";
   const correctValues = input.correctResponse;
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="${input.responseCardinality}" base-type="identifier">
     <qti-correct-response>
-${correctValues.map((value) => `      <qti-value>${xmlEscape(value)}</qti-value>`).join("\n")}
+${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-value>`).join("\n")}
     </qti-correct-response>
 ${choiceMappingXml(input, scoring, correctValues)}  </qti-response-declaration>`;
 
@@ -53,10 +53,14 @@ ${choiceMappingXml(input, scoring, correctValues)}  </qti-response-declaration>`
   });
   const choicesXml = input.choices
     .map((choice) => {
-      const identifier = xmlEscape(assertQtiIdentifier(choice.identifier, "Choice identifier"));
+      const identifier = escapeXmlAttribute(
+        assertQtiIdentifier(choice.identifier, "Choice identifier"),
+      );
       const fixedAttr = choice.fixed ? ' fixed="true"' : "";
       const visibilityAttr = input.choiceVisibility === "hide" ? ' show-hide="hide"' : "";
-      const body = choice.contentHtml?.trim() ? choice.contentHtml : xmlEscape(choice.text ?? "");
+      const body = choice.contentHtml?.trim()
+        ? choice.contentHtml
+        : escapeXmlText(choice.text ?? "");
       return `      <qti-simple-choice identifier="${identifier}"${fixedAttr}${visibilityAttr}>${body}</qti-simple-choice>`;
     })
     .join("\n");
@@ -88,7 +92,7 @@ function choiceMappingXml(
 ${input.choices
   .map(
     (choice) =>
-      `    <qti-map-entry map-key="${xmlEscape(choice.identifier)}" mapped-value="${
+      `    <qti-map-entry map-key="${escapeXmlAttribute(choice.identifier)}" mapped-value="${
         correctSet.has(choice.identifier) ? "1" : "0"
       }"/>`,
   )

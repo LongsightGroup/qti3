@@ -18,7 +18,7 @@ import type {
   Qti3InlineChoiceSlot,
   Qti3WriterDiagnostic,
 } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3InlineChoiceItem(input: Qti3InlineChoiceBuilderInput): string {
   const diagnostics = validateQti3InlineChoiceItem(input);
@@ -59,13 +59,13 @@ function responseDeclarationXml(
   slot: Qti3InlineChoiceSlot,
   scoring: "all_or_nothing" | "map_response",
 ): string {
-  const responseIdentifier = xmlEscape(
+  const responseIdentifier = escapeXmlAttribute(
     assertQtiIdentifier(slot.responseIdentifier, "Inline choice response identifier"),
   );
   const correctResponse = slot.correctResponse?.trim() ?? "";
   const correctResponseXml = correctResponse
     ? `    <qti-correct-response>
-      <qti-value>${xmlEscape(correctResponse)}</qti-value>
+      <qti-value>${escapeXmlText(correctResponse)}</qti-value>
     </qti-correct-response>
 `
     : "";
@@ -81,7 +81,7 @@ function mappingXml(
   const correctResponse = slot.correctResponse?.trim() ?? "";
   const entries = slot.options
     .map((option) => {
-      const identifier = xmlEscape(
+      const identifier = escapeXmlAttribute(
         assertQtiIdentifier(option.identifier, "Inline choice option identifier"),
       );
       const mappedValue =
@@ -100,7 +100,7 @@ ${entries}
 }
 
 function interactionXml(slot: Qti3InlineChoiceSlot, input: Qti3InlineChoiceBuilderInput): string {
-  const responseIdentifier = xmlEscape(
+  const responseIdentifier = escapeXmlAttribute(
     assertQtiIdentifier(slot.responseIdentifier, "Inline choice response identifier"),
   );
   const attrs = xmlAttributeList([
@@ -119,9 +119,11 @@ ${choices}
 }
 
 function optionXml(option: Qti3InlineChoiceOption): string {
-  const identifier = xmlEscape(assertQtiIdentifier(option.identifier, "Inline choice option"));
+  const identifier = escapeXmlAttribute(
+    assertQtiIdentifier(option.identifier, "Inline choice option"),
+  );
   const fixed = option.fixed ? ' fixed="true"' : "";
-  const body = option.contentHtml?.trim() ? option.contentHtml : xmlEscape(option.text ?? "");
+  const body = option.contentHtml?.trim() ? option.contentHtml : escapeXmlText(option.text ?? "");
   return `      <qti-inline-choice identifier="${identifier}"${fixed}>${body}</qti-inline-choice>`;
 }
 

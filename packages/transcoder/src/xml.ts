@@ -1,5 +1,7 @@
 import { DOMParser } from "@xmldom/xmldom";
 
+export { escapeXmlAttribute, escapeXmlText } from "@longsightgroup/qti3-core";
+
 import { validateMoodleXmlDocument } from "./moodle-validation.js";
 import type { QtiTranscodeDiagnostic, QtiTranscodeTarget } from "./types.js";
 
@@ -10,15 +12,6 @@ const parser = new DOMParser({
     fatalError: () => undefined,
   },
 });
-
-export function escapeXml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-}
 
 export function safePackagePath(path: string): boolean {
   if (!path || path.startsWith("/") || path.includes("\\")) return false;

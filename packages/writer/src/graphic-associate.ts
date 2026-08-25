@@ -27,7 +27,7 @@ import {
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3GraphicAssociateBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlAttributeList, xmlEscape } from "./xml.js";
+import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3GraphicAssociateItem(input: Qti3GraphicAssociateBuilderInput): string {
   const diagnostics = validateQti3GraphicAssociateItem(input);
@@ -40,7 +40,7 @@ export function renderQti3GraphicAssociateItem(input: Qti3GraphicAssociateBuilde
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic associate response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const scoring = input.scoring ?? "match_correct";
   const declarationsXml = pairResponseDeclarationXml({
     responseIdentifier: escapedResponseIdentifier,
@@ -70,16 +70,16 @@ export function renderQti3GraphicAssociateItem(input: Qti3GraphicAssociateBuilde
   const objectAttrs = renderGraphicObjectAttributes(input.object);
   const hotspotsXml = input.hotspots
     .map((hotspot) => {
-      const identifier = xmlEscape(
+      const identifier = escapeXmlAttribute(
         assertQtiIdentifier(hotspot.identifier, "Graphic associate hotspot identifier"),
       );
       const attrs = [
         `identifier="${identifier}"`,
         hotspot.hotspotLabel?.trim()
-          ? `hotspot-label="${xmlEscape(hotspot.hotspotLabel.trim())}"`
+          ? `hotspot-label="${escapeXmlAttribute(hotspot.hotspotLabel.trim())}"`
           : "",
         `shape="${hotspot.shape}"`,
-        `coords="${xmlEscape(hotspot.coords.trim())}"`,
+        `coords="${escapeXmlAttribute(hotspot.coords.trim())}"`,
         `match-max="${String(hotspot.matchMax ?? 1)}"`,
       ];
       return `      <qti-associable-hotspot ${xmlAttributeList(attrs)}/>`;

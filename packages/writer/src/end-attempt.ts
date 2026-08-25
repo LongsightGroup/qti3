@@ -14,7 +14,7 @@ import {
 import { trustedResponseProcessingXml } from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3EndAttemptBuilderInput, Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): string {
   const diagnostics = validateQti3EndAttemptItem(input);
@@ -27,7 +27,7 @@ export function renderQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): str
     resolveResponseIdentifier(input.responseIdentifier),
     "End attempt response identifier",
   );
-  const escapedResponseIdentifier = xmlEscape(responseIdentifier);
+  const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="single" base-type="boolean"/>`;
   const interactionAttrs = interactionAttributeList({
     responseIdentifier: escapedResponseIdentifier,
@@ -35,7 +35,7 @@ export function renderQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): str
     interactionType: "endAttempt",
     classNames: input.classNames,
     extraAttributes: [
-      `title="${xmlEscape(input.buttonTitle.trim())}"`,
+      `title="${escapeXmlAttribute(input.buttonTitle.trim())}"`,
       optionalBooleanAttribute("count-attempt", input.countAttempt),
     ],
   });

@@ -13,7 +13,7 @@ import type {
   Qti3TextEntryResponse,
   Qti3WriterDiagnostic,
 } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3TextEntryItem(input: Qti3TextEntryBuilderInput): string {
   const diagnostics = validateQti3TextEntryItem(input);
@@ -40,7 +40,7 @@ export function renderQti3TextEntryItem(input: Qti3TextEntryBuilderInput): strin
 }
 
 function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
-  const responseIdentifier = xmlEscape(
+  const responseIdentifier = escapeXmlAttribute(
     assertQtiIdentifier(response.responseIdentifier, "Text entry response identifier"),
   );
   const baseType = response.baseType ?? "string";
@@ -53,7 +53,7 @@ function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
     const firstCorrectAnswer = correctAnswers[0];
     if (firstCorrectAnswer) {
       parts.push("    <qti-correct-response>");
-      parts.push(`      <qti-value>${xmlEscape(firstCorrectAnswer.value.trim())}</qti-value>`);
+      parts.push(`      <qti-value>${escapeXmlText(firstCorrectAnswer.value.trim())}</qti-value>`);
       parts.push("    </qti-correct-response>");
     }
     parts.push('    <qti-mapping default-value="0">');
@@ -66,7 +66,7 @@ function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
 
 function mapEntryXml(answer: Qti3TextEntryAnswer): string {
   const attrs = [
-    `map-key="${xmlEscape(answer.value.trim())}"`,
+    `map-key="${escapeXmlAttribute(answer.value.trim())}"`,
     `mapped-value="${String(normalizeScore(answer.score))}"`,
   ];
   if (answer.caseSensitive === false) attrs.push('case-sensitive="false"');
@@ -87,7 +87,7 @@ function buildResponseProcessing(responses: readonly Qti3TextEntryResponse[]): s
   }
   const conditions = scoredResponses
     .map((response) => {
-      const responseIdentifier = xmlEscape(
+      const responseIdentifier = escapeXmlAttribute(
         assertQtiIdentifier(response.responseIdentifier, "Text entry response identifier"),
       );
       return `  <qti-response-condition>

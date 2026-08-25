@@ -1,6 +1,6 @@
 import { isPositiveInteger, writerDiagnostic } from "./diagnostics.js";
 import type { Qti3WriterDiagnostic } from "./types.js";
-import { xmlEscape } from "./xml.js";
+import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface Qti3GraphicObjectLike {
   readonly data: string;
@@ -24,9 +24,9 @@ export interface GraphicObjectLongDescription {
 
 export function renderGraphicObjectAttributes(object: Qti3GraphicObjectLike): readonly string[] {
   return [
-    `data="${xmlEscape(object.data.trim())}"`,
-    `alt="${xmlEscape(object.alt?.trim() ?? "")}"`,
-    `type="${xmlEscape(object.type ?? inferMimeFromSrc(object.data) ?? "")}"`,
+    `data="${escapeXmlAttribute(object.data.trim())}"`,
+    `alt="${escapeXmlAttribute(object.alt?.trim() ?? "")}"`,
+    `type="${escapeXmlAttribute(object.type ?? inferMimeFromSrc(object.data) ?? "")}"`,
     object.width !== undefined ? `width="${String(object.width)}"` : "",
     object.height !== undefined ? `height="${String(object.height)}"` : "",
   ];
@@ -40,8 +40,8 @@ export function optionalLongDescriptionBlock(
   if (!text) return { blockXml: "", attributeXml: "" };
   const id = `longdesc-${identifier}`;
   return {
-    blockXml: `    <div id="${xmlEscape(id)}" class="qti-visually-hidden" data-qti-a11y-content-role="long-description">${xmlEscape(text)}</div>\n`,
-    attributeXml: `data-qti-aria-describedby="${xmlEscape(id)}"`,
+    blockXml: `    <div id="${escapeXmlAttribute(id)}" class="qti-visually-hidden" data-qti-a11y-content-role="long-description">${escapeXmlText(text)}</div>\n`,
+    attributeXml: `data-qti-aria-describedby="${escapeXmlAttribute(id)}"`,
   };
 }
 
