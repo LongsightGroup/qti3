@@ -847,6 +847,61 @@ test.describe("player DOM behavior", () => {
     ).toHaveLength(1);
   });
 
+  test("omits unsafe interaction URLs, emits diagnostics, and keeps the item usable", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const player = element as HTMLElement & { unsafeDiagnosticCodes?: string[] };
+      player.unsafeDiagnosticCodes = [];
+      player.addEventListener("qti-diagnostics", (event) => {
+        const detail = (event as CustomEvent<{ diagnostics: Array<{ code: string }> }>).detail;
+        player.unsafeDiagnosticCodes?.push(...detail.diagnostics.map((entry) => entry.code));
+      });
+    });
+    await pasteXml(
+      page,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsafe-interaction-url" title="unsafe-interaction-url" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+  <qti-response-declaration identifier="MEDIA" cardinality="single" base-type="integer"/>
+  <qti-item-body>
+    <qti-media-interaction response-identifier="MEDIA">
+      <qti-prompt>Optional illustration</qti-prompt>
+      <object data="//attacker.example/illustration.png" type="image/png">Illustration unavailable</object>
+    </qti-media-interaction>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Choose an answer.</qti-prompt>
+      <qti-simple-choice identifier="A">Answer A</qti-simple-choice>
+      <qti-simple-choice identifier="B">Answer B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    await expect(page.locator('qti-assessment-item-player [src*="attacker.example"]')).toHaveCount(
+      0,
+    );
+    await expect(page.locator('qti-assessment-item-player [href*="attacker.example"]')).toHaveCount(
+      0,
+    );
+    const playerState = await page.locator("qti-assessment-item-player").evaluate((element) => {
+      const player = element as HTMLElement & {
+        serialize: () => { validationMessages: Array<{ code: string }> };
+        unsafeDiagnosticCodes?: string[];
+      };
+      return {
+        emittedCodes: player.unsafeDiagnosticCodes,
+        validationCodes: player.serialize().validationMessages.map((entry) => entry.code),
+      };
+    });
+    expect(playerState.emittedCodes).toContain("interaction.asset.url.unsafe");
+    expect(playerState.validationCodes).toContain("interaction.asset.url.unsafe");
+
+    await provideResponse(page, "choice", "A");
+    expect(await currentResponse(page)).toBe("A");
+  });
+
   test("does not duplicate authoring validation alerts after restore", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, EMPTY_CHOICE_ITEM);

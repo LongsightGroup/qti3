@@ -3,9 +3,12 @@ import type {
   QtiContentNode,
   QtiDiagnostic,
   QtiInteraction,
+  QtiObjectAsset,
+  QtiSourceLocation,
 } from "@longsightgroup/qti3-core";
+import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
 import { contentElementName } from "../content/content-dom.js";
-import { interactionChoices } from "../interaction-support.js";
+import { interactionChoices, objectIsImage } from "../interaction-support.js";
 import { sourceChoices, targetChoices } from "./shared.js";
 import { isInlineFlowInteraction } from "./interaction-inline-embedding.js";
 import { isInteractionSupported } from "./interaction-registry.js";
@@ -60,7 +63,85 @@ export function collectInteractionRenderDiagnostics(
   return interactions.flatMap((interaction) => [
     ...interactionUnsupportedDiagnostics(interaction),
     ...interactionMissingChoiceDiagnostics(interaction),
+    ...interactionAssetUrlDiagnostics(interaction),
   ]);
+}
+
+/** Report authored interaction assets that cannot be assigned to their intended DOM sinks. */
+export function interactionAssetUrlDiagnostics(interaction: QtiInteraction): QtiDiagnostic[] {
+  const diagnostics: QtiDiagnostic[] = [];
+  if (interaction.object) {
+    diagnostics.push(...objectAssetUrlDiagnostics(interaction, interaction.object, "object"));
+  }
+  if (interaction.positionObjectStage && interaction.positionObjectStage !== interaction.object) {
+    diagnostics.push(
+      ...objectAssetUrlDiagnostics(interaction, interaction.positionObjectStage, "stage object"),
+    );
+  }
+  for (const choice of interaction.choices) {
+    if (!choice.asset?.data) continue;
+    if (parseAuthoredAssetUrl(choice.asset.data, "image")) continue;
+    diagnostics.push(
+      unsafeAssetUrlDiagnostic(
+        interaction,
+        `choice "${choice.identifier}" image`,
+        choice.asset.source ?? choice.source,
+      ),
+    );
+  }
+  return diagnostics;
+}
+
+function objectAssetUrlDiagnostics(
+  interaction: QtiInteraction,
+  object: QtiObjectAsset,
+  label: string,
+): QtiDiagnostic[] {
+  const diagnostics: QtiDiagnostic[] = [];
+  const dataContext =
+    interaction.type === "media" && mediaObjectType(object)
+      ? "media"
+      : objectIsImage(object)
+        ? "image"
+        : "navigation";
+  if (object.data && !parseAuthoredAssetUrl(object.data, dataContext)) {
+    diagnostics.push(unsafeAssetUrlDiagnostic(interaction, label, object.source));
+  }
+  const sourceContext =
+    interaction.type === "media" && mediaObjectType(object) ? "media" : "navigation";
+  for (const source of object.sources) {
+    if (!source.src || parseAuthoredAssetUrl(source.src, sourceContext)) continue;
+    diagnostics.push(unsafeAssetUrlDiagnostic(interaction, `${label} source`, source.source));
+  }
+  for (const track of object.tracks) {
+    if (!track.src || parseAuthoredAssetUrl(track.src, "track")) continue;
+    diagnostics.push(unsafeAssetUrlDiagnostic(interaction, `${label} track`, track.source));
+  }
+  return diagnostics;
+}
+
+function mediaObjectType(object: QtiObjectAsset): "audio" | "video" | undefined {
+  const types = [object.type, ...object.sources.map((source) => source.type)].filter(
+    (value): value is string => Boolean(value),
+  );
+  if (types.some((value) => value.startsWith("audio/"))) return "audio";
+  if (types.some((value) => value.startsWith("video/"))) return "video";
+  return undefined;
+}
+
+function unsafeAssetUrlDiagnostic(
+  interaction: QtiInteraction,
+  assetLabel: string,
+  source: QtiSourceLocation | undefined,
+): QtiDiagnostic {
+  const path = diagnosticPath(interaction);
+  return {
+    code: "interaction.asset.url.unsafe",
+    severity: "error",
+    message: `Unsafe ${assetLabel} URL was omitted from the ${interaction.type} interaction${path ? ` (${path})` : ""}.`,
+    path,
+    source,
+  };
 }
 
 export function interactionEmbeddedDiagnostics(interaction: QtiInteraction): QtiDiagnostic[] {

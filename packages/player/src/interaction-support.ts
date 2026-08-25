@@ -6,6 +6,7 @@ import type {
   QtiValue,
 } from "@longsightgroup/qti3-core";
 import { errorView } from "./player-validation.js";
+import { parseAuthoredAssetUrl } from "./asset-url-policy.js";
 
 export function responseGroup(className?: string): HTMLElement {
   const group = document.createElement("div");
@@ -96,9 +97,11 @@ export function appendGraphicObjectImage(
   alt: string,
 ): void {
   if (!object.data || !objectIsImage(object)) return;
+  const src = parseAuthoredAssetUrl(object.data, "image");
+  if (!src) return;
   const image = document.createElement("img");
   image.className = "qti3-graphic-object-image";
-  image.src = object.data;
+  image.src = src;
   image.alt = alt;
   surface.append(image);
 }

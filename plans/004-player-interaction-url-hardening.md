@@ -12,6 +12,13 @@
 - **Depends on**: none
 - **Category**: security
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+The player now applies one context-aware URL policy to item content and every authored interaction
+asset sink. Unsafe values are omitted with source-located `interaction.asset.url.unsafe`
+diagnostics, while sink-compatible relative, HTTP(S), and media data URLs remain supported. The
+DOM-free policy and diagnostic tests, focused browser scenario, full verification suite, and all
+471 Playwright tests pass.
 
 ## Why this matters
 

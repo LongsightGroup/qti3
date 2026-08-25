@@ -3,6 +3,7 @@ import { bindActivateOnEnterOrSpace } from "../dom/keyboard-activation.js";
 import { applyResponsiveGraphicSize, objectIsImage } from "../interaction-support.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
+import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
 import {
   announceDrawingPenColor,
   announceDrawingStrokeStatus,
@@ -495,7 +496,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 function drawingBackgroundHref(interaction: QtiInteraction): string | undefined {
   if (!interaction.object?.data || !objectIsImage(interaction.object)) return undefined;
-  return interaction.object.data;
+  return parseAuthoredAssetUrl(interaction.object.data, "image");
 }
 
 function drawingImageElement(href: string, width: number, height: number): SVGImageElement {

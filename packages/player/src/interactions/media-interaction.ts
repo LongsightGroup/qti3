@@ -13,6 +13,7 @@ import { objectIsImage } from "../interaction-support.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import { errorView } from "../player-validation.js";
 import { mediaPlayCount } from "../response-limits.js";
+import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
 import { createMediaPauseTiming, mediaPauseTimingConfigured } from "./media-pause-timing.js";
 
 export interface MediaResponseBinding {
@@ -61,22 +62,30 @@ export function renderMediaResponse(
   }
 
   if (object?.data && objectIsImage(object)) {
-    const image = document.createElement("img");
-    image.src = object.data;
-    image.alt = label;
-    image.style.maxInlineSize = "100%";
-    image.style.blockSize = "auto";
-    regions.control(image);
-    if (object.width) image.width = Number(object.width);
-    if (object.height) image.height = Number(object.height);
-    return image;
+    const src = parseAuthoredAssetUrl(object.data, "image");
+    if (src) {
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = label;
+      image.style.maxInlineSize = "100%";
+      image.style.blockSize = "auto";
+      regions.control(image);
+      if (object.width) image.width = Number(object.width);
+      if (object.height) image.height = Number(object.height);
+      return image;
+    }
   }
 
   const group = document.createElement("div");
   group.role = "group";
   group.setAttribute("aria-label", label);
   regions.control(group);
-  const fallbackHref = object?.data ?? object?.sources.find((source) => source.src)?.src;
+  const fallbackHref = object
+    ? [object.data, ...object.sources.map((source) => source.src)]
+        .filter((value): value is string => value !== undefined)
+        .map((value) => parseAuthoredAssetUrl(value, "navigation"))
+        .find((value): value is string => value !== undefined)
+    : undefined;
   if (fallbackHref) {
     const link = document.createElement("a");
     link.href = fallbackHref;
@@ -105,19 +114,24 @@ function configureMediaElement(
   copyMediaDataAttributes(media, interaction.attributes);
   copyMediaDataAttributes(media, object.attributes);
 
-  if (object.data) media.src = object.data;
+  const objectSrc = object.data ? parseAuthoredAssetUrl(object.data, "media") : undefined;
+  if (objectSrc) media.src = objectSrc;
   for (const source of object.sources) {
     if (!source.src) continue;
+    const src = parseAuthoredAssetUrl(source.src, "media");
+    if (!src) continue;
     const sourceElement = document.createElement("source");
-    sourceElement.src = source.src;
+    sourceElement.src = src;
     if (source.type) sourceElement.type = source.type;
     copySafeMediaChildAttributes(sourceElement, source.attributes, sourceAttributeNames);
     media.append(sourceElement);
   }
   for (const track of object.tracks) {
     if (!track.src) continue;
+    const src = parseAuthoredAssetUrl(track.src, "track");
+    if (!src) continue;
     const trackElement = document.createElement("track");
-    trackElement.src = track.src;
+    trackElement.src = src;
     if (track.kind) trackElement.kind = track.kind;
     if (track.srclang) trackElement.srclang = track.srclang;
     if (track.label) trackElement.label = track.label;

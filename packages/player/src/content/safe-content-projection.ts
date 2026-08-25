@@ -37,7 +37,7 @@ export function projectSafeContentNodes(
     projected.push({
       kind: "element",
       name,
-      attributes: sanitizeContentAttributes(node.attributes, resolveAsset),
+      attributes: sanitizeContentAttributes(node.attributes, resolveAsset, name),
       children,
     });
   }

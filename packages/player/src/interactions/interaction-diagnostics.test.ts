@@ -5,6 +5,7 @@ import { isInteractionSupported } from "./interaction-registry.js";
 import {
   collectEmbeddedInteractionDiagnostics,
   collectInteractionRenderDiagnostics,
+  interactionAssetUrlDiagnostics,
   interactionMissingChoiceDiagnostics,
   interactionUnsupportedDiagnostics,
 } from "./interaction-diagnostics.js";
@@ -103,6 +104,73 @@ describe("interaction-diagnostics", () => {
     ]);
     expect(diagnostics.some((entry) => entry.code === "interaction.choices.missing")).toBe(true);
     expect(diagnostics.some((entry) => entry.code === "interaction.unsupported")).toBe(true);
+  });
+
+  it("reports unsafe interaction asset URLs with their authored locations", () => {
+    const objectSource = { line: 8, column: 9, offset: 120, path: "object" };
+    const sourceSource = { line: 9, column: 11, offset: 160, path: "source" };
+    const trackSource = { line: 10, column: 11, offset: 210, path: "track" };
+    const diagnostics = interactionAssetUrlDiagnostics(
+      testInteraction({
+        type: "media",
+        object: {
+          data: "javascript:alert(1)",
+          type: "video/mp4",
+          text: "Video",
+          sources: [
+            {
+              src: "//attacker.example/video.mp4",
+              type: "video/mp4",
+              attributes: {},
+              source: sourceSource,
+            },
+          ],
+          tracks: [
+            {
+              src: "file:///private/captions.vtt",
+              kind: "captions",
+              attributes: {},
+              source: trackSource,
+            },
+          ],
+          attributes: {},
+          source: objectSource,
+        },
+      }),
+    );
+
+    expect(diagnostics).toHaveLength(3);
+    expect(diagnostics.map((entry) => entry.code)).toEqual([
+      "interaction.asset.url.unsafe",
+      "interaction.asset.url.unsafe",
+      "interaction.asset.url.unsafe",
+    ]);
+    expect(diagnostics.map((entry) => entry.source)).toEqual([
+      objectSource,
+      sourceSource,
+      trackSource,
+    ]);
+    expect(diagnostics.every((entry) => entry.path === "RESPONSE")).toBe(true);
+    expect(diagnostics.map((entry) => entry.message).join(" ")).not.toContain("attacker.example");
+    expect(diagnostics.map((entry) => entry.message).join(" ")).not.toContain("javascript:");
+  });
+
+  it("accepts sink-compatible interaction asset URLs", () => {
+    expect(
+      interactionAssetUrlDiagnostics(
+        testInteraction({
+          type: "media",
+          object: {
+            data: "data:audio/wav;base64,AA==",
+            type: "audio/wav",
+            text: "Audio",
+            sources: [{ src: "media/item.ogg", type: "audio/ogg", attributes: {} }],
+            tracks: [{ src: "captions/item.vtt", kind: "captions", attributes: {} }],
+            attributes: {},
+          },
+        }),
+      ),
+    ).toEqual([]);
   });
 
   it("does not report block-level interaction references as embedded", () => {

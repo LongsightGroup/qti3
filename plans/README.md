@@ -10,7 +10,7 @@ honor its stop conditions, and update its status when complete.
 | ---- | ---------------------------------------------------------------------- | -------- | ------ | ----------------- | ------ |
 | 002  | Give media a core play-count domain and one native playback path       | P1       | M      | —                 | DONE   |
 | 020  | Upgrade the vulnerable Vite toolchain and gate dev advisories          | P1       | S      | —                 | DONE   |
-| 004  | Validate and drop unsafe interaction asset URLs                        | P1       | M      | —                 | TODO   |
+| 004  | Validate and drop unsafe interaction asset URLs                        | P1       | M      | —                 | DONE   |
 | 007  | Map every matching area at most once across response points            | P1       | S      | —                 | TODO   |
 | 003  | Make invalid equal-rounded expressions inert during evaluation         | P1       | S      | —                 | TODO   |
 | 019  | Move qti3-fixtures out of player runtime dependencies                  | P1       | S      | —                 | TODO   |

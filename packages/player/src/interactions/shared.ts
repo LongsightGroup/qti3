@@ -6,6 +6,7 @@ import {
 import { renderStaticContentNodes } from "../content/content-renderer.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { interactionChoices } from "../interaction-support.js";
+import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
 
 export function tokenRegion(label: string, visibleLabel?: string): HTMLElement {
   const region = document.createElement("div");
@@ -42,9 +43,11 @@ export function hasRichChoiceContent(choice: QtiChoice): boolean {
 
 export function choiceVisualNodes(choice: QtiChoice): Node[] {
   if (choice.asset?.data) {
+    const src = parseAuthoredAssetUrl(choice.asset.data, "image");
+    if (!src) return [document.createTextNode(choice.text)];
     const image = document.createElement("img");
     image.className = "qti3-gap-choice-image";
-    image.src = choice.asset.data;
+    image.src = src;
     image.alt = "";
     image.draggable = false;
     const width = parsePositiveNumber(choice.asset.width);

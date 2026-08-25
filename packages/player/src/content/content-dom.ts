@@ -1,5 +1,10 @@
 import type { QtiContentNode, QtiValue } from "@longsightgroup/qti3-core";
 import { isResolvableAssetUrl } from "@longsightgroup/qti3-core";
+import {
+  parseAuthoredAssetUrl,
+  parseResolvedAssetUrl,
+  type QtiRenderedAssetUrlContext,
+} from "../asset-url-policy.js";
 
 export { isResolvableAssetUrl };
 
@@ -132,7 +137,9 @@ export function createContentElement(name: string): HTMLElement | MathMLElement 
 }
 
 export function copySafeAttributes(element: Element, attributes: Record<string, string>): void {
-  for (const [name, value] of Object.entries(sanitizeContentAttributes(attributes))) {
+  for (const [name, value] of Object.entries(
+    sanitizeContentAttributes(attributes, undefined, element.localName),
+  )) {
     element.setAttribute(name, value);
     if (name === "xml:lang" && !Object.hasOwn(attributes, "lang")) {
       element.setAttribute("lang", value);
@@ -145,10 +152,12 @@ export function copySafeAttributes(element: Element, attributes: Record<string, 
 export function sanitizeContentAttributes(
   attributes: Record<string, string>,
   resolveAsset?: (url: string) => string,
+  elementName?: string,
 ): Record<string, string> {
   const sanitized: Record<string, string> = {};
   for (const [name, value] of Object.entries(attributes)) {
-    if (!isSafeContentAttribute(name, value)) continue;
+    const urlContext = contentAttributeUrlContext(elementName, name);
+    if (!isSafeContentAttribute(name, value, urlContext)) continue;
     const normalizedName = name.toLowerCase();
     if (
       resolveAsset &&
@@ -156,8 +165,14 @@ export function sanitizeContentAttributes(
       isResolvableAssetUrl(value)
     ) {
       const resolved = resolveAsset(value);
-      if (!isSafeResolvedAssetUrl(resolved)) continue;
-      sanitized[name] = resolved;
+      const safeResolved = parseResolvedAssetUrl(resolved, urlContext ?? "content");
+      if (!safeResolved) continue;
+      sanitized[name] = safeResolved;
+      continue;
+    }
+    if (urlContext) {
+      const safeAuthored = parseAuthoredAssetUrl(value, urlContext);
+      if (safeAuthored) sanitized[name] = safeAuthored;
       continue;
     }
     sanitized[name] = value;
@@ -215,12 +230,16 @@ function suppressesScreenReaderSpeech(value: string | undefined): boolean {
   return tokens.includes("all") || tokens.includes("screen-reader");
 }
 
-function isSafeContentAttribute(name: string, value: string): boolean {
+function isSafeContentAttribute(
+  name: string,
+  value: string,
+  urlContext: QtiRenderedAssetUrlContext | undefined,
+): boolean {
   const normalizedName = name.toLowerCase();
   if (normalizedName.startsWith("on")) return false;
   if (normalizedName === "style") return false;
   if (normalizedName === "href" || normalizedName === "src" || normalizedName === "data") {
-    return isSafeContentUrl(value);
+    return parseAuthoredAssetUrl(value, urlContext ?? "content") !== undefined;
   }
   return (
     normalizedName === "alt" ||
@@ -250,6 +269,20 @@ function isSafeContentAttribute(name: string, value: string): boolean {
   );
 }
 
+function contentAttributeUrlContext(
+  elementName: string | undefined,
+  attributeName: string,
+): QtiRenderedAssetUrlContext | undefined {
+  const normalizedAttribute = attributeName.toLowerCase();
+  if (normalizedAttribute === "href") return "navigation";
+  if (normalizedAttribute === "data" && elementName === "object") return "object";
+  if (normalizedAttribute !== "src") return normalizedAttribute === "data" ? "content" : undefined;
+  if (elementName === "img" || elementName === "image") return "image";
+  if (elementName === "track") return "track";
+  if (elementName === "audio" || elementName === "video") return "media";
+  return "content";
+}
+
 const mathMlAttributeNames = new Set([
   "accent",
   "accentunder",
@@ -272,17 +305,7 @@ const mathMlAttributeNames = new Set([
 ]);
 
 export function isSafeUrl(value: string): boolean {
-  return (
-    value.startsWith("#") ||
-    value.startsWith("/") ||
-    value.startsWith("./") ||
-    value.startsWith("../") ||
-    value.startsWith("http://") ||
-    value.startsWith("https://") ||
-    value.startsWith("data:image/") ||
-    value.startsWith("data:audio/") ||
-    value.startsWith("data:video/")
-  );
+  return parseAuthoredAssetUrl(value, "content") !== undefined;
 }
 
 /** Returns whether a URL is safe to retain as rendered content or a package-relative asset. */
@@ -292,7 +315,7 @@ export function isSafeContentUrl(value: string): boolean {
 
 /** Returns whether a trusted host resolver produced a renderable asset URL. */
 export function isSafeResolvedAssetUrl(value: string): boolean {
-  return isSafeContentUrl(value) || /^blob:/i.test(value.trim());
+  return parseResolvedAssetUrl(value, "content") !== undefined;
 }
 
 export function formatPrintedValue(value: QtiValue, format?: string): string {
