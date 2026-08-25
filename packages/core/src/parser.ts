@@ -111,16 +111,16 @@ export function parseQtiXml(xml: string): QtiParseResult {
 function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAssessmentItem {
   const identifier = node.attributes.identifier ?? "";
   const responseDeclarations = childElements(node, "qti-response-declaration").map(
-    parseResponseDeclaration,
+    (declarationNode) => parseResponseDeclaration(declarationNode, diagnostics),
   );
   const responseDeclarationMap = new Map(
     responseDeclarations.map((declaration) => [declaration.identifier, declaration]),
   );
   const outcomeDeclarations = childElements(node, "qti-outcome-declaration").map(
-    parseOutcomeDeclaration,
+    (declarationNode) => parseOutcomeDeclaration(declarationNode, diagnostics),
   );
   const templateDeclarations = childElements(node, "qti-template-declaration").map(
-    parseTemplateDeclaration,
+    (declarationNode) => parseTemplateDeclaration(declarationNode, diagnostics),
   );
   const templateProcessing = parseTemplateProcessing(
     childElements(node, "qti-template-processing")[0],

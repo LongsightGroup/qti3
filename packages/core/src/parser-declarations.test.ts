@@ -85,6 +85,118 @@ describe("declaration numeric parsing", () => {
   });
 });
 
+describe("declaration value parsing", () => {
+  it.each([
+    {
+      name: "a mapped response correct value",
+      declaration: `
+        <qti-response-declaration identifier="RESPONSE" cardinality="record">
+          <qti-correct-response>
+            <qti-value field-identifier="answer" base-type="integer">7</qti-value>
+            <qti-value base-type="string">discarded</qti-value>
+          </qti-correct-response>
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="answer" mapped-value="1"/>
+          </qti-mapping>
+        </qti-response-declaration>`,
+      path: "/qti-assessment-item/qti-response-declaration[1]/qti-correct-response[1]",
+      value: (result: ReturnType<typeof parseQtiXml>) =>
+        result.document?.item.responseDeclarations[0]?.correctResponse,
+    },
+    {
+      name: "a response default value",
+      declaration: `
+        <qti-response-declaration identifier="RESPONSE" cardinality="record">
+          <qti-default-value>
+            <qti-value field-identifier="answer" base-type="integer">7</qti-value>
+            <qti-value base-type="string">discarded</qti-value>
+          </qti-default-value>
+        </qti-response-declaration>`,
+      path: "/qti-assessment-item/qti-response-declaration[1]/qti-default-value[1]",
+      value: (result: ReturnType<typeof parseQtiXml>) =>
+        result.document?.item.responseDeclarations[0]?.defaultValue,
+    },
+    {
+      name: "an outcome default value",
+      declaration: `
+        <qti-outcome-declaration identifier="OUTCOME" cardinality="record">
+          <qti-default-value>
+            <qti-value field-identifier="answer" base-type="integer">7</qti-value>
+            <qti-value base-type="string">discarded</qti-value>
+          </qti-default-value>
+        </qti-outcome-declaration>`,
+      path: "/qti-assessment-item/qti-outcome-declaration[1]/qti-default-value[1]",
+      value: (result: ReturnType<typeof parseQtiXml>) =>
+        result.document?.item.outcomeDeclarations[0]?.defaultValue,
+    },
+    {
+      name: "a template default value",
+      declaration: `
+        <qti-template-declaration identifier="TEMPLATE" cardinality="record">
+          <qti-default-value>
+            <qti-value field-identifier="answer" base-type="integer">7</qti-value>
+            <qti-value base-type="string">discarded</qti-value>
+          </qti-default-value>
+        </qti-template-declaration>`,
+      path: "/qti-assessment-item/qti-template-declaration[1]/qti-default-value[1]",
+      value: (result: ReturnType<typeof parseQtiXml>) =>
+        result.document?.item.templateDeclarations[0]?.defaultValue,
+    },
+  ])("diagnoses mixed field identifiers in $name", ({ declaration, path, value }) => {
+    const result = parseQtiXml(declarationItemXml(declaration));
+    const diagnostics = result.diagnostics.filter(
+      (diagnostic) => diagnostic.code === "declaration.value.fieldIdentifier.mixed",
+    );
+
+    expect(result.ok).toBe(false);
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        severity: "error",
+        path,
+        source: expect.objectContaining({ path }),
+      }),
+    ]);
+    expect(value(result)).toEqual({ answer: 7 });
+  });
+
+  it("preserves scalar, container, and record value behavior", () => {
+    const result = parseQtiXml(
+      declarationItemXml(`
+        <qti-response-declaration identifier="SCALAR" cardinality="single" base-type="identifier">
+          <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="CONTAINER" cardinality="multiple" base-type="identifier">
+          <qti-correct-response>
+            <qti-value>A</qti-value>
+            <qti-value>B</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+        <qti-response-declaration identifier="RECORD" cardinality="record">
+          <qti-correct-response>
+            <qti-value field-identifier="count" base-type="integer">2</qti-value>
+            <qti-value field-identifier="label" base-type="string">two</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>`),
+    );
+
+    expect(result.ok).toBe(true);
+    expect(result.diagnostics).not.toContainEqual(
+      expect.objectContaining({ code: "declaration.value.fieldIdentifier.mixed" }),
+    );
+    expect(
+      result.document?.item.responseDeclarations.map((declaration) => declaration.correctResponse),
+    ).toEqual(["A", ["A", "B"], { count: 2, label: "two" }]);
+  });
+});
+
+function declarationItemXml(declarations: string): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="declaration-values" title="declaration-values" time-dependent="false">
+      ${declarations}
+      <qti-item-body/>
+    </qti-assessment-item>`;
+}
+
 function expectFiniteNumbers(value: unknown, path = "document"): void {
   if (typeof value === "number") {
     expect(Number.isFinite(value), `${path} must be finite`).toBe(true);

@@ -12,6 +12,13 @@
 - **Depends on**: none
 - **Category**: bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Declaration parsers now receive the existing parse diagnostic array and emit one sourced
+`declaration.value.fieldIdentifier.mixed` error for each value container that mixes fielded and
+unfielded children. The parser preserves the prior record-only defensive fallback. Public-boundary
+tests cover response correct/default, mapping-bearing response, outcome/template defaults, exact
+paths, and unchanged scalar/container/record behavior; parser and full verification pass.
 
 ## Why this matters
 

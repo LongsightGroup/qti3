@@ -10,6 +10,7 @@ import {
 import type {
   QtiAssessmentItem,
   QtiBaseType,
+  QtiDiagnostic,
   QtiLookupTable,
   QtiOutcomeDeclaration,
   QtiResponseDeclaration,
@@ -19,7 +20,10 @@ import type {
 } from "./types.js";
 import { childElements, textContent, type XmlNode } from "./xml.js";
 
-export function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration {
+export function parseResponseDeclaration(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiResponseDeclaration {
   const cardinality = parseCardinality(node.attributes.cardinality);
   const baseType = parseBaseType(node.attributes["base-type"]);
   return {
@@ -27,9 +31,13 @@ export function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration 
     identifier: node.attributes.identifier ?? "",
     cardinality,
     baseType,
-    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
+    defaultValue: parseVariableValue(
+      childElements(node, "qti-default-value")[0],
+      baseType,
+      diagnostics,
+    ),
     correctResponse: normalizeValueForCardinality(
-      parseVariableValue(childElements(node, "qti-correct-response")[0], baseType),
+      parseVariableValue(childElements(node, "qti-correct-response")[0], baseType, diagnostics),
       cardinality,
     ),
     mapping: parseMapping(childElements(node, "qti-mapping")[0]),
@@ -39,28 +47,42 @@ export function parseResponseDeclaration(node: XmlNode): QtiResponseDeclaration 
   };
 }
 
-export function parseOutcomeDeclaration(node: XmlNode): QtiOutcomeDeclaration {
+export function parseOutcomeDeclaration(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiOutcomeDeclaration {
   const baseType = parseBaseType(node.attributes["base-type"]);
   return {
     kind: "outcome",
     identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType,
-    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
+    defaultValue: parseVariableValue(
+      childElements(node, "qti-default-value")[0],
+      baseType,
+      diagnostics,
+    ),
     lookupTable: parseLookupTable(node, baseType),
     attributes: node.attributes,
     source: node.source,
   };
 }
 
-export function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration {
+export function parseTemplateDeclaration(
+  node: XmlNode,
+  diagnostics: QtiDiagnostic[],
+): QtiTemplateDeclaration {
   const baseType = parseBaseType(node.attributes["base-type"]);
   return {
     kind: "template",
     identifier: node.attributes.identifier ?? "",
     cardinality: parseCardinality(node.attributes.cardinality),
     baseType,
-    defaultValue: parseVariableValue(childElements(node, "qti-default-value")[0], baseType),
+    defaultValue: parseVariableValue(
+      childElements(node, "qti-default-value")[0],
+      baseType,
+      diagnostics,
+    ),
     attributes: node.attributes,
     source: node.source,
   };
@@ -69,6 +91,7 @@ export function parseTemplateDeclaration(node: XmlNode): QtiTemplateDeclaration 
 function parseVariableValue(
   node: XmlNode | undefined,
   baseType: QtiBaseType | undefined,
+  diagnostics: QtiDiagnostic[],
 ): QtiValue {
   if (!node) return null;
   const valueNodes = childElements(node, "qti-value");
@@ -80,6 +103,16 @@ function parseVariableValue(
     (entry): entry is { fieldIdentifier: string; value: QtiScalarValue } =>
       Boolean(entry.fieldIdentifier),
   );
+  const fieldedEntryCount = entries.filter((entry) => entry.fieldIdentifier !== undefined).length;
+  if (fieldedEntryCount > 0 && fieldedEntryCount < entries.length) {
+    diagnostics.push({
+      code: "declaration.value.fieldIdentifier.mixed",
+      severity: "error",
+      message: `${node.localName} must not mix qti-value children with and without field-identifier.`,
+      path: node.source.path,
+      source: node.source,
+    });
+  }
   if (recordEntries.length > 0) {
     return Object.fromEntries(recordEntries.map((entry) => [entry.fieldIdentifier, entry.value]));
   }
