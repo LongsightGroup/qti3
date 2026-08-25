@@ -1,5 +1,9 @@
 # Issue 12: Structured Response Processing Serialization Plan (Revised)
 
+> **Status: DELIVERED** ([v0.8.0](../../CHANGELOG.md#080---2026-06-12)). Kept for design
+> rationale; behavior now lives in the `serializeResponseProcessing` export from
+> `packages/core/src/index.ts`.
+
 Revision of `issue-12-response-processing-serialization.md` after auditing the plan against the
 actual model (`packages/core/src/types.ts`), parser (`packages/core/src/parser-processing.ts`),
 scorer (`packages/core/src/session.ts`), and public exports (`packages/core/src/index.ts`).

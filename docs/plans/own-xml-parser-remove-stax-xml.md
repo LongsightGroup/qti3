@@ -1,5 +1,8 @@
 # Own XML Parser: Remove the stax-xml Dependency
 
+> **Status: DELIVERED** ([v0.8.0](../../CHANGELOG.md#080---2026-06-12)). Kept for design
+> rationale; behavior now lives in `packages/core/src/xml.ts`.
+
 ## Summary
 
 Replace `stax-xml` with a small, purpose-built XML parser inside `@longsightgroup/qti3-core`,

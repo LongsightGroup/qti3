@@ -32,7 +32,7 @@ honor its stop conditions, and update its status when complete.
 | 023  | Split transcoder snapshots without reducing output coverage            | P3       | M      | 022               | DONE                            |
 | 027  | Test the supported Node version boundaries explicitly                  | P3       | S      | 020, 024          | DONE                            |
 | 028  | Add an EditorConfig matching repository formatting                     | P3       | S      | —                 | DONE                            |
-| 029  | Mark delivered design notes and supersede discredited docs             | P3       | S      | —                 | TODO                            |
+| 029  | Mark delivered design notes and supersede discredited docs             | P3       | S      | —                 | DONE                            |
 | 032  | Reuse core package-path normalization in the CLI                       | P3       | S      | —                 | TODO                            |
 | 033  | Split core.test.ts with stable support-evidence paths                  | P3       | L      | correctness plans | TODO                            |
 

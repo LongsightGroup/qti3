@@ -1,3 +1,8 @@
+> **SUPERSEDED — do not implement.** The serialization rule in this plan is wrong and would fail
+> its own round-trip test. See
+> [issue-12-response-processing-serialization-revised.md](./issue-12-response-processing-serialization-revised.md)
+> for the authoritative design (delivered).
+
 # Issue 12: Structured Response Processing Serialization Plan
 
 ## Summary

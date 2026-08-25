@@ -1,5 +1,8 @@
 # QTI 3 PNP Resolver Package
 
+> **Status: DELIVERED** ([v0.9.0](../../CHANGELOG.md#090---2026-06-15)). Kept for design
+> rationale; behavior now lives in `packages/pnp/`.
+
 ## Decision
 
 Add `@longsightgroup/qti3-pnp` as an optional, dependency-free TypeScript package that

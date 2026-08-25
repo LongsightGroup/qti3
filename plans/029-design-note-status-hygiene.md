@@ -13,6 +13,12 @@
 - **Depends on**: none
 - **Category**: docs
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+The discredited response-processing serialization note now opens with a superseded warning and a
+link to the authoritative revision. The revised response serializer and owned XML parser carry
+v0.8.0 DELIVERED banners; the PNP resolver carries a v0.9.0 DELIVERED banner. Each banner links to
+the changelog and names the live implementation location.
 
 ## Why this matters
 
