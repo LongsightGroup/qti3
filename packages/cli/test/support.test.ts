@@ -18,13 +18,12 @@ import { describe, expect, it } from "vitest";
 import { lastStderr, lastStdout, runCli } from "./cli-harness.js";
 import { basicImportTestPackageEntries } from "./package-fixtures.js";
 import { createStoredZip } from "./zip-fixtures.js";
-import { main } from "../src/index.js";
 
 describe("@longsightgroup/qti3-cli support and certification", () => {
   it("writes standalone reference XML fixtures", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-fixtures-"));
     try {
-      await expect(main(["write-fixtures", directory])).resolves.toBe(0);
+      await expect(runCli(["write-fixtures", directory])).resolves.toMatchObject({ code: 0 });
 
       for (const fixture of interactionFixtures) {
         const xml = await readFile(join(directory, `${fixture.id}.xml`), "utf8");
@@ -33,8 +32,8 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
         expect(result.document?.item.interactions[0]?.type).toBe(fixture.interactionType);
       }
 
-      await expect(main(["validate-dir", directory])).resolves.toBe(0);
-      await expect(main(["score-correct-dir", directory])).resolves.toBe(0);
+      await expect(runCli(["validate-dir", directory])).resolves.toMatchObject({ code: 0 });
+      await expect(runCli(["score-correct-dir", directory])).resolves.toMatchObject({ code: 0 });
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
@@ -114,7 +113,9 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
   });
 
   it("runs the canonical conformance fixture suite", async () => {
-    await expect(main(["run-fixtures"])).resolves.toBe(0);
+    const { code, output } = await runCli(["run-fixtures"]);
+    expect(code).toBe(0);
+    expect(JSON.parse(lastStdout(output))).toMatchObject({ checked: 31, failed: 0 });
   });
 
   it("requires explicit inputs for Basic IMPORT item certification evidence", async () => {
@@ -416,7 +417,7 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
         "utf8",
       );
 
-      await expect(main(["score-correct", file])).resolves.toBe(0);
+      await expect(runCli(["score-correct", file])).resolves.toMatchObject({ code: 0 });
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

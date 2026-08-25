@@ -48,11 +48,13 @@ export function createRecordingCliOutput(): RecordingCliOutput {
 }
 
 /** Run the public CLI seam with recorded output. */
-export async function runCli(args: string[]): Promise<{
+export async function runCli(
+  args: string[],
+  output: RecordingCliOutput = createRecordingCliOutput(),
+): Promise<{
   readonly code: number;
   readonly output: RecordingCliOutput;
 }> {
-  const output = createRecordingCliOutput();
   const code = await main(args, output);
   return { code, output };
 }

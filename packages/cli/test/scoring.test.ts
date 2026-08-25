@@ -2,9 +2,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { createRecordingCliOutput, lastStderr, lastStdout } from "./cli-harness.js";
+import { createRecordingCliOutput, lastStderr, lastStdout, runCli } from "./cli-harness.js";
 import { adaptiveDeliveryXml, choiceFixtureXml } from "./item-fixtures.js";
-import { main } from "../src/index.js";
 
 describe("@longsightgroup/qti3-cli scoring and delivery", () => {
   it("scores server-trusted response JSON and emits the complete result", async () => {
@@ -16,9 +15,9 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
       await writeFile(responsesFile, JSON.stringify({ RESPONSE: "A" }), "utf8");
 
-      await expect(main(["score", itemFile, "--responses", responsesFile], output)).resolves.toBe(
-        0,
-      );
+      await expect(
+        runCli(["score", itemFile, "--responses", responsesFile], output),
+      ).resolves.toMatchObject({ code: 0 });
       const result = JSON.parse(lastStdout(output));
       expect(result).toMatchObject({
         ok: true,
@@ -45,20 +44,26 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       await writeFile(malformedFile, "{", "utf8");
       await writeFile(arrayFile, "[]", "utf8");
 
-      await expect(main(["score", itemFile], output)).resolves.toBe(1);
+      await expect(runCli(["score", itemFile], output)).resolves.toMatchObject({ code: 1 });
       await expect(
-        main(["score", itemFile, "--responses", malformedFile, "--responses", arrayFile], output),
-      ).resolves.toBe(1);
-      await expect(main(["score", itemFile, "--unknown", arrayFile], output)).resolves.toBe(1);
-      await expect(main(["score", itemFile, "--responses", malformedFile], output)).resolves.toBe(
-        1,
-      );
+        runCli(["score", itemFile, "--responses", malformedFile, "--responses", arrayFile], output),
+      ).resolves.toMatchObject({ code: 1 });
+      await expect(
+        runCli(["score", itemFile, "--unknown", arrayFile], output),
+      ).resolves.toMatchObject({ code: 1 });
+      await expect(
+        runCli(["score", itemFile, "--responses", malformedFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       expect(lastStderr(output)).toContain(malformedFile);
       expect(lastStderr(output)).not.toContain("\n");
-      await expect(main(["score", itemFile, "--responses", arrayFile], output)).resolves.toBe(1);
+      await expect(
+        runCli(["score", itemFile, "--responses", arrayFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       expect(lastStderr(output)).toContain("JSON object");
       const missingFile = join(directory, "missing.json");
-      await expect(main(["score", itemFile, "--responses", missingFile], output)).resolves.toBe(1);
+      await expect(
+        runCli(["score", itemFile, "--responses", missingFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       expect(lastStderr(output)).toContain(missingFile);
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -74,9 +79,9 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       await writeFile(itemFile, "<qti-assessment-item>", "utf8");
       await writeFile(responsesFile, JSON.stringify({ RESPONSE: "A" }), "utf8");
 
-      await expect(main(["score", itemFile, "--responses", responsesFile], output)).resolves.toBe(
-        1,
-      );
+      await expect(
+        runCli(["score", itemFile, "--responses", responsesFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       const result = JSON.parse(lastStdout(output));
       expect(result.ok).toBe(false);
       expect(result.diagnostics).toEqual(
@@ -85,9 +90,9 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
 
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
       await writeFile(responsesFile, JSON.stringify({ RESPONSE: [{}] }), "utf8");
-      await expect(main(["score", itemFile, "--responses", responsesFile], output)).resolves.toBe(
-        1,
-      );
+      await expect(
+        runCli(["score", itemFile, "--responses", responsesFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       const invalidResponseResult = JSON.parse(lastStdout(output));
       expect(invalidResponseResult.diagnostics).toEqual(
         expect.arrayContaining([
@@ -106,7 +111,9 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     try {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
 
-      await expect(main(["prepare-delivery", itemFile], output)).resolves.toBe(0);
+      await expect(runCli(["prepare-delivery", itemFile], output)).resolves.toMatchObject({
+        code: 0,
+      });
       const result = JSON.parse(lastStdout(output));
       expect(result).toMatchObject({ ok: true, mode: "static" });
       expect(result.candidateSafeXml).not.toContain("qti-correct-response");
@@ -127,7 +134,7 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       await writeFile(stateFile, JSON.stringify({ outcomes: { FEEDBACK: "yes" } }), "utf8");
 
       await expect(
-        main(
+        runCli(
           [
             "prepare-delivery",
             itemFile,
@@ -140,7 +147,7 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
           ],
           output,
         ),
-      ).resolves.toBe(0);
+      ).resolves.toMatchObject({ code: 0 });
       const summary = JSON.parse(lastStdout(output));
       expect(summary).toMatchObject({
         ok: true,
@@ -166,19 +173,22 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       await writeFile(stateFile, JSON.stringify({ outcomes: [], extra: true }), "utf8");
 
       await expect(
-        main(["prepare-delivery", itemFile, "--state", stateFile], output),
-      ).resolves.toBe(1);
+        runCli(["prepare-delivery", itemFile, "--state", stateFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       await expect(
-        main(["prepare-delivery", itemFile, "--mode", "server-materialized-adaptive"], output),
-      ).resolves.toBe(1);
+        runCli(["prepare-delivery", itemFile, "--mode", "server-materialized-adaptive"], output),
+      ).resolves.toMatchObject({ code: 1 });
       await expect(
-        main(["prepare-delivery", itemFile, "--mode", "unsupported", "--state", stateFile], output),
-      ).resolves.toBe(1);
+        runCli(
+          ["prepare-delivery", itemFile, "--mode", "unsupported", "--state", stateFile],
+          output,
+        ),
+      ).resolves.toMatchObject({ code: 1 });
       await expect(
-        main(["prepare-delivery", itemFile, "--mode", "static", "--mode", "static"], output),
-      ).resolves.toBe(1);
+        runCli(["prepare-delivery", itemFile, "--mode", "static", "--mode", "static"], output),
+      ).resolves.toMatchObject({ code: 1 });
       await expect(
-        main(
+        runCli(
           [
             "prepare-delivery",
             itemFile,
@@ -189,13 +199,13 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
           ],
           output,
         ),
-      ).resolves.toBe(1);
+      ).resolves.toMatchObject({ code: 1 });
       expect(lastStderr(output)).toContain(stateFile);
       expect(lastStderr(output)).not.toContain("\n");
 
       await writeFile(stateFile, JSON.stringify({ outcomes: { SCORE: [{}] } }), "utf8");
       await expect(
-        main(
+        runCli(
           [
             "prepare-delivery",
             itemFile,
@@ -206,7 +216,7 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
           ],
           output,
         ),
-      ).resolves.toBe(1);
+      ).resolves.toMatchObject({ code: 1 });
       expect(lastStderr(output)).toContain("QTI values");
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -221,9 +231,9 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     try {
       await writeFile(itemFile, "<qti-assessment-item>", "utf8");
 
-      await expect(main(["prepare-delivery", itemFile, "--out", outputFile], output)).resolves.toBe(
-        1,
-      );
+      await expect(
+        runCli(["prepare-delivery", itemFile, "--out", outputFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       await expect(readFile(outputFile, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
       const summary = JSON.parse(lastStdout(output));
       expect(summary.ok).toBe(false);
@@ -244,9 +254,9 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     try {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
 
-      await expect(main(["prepare-delivery", itemFile, "--out", outputFile], output)).resolves.toBe(
-        1,
-      );
+      await expect(
+        runCli(["prepare-delivery", itemFile, "--out", outputFile], output),
+      ).resolves.toMatchObject({ code: 1 });
       expect(lastStderr(output)).toContain(outputFile);
       expect(lastStderr(output)).not.toContain("\n");
     } finally {

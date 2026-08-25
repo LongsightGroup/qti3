@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFile } from "node:fs/promises";
 import { parseQtiXml } from "@longsightgroup/qti3-core";
+import { readTextInput } from "./cli-io.js";
 import { basicItemPlayerReport } from "./commands/basic-item-player.js";
 import { runCertificationCommand } from "./commands/certification.js";
 import {
@@ -21,10 +21,11 @@ import {
 } from "./commands/support.js";
 import { inspectPackageSafely } from "./package/package-inspection.js";
 import {
-  fileSystemErrorResult,
+  errorResult,
   jsonResult,
   nodeCliOutput,
   renderCliResult,
+  runFileSystemCommand,
   type CliCommandResult,
   type CliOutput,
 } from "./cli-result.js";
@@ -37,14 +38,7 @@ export async function main(
   args = process.argv.slice(2),
   output: CliOutput = nodeCliOutput,
 ): Promise<number> {
-  let result: CliCommandResult;
-  try {
-    result = await executeCli(args);
-  } catch (cause) {
-    const fileSystemFailure = fileSystemErrorResult(cause);
-    if (fileSystemFailure === undefined) throw cause;
-    result = fileSystemFailure;
-  }
+  const result = await executeCli(args);
   return renderCliResult(result, output);
 }
 
@@ -59,34 +53,45 @@ async function executeCli(args: string[]): Promise<CliCommandResult> {
       return runCertificationCommand(commandArgs);
     case "parse": {
       if (file === undefined) break;
-      const xml = await readFile(file, "utf8");
-      const result = parseQtiXml(xml);
+      const xml = await readTextInput(file, "QTI item");
+      if (!xml.ok) return errorResult(xml.message);
+      const result = parseQtiXml(xml.value);
       return jsonResult(result, result.ok ? 0 : 1);
     }
     case "parse-dir": {
       if (file === undefined) break;
-      const report = await parseDirectory(file);
-      return jsonResult(report, report.failed === 0 ? 0 : 1);
+      return runFileSystemCommand(async () => {
+        const report = await parseDirectory(file);
+        return jsonResult(report, report.failed === 0 ? 0 : 1);
+      });
     }
     case "validate": {
       if (file === undefined) break;
-      const result = await validateFile(file);
-      return jsonResult(result, result.ok ? 0 : 1);
+      return runFileSystemCommand(async () => {
+        const result = await validateFile(file);
+        return jsonResult(result, result.ok ? 0 : 1);
+      });
     }
     case "validate-dir": {
       if (file === undefined) break;
-      const report = await validateDirectory(file);
-      return jsonResult(report, report.failed === 0 ? 0 : 1);
+      return runFileSystemCommand(async () => {
+        const report = await validateDirectory(file);
+        return jsonResult(report, report.failed === 0 ? 0 : 1);
+      });
     }
     case "score-correct": {
       if (file === undefined) break;
-      const result = await scoreCorrectFile(file);
-      return jsonResult(result, result.ok && (!result.scorable || result.scorePositive) ? 0 : 1);
+      return runFileSystemCommand(async () => {
+        const result = await scoreCorrectFile(file);
+        return jsonResult(result, result.ok && (!result.scorable || result.scorePositive) ? 0 : 1);
+      });
     }
     case "score-correct-dir": {
       if (file === undefined) break;
-      const report = await scoreCorrectDirectory(file);
-      return jsonResult(report, report.failed === 0 ? 0 : 1);
+      return runFileSystemCommand(async () => {
+        const report = await scoreCorrectDirectory(file);
+        return jsonResult(report, report.failed === 0 ? 0 : 1);
+      });
     }
     case "score":
       return runScoreCommand(commandArgs);
@@ -103,13 +108,17 @@ async function executeCli(args: string[]): Promise<CliCommandResult> {
       return jsonResult(report, report.failed === 0 ? 0 : 1);
     }
     case "basic-item-player-report": {
-      const report = await basicItemPlayerReport(commandArgs);
-      return jsonResult(report, report.failed === 0 ? 0 : 1);
+      return runFileSystemCommand(async () => {
+        const report = await basicItemPlayerReport(commandArgs);
+        return jsonResult(report, report.failed === 0 ? 0 : 1);
+      });
     }
     case "write-fixtures": {
       if (file === undefined) break;
-      const report = await writeCanonicalFixtures(file);
-      return jsonResult(report, 0);
+      return runFileSystemCommand(async () => {
+        const report = await writeCanonicalFixtures(file);
+        return jsonResult(report, 0);
+      });
     }
     case "support-matrix":
       return jsonResult(supportMatrixReport(), 0);

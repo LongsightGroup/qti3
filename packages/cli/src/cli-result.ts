@@ -27,8 +27,20 @@ export function errorResult(stderr: string): CliCommandResult {
 /** Translate a Node filesystem failure at the CLI boundary when the cause is classifiable. */
 export function fileSystemErrorResult(cause: unknown): CliCommandResult | undefined {
   if (!isNodeFileSystemError(cause)) return undefined;
-  const message = cause instanceof Error ? cause.message : String(cause);
-  return errorResult(message);
+  return errorResult(cause.message);
+}
+
+/** Run a filesystem-backed command, translating expected system failures while preserving defects. */
+export async function runFileSystemCommand(
+  command: () => Promise<CliCommandResult>,
+): Promise<CliCommandResult> {
+  try {
+    return await command();
+  } catch (cause) {
+    const failure = fileSystemErrorResult(cause);
+    if (failure === undefined) throw cause;
+    return failure;
+  }
 }
 
 /** Render a command result and return its process exit code. */
@@ -45,5 +57,11 @@ export const nodeCliOutput: CliOutput = {
 };
 
 function isNodeFileSystemError(cause: unknown): cause is NodeJS.ErrnoException {
-  return cause instanceof Error && "code" in cause && typeof cause.code === "string";
+  return (
+    cause instanceof Error &&
+    "code" in cause &&
+    typeof cause.code === "string" &&
+    "syscall" in cause &&
+    typeof cause.syscall === "string"
+  );
 }

@@ -13,6 +13,7 @@
     { "path": "./packages/conformance" },
     { "path": "./packages/pnp" },
     { "path": "./packages/a11y" },
-    { "path": "./packages/cli" }
+    { "path": "./packages/cli" },
+    { "path": "./packages/cli/tsconfig.test.json" }
   ]
 }
