@@ -83,46 +83,6 @@ describe("qti3 transcoder evidence matrix", () => {
       });
     }
   });
-
-  describe.each(profiles)("%s", (profile) => {
-    for (const interaction of interactions) {
-      it(`transcodes ${interaction.interactionType}`, () => {
-        const xml = fixtureXml(interaction.interactionType);
-        const result = transcodeQti3Item(
-          { kind: "xml", xml, sourcePath: `${interaction.interactionType}.xml` },
-          { profile },
-        );
-        expect(result.ok).toBe(true);
-        if (!result.ok) return;
-        expect(result.report.mappings.length).toBeGreaterThanOrEqual(1);
-        expect(
-          result.report.mappings.every(
-            (mapping) => mapping.sourceInteraction === interaction.interactionType,
-          ),
-        ).toBe(true);
-        expect(result.assets).toEqual([]);
-        expect(result.xml).not.toContain("qti-portable-custom-interaction");
-        expect(result.diagnostics.some((entry) => entry.severity === "error")).toBe(false);
-        if (profile === "moodle-xml@1") {
-          expect(result.xml).toContain("<quiz>");
-          expect(result.xml).toContain("<question ");
-        } else if (
-          profile === "qti12-standard@1" ||
-          profile === "canvas-classic-quizzes@1" ||
-          profile === "canvas-new-quizzes@1"
-        ) {
-          expect(result.xml).toContain("<questestinterop");
-        } else {
-          expect(result.xml).toContain("<assessmentItem");
-        }
-        expect({
-          diagnostics: result.diagnostics,
-          report: result.report,
-          xml: result.xml,
-        }).toMatchSnapshot();
-      });
-    }
-  });
 });
 
 describe("qti3 transcoder package output", () => {

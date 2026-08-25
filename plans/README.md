@@ -29,7 +29,7 @@ honor its stop conditions, and update its status when complete.
 | 012  | Require qti-any-n min/max attributes with validation                   | P3       | S      | —                 | DONE                            |
 | 013  | Diagnose mixed fielded and unfielded declaration values                | P3       | M      | —                 | DONE                            |
 | 021  | Decide and execute the xmldom 0.9 migration                            | P3       | M      | —                 | REJECTED — safe patch age-gated |
-| 023  | Split transcoder snapshots without reducing output coverage            | P3       | M      | 022               | TODO                            |
+| 023  | Split transcoder snapshots without reducing output coverage            | P3       | M      | 022               | DONE                            |
 | 027  | Test the supported Node version boundaries explicitly                  | P3       | S      | 020, 024          | TODO                            |
 | 028  | Add an EditorConfig matching repository formatting                     | P3       | S      | —                 | TODO                            |
 | 029  | Mark delivered design notes and supersede discredited docs             | P3       | S      | —                 | TODO                            |

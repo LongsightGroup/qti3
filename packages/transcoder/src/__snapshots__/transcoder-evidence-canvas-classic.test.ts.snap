@@ -1,0 +1,1433 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes associate 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.extended-text",
+      "message": "Converted associate to a QTI 1.2 extended-text representation.",
+      "path": "associate.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "associate.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.extended-text",
+    ],
+    "fidelity": "lossy",
+    "identifier": "associate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "associate.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.extended-text",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "associate",
+      },
+    ],
+    "sourcePath": "associate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="associate-reference" title="associate-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D,E</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_associate-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A media-literacy item asks the student to connect a source detail with the reason it is useful.&lt;/p&gt;&lt;p&gt;Choose the two details that belong together in a source-evaluation note.&lt;/p&gt;</mattext></material>
+
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Provide a complete written response. Available task elements: Interview with the park ranger who led the restoration project; Firsthand source for project timeline; Anonymous comment on a neighborhood forum; Decorative map border; Weather forecast for next month.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes choice 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "choice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "response_lid",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "choice",
+      },
+    ],
+    "sourcePath": "choice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="choice-reference" title="choice-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_choice_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D,E</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_choice-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A civics item asks the student to choose the strongest evidence for a local-news claim.&lt;/p&gt;&lt;p&gt;A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?&lt;/p&gt;</mattext></material>
+
+
+      <response_lid ident="response1" rcardinality="Single">
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/html">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/html">The library repainted the study room in a brighter color during spring break.</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/html">Several tutors said they enjoyed helping younger students with homework.</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/html">The tutoring flyers used the same logo as the summer reading program.</mattext></material></response_label><response_label ident="E"><material><mattext texttype="text/html">The library closes one hour earlier on Sundays than it does on Saturdays.</mattext></material></response_label></render_choice>
+      </response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">A</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes custom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "source.interaction.deprecated",
+      "message": "qti-custom-interaction is deprecated. Deprecated in favor of qti-portable-custom-interaction.",
+      "path": "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti12.fallback.extended-text",
+      "message": "Converted custom to a QTI 1.2 extended-text representation.",
+      "path": "custom.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "custom.xml",
+    ],
+    "diagnosticCodes": [
+      "source.interaction.deprecated",
+      "profile.qti12.fallback.extended-text",
+    ],
+    "fidelity": "lossy",
+    "identifier": "custom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "custom.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.extended-text",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "custom",
+      },
+    ],
+    "sourcePath": "custom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="custom-reference" title="Custom reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_custom-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;Use the widget.&lt;/p&gt;</mattext></material>
+
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Provide the requested response in text.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes drawing 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.extended-text",
+      "message": "Converted drawing to a QTI 1.2 extended-text representation.",
+      "path": "drawing.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "drawing.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.extended-text",
+    ],
+    "fidelity": "lossy",
+    "identifier": "drawing-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "drawing.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.extended-text",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "drawing",
+      },
+    ],
+    "sourcePath": "drawing.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="drawing-reference" title="drawing-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_drawing-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A science item asks the student to annotate a field-study workflow diagram.&lt;/p&gt;&lt;p&gt;Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Describe the response you would draw.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes endAttempt 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.extended-text",
+      "message": "Converted endAttempt to a QTI 1.2 extended-text representation.",
+      "path": "endAttempt.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "endAttempt.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.extended-text",
+    ],
+    "fidelity": "lossy",
+    "identifier": "endAttempt-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "endAttempt.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.extended-text",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "endAttempt",
+      },
+    ],
+    "sourcePath": "endAttempt.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="endAttempt-reference" title="endAttempt-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_endAttempt-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;</mattext></material>
+
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Explain whether the attempt should end and why.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes extendedText 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "extendedText-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "response_str",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "extendedText",
+      },
+    ],
+    "sourcePath": "extendedText.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="extendedText-reference" title="extendedText-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_extendedText-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A constructed-response item asks for a recommendation based on garden moisture data.&lt;/p&gt;&lt;p&gt;Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.&lt;/p&gt;</mattext></material>
+
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain"></mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes gapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices with equivalent deterministic scoring.",
+      "path": "gapMatch.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "gapMatch.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "gapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "gapMatch.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.choice",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "gapMatch",
+      },
+    ],
+    "sourcePath": "gapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="gapMatch-reference" title="gapMatch-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_answers_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D,G1,G2</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_gapMatch-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A science vocabulary item asks the student to complete a field-notes sentence from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-notes sentence using the word bank.&lt;/p&gt;</mattext></material>
+
+
+      <response_lid ident="response1" rcardinality="Multiple"><material><mattext texttype="text/plain">Select the correct relationships.</mattext></material><render_choice shuffle="No"><response_label ident="PAIR_A_G1"><material><mattext texttype="text/plain">evidence — G1</mattext></material></response_label><response_label ident="PAIR_A_G2"><material><mattext texttype="text/plain">evidence — G2</mattext></material></response_label><response_label ident="PAIR_B_G1"><material><mattext texttype="text/plain">claim — G1</mattext></material></response_label><response_label ident="PAIR_B_G2"><material><mattext texttype="text/plain">claim — G2</mattext></material></response_label><response_label ident="PAIR_C_G1"><material><mattext texttype="text/plain">opinion — G1</mattext></material></response_label><response_label ident="PAIR_C_G2"><material><mattext texttype="text/plain">opinion — G2</mattext></material></response_label><response_label ident="PAIR_D_G1"><material><mattext texttype="text/plain">caption — G1</mattext></material></response_label><response_label ident="PAIR_D_G2"><material><mattext texttype="text/plain">caption — G2</mattext></material></response_label></render_choice></response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><and><varequal respident="response1">PAIR_A_G1</varequal><varequal respident="response1">PAIR_B_G2</varequal><not><varequal respident="response1">PAIR_A_G2</varequal></not><not><varequal respident="response1">PAIR_B_G1</varequal></not><not><varequal respident="response1">PAIR_C_G1</varequal></not><not><varequal respident="response1">PAIR_C_G2</varequal></not><not><varequal respident="response1">PAIR_D_G1</varequal></not><not><varequal respident="response1">PAIR_D_G2</varequal></not></and></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes graphicAssociate 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices with equivalent deterministic scoring.",
+      "path": "graphicAssociate.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "graphicAssociate.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicAssociate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "graphicAssociate.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.choice",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicAssociate",
+      },
+    ],
+    "sourcePath": "graphicAssociate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="graphicAssociate-reference" title="graphicAssociate-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_answers_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D,E</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_graphicAssociate-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to connect related parts of a field-study workflow.&lt;/p&gt;&lt;p&gt;Connect the two workflow regions that belong together: planning the route should be paired with collecting water data, and analyzing results should be paired with reporting recommendations.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="hotspot-flow-unlabeled.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_lid ident="response1" rcardinality="Multiple"><material><mattext texttype="text/plain">Select the correct relationships.</mattext></material><render_choice shuffle="No"><response_label ident="PAIR_A_A"><material><mattext texttype="text/plain">Plan sampling route — Plan sampling route</mattext></material></response_label><response_label ident="PAIR_A_B"><material><mattext texttype="text/plain">Plan sampling route — Collect water data</mattext></material></response_label><response_label ident="PAIR_A_C"><material><mattext texttype="text/plain">Plan sampling route — Analyze results</mattext></material></response_label><response_label ident="PAIR_A_D"><material><mattext texttype="text/plain">Plan sampling route — Report recommendations</mattext></material></response_label><response_label ident="PAIR_A_E"><material><mattext texttype="text/plain">Plan sampling route — Community meeting</mattext></material></response_label><response_label ident="PAIR_B_A"><material><mattext texttype="text/plain">Collect water data — Plan sampling route</mattext></material></response_label><response_label ident="PAIR_B_B"><material><mattext texttype="text/plain">Collect water data — Collect water data</mattext></material></response_label><response_label ident="PAIR_B_C"><material><mattext texttype="text/plain">Collect water data — Analyze results</mattext></material></response_label><response_label ident="PAIR_B_D"><material><mattext texttype="text/plain">Collect water data — Report recommendations</mattext></material></response_label><response_label ident="PAIR_B_E"><material><mattext texttype="text/plain">Collect water data — Community meeting</mattext></material></response_label><response_label ident="PAIR_C_A"><material><mattext texttype="text/plain">Analyze results — Plan sampling route</mattext></material></response_label><response_label ident="PAIR_C_B"><material><mattext texttype="text/plain">Analyze results — Collect water data</mattext></material></response_label><response_label ident="PAIR_C_C"><material><mattext texttype="text/plain">Analyze results — Analyze results</mattext></material></response_label><response_label ident="PAIR_C_D"><material><mattext texttype="text/plain">Analyze results — Report recommendations</mattext></material></response_label><response_label ident="PAIR_C_E"><material><mattext texttype="text/plain">Analyze results — Community meeting</mattext></material></response_label><response_label ident="PAIR_D_A"><material><mattext texttype="text/plain">Report recommendations — Plan sampling route</mattext></material></response_label><response_label ident="PAIR_D_B"><material><mattext texttype="text/plain">Report recommendations — Collect water data</mattext></material></response_label><response_label ident="PAIR_D_C"><material><mattext texttype="text/plain">Report recommendations — Analyze results</mattext></material></response_label><response_label ident="PAIR_D_D"><material><mattext texttype="text/plain">Report recommendations — Report recommendations</mattext></material></response_label><response_label ident="PAIR_D_E"><material><mattext texttype="text/plain">Report recommendations — Community meeting</mattext></material></response_label><response_label ident="PAIR_E_A"><material><mattext texttype="text/plain">Community meeting — Plan sampling route</mattext></material></response_label><response_label ident="PAIR_E_B"><material><mattext texttype="text/plain">Community meeting — Collect water data</mattext></material></response_label><response_label ident="PAIR_E_C"><material><mattext texttype="text/plain">Community meeting — Analyze results</mattext></material></response_label><response_label ident="PAIR_E_D"><material><mattext texttype="text/plain">Community meeting — Report recommendations</mattext></material></response_label><response_label ident="PAIR_E_E"><material><mattext texttype="text/plain">Community meeting — Community meeting</mattext></material></response_label></render_choice></response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><and><varequal respident="response1">PAIR_A_B</varequal><varequal respident="response1">PAIR_C_D</varequal><not><varequal respident="response1">PAIR_A_A</varequal></not><not><varequal respident="response1">PAIR_A_C</varequal></not><not><varequal respident="response1">PAIR_A_D</varequal></not><not><varequal respident="response1">PAIR_A_E</varequal></not><not><varequal respident="response1">PAIR_B_A</varequal></not><not><varequal respident="response1">PAIR_B_B</varequal></not><not><varequal respident="response1">PAIR_B_C</varequal></not><not><varequal respident="response1">PAIR_B_D</varequal></not><not><varequal respident="response1">PAIR_B_E</varequal></not><not><varequal respident="response1">PAIR_C_A</varequal></not><not><varequal respident="response1">PAIR_C_B</varequal></not><not><varequal respident="response1">PAIR_C_C</varequal></not><not><varequal respident="response1">PAIR_C_E</varequal></not><not><varequal respident="response1">PAIR_D_A</varequal></not><not><varequal respident="response1">PAIR_D_B</varequal></not><not><varequal respident="response1">PAIR_D_C</varequal></not><not><varequal respident="response1">PAIR_D_D</varequal></not><not><varequal respident="response1">PAIR_D_E</varequal></not><not><varequal respident="response1">PAIR_E_A</varequal></not><not><varequal respident="response1">PAIR_E_B</varequal></not><not><varequal respident="response1">PAIR_E_C</varequal></not><not><varequal respident="response1">PAIR_E_D</varequal></not><not><varequal respident="response1">PAIR_E_E</varequal></not></and></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes graphicGapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices with equivalent deterministic scoring.",
+      "path": "graphicGapMatch.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "graphicGapMatch.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicGapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "graphicGapMatch.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.choice",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicGapMatch",
+      },
+    ],
+    "sourcePath": "graphicGapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="graphicGapMatch-reference" title="graphicGapMatch-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_answers_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D,G1,G2</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_graphicGapMatch-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="hotspot-flow-unlabeled.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_lid ident="response1" rcardinality="Multiple"><material><mattext texttype="text/plain">Select the correct relationships.</mattext></material><render_choice shuffle="No"><response_label ident="PAIR_A_G1"><material><mattext texttype="text/plain">Plan route — G1</mattext></material></response_label><response_label ident="PAIR_A_G2"><material><mattext texttype="text/plain">Plan route — G2</mattext></material></response_label><response_label ident="PAIR_B_G1"><material><mattext texttype="text/plain">Collect data — G1</mattext></material></response_label><response_label ident="PAIR_B_G2"><material><mattext texttype="text/plain">Collect data — G2</mattext></material></response_label><response_label ident="PAIR_C_G1"><material><mattext texttype="text/plain">Analyze results — G1</mattext></material></response_label><response_label ident="PAIR_C_G2"><material><mattext texttype="text/plain">Analyze results — G2</mattext></material></response_label><response_label ident="PAIR_D_G1"><material><mattext texttype="text/plain">Hold celebration — G1</mattext></material></response_label><response_label ident="PAIR_D_G2"><material><mattext texttype="text/plain">Hold celebration — G2</mattext></material></response_label></render_choice></response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><and><varequal respident="response1">PAIR_A_G1</varequal><varequal respident="response1">PAIR_B_G2</varequal><not><varequal respident="response1">PAIR_A_G2</varequal></not><not><varequal respident="response1">PAIR_B_G1</varequal></not><not><varequal respident="response1">PAIR_C_G1</varequal></not><not><varequal respident="response1">PAIR_C_G2</varequal></not><not><varequal respident="response1">PAIR_D_G1</varequal></not><not><varequal respident="response1">PAIR_D_G2</varequal></not></and></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes graphicOrder 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.canvas.classic.sequence_matching",
+      "message": "Converted the sequencing task to a Canvas Classic matching question with one row per position.",
+      "path": "graphicOrder.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "graphicOrder.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.canvas.classic.sequence_matching",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicOrder-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "graphicOrder.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.canvas.classic.sequence_matching",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "matching",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicOrder",
+      },
+    ],
+    "sourcePath": "graphicOrder.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="graphicOrder-reference" title="graphicOrder-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>matching_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_graphicOrder-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A visual sequencing item asks the student to order field-study workflow regions.&lt;/p&gt;&lt;p&gt;Select the workflow regions in the order a field team should complete them: plan the sampling route, collect data, analyze the results, then write the recommendation report.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="hotspot-flow-unlabeled.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_lid ident="response_POS_1" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 1</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Plan sampling route</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Collect water data</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Report recommendations</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Analyze results</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_POS_2" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 2</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Plan sampling route</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Collect water data</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Report recommendations</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Analyze results</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_POS_3" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 3</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Plan sampling route</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Collect water data</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Report recommendations</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Analyze results</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_POS_4" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 4</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Plan sampling route</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Collect water data</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Report recommendations</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Analyze results</mattext></material></response_label></render_choice>
+      </response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="Yes"><conditionvar><varequal respident="response_POS_1">A</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_POS_2">B</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_POS_3">D</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_POS_4">C</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes hotspot 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "hotspot-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "response_lid",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "hotspot",
+      },
+    ],
+    "sourcePath": "hotspot.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="hotspot-reference" title="hotspot-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_choice_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_hotspot-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to select the workflow step where stream data are collected.&lt;/p&gt;&lt;p&gt;The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_xy ident="response1" rcardinality="Single" rtiming="No"><render_hotspot><material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material><response_label ident="response1" rarea="Rectangle">184,52,296,124</response_label></render_hotspot></response_xy>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varinside respident="response1" areatype="Rectangle">184,52,296,124</varinside></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes hottext 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted hottext to a QTI 1.2 choice representation.",
+      "path": "hottext.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "hottext.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "hottext-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "hottext.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.choice",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "hottext",
+      },
+    ],
+    "sourcePath": "hottext.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="hottext-reference" title="hottext-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_choice_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_hottext-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A reading item asks the student to select the author's claim inside a short paragraph.&lt;/p&gt;&lt;p&gt;Read the paragraph and select the phrase that best states the author's claim.&lt;/p&gt;</mattext></material>
+
+
+      <response_lid ident="response1" rcardinality="Single">
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/html">A small green space would give nearby residents a shaded place to gather</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/html">The lot is 0.4 acres</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/html">The planning department posted the proposal last Tuesday</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/html">Two benches are stored in a public works warehouse</mattext></material></response_label></render_choice>
+      </response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">A</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes inlineChoice 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted inlineChoice to a QTI 1.2 choice representation.",
+      "path": "inlineChoice.xml",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted inlineChoice to a QTI 1.2 choice representation.",
+      "path": "inlineChoice.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "inlineChoice.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.choice",
+      "profile.qti12.fallback.choice",
+    ],
+    "fidelity": "lossy",
+    "identifier": "inlineChoice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "inlineChoice.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.choice",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "inlineChoice",
+      },
+      {
+        "affectedPaths": [
+          "inlineChoice.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.choice",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
+        "fidelity": "lossy",
+        "index": 1,
+        "scoring": "automatic",
+        "sourceInteraction": "inlineChoice",
+      },
+    ],
+    "sourcePath": "inlineChoice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="inlineChoice-reference" title="inlineChoice-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_choice_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_inlineChoice-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;Read the sentence from a school-news article and choose the words that make the account accurate.&lt;/p&gt;&lt;p&gt;After a three-week pilot, the cafeteria team reported that the reusable tray program , and the strongest evidence was the .&lt;/p&gt;</mattext></material>
+
+
+      <response_lid ident="response1" rcardinality="Single">
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/html">reduced lunchroom waste</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/html">increased disposable packaging</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/html">left trash levels unchanged</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/html">stopped food donations</mattext></material></response_label></render_choice>
+      </response_lid>
+      <response_lid ident="response2" rcardinality="Single">
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/html">number of students who bought lunch</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/html">drop in bags collected after lunch</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/html">color of the new trays</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/html">menu posted on Monday</mattext></material></response_label></render_choice>
+      </response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">A</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+      <respcondition continue="No"><conditionvar><varequal respident="response2">B</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes match 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "match-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "response_lid",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "match",
+      },
+    ],
+    "sourcePath": "match.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="match-reference" title="match-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>matching_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>G1,G2,G3,G4</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_match-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A garden-data item asks the student to match observations with reasonable interpretations.&lt;/p&gt;&lt;p&gt;Match each observation from a community garden study with the most reasonable interpretation.&lt;/p&gt;</mattext></material>
+
+
+      <response_lid ident="response_A" rcardinality="Single">
+        <material><mattext texttype="text/plain">Mulched beds stayed moist two days longer after watering.</mattext></material>
+        <render_choice shuffle="No"><response_label ident="G1"><material><mattext texttype="text/plain">Mulch helped reduce water loss from the soil.</mattext></material></response_label><response_label ident="G2"><material><mattext texttype="text/plain">Bare soil may need more frequent weeding.</mattext></material></response_label><response_label ident="G3"><material><mattext texttype="text/plain">Light exposure was not identical across all beds.</mattext></material></response_label><response_label ident="G4"><material><mattext texttype="text/plain">This maintenance detail does not explain plant growth.</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_B" rcardinality="Single">
+        <material><mattext texttype="text/plain">Uncovered beds had more weeds by the third week.</mattext></material>
+        <render_choice shuffle="No"><response_label ident="G1"><material><mattext texttype="text/plain">Mulch helped reduce water loss from the soil.</mattext></material></response_label><response_label ident="G2"><material><mattext texttype="text/plain">Bare soil may need more frequent weeding.</mattext></material></response_label><response_label ident="G3"><material><mattext texttype="text/plain">Light exposure was not identical across all beds.</mattext></material></response_label><response_label ident="G4"><material><mattext texttype="text/plain">This maintenance detail does not explain plant growth.</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_C" rcardinality="Single">
+        <material><mattext texttype="text/plain">Beds near the fence received less afternoon sun.</mattext></material>
+        <render_choice shuffle="No"><response_label ident="G1"><material><mattext texttype="text/plain">Mulch helped reduce water loss from the soil.</mattext></material></response_label><response_label ident="G2"><material><mattext texttype="text/plain">Bare soil may need more frequent weeding.</mattext></material></response_label><response_label ident="G3"><material><mattext texttype="text/plain">Light exposure was not identical across all beds.</mattext></material></response_label><response_label ident="G4"><material><mattext texttype="text/plain">This maintenance detail does not explain plant growth.</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_D" rcardinality="Single">
+        <material><mattext texttype="text/plain">The garden sign was repainted on Saturday.</mattext></material>
+        <render_choice shuffle="No"><response_label ident="G1"><material><mattext texttype="text/plain">Mulch helped reduce water loss from the soil.</mattext></material></response_label><response_label ident="G2"><material><mattext texttype="text/plain">Bare soil may need more frequent weeding.</mattext></material></response_label><response_label ident="G3"><material><mattext texttype="text/plain">Light exposure was not identical across all beds.</mattext></material></response_label><response_label ident="G4"><material><mattext texttype="text/plain">This maintenance detail does not explain plant growth.</mattext></material></response_label></render_choice>
+      </response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="Yes"><conditionvar><varequal respident="response_A">G1</varequal></conditionvar><setvar action="Add" varname="SCORE">50</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_B">G2</varequal></conditionvar><setvar action="Add" varname="SCORE">50</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes media 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.extended-text",
+      "message": "Converted media to a QTI 1.2 extended-text representation.",
+      "path": "media.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "media.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.extended-text",
+    ],
+    "fidelity": "lossy",
+    "identifier": "media-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "media.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.extended-text",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "media",
+      },
+    ],
+    "sourcePath": "media.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="media-reference" title="media-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_media-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A listening item renders a town-hall audio excerpt through native browser media controls.&lt;/p&gt;&lt;p&gt;Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.&lt;/p&gt;</mattext></material>
+      <material><mataudio uri="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" audiotype="audio/wav" label="Silent town-hall audio excerpt"></mataudio></material>
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Describe your response after reviewing the media.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes order 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.canvas.classic.sequence_matching",
+      "message": "Converted the sequencing task to a Canvas Classic matching question with one row per position.",
+      "path": "order.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "order.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.canvas.classic.sequence_matching",
+    ],
+    "fidelity": "lossy",
+    "identifier": "order-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "order.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.canvas.classic.sequence_matching",
+        ],
+        "emittedInteraction": "response_lid",
+        "fallback": "matching",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "order",
+      },
+    ],
+    "sourcePath": "order.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="order-reference" title="order-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>matching_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_order-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A science-planning item asks the student to arrange investigation steps in order.&lt;/p&gt;&lt;p&gt;A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.&lt;/p&gt;</mattext></material>
+
+
+      <response_lid ident="response_POS_1" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 1</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Set up identical trays with the same soil, seed type, and water schedule.</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Place one tray in full light and one tray in reduced light for the same number of days.</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Measure and compare seedling height at the end of the trial.</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Use the measurements to write a conclusion about how light affected growth.</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_POS_2" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 2</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Set up identical trays with the same soil, seed type, and water schedule.</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Place one tray in full light and one tray in reduced light for the same number of days.</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Measure and compare seedling height at the end of the trial.</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Use the measurements to write a conclusion about how light affected growth.</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_POS_3" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 3</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Set up identical trays with the same soil, seed type, and water schedule.</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Place one tray in full light and one tray in reduced light for the same number of days.</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Measure and compare seedling height at the end of the trial.</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Use the measurements to write a conclusion about how light affected growth.</mattext></material></response_label></render_choice>
+      </response_lid><response_lid ident="response_POS_4" rcardinality="Single">
+        <material><mattext texttype="text/plain">Step 4</mattext></material>
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/plain">Set up identical trays with the same soil, seed type, and water schedule.</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/plain">Place one tray in full light and one tray in reduced light for the same number of days.</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/plain">Measure and compare seedling height at the end of the trial.</mattext></material></response_label><response_label ident="D"><material><mattext texttype="text/plain">Use the measurements to write a conclusion about how light affected growth.</mattext></material></response_label></render_choice>
+      </response_lid>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="Yes"><conditionvar><varequal respident="response_POS_1">A</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_POS_2">B</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_POS_3">C</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_POS_4">D</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes portableCustom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.extended-text",
+      "message": "Converted portableCustom to a QTI 1.2 extended-text representation.",
+      "path": "portableCustom.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "portableCustom.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.extended-text",
+    ],
+    "fidelity": "lossy",
+    "identifier": "portableCustom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "portableCustom.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.extended-text",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "portableCustom",
+      },
+    ],
+    "sourcePath": "portableCustom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="portableCustom-reference" title="portableCustom-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_portableCustom-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A graphing-item placeholder exercises a custom interaction while presenting sample-data content.&lt;/p&gt;&lt;p&gt;Use the custom graphing tool to choose the claim best supported by the sample data. The fixture module returns A for the supported claim.&lt;/p&gt;</mattext></material>
+      <material><matapplication uri="modules/module_resolution.js" apptype="application/javascript" label="Custom interaction dependency"></matapplication></material>
+      <material><matapplication uri="modules/fixture-portable-custom" apptype="application/octet-stream" label="Custom interaction dependency"></matapplication></material>
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Provide the requested response in text.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes positionObject 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.text-entry",
+      "message": "Converted positionObject to a QTI 1.2 text-entry representation.",
+      "path": "positionObject.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "positionObject.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.text-entry",
+    ],
+    "fidelity": "lossy",
+    "identifier": "positionObject-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "positionObject.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.text-entry",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "positionObject",
+      },
+    ],
+    "sourcePath": "positionObject.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="positionObject-reference" title="positionObject-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>short_answer_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_positionObject-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
+      <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Enter the response as x,y coordinates.</mattext></material><render_fib fibtype="String" prompt="Box" rows="1" columns="30"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">240,88</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes selectPoint 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.text-entry",
+      "message": "Converted selectPoint to a QTI 1.2 text-entry representation.",
+      "path": "selectPoint.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "selectPoint.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.text-entry",
+    ],
+    "fidelity": "lossy",
+    "identifier": "selectPoint-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "selectPoint.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.text-entry",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "selectPoint",
+      },
+    ],
+    "sourcePath": "selectPoint.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="selectPoint-reference" title="selectPoint-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>short_answer_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_selectPoint-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A coordinate item asks the student to mark the center of the data-collection workflow step.&lt;/p&gt;&lt;p&gt;Mark the center of the Collect water data step, where students record the stream measurements.&lt;/p&gt;</mattext></material>
+      <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Enter the response as x,y coordinates.</mattext></material><render_fib fibtype="String" prompt="Box" rows="1" columns="30"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">240,88</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes slider 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti12.fallback.text-entry",
+      "message": "Converted slider to a QTI 1.2 text-entry representation.",
+      "path": "slider.xml",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "slider.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.qti12.fallback.text-entry",
+    ],
+    "fidelity": "lossy",
+    "identifier": "slider-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "slider.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.fallback.text-entry",
+        ],
+        "emittedInteraction": "response_str",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "slider",
+      },
+    ],
+    "sourcePath": "slider.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="slider-reference" title="slider-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>numerical_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_slider-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A timeline item asks the student to choose the opening year of a restored rail-trail.&lt;/p&gt;&lt;p&gt;A community archive asks students to place the opening year of the restored rail-trail on a timeline. The project opened in 2024 after fourteen years of planning. Select the opening year.&lt;/p&gt;</mattext></material>
+
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Enter a value within the stated range.</mattext></material><render_fib fibtype="Decimal" prompt="Box" rows="1" columns="30"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">2024</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes textEntry 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "textEntry-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "response_str",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "textEntry",
+      },
+    ],
+    "sourcePath": "textEntry.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="textEntry-reference" title="textEntry-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>short_answer_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_textEntry-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A geography vocabulary item asks the student to type the name of a coastal feature.&lt;/p&gt;&lt;p&gt;A river meets the ocean in a partly enclosed area where fresh water and salt water mix. Type the vocabulary word for this coastal feature: .&lt;/p&gt;</mattext></material>
+
+
+      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain"></mattext></material><render_fib fibtype="String" prompt="Box" rows="1" columns="30"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">estuary</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;
+
+exports[`canvas-classic-quizzes@1 evidence > transcodes upload 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.canvas.classic.upload",
+      "message": "Mapped the QTI upload task to a Canvas Classic file-upload question.",
+      "path": "upload.xml",
+      "severity": "info",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "upload.xml",
+    ],
+    "diagnosticCodes": [
+      "profile.canvas.classic.upload",
+    ],
+    "fidelity": "normalized",
+    "identifier": "upload-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "upload.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.canvas.classic.upload",
+        ],
+        "emittedInteraction": "presentation",
+        "fallback": undefined,
+        "fidelity": "normalized",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "upload",
+      },
+    ],
+    "sourcePath": "upload.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/ims_qtiasiv1p2 http://www.imsglobal.org/xsd/ims_qtiasiv1p2.xsd">
+  <item ident="upload-reference" title="upload-reference">
+    <itemmetadata>
+      <qtimetadata>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>file_upload_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_upload-reference</fieldentry></qtimetadatafield>
+      </qtimetadata>
+    </itemmetadata>
+    <presentation>
+      <material><mattext texttype="text/html">&lt;p&gt;A constructed-response item asks the student to upload a field-notes text file.&lt;/p&gt;&lt;p&gt;Upload a text file named upload.txt containing your one-page field notes from the water-quality investigation.&lt;/p&gt;</mattext></material>
+
+
+
+    </presentation>
+    <resprocessing>
+      <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+    </resprocessing>
+  </item>
+</questestinterop>",
+}
+`;

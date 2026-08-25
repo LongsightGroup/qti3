@@ -1,0 +1,824 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`qti22-standard@1 evidence > transcodes associate 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "associate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "associateInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "associate",
+      },
+    ],
+    "sourcePath": "associate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="associate-reference" title="associate-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="pair"><correctResponse><value>A B</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A media-literacy item asks the student to connect a source detail with the reason it is useful.</p><associateInteraction responseIdentifier="RESPONSE"><prompt>Choose the two details that belong together in a source-evaluation note.</prompt><simpleAssociableChoice identifier="A" matchMax="1">Interview with the park ranger who led the restoration project</simpleAssociableChoice><simpleAssociableChoice identifier="B" matchMax="1">Firsthand source for project timeline</simpleAssociableChoice><simpleAssociableChoice identifier="C" matchMax="1">Anonymous comment on a neighborhood forum</simpleAssociableChoice><simpleAssociableChoice identifier="D" matchMax="1">Decorative map border</simpleAssociableChoice><simpleAssociableChoice identifier="E" matchMax="1">Weather forecast for next month</simpleAssociableChoice></associateInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes choice 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "choice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "choiceInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "choice",
+      },
+    ],
+    "sourcePath": "choice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="choice-reference" title="choice-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes custom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "source.interaction.deprecated",
+      "message": "qti-custom-interaction is deprecated. Deprecated in favor of qti-portable-custom-interaction.",
+      "path": "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti2.custom.preserved",
+      "message": "Preserved custom interaction configuration and markup in a foreign-namespace payload.",
+      "path": "/itemBody/interactions/0",
+      "severity": "info",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "/itemBody/interactions/0",
+    ],
+    "diagnosticCodes": [
+      "source.interaction.deprecated",
+      "profile.qti2.custom.preserved",
+    ],
+    "fidelity": "lossy",
+    "identifier": "custom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.qti2.custom.preserved",
+        ],
+        "emittedInteraction": "customInteraction",
+        "fallback": undefined,
+        "fidelity": "normalized",
+        "index": 0,
+        "scoring": "unscored",
+        "sourceInteraction": "custom",
+      },
+    ],
+    "sourcePath": "custom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="custom-reference" title="Custom reference" adaptive="false" timeDependent="false" xml:lang="en-US">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>Use the widget.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{"sourceType":"custom","dataAttributes":{},"attributes":{"response-identifier":"RESPONSE"},"markup":"\\n      &lt;div class=\\"widget\\"&gt;Ready&lt;/div&gt;\\n    "}</qti3t:source></customInteraction></itemBody>
+  <responseProcessing>
+  <setOutcomeValue identifier="SCORE">
+    <baseValue baseType="float">0</baseValue>
+  </setOutcomeValue>
+</responseProcessing>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes drawing 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "drawing-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "drawingInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "unscored",
+        "sourceInteraction": "drawing",
+      },
+    ],
+    "sourcePath": "drawing.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="drawing-reference" title="drawing-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="file"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A science item asks the student to annotate a field-study workflow diagram.</p><drawingInteraction responseIdentifier="RESPONSE"><prompt>Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.</prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></drawingInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes endAttempt 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "endAttempt-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "endAttemptInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "endAttempt",
+      },
+    ],
+    "sourcePath": "endAttempt.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="boolean"><correctResponse><value>true</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><endAttemptInteraction responseIdentifier="RESPONSE" title="Show planning hint"></endAttemptInteraction></p></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes extendedText 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "extendedText-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "extendedText",
+      },
+    ],
+    "sourcePath": "extendedText.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="extendedText-reference" title="extendedText-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A constructed-response item asks for a recommendation based on garden moisture data.</p><extendedTextInteraction responseIdentifier="RESPONSE" expectedLines="6"><prompt>Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.</prompt></extendedTextInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes gapMatch 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "gapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "gapMatchInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "gapMatch",
+      },
+    ],
+    "sourcePath": "gapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="gapMatch-reference" title="gapMatch-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value><value>B G2</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report's <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes graphicAssociate 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "graphicAssociate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "graphicAssociateInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicAssociate",
+      },
+    ],
+    "sourcePath": "graphicAssociate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="graphicAssociate-reference" title="graphicAssociate-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="pair"><correctResponse><value>A B</value><value>C D</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram item asks the student to connect related parts of a field-study workflow.</p><graphicAssociateInteraction responseIdentifier="RESPONSE"><prompt>Connect the two workflow regions that belong together: planning the route should be paired with collecting water data, and analyzing results should be paired with reporting recommendations.</prompt><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object><associableHotspot identifier="A" hotspotLabel="Plan sampling route" shape="rect" coords="24,52,136,124" matchMax="1"></associableHotspot><associableHotspot identifier="B" hotspotLabel="Collect water data" shape="rect" coords="184,52,296,124" matchMax="1"></associableHotspot><associableHotspot identifier="C" hotspotLabel="Analyze results" shape="rect" coords="344,52,456,124" matchMax="1"></associableHotspot><associableHotspot identifier="D" hotspotLabel="Report recommendations" shape="rect" coords="184,178,296,250" matchMax="1"></associableHotspot><associableHotspot identifier="E" hotspotLabel="Community meeting" shape="circle" coords="420,214,28" matchMax="1"></associableHotspot></graphicAssociateInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes graphicGapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti2.graphic_gap_match.textual_fallback",
+      "message": "Mapped graphic gap-match content without complete image geometry to a textual gap-match interaction.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+    ],
+    "diagnosticCodes": [
+      "profile.qti2.graphic_gap_match.textual_fallback",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicGapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.qti2.graphic_gap_match.textual_fallback",
+        ],
+        "emittedInteraction": "gapMatchInteraction",
+        "fallback": undefined,
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicGapMatch",
+      },
+    ],
+    "sourcePath": "graphicGapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="graphicGapMatch-reference" title="graphicGapMatch-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value><value>B G2</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram-labeling item asks the student to complete two workflow labels from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-study workflow labels.</prompt><gapText identifier="A" matchMax="1">Plan route</gapText><gapText identifier="B" matchMax="1">Collect data</gapText><gapText identifier="C" matchMax="1">Analyze results</gapText><gapText identifier="D" matchMax="1">Hold celebration</gapText><div><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object></div><p>The first step is to <gap identifier="G1"></gap> before the class can <gap identifier="G2"></gap> at the stream. </p></gapMatchInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes graphicOrder 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "graphicOrder-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "graphicOrderInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "graphicOrder",
+      },
+    ],
+    "sourcePath": "graphicOrder.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="graphicOrder-reference" title="graphicOrder-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="ordered" baseType="identifier"><correctResponse><value>A</value><value>B</value><value>D</value><value>C</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A visual sequencing item asks the student to order field-study workflow regions.</p><graphicOrderInteraction responseIdentifier="RESPONSE"><prompt>Select the workflow regions in the order a field team should complete them: plan the sampling route, collect data, analyze the results, then write the recommendation report.</prompt><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object><hotspotChoice identifier="A" hotspotLabel="Plan sampling route" shape="rect" coords="24,52,136,124"></hotspotChoice><hotspotChoice identifier="B" hotspotLabel="Collect water data" shape="rect" coords="184,52,296,124"></hotspotChoice><hotspotChoice identifier="C" hotspotLabel="Report recommendations" shape="rect" coords="184,178,296,250"></hotspotChoice><hotspotChoice identifier="D" hotspotLabel="Analyze results" shape="rect" coords="344,52,456,124"></hotspotChoice></graphicOrderInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes hotspot 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "hotspot-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "hotspotInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "hotspot",
+      },
+    ],
+    "sourcePath": "hotspot.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="hotspot-reference" title="hotspot-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram item asks the student to select the workflow step where stream data are collected.</p><hotspotInteraction responseIdentifier="RESPONSE"><prompt>The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.</prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object><hotspotChoice identifier="A" shape="rect" coords="184,52,296,124"></hotspotChoice><hotspotChoice identifier="B" shape="rect" coords="24,52,136,124"></hotspotChoice><hotspotChoice identifier="C" shape="rect" coords="344,52,456,124"></hotspotChoice><hotspotChoice identifier="D" shape="rect" coords="184,178,296,250"></hotspotChoice></hotspotInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes hottext 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "hottext-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "hottextInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "hottext",
+      },
+    ],
+    "sourcePath": "hottext.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="hottext-reference" title="hottext-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A reading item asks the student to select the author's claim inside a short paragraph.</p><hottextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author's claim.</prompt><p>The city should convert the vacant lot on Pine Street into a pocket park. <hottext identifier="A">A small green space would give nearby residents a shaded place to gather</hottext>, and volunteers have already offered to maintain native plants. <hottext identifier="B">The lot is 0.4 acres</hottext> and sits next to a bus stop. <hottext identifier="C">The planning department posted the proposal last Tuesday</hottext>. <hottext identifier="D">Two benches are stored in a public works warehouse</hottext>. </p></hottextInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes inlineChoice 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "inlineChoice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "inlineChoiceInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "inlineChoice",
+      },
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "inlineChoiceInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 1,
+        "scoring": "automatic",
+        "sourceInteraction": "inlineChoice",
+      },
+    ],
+    "sourcePath": "inlineChoice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="inlineChoice-reference" title="inlineChoice-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE_DECLARATION" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <responseDeclaration identifier="RESPONSE_OUTCOME" cardinality="single" baseType="identifier"><correctResponse><value>B</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>Read the sentence from a school-news article and choose the words that make the account accurate.</p><p>After a three-week pilot, the cafeteria team reported that the reusable tray program <inlineChoiceInteraction responseIdentifier="RESPONSE_DECLARATION"><inlineChoice identifier="A">reduced lunchroom waste</inlineChoice><inlineChoice identifier="B">increased disposable packaging</inlineChoice><inlineChoice identifier="C">left trash levels unchanged</inlineChoice><inlineChoice identifier="D">stopped food donations</inlineChoice></inlineChoiceInteraction>, and the strongest evidence was the <inlineChoiceInteraction responseIdentifier="RESPONSE_OUTCOME"><inlineChoice identifier="A">number of students who bought lunch</inlineChoice><inlineChoice identifier="B">drop in bags collected after lunch</inlineChoice><inlineChoice identifier="C">color of the new trays</inlineChoice><inlineChoice identifier="D">menu posted on Monday</inlineChoice></inlineChoiceInteraction>.</p></itemBody>
+  <responseProcessing>
+  <responseCondition>
+    <responseIf>
+      <match>
+        <variable identifier="RESPONSE_DECLARATION"/>
+        <correct identifier="RESPONSE_DECLARATION"/>
+      </match>
+      <setOutcomeValue identifier="SCORE">
+        <sum>
+          <variable identifier="SCORE"/>
+          <baseValue baseType="float">1</baseValue>
+        </sum>
+      </setOutcomeValue>
+    </responseIf>
+  </responseCondition>
+  <responseCondition>
+    <responseIf>
+      <match>
+        <variable identifier="RESPONSE_OUTCOME"/>
+        <correct identifier="RESPONSE_OUTCOME"/>
+      </match>
+      <setOutcomeValue identifier="SCORE">
+        <sum>
+          <variable identifier="SCORE"/>
+          <baseValue baseType="float">1</baseValue>
+        </sum>
+      </setOutcomeValue>
+    </responseIf>
+  </responseCondition>
+</responseProcessing>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes match 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "match-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "matchInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "match",
+      },
+    ],
+    "sourcePath": "match.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="match-reference" title="match-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value><value>B G2</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A garden-data item asks the student to match observations with reasonable interpretations.</p><matchInteraction responseIdentifier="RESPONSE"><prompt>Match each observation from a community garden study with the most reasonable interpretation.</prompt><simpleMatchSet><simpleAssociableChoice identifier="A" matchMax="1">Mulched beds stayed moist two days longer after watering.</simpleAssociableChoice><simpleAssociableChoice identifier="B" matchMax="1">Uncovered beds had more weeds by the third week.</simpleAssociableChoice><simpleAssociableChoice identifier="C" matchMax="1">Beds near the fence received less afternoon sun.</simpleAssociableChoice><simpleAssociableChoice identifier="D" matchMax="1">The garden sign was repainted on Saturday.</simpleAssociableChoice></simpleMatchSet><simpleMatchSet><simpleAssociableChoice identifier="G1" matchMax="1">Mulch helped reduce water loss from the soil.</simpleAssociableChoice><simpleAssociableChoice identifier="G2" matchMax="1">Bare soil may need more frequent weeding.</simpleAssociableChoice><simpleAssociableChoice identifier="G3" matchMax="1">Light exposure was not identical across all beds.</simpleAssociableChoice><simpleAssociableChoice identifier="G4" matchMax="1">This maintenance detail does not explain plant growth.</simpleAssociableChoice></simpleMatchSet></matchInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes media 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "media-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "mediaInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "media",
+      },
+    ],
+    "sourcePath": "media.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="media-reference" title="media-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="integer"><correctResponse><value>1</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><mediaInteraction responseIdentifier="RESPONSE" autostart="false" minPlays="1"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</prompt><object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object></mediaInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes order 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "order-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "orderInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "order",
+      },
+    ],
+    "sourcePath": "order.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="order-reference" title="order-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="ordered" baseType="identifier"><correctResponse><value>A</value><value>B</value><value>C</value><value>D</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A science-planning item asks the student to arrange investigation steps in order.</p><orderInteraction responseIdentifier="RESPONSE"><prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.</prompt><simpleChoice identifier="A">Set up identical trays with the same soil, seed type, and water schedule.</simpleChoice><simpleChoice identifier="B">Place one tray in full light and one tray in reduced light for the same number of days.</simpleChoice><simpleChoice identifier="C">Measure and compare seedling height at the end of the trial.</simpleChoice><simpleChoice identifier="D">Use the measurements to write a conclusion about how light affected growth.</simpleChoice></orderInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes portableCustom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.qti2.portable_custom.preserved",
+      "message": "Preserved custom interaction configuration and markup in a foreign-namespace payload.",
+      "path": "/itemBody/interactions/0",
+      "severity": "info",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+    ],
+    "diagnosticCodes": [
+      "profile.qti2.portable_custom.preserved",
+    ],
+    "fidelity": "normalized",
+    "identifier": "portableCustom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.qti2.portable_custom.preserved",
+        ],
+        "emittedInteraction": "customInteraction",
+        "fallback": undefined,
+        "fidelity": "normalized",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "portableCustom",
+      },
+    ],
+    "sourcePath": "portableCustom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="portableCustom-reference" title="portableCustom-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p><customInteraction responseIdentifier="RESPONSE"><qti3t:source xmlns:qti3t="urn:longsightgroup:qti3-transcoder:custom:v1" encoding="application/json">{"sourceType":"portableCustom","customInteractionTypeIdentifier":"urn:qti3:fixture:portable-custom","module":"fixture-portable-custom","modules":{"primaryConfiguration":"modules/module_resolution.js","modules":[{"id":"fixture-portable-custom","primaryPath":"modules/fixture-portable-custom","attributes":{"id":"fixture-portable-custom","primary-path":"modules/fixture-portable-custom"}}],"attributes":{"primary-configuration":"modules/module_resolution.js"}},"templateVariables":[],"contextVariables":[],"stylesheets":[],"dataAttributes":{},"attributes":{"response-identifier":"RESPONSE","custom-interaction-type-identifier":"urn:qti3:fixture:portable-custom","module":"fixture-portable-custom"},"markup":"&lt;div class=\\"qti3-fixture-pci-markup\\"&gt;Custom graphing widget placeholder for sample data&lt;/div&gt;"}</qti3t:source></customInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes positionObject 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "positionObject-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "positionObjectInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "positionObject",
+      },
+    ],
+    "sourcePath": "positionObject.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="positionObject-reference" title="positionObject-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="point"><correctResponse><value>240 88</value></correctResponse><areaMapping defaultValue="0"><areaMapEntry shape="circle" coords="240,88,18" mappedValue="1"></areaMapEntry></areaMapping></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><positionObjectStage><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object><positionObjectInteraction responseIdentifier="RESPONSE"><object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object></positionObjectInteraction></positionObjectStage></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/map_response_point"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes selectPoint 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "selectPoint-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "selectPointInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "selectPoint",
+      },
+    ],
+    "sourcePath": "selectPoint.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="selectPoint-reference" title="selectPoint-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="point"><correctResponse><value>240 88</value></correctResponse><areaMapping defaultValue="0"><areaMapEntry shape="circle" coords="240,88,18" mappedValue="1"></areaMapEntry></areaMapping></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A coordinate item asks the student to mark the center of the data-collection workflow step.</p><selectPointInteraction responseIdentifier="RESPONSE"><prompt>Mark the center of the Collect water data step, where students record the stream measurements.</prompt><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></selectPointInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/map_response_point"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes slider 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "slider-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "sliderInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "slider",
+      },
+    ],
+    "sourcePath": "slider.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="slider-reference" title="slider-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="integer"><correctResponse><value>2024</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A timeline item asks the student to choose the opening year of a restored rail-trail.</p><sliderInteraction responseIdentifier="RESPONSE" lowerBound="2010" upperBound="2030" step="1"><prompt>A community archive asks students to place the opening year of the restored rail-trail on a timeline. The project opened in 2024 after fourteen years of planning. Select the opening year.</prompt></sliderInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes textEntry 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "textEntry-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "textEntryInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "textEntry",
+      },
+    ],
+    "sourcePath": "textEntry.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="textEntry-reference" title="textEntry-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>estuary</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A geography vocabulary item asks the student to type the name of a coastal feature.</p><p>A river meets the ocean in a partly enclosed area where fresh water and salt water mix. Type the vocabulary word for this coastal feature: <textEntryInteraction responseIdentifier="RESPONSE" expectedLength="10"></textEntryInteraction>.</p></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`qti22-standard@1 evidence > transcodes upload 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "upload-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "uploadInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "upload",
+      },
+    ],
+    "sourcePath": "upload.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="upload-reference" title="upload-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="file"><correctResponse><value>upload.txt</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A constructed-response item asks the student to upload a field-notes text file.</p><uploadInteraction responseIdentifier="RESPONSE"><prompt>Upload a text file named upload.txt containing your one-page field notes from the water-quality investigation.</prompt></uploadInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;

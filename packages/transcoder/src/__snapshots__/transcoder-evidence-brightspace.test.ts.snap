@@ -1,0 +1,1216 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`brightspace-course-import@1 evidence > transcodes associate 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.associate.manual_fallback",
+      "message": "Converted the associate interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.associate.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "associate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.associate.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "associate",
+      },
+    ],
+    "sourcePath": "associate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="associate-reference" title="associate-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A media-literacy item asks the student to connect a source detail with the reason it is useful.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Choose the two details that belong together in a source-evaluation note.<div><p>Source options:</p><ul><li>Interview with the park ranger who led the restoration project</li><li>Firsthand source for project timeline</li><li>Anonymous comment on a neighborhood forum</li><li>Decorative map border</li><li>Weather forecast for next month</li></ul></div></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes choice 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "choice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "choiceInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "choice",
+      },
+    ],
+    "sourcePath": "choice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="choice-reference" title="choice-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A civics item asks the student to choose the strongest evidence for a local-news claim.</p><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>A local newspaper reports that the library's weekend tutoring program improved attendance. Which detail would best support that claim?</prompt><simpleChoice identifier="A">Attendance records show that average Saturday visits rose from 42 to 68 students after tutoring began.</simpleChoice><simpleChoice identifier="B">The library repainted the study room in a brighter color during spring break.</simpleChoice><simpleChoice identifier="C">Several tutors said they enjoyed helping younger students with homework.</simpleChoice><simpleChoice identifier="D">The tutoring flyers used the same logo as the summer reading program.</simpleChoice><simpleChoice identifier="E">The library closes one hour earlier on Sundays than it does on Saturdays.</simpleChoice></choiceInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes custom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "source.interaction.deprecated",
+      "message": "qti-custom-interaction is deprecated. Deprecated in favor of qti-portable-custom-interaction.",
+      "path": "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.brightspace.custom.manual_fallback",
+      "message": "Converted the custom interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/qti-assessment-item/qti-item-body[1]/qti-custom-interaction[1]",
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "source.interaction.deprecated",
+      "profile.brightspace.custom.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "custom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.custom.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "custom",
+      },
+    ],
+    "sourcePath": "custom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="custom-reference" title="Custom reference" adaptive="false" timeDependent="false" xml:lang="en-US">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>Use the widget.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt><div class="widget">Ready</div></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes drawing 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.drawing.manual_fallback",
+      "message": "Converted the drawing interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.drawing.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "drawing-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.drawing.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "drawing",
+      },
+    ],
+    "sourcePath": "drawing.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="drawing-reference" title="drawing-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A science item asks the student to annotate a field-study workflow diagram.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Annotate the field-study workflow by circling the step where students collect measurements and adding a note about what data should be recorded.<object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.end_attempt.manual_fallback",
+      "message": "Converted the end-attempt interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.end_attempt.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "endAttempt-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.end_attempt.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "endAttempt",
+      },
+    ],
+    "sourcePath": "endAttempt.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt><p>Enter your response.</p></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes extendedText 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "extendedText-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "extendedText",
+      },
+    ],
+    "sourcePath": "extendedText.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="extendedText-reference" title="extendedText-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A constructed-response item asks for a recommendation based on garden moisture data.</p><extendedTextInteraction responseIdentifier="RESPONSE" expectedLines="6"><prompt>Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.</prompt></extendedTextInteraction></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes gapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.gap_match.manual_fallback",
+      "message": "Converted the gap-match interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.gap_match.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "gapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.gap_match.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "gapMatch",
+      },
+    ],
+    "sourcePath": "gapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="gapMatch-reference" title="gapMatch-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.<div><p>Source options:</p><ul><li>evidence</li><li>claim</li><li>opinion</li><li>caption</li><li>G1</li><li>G2</li></ul></div><p>The water sample data are the  [response]  that supports the report's  [response]  about stream health.</p></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes graphicAssociate 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.graphic_associate.manual_fallback",
+      "message": "Converted the graphic-associate interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.graphic_associate.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicAssociate-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.graphic_associate.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "graphicAssociate",
+      },
+    ],
+    "sourcePath": "graphicAssociate.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="graphicAssociate-reference" title="graphicAssociate-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram item asks the student to connect related parts of a field-study workflow.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Connect the two workflow regions that belong together: planning the route should be paired with collecting water data, and analyzing results should be paired with reporting recommendations.<div><p>Source options:</p><ul><li>Plan sampling route</li><li>Collect water data</li><li>Analyze results</li><li>Report recommendations</li><li>Community meeting</li></ul></div><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes graphicGapMatch 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.graphic_gap_match.manual_fallback",
+      "message": "Converted the graphic-gap-match interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.graphic_gap_match.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicGapMatch-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.graphic_gap_match.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "graphicGapMatch",
+      },
+    ],
+    "sourcePath": "graphicGapMatch.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="graphicGapMatch-reference" title="graphicGapMatch-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram-labeling item asks the student to complete two workflow labels from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-study workflow labels.<div><p>Source options:</p><ul><li>Plan route</li><li>Collect data</li><li>Analyze results</li><li>Hold celebration</li><li>G1</li><li>G2</li></ul></div><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object><p>The first step is to  [response]  before the class can  [response]  at the stream.</p></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes graphicOrder 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.graphic_order.manual_fallback",
+      "message": "Converted the graphic-order interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.graphic_order.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "graphicOrder-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.graphic_order.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "graphicOrder",
+      },
+    ],
+    "sourcePath": "graphicOrder.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="graphicOrder-reference" title="graphicOrder-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A visual sequencing item asks the student to order field-study workflow regions.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Select the workflow regions in the order a field team should complete them: plan the sampling route, collect data, analyze the results, then write the recommendation report.<div><p>Source options:</p><ul><li>Plan sampling route</li><li>Collect water data</li><li>Report recommendations</li><li>Analyze results</li></ul></div><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes hotspot 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.hotspot.manual_fallback",
+      "message": "Converted the hotspot interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.hotspot.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "hotspot-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.hotspot.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "hotspot",
+      },
+    ],
+    "sourcePath": "hotspot.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="hotspot-reference" title="hotspot-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram item asks the student to select the workflow step where stream data are collected.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>The field-study workflow shows how a class monitors water quality. Select the step where students collect water-temperature and dissolved-oxygen readings at the stream.<div><p>Source options:</p><ul><li>A</li><li>B</li><li>C</li><li>D</li></ul></div><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes hottext 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.hot_text.manual_fallback",
+      "message": "Converted the hot-text interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.hot_text.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "hottext-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.hot_text.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "hottext",
+      },
+    ],
+    "sourcePath": "hottext.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="hottext-reference" title="hottext-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A reading item asks the student to select the author's claim inside a short paragraph.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Read the paragraph and select the phrase that best states the author's claim.<div><p>Source options:</p><ul><li>A small green space would give nearby residents a shaded place to gather</li><li>The lot is 0.4 acres</li><li>The planning department posted the proposal last Tuesday</li><li>Two benches are stored in a public works warehouse</li></ul></div><p>The city should convert the vacant lot on Pine Street into a pocket park.  A small green space would give nearby residents a shaded place to gather , and volunteers have already offered to maintain native plants.  The lot is 0.4 acres  and sits next to a bus stop.  The planning department posted the proposal last Tuesday .  Two benches are stored in a public works warehouse .</p></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes inlineChoice 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.inline_choice.text_entry_fallback",
+      "message": "Converted the inline-choice interaction to an exact text entry for the Brightspace course importer. Review the accepted answer after import.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.brightspace.inline_choice.text_entry_fallback",
+      "message": "Converted the inline-choice interaction to an exact text entry for the Brightspace course importer. Review the accepted answer after import.",
+      "path": "/itemBody/interactions/1",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/itemBody/interactions/1",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.inline_choice.text_entry_fallback",
+      "profile.brightspace.inline_choice.text_entry_fallback",
+    ],
+    "fidelity": "lossy",
+    "identifier": "inlineChoice-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.inline_choice.text_entry_fallback",
+        ],
+        "emittedInteraction": "textEntryInteraction",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "inlineChoice",
+      },
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/1",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.inline_choice.text_entry_fallback",
+        ],
+        "emittedInteraction": "textEntryInteraction",
+        "fallback": "text-entry",
+        "fidelity": "lossy",
+        "index": 1,
+        "scoring": "automatic",
+        "sourceInteraction": "inlineChoice",
+      },
+    ],
+    "sourcePath": "inlineChoice.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="inlineChoice-reference" title="inlineChoice-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE_DECLARATION" cardinality="single" baseType="string"><correctResponse><value>reduced lunchroom waste</value></correctResponse></responseDeclaration>
+  <responseDeclaration identifier="RESPONSE_OUTCOME" cardinality="single" baseType="string"><correctResponse><value>drop in bags collected after lunch</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>Read the sentence from a school-news article and choose the words that make the account accurate.</p><p>After a three-week pilot, the cafeteria team reported that the reusable tray program <textEntryInteraction responseIdentifier="RESPONSE_DECLARATION"></textEntryInteraction> <span>Source options: reduced lunchroom waste; increased disposable packaging; left trash levels unchanged; stopped food donations</span>, and the strongest evidence was the <textEntryInteraction responseIdentifier="RESPONSE_OUTCOME"></textEntryInteraction> <span>Source options: number of students who bought lunch; drop in bags collected after lunch; color of the new trays; menu posted on Monday</span>.</p></itemBody>
+  <responseProcessing>
+  <responseCondition>
+    <responseIf>
+      <match>
+        <variable identifier="RESPONSE_DECLARATION"/>
+        <correct identifier="RESPONSE_DECLARATION"/>
+      </match>
+      <setOutcomeValue identifier="SCORE">
+        <sum>
+          <variable identifier="SCORE"/>
+          <baseValue baseType="float">1</baseValue>
+        </sum>
+      </setOutcomeValue>
+    </responseIf>
+  </responseCondition>
+  <responseCondition>
+    <responseIf>
+      <match>
+        <variable identifier="RESPONSE_OUTCOME"/>
+        <correct identifier="RESPONSE_OUTCOME"/>
+      </match>
+      <setOutcomeValue identifier="SCORE">
+        <sum>
+          <variable identifier="SCORE"/>
+          <baseValue baseType="float">1</baseValue>
+        </sum>
+      </setOutcomeValue>
+    </responseIf>
+  </responseCondition>
+</responseProcessing>
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes match 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.match.manual_fallback",
+      "message": "Converted the match interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.match.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "match-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.match.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "match",
+      },
+    ],
+    "sourcePath": "match.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="match-reference" title="match-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A garden-data item asks the student to match observations with reasonable interpretations.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Match each observation from a community garden study with the most reasonable interpretation.<div><p>Source options:</p><ul><li>Mulched beds stayed moist two days longer after watering.</li><li>Uncovered beds had more weeds by the third week.</li><li>Beds near the fence received less afternoon sun.</li><li>The garden sign was repainted on Saturday.</li><li>Mulch helped reduce water loss from the soil.</li><li>Bare soil may need more frequent weeding.</li><li>Light exposure was not identical across all beds.</li><li>This maintenance detail does not explain plant growth.</li></ul></div></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes media 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.media.manual_fallback",
+      "message": "Converted the media interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.media.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "media-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.media.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "media",
+      },
+    ],
+    "sourcePath": "media.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="media-reference" title="media-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A listening item renders a town-hall audio excerpt through native browser media controls.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.<object data="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=" type="audio/wav">Silent town-hall audio excerpt</object><p>Silent town-hall audio excerpt</p></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes order 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.order.manual_fallback",
+      "message": "Converted the order interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.order.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "order-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.order.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "order",
+      },
+    ],
+    "sourcePath": "order.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="order-reference" title="order-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A science-planning item asks the student to arrange investigation steps in order.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>A science class is planning a fair test of how light affects seedling growth. Put the investigation steps in the best order.<div><p>Source options:</p><ul><li>Set up identical trays with the same soil, seed type, and water schedule.</li><li>Place one tray in full light and one tray in reduced light for the same number of days.</li><li>Measure and compare seedling height at the end of the trial.</li><li>Use the measurements to write a conclusion about how light affected growth.</li></ul></div></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes portableCustom 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.portable_custom.manual_fallback",
+      "message": "Converted the portable-custom interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.portable_custom.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "portableCustom-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.portable_custom.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "portableCustom",
+      },
+    ],
+    "sourcePath": "portableCustom.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="portableCustom-reference" title="portableCustom-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A graphing-item placeholder exercises a custom interaction while presenting sample-data content.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Use the custom graphing tool to choose the claim best supported by the sample data. The fixture module returns A for the supported claim.<div class="qti3-fixture-pci-markup">Custom graphing widget placeholder for sample data</div></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes positionObject 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.position_object.manual_fallback",
+      "message": "Converted the position-object interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.position_object.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "positionObject-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.position_object.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "positionObject",
+      },
+    ],
+    "sourcePath": "positionObject.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="positionObject-reference" title="positionObject-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A diagram item asks the student to move a field-note marker onto the data-collection step.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Drag the field-note marker onto the Collect water data step in the workflow.<object data="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" type="image/svg+xml" width="64" height="48"></object><object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes selectPoint 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.select_point.manual_fallback",
+      "message": "Converted the select-point interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.select_point.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "selectPoint-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.select_point.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "selectPoint",
+      },
+    ],
+    "sourcePath": "selectPoint.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="selectPoint-reference" title="selectPoint-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A coordinate item asks the student to mark the center of the data-collection workflow step.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Mark the center of the Collect water data step, where students record the stream measurements.<object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes slider 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.slider.manual_fallback",
+      "message": "Converted the slider interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.slider.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "slider-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.slider.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "slider",
+      },
+    ],
+    "sourcePath": "slider.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="slider-reference" title="slider-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A timeline item asks the student to choose the opening year of a restored rail-trail.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>A community archive asks students to place the opening year of the restored rail-trail on a timeline. The project opened in 2024 after fourteen years of planning. Select the opening year.</prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes textEntry 1`] = `
+{
+  "diagnostics": [],
+  "report": {
+    "affectedPaths": [],
+    "diagnosticCodes": [],
+    "fidelity": "exact",
+    "identifier": "textEntry-reference",
+    "mappings": [
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "textEntryInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "textEntry",
+      },
+    ],
+    "sourcePath": "textEntry.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="textEntry-reference" title="textEntry-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>estuary</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A geography vocabulary item asks the student to type the name of a coastal feature.</p><p>A river meets the ocean in a partly enclosed area where fresh water and salt water mix. Type the vocabulary word for this coastal feature: <textEntryInteraction responseIdentifier="RESPONSE" expectedLength="10"></textEntryInteraction>.</p></itemBody>
+  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
+</assessmentItem>",
+}
+`;
+
+exports[`brightspace-course-import@1 evidence > transcodes upload 1`] = `
+{
+  "diagnostics": [
+    {
+      "code": "profile.brightspace.upload.manual_fallback",
+      "message": "Converted the upload interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.qti21.manual_fallback.response_processing_omitted",
+      "message": "Removed automatic response processing because this item includes a manual written-response fallback.",
+      "path": "/responseProcessing",
+      "severity": "warning",
+    },
+  ],
+  "report": {
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+      "/responseProcessing",
+    ],
+    "diagnosticCodes": [
+      "profile.brightspace.upload.manual_fallback",
+      "profile.qti21.manual_fallback.response_processing_omitted",
+    ],
+    "fidelity": "lossy",
+    "identifier": "upload-reference",
+    "mappings": [
+      {
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.brightspace.upload.manual_fallback",
+        ],
+        "emittedInteraction": "extendedTextInteraction",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "upload",
+      },
+    ],
+    "sourcePath": "upload.xml",
+  },
+  "xml": "<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="upload-reference" title="upload-reference" adaptive="false" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+
+  <itemBody><p>A constructed-response item asks the student to upload a field-notes text file.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Upload a text file named upload.txt containing your one-page field notes from the water-quality investigation.</prompt></extendedTextInteraction></itemBody>
+
+</assessmentItem>",
+}
+`;

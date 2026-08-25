@@ -12,6 +12,13 @@
 - **Depends on**: none
 - **Category**: tests
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+The 176 profile/interaction cases and 176 normalized full-output snapshots now live in eight
+profile-owned test/snapshot files. A shared helper adds explicit profile, aggregate fidelity,
+interaction-report, scoring-disposition, and unexpected-error assertions before every full-output
+snapshot. Mechanical parsing compared all 176 before/after bodies byte-for-byte: no keys or output
+changed. Focused transcoder checks, all 176 support-evidence cases, and full verification pass.
 
 ## Why this matters
 
