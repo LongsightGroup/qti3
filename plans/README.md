@@ -6,35 +6,35 @@ honor its stop conditions, and update its status when complete.
 
 ## Execution order and status
 
-| Plan | Title                                                                  | Priority | Effort | Depends on        | Status |
-| ---- | ---------------------------------------------------------------------- | -------- | ------ | ----------------- | ------ |
-| 002  | Give media a core play-count domain and one native playback path       | P1       | M      | —                 | DONE   |
-| 020  | Upgrade the vulnerable Vite toolchain and gate dev advisories          | P1       | S      | —                 | DONE   |
-| 004  | Validate and drop unsafe interaction asset URLs                        | P1       | M      | —                 | DONE   |
-| 007  | Map every matching area at most once across response points            | P1       | S      | —                 | DONE   |
-| 003  | Make invalid equal-rounded expressions inert during evaluation         | P1       | S      | —                 | DONE   |
-| 019  | Move qti3-fixtures out of player runtime dependencies                  | P1       | S      | —                 | DONE   |
-| 009  | Exact decimal rounding for roundTo/equalRounded                        | P2       | M      | —                 | DONE   |
-| 005  | Add player session options and preserve them across lifecycle rebuilds | P2       | M      | —                 | DONE   |
-| 008  | Keep invalid declaration numbers out of the parsed runtime model       | P2       | M      | —                 | DONE   |
-| 014  | Bound repeat expansion in processing                                   | P2       | M      | —                 | DONE   |
-| 015  | Validate numeric-operator arity and define empty stats results         | P2       | M      | —                 | DONE   |
-| 017  | Separate XML textContent semantics from visible-text flattening        | P2       | M      | —                 | DONE   |
-| 018  | Mark modal feedback as rendered in the support matrix                  | P2       | S      | —                 | DONE   |
-| 022  | Add characterization tests to the highest-risk migrator seams          | P2       | M      | —                 | DONE   |
-| 024  | Capture actionable Playwright failure artifacts with one CI retry      | P2       | S      | 020               | DONE   |
-| 026  | Remove duplicate stages from pnpm verify                               | P2       | S      | 020               | DONE   |
-| 030  | Consolidate XML escaping with explicit text and attribute APIs         | P2       | M      | —                 | DONE   |
-| 037  | Add CLI commands for trusted scoring and candidate-safe delivery XML   | P2       | M      | —                 | DONE   |
-| 012  | Require qti-any-n min/max attributes with validation                   | P3       | S      | —                 | DONE   |
-| 013  | Diagnose mixed fielded and unfielded declaration values                | P3       | M      | —                 | DONE   |
-| 021  | Decide and execute the xmldom 0.9 migration                            | P3       | M      | —                 | TODO   |
-| 023  | Split transcoder snapshots without reducing output coverage            | P3       | M      | 022               | TODO   |
-| 027  | Test the supported Node version boundaries explicitly                  | P3       | S      | 020, 024          | TODO   |
-| 028  | Add an EditorConfig matching repository formatting                     | P3       | S      | —                 | TODO   |
-| 029  | Mark delivered design notes and supersede discredited docs             | P3       | S      | —                 | TODO   |
-| 032  | Reuse core package-path normalization in the CLI                       | P3       | S      | —                 | TODO   |
-| 033  | Split core.test.ts with stable support-evidence paths                  | P3       | L      | correctness plans | TODO   |
+| Plan | Title                                                                  | Priority | Effort | Depends on        | Status                          |
+| ---- | ---------------------------------------------------------------------- | -------- | ------ | ----------------- | ------------------------------- |
+| 002  | Give media a core play-count domain and one native playback path       | P1       | M      | —                 | DONE                            |
+| 020  | Upgrade the vulnerable Vite toolchain and gate dev advisories          | P1       | S      | —                 | DONE                            |
+| 004  | Validate and drop unsafe interaction asset URLs                        | P1       | M      | —                 | DONE                            |
+| 007  | Map every matching area at most once across response points            | P1       | S      | —                 | DONE                            |
+| 003  | Make invalid equal-rounded expressions inert during evaluation         | P1       | S      | —                 | DONE                            |
+| 019  | Move qti3-fixtures out of player runtime dependencies                  | P1       | S      | —                 | DONE                            |
+| 009  | Exact decimal rounding for roundTo/equalRounded                        | P2       | M      | —                 | DONE                            |
+| 005  | Add player session options and preserve them across lifecycle rebuilds | P2       | M      | —                 | DONE                            |
+| 008  | Keep invalid declaration numbers out of the parsed runtime model       | P2       | M      | —                 | DONE                            |
+| 014  | Bound repeat expansion in processing                                   | P2       | M      | —                 | DONE                            |
+| 015  | Validate numeric-operator arity and define empty stats results         | P2       | M      | —                 | DONE                            |
+| 017  | Separate XML textContent semantics from visible-text flattening        | P2       | M      | —                 | DONE                            |
+| 018  | Mark modal feedback as rendered in the support matrix                  | P2       | S      | —                 | DONE                            |
+| 022  | Add characterization tests to the highest-risk migrator seams          | P2       | M      | —                 | DONE                            |
+| 024  | Capture actionable Playwright failure artifacts with one CI retry      | P2       | S      | 020               | DONE                            |
+| 026  | Remove duplicate stages from pnpm verify                               | P2       | S      | 020               | DONE                            |
+| 030  | Consolidate XML escaping with explicit text and attribute APIs         | P2       | M      | —                 | DONE                            |
+| 037  | Add CLI commands for trusted scoring and candidate-safe delivery XML   | P2       | M      | —                 | DONE                            |
+| 012  | Require qti-any-n min/max attributes with validation                   | P3       | S      | —                 | DONE                            |
+| 013  | Diagnose mixed fielded and unfielded declaration values                | P3       | M      | —                 | DONE                            |
+| 021  | Decide and execute the xmldom 0.9 migration                            | P3       | M      | —                 | REJECTED — safe patch age-gated |
+| 023  | Split transcoder snapshots without reducing output coverage            | P3       | M      | 022               | TODO                            |
+| 027  | Test the supported Node version boundaries explicitly                  | P3       | S      | 020, 024          | TODO                            |
+| 028  | Add an EditorConfig matching repository formatting                     | P3       | S      | —                 | TODO                            |
+| 029  | Mark delivered design notes and supersede discredited docs             | P3       | S      | —                 | TODO                            |
+| 032  | Reuse core package-path normalization in the CLI                       | P3       | S      | —                 | TODO                            |
+| 033  | Split core.test.ts with stable support-evidence paths                  | P3       | L      | correctness plans | TODO                            |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED
 (with one-line rationale).

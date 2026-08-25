@@ -12,6 +12,13 @@
 - **Depends on**: none
 - **Category**: migration / dependency decision
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: REJECTED, 2026-08-25 — the non-deprecated 0.9.12 patch is still blocked by the
+  configured seven-day package-age gate; mature 0.9.11 is publisher-deprecated.
+
+The 0.9.11 compatibility probe passed all focused and full tests after confined adapter/type
+changes and produced no output deltas. Its manifests, lockfile, and code changes were restored.
+The required decision record documents the XML ownership boundary, evidence, exact blocker, and
+revisit procedure in `docs/decisions/xmldom-and-xml-stack-boundaries.md`.
 
 ## Why this matters
 
