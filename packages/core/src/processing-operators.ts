@@ -39,15 +39,45 @@ export const STATS_OPERATOR_NAMES = [
   "popSD",
 ] as const;
 
+/** Round decimal ties away from zero without an intermediate scaled binary float. */
 export function roundToDecimalPlaces(value: number, figures: number): number {
-  const factor = 10 ** figures;
-  return Math.round(value * factor) / factor;
+  if (!Number.isFinite(value) || value === 0) return value;
+  const decimal = decimalDigits(value);
+  const retainedDigits = decimal.exponent + figures + 1;
+  return roundDecimalDigits(value, decimal, retainedDigits);
 }
 
+/** Round significant decimal digits, with half-up ties on the absolute magnitude. */
 export function roundToSignificantFigures(value: number, figures: number): number {
   if (value === 0 || figures <= 0) return 0;
-  const factor = 10 ** (figures - 1 - Math.floor(Math.log10(Math.abs(value))));
-  return Math.round(value * factor) / factor;
+  if (!Number.isFinite(value)) return Number.NaN;
+  return roundDecimalDigits(value, decimalDigits(value), figures);
+}
+
+interface DecimalDigits {
+  digits: string;
+  exponent: number;
+}
+
+function decimalDigits(value: number): DecimalDigits {
+  const [coefficient = "", exponent = "0"] = Math.abs(value).toExponential().split("e");
+  return {
+    digits: coefficient.replace(".", ""),
+    exponent: Number(exponent),
+  };
+}
+
+function roundDecimalDigits(value: number, decimal: DecimalDigits, retainedDigits: number): number {
+  if (retainedDigits >= decimal.digits.length) return value;
+  if (retainedDigits < 0) return value < 0 ? -0 : 0;
+
+  const roundingDigit = decimal.digits[retainedDigits] ?? "0";
+  const retained = retainedDigits === 0 ? 0n : BigInt(decimal.digits.slice(0, retainedDigits));
+  const rounded = roundingDigit >= "5" ? retained + 1n : retained;
+  if (rounded === 0n) return value < 0 ? -0 : 0;
+
+  const unitExponent = decimal.exponent - retainedDigits + 1;
+  return Number(`${value < 0 ? "-" : ""}${rounded}e${unitExponent}`);
 }
 
 export function roundWithMode(value: number, roundingMode: string, figures: number): number | null {

@@ -14,6 +14,13 @@
 - **Depends on**: none
 - **Category**: bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+Decimal-place and significant-figure rounding now operate on the number's canonical decimal
+digits and perform one final scientific-notation conversion, avoiding lossy scaled multiplication.
+The functions document half-up/away-from-zero ties and preserve prior zero and non-finite behavior.
+Boundary, carry, sign, magnitude, and excess-precision tests pass with the full unit, conformance,
+and verification suites.
 
 ## Why this matters
 

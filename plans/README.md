@@ -14,7 +14,7 @@ honor its stop conditions, and update its status when complete.
 | 007  | Map every matching area at most once across response points            | P1       | S      | —                 | DONE   |
 | 003  | Make invalid equal-rounded expressions inert during evaluation         | P1       | S      | —                 | DONE   |
 | 019  | Move qti3-fixtures out of player runtime dependencies                  | P1       | S      | —                 | DONE   |
-| 009  | Exact decimal rounding for roundTo/equalRounded                        | P2       | M      | —                 | TODO   |
+| 009  | Exact decimal rounding for roundTo/equalRounded                        | P2       | M      | —                 | DONE   |
 | 005  | Add player session options and preserve them across lifecycle rebuilds | P2       | M      | —                 | TODO   |
 | 008  | Keep invalid declaration numbers out of the parsed runtime model       | P2       | M      | —                 | TODO   |
 | 014  | Bound repeat expansion in processing                                   | P2       | M      | —                 | TODO   |
