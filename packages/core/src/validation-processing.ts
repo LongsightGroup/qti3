@@ -451,6 +451,11 @@ function validateExpressionReferences(
     );
   }
 
+  if (expression.type === "anyN") {
+    validateAnyNBound("min", expression.min, responses, variables, diagnostics, expression.source);
+    validateAnyNBound("max", expression.max, responses, variables, diagnostics, expression.source);
+  }
+
   if (expression.type === "mathConstant" && !mathConstantNames.has(expression.name)) {
     diagnostics.push({
       code: "processing.mathConstant.name",
@@ -608,6 +613,46 @@ function validateRepeatExpression(
       message: `qti-repeat references missing template or outcome variable ${expression.numberRepeats}.`,
       path: expression.source?.path,
       source: expression.source,
+    });
+  }
+}
+
+function validateAnyNBound(
+  attribute: "min" | "max",
+  value: string,
+  responses: Set<string>,
+  variables: Set<string>,
+  diagnostics: QtiDiagnostic[],
+  source: QtiDiagnostic["source"],
+): void {
+  if (value.length === 0) {
+    diagnostics.push({
+      code: `processing.anyN.${attribute}.required`,
+      severity: "error",
+      message: `qti-any-n requires ${attribute}.`,
+      path: source?.path,
+      source,
+    });
+    return;
+  }
+  if (isInteger(value)) return;
+  if (Number.isFinite(Number(value))) {
+    diagnostics.push({
+      code: `processing.anyN.${attribute}.integer`,
+      severity: "error",
+      message: `qti-any-n ${attribute} must be an integer or a declared variable.`,
+      path: source?.path,
+      source,
+    });
+    return;
+  }
+  if (!variables.has(value) || responses.has(value)) {
+    diagnostics.push({
+      code: `processing.anyN.${attribute}.reference`,
+      severity: "error",
+      message: `qti-any-n ${attribute} references missing template or outcome variable ${value}.`,
+      path: source?.path,
+      source,
     });
   }
 }

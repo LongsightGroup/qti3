@@ -14,6 +14,13 @@
 - **Depends on**: none
 - **Category**: bug
 - **Planned at**: commit `646dd16`, 2026-08-25
+- **Status**: DONE, 2026-08-25
+
+The raw parser model continues to retain `min` and `max` so malformed expressions keep their source
+locations; required/integer/reference enforcement lives in processing validation instead of
+dropping the expression at parse time. Eight focused tests cover missing and fractional bounds,
+literal and outcome/template-variable success, missing references, and response variables that the
+evaluator cannot resolve. The evaluator fallback remains unchanged and full verification passes.
 
 ## Why this matters
 
