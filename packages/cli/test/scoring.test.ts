@@ -1,23 +1,25 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
-import { main } from "./index.js";
-import { adaptiveDeliveryXml, choiceFixtureXml } from "./test-support.js";
+import { describe, expect, it } from "vitest";
+import { createRecordingCliOutput, lastStderr, lastStdout } from "./cli-harness.js";
+import { adaptiveDeliveryXml, choiceFixtureXml } from "./item-fixtures.js";
+import { main } from "../src/index.js";
 
 describe("@longsightgroup/qti3-cli scoring and delivery", () => {
   it("scores server-trusted response JSON and emits the complete result", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-score-"));
     const itemFile = join(directory, "item.xml");
     const responsesFile = join(directory, "responses.json");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
       await writeFile(responsesFile, JSON.stringify({ RESPONSE: "A" }), "utf8");
 
-      await expect(main(["score", itemFile, "--responses", responsesFile])).resolves.toBe(0);
-      const result = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      await expect(main(["score", itemFile, "--responses", responsesFile], output)).resolves.toBe(
+        0,
+      );
+      const result = JSON.parse(lastStdout(output));
       expect(result).toMatchObject({
         ok: true,
         responses: { RESPONSE: "A" },
@@ -26,10 +28,8 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       expect(result).toHaveProperty("diagnostics");
       expect(result).toHaveProperty("state");
       expect(result).toHaveProperty("outcomes");
-      expect(error).not.toHaveBeenCalled();
+      expect(output.stderr).toEqual([]);
     } finally {
-      log.mockRestore();
-      error.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -39,27 +39,28 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     const itemFile = join(directory, "item.xml");
     const malformedFile = join(directory, "malformed.json");
     const arrayFile = join(directory, "array.json");
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
       await writeFile(malformedFile, "{", "utf8");
       await writeFile(arrayFile, "[]", "utf8");
 
-      await expect(main(["score", itemFile])).resolves.toBe(1);
+      await expect(main(["score", itemFile], output)).resolves.toBe(1);
       await expect(
-        main(["score", itemFile, "--responses", malformedFile, "--responses", arrayFile]),
+        main(["score", itemFile, "--responses", malformedFile, "--responses", arrayFile], output),
       ).resolves.toBe(1);
-      await expect(main(["score", itemFile, "--unknown", arrayFile])).resolves.toBe(1);
-      await expect(main(["score", itemFile, "--responses", malformedFile])).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain(malformedFile);
-      expect(String(error.mock.calls.at(-1)?.[0])).not.toContain("\n");
-      await expect(main(["score", itemFile, "--responses", arrayFile])).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain("JSON object");
+      await expect(main(["score", itemFile, "--unknown", arrayFile], output)).resolves.toBe(1);
+      await expect(main(["score", itemFile, "--responses", malformedFile], output)).resolves.toBe(
+        1,
+      );
+      expect(lastStderr(output)).toContain(malformedFile);
+      expect(lastStderr(output)).not.toContain("\n");
+      await expect(main(["score", itemFile, "--responses", arrayFile], output)).resolves.toBe(1);
+      expect(lastStderr(output)).toContain("JSON object");
       const missingFile = join(directory, "missing.json");
-      await expect(main(["score", itemFile, "--responses", missingFile])).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain(missingFile);
+      await expect(main(["score", itemFile, "--responses", missingFile], output)).resolves.toBe(1);
+      expect(lastStderr(output)).toContain(missingFile);
     } finally {
-      error.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -68,13 +69,15 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-score-invalid-"));
     const itemFile = join(directory, "item.xml");
     const responsesFile = join(directory, "responses.json");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, "<qti-assessment-item>", "utf8");
       await writeFile(responsesFile, JSON.stringify({ RESPONSE: "A" }), "utf8");
 
-      await expect(main(["score", itemFile, "--responses", responsesFile])).resolves.toBe(1);
-      const result = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      await expect(main(["score", itemFile, "--responses", responsesFile], output)).resolves.toBe(
+        1,
+      );
+      const result = JSON.parse(lastStdout(output));
       expect(result.ok).toBe(false);
       expect(result.diagnostics).toEqual(
         expect.arrayContaining([expect.objectContaining({ severity: "error" })]),
@@ -82,15 +85,16 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
 
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
       await writeFile(responsesFile, JSON.stringify({ RESPONSE: [{}] }), "utf8");
-      await expect(main(["score", itemFile, "--responses", responsesFile])).resolves.toBe(1);
-      const invalidResponseResult = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      await expect(main(["score", itemFile, "--responses", responsesFile], output)).resolves.toBe(
+        1,
+      );
+      const invalidResponseResult = JSON.parse(lastStdout(output));
       expect(invalidResponseResult.diagnostics).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ code: "serverScoring.response.value", severity: "error" }),
         ]),
       );
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -98,17 +102,16 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
   it("prepares static candidate-safe XML as a structured result", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-prepare-static-"));
     const itemFile = join(directory, "item.xml");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
 
-      await expect(main(["prepare-delivery", itemFile])).resolves.toBe(0);
-      const result = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      await expect(main(["prepare-delivery", itemFile], output)).resolves.toBe(0);
+      const result = JSON.parse(lastStdout(output));
       expect(result).toMatchObject({ ok: true, mode: "static" });
       expect(result.candidateSafeXml).not.toContain("qti-correct-response");
       expect(result.candidateSafeXml).not.toContain("qti-response-processing");
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -118,24 +121,27 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     const itemFile = join(directory, "item.xml");
     const stateFile = join(directory, "state.json");
     const outputFile = join(directory, "candidate.xml");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, adaptiveDeliveryXml(), "utf8");
       await writeFile(stateFile, JSON.stringify({ outcomes: { FEEDBACK: "yes" } }), "utf8");
 
       await expect(
-        main([
-          "prepare-delivery",
-          itemFile,
-          "--mode",
-          "server-materialized-adaptive",
-          "--state",
-          stateFile,
-          "--out",
-          outputFile,
-        ]),
+        main(
+          [
+            "prepare-delivery",
+            itemFile,
+            "--mode",
+            "server-materialized-adaptive",
+            "--state",
+            stateFile,
+            "--out",
+            outputFile,
+          ],
+          output,
+        ),
       ).resolves.toBe(0);
-      const summary = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      const summary = JSON.parse(lastStdout(output));
       expect(summary).toMatchObject({
         ok: true,
         mode: "server-materialized-adaptive",
@@ -146,7 +152,6 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
       expect(candidateXml).toContain("Visible feedback.");
       expect(candidateXml).not.toContain("qti-response-processing");
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -155,48 +160,55 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-prepare-errors-"));
     const itemFile = join(directory, "item.xml");
     const stateFile = join(directory, "state.json");
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, adaptiveDeliveryXml(), "utf8");
       await writeFile(stateFile, JSON.stringify({ outcomes: [], extra: true }), "utf8");
 
-      await expect(main(["prepare-delivery", itemFile, "--state", stateFile])).resolves.toBe(1);
       await expect(
-        main(["prepare-delivery", itemFile, "--mode", "server-materialized-adaptive"]),
+        main(["prepare-delivery", itemFile, "--state", stateFile], output),
       ).resolves.toBe(1);
       await expect(
-        main(["prepare-delivery", itemFile, "--mode", "unsupported", "--state", stateFile]),
+        main(["prepare-delivery", itemFile, "--mode", "server-materialized-adaptive"], output),
       ).resolves.toBe(1);
       await expect(
-        main(["prepare-delivery", itemFile, "--mode", "static", "--mode", "static"]),
+        main(["prepare-delivery", itemFile, "--mode", "unsupported", "--state", stateFile], output),
       ).resolves.toBe(1);
       await expect(
-        main([
-          "prepare-delivery",
-          itemFile,
-          "--mode",
-          "server-materialized-adaptive",
-          "--state",
-          stateFile,
-        ]),
+        main(["prepare-delivery", itemFile, "--mode", "static", "--mode", "static"], output),
       ).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain(stateFile);
-      expect(String(error.mock.calls.at(-1)?.[0])).not.toContain("\n");
+      await expect(
+        main(
+          [
+            "prepare-delivery",
+            itemFile,
+            "--mode",
+            "server-materialized-adaptive",
+            "--state",
+            stateFile,
+          ],
+          output,
+        ),
+      ).resolves.toBe(1);
+      expect(lastStderr(output)).toContain(stateFile);
+      expect(lastStderr(output)).not.toContain("\n");
 
       await writeFile(stateFile, JSON.stringify({ outcomes: { SCORE: [{}] } }), "utf8");
       await expect(
-        main([
-          "prepare-delivery",
-          itemFile,
-          "--mode",
-          "server-materialized-adaptive",
-          "--state",
-          stateFile,
-        ]),
+        main(
+          [
+            "prepare-delivery",
+            itemFile,
+            "--mode",
+            "server-materialized-adaptive",
+            "--state",
+            stateFile,
+          ],
+          output,
+        ),
       ).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain("QTI values");
+      expect(lastStderr(output)).toContain("QTI values");
     } finally {
-      error.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -205,20 +217,21 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-prepare-failure-"));
     const itemFile = join(directory, "item.xml");
     const outputFile = join(directory, "candidate.xml");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, "<qti-assessment-item>", "utf8");
 
-      await expect(main(["prepare-delivery", itemFile, "--out", outputFile])).resolves.toBe(1);
+      await expect(main(["prepare-delivery", itemFile, "--out", outputFile], output)).resolves.toBe(
+        1,
+      );
       await expect(readFile(outputFile, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
-      const summary = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      const summary = JSON.parse(lastStdout(output));
       expect(summary.ok).toBe(false);
       expect(summary).not.toHaveProperty("candidateSafeXml");
       expect(summary.diagnostics).toEqual(
         expect.arrayContaining([expect.objectContaining({ severity: "error" })]),
       );
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -227,15 +240,16 @@ describe("@longsightgroup/qti3-cli scoring and delivery", () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-prepare-write-error-"));
     const itemFile = join(directory, "item.xml");
     const outputFile = join(directory, "missing", "candidate.xml");
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const output = createRecordingCliOutput();
     try {
       await writeFile(itemFile, choiceFixtureXml(), "utf8");
 
-      await expect(main(["prepare-delivery", itemFile, "--out", outputFile])).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain(outputFile);
-      expect(String(error.mock.calls.at(-1)?.[0])).not.toContain("\n");
+      await expect(main(["prepare-delivery", itemFile, "--out", outputFile], output)).resolves.toBe(
+        1,
+      );
+      expect(lastStderr(output)).toContain(outputFile);
+      expect(lastStderr(output)).not.toContain("\n");
     } finally {
-      error.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });

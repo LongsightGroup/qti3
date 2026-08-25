@@ -2,41 +2,39 @@ import {
   runQti3BasicImportItemOnlyCertification,
   runQti3BasicImportTestCertification,
 } from "@longsightgroup/qti3-conformance";
+import { errorResult, jsonResult, type CliCommandResult } from "../cli-result.js";
 
 const IMPORT_ITEMS_USAGE =
   "Usage: qti3 certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>]";
 const IMPORT_TESTS_USAGE =
   "Usage: qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0>";
+const CERTIFICATION_USAGE = `${IMPORT_ITEMS_USAGE} | ${IMPORT_TESTS_USAGE}`;
 
 /** Run a QTI Basic IMPORT certification subcommand. */
-export async function runCertificationCommand(args: string[]): Promise<number | undefined> {
+export async function runCertificationCommand(args: string[]): Promise<CliCommandResult> {
   const [profile, ...optionsArgs] = args;
   if (profile === "import-basic-items") {
     const options = parseImportBasicItemsArgs(optionsArgs);
     if (!options.ok) {
-      console.error(options.message);
-      return 1;
+      return errorResult(options.message);
     }
     const report = await runQti3BasicImportItemOnlyCertification({
       qtiRoot: options.qtiRoot,
       validatorReport: options.validatorReport,
     });
-    console.log(JSON.stringify(report, null, 2));
-    return report.ok ? 0 : 1;
+    return jsonResult(report, report.ok ? 0 : 1);
   }
 
   if (profile === "import-basic-tests") {
     const options = parseImportBasicTestsArgs(optionsArgs);
     if (!options.ok) {
-      console.error(options.message);
-      return 1;
+      return errorResult(options.message);
     }
     const report = await runQti3BasicImportTestCertification({ qtiRoot: options.qtiRoot });
-    console.log(JSON.stringify(report, null, 2));
-    return report.ok ? 0 : 1;
+    return jsonResult(report, report.ok ? 0 : 1);
   }
 
-  return undefined;
+  return { exitCode: 1, stdout: CERTIFICATION_USAGE };
 }
 
 function parseImportBasicItemsArgs(

@@ -52,9 +52,22 @@ async function checkPackage(packageRoot, manifest) {
     await checkExportMap(packageDirectory, manifest);
     await checkBin(packageDirectory, manifest);
     await checkDistRelativeImports(packageDirectory, manifest);
+    if (manifest.name === "@longsightgroup/qti3-cli") {
+      await checkPackedTestImports(packageDirectory, manifest);
+    }
     await checkWorkspaceImport(packageRoot, manifest);
   } finally {
     await rm(tempRoot, { force: true, recursive: true });
+  }
+}
+
+async function checkPackedTestImports(packageDirectory, manifest) {
+  for (const path of await listFiles(packageDirectory)) {
+    if (!/\.(?:[cm]?js|[cm]?ts)$/.test(path)) continue;
+    const content = await readFile(join(packageDirectory, path), "utf8");
+    if (/from\s+["'](?:@vitest\/[^"']+|vitest)["']/.test(content)) {
+      failures.push(`${manifest.name} packed test-only Vitest import in ${path}.`);
+    }
   }
 }
 

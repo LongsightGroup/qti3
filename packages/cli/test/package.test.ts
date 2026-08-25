@@ -2,11 +2,27 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { interactionFixtures } from "@longsightgroup/qti3-fixtures";
-import { describe, expect, it, vi } from "vitest";
-import { main } from "./index.js";
-import { basicFeatureIds, createDeflatedZip, createStoredZip, runCliJson } from "./test-support.js";
+import { describe, expect, it } from "vitest";
+import { lastStderr, runCli, runCliJson } from "./cli-harness.js";
+import { basicFeatureIds } from "./package-fixtures.js";
+import { createDeflatedZip, createStoredZip } from "./zip-fixtures.js";
 
 describe("@longsightgroup/qti3-cli package handling", () => {
+  it("reports a missing Basic item-player target without a stack trace", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-missing-package-"));
+    const target = join(directory, "missing");
+    try {
+      const { code, output } = await runCli(["basic-item-player-report", target]);
+
+      expect(code).toBe(1);
+      expect(output.stdout).toEqual([]);
+      expect(lastStderr(output)).toContain(target);
+      expect(lastStderr(output)).not.toContain("\n    at ");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("inspects package zips and enumerates loadable item references", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-package-"));
     const file = join(directory, "package.zip");
@@ -42,10 +58,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["inspect-package", file])).resolves.toBe(0);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      expect(code).toBe(0);
 
       expect(report).toMatchObject({
         checked: 2,
@@ -62,17 +76,17 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       ]);
 
-      const strictLog = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["validate-package", file])).resolves.toBe(0);
-      const strictReport = JSON.parse(String(strictLog.mock.calls.at(-1)?.[0]));
-      strictLog.mockRestore();
+      const { code: strictCode, report: strictReport } = await runCliJson([
+        "validate-package",
+        file,
+      ]);
+      expect(strictCode).toBe(0);
       expect(strictReport).toMatchObject({
         strict: true,
         checked: 2,
         failed: 0,
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -99,10 +113,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["inspect-package", file])).resolves.toBe(0);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      expect(code).toBe(0);
 
       expect(report).toMatchObject({
         checked: 1,
@@ -110,7 +122,6 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         discoveredReferences: ["items/choice.xml"],
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -195,10 +206,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["inspect-package", file])).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      expect(code).toBe(1);
 
       expect(report).toMatchObject({
         checked: 0,
@@ -206,7 +215,6 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         packageErrors: ["ZIP entry ../items/choice.xml escapes the package root."],
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -218,10 +226,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
     try {
       await writeFile(file, "not a zip");
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["inspect-package", file])).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      expect(code).toBe(1);
 
       expect(report).toMatchObject({
         checked: 0,
@@ -229,7 +235,6 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         packageErrors: ["No ZIP central directory was found."],
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -248,10 +253,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["validate-package", file])).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["validate-package", file]);
+      expect(code).toBe(1);
 
       expect(report).toMatchObject({
         strict: true,
@@ -264,7 +267,6 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         ],
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -291,10 +293,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["inspect-package", file])).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      expect(code).toBe(1);
 
       expect(report).toMatchObject({
         checked: 0,
@@ -302,7 +302,6 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         packageErrors: ["package reference ../items/choice.xml escapes the package root."],
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -324,10 +323,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
-      await expect(main(["inspect-package", file])).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      log.mockRestore();
+      const { code, report } = await runCliJson(["inspect-package", file]);
+      expect(code).toBe(1);
 
       expect(report).toMatchObject({
         checked: 0,
@@ -336,7 +333,6 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         packageErrors: ["package reference items/missing.xml was not found."],
       });
     } finally {
-      vi.restoreAllMocks();
       await rm(directory, { recursive: true, force: true });
     }
   });

@@ -14,9 +14,11 @@ import {
   canonicalFixtures,
   interactionFixtures,
 } from "@longsightgroup/qti3-fixtures";
-import { describe, expect, it, vi } from "vitest";
-import { main } from "./index.js";
-import { basicImportTestPackageEntries, createStoredZip } from "./test-support.js";
+import { describe, expect, it } from "vitest";
+import { lastStderr, lastStdout, runCli } from "./cli-harness.js";
+import { basicImportTestPackageEntries } from "./package-fixtures.js";
+import { createStoredZip } from "./zip-fixtures.js";
+import { main } from "../src/index.js";
 
 describe("@longsightgroup/qti3-cli support and certification", () => {
   it("writes standalone reference XML fixtures", async () => {
@@ -39,84 +41,76 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
   });
 
   it("prints the support matrix", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    try {
-      await expect(main(["support-matrix"])).resolves.toBe(0);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      expect(Object.keys(report).slice(0, 2)).toEqual(["target", "sharedVocabularyClasses"]);
-      expect(report.sharedVocabularyClasses).toHaveLength(sharedVocabularyClassSupport.length);
-      expect(report.sharedVocabularyClasses).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            className: "qti-choices-top",
-            scope: "interaction",
-            interactions: expect.arrayContaining(["order", "match", "gapMatch"]),
-            level: "full",
-            tests: expect.arrayContaining(["tests/browser/player-dom-behavior.spec.ts"]),
-          }),
-          expect.objectContaining({
-            className: "qti-layout-row",
-            scope: "content",
-            level: "stylesheet",
-          }),
-          expect.objectContaining({
-            className: "qti-input-width-10",
-            scope: "gap",
-            interactions: ["gapMatch"],
-            level: "full",
-          }),
-          expect.objectContaining({
-            className: "data-qti-media-player-controls",
-            scope: "interaction",
-            interactions: ["media"],
-            level: "full",
-            tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
-          }),
-          expect.objectContaining({
-            className: "data-qti-media-player-pause-delay",
-            scope: "interaction",
-            interactions: ["media"],
-            level: "full",
-            tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
-          }),
-          expect.objectContaining({
-            className: "data-qti-media-player-pause-duration",
-            scope: "interaction",
-            interactions: ["media"],
-            level: "full",
-            tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
-          }),
-        ]),
-      );
-    } finally {
-      log.mockRestore();
-    }
+    const { code, output } = await runCli(["support-matrix"]);
+    expect(code).toBe(0);
+    const report = JSON.parse(lastStdout(output));
+    expect(Object.keys(report).slice(0, 2)).toEqual(["target", "sharedVocabularyClasses"]);
+    expect(report.sharedVocabularyClasses).toHaveLength(sharedVocabularyClassSupport.length);
+    expect(report.sharedVocabularyClasses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          className: "qti-choices-top",
+          scope: "interaction",
+          interactions: expect.arrayContaining(["order", "match", "gapMatch"]),
+          level: "full",
+          tests: expect.arrayContaining(["tests/browser/player-dom-behavior.spec.ts"]),
+        }),
+        expect.objectContaining({
+          className: "qti-layout-row",
+          scope: "content",
+          level: "stylesheet",
+        }),
+        expect.objectContaining({
+          className: "qti-input-width-10",
+          scope: "gap",
+          interactions: ["gapMatch"],
+          level: "full",
+        }),
+        expect.objectContaining({
+          className: "data-qti-media-player-controls",
+          scope: "interaction",
+          interactions: ["media"],
+          level: "full",
+          tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
+        }),
+        expect.objectContaining({
+          className: "data-qti-media-player-pause-delay",
+          scope: "interaction",
+          interactions: ["media"],
+          level: "full",
+          tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
+        }),
+        expect.objectContaining({
+          className: "data-qti-media-player-pause-duration",
+          scope: "interaction",
+          interactions: ["media"],
+          level: "full",
+          tests: expect.arrayContaining(["tests/browser/player-media.spec.ts"]),
+        }),
+      ]),
+    );
   });
 
   it("prints the accessibility proof matrix", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    try {
-      await expect(main(["a11y-proof"])).resolves.toBe(0);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      expect(report.target).toContain("accessibility proof");
-      expect(report.interactions).toHaveLength(interactionSupport.length);
-      expect(report.manualAssistiveTechnologyScripts).toHaveLength(3);
-      expect(report.interactions).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            interactionType: "order",
-            proof: expect.objectContaining({
-              automated: expect.arrayContaining([
-                "manual harness reference fixture renders without axe-core violations",
-              ]),
-              manual: expect.arrayContaining(["keyboard-only completion without pointer input"]),
-            }),
+    const { code, output } = await runCli(["a11y-proof"]);
+    expect(code).toBe(0);
+    const report = JSON.parse(lastStdout(output));
+    expect(report.target).toContain("accessibility proof");
+    expect(report.interactions).toHaveLength(interactionSupport.length);
+    expect(report.manualAssistiveTechnologyScripts).toHaveLength(3);
+    expect(report.interactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          interactionType: "order",
+          proof: expect.objectContaining({
+            automated: expect.arrayContaining([
+              "manual harness reference fixture renders without axe-core violations",
+            ]),
+            manual: expect.arrayContaining(["keyboard-only completion without pointer input"]),
           }),
-        ]),
-      );
-    } finally {
-      log.mockRestore();
-    }
+        }),
+      ]),
+    );
   });
 
   it("runs the canonical conformance fixture suite", async () => {
@@ -124,33 +118,28 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
   });
 
   it("requires explicit inputs for Basic IMPORT item certification evidence", async () => {
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
-    try {
-      await expect(main(["certification", "import-basic-items"])).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain("--qti-root");
-    } finally {
-      error.mockRestore();
-    }
+    const { code, output } = await runCli(["certification", "import-basic-items"]);
+    expect(code).toBe(1);
+    expect(lastStderr(output)).toContain("--qti-root");
   });
 
   it("requires explicit inputs for Basic IMPORT test certification evidence", async () => {
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
-    try {
-      await expect(main(["certification", "import-basic-tests"])).resolves.toBe(1);
-      expect(String(error.mock.calls.at(-1)?.[0])).toContain("--qti-root");
-    } finally {
-      error.mockRestore();
-    }
+    const { code, output } = await runCli(["certification", "import-basic-tests"]);
+    expect(code).toBe(1);
+    expect(lastStderr(output)).toContain("--qti-root");
   });
 
   it("prints a Basic IMPORT item certification report", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-certification-"));
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     try {
-      await expect(
-        main(["certification", "import-basic-items", "--qti-root", directory]),
-      ).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      const { code, output } = await runCli([
+        "certification",
+        "import-basic-items",
+        "--qti-root",
+        directory,
+      ]);
+      expect(code).toBe(1);
+      const report = JSON.parse(lastStdout(output));
       expect(report).toMatchObject({
         targetCapability: "IMPORT",
         targetLevel: "Basic",
@@ -158,19 +147,21 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
       });
       expect(report.failed).toBeGreaterThan(0);
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
 
   it("prints a failing Basic IMPORT test certification report", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-certification-"));
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     try {
-      await expect(
-        main(["certification", "import-basic-tests", "--qti-root", directory]),
-      ).resolves.toBe(1);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      const { code, output } = await runCli([
+        "certification",
+        "import-basic-tests",
+        "--qti-root",
+        directory,
+      ]);
+      expect(code).toBe(1);
+      const report = JSON.parse(lastStdout(output));
       expect(report).toMatchObject({
         targetCapability: "IMPORT",
         targetLevel: "Basic",
@@ -178,7 +169,6 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
       });
       expect(report.failed).toBeGreaterThan(0);
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -186,15 +176,18 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
   it("prints a passing Basic IMPORT test certification report", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-certification-"));
     const packagePath = join(directory, "Basic/T4 and T7 - Test Structures/T4T7TestStructures.zip");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
     try {
       await mkdir(join(directory, "Basic/T4 and T7 - Test Structures"), { recursive: true });
       await writeFile(packagePath, createStoredZip(basicImportTestPackageEntries()));
 
-      await expect(
-        main(["certification", "import-basic-tests", "--qti-root", directory]),
-      ).resolves.toBe(0);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
+      const { code, output } = await runCli([
+        "certification",
+        "import-basic-tests",
+        "--qti-root",
+        directory,
+      ]);
+      expect(code).toBe(0);
+      const report = JSON.parse(lastStdout(output));
       expect(report).toMatchObject({
         checked: 4,
         failed: 0,
@@ -210,24 +203,19 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
         },
       });
     } finally {
-      log.mockRestore();
       await rm(directory, { recursive: true, force: true });
     }
   });
 
   it("fails release support assertions when matrix evidence regresses", async () => {
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
-    try {
-      await expect(main(["assert-support"])).resolves.toBe(0);
-      const report = JSON.parse(String(log.mock.calls.at(-1)?.[0]));
-      expect(report).toMatchObject({
-        checked: elementSupport.length + sharedVocabularyClassSupport.length,
-        failed: 0,
-        failures: [],
-      });
-    } finally {
-      log.mockRestore();
-    }
+    const { code, output } = await runCli(["assert-support"]);
+    expect(code).toBe(0);
+    const report = JSON.parse(lastStdout(output));
+    expect(report).toMatchObject({
+      checked: elementSupport.length + sharedVocabularyClassSupport.length,
+      failed: 0,
+      failures: [],
+    });
   });
 
   it("keeps checked-in XML fixture artifacts aligned with canonical fixtures", async () => {

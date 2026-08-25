@@ -18,11 +18,8 @@ interface PackageXmlFile {
   errors: string[];
 }
 
-/** Controls strict and item-only package inspection policies. */
-export interface InspectPackageOptions {
-  strict: boolean;
-  itemOnly?: boolean | undefined;
-}
+/** Package inspection policy selected by a CLI use case. */
+export type PackageInspectionMode = "inspect" | "validate" | "basic-item-player";
 
 /** Structured package inspection result emitted by package-related CLI commands. */
 export interface PackageInspectionReport {
@@ -48,14 +45,14 @@ export interface PackageInspectionReport {
 /** Inspect a package and convert package-reader failures into a structured CLI report. */
 export async function inspectPackageSafely(
   file: string,
-  options: InspectPackageOptions,
+  mode: PackageInspectionMode,
 ): Promise<PackageInspectionReport> {
   try {
-    return await inspectPackage(file, options);
+    return await inspectPackage(file, mode);
   } catch (error) {
     return {
       file,
-      strict: options.strict,
+      strict: mode !== "inspect",
       checked: 0,
       failed: 1,
       packageErrors: [error instanceof Error ? error.message : String(error)],
@@ -70,8 +67,10 @@ export async function inspectPackageSafely(
 
 async function inspectPackage(
   file: string,
-  options: InspectPackageOptions,
+  mode: PackageInspectionMode,
 ): Promise<PackageInspectionReport> {
+  const strict = mode !== "inspect";
+  const itemOnly = mode === "basic-item-player";
   const entries = await readPackageEntries(file);
   const xmlFiles = entries
     .filter((entry) => entry.name.toLowerCase().endsWith(".xml"))
@@ -87,7 +86,7 @@ async function inspectPackage(
   });
   const manifestFiles = xmlFiles.filter((xmlFile) => xmlFile.root?.localName === "manifest");
 
-  if (options.strict) {
+  if (strict) {
     if (!manifestFiles.some((xmlFile) => xmlFile.path === "imsmanifest.xml")) {
       packageErrors.push("strict package validation requires imsmanifest.xml.");
     }
@@ -106,7 +105,7 @@ async function inspectPackage(
       assessmentTestFiles.push(xmlFile.path);
     }
     const refs =
-      rootName === "qti-assessment-test" && !options.itemOnly
+      rootName === "qti-assessment-test" && !itemOnly
         ? assessmentItemRefs(xmlFile)
         : rootName === "manifest"
           ? manifestItemResources(xmlFile)
@@ -119,7 +118,7 @@ async function inspectPackage(
         packageErrors.push(`package reference ${ref} was not found.`);
       }
     }
-    if (options.strict) {
+    if (strict) {
       for (const ref of packageDependencyReferences(xmlFile)) {
         if (!entryNames.has(ref)) {
           packageErrors.push(
@@ -133,13 +132,13 @@ async function inspectPackage(
     }
   }
 
-  if (options.itemOnly && assessmentTestFiles.length > 0) {
+  if (itemOnly && assessmentTestFiles.length > 0) {
     packageErrors.push(
       `assessment-test packages are out of scope for Basic item-player readiness: ${assessmentTestFiles.join(", ")}.`,
     );
   }
 
-  if (options.strict && discoveredReferences.length === 0) {
+  if (strict && discoveredReferences.length === 0) {
     packageErrors.push(
       "strict package validation requires manifest or assessment-test item references.",
     );
@@ -147,7 +146,7 @@ async function inspectPackage(
 
   for (const path of directItemPaths) {
     if (itemSources.has(path)) continue;
-    if (options.strict) {
+    if (strict) {
       packageErrors.push(
         `qti-assessment-item ${path} is not referenced by the package manifest or assessment test.`,
       );
@@ -175,7 +174,7 @@ async function inspectPackage(
     const diagnostics = uniqueDiagnostics([
       ...result.diagnostics,
       ...validation.diagnostics,
-      ...(options.strict ? packageXmlDiagnostics(xmlFile) : []),
+      ...(strict ? packageXmlDiagnostics(xmlFile) : []),
     ]);
     return {
       file: path,
@@ -190,7 +189,7 @@ async function inspectPackage(
 
   return {
     file,
-    strict: options.strict,
+    strict,
     checked: results.length,
     failed: results.filter((result) => !result.ok).length + packageErrors.length,
     packageErrors,

@@ -38,7 +38,7 @@ export async function basicItemPlayerReport(targets: string[]): Promise<{
 }> {
   const packageTargets = await expandBasicPackageTargets(targets);
   const packages = await Promise.all(
-    packageTargets.map((target) => inspectPackageSafely(target, { strict: true, itemOnly: true })),
+    packageTargets.map((target) => inspectPackageSafely(target, "basic-item-player")),
   );
   const packageEvidence = packages.map(toBasicPackageEvidence);
   const readiness = runBasicItemPlayerReadiness({ packageEvidence });

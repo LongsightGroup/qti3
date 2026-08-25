@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { isQtiValue, prepareQtiDeliveryXml, type QtiValue } from "@longsightgroup/qti3-core";
 import { fileErrorMessage, readJsonObject, readTextInput } from "../cli-io.js";
+import { errorResult, jsonResult, type CliCommandResult } from "../cli-result.js";
 
 const PREPARE_DELIVERY_USAGE =
   "Usage: qti3 prepare-delivery <item.xml> [--mode static|server-materialized-adaptive] [--state <state.json>] [--out <candidate.xml>]";
@@ -23,17 +24,15 @@ type PrepareDeliveryOptionsResult =
   | { readonly ok: false; readonly message: string };
 
 /** Prepare candidate-safe static or server-materialized adaptive delivery XML. */
-export async function runPrepareDeliveryCommand(args: string[]): Promise<number> {
+export async function runPrepareDeliveryCommand(args: string[]): Promise<CliCommandResult> {
   const parsed = parsePrepareDeliveryArgs(args);
   if (!parsed.ok) {
-    console.error(parsed.message);
-    return 1;
+    return errorResult(parsed.message);
   }
 
   const itemXml = await readTextInput(parsed.options.itemFile, "QTI item");
   if (!itemXml.ok) {
-    console.error(itemXml.message);
-    return 1;
+    return errorResult(itemXml.message);
   }
 
   const prepared =
@@ -41,31 +40,26 @@ export async function runPrepareDeliveryCommand(args: string[]): Promise<number>
       ? { ok: true as const, value: prepareQtiDeliveryXml(itemXml.value, { mode: "static" }) }
       : await prepareAdaptiveDelivery(itemXml.value, parsed.options.stateFile);
   if (!prepared.ok) {
-    console.error(prepared.message);
-    return 1;
+    return errorResult(prepared.message);
   }
   const result = prepared.value;
 
   if (parsed.options.outputFile === undefined) {
-    console.log(JSON.stringify(result, null, 2));
-    return result.ok ? 0 : 1;
+    return jsonResult(result, result.ok ? 0 : 1);
   }
 
   const { candidateSafeXml: _candidateSafeXml, ...summary } = result;
   if (!result.ok || result.candidateSafeXml === undefined) {
-    console.log(JSON.stringify(summary, null, 2));
-    return 1;
+    return jsonResult(summary, 1);
   }
   try {
     await writeFile(parsed.options.outputFile, result.candidateSafeXml, "utf8");
   } catch (error) {
-    console.error(
+    return errorResult(
       fileErrorMessage("Candidate XML output", parsed.options.outputFile, "write", error),
     );
-    return 1;
   }
-  console.log(JSON.stringify({ ...summary, outputFile: parsed.options.outputFile }, null, 2));
-  return 0;
+  return jsonResult({ ...summary, outputFile: parsed.options.outputFile }, 0);
 }
 
 function parsePrepareDeliveryArgs(args: string[]): PrepareDeliveryOptionsResult {

@@ -1,5 +1,6 @@
 import { scoreQtiItemServerSide } from "@longsightgroup/qti3-core";
 import { readJsonObject, readTextInput } from "../cli-io.js";
+import { errorResult, jsonResult, type CliCommandResult } from "../cli-result.js";
 
 const SCORE_USAGE = "Usage: qti3 score <item.xml> --responses <responses.json>";
 
@@ -13,30 +14,26 @@ type ScoreOptionsResult =
   | { readonly ok: false; readonly message: string };
 
 /** Run trusted server-side scoring for a QTI item and response JSON file. */
-export async function runScoreCommand(args: string[]): Promise<number> {
+export async function runScoreCommand(args: string[]): Promise<CliCommandResult> {
   const parsed = parseScoreArgs(args);
   if (!parsed.ok) {
-    console.error(parsed.message);
-    return 1;
+    return errorResult(parsed.message);
   }
 
   const itemXml = await readTextInput(parsed.options.itemFile, "QTI item");
   if (!itemXml.ok) {
-    console.error(itemXml.message);
-    return 1;
+    return errorResult(itemXml.message);
   }
   const responses = await readJsonObject(parsed.options.responsesFile, "Responses");
   if (!responses.ok) {
-    console.error(responses.message);
-    return 1;
+    return errorResult(responses.message);
   }
 
   const result = scoreQtiItemServerSide({
     itemXml: itemXml.value,
     trustedResponses: responses.value,
   });
-  console.log(JSON.stringify(result, null, 2));
-  return result.ok ? 0 : 1;
+  return jsonResult(result, result.ok ? 0 : 1);
 }
 
 function parseScoreArgs(args: string[]): ScoreOptionsResult {
