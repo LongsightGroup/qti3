@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { interactionFixtures } from "@longsightgroup/qti3-fixtures";
 import { describe, expect, it } from "vitest";
-import { lastStderr, runCli, runCliJson } from "./cli-harness.js";
+import { lastStderr, lastStdout, runCli, runCliJson } from "./cli-harness.js";
 import { basicFeatureIds } from "./package-fixtures.js";
 import { createDeflatedZip, createStoredZip } from "./zip-fixtures.js";
 
@@ -22,6 +22,24 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it.each(["inspect-package", "validate-package"])(
+    "reports a missing target for %s on stderr",
+    async (command) => {
+      const directory = await mkdtemp(join(tmpdir(), "qti3-missing-package-"));
+      const target = join(directory, "missing");
+      try {
+        const { code, output } = await runCli([command, target]);
+
+        expect(code).toBe(1);
+        expect(output.stdout).toEqual([]);
+        expect(lastStderr(output)).toContain(target);
+        expect(lastStderr(output)).not.toContain("\n    at ");
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
 
   it("inspects package zips and enumerates loadable item references", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-package-"));
@@ -206,8 +224,10 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         }),
       );
 
-      const { code, report } = await runCliJson(["inspect-package", file]);
+      const { code, output } = await runCli(["inspect-package", file]);
       expect(code).toBe(1);
+      expect(output.stderr).toEqual([]);
+      const report = JSON.parse(lastStdout(output));
 
       expect(report).toMatchObject({
         checked: 0,

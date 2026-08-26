@@ -34,7 +34,7 @@ export async function runCertificationCommand(args: string[]): Promise<CliComman
     return jsonResult(report, report.ok ? 0 : 1);
   }
 
-  return { exitCode: 1, stdout: CERTIFICATION_USAGE };
+  return errorResult(CERTIFICATION_USAGE);
 }
 
 function parseImportBasicItemsArgs(

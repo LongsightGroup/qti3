@@ -20,23 +20,18 @@ export async function parseDirectory(root: string): Promise<{
     interactions: string[];
   }[];
 }> {
-  const files = await findXmlFiles(root);
-  const results = [];
-  let failed = 0;
-  for (const xmlFile of files) {
-    const xml = await readFile(xmlFile, "utf8");
-    if (!xml.includes("qti-assessment-item")) continue;
+  const sources = await readAssessmentItemSources(root);
+  const results = sources.map(({ file, xml }) => {
     const result = parseQtiXml(xml);
-    if (!result.ok) failed += 1;
-    results.push({
-      file: xmlFile,
+    return {
+      file,
       ok: result.ok,
       diagnostics: result.diagnostics,
       interactions:
         result.document?.item.interactions.map((interaction) => interaction.qtiName) ?? [],
-    });
-  }
-  return { checked: results.length, failed, results };
+    };
+  });
+  return summarizeDirectoryResults(results, (result) => !result.ok);
 }
 
 /** Validate every assessment item XML file beneath a directory. */
@@ -45,17 +40,9 @@ export async function validateDirectory(root: string): Promise<{
   failed: number;
   results: Awaited<ReturnType<typeof validateFile>>[];
 }> {
-  const files = await findXmlFiles(root);
-  const results = [];
-  let failed = 0;
-  for (const xmlFile of files) {
-    const xml = await readFile(xmlFile, "utf8");
-    if (!xml.includes("qti-assessment-item")) continue;
-    const result = await validateFile(xmlFile);
-    if (!result.ok) failed += 1;
-    results.push(result);
-  }
-  return { checked: results.length, failed, results };
+  const sources = await readAssessmentItemSources(root);
+  const results = sources.map(({ file, xml }) => validateItemSource(file, xml));
+  return summarizeDirectoryResults(results, (result) => !result.ok);
 }
 
 /** Parse and validate one assessment item file. */
@@ -64,7 +51,17 @@ export async function validateFile(file: string): Promise<{
   ok: boolean;
   diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
 }> {
-  const xml = await readFile(file, "utf8");
+  return validateItemSource(file, await readFile(file, "utf8"));
+}
+
+function validateItemSource(
+  file: string,
+  xml: string,
+): {
+  file: string;
+  ok: boolean;
+  diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
+} {
   const result = parseQtiXml(xml);
   if (!result.document) {
     return { file, ok: false, diagnostics: result.diagnostics };
@@ -84,17 +81,12 @@ export async function scoreCorrectDirectory(root: string): Promise<{
   failed: number;
   results: Awaited<ReturnType<typeof scoreCorrectFile>>[];
 }> {
-  const files = await findXmlFiles(root);
-  const results = [];
-  let failed = 0;
-  for (const xmlFile of files) {
-    const xml = await readFile(xmlFile, "utf8");
-    if (!xml.includes("qti-assessment-item")) continue;
-    const result = await scoreCorrectFile(xmlFile);
-    if (!result.ok || (result.scorable && !result.scorePositive)) failed += 1;
-    results.push(result);
-  }
-  return { checked: results.length, failed, results };
+  const sources = await readAssessmentItemSources(root);
+  const results = sources.map(({ file, xml }) => scoreCorrectItemSource(file, xml));
+  return summarizeDirectoryResults(
+    results,
+    (result) => !result.ok || (result.scorable && !result.scorePositive),
+  );
 }
 
 /** Score one assessment item with its declared correct responses. */
@@ -106,7 +98,20 @@ export async function scoreCorrectFile(file: string): Promise<{
   outcomes: Record<string, QtiValue>;
   diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
 }> {
-  const xml = await readFile(file, "utf8");
+  return scoreCorrectItemSource(file, await readFile(file, "utf8"));
+}
+
+function scoreCorrectItemSource(
+  file: string,
+  xml: string,
+): {
+  file: string;
+  ok: boolean;
+  scorable: boolean;
+  scorePositive: boolean;
+  outcomes: Record<string, QtiValue>;
+  diagnostics: ReturnType<typeof parseQtiXml>["diagnostics"];
+} {
   const result = parseQtiXml(xml);
   if (!result.document || !result.ok) {
     return {
@@ -165,4 +170,26 @@ async function findXmlFiles(root: string): Promise<string[]> {
     else if (entry.isFile() && entry.name.endsWith(".xml")) files.push(path);
   }
   return files;
+}
+
+async function readAssessmentItemSources(
+  root: string,
+): Promise<{ readonly file: string; readonly xml: string }[]> {
+  const sources: { file: string; xml: string }[] = [];
+  for (const file of await findXmlFiles(root)) {
+    const xml = await readFile(file, "utf8");
+    if (xml.includes("qti-assessment-item")) sources.push({ file, xml });
+  }
+  return sources;
+}
+
+function summarizeDirectoryResults<T>(
+  results: T[],
+  isFailed: (result: T) => boolean,
+): { checked: number; failed: number; results: T[] } {
+  return {
+    checked: results.length,
+    failed: results.filter(isFailed).length,
+    results,
+  };
 }

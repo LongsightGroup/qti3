@@ -45,6 +45,22 @@ export function fileErrorMessage(
   return `${label} file "${file}" could not be ${action}: ${detail}`;
 }
 
+/** Identify a Node system error produced by a filesystem operation. */
+export function isNodeFileSystemError(cause: unknown): cause is NodeJS.ErrnoException {
+  return (
+    cause instanceof Error &&
+    "code" in cause &&
+    typeof cause.code === "string" &&
+    "syscall" in cause &&
+    typeof cause.syscall === "string"
+  );
+}
+
+/** Identify filesystem absence while preserving permission failures and defects. */
+export function isMissingPathError(cause: unknown): boolean {
+  return isNodeFileSystemError(cause) && (cause.code === "ENOENT" || cause.code === "ENOTDIR");
+}
+
 function isJsonObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

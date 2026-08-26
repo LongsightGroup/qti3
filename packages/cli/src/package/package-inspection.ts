@@ -1,6 +1,5 @@
 import {
   decodeUtf8,
-  normalizePackagePath,
   parseQtiPackageXmlTree,
   parseQtiXml,
   validateAssessmentItem,
@@ -9,6 +8,8 @@ import {
 } from "@longsightgroup/qti3-core";
 import { uniqueDiagnostics } from "../diagnostics.js";
 import { detectBasicItemFeatures } from "./basic-item-features.js";
+import { PackageContentError } from "./package-content-error.js";
+import { parseCliPackagePath } from "./package-path.js";
 import { readPackageEntries, type PackageEntry } from "./package-reader.js";
 
 interface PackageXmlFile {
@@ -49,13 +50,14 @@ export async function inspectPackageSafely(
 ): Promise<PackageInspectionReport> {
   try {
     return await inspectPackage(file, mode);
-  } catch (error) {
+  } catch (cause) {
+    if (!(cause instanceof PackageContentError)) throw cause;
     return {
       file,
       strict: mode !== "inspect",
       checked: 0,
       failed: 1,
-      packageErrors: [error instanceof Error ? error.message : String(error)],
+      packageErrors: [cause.message],
       xmlFiles: [],
       assetFiles: [],
       discoveredReferences: [],
@@ -370,15 +372,5 @@ function packageDescendants(
 
 function resolveRelativePath(from: string, href: string): string {
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  return normalizeCliPackagePath(`${base}${href}`, "package reference");
-}
-
-function normalizeCliPackagePath(path: string, context: string): string {
-  const diagnostics: QtiDiagnostic[] = [];
-  const normalized = normalizePackagePath(path, context, diagnostics);
-  if (normalized !== undefined) return normalized;
-  throw new Error(
-    diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
-      `${context} ${path} is not a valid package-relative path.`,
-  );
+  return parseCliPackagePath(`${base}${href}`, "package reference");
 }

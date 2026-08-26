@@ -1,11 +1,9 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { inflateRawSync } from "node:zlib";
-import {
-  normalizePackagePath,
-  readQtiPackageZipEntries,
-  type QtiDiagnostic,
-} from "@longsightgroup/qti3-core";
+import { readQtiPackageZipEntries, type QtiDiagnostic } from "@longsightgroup/qti3-core";
+import { PackageContentError } from "./package-content-error.js";
+import { parseCliPackagePath } from "./package-path.js";
 
 /** One normalized file entry read from an expanded or zipped QTI package. */
 export interface PackageEntry {
@@ -31,7 +29,7 @@ function readZipEntries(buffer: Uint8Array): PackageEntry[] {
     const message =
       diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
       "No ZIP central directory was found.";
-    throw new Error(message);
+    throw new PackageContentError(message);
   }
   return entries.map((entry) => ({ name: entry.path, bytes: entry.bytes }));
 }
@@ -57,20 +55,7 @@ async function collectDirectoryPackageEntries(
       continue;
     }
     if (!entry.isFile()) continue;
-    const name = normalizeCliPackagePath(
-      relative(root, path).replaceAll("\\", "/"),
-      "package file",
-    );
+    const name = parseCliPackagePath(relative(root, path).replaceAll("\\", "/"), "package file");
     entries.push({ name, bytes: await readFile(path) });
   }
-}
-
-function normalizeCliPackagePath(path: string, context: string): string {
-  const diagnostics: QtiDiagnostic[] = [];
-  const normalized = normalizePackagePath(path, context, diagnostics);
-  if (normalized !== undefined) return normalized;
-  throw new Error(
-    diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
-      `${context} ${path} is not a valid package-relative path.`,
-  );
 }

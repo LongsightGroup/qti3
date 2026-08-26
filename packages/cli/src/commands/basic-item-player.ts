@@ -6,6 +6,7 @@ import {
   type QtiBasicItemPlayerPackageEvidence,
 } from "@longsightgroup/qti3-conformance";
 import type { QtiDiagnostic } from "@longsightgroup/qti3-core";
+import { isMissingPathError } from "../cli-io.js";
 import {
   inspectPackageSafely,
   type PackageInspectionReport,
@@ -148,8 +149,9 @@ async function expandBasicPackageTargets(targets: string[]): Promise<string[]> {
 async function hasPackageManifest(directory: string): Promise<boolean> {
   try {
     return (await stat(join(directory, "imsmanifest.xml"))).isFile();
-  } catch {
-    return false;
+  } catch (cause) {
+    if (isMissingPathError(cause)) return false;
+    throw cause;
   }
 }
 

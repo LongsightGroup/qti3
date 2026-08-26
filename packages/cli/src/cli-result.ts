@@ -1,12 +1,12 @@
+import { isNodeFileSystemError } from "./cli-io.js";
+
 /** Process exit codes emitted by supported CLI commands. */
 export type CliExitCode = 0 | 1;
 
 /** Observable result of executing one CLI command. */
-export interface CliCommandResult {
-  readonly exitCode: CliExitCode;
-  readonly stdout?: string;
-  readonly stderr?: string;
-}
+export type CliCommandResult =
+  | { readonly exitCode: CliExitCode; readonly stream: "stdout"; readonly text: string }
+  | { readonly exitCode: 1; readonly stream: "stderr"; readonly text: string };
 
 /** Output boundary used to render a command result. */
 export interface CliOutput {
@@ -16,12 +16,12 @@ export interface CliOutput {
 
 /** Build a command result whose standard output is formatted JSON. */
 export function jsonResult(value: unknown, exitCode: CliExitCode): CliCommandResult {
-  return { exitCode, stdout: JSON.stringify(value, null, 2) };
+  return { exitCode, stream: "stdout", text: JSON.stringify(value, null, 2) };
 }
 
 /** Build a failed command result whose message belongs on standard error. */
 export function errorResult(stderr: string): CliCommandResult {
-  return { exitCode: 1, stderr };
+  return { exitCode: 1, stream: "stderr", text: stderr };
 }
 
 /** Translate a Node filesystem failure at the CLI boundary when the cause is classifiable. */
@@ -45,8 +45,8 @@ export async function runFileSystemCommand(
 
 /** Render a command result and return its process exit code. */
 export function renderCliResult(result: CliCommandResult, output: CliOutput): number {
-  if (result.stdout !== undefined) output.writeStdout(result.stdout);
-  if (result.stderr !== undefined) output.writeStderr(result.stderr);
+  if (result.stream === "stdout") output.writeStdout(result.text);
+  else output.writeStderr(result.text);
   return result.exitCode;
 }
 
@@ -55,13 +55,3 @@ export const nodeCliOutput: CliOutput = {
   writeStdout: (text) => console.log(text),
   writeStderr: (text) => console.error(text),
 };
-
-function isNodeFileSystemError(cause: unknown): cause is NodeJS.ErrnoException {
-  return (
-    cause instanceof Error &&
-    "code" in cause &&
-    typeof cause.code === "string" &&
-    "syscall" in cause &&
-    typeof cause.syscall === "string"
-  );
-}
