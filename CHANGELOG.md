@@ -11,7 +11,7 @@
 - Add `qti3 score` and `qti3 prepare-delivery` commands for server-trusted scoring inputs and
   candidate-safe static or server-materialized adaptive XML.
 - Add a typed media play-count domain with native control metadata, pause timing, attempt-state
-  support, and focused browser coverage.
+  support, and browser tests for play counts and pause timers.
 - Add a typed slider value domain with decimal-safe bounds and steps, keyboard operation, reverse
   direction, validation, and cross-browser rendering coverage.
 
@@ -19,8 +19,8 @@
 
 - Preserve player session options across reset and restore operations, including React and Preact
   adapter reloads.
-- Split the CLI, core tests, and transcoder evidence snapshots into focused modules with clearer
-  ownership and failure reporting.
+- Split CLI commands, core tests, and transcoder evidence snapshots into smaller modules. CLI
+  commands now share typed parsing, package inspection, and output failures.
 - Upgrade Vite and add dependency-advisory, Node.js version-boundary, Playwright artifact, and
   package-export checks to the release pipeline.
 - Align all workspace package versions on `0.10.3`.

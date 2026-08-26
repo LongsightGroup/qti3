@@ -9,19 +9,17 @@ and accessibility evidence. The
 [shared vocabulary gallery](https://longsightgroup.github.io/qti3/sv-gallery/) provides runnable
 matrix fixtures for presentation-class review.
 
-The project ships public releases on npm. The target is a clean, auditable item engine for
-parsing, validating, rendering, scoring, serializing, restoring, and testing QTI 3 items
-across products. The core stays independent of any UI framework.
+The project publishes packages on npm for parsing, validating, rendering, scoring, serializing,
+restoring, and testing QTI 3 items. The core has no UI framework dependency.
 
-This is not another framework-specific item player. The public project focuses on QTI
-item and question-type conformance. Host products own runners, controllers, LMS shells,
-candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations.
+qti3 covers QTI item and question-type conformance. Host products provide runners, controllers,
+LMS shells, candidate attempt policy, analytics, proctoring, rostering, and gradebook integrations.
 
 Longsight maintains qti3 as part of its
 [open-source educational software work](https://www.longsight.com/). The implementation also
 supports the open-standards direction used by
-[QFlowLearn's QTI 3 assessment platform](https://www.qflowlearn.com/standards/qti-3/) while keeping
-product-specific authoring and delivery responsibilities outside this repository.
+[QFlowLearn's QTI 3 assessment platform](https://www.qflowlearn.com/standards/qti-3/).
+Product-specific authoring and delivery remain outside this repository.
 
 ## Project shape
 
@@ -73,9 +71,9 @@ flowchart LR
 
 ## Interaction families
 
-Most interaction support starts from the same parser, normalized `QtiInteraction` model,
-and validation gates. The browser player then routes each interaction to a renderer or
-helper family based on response shape and user interaction model.
+The parser stores each interaction in the normalized `QtiInteraction` model and validates its
+response contract. The browser player selects a renderer from the response shape and interaction
+model.
 
 | Family                     | Interactions                                                             | Shared implementation                                       |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
@@ -90,7 +88,7 @@ helper family based on response shape and user interaction model.
 
 ## Question-type support
 
-The target is the current public QTI 3 item interaction set described by the
+The support matrix tracks the current public QTI 3 item interaction set described by the
 [1EdTech QTI 3 Implementation Guide](https://www.imsglobal.org/spec/qti/v3p0/impl)
 with element names from the
 [QTI 3 XML Binding](https://www.imsglobal.org/spec/qti/v3p0/bind/) and tracked
@@ -137,21 +135,21 @@ node packages/cli/dist/index.js support-matrix
 - Implement the latest public QTI 3 item behavior explicitly, tracking QTI 3.0.1 ASI documents where applicable.
 - Support all QTI 3 interaction/question types in the target item profile.
 - Make scoring and response processing runnable in Node without a browser.
-- Provide an accessible, style-neutral web component player that can be embedded in any product.
+- Publish an accessible, style-neutral web component player for host applications.
 - Publish a reusable conformance test suite.
-- Load QTI package zips and assessment-test item references where useful for item-focused testing.
+- Load QTI package ZIPs and assessment-test item references for import tests and item-focused
+  tooling.
 - Transcode QTI 3 items and packages to explicit, versioned QTI 1.2, QTI 2.1, QTI 2.2, and
   product-specific import profiles.
-- Resolve host-provided QTI 3 PNP data into player-neutral delivery intents without taking over
-  identity, storage, authorization, or institutional policy.
-- Keep dependencies as small as possible, with `qti3-core` and `qti3-cli` remaining
-  zero-third-party-runtime-dependency packages.
+- Resolve host-provided QTI 3 PNP data into player-neutral delivery intents. Hosts retain
+  responsibility for identity, storage, authorization, and institutional policy.
+- Keep `qti3-core` and `qti3-cli` free of third-party runtime dependencies.
 - Make unsupported or invalid behavior visible through structured diagnostics.
 
 ## Non-goals
 
-- The project does not depend on a heavy UI framework such as React or Vue.
-- The browser player does not use Lit. Native custom elements keep the surface small.
+- The core and browser player do not depend on React, Vue, or another UI framework.
+- The browser player uses native custom elements without Lit.
 - The project does not provide a full assessment-test runner, reusable LMS controller, navigation
   UI, or delivery shell. The LMS, assessment engine, or harness owns that.
 - The project does not provide shared stimulus delivery (`S-*`), full test delivery (`T-*`), timing
@@ -163,38 +161,37 @@ node packages/cli/dist/index.js support-matrix
 - Production configuration must be explicit. The project should fail fast instead of using hidden fallbacks.
 - QTI XML is not compiled as framework templates.
 - There is no global singleton state store. Multiple players should not share a brain.
-- The runtime does not run XSD or schema validation. Semantic diagnostics stay fast and embeddable.
+- Runtime XSD validation is out of scope.
 
 ## Packages
 
-| Package                              | Path                     | Purpose                                                                                                    |
-| ------------------------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `@longsightgroup/qti3-core`          | `packages/core`          | Zero-third-party-runtime-dependency parser, typed model, validation, processing, scoring, state            |
-| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                                                                       |
-| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                                                                 |
-| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                                                                |
-| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                                                                  |
-| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                               |
-| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                                    |
-| `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                                    |
-| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML and item-bank package writer with typed diagnostics             |
-| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items, XML, and package input              |
-| `@longsightgroup/qti3-transcoder`    | `packages/transcoder`    | Profile-driven QTI 3 output for QTI 1.2, QTI 2.1, QTI 2.2, Canvas Classic/New Quizzes, and Moodle XML      |
-| `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-dependency validation, trusted scoring and delivery preparation, package inspection, and evidence CLI |
+| Package                              | Path                     | Purpose                                                                                                                     |
+| ------------------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `@longsightgroup/qti3-core`          | `packages/core`          | Zero-third-party-runtime-dependency parser, typed model, validation, processing, scoring, state                             |
+| `@longsightgroup/qti3-player`        | `packages/player`        | Native custom element browser player                                                                                        |
+| `@longsightgroup/qti3-player-react`  | `packages/player-react`  | React adapter for the native web component                                                                                  |
+| `@longsightgroup/qti3-player-preact` | `packages/player-preact` | Preact adapter for the native web component                                                                                 |
+| `@longsightgroup/qti3-conformance`   | `packages/conformance`   | Fixture runner and support matrix tooling                                                                                   |
+| `@longsightgroup/qti3-a11y`          | `packages/a11y`          | Accessibility contracts and automated checks                                                                                |
+| `@longsightgroup/qti3-fixtures`      | `packages/fixtures`      | QTI item fixtures and expected outcomes                                                                                     |
+| `@longsightgroup/qti3-pnp`           | `packages/pnp`           | Dependency-free QTI 3 PNP parser, normalizer, resolver, and diagnostics                                                     |
+| `@longsightgroup/qti3-writer`        | `packages/writer`        | Framework-neutral QTI-shaped authoring XML and item-bank package writer with typed diagnostics                              |
+| `@longsightgroup/qti3-migrator`      | `packages/migrator`      | QTI 1.2 and QTI 2.x package/item migration into QTI 3 authoring items, XML, and package input                               |
+| `@longsightgroup/qti3-transcoder`    | `packages/transcoder`    | Profile-driven QTI 3 output for QTI 1.2, QTI 2.1, QTI 2.2, Canvas Classic/New Quizzes, and Moodle XML                       |
+| `@longsightgroup/qti3-cli`           | `packages/cli`           | Zero-third-party-runtime-dependency validation, trusted scoring, delivery preparation, package inspection, and evidence CLI |
 
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
-inspection, validation, and item loading. The browser player intentionally renders one assessment
-item at a time.
+inspection, validation, and item loading. The browser player renders one assessment item at a time.
 
-The transcoder converts QTI 3 items and packages only through explicit, versioned profiles. Standard
-QTI output and product-specific compatibility modes remain distinct, and each conversion returns
-typed mapping diagnostics instead of silently choosing an LMS dialect or fallback.
+The transcoder converts QTI 3 items and packages through versioned profiles. Standard QTI output
+and product-specific compatibility use separate profiles. Each conversion returns typed mapping
+diagnostics instead of selecting an LMS dialect or fallback automatically.
 
-Framework adapters should stay thin wrappers around the native web component or core API. React and
-Preact adapters are included; Vue, Svelte, or other adapters can be added when there is host demand
-without moving framework dependencies into `qti3-core`.
+Framework adapters wrap the native web component or core API. The repository includes React and
+Preact adapters. Other adapters can be added without moving framework dependencies into
+`qti3-core`.
 
-The browser player surface is a native web component:
+The browser player is a native web component:
 
 ```html
 <script type="module" src="/qti3-player.js"></script>
@@ -256,9 +253,9 @@ player.addEventListener("qti-validation", (event) => {
 `resolveAsset` is a host hook for package or virtual-file environments. The player calls it
 for relative `src`, `href`, and `data` asset URLs after rendering the item, and also when hosts
 resolve companion-material file references through `getCompanionMaterialsResolution()` or catalog
-support content through `getCatalogDeliveryResolution()`. Items whose assets are already reachable
-by normal browser URLs can omit it. Package-backed media, graphic, and drawing assets should use
-this hook so rendered controls and serialized response exports can resolve authored asset references.
+support content through `getCatalogDeliveryResolution()`. Items whose assets are available at
+browser URLs can omit it. Use the hook for package-backed media, graphic, and drawing assets so
+controls and serialized responses resolve authored references.
 
 `qti-stylesheet` delivery is a separate host contract. Core preserves stylesheet metadata, and the
 browser player attaches item stylesheets only when `loadXml` / `loadUrl` receives
@@ -266,11 +263,10 @@ browser player attaches item stylesheets only when `loadXml` / `loadUrl` receive
 `undefined` to decline delivery. Package import, path validation, authorization, immutable asset
 preservation, and unsafe URL rejection remain host responsibilities.
 
-When `resolveStylesheet` is omitted, the player does not attach item stylesheets and does not emit
-`player.stylesheet.unresolved` diagnostics. That silence is intentional opt-out, not a delivery
-failure.
+When `resolveStylesheet` is omitted, the player treats stylesheets as disabled. It does not attach
+them or emit `player.stylesheet.unresolved` diagnostics.
 
-Several response-bearing interactions have format-specific contracts worth calling out:
+## Interaction response contracts
 
 - `qti-media-interaction` records play experiences as a `single` / `integer` response.
   The player supports the QTI shared vocabulary
@@ -296,8 +292,8 @@ Several response-bearing interactions have format-specific contracts worth calli
 
 ## Styling
 
-The browser player is style-neutral by design. It ships only the structural styles needed
-for layout, focus visibility, forced-colors support, and accessible interaction behavior.
+The browser player ships structural styles for layout, focus visibility, forced-colors support,
+and accessible interaction behavior.
 Host products own product chrome, branding, layout density, typography, colors, page-level
 spacing, candidate navigation, and broader candidate experience styling.
 
@@ -325,20 +321,16 @@ Rendered elements use `qti3-*` class names for player structure, such as
 like `qti3-choice`, `qti3-textEntry`, and `qti3-hotspot`. Authored QTI shared-vocabulary
 classes that start with `qti-` are preserved on rendered interactions where applicable.
 
-The player also exposes a small set of theme-aware CSS custom properties for structural
-controls where host products commonly need to tune density or contrast without relying
-on renderer internals. For order interaction rows, hosts can set
+The player exposes theme-aware CSS custom properties for structural controls. For order interaction
+rows, hosts can set
 `--qti3-order-row-border-color`, `--qti3-order-row-background`, and
 `--qti3-order-row-background-hover` on the player or an ancestor. Their defaults use
 system colors, so they work in light mode, dark mode, and forced-colors environments.
 
-QTI shared vocabulary classes are authoring hints defined by the specification, not
-product theme classes. Classes such as `qti-labels-none`,
-`qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden` describe
-portable item-level presentation preferences. `qti3` preserves those classes so host
-products can reflect the item author's choices while still applying their own visual system.
-Supported shared vocabulary classes are parsed, validated, preserved, and implemented according to
-the matrix; product-specific CSS belongs in the host application.
+QTI shared vocabulary classes define portable item presentation preferences. Classes such as
+`qti-labels-none`, `qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden`
+are parsed, validated, preserved, and implemented according to the support matrix. Host applications
+provide product-specific CSS.
 The machine-readable support matrix is the source of truth for shipped shared vocabulary
 coverage. Inspect the `sharedVocabularyClasses` section for each class name, scope,
 interaction surface, support level, fixture evidence, and test evidence:
@@ -383,7 +375,7 @@ accessibility checks, dependency policy, build, source-map validation, package e
 checks, browser coverage, support metadata, and the built CLI fixture runner. It does
 not require official 1EdTech certification artifacts.
 
-The certification-oriented gate is available separately:
+Run certification checks separately:
 
 ```sh
 QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
@@ -396,13 +388,13 @@ pnpm certification:check
 provided. `QTI3_EXTERNAL_VALIDATOR_REPORT` may be supplied as supplemental evidence,
 but Basic IMPORT proof is generated by importing official item and test package zips.
 
-The browser harness is available with:
+Start the browser harness with:
 
 ```sh
 pnpm dev
 ```
 
-The shared vocabulary gallery is available from the same Vite dev server for visual QA:
+Open the shared vocabulary gallery from the same Vite dev server:
 
 ```sh
 pnpm dev
@@ -424,14 +416,13 @@ Use validation when diagnostics should fail the command:
 node packages/cli/dist/index.js validate-dir /path/to/items
 ```
 
-It can also score each item by applying its declared correct responses:
+Score each item with its declared correct responses:
 
 ```sh
 node packages/cli/dist/index.js score-correct-dir /path/to/items
 ```
 
-Use a server-trusted response file to score one item through the same core API used by trusted
-hosts:
+Use a server-trusted response file to score one item:
 
 ```sh
 node packages/cli/dist/index.js score item.xml --responses trusted-responses.json
@@ -447,10 +438,10 @@ node packages/cli/dist/index.js prepare-delivery adaptive.xml \
   --out candidate.xml
 ```
 
-Response and state JSON are server-trusted inputs, not raw browser submissions. Secure adaptive
-turn handling remains a library API for hosts that manage the versioned attempt-state contract.
+Response and state JSON are server-trusted inputs, not raw browser submissions. Hosts manage
+adaptive turns through the library API and versioned attempt-state contract.
 
-For package-level inspection without creating an open-source runner, use:
+Inspect a package with:
 
 ```sh
 node packages/cli/dist/index.js inspect-package /path/to/package.zip
@@ -469,8 +460,8 @@ Strict package validation requires `imsmanifest.xml`, requires manifest or
 assessment-test item references, and fails direct item XML files that are not referenced
 by the package metadata.
 
-It can also write standalone canonical reference items for targeted interactions,
-processing patterns, and adaptive behavior:
+Write standalone reference items for targeted interactions, processing patterns, and adaptive
+behavior:
 
 ```sh
 node packages/cli/dist/index.js write-fixtures packages/fixtures/xml
@@ -490,16 +481,15 @@ keyboard contract, automated evidence, and manual assistive-technology scripts:
 node packages/cli/dist/index.js a11y-proof
 ```
 
-The release bar is:
+Before publishing, verify these requirements:
 
 - Supported interactions need parser, validation, scoring, rendering, keyboard, and accessibility evidence.
 - Accessibility checks cover real operation as well as automated scans.
 - Dependencies stay small, exact, and reviewed.
 - Published packages use explicit npm `files` allowlists so package contents stay small and deliberate.
-- Release checks must pass before publishing; certification evidence remains a separate
-  future gate.
+- Release checks must pass before publishing. Certification evidence is checked separately.
 
-## Attempt State
+## Attempt state
 
 Serialized attempt state uses `qti3.attempt-state.v1`. It captures responses, outcomes,
 generated template values, validation messages, lifecycle status, and QTI's built-in
@@ -514,7 +504,7 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
 - Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.
 
-## Randomized Item Instances
+## Randomized item instances
 
 `qti3` supports QTI-native randomized item instances through template processing.
 Authors can use `qti-random-integer`, generated template variables, printed variables,
@@ -534,11 +524,10 @@ candidate XML.
 
 ## Coverage
 
-`qti3` includes public synthetic fixtures for every current, non-deprecated QTI 3 item
-interaction. The canonical examples use realistic item prompts and classroom-style
-scenarios rather than placeholder QTI terminology, while staying synthetic and
-MIT-licensed. The fixtures cover response shape, scoring, browser rendering, keyboard
-operation, and accessibility evidence.
+`qti3` includes public synthetic fixtures for every current, non-deprecated QTI 3 item interaction.
+The canonical examples use MIT-licensed classroom prompts instead of placeholder QTI terminology.
+The fixtures cover response shape, scoring, browser rendering, keyboard operation, and
+accessibility evidence.
 
 Processing coverage includes response processing, template processing, feedback, printed
 variables, MathML/template variables, catalogs, shared CSS vocabulary, advanced
@@ -556,7 +545,5 @@ from the same checked build output that CI verifies.
 
 ## Certification
 
-The project is not currently certified. We plan to pursue relevant QTI certification once
-the implementation, fixtures, conformance tests, and public API are stable enough for
-review. The `certification:check` script is intentionally strict so certification work
-cannot pass without official 1EdTech external content and validator evidence.
+The project is not certified. `pnpm certification:check` requires official 1EdTech external
+content and validator evidence.
