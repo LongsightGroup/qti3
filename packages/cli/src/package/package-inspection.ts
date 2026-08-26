@@ -43,8 +43,8 @@ export interface PackageInspectionReport {
   }[];
 }
 
-/** Inspect a package and convert package-reader failures into a structured CLI report. */
-export async function inspectPackageSafely(
+/** Inspect a package and convert authored package-content failures into a structured report. */
+export async function inspectPackageWithContentErrorReport(
   file: string,
   mode: PackageInspectionMode,
 ): Promise<PackageInspectionReport> {

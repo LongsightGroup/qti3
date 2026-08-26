@@ -8,7 +8,7 @@ import {
 import type { QtiDiagnostic } from "@longsightgroup/qti3-core";
 import { isMissingPathError } from "../cli-io.js";
 import {
-  inspectPackageSafely,
+  inspectPackageWithContentErrorReport,
   type PackageInspectionReport,
 } from "../package/package-inspection.js";
 
@@ -39,7 +39,9 @@ export async function basicItemPlayerReport(targets: string[]): Promise<{
 }> {
   const packageTargets = await expandBasicPackageTargets(targets);
   const packages = await Promise.all(
-    packageTargets.map((target) => inspectPackageSafely(target, "basic-item-player")),
+    packageTargets.map((target) =>
+      inspectPackageWithContentErrorReport(target, "basic-item-player"),
+    ),
   );
   const packageEvidence = packages.map(toBasicPackageEvidence);
   const readiness = runBasicItemPlayerReadiness({ packageEvidence });

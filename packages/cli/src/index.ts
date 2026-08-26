@@ -19,7 +19,7 @@ import {
   runCanonicalFixtures,
   supportMatrixReport,
 } from "./commands/support.js";
-import { inspectPackageSafely } from "./package/package-inspection.js";
+import { inspectPackageWithContentErrorReport } from "./package/package-inspection.js";
 import {
   errorResult,
   jsonResult,
@@ -100,12 +100,12 @@ async function executeCli(args: string[]): Promise<CliCommandResult> {
       return runPrepareDeliveryCommand(commandArgs);
     case "inspect-package": {
       if (file === undefined) return errorResult(FILE_COMMAND_USAGE.inspectPackage);
-      const report = await inspectPackageSafely(file, "inspect");
+      const report = await inspectPackageWithContentErrorReport(file, "inspect");
       return jsonResult(report, report.failed === 0 ? 0 : 1);
     }
     case "validate-package": {
       if (file === undefined) return errorResult(FILE_COMMAND_USAGE.validatePackage);
-      const report = await inspectPackageSafely(file, "validate");
+      const report = await inspectPackageWithContentErrorReport(file, "validate");
       return jsonResult(report, report.failed === 0 ? 0 : 1);
     }
     case "basic-item-player-report": {
