@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-migrator",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "description": "Framework-neutral QTI 1.2 and QTI 2.x to QTI 3 migration utilities.",
   "keywords": [
     "assessment",
