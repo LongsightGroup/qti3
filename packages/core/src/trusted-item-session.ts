@@ -1,6 +1,6 @@
 import { parseQtiXml } from "./parser.js";
 import { itemExpectsAutomatedScore } from "./item-scoring-expectation.js";
-import { validateQtiResponseVariables } from "./response-validation.js";
+import { parseQtiResponseVariables } from "./response-validation.js";
 import { createItemSession, isQtiAttemptStateV1, type QtiItemSession } from "./session.js";
 import type {
   QtiAttemptStateV1,
@@ -165,7 +165,7 @@ export function runTrustedItemSession(
 
   let submission = input.submission;
   if (input.submissionValidation === "strict") {
-    const validation = validateQtiResponseVariables({
+    const validation = parseQtiResponseVariables({
       item: parsedResult.parsed.document.item,
       responses: input.submission.trustedResponses ?? {},
       allowIncompleteResponses: input.allowIncompleteResponses,

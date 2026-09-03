@@ -45,8 +45,12 @@ export interface QtiResponseValidationDiagnostic extends QtiDiagnostic {
   identifier?: string | undefined;
 }
 
-/** Result of validating submitted responses, including normalized values on success. */
-export type QtiResponseValidationResult =
+export interface QtiResponseValidationResult {
+  ok: boolean;
+  diagnostics: QtiResponseValidationDiagnostic[];
+}
+
+type QtiResponseVariablesParseResult =
   | {
       ok: true;
       diagnostics: QtiResponseValidationDiagnostic[];
@@ -65,10 +69,18 @@ export interface QtiResponseValidationInput {
   responseIdentifiers?: Iterable<string> | undefined;
 }
 
-/** Validate and normalize submitted response variables against a parsed QTI assessment item. */
+/** Validate submitted response variables against a parsed QTI assessment item. */
 export function validateQtiResponseVariables(
   input: QtiResponseValidationInput,
 ): QtiResponseValidationResult {
+  const result = parseQtiResponseVariables(input);
+  return { ok: result.ok, diagnostics: result.diagnostics };
+}
+
+/** Parse and normalize submitted response variables for trusted boundary application. */
+export function parseQtiResponseVariables(
+  input: QtiResponseValidationInput,
+): QtiResponseVariablesParseResult {
   const diagnostics: QtiResponseValidationDiagnostic[] = [];
   const declaredIdentifiers = new Set(
     input.item.responseDeclarations.map((declaration) => declaration.identifier),
