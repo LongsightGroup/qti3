@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coerceValue, parseInteger, parseXmlBoolean } from "./parser-values.js";
+import { coerceValue, parseFiniteNumber, parseInteger, parseXmlBoolean } from "./parser-values.js";
 import { isBooleanAttribute } from "./validation-primitives.js";
 
 describe("parseXmlBoolean", () => {
@@ -27,8 +27,31 @@ describe("parseXmlBoolean", () => {
     expect(coerceValue("12garbage", "integer")).toBe("12garbage");
     expect(coerceValue("1.5", "float")).toBe(1.5);
     expect(coerceValue("1.5garbage", "float")).toBe("1.5garbage");
+    expect(coerceValue("0x10", "float")).toBe("0x10");
+    expect(coerceValue("0b10", "float")).toBe("0b10");
     expect(coerceValue("Infinity", "float")).toBe("Infinity");
   });
+
+  it.each([
+    ["0", 0],
+    ["+1", 1],
+    ["-1.5", -1.5],
+    ["1.", 1],
+    [".5", 0.5],
+    ["-.5", -0.5],
+    ["1e2", 100],
+    ["1E-2", 0.01],
+    [" 1.5 ", 1.5],
+  ] as const)("parses QTI float lexical value %j", (value, expected) => {
+    expect(parseFiniteNumber(value)).toBe(expected);
+  });
+
+  it.each(["", ".", "+", "0x10", "0b10", "0o10", "1_000", "1f", "INF", "NaN"])(
+    "rejects non-finite or non-QTI float lexical value %j",
+    (value) => {
+      expect(parseFiniteNumber(value)).toBeUndefined();
+    },
+  );
 
   it("parses complete integer lexical values", () => {
     expect(parseInteger(" -12 ")).toBe(-12);

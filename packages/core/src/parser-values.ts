@@ -20,6 +20,7 @@ const QTI_BASE_TYPES = new Set<string>([
   "file",
   "uri",
 ]);
+const QTI_FINITE_FLOAT_PATTERN = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?$/;
 
 export function isQtiBaseType(value: string): value is QtiBaseType {
   return QTI_BASE_TYPES.has(value);
@@ -75,10 +76,12 @@ export function parseXmlBoolean(value: string | undefined): boolean | undefined 
   return undefined;
 }
 
-/** Parse a non-empty finite numeric XML attribute value. */
+/** Parse the finite subset of the XML Schema float lexical space used by QTI values. */
 export function parseFiniteNumber(value: string | undefined): number | undefined {
-  if (value === undefined || value.trim().length === 0) return undefined;
-  const parsed = Number(value);
+  if (value === undefined) return undefined;
+  const normalized = value.trim();
+  if (!QTI_FINITE_FLOAT_PATTERN.test(normalized)) return undefined;
+  const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 

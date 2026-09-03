@@ -98,6 +98,15 @@ describe("QTI response variable validation", () => {
         expect.objectContaining({ code: "response.baseType", identifier: "FILE" }),
       ]),
     );
+
+    const invalidFloatSyntax = validateQtiResponseVariables({
+      item,
+      responses: { FLOAT: "0x10" },
+      allowIncompleteResponses: true,
+    });
+    expect(invalidFloatSyntax.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "response.baseType", identifier: "FLOAT" }),
+    );
   });
 
   it("rejects values outside authored choice, pair, and slider domains", () => {

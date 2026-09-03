@@ -460,6 +460,36 @@ describe("declaration parsing and validation", () => {
     );
   });
 
+  it("rejects JavaScript-only numeric syntax in QTI float values", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="javascript-numbers" title="javascript-numbers" time-dependent="false">
+        <qti-outcome-declaration identifier="HEX" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>0x10</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-template-declaration identifier="BINARY" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>0b10</qti-value></qti-default-value>
+        </qti-template-declaration>
+        <qti-item-body><p>Invalid numeric syntax.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.outcomeDeclarations[0]?.defaultValue).toBe("0x10");
+    expect(result.document?.item.templateDeclarations[0]?.defaultValue).toBe("0b10");
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("HEX"),
+        }),
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("BINARY"),
+        }),
+      ]),
+    );
+  });
+
   it("validates correct response choice references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs" title="bad-correct-response-refs" time-dependent="false">
