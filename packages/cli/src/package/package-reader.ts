@@ -25,11 +25,10 @@ function readZipEntries(buffer: Uint8Array): PackageEntry[] {
     { inflateRaw: (bytes) => inflateRawSync(bytes) },
     diagnostics,
   );
+  const errorDiagnostic = diagnostics.find((diagnostic) => diagnostic.severity === "error");
+  if (errorDiagnostic) throw new PackageContentError(errorDiagnostic.message);
   if (entries.length === 0) {
-    const message =
-      diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
-      "No ZIP central directory was found.";
-    throw new PackageContentError(message);
+    throw new PackageContentError("No ZIP central directory was found.");
   }
   return entries.map((entry) => ({ name: entry.path, bytes: entry.bytes }));
 }

@@ -239,6 +239,42 @@ describe("@longsightgroup/qti3-cli package handling", () => {
     }
   });
 
+  it.each(["inspect-package", "validate-package"])(
+    "rejects mixed package zips with invalid entries through %s",
+    async (command) => {
+      const directory = await mkdtemp(join(tmpdir(), "qti3-package-mixed-paths-"));
+      const file = join(directory, "package.zip");
+      const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+      if (!choice) throw new Error("Missing package fixture.");
+
+      try {
+        await writeFile(
+          file,
+          createStoredZip({
+            "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
+  <resources>
+    <resource identifier="choice" type="imsqti_item_xmlv3p0" href="items/choice.xml"/>
+  </resources>
+</manifest>`,
+            "items/choice.xml": choice.xml,
+            "../escaped.xml": choice.xml,
+          }),
+        );
+
+        const { code, report } = await runCliJson([command, file]);
+        expect(code).toBe(1);
+        expect(report).toMatchObject({
+          checked: 0,
+          failed: 1,
+          packageErrors: ["ZIP entry ../escaped.xml escapes the package root."],
+        });
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+
   it("rejects unreadable package zips", async () => {
     const directory = await mkdtemp(join(tmpdir(), "qti3-package-broken-"));
     const file = join(directory, "package.zip");
