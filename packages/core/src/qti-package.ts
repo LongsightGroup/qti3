@@ -24,6 +24,7 @@ import {
 import type { QtiPackageParseResult } from "./qti-package-types.js";
 import { parseXmlFiles, pushXmlDiagnostics } from "./qti-package-xml.js";
 import {
+  DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
   decodeUtf8,
   readQtiPackageZipEntries,
   type QtiPackageEntry,
@@ -31,7 +32,7 @@ import {
 } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
 
-export { decodeUtf8, readQtiPackageZipEntries };
+export { DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS, decodeUtf8, readQtiPackageZipEntries };
 export { discoverQtiPackageContentAssets } from "./qti-package-assets.js";
 export { normalizePackagePath } from "./qti-package-paths.js";
 export { QTI_ITEM_RESOURCE_TYPE, QTI_PACKAGE_MANIFEST_PATH } from "./qti-package-manifest.js";
@@ -63,6 +64,7 @@ export type {
   QtiPackageInflateContext,
   QtiPackageInflateRaw,
   QtiPackageParseOptions,
+  QtiPackageResourceLimits,
 } from "./qti-package-zip.js";
 
 /** Parse a QTI ZIP package into a neutral manifest, item, asset, and diagnostic model. */

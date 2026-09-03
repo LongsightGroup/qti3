@@ -52,6 +52,7 @@ export {
 } from "./package-xml.js";
 export {
   decodeUtf8,
+  DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
   discoverQtiPackageContentAssets,
   normalizePackagePath,
   QTI_ITEM_RESOURCE_TYPE,
@@ -74,6 +75,7 @@ export {
   type QtiPackageItemSource,
   type QtiPackageParseOptions,
   type QtiPackageParseResult,
+  type QtiPackageResourceLimits,
   type QtiPackageShape,
   type QtiStandardAlignment,
   type QtiTestPartNavigationMode,

@@ -10,7 +10,8 @@ import {
 } from "@longsightgroup/qti3-core";
 
 export const nodeQtiPackageParseOptions = {
-  inflateRaw: (bytes: Uint8Array) => inflateRawSync(bytes),
+  inflateRaw: (bytes: Uint8Array, context) =>
+    inflateRawSync(bytes, { maxOutputLength: context.maxOutputLength }),
 } satisfies QtiPackageParseOptions;
 
 export function parseOfficialQtiPackage(bytes: Uint8Array): QtiPackageParseResult {

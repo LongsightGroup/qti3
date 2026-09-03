@@ -1,3 +1,4 @@
+import { DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS } from "@longsightgroup/qti3-core";
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
@@ -16,7 +17,38 @@ function createStoredZip(files: Record<string, string | Uint8Array>): Uint8Array
   );
 }
 
+function firstEntryWithDeclaredSize(bytes: Uint8Array, uncompressedSize: number): Uint8Array {
+  const altered = bytes.slice();
+  const view = new DataView(altered.buffer, altered.byteOffset, altered.byteLength);
+  for (let offset = 0; offset <= view.byteLength - 46; offset += 1) {
+    if (view.getUint32(offset, true) !== 0x02014b50) continue;
+    view.setUint32(offset + 24, uncompressedSize, true);
+    return altered;
+  }
+  throw new Error("Expected ZIP central directory entry.");
+}
+
 describe("selectPackageItemHrefs", () => {
+  it("rejects migration packages that exceed shared expansion limits", () => {
+    const oversized = firstEntryWithDeclaredSize(
+      createStoredZip({ "imsmanifest.xml": "<manifest/>" }),
+      DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS.maxEntryUncompressedBytes + 1,
+    );
+
+    expect(() => readMigrationSource({ filename: "oversized.zip", bytes: oversized })).toThrow(
+      "configured per-entry limit",
+    );
+  });
+
+  it("stops migration inflation when output exceeds the declared budget", () => {
+    const compressed = zipSync({ "imsmanifest.xml": strToU8("A".repeat(10_000)) });
+    const underreported = firstEntryWithDeclaredSize(compressed, 1);
+
+    expect(() =>
+      readMigrationSource({ filename: "underreported.zip", bytes: underreported }),
+    ).toThrow("could not be inflated");
+  });
+
   it("resolves QTI 1.2 assessment itemrefs through manifest resource identifiers", () => {
     const manifest = `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsglobal.org/xsd/imscp_v1p1" identifier="MANIFEST">

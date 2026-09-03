@@ -22,7 +22,10 @@ function readZipEntries(buffer: Uint8Array): PackageEntry[] {
   const diagnostics: QtiDiagnostic[] = [];
   const entries = readQtiPackageZipEntries(
     buffer,
-    { inflateRaw: (bytes) => inflateRawSync(bytes) },
+    {
+      inflateRaw: (bytes, context) =>
+        inflateRawSync(bytes, { maxOutputLength: context.maxOutputLength }),
+    },
     diagnostics,
   );
   const errorDiagnostic = diagnostics.find((diagnostic) => diagnostic.severity === "error");

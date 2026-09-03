@@ -1,5 +1,10 @@
-import { unzipSync } from "fflate";
-import { decodeUtf8 } from "@longsightgroup/qti3-core";
+import { Inflate } from "fflate";
+import {
+  decodeUtf8,
+  readQtiPackageZipEntries,
+  type QtiDiagnostic,
+  type QtiPackageInflateContext,
+} from "@longsightgroup/qti3-core";
 import { diagnostic } from "./diagnostics.js";
 import type {
   QtiMigrationDetectionResult,
@@ -20,6 +25,8 @@ export interface MigrationSource {
   readonly entries: readonly MigrationEntry[];
   readonly xml?: string | undefined;
 }
+
+const INFLATE_INPUT_CHUNK_BYTES = 4_096;
 
 export function buildMigrationEntry(path: string, bytes: Uint8Array): MigrationEntry {
   return {
@@ -67,10 +74,7 @@ export function readMigrationSource(input: QtiMigrationSourceInput): MigrationSo
     throw new Error("QTI migration input must include xml or bytes.");
   }
   if (isZip(input.bytes)) {
-    const unzipped = unzipSync(input.bytes);
-    const entries = Object.entries(unzipped)
-      .filter(([path]) => !path.endsWith("/"))
-      .map(([path, bytes]) => buildMigrationEntry(path.replaceAll("\\", "/"), bytes));
+    const entries = readMigrationPackageEntries(input.bytes);
     return { filename: input.filename, isPackage: true, entries };
   }
   return {
@@ -79,6 +83,50 @@ export function readMigrationSource(input: QtiMigrationSourceInput): MigrationSo
     entries: [],
     xml: decodeUtf8(input.bytes),
   };
+}
+
+function readMigrationPackageEntries(bytes: Uint8Array): MigrationEntry[] {
+  const diagnostics: QtiDiagnostic[] = [];
+  const entries = readQtiPackageZipEntries(
+    bytes,
+    { inflateRaw: inflateMigrationEntry },
+    diagnostics,
+  );
+  const errorDiagnostic = diagnostics.find((entry) => entry.severity === "error");
+  if (errorDiagnostic) throw new Error(errorDiagnostic.message);
+  return entries.map((entry) => buildMigrationEntry(entry.path, entry.bytes));
+}
+
+function inflateMigrationEntry(
+  compressed: Uint8Array,
+  context: QtiPackageInflateContext,
+): Uint8Array {
+  const chunks: Uint8Array[] = [];
+  let expandedBytes = 0;
+  const inflater = new Inflate((chunk) => {
+    expandedBytes += chunk.length;
+    if (expandedBytes > context.maxOutputLength) {
+      throw new Error(`ZIP entry ${context.path} exceeds its expansion budget.`);
+    }
+    chunks.push(chunk);
+  });
+
+  if (compressed.length === 0) {
+    inflater.push(compressed, true);
+  } else {
+    for (let offset = 0; offset < compressed.length; offset += INFLATE_INPUT_CHUNK_BYTES) {
+      const end = Math.min(offset + INFLATE_INPUT_CHUNK_BYTES, compressed.length);
+      inflater.push(compressed.subarray(offset, end), end === compressed.length);
+    }
+  }
+
+  const expanded = new Uint8Array(expandedBytes);
+  let outputOffset = 0;
+  for (const chunk of chunks) {
+    expanded.set(chunk, outputOffset);
+    outputOffset += chunk.length;
+  }
+  return expanded;
 }
 
 export function detectQtiMigrationSource(

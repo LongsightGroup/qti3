@@ -236,7 +236,10 @@ describe("QTI package parser", () => {
 </manifest>`,
         "items/choice.xml": simpleChoiceItemXml(),
       }),
-      { inflateRaw: (compressed) => inflateRawSync(compressed) },
+      {
+        inflateRaw: (compressed, context) =>
+          inflateRawSync(compressed, { maxOutputLength: context.maxOutputLength }),
+      },
     );
 
     expect(result.ok).toBe(true);
@@ -246,6 +249,59 @@ describe("QTI package parser", () => {
         identifier: "choice",
       }),
     ]);
+  });
+
+  it("enforces entry-count, per-entry, total-size, and compression-ratio limits", () => {
+    const entryCount = parseQtiPackage(createStoredZip({ "one.xml": "1", "two.xml": "2" }), {
+      limits: { maxEntries: 1 },
+    });
+    expect(entryCount.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "package.zip.limit.entries", severity: "error" }),
+    );
+
+    const entrySize = parseQtiPackage(createStoredZip({ "large.xml": "1234" }), {
+      limits: { maxEntryUncompressedBytes: 3 },
+    });
+    expect(entrySize.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "package.zip.limit.entrySize", severity: "error" }),
+    );
+
+    const totalSize = parseQtiPackage(createStoredZip({ "one.xml": "1234", "two.xml": "5678" }), {
+      limits: { maxTotalUncompressedBytes: 7 },
+    });
+    expect(totalSize.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "package.zip.limit.totalSize", severity: "error" }),
+    );
+
+    let inflated = false;
+    const compressionRatio = parseQtiPackage(
+      createDeflatedZip({ "compressed.xml": "A".repeat(1_000) }),
+      {
+        inflateRaw: () => {
+          inflated = true;
+          return new Uint8Array();
+        },
+        limits: { maxCompressionRatio: 2 },
+      },
+    );
+    expect(inflated).toBe(false);
+    expect(compressionRatio.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "package.zip.limit.compressionRatio",
+        severity: "error",
+      }),
+    );
+  });
+
+  it("rejects inflater output that disagrees with the declared expanded size", () => {
+    const result = parseQtiPackage(createDeflatedZip({ "imsmanifest.xml": "manifest" }), {
+      inflateRaw: () => new Uint8Array(1),
+      limits: { maxCompressionRatio: Number.POSITIVE_INFINITY },
+    });
+
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "package.zip.entry.size", severity: "error" }),
+    );
   });
 
   it("diagnoses packages without imsmanifest.xml", () => {
