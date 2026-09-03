@@ -268,19 +268,20 @@ function validateResponseDomain(
   diagnostics: QtiResponseValidationDiagnostic[],
 ): void {
   if (value === null) return;
-  const identifiers = new Set(
-    interactions.flatMap((interaction) =>
-      interaction.choices.flatMap((choice) => (choice.identifier ? [choice.identifier] : [])),
-    ),
+  const interactionsWithChoices = interactions.filter((interaction) =>
+    interaction.choices.some((choice) => choice.identifier.length > 0),
   );
+  const baseType = declaration.baseType;
   if (
-    identifiers.size > 0 &&
-    (declaration.baseType === "identifier" ||
-      declaration.baseType === "pair" ||
-      declaration.baseType === "directedPair")
+    interactionsWithChoices.length > 0 &&
+    (baseType === "identifier" || baseType === "pair" || baseType === "directedPair")
   ) {
     const invalidValue = valueContainer(value).find(
-      (entry) => typeof entry !== "string" || !valueReferencesIdentifiers(entry, identifiers),
+      (entry) =>
+        typeof entry !== "string" ||
+        !interactionsWithChoices.some((interaction) =>
+          interactionAcceptsResponseValue(interaction, baseType, entry),
+        ),
     );
     if (invalidValue !== undefined) {
       pushResponseDomainDiagnostic(declaration, invalidValue, diagnostics);
@@ -297,9 +298,40 @@ function validateResponseDomain(
   }
 }
 
-function valueReferencesIdentifiers(value: string, identifiers: ReadonlySet<string>): boolean {
+function interactionAcceptsResponseValue(
+  interaction: QtiInteraction,
+  baseType: "identifier" | "pair" | "directedPair",
+  value: string,
+): boolean {
   const parts = value.trim().split(/\s+/);
-  return parts.length > 0 && parts.every((part) => identifiers.has(part));
+  const identifiers = new Set(
+    interaction.choices.flatMap((choice) => (choice.identifier ? [choice.identifier] : [])),
+  );
+  if (baseType === "identifier") return parts.length === 1 && identifiers.has(parts[0] ?? "");
+  if (parts.length !== 2) return false;
+
+  const sourceIdentifiers = choiceIdentifiersForRoles(interaction, ["matchSource", "gapChoice"]);
+  const targetIdentifiers = choiceIdentifiersForRoles(interaction, [
+    "matchTarget",
+    "gap",
+    "hotspot",
+  ]);
+  if (baseType === "directedPair" && sourceIdentifiers.size > 0 && targetIdentifiers.size > 0) {
+    return sourceIdentifiers.has(parts[0] ?? "") && targetIdentifiers.has(parts[1] ?? "");
+  }
+  return parts.every((part) => identifiers.has(part));
+}
+
+function choiceIdentifiersForRoles(
+  interaction: QtiInteraction,
+  roles: readonly QtiInteraction["choices"][number]["role"][],
+): Set<string> {
+  const acceptedRoles = new Set(roles);
+  return new Set(
+    interaction.choices.flatMap((choice) =>
+      choice.identifier && acceptedRoles.has(choice.role) ? [choice.identifier] : [],
+    ),
+  );
 }
 
 function pushResponseDomainDiagnostic(

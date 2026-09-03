@@ -128,6 +128,40 @@ describe("QTI response variable validation", () => {
   });
 
   it.each([
+    ["match", matchDomainItemXml(), "A X", ["A B", "X Y", "X A"]],
+    ["gap match", gapMatchDomainItemXml(), "A G", ["G A"]],
+    ["graphic gap match", graphicGapMatchDomainItemXml(), "A G", ["G A"]],
+  ] as const)(
+    "enforces source and target roles for %s directed pairs",
+    (_label, xml, validPair, invalidPairs) => {
+      const item = parsedItem(xml);
+
+      expect(
+        validateQtiResponseVariables({ item, responses: { RESPONSE: [validPair] } }),
+      ).toMatchObject({ ok: true, diagnostics: [] });
+      for (const invalidPair of invalidPairs) {
+        expect(
+          validateQtiResponseVariables({ item, responses: { RESPONSE: [invalidPair] } })
+            .diagnostics,
+        ).toContainEqual(
+          expect.objectContaining({ code: "response.domain", identifier: "RESPONSE" }),
+        );
+      }
+    },
+  );
+
+  it("accepts unordered pair members from the same associate interaction", () => {
+    const item = parsedItem(associateDomainItemXml());
+
+    expect(
+      validateQtiResponseVariables({ item, responses: { RESPONSE: ["A B", "B A"] } }),
+    ).toMatchObject({ ok: true, diagnostics: [] });
+    expect(
+      validateQtiResponseVariables({ item, responses: { RESPONSE: ["A MISSING"] } }).diagnostics,
+    ).toContainEqual(expect.objectContaining({ code: "response.domain", identifier: "RESPONSE" }));
+  });
+
+  it.each([
     ["authored minimum", choiceBoundsItemXml(), "CHOICE"],
     ["required attribute", choiceItemXml({ required: true }), "CHOICE"],
   ] as const)(
@@ -495,6 +529,69 @@ function matchBoundsItemXml(): string {
             <qti-simple-associable-choice identifier="Y" match-max="1">Y</qti-simple-associable-choice>
           </qti-simple-match-set>
         </qti-match-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function matchDomainItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-domain" title="match-domain" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+      <qti-item-body>
+        <qti-match-interaction response-identifier="RESPONSE">
+          <qti-simple-match-set>
+            <qti-simple-associable-choice identifier="A" match-max="1">A</qti-simple-associable-choice>
+            <qti-simple-associable-choice identifier="B" match-max="1">B</qti-simple-associable-choice>
+          </qti-simple-match-set>
+          <qti-simple-match-set>
+            <qti-simple-associable-choice identifier="X" match-max="1">X</qti-simple-associable-choice>
+            <qti-simple-associable-choice identifier="Y" match-max="1">Y</qti-simple-associable-choice>
+          </qti-simple-match-set>
+        </qti-match-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function gapMatchDomainItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-domain" title="gap-domain" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+      <qti-item-body>
+        <qti-gap-match-interaction response-identifier="RESPONSE">
+          <qti-gap-text identifier="A" match-max="1">A</qti-gap-text>
+          <p>Target <qti-gap identifier="G"/></p>
+        </qti-gap-match-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function graphicGapMatchDomainItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-domain" title="graphic-gap-domain" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
+      <qti-item-body>
+        <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+          <object data="image.png" type="image/png"/>
+          <qti-gap-text identifier="A" match-max="1">A</qti-gap-text>
+          <qti-associable-hotspot identifier="G" shape="rect" coords="0,0,10,10" match-max="1"/>
+        </qti-graphic-gap-match-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function associateDomainItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="associate-domain" title="associate-domain" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
+      <qti-item-body>
+        <qti-associate-interaction response-identifier="RESPONSE">
+          <qti-simple-associable-choice identifier="A" match-max="2">A</qti-simple-associable-choice>
+          <qti-simple-associable-choice identifier="B" match-max="2">B</qti-simple-associable-choice>
+        </qti-associate-interaction>
       </qti-item-body>
     </qti-assessment-item>
   `;
