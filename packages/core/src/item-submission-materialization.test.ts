@@ -57,6 +57,41 @@ describe("QTI item submission materialization", () => {
     expect(undeclared.diagnostics).toContainEqual(
       expect.objectContaining({ code: "response.undeclared", severity: "error" }),
     );
+
+    const invalidBaseType = materializeQtiItemSubmission({
+      itemXml: scoredChoiceXml(),
+      trustedResponses: { RESPONSE: 42 },
+    });
+    expect(invalidBaseType.ok).toBe(false);
+    expect(invalidBaseType.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "response.baseType", severity: "error" }),
+    );
+
+    const invalidDomain = materializeQtiItemSubmission({
+      itemXml: scoredChoiceXml(),
+      trustedResponses: { RESPONSE: "MISSING" },
+    });
+    expect(invalidDomain.ok).toBe(false);
+    expect(invalidDomain.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "response.domain", severity: "error" }),
+    );
+  });
+
+  it("materializes response state that remains valid when restored", () => {
+    const initial = materializeQtiItemSubmission({
+      itemXml: scoredChoiceXml(),
+      trustedResponses: { RESPONSE: "A" },
+    });
+    expect(initial.ok).toBe(true);
+    if (!initial.state) throw new Error("Expected materialized attempt state.");
+
+    const restored = materializeQtiItemSubmission({
+      itemXml: scoredChoiceXml(),
+      existingState: initial.state,
+      trustedResponses: { RESPONSE: "A" },
+    });
+    expect(restored.ok).toBe(true);
+    expect(restored.state?.responses.RESPONSE).toBe("A");
   });
 
   it("classifies manually scored items without requiring a numeric SCORE", () => {

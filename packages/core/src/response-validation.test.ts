@@ -37,6 +37,82 @@ describe("QTI response variable validation", () => {
     ]);
   });
 
+  it("validates submitted scalar values against every declared base type", () => {
+    const item = parsedItem(baseTypeItemXml());
+
+    const valid = validateQtiResponseVariables({
+      item,
+      responses: {
+        INTEGER: "-3",
+        FLOAT: "1.5",
+        BOOLEAN: "1",
+        STRING: "answer",
+        IDENTIFIER: "answer-id",
+        POINT: "10 20",
+        PAIR: "A B",
+        DIRECTED_PAIR: "A B",
+        DURATION: "PT1S",
+        FILE: "drawing.png",
+        URI: "https://example.test/answer",
+      },
+    });
+    expect(valid.ok).toBe(true);
+    expect(valid.diagnostics).toEqual([]);
+
+    const invalid = validateQtiResponseVariables({
+      item,
+      responses: {
+        INTEGER: true,
+        FLOAT: false,
+        BOOLEAN: 1,
+        STRING: 1,
+        IDENTIFIER: 42,
+        POINT: 1,
+        PAIR: true,
+        DIRECTED_PAIR: false,
+        DURATION: 1,
+        FILE: true,
+        URI: 1,
+      },
+    });
+    expect(invalid.ok).toBe(false);
+    expect(invalid.diagnostics).toHaveLength(11);
+    expect(invalid.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "response.baseType", identifier: "INTEGER" }),
+        expect.objectContaining({ code: "response.baseType", identifier: "IDENTIFIER" }),
+        expect.objectContaining({ code: "response.baseType", identifier: "FILE" }),
+      ]),
+    );
+  });
+
+  it("rejects values outside authored choice, pair, and slider domains", () => {
+    const unknownChoice = validateQtiResponseVariables({
+      item: parsedItem(choiceItemXml()),
+      responses: { CHOICE: "MISSING" },
+    });
+    expect(unknownChoice.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "response.domain", identifier: "CHOICE" }),
+    );
+
+    const unknownPairMember = validateQtiResponseVariables({
+      item: parsedItem(matchBoundsItemXml()),
+      allowIncompleteResponses: true,
+      responses: { MATCH: ["A MISSING"] },
+    });
+    expect(unknownPairMember.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "response.domain", identifier: "MATCH" }),
+    );
+
+    const offStepSlider = validateQtiResponseVariables({
+      item: parsedItem(sliderItemXml()),
+      responses: { SLIDER: 4 },
+    });
+    expect(offStepSlider.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "response.domain", identifier: "SLIDER" }),
+    );
+  });
+
   it.each([
     ["authored minimum", choiceBoundsItemXml(), "CHOICE"],
     ["required attribute", choiceItemXml({ required: true }), "CHOICE"],
@@ -355,6 +431,25 @@ function cardinalityItemXml(): string {
   `;
 }
 
+function baseTypeItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="base-types" title="base-types" time-dependent="false">
+      <qti-response-declaration identifier="INTEGER" cardinality="single" base-type="integer"/>
+      <qti-response-declaration identifier="FLOAT" cardinality="single" base-type="float"/>
+      <qti-response-declaration identifier="BOOLEAN" cardinality="single" base-type="boolean"/>
+      <qti-response-declaration identifier="STRING" cardinality="single" base-type="string"/>
+      <qti-response-declaration identifier="IDENTIFIER" cardinality="single" base-type="identifier"/>
+      <qti-response-declaration identifier="POINT" cardinality="single" base-type="point"/>
+      <qti-response-declaration identifier="PAIR" cardinality="single" base-type="pair"/>
+      <qti-response-declaration identifier="DIRECTED_PAIR" cardinality="single" base-type="directedPair"/>
+      <qti-response-declaration identifier="DURATION" cardinality="single" base-type="duration"/>
+      <qti-response-declaration identifier="FILE" cardinality="single" base-type="file"/>
+      <qti-response-declaration identifier="URI" cardinality="single" base-type="uri"/>
+      <qti-item-body><p>Base-type validation fixture.</p></qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
 function choiceBoundsItemXml(): string {
   return `
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-bounds" title="choice-bounds" time-dependent="false">
@@ -386,6 +481,17 @@ function matchBoundsItemXml(): string {
             <qti-simple-associable-choice identifier="Y" match-max="1">Y</qti-simple-associable-choice>
           </qti-simple-match-set>
         </qti-match-interaction>
+      </qti-item-body>
+    </qti-assessment-item>
+  `;
+}
+
+function sliderItemXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="slider" title="slider" time-dependent="false">
+      <qti-response-declaration identifier="SLIDER" cardinality="single" base-type="integer"/>
+      <qti-item-body>
+        <qti-slider-interaction response-identifier="SLIDER" lower-bound="0" upper-bound="10" step="3"/>
       </qti-item-body>
     </qti-assessment-item>
   `;

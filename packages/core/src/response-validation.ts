@@ -7,7 +7,7 @@ import type {
   QtiValue,
 } from "./types.js";
 import { assertNever } from "./assert-never.js";
-import { isNullResponse, isRecordValue } from "./processing-values.js";
+import { isNullResponse, isRecordValue, valueContainer } from "./processing-values.js";
 import { listNamedResponseInputs, type QtiNamedResponseInput } from "./response-input.js";
 import {
   matchMaxDiagnostics,
@@ -20,7 +20,9 @@ import {
   responseLimitAttribute,
   responseValidationPolicy,
 } from "./response-validation-policy.js";
-import { readQtiJsonValue } from "./value-format.js";
+import { parseQtiSliderDefinition, parseQtiSliderValue } from "./slider-definition.js";
+import { qtiValueToString, readQtiJsonValue } from "./value-format.js";
+import { qtiScalarMatchesBaseType } from "./validation-primitives.js";
 
 export type { QtiNamedResponseInput as QtiResponseVariableInput } from "./response-input.js";
 export type QtiResponseVariablesInput = Record<string, unknown> | readonly QtiNamedResponseInput[];
@@ -30,6 +32,8 @@ export type QtiResponseValidationDiagnosticCode =
   | "response.maximum"
   | "response.matchMax"
   | "response.cardinality"
+  | "response.baseType"
+  | "response.domain"
   | "response.undeclared"
   | "response.identifier.required"
   | "response.value.invalid";
@@ -81,11 +85,15 @@ export function validateQtiResponseVariables(
     }
 
     const value = responses.get(declaration.identifier);
+    const interactions = interactionsByResponse.get(declaration.identifier);
     if (value !== undefined) {
-      validateResponseCardinality(declaration, value, diagnostics);
+      const cardinalityMatches = validateResponseCardinality(declaration, value, diagnostics);
+      const baseTypeMatches = validateResponseBaseType(declaration, value, diagnostics);
+      if (cardinalityMatches && baseTypeMatches) {
+        validateResponseDomain(declaration, interactions ?? [], value, diagnostics);
+      }
     }
 
-    const interactions = interactionsByResponse.get(declaration.identifier);
     if (interactions === undefined) {
       validateDeclarationResponse(
         declaration,
@@ -184,15 +192,94 @@ function validateResponseCardinality(
   declaration: QtiResponseDeclaration,
   value: QtiValue,
   diagnostics: QtiResponseValidationDiagnostic[],
-): void {
-  if (value === null) return;
+): boolean {
+  if (value === null) return true;
 
-  if (matchesCardinality(declaration.cardinality, value)) return;
+  if (matchesCardinality(declaration.cardinality, value)) return true;
   diagnostics.push({
     code: "response.cardinality",
     severity: "error",
     identifier: declaration.identifier,
     message: `Response ${declaration.identifier} must match ${declaration.cardinality} cardinality.`,
+    path: declaration.identifier,
+    source: declaration.source,
+  });
+  return false;
+}
+
+function validateResponseBaseType(
+  declaration: QtiResponseDeclaration,
+  value: QtiValue,
+  diagnostics: QtiResponseValidationDiagnostic[],
+): boolean {
+  const baseType = declaration.baseType;
+  if (value === null || baseType === undefined || isRecordValue(value)) return true;
+  const invalidValue = valueContainer(value).find(
+    (entry) => !qtiScalarMatchesBaseType(entry, baseType),
+  );
+  if (invalidValue === undefined) return true;
+  diagnostics.push({
+    code: "response.baseType",
+    severity: "error",
+    identifier: declaration.identifier,
+    message: `Response ${declaration.identifier} value ${qtiValueToString(invalidValue)} is not valid for base-type ${baseType}.`,
+    path: declaration.identifier,
+    source: declaration.source,
+  });
+  return false;
+}
+
+function validateResponseDomain(
+  declaration: QtiResponseDeclaration,
+  interactions: readonly QtiInteraction[],
+  value: QtiValue,
+  diagnostics: QtiResponseValidationDiagnostic[],
+): void {
+  if (value === null) return;
+  const identifiers = new Set(
+    interactions.flatMap((interaction) =>
+      interaction.choices.flatMap((choice) => (choice.identifier ? [choice.identifier] : [])),
+    ),
+  );
+  if (
+    identifiers.size > 0 &&
+    (declaration.baseType === "identifier" ||
+      declaration.baseType === "pair" ||
+      declaration.baseType === "directedPair")
+  ) {
+    const invalidValue = valueContainer(value).find(
+      (entry) => typeof entry !== "string" || !valueReferencesIdentifiers(entry, identifiers),
+    );
+    if (invalidValue !== undefined) {
+      pushResponseDomainDiagnostic(declaration, invalidValue, diagnostics);
+      return;
+    }
+  }
+
+  for (const interaction of interactions) {
+    if (interaction.type !== "slider") continue;
+    const definition = parseQtiSliderDefinition(interaction);
+    if (!definition.ok || parseQtiSliderValue(value, definition.value).ok) continue;
+    pushResponseDomainDiagnostic(declaration, value, diagnostics);
+    return;
+  }
+}
+
+function valueReferencesIdentifiers(value: string, identifiers: ReadonlySet<string>): boolean {
+  const parts = value.trim().split(/\s+/);
+  return parts.length > 0 && parts.every((part) => identifiers.has(part));
+}
+
+function pushResponseDomainDiagnostic(
+  declaration: QtiResponseDeclaration,
+  value: QtiValue,
+  diagnostics: QtiResponseValidationDiagnostic[],
+): void {
+  diagnostics.push({
+    code: "response.domain",
+    severity: "error",
+    identifier: declaration.identifier,
+    message: `Response ${declaration.identifier} value ${qtiValueToString(value)} is not in the authored interaction domain.`,
     path: declaration.identifier,
     source: declaration.source,
   });
@@ -291,6 +378,8 @@ function isResponseValidationDiagnosticCode(
     code === "response.maximum" ||
     code === "response.matchMax" ||
     code === "response.cardinality" ||
+    code === "response.baseType" ||
+    code === "response.domain" ||
     code === "response.undeclared" ||
     code === "response.identifier.required" ||
     code === "response.value.invalid"

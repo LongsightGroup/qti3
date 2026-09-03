@@ -16,10 +16,9 @@ import {
   COMPLETION_UNKNOWN,
 } from "./attempt-state-constants.js";
 import { isQtiPortableCustomStateValue, isQtiValue, qtiValueToString } from "./value-format.js";
-import { parseXmlBoolean } from "./parser-values.js";
 import { isRecordValue } from "./processing-values.js";
 import { parseQtiSliderDefinition, parseQtiSliderValue } from "./slider-definition.js";
-import { isPair, isPoint } from "./validation-primitives.js";
+import { qtiScalarMatchesBaseType } from "./validation-primitives.js";
 
 export function isQtiAttemptStateV1(value: unknown): value is QtiAttemptStateV1 {
   return attemptStateErrors(value).length === 0;
@@ -159,7 +158,7 @@ function restoredValueError(
   }
   if (!declaration.baseType) return undefined;
   for (const entry of restoredValueEntries(value)) {
-    if (!restoredScalarMatchesBaseType(entry, declaration.baseType)) {
+    if (!qtiScalarMatchesBaseType(entry, declaration.baseType)) {
       return `value ${String(entry)} is not valid for base-type ${declaration.baseType}`;
     }
   }
@@ -169,29 +168,6 @@ function restoredValueError(
 function restoredValueEntries(value: QtiValue): QtiScalarValue[] {
   if (value === null || isRecordValue(value)) return [];
   return Array.isArray(value) ? value : [value];
-}
-
-function restoredScalarMatchesBaseType(
-  value: QtiScalarValue,
-  baseType: QtiVariableDeclaration["baseType"],
-): boolean {
-  if (!baseType) return true;
-  if (baseType === "integer") {
-    return typeof value === "number" ? Number.isInteger(value) : /^-?\d+$/.test(String(value));
-  }
-  if (baseType === "float") {
-    return typeof value === "number" ? Number.isFinite(value) : Number.isFinite(Number(value));
-  }
-  if (baseType === "boolean") {
-    if (typeof value === "boolean") return true;
-    if (typeof value === "string") return parseXmlBoolean(value) !== undefined;
-    return false;
-  }
-  if (baseType === "point") return isPoint(String(value));
-  if (baseType === "pair" || baseType === "directedPair") return isPair(String(value));
-  if (baseType === "identifier")
-    return typeof value === "string" && value.trim().length > 0 && !/\s/.test(value);
-  return typeof value === "string";
 }
 
 function isAttemptStatus(value: string): value is QtiAttemptStatus {

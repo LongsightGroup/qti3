@@ -1,4 +1,5 @@
-import type { QtiBaseType, QtiCardinality, QtiDiagnostic } from "./types.js";
+import type { QtiBaseType, QtiCardinality, QtiDiagnostic, QtiScalarValue } from "./types.js";
+import { assertNever } from "./assert-never.js";
 import { parseFiniteNumber, parseInteger, parseXmlBoolean } from "./parser-values.js";
 
 export function requireIdentifier(
@@ -66,4 +67,42 @@ export function isPoint(value: string): boolean {
 export function isPair(value: string): boolean {
   const parts = value.trim().split(/\s+/);
   return parts.length === 2 && parts.every((part) => part.length > 0);
+}
+
+/** Check a runtime scalar against the value representation accepted for a QTI base type. */
+export function qtiScalarMatchesBaseType(value: QtiScalarValue, baseType: QtiBaseType): boolean {
+  switch (baseType) {
+    case "integer":
+      return typeof value === "number" ? Number.isInteger(value) : parseIntegerValue(value);
+    case "float":
+      return typeof value === "number" ? Number.isFinite(value) : parseFloatValue(value);
+    case "boolean":
+      return typeof value === "boolean" || parseBooleanValue(value);
+    case "point":
+      return typeof value === "string" && isPoint(value);
+    case "pair":
+    case "directedPair":
+      return typeof value === "string" && isPair(value);
+    case "identifier":
+      return typeof value === "string" && value.trim().length > 0 && !/\s/.test(value);
+    case "string":
+    case "duration":
+    case "file":
+    case "uri":
+      return typeof value === "string";
+    default:
+      return assertNever(baseType);
+  }
+}
+
+function parseIntegerValue(value: QtiScalarValue): boolean {
+  return typeof value === "string" && parseInteger(value) !== undefined;
+}
+
+function parseFloatValue(value: QtiScalarValue): boolean {
+  return typeof value === "string" && parseFiniteNumber(value) !== undefined;
+}
+
+function parseBooleanValue(value: QtiScalarValue): boolean {
+  return typeof value === "string" && parseXmlBoolean(value) !== undefined;
 }
