@@ -85,6 +85,23 @@ describe("qti3-writer order", () => {
     expect(parsed.interactions[0]?.qtiName).toBe("qti-order-interaction");
   });
 
+  it("normalizes order identifiers and response references before serialization", () => {
+    const item = expectValidParsedItem(
+      buildQti3OrderItem({
+        identifier: "order-normalized-identifiers",
+        title: "Normalized identifiers",
+        choices: [
+          { identifier: " A ", text: "A" },
+          { identifier: " B ", text: "B" },
+        ],
+        correctOrder: [" B ", " A "],
+      }),
+    );
+
+    expect(item.responseDeclarations[0]?.correctResponse).toEqual(["B", "A"]);
+    expect(item.interactions[0]?.choices.map((choice) => choice.identifier)).toEqual(["A", "B"]);
+  });
+
   it("requires explicit correct order to cover every choice unless subset ordering is configured", () => {
     const incomplete = {
       identifier: "order-incomplete",

@@ -94,6 +94,33 @@ describe("qti3-writer choice", () => {
     });
   });
 
+  it("normalizes choice identifiers and response references before serialization", () => {
+    const item = expectValidParsedItem(
+      buildQti3ChoiceItem({
+        identifier: "choice-normalized-identifiers",
+        title: "Normalized identifiers",
+        responseCardinality: "single",
+        choices: [
+          { identifier: " A ", text: "A" },
+          { identifier: " B ", text: "B" },
+        ],
+        correctResponse: [" B "],
+        scoring: "map_response",
+      }),
+    );
+
+    expect(item.responseDeclarations[0]).toMatchObject({
+      correctResponse: "B",
+      mapping: {
+        entries: [
+          expect.objectContaining({ mapKey: "A", mappedValue: 0 }),
+          expect.objectContaining({ mapKey: "B", mappedValue: 1 }),
+        ],
+      },
+    });
+    expect(item.interactions[0]?.choices.map((choice) => choice.identifier)).toEqual(["A", "B"]);
+  });
+
   it("preserves trusted MathML in prompts, body fragments, and rich choice content", () => {
     const math =
       '<math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math>';

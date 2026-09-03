@@ -32,7 +32,13 @@ export function renderQti3OrderItem(input: Qti3OrderBuilderInput): string {
     "Response identifier",
   );
   const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
-  const correctValues = orderCorrectValues(input);
+  const correctValues = orderCorrectValues(input).map((value) =>
+    assertQtiIdentifier(value, "Order correct response identifier"),
+  );
+  const choices = input.choices.map((choice) => ({
+    choice,
+    identifier: assertQtiIdentifier(choice.identifier, "Order choice identifier"),
+  }));
   const declarationsXml = `  <qti-response-declaration identifier="${escapedResponseIdentifier}" cardinality="ordered" base-type="identifier">
     <qti-correct-response>
 ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-value>`).join("\n")}
@@ -56,17 +62,15 @@ ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-va
       booleanAttribute("shuffle", input.shuffle ?? false),
     ],
   });
-  const choicesXml = input.choices
-    .map((choice) => {
-      const identifier = escapeXmlAttribute(
-        assertQtiIdentifier(choice.identifier, "Order choice identifier"),
-      );
+  const choicesXml = choices
+    .map(({ choice, identifier }) => {
+      const escapedIdentifier = escapeXmlAttribute(identifier);
       const fixedAttr = choice.fixed ? ' fixed="true"' : "";
       const visibilityAttr = input.choiceVisibility === "hide" ? ' show-hide="hide"' : "";
       const body = choice.contentHtml?.trim()
         ? choice.contentHtml
         : escapeXmlText(choice.text ?? "");
-      return `      <qti-simple-choice identifier="${identifier}"${fixedAttr}${visibilityAttr}>${body}</qti-simple-choice>`;
+      return `      <qti-simple-choice identifier="${escapedIdentifier}"${fixedAttr}${visibilityAttr}>${body}</qti-simple-choice>`;
     })
     .join("\n");
   const bodyXml = wrapInteractionBody(
