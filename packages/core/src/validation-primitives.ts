@@ -69,40 +69,41 @@ export function isPair(value: string): boolean {
   return parts.length === 2 && parts.every((part) => part.length > 0);
 }
 
-/** Check a runtime scalar against the value representation accepted for a QTI base type. */
-export function qtiScalarMatchesBaseType(value: QtiScalarValue, baseType: QtiBaseType): boolean {
+/** Parse and normalize a runtime scalar for a QTI base type. */
+export function parseQtiScalarForBaseType(
+  value: QtiScalarValue,
+  baseType: QtiBaseType,
+): QtiScalarValue | undefined {
   switch (baseType) {
     case "integer":
-      return typeof value === "number" ? Number.isInteger(value) : parseIntegerValue(value);
+      if (typeof value === "number") return Number.isInteger(value) ? value : undefined;
+      return typeof value === "string" ? parseInteger(value) : undefined;
     case "float":
-      return typeof value === "number" ? Number.isFinite(value) : parseFloatValue(value);
+      if (typeof value === "number") return Number.isFinite(value) ? value : undefined;
+      return typeof value === "string" ? parseFiniteNumber(value) : undefined;
     case "boolean":
-      return typeof value === "boolean" || parseBooleanValue(value);
+      if (typeof value === "boolean") return value;
+      return typeof value === "string" ? parseXmlBoolean(value) : undefined;
     case "point":
-      return typeof value === "string" && isPoint(value);
+      return typeof value === "string" && isPoint(value) ? value : undefined;
     case "pair":
     case "directedPair":
-      return typeof value === "string" && isPair(value);
+      return typeof value === "string" && isPair(value) ? value : undefined;
     case "identifier":
-      return typeof value === "string" && value.trim().length > 0 && !/\s/.test(value);
+      return typeof value === "string" && value.trim().length > 0 && !/\s/.test(value)
+        ? value
+        : undefined;
     case "string":
     case "duration":
     case "file":
     case "uri":
-      return typeof value === "string";
+      return typeof value === "string" ? value : undefined;
     default:
       return assertNever(baseType);
   }
 }
 
-function parseIntegerValue(value: QtiScalarValue): boolean {
-  return typeof value === "string" && parseInteger(value) !== undefined;
-}
-
-function parseFloatValue(value: QtiScalarValue): boolean {
-  return typeof value === "string" && parseFiniteNumber(value) !== undefined;
-}
-
-function parseBooleanValue(value: QtiScalarValue): boolean {
-  return typeof value === "string" && parseXmlBoolean(value) !== undefined;
+/** Check a runtime scalar against the value representation accepted for a QTI base type. */
+export function qtiScalarMatchesBaseType(value: QtiScalarValue, baseType: QtiBaseType): boolean {
+  return parseQtiScalarForBaseType(value, baseType) !== undefined;
 }

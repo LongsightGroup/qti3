@@ -163,6 +163,7 @@ export function runTrustedItemSession(
 
   if (input.attemptStatus) sessionResult.session.setStatus(input.attemptStatus);
 
+  let submission = input.submission;
   if (input.submissionValidation === "strict") {
     const validation = validateQtiResponseVariables({
       item: parsedResult.parsed.document.item,
@@ -173,12 +174,13 @@ export function runTrustedItemSession(
     if (!validation.ok) {
       return emptyTrustedItemSessionFailure(validation.diagnostics);
     }
+    submission = { ...input.submission, trustedResponses: validation.responses };
   }
 
   const applicationResult = applyTrustedResponseApplication(
     sessionResult.session,
     parsedResult.parsed,
-    input.submission,
+    submission,
     input.allowedUndeclaredResponseIdentifiers,
     input.diagnosticPrefix,
   );

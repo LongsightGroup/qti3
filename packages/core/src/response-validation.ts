@@ -1,9 +1,11 @@
 import type {
   QtiAssessmentItem,
+  QtiBaseType,
   QtiCardinality,
   QtiDiagnostic,
   QtiInteraction,
   QtiResponseDeclaration,
+  QtiScalarValue,
   QtiValue,
 } from "./types.js";
 import { assertNever } from "./assert-never.js";
@@ -22,7 +24,7 @@ import {
 } from "./response-validation-policy.js";
 import { parseQtiSliderDefinition, parseQtiSliderValue } from "./slider-definition.js";
 import { qtiValueToString, readQtiJsonValue } from "./value-format.js";
-import { qtiScalarMatchesBaseType } from "./validation-primitives.js";
+import { parseQtiScalarForBaseType } from "./validation-primitives.js";
 
 export type { QtiNamedResponseInput as QtiResponseVariableInput } from "./response-input.js";
 export type QtiResponseVariablesInput = Record<string, unknown> | readonly QtiNamedResponseInput[];
@@ -43,10 +45,17 @@ export interface QtiResponseValidationDiagnostic extends QtiDiagnostic {
   identifier?: string | undefined;
 }
 
-export interface QtiResponseValidationResult {
-  ok: boolean;
-  diagnostics: QtiResponseValidationDiagnostic[];
-}
+/** Result of validating submitted responses, including normalized values on success. */
+export type QtiResponseValidationResult =
+  | {
+      ok: true;
+      diagnostics: QtiResponseValidationDiagnostic[];
+      responses: Record<string, QtiValue>;
+    }
+  | {
+      ok: false;
+      diagnostics: QtiResponseValidationDiagnostic[];
+    };
 
 export interface QtiResponseValidationInput {
   item: QtiAssessmentItem;
@@ -56,7 +65,7 @@ export interface QtiResponseValidationInput {
   responseIdentifiers?: Iterable<string> | undefined;
 }
 
-/** Validate submitted response variables against a parsed QTI assessment item. */
+/** Validate and normalize submitted response variables against a parsed QTI assessment item. */
 export function validateQtiResponseVariables(
   input: QtiResponseValidationInput,
 ): QtiResponseValidationResult {
@@ -88,9 +97,10 @@ export function validateQtiResponseVariables(
     const interactions = interactionsByResponse.get(declaration.identifier);
     if (value !== undefined) {
       const cardinalityMatches = validateResponseCardinality(declaration, value, diagnostics);
-      const baseTypeMatches = validateResponseBaseType(declaration, value, diagnostics);
-      if (cardinalityMatches && baseTypeMatches) {
-        validateResponseDomain(declaration, interactions ?? [], value, diagnostics);
+      const parsedValue = parseResponseBaseType(declaration, value, diagnostics);
+      if (cardinalityMatches && parsedValue !== undefined) {
+        responses.set(declaration.identifier, parsedValue);
+        validateResponseDomain(declaration, interactions ?? [], parsedValue, diagnostics);
       }
     }
 
@@ -116,10 +126,10 @@ export function validateQtiResponseVariables(
     }
   }
 
-  return {
-    ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
-    diagnostics,
-  };
+  if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+    return { ok: false, diagnostics };
+  }
+  return { ok: true, diagnostics, responses: Object.fromEntries(responses) };
 }
 
 function ingestSubmittedResponses(
@@ -154,15 +164,16 @@ function ingestSubmittedResponses(
     }
 
     if (!declaredIdentifiers.has(identifier)) {
-      if (allowedUndeclaredIdentifiers.has(identifier)) continue;
-      diagnostics.push({
-        code: "response.undeclared",
-        severity: "error",
-        identifier,
-        message: `Response ${identifier} is not declared by the assessment item.`,
-        path: identifier,
-      });
-      continue;
+      if (!allowedUndeclaredIdentifiers.has(identifier)) {
+        diagnostics.push({
+          code: "response.undeclared",
+          severity: "error",
+          identifier,
+          message: `Response ${identifier} is not declared by the assessment item.`,
+          path: identifier,
+        });
+        continue;
+      }
     }
 
     responses.set(identifier, value);
@@ -207,26 +218,47 @@ function validateResponseCardinality(
   return false;
 }
 
-function validateResponseBaseType(
+function parseResponseBaseType(
   declaration: QtiResponseDeclaration,
   value: QtiValue,
   diagnostics: QtiResponseValidationDiagnostic[],
-): boolean {
+): QtiValue | undefined {
   const baseType = declaration.baseType;
-  if (value === null || baseType === undefined || isRecordValue(value)) return true;
-  const invalidValue = valueContainer(value).find(
-    (entry) => !qtiScalarMatchesBaseType(entry, baseType),
-  );
-  if (invalidValue === undefined) return true;
+  if (value === null || baseType === undefined || isRecordValue(value)) return value;
+
+  if (Array.isArray(value)) {
+    const parsedValues: QtiScalarValue[] = [];
+    for (const entry of value) {
+      const parsedValue = parseQtiScalarForBaseType(entry, baseType);
+      if (parsedValue === undefined) {
+        pushResponseBaseTypeDiagnostic(declaration, entry, baseType, diagnostics);
+        return undefined;
+      }
+      parsedValues.push(parsedValue);
+    }
+    return parsedValues;
+  }
+
+  const parsedValue = parseQtiScalarForBaseType(value, baseType);
+  if (parsedValue !== undefined) return parsedValue;
+  pushResponseBaseTypeDiagnostic(declaration, value, baseType, diagnostics);
+  return undefined;
+}
+
+function pushResponseBaseTypeDiagnostic(
+  declaration: QtiResponseDeclaration,
+  value: QtiScalarValue,
+  baseType: QtiBaseType,
+  diagnostics: QtiResponseValidationDiagnostic[],
+): void {
   diagnostics.push({
     code: "response.baseType",
     severity: "error",
     identifier: declaration.identifier,
-    message: `Response ${declaration.identifier} value ${qtiValueToString(invalidValue)} is not valid for base-type ${baseType}.`,
+    message: `Response ${declaration.identifier} value ${qtiValueToString(value)} is not valid for base-type ${baseType}.`,
     path: declaration.identifier,
     source: declaration.source,
   });
-  return false;
 }
 
 function validateResponseDomain(

@@ -58,6 +58,20 @@ describe("QTI response variable validation", () => {
     });
     expect(valid.ok).toBe(true);
     expect(valid.diagnostics).toEqual([]);
+    if (!valid.ok) throw new Error("Expected valid response variables.");
+    expect(valid.responses).toEqual({
+      INTEGER: -3,
+      FLOAT: 1.5,
+      BOOLEAN: true,
+      STRING: "answer",
+      IDENTIFIER: "answer-id",
+      POINT: "10 20",
+      PAIR: "A B",
+      DIRECTED_PAIR: "A B",
+      DURATION: "PT1S",
+      FILE: "drawing.png",
+      URI: "https://example.test/answer",
+    });
 
     const invalid = validateQtiResponseVariables({
       item,

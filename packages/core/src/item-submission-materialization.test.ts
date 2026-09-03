@@ -8,6 +8,7 @@ describe("QTI item submission materialization", () => {
       trustedResponses: { RESPONSE: "A" },
     });
 
+    expect(result.diagnostics).toEqual([]);
     expect(result.ok).toBe(true);
     expect(result.scoringDisposition).toBe("scored");
     expect(result.score).toBe(1);
@@ -17,6 +18,21 @@ describe("QTI item submission materialization", () => {
     );
     expect(result.outcomeVariables).toContainEqual(
       expect.objectContaining({ identifier: "SCORE", value: 1 }),
+    );
+  });
+
+  it("normalizes valid XML boolean response lexemes before scoring and serialization", () => {
+    const result = materializeQtiItemSubmission({
+      itemXml: scoredBooleanXml(),
+      trustedResponses: { RESPONSE: "1" },
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(result.score).toBe(1);
+    expect(result.state?.responses.RESPONSE).toBe(true);
+    expect(result.responseVariables).toContainEqual(
+      expect.objectContaining({ identifier: "RESPONSE", value: true }),
     );
   });
 
@@ -178,6 +194,23 @@ function scoredChoiceXml(): string {
           <qti-simple-choice identifier="A">A</qti-simple-choice>
           <qti-simple-choice identifier="B">B</qti-simple-choice>
         </qti-choice-interaction>
+      </qti-item-body>
+      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+    </qti-assessment-item>
+  `;
+}
+
+function scoredBooleanXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="boolean" title="boolean" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="boolean">
+        <qti-correct-response><qti-value>true</qti-value></qti-correct-response>
+      </qti-response-declaration>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+        <qti-default-value><qti-value>0</qti-value></qti-default-value>
+      </qti-outcome-declaration>
+      <qti-item-body>
+        <qti-end-attempt-interaction response-identifier="RESPONSE" title="Finish"/>
       </qti-item-body>
       <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
     </qti-assessment-item>
