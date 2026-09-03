@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coerceValue, parseXmlBoolean } from "./parser-values.js";
+import { coerceValue, parseInteger, parseXmlBoolean } from "./parser-values.js";
 import { isBooleanAttribute } from "./validation-primitives.js";
 
 describe("parseXmlBoolean", () => {
@@ -20,6 +20,20 @@ describe("parseXmlBoolean", () => {
   it("coerces declaration boolean values with numeric XML literals", () => {
     expect(coerceValue("1", "boolean")).toBe(true);
     expect(coerceValue("0", "boolean")).toBe(false);
+  });
+
+  it("only coerces complete finite numeric values", () => {
+    expect(coerceValue("12", "integer")).toBe(12);
+    expect(coerceValue("12garbage", "integer")).toBe("12garbage");
+    expect(coerceValue("1.5", "float")).toBe(1.5);
+    expect(coerceValue("1.5garbage", "float")).toBe("1.5garbage");
+    expect(coerceValue("Infinity", "float")).toBe("Infinity");
+  });
+
+  it("parses complete integer lexical values", () => {
+    expect(parseInteger(" -12 ")).toBe(-12);
+    expect(parseInteger("12.5")).toBeUndefined();
+    expect(parseInteger("12garbage")).toBeUndefined();
   });
 
   it("shares boolean validation with isBooleanAttribute", () => {

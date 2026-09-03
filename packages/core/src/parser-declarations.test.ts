@@ -428,6 +428,38 @@ describe("declaration parsing and validation", () => {
     );
   });
 
+  it("rejects declaration values with partially numeric content", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="partial-numbers" title="partial-numbers" time-dependent="false">
+        <qti-response-declaration identifier="INTEGER_RESPONSE" cardinality="single" base-type="integer">
+          <qti-correct-response><qti-value>12garbage</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="FLOAT_OUTCOME" cardinality="single" base-type="float">
+          <qti-default-value><qti-value>1.5garbage</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body>
+          <qti-custom-interaction response-identifier="INTEGER_RESPONSE"/>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.responseDeclarations[0]?.correctResponse).toBe("12garbage");
+    expect(result.document?.item.outcomeDeclarations[0]?.defaultValue).toBe("1.5garbage");
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "declaration.correctResponse.baseType",
+          message: expect.stringContaining("INTEGER_RESPONSE"),
+        }),
+        expect.objectContaining({
+          code: "declaration.defaultValue.baseType",
+          message: expect.stringContaining("FLOAT_OUTCOME"),
+        }),
+      ]),
+    );
+  });
+
   it("validates correct response choice references", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-correct-response-refs" title="bad-correct-response-refs" time-dependent="false">

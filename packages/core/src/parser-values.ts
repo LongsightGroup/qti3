@@ -43,14 +43,23 @@ export function numericTuple4(values: number[]): [number, number, number, number
 }
 
 export function coerceValue(value: string, baseType: string | undefined): QtiScalarValue {
-  if (baseType === "integer") return Number.parseInt(value, 10);
-  if (baseType === "float") return Number.parseFloat(value);
+  if (baseType === "integer") return parseInteger(value) ?? value;
+  if (baseType === "float") return parseFiniteNumber(value) ?? value;
   if (baseType === "boolean") {
     const parsed = parseXmlBoolean(value);
     if (parsed !== undefined) return parsed;
     // Invalid boolean literals fall through to the raw string; validation rejects them separately.
   }
   return value;
+}
+
+/** Parse a complete integer lexical value without accepting a numeric prefix. */
+export function parseInteger(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const normalized = value.trim();
+  if (!/^-?\d+$/.test(normalized)) return undefined;
+  const parsed = Number(normalized);
+  return Number.isInteger(parsed) ? parsed : undefined;
 }
 
 export function parseCardinality(value: string | undefined): QtiCardinality {
