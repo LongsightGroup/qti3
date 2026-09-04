@@ -9,7 +9,7 @@ import {
   valuesEqual,
   valueContainer,
 } from "./processing-values.js";
-import { expressionIsOrdered } from "./processing-variables.js";
+import { expressionBaseType, expressionIsOrdered } from "./processing-variables.js";
 import { roundWithMode } from "./processing-operators.js";
 
 type ComparisonExpression = Extract<
@@ -40,12 +40,22 @@ export function evaluateComparisonExpression(
         right,
         expressionIsOrdered(expression.left, context.document) ||
           expressionIsOrdered(expression.right, context.document),
+        expressionBaseType(expression.left, context.document) ??
+          expressionBaseType(expression.right, context.document),
       );
     }
     case "equal": {
       const left = context.evaluate(expression.left);
       const right = context.evaluate(expression.right);
-      return left === null || right === null ? null : valuesEqual(left, right);
+      return left === null || right === null
+        ? null
+        : valuesEqual(
+            left,
+            right,
+            false,
+            expressionBaseType(expression.left, context.document) ??
+              expressionBaseType(expression.right, context.document),
+          );
     }
     case "equalRounded": {
       const validRounding =
@@ -86,7 +96,10 @@ export function evaluateComparisonExpression(
       const value = context.evaluate(expression.value);
       const collection = context.evaluate(expression.collection);
       if (value === null || collection === null) return null;
-      return valueContainer(collection).some((item) => valuesEqual(item, value));
+      const baseType =
+        expressionBaseType(expression.value, context.document) ??
+        expressionBaseType(expression.collection, context.document);
+      return valueContainer(collection).some((item) => valuesEqual(item, value, false, baseType));
     }
     case "delete": {
       const value = context.evaluate(expression.value);
@@ -94,7 +107,10 @@ export function evaluateComparisonExpression(
       if (value === null || collectionValue === null) return null;
       const collection = valueContainer(collectionValue);
       if (collection.length === 0) return null;
-      const filtered = collection.filter((item) => !valuesEqual(item, value));
+      const baseType =
+        expressionBaseType(expression.value, context.document) ??
+        expressionBaseType(expression.collection, context.document);
+      const filtered = collection.filter((item) => !valuesEqual(item, value, false, baseType));
       return filtered.length > 0 ? filtered : null;
     }
     case "contains": {
@@ -104,7 +120,10 @@ export function evaluateComparisonExpression(
       const collection = valueContainer(collectionValue);
       const values = valueContainer(valuesValue);
       if (collection.length === 0 || values.length === 0) return null;
-      return containsValues(collection, values);
+      const baseType =
+        expressionBaseType(expression.collection, context.document) ??
+        expressionBaseType(expression.values, context.document);
+      return containsValues(collection, values, baseType);
     }
     default:
       return assertNever(expression);

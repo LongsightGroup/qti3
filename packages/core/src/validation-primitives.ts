@@ -1,6 +1,6 @@
 import type { QtiBaseType, QtiCardinality, QtiDiagnostic, QtiScalarValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
-import { parseFiniteNumber, parseInteger, parseXmlBoolean } from "./parser-values.js";
+import { parseFiniteNumber, parseInteger, parseQtiPair, parseXmlBoolean } from "./parser-values.js";
 
 export function requireIdentifier(
   qtiName: string,
@@ -88,7 +88,7 @@ export function parseQtiScalarForBaseType(
       return typeof value === "string" && isPoint(value) ? value : undefined;
     case "pair":
     case "directedPair":
-      return typeof value === "string" && isPair(value) ? value : undefined;
+      return typeof value === "string" ? parseQtiPair(value, baseType) : undefined;
     case "identifier":
       return typeof value === "string" && value.trim().length > 0 && !/\s/.test(value)
         ? value

@@ -1,4 +1,5 @@
 import type {
+  QtiBaseType,
   QtiDocument,
   QtiOutcomeDeclaration,
   QtiProcessingExpression,
@@ -6,6 +7,7 @@ import type {
   QtiTemplateDeclaration,
   QtiValue,
 } from "./types.js";
+import { parseBaseType } from "./parser-values.js";
 
 export function getResponseDeclaration(
   document: QtiDocument,
@@ -61,6 +63,23 @@ export function expressionIsOrdered(
     return true;
   }
   return false;
+}
+
+/** Resolve the declared atomic base type for an expression when it is statically knowable. */
+export function expressionBaseType(
+  expression: QtiProcessingExpression,
+  document: QtiDocument,
+): QtiBaseType | undefined {
+  if (expression.type === "baseValue") return parseBaseType(expression.baseType);
+  if (
+    expression.type === "variable" ||
+    expression.type === "correct" ||
+    expression.type === "default" ||
+    expression.type === "isNull"
+  ) {
+    return resolveVariableDeclaration(document, expression.identifier)?.baseType;
+  }
+  return undefined;
 }
 
 function variableCardinality(document: QtiDocument, identifier: string): string | undefined {

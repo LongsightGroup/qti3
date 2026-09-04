@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { coerceValue, parseFiniteNumber, parseInteger, parseXmlBoolean } from "./parser-values.js";
+import {
+  coerceValue,
+  parseFiniteNumber,
+  parseInteger,
+  parseQtiPair,
+  parseXmlBoolean,
+} from "./parser-values.js";
 import { isBooleanAttribute } from "./validation-primitives.js";
 
 describe("parseXmlBoolean", () => {
@@ -30,6 +36,13 @@ describe("parseXmlBoolean", () => {
     expect(coerceValue("0x10", "float")).toBe("0x10");
     expect(coerceValue("0b10", "float")).toBe("0b10");
     expect(coerceValue("Infinity", "float")).toBe("Infinity");
+  });
+
+  it("canonicalizes pair values without changing directed-pair endpoint order", () => {
+    expect(parseQtiPair(" B   A ", "pair")).toBe("A B");
+    expect(parseQtiPair(" B   A ", "directedPair")).toBe("B A");
+    expect(coerceValue("B A", "pair")).toBe("A B");
+    expect(parseQtiPair("A", "pair")).toBeUndefined();
   });
 
   it.each([

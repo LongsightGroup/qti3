@@ -1,4 +1,5 @@
 import type { QtiDocument, QtiResponseDeclaration, QtiValue } from "./types.js";
+import { parseQtiPair } from "./parser-values.js";
 import { qtiScalarToString, qtiValueToStringList } from "./value-format.js";
 import { isRecordValue, numericValue, valuesEqual } from "./processing-values.js";
 
@@ -36,8 +37,15 @@ export function mapOrMatchResponse(
   correctResponse: QtiValue,
 ): number {
   if (declaration.areaMapping) return scoreAreaMapping(response, declaration.areaMapping);
-  if (declaration.mapping) return scoreMapping(response, declaration.mapping);
-  return valuesEqual(response, correctResponse, declaration.cardinality === "ordered") ? 1 : 0;
+  if (declaration.mapping) return scoreMapping(response, declaration.mapping, declaration.baseType);
+  return valuesEqual(
+    response,
+    correctResponse,
+    declaration.cardinality === "ordered",
+    declaration.baseType,
+  )
+    ? 1
+    : 0;
 }
 
 export function scoreAreaMapping(
@@ -125,15 +133,17 @@ function pointInsidePolygon(point: { x: number; y: number }, coords: number[]): 
 function scoreMapping(
   response: QtiValue,
   mapping: NonNullable<QtiResponseDeclaration["mapping"]>,
+  baseType: QtiResponseDeclaration["baseType"],
 ): number {
-  const values = Object.fromEntries(
+  const values = new Map(
     mapping.entries
       .filter((entry) => entry.mapKey !== undefined)
-      .map((entry) => [entry.mapKey!, entry.mappedValue]),
+      .map((entry) => [mappingKey(entry.mapKey!, baseType), entry.mappedValue] as const),
   );
   if (Array.isArray(response)) {
     const score = response.reduce<number>(
-      (sum, value) => sum + (values[String(value)] ?? mapping.defaultValue),
+      (sum, value) =>
+        sum + (values.get(mappingKey(String(value), baseType)) ?? mapping.defaultValue),
       0,
     );
     return clampMappedScore(score, mapping.attributes);
@@ -141,8 +151,14 @@ function scoreMapping(
   const score =
     response === null || isRecordValue(response)
       ? 0
-      : (values[String(response)] ?? mapping.defaultValue);
+      : (values.get(mappingKey(String(response), baseType)) ?? mapping.defaultValue);
   return clampMappedScore(score, mapping.attributes);
+}
+
+function mappingKey(value: string, baseType: QtiResponseDeclaration["baseType"]): string {
+  return baseType === "pair" || baseType === "directedPair"
+    ? (parseQtiPair(value, baseType) ?? value)
+    : value;
 }
 
 function clampMappedScore(score: number, attributes: Record<string, string>): number {

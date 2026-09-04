@@ -410,6 +410,7 @@ function applyResponseProcessing(context: SessionProcessingContext): void {
           evaluation.responses.RESPONSE ?? null,
           evaluation.correctResponses.RESPONSE ?? null,
           declaration.cardinality === "ordered",
+          declaration.baseType,
         )
       : null;
     evaluation.outcomes.SCORE = matches === true ? 1 : 0;

@@ -46,12 +46,26 @@ export function numericTuple4(values: number[]): [number, number, number, number
 export function coerceValue(value: string, baseType: string | undefined): QtiScalarValue {
   if (baseType === "integer") return parseInteger(value) ?? value;
   if (baseType === "float") return parseFiniteNumber(value) ?? value;
+  if (baseType === "pair" || baseType === "directedPair") {
+    return parseQtiPair(value, baseType) ?? value;
+  }
   if (baseType === "boolean") {
     const parsed = parseXmlBoolean(value);
     if (parsed !== undefined) return parsed;
     // Invalid boolean literals fall through to the raw string; validation rejects them separately.
   }
   return value;
+}
+
+/** Parse and canonicalize a QTI pair while preserving directed-pair endpoint order. */
+export function parseQtiPair(
+  value: string | undefined,
+  baseType: "pair" | "directedPair",
+): string | undefined {
+  if (value === undefined) return undefined;
+  const parts = value.trim().split(/\s+/);
+  if (parts.length !== 2 || parts.some((part) => part.length === 0)) return undefined;
+  return (baseType === "pair" ? parts.toSorted() : parts).join(" ");
 }
 
 /** Parse a complete integer lexical value without accepting a numeric prefix. */

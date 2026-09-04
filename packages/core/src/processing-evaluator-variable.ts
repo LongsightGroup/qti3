@@ -37,6 +37,7 @@ export function evaluateVariableExpression(
             context.responses[expression.identifier] ?? null,
             context.correctResponses[expression.correctIdentifier] ?? null,
             declaration.cardinality === "ordered",
+            declaration.baseType,
           )
         : false;
     }

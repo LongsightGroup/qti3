@@ -1,18 +1,32 @@
-import type { QtiRecordValue, QtiResponseDeclaration, QtiScalarValue, QtiValue } from "./types.js";
+import { parseQtiPair } from "./parser-values.js";
+import type {
+  QtiBaseType,
+  QtiRecordValue,
+  QtiResponseDeclaration,
+  QtiScalarValue,
+  QtiValue,
+} from "./types.js";
 import { qtiValueToString } from "./value-format.js";
 
 export function isNullResponse(response: QtiValue): boolean {
   return response === null || response === "" || (Array.isArray(response) && response.length === 0);
 }
 
-export function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = false): boolean {
+export function valuesEqual(
+  actual: QtiValue,
+  expected: QtiValue,
+  ordered = false,
+  baseType?: QtiBaseType,
+): boolean {
   if (isRecordValue(actual) || isRecordValue(expected)) {
     if (!isRecordValue(actual) || !isRecordValue(expected)) return false;
     const actualKeys = Object.keys(actual).toSorted();
     const expectedKeys = Object.keys(expected).toSorted();
     return (
       valuesEqual(actualKeys, expectedKeys, true) &&
-      actualKeys.every((key) => valuesEqual(actual[key] ?? null, expected[key] ?? null, ordered))
+      actualKeys.every((key) =>
+        valuesEqual(actual[key] ?? null, expected[key] ?? null, ordered, baseType),
+      )
     );
   }
   if (Array.isArray(actual) || Array.isArray(expected)) {
@@ -20,25 +34,38 @@ export function valuesEqual(actual: QtiValue, expected: QtiValue, ordered = fals
     const expectedValues = Array.isArray(expected) ? expected : expected === null ? [] : [expected];
     if (actualValues.length !== expectedValues.length) return false;
     if (ordered)
-      return actualValues.every((value, index) => scalarValuesEqual(value, expectedValues[index]!));
-    const sortedExpected = [...expectedValues].toSorted(compareScalarValues);
+      return actualValues.every((value, index) =>
+        scalarValuesEqual(value, expectedValues[index]!, baseType),
+      );
+    const compareValues = (left: QtiScalarValue, right: QtiScalarValue): number =>
+      compareScalarValues(left, right, baseType);
+    const sortedExpected = [...expectedValues].toSorted(compareValues);
     return [...actualValues]
-      .toSorted(compareScalarValues)
-      .every((value, index) => scalarValuesEqual(value, sortedExpected[index]!));
+      .toSorted(compareValues)
+      .every((value, index) => scalarValuesEqual(value, sortedExpected[index]!, baseType));
   }
-  return scalarValuesEqual(actual, expected);
+  return scalarValuesEqual(actual, expected, baseType);
 }
 
 export function qtiMatchValues(
   actual: QtiValue,
   expected: QtiValue,
   ordered = false,
+  baseType?: QtiBaseType,
 ): boolean | null {
   if (actual === null || expected === null) return null;
-  return valuesEqual(actual, expected, ordered);
+  return valuesEqual(actual, expected, ordered, baseType);
 }
 
-function scalarValuesEqual(actual: QtiValue, expected: QtiValue): boolean {
+function scalarValuesEqual(actual: QtiValue, expected: QtiValue, baseType?: QtiBaseType): boolean {
+  if (
+    (baseType === "pair" || baseType === "directedPair") &&
+    typeof actual === "string" &&
+    typeof expected === "string"
+  ) {
+    const normalizedActual = parseQtiPair(actual, baseType);
+    return normalizedActual !== undefined && normalizedActual === parseQtiPair(expected, baseType);
+  }
   if (typeof actual === "boolean" && typeof expected === "string") {
     return String(actual) === expected;
   }
@@ -79,18 +106,36 @@ export function isRecordValue(value: QtiValue): value is QtiRecordValue {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function containsValues(collection: QtiScalarValue[], values: QtiScalarValue[]): boolean {
+export function containsValues(
+  collection: QtiScalarValue[],
+  values: QtiScalarValue[],
+  baseType?: QtiBaseType,
+): boolean {
   const remaining = [...collection];
   for (const value of values) {
-    const index = remaining.findIndex((candidate) => valuesEqual(candidate, value));
+    const index = remaining.findIndex((candidate) =>
+      valuesEqual(candidate, value, false, baseType),
+    );
     if (index === -1) return false;
     remaining.splice(index, 1);
   }
   return true;
 }
 
-function compareScalarValues(left: QtiScalarValue, right: QtiScalarValue): number {
-  return String(left).localeCompare(String(right));
+function compareScalarValues(
+  left: QtiScalarValue,
+  right: QtiScalarValue,
+  baseType?: QtiBaseType,
+): number {
+  const leftKey =
+    (baseType === "pair" || baseType === "directedPair") && typeof left === "string"
+      ? (parseQtiPair(left, baseType) ?? left)
+      : String(left);
+  const rightKey =
+    (baseType === "pair" || baseType === "directedPair") && typeof right === "string"
+      ? (parseQtiPair(right, baseType) ?? right)
+      : String(right);
+  return leftKey.localeCompare(rightKey);
 }
 
 export function numericValue(value: QtiValue): number {

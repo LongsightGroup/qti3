@@ -36,6 +36,18 @@ describe("QTI item submission materialization", () => {
     );
   });
 
+  it("scores and serializes equivalent unordered pair responses canonically", () => {
+    const result = materializeQtiItemSubmission({
+      itemXml: scoredAssociateXml(),
+      trustedResponses: { RESPONSE: ["D C", "B A"] },
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(result.score).toBe(1);
+    expect(result.state?.responses.RESPONSE).toEqual(["C D", "A B"]);
+  });
+
   it("materializes adaptive submissions through the adaptive turn path", () => {
     const result = materializeQtiItemSubmission({
       itemXml: adaptiveChoiceXml(),
@@ -211,6 +223,31 @@ function scoredBooleanXml(): string {
       </qti-outcome-declaration>
       <qti-item-body>
         <qti-end-attempt-interaction response-identifier="RESPONSE" title="Finish"/>
+      </qti-item-body>
+      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+    </qti-assessment-item>
+  `;
+}
+
+function scoredAssociateXml(): string {
+  return `
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="associate" title="associate" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+        <qti-correct-response>
+          <qti-value>A B</qti-value>
+          <qti-value>C D</qti-value>
+        </qti-correct-response>
+      </qti-response-declaration>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+        <qti-default-value><qti-value>0</qti-value></qti-default-value>
+      </qti-outcome-declaration>
+      <qti-item-body>
+        <qti-associate-interaction response-identifier="RESPONSE">
+          <qti-simple-associable-choice identifier="A" match-max="2">A</qti-simple-associable-choice>
+          <qti-simple-associable-choice identifier="B" match-max="2">B</qti-simple-associable-choice>
+          <qti-simple-associable-choice identifier="C" match-max="2">C</qti-simple-associable-choice>
+          <qti-simple-associable-choice identifier="D" match-max="2">D</qti-simple-associable-choice>
+        </qti-associate-interaction>
       </qti-item-body>
       <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
     </qti-assessment-item>

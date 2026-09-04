@@ -126,6 +126,31 @@ describe("processing mapping", () => {
     expect(session.score().outcomes.SCORE).toBe(2);
   });
 
+  it("maps equivalent unordered pair responses to the same entry", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped-pair" title="mapped-pair" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="A B" mapped-value="2"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body>
+          <qti-associate-interaction response-identifier="RESPONSE">
+            <qti-simple-associable-choice identifier="A" match-max="2">A</qti-simple-associable-choice>
+            <qti-simple-associable-choice identifier="B" match-max="2">B</qti-simple-associable-choice>
+          </qti-associate-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"/>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", ["B A"]);
+    expect(session.score().outcomes.SCORE).toBe(2);
+  });
+
   it("rejects built-in match-correct templates across multiple response declarations", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-template-sum" title="match-template-sum" time-dependent="false">
