@@ -22,6 +22,7 @@ import {
   uniqueStandards,
 } from "./qti-package-metadata.js";
 import type { QtiPackageParseResult } from "./qti-package-types.js";
+import { QTI_PACKAGE_MANIFEST_NAMESPACE } from "./qti-namespaces.js";
 import { parseXmlFiles, pushXmlDiagnostics } from "./qti-package-xml.js";
 import {
   DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
@@ -98,13 +99,19 @@ function parseQtiPackageEntries(
     pushXmlDiagnostics(manifestXml, diagnostics);
   }
 
-  const manifestRoot = manifestXml?.root?.localName === "manifest" ? manifestXml.root : undefined;
+  const manifestRoot =
+    manifestXml?.root?.localName === "manifest" &&
+    manifestXml.root.uri === QTI_PACKAGE_MANIFEST_NAMESPACE
+      ? manifestXml.root
+      : undefined;
   if (manifestXml?.root && !manifestRoot) {
     pushPackageDiagnostic(
       diagnostics,
       "package.manifest.root",
       "error",
-      `Expected imsmanifest.xml root manifest, found ${manifestXml.root.localName}.`,
+      manifestXml.root.localName === "manifest"
+        ? `Expected imsmanifest.xml manifest in namespace ${QTI_PACKAGE_MANIFEST_NAMESPACE}, found ${manifestXml.root.uri ?? "(none)"}.`
+        : `Expected imsmanifest.xml root manifest, found ${manifestXml.root.localName}.`,
       QTI_PACKAGE_MANIFEST_PATH,
     );
   }

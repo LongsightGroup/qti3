@@ -11,6 +11,7 @@ import type {
   QtiTimingMetadata,
 } from "./qti-package-types.js";
 import type { QtiDiagnostic } from "./types.js";
+import { QTI_ASI_NAMESPACE, QTI_PACKAGE_MANIFEST_NAMESPACE } from "./qti-namespaces.js";
 
 /** Known QTI / IMS CP alignment element names plus attribute-driven manifest metadata. */
 const STANDARD_ALIGNMENT_ELEMENT_NAMES = new Set([
@@ -34,7 +35,7 @@ export function parseTimingMetadata(
   diagnostics: QtiDiagnostic[],
   parsedTimeLimits?: QtiTimeLimits,
 ): QtiTimingMetadata | undefined {
-  const timeLimitsNode = childPackageElements(root, "qti-time-limits")[0];
+  const timeLimitsNode = childPackageElements(root, "qti-time-limits", QTI_ASI_NAMESPACE)[0];
   const timeLimits = parsedTimeLimits ?? parseTimeLimits(timeLimitsNode, sourcePath, diagnostics);
   const timeDependent = parseXmlBoolean(root.attributes["time-dependent"]);
   if (!timeLimitsNode && timeDependent === undefined) return undefined;
@@ -296,7 +297,7 @@ export function packageTitle(
   items: readonly QtiPackageItem[],
 ): string {
   const manifestTitle = manifestRoot
-    ? packageDescendants(manifestRoot, "title")
+    ? packageDescendants(manifestRoot, "title", QTI_PACKAGE_MANIFEST_NAMESPACE)
         .map((node) => node.text.trim())
         .find((text) => text.length > 0)
     : undefined;

@@ -119,6 +119,31 @@ describe("assessment item validation", () => {
     );
   });
 
+  it("rejects QTI-shaped descendants from a foreign namespace", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:foreign="https://example.invalid/not-qti" identifier="foreign-descendant" title="foreign-descendant" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>
+          <foreign:qti-choice-interaction response-identifier="RESPONSE">
+            <foreign:qti-simple-choice identifier="A">A</foreign:qti-simple-choice>
+          </foreign:qti-choice-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document).toBeUndefined();
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "qti.namespace",
+          severity: "error",
+          path: "/qti-assessment-item/qti-item-body[1]/qti-choice-interaction[1]",
+        }),
+      ]),
+    );
+  });
+
   it("requires schema-required assessment item root attributes", () => {
     const missingAttributes = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-root-attrs">

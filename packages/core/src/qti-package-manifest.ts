@@ -5,6 +5,7 @@ import type { QtiManifestFile, QtiManifestResource, QtiPackageShape } from "./qt
 import { childPackageElements, packageDescendants, stripHrefSuffix } from "./qti-package-xml.js";
 import type { QtiPackageEntry } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
+import { QTI_PACKAGE_MANIFEST_NAMESPACE } from "./qti-namespaces.js";
 
 export const QTI_PACKAGE_MANIFEST_PATH = "imsmanifest.xml";
 
@@ -23,8 +24,12 @@ export function parseManifestResources(
   entriesByPath: ReadonlyMap<string, QtiPackageEntry>,
   diagnostics: QtiDiagnostic[],
 ): QtiManifestResource[] {
-  const resourceNodes = packageDescendants(manifestRoot, "resources").flatMap((resources) =>
-    childPackageElements(resources, "resource"),
+  const resourceNodes = packageDescendants(
+    manifestRoot,
+    "resources",
+    QTI_PACKAGE_MANIFEST_NAMESPACE,
+  ).flatMap((resources) =>
+    childPackageElements(resources, "resource", QTI_PACKAGE_MANIFEST_NAMESPACE),
   );
   const resources: QtiManifestResource[] = [];
 
@@ -71,7 +76,7 @@ function parseManifestFiles(
   diagnostics: QtiDiagnostic[],
 ): QtiManifestFile[] {
   const files: QtiManifestFile[] = [];
-  for (const fileNode of packageDescendants(resourceNode, "file")) {
+  for (const fileNode of packageDescendants(resourceNode, "file", QTI_PACKAGE_MANIFEST_NAMESPACE)) {
     const rawHref = fileNode.attributes.href;
     if (!rawHref) {
       pushPackageDiagnostic(
@@ -105,7 +110,11 @@ function parseManifestDependencies(
   diagnostics: QtiDiagnostic[],
 ): string[] {
   const dependencies: string[] = [];
-  for (const dependencyNode of packageDescendants(resourceNode, "dependency")) {
+  for (const dependencyNode of packageDescendants(
+    resourceNode,
+    "dependency",
+    QTI_PACKAGE_MANIFEST_NAMESPACE,
+  )) {
     const identifierref = dependencyNode.attributes.identifierref;
     if (!identifierref) {
       pushPackageDiagnostic(

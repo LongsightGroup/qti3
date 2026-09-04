@@ -2,6 +2,7 @@ import { parseXmlTree, type XmlNode } from "./xml.js";
 
 export interface QtiPackageXmlNode {
   localName: string;
+  uri?: string | undefined;
   attributes: Record<string, string>;
   children: QtiPackageXmlNode[];
   text: string;
@@ -23,6 +24,7 @@ export function parseQtiPackageXmlTree(xml: string): QtiPackageXmlTree {
 function packageXmlNode(node: XmlNode): QtiPackageXmlNode {
   return {
     localName: node.localName,
+    uri: node.uri,
     attributes: node.attributes,
     children: node.children.map(packageXmlNode),
     text: node.text,

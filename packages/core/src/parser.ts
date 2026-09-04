@@ -36,9 +36,9 @@ import type {
   QtiResponseDeclaration,
 } from "./types.js";
 import { validateAssessmentItem } from "./validation.js";
+import { QTI_ASI_NAMESPACE } from "./qti-namespaces.js";
 import { childElements, descendants, parseXmlTree, type XmlNode } from "./xml.js";
 
-const qtiAssessmentItemNamespace = "http://www.imsglobal.org/xsd/imsqtiasi_v3p0";
 const supportedProcessingNames = new Set(processingSupport.map((entry) => entry.qtiName));
 const processingContainerNames = new Set(["qti-template-processing", "qti-response-processing"]);
 const responseProcessingForbiddenNames = new Set([
@@ -78,7 +78,7 @@ export function parseQtiXml(xml: string): QtiParseResult {
   }
 
   const itemNode =
-    tree.root.localName === "qti-assessment-item" && tree.root.uri === qtiAssessmentItemNamespace
+    tree.root.localName === "qti-assessment-item" && tree.root.uri === QTI_ASI_NAMESPACE
       ? tree.root
       : undefined;
   if (!itemNode) {
@@ -87,11 +87,28 @@ export function parseQtiXml(xml: string): QtiParseResult {
       severity: "error",
       message:
         tree.root.localName === "qti-assessment-item"
-          ? `Expected qti-assessment-item in namespace ${qtiAssessmentItemNamespace}, found ${tree.root.uri ?? "(none)"}.`
+          ? `Expected qti-assessment-item in namespace ${QTI_ASI_NAMESPACE}, found ${tree.root.uri ?? "(none)"}.`
           : `Expected qti-assessment-item root, found ${tree.root.localName}.`,
       path: tree.root.source.path,
       source: tree.root.source,
     });
+    return { ok: false, diagnostics };
+  }
+
+  const foreignQtiElements = descendants(
+    itemNode,
+    (node) => node.localName.startsWith("qti-") && node.uri !== QTI_ASI_NAMESPACE,
+  );
+  if (foreignQtiElements.length > 0) {
+    for (const node of foreignQtiElements) {
+      diagnostics.push({
+        code: "qti.namespace",
+        severity: "error",
+        message: `Expected ${node.localName} in namespace ${QTI_ASI_NAMESPACE}, found ${node.uri ?? "(none)"}.`,
+        path: node.source.path,
+        source: node.source,
+      });
+    }
     return { ok: false, diagnostics };
   }
 

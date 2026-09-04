@@ -323,6 +323,23 @@ describe("QTI package parser", () => {
     );
   });
 
+  it("rejects manifests from a foreign namespace", () => {
+    const result = parseQtiPackage(
+      createStoredZip({
+        "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="https://example.invalid/not-qti" identifier="pkg">
+  <resources/>
+</manifest>`,
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.packageShape).toBe("unknown");
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "package.manifest.root", severity: "error" }),
+    );
+  });
+
   it("diagnoses item resources without a primary href", () => {
     const result = parseQtiPackage(
       createStoredZip({

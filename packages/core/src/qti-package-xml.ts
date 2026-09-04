@@ -39,22 +39,35 @@ export function pushXmlDiagnostics(xmlFile: PackageXmlFile, diagnostics: QtiDiag
   }
 }
 
+/** Return direct package-XML children, optionally restricted by local name and namespace. */
 export function childPackageElements(
   node: QtiPackageXmlNode,
   localName?: string,
+  namespaceUri?: string,
 ): QtiPackageXmlNode[] {
-  return node.children.filter((child) => !localName || child.localName === localName);
+  return node.children.filter(
+    (child) =>
+      (!localName || child.localName === localName) &&
+      (namespaceUri === undefined || child.uri === namespaceUri),
+  );
 }
 
+/** Return package-XML descendants, optionally restricted by local name and namespace. */
 export function packageDescendants(
   node: QtiPackageXmlNode | undefined,
   localName?: string,
+  namespaceUri?: string,
 ): QtiPackageXmlNode[] {
   if (!node) return [];
   const found: QtiPackageXmlNode[] = [];
   for (const child of node.children) {
-    if (!localName || child.localName === localName) found.push(child);
-    found.push(...packageDescendants(child, localName));
+    if (
+      (!localName || child.localName === localName) &&
+      (namespaceUri === undefined || child.uri === namespaceUri)
+    ) {
+      found.push(child);
+    }
+    found.push(...packageDescendants(child, localName, namespaceUri));
   }
   return found;
 }

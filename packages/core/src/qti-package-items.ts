@@ -34,6 +34,7 @@ import {
 } from "./qti-package-xml.js";
 import type { QtiPackageEntry } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
+import { QTI_ASI_NAMESPACE } from "./qti-namespaces.js";
 
 export interface PackageItemReference {
   readonly href: string;
@@ -83,13 +84,18 @@ export function parseAssessmentTestPackageModel(
   const xmlFile = xmlFilesByPath.get(href) ?? parsePackageXml(entry);
   const testDiagnostics: QtiDiagnostic[] = [];
   pushXmlDiagnostics(xmlFile, testDiagnostics);
-  const root = xmlFile.root?.localName === "qti-assessment-test" ? xmlFile.root : undefined;
+  const root =
+    xmlFile.root?.localName === "qti-assessment-test" && xmlFile.root.uri === QTI_ASI_NAMESPACE
+      ? xmlFile.root
+      : undefined;
   if (xmlFile.root && !root) {
     pushPackageDiagnostic(
       testDiagnostics,
       "package.assessmentTest.root",
       "error",
-      `Expected qti-assessment-test root, found ${xmlFile.root.localName}.`,
+      xmlFile.root.localName === "qti-assessment-test"
+        ? `Expected qti-assessment-test in namespace ${QTI_ASI_NAMESPACE}, found ${xmlFile.root.uri ?? "(none)"}.`
+        : `Expected qti-assessment-test root, found ${xmlFile.root.localName}.`,
       href,
     );
   }
@@ -98,7 +104,7 @@ export function parseAssessmentTestPackageModel(
   const itemRefs = testParts.flatMap(flattenTestPartItemRefs);
   const assetHrefs = root ? discoverContentAssetHrefs(xmlFile, testDiagnostics) : [];
   const timeLimits = root
-    ? parseTimeLimits(childPackageElements(root, "qti-time-limits")[0], href, testDiagnostics)
+    ? parseTimeLimits(qtiChildElements(root, "qti-time-limits")[0], href, testDiagnostics)
     : undefined;
   const timing = root ? parseTimingMetadata(root, href, testDiagnostics, timeLimits) : undefined;
   const scopedDiagnostics = testDiagnostics.map((diagnostic) =>
@@ -128,18 +134,18 @@ function parseAssessmentTestParts(
   sourcePath: string,
   diagnostics: QtiDiagnostic[],
 ): QtiTestPartPackageModel[] {
-  return childPackageElements(root, "qti-test-part").map((partNode) => {
+  return qtiChildElements(root, "qti-test-part").map((partNode) => {
     const identifier = partNode.attributes.identifier ?? "";
     return {
       identifier,
       navigationMode: parseNavigationMode(partNode, sourcePath, diagnostics),
       submissionMode: parseSubmissionMode(partNode, sourcePath, diagnostics),
       timeLimits: parseTimeLimits(
-        childPackageElements(partNode, "qti-time-limits")[0],
+        qtiChildElements(partNode, "qti-time-limits")[0],
         sourcePath,
         diagnostics,
       ),
-      sections: childPackageElements(partNode, "qti-assessment-section").map((sectionNode) =>
+      sections: qtiChildElements(partNode, "qti-assessment-section").map((sectionNode) =>
         parseAssessmentSection(sectionNode, identifier, undefined, sourcePath, diagnostics),
       ),
       attributes: { ...partNode.attributes },
@@ -156,43 +162,41 @@ function parseAssessmentSection(
 ): QtiAssessmentSectionPackageModel {
   const identifier = sectionNode.attributes.identifier ?? "";
   const visible = parseOptionalXmlBoolean(sectionNode, "visible", sourcePath, diagnostics);
-  const itemRefs = childPackageElements(sectionNode, "qti-assessment-item-ref").flatMap(
-    (refNode) => {
-      const rawHref = refNode.attributes.href;
-      if (!rawHref) {
-        pushPackageDiagnostic(
-          diagnostics,
-          "package.assessmentTest.itemRef.href.missing",
-          "error",
-          "qti-assessment-item-ref is missing href.",
-          sourcePath,
-        );
-        return [];
-      }
+  const itemRefs = qtiChildElements(sectionNode, "qti-assessment-item-ref").flatMap((refNode) => {
+    const rawHref = refNode.attributes.href;
+    if (!rawHref) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.assessmentTest.itemRef.href.missing",
+        "error",
+        "qti-assessment-item-ref is missing href.",
+        sourcePath,
+      );
+      return [];
+    }
 
-      const href = resolvePackageHref(sourcePath, rawHref, diagnostics);
-      if (!href) return [];
-      return [
-        {
-          identifier: refNode.attributes.identifier,
-          href,
-          testPartIdentifier,
-          sectionIdentifier: identifier,
-          timeLimits: parseTimeLimits(
-            childPackageElements(refNode, "qti-time-limits")[0],
-            sourcePath,
-            diagnostics,
-          ),
-          itemSessionControl: parseItemSessionControl(
-            childPackageElements(refNode, "qti-item-session-control")[0],
-            sourcePath,
-            diagnostics,
-          ),
-          attributes: { ...refNode.attributes },
-        },
-      ];
-    },
-  );
+    const href = resolvePackageHref(sourcePath, rawHref, diagnostics);
+    if (!href) return [];
+    return [
+      {
+        identifier: refNode.attributes.identifier,
+        href,
+        testPartIdentifier,
+        sectionIdentifier: identifier,
+        timeLimits: parseTimeLimits(
+          qtiChildElements(refNode, "qti-time-limits")[0],
+          sourcePath,
+          diagnostics,
+        ),
+        itemSessionControl: parseItemSessionControl(
+          qtiChildElements(refNode, "qti-item-session-control")[0],
+          sourcePath,
+          diagnostics,
+        ),
+        attributes: { ...refNode.attributes },
+      },
+    ];
+  });
 
   return {
     identifier,
@@ -201,12 +205,12 @@ function parseAssessmentSection(
     testPartIdentifier,
     parentSectionIdentifier,
     timeLimits: parseTimeLimits(
-      childPackageElements(sectionNode, "qti-time-limits")[0],
+      qtiChildElements(sectionNode, "qti-time-limits")[0],
       sourcePath,
       diagnostics,
     ),
     itemRefs,
-    sections: childPackageElements(sectionNode, "qti-assessment-section").map((child) =>
+    sections: qtiChildElements(sectionNode, "qti-assessment-section").map((child) =>
       parseAssessmentSection(child, testPartIdentifier, identifier, sourcePath, diagnostics),
     ),
     attributes: { ...sectionNode.attributes },
@@ -385,14 +389,13 @@ export function parsePackageItems(
     diagnostics.push(...itemDiagnostics);
 
     const assetHrefs = xmlFile.root ? discoverContentAssetHrefs(xmlFile, diagnostics) : [];
-    const root = xmlFile.root?.localName === "qti-assessment-item" ? xmlFile.root : undefined;
+    const root =
+      xmlFile.root?.localName === "qti-assessment-item" && xmlFile.root.uri === QTI_ASI_NAMESPACE
+        ? xmlFile.root
+        : undefined;
     const item = parsed.document?.item;
     const timeLimits = root
-      ? parseTimeLimits(
-          childPackageElements(root, "qti-time-limits")[0],
-          reference.href,
-          diagnostics,
-        )
+      ? parseTimeLimits(qtiChildElements(root, "qti-time-limits")[0], reference.href, diagnostics)
       : undefined;
 
     items.push({
@@ -420,4 +423,8 @@ export function parsePackageItems(
   }
 
   return items;
+}
+
+function qtiChildElements(node: QtiPackageXmlNode, localName: string): QtiPackageXmlNode[] {
+  return childPackageElements(node, localName, QTI_ASI_NAMESPACE);
 }
