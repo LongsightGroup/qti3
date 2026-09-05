@@ -1,5 +1,6 @@
 import type { QtiChoice, QtiContentNode, QtiSourceLocation } from "./types.js";
 import { assertNever } from "./assert-never.js";
+import { MATHML_NAMESPACE, QTI_ASI_NAMESPACE } from "./qti-namespaces.js";
 import type { XmlNode } from "./xml.js";
 
 export interface FlatTextFromContentOptions {
@@ -48,16 +49,33 @@ function flatTextFromContentNode(
     case "element":
       if (
         excludeAnnotations &&
+        isMathContentNamespace(node.namespaceUri) &&
         (node.qtiName === "annotation" || node.qtiName === "annotation-xml")
       ) {
         return "";
       }
-      if (node.qtiName === "math" && node.attributes.alttext) return node.attributes.alttext;
-      if (node.qtiName === "img" && node.attributes.alt) return node.attributes.alt;
-      if (node.qtiName === "object" && node.attributes["object-label"]) {
+      if (
+        node.qtiName === "math" &&
+        isMathContentNamespace(node.namespaceUri) &&
+        node.attributes.alttext
+      ) {
+        return node.attributes.alttext;
+      }
+      if (
+        node.qtiName === "img" &&
+        isQtiContentNamespace(node.namespaceUri) &&
+        node.attributes.alt
+      ) {
+        return node.attributes.alt;
+      }
+      if (
+        node.qtiName === "object" &&
+        isQtiContentNamespace(node.namespaceUri) &&
+        node.attributes["object-label"]
+      ) {
         return node.attributes["object-label"];
       }
-      if (node.qtiName === "math") {
+      if (node.qtiName === "math" && isMathContentNamespace(node.namespaceUri)) {
         return withVisibleBoundary(
           node.qtiName,
           node.children
@@ -88,6 +106,7 @@ function flatMathText(node: QtiContentNode, excludeAnnotations: boolean): string
   if (
     node.kind === "element" &&
     excludeAnnotations &&
+    isMathContentNamespace(node.namespaceUri) &&
     (node.qtiName === "annotation" || node.qtiName === "annotation-xml")
   ) {
     return "";
@@ -111,7 +130,7 @@ function visibleTextFromXmlNode(node: XmlNode): string {
   const accessibleLabel = accessibleXmlLabel(node);
   const text =
     accessibleLabel ??
-    (node.localName === "math"
+    (node.localName === "math" && isMathContentNamespace(node.uri)
       ? flatMathXmlText(node)
       : node.content
           .map((entry) => (typeof entry === "string" ? entry : visibleTextFromXmlNode(entry)))
@@ -124,7 +143,8 @@ function flatMathXmlText(node: XmlNode): string {
     .map((entry) =>
       typeof entry === "string"
         ? entry
-        : entry.localName === "annotation" || entry.localName === "annotation-xml"
+        : isMathContentNamespace(entry.uri) &&
+            (entry.localName === "annotation" || entry.localName === "annotation-xml")
           ? ""
           : flatMathXmlText(entry),
     )
@@ -133,12 +153,28 @@ function flatMathXmlText(node: XmlNode): string {
 }
 
 function accessibleXmlLabel(node: XmlNode): string | undefined {
-  if (node.localName === "math" && node.attributes.alttext) return node.attributes.alttext;
-  if (node.localName === "img" && node.attributes.alt) return node.attributes.alt;
-  if (node.localName === "object" && node.attributes["object-label"]) {
+  if (node.localName === "math" && isMathContentNamespace(node.uri) && node.attributes.alttext) {
+    return node.attributes.alttext;
+  }
+  if (node.localName === "img" && isQtiContentNamespace(node.uri) && node.attributes.alt) {
+    return node.attributes.alt;
+  }
+  if (
+    node.localName === "object" &&
+    isQtiContentNamespace(node.uri) &&
+    node.attributes["object-label"]
+  ) {
     return node.attributes["object-label"];
   }
   return undefined;
+}
+
+function isQtiContentNamespace(namespaceUri: string | undefined): boolean {
+  return namespaceUri === undefined || namespaceUri === QTI_ASI_NAMESPACE;
+}
+
+function isMathContentNamespace(namespaceUri: string | undefined): boolean {
+  return isQtiContentNamespace(namespaceUri) || namespaceUri === MATHML_NAMESPACE;
 }
 
 function withVisibleBoundary(qtiName: string, text: string): string {

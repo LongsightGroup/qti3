@@ -10,6 +10,7 @@ import {
   copySafeAttributes,
   createContentElement,
   formatPrintedValue,
+  isQtiContentNamespace,
   unsafeContentElements,
 } from "./content-dom.js";
 
@@ -66,10 +67,13 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
     return [element];
   }
   if (node.kind === "feedback") return renderFeedbackContent(node, context);
-  if (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline") {
+  if (
+    isQtiContentNamespace(node.namespaceUri) &&
+    (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline")
+  ) {
     return [renderTemplateContent(node, context)];
   }
-  if (node.qtiName === "qti-position-object-stage") {
+  if (isQtiContentNamespace(node.namespaceUri) && node.qtiName === "qti-position-object-stage") {
     return renderContentNodes(
       node.children.filter(
         (child) => !("qtiName" in child) || (child.qtiName !== "object" && child.qtiName !== "img"),
@@ -77,7 +81,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
       context,
     );
   }
-  if (node.qtiName === "qti-prompt") {
+  if (isQtiContentNamespace(node.namespaceUri) && node.qtiName === "qti-prompt") {
     const prompt = document.createElement("p");
     copySafeAttributes(prompt, node.attributes);
     prompt.classList.add("qti3-item-prompt");
@@ -87,7 +91,7 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   }
 
   if (unsafeContentElements.has(node.qtiName)) return [];
-  const elementName = contentElementName(node.qtiName);
+  const elementName = contentElementName(node.qtiName, node.namespaceUri);
   if (!elementName) return renderContentNodes(node.children, context);
   const element = createContentElement(elementName);
   copySafeAttributes(element, node.attributes);

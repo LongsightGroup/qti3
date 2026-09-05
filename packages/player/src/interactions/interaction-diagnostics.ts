@@ -189,9 +189,8 @@ function findEmbeddedInteractionIndicesInContext(
 
 function isInlineFlowContainer(node: QtiContentNode): boolean {
   if (node.kind !== "element") return false;
-  if (node.qtiName === "qti-template-inline") return true;
-  if (node.qtiName === "p") return true;
-  const tag = contentElementName(node.qtiName);
+  const tag = contentElementName(node.qtiName, node.namespaceUri);
+  if (tag === "p" || (tag === "span" && node.qtiName === "qti-template-inline")) return true;
   if (!tag) return false;
   return new Set(["span", "label", "a", "em", "strong", "b", "i", "sub", "sup", "small"]).has(tag);
 }

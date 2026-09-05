@@ -1,5 +1,9 @@
 import type { QtiContentNode, QtiValue } from "@longsightgroup/qti3-core";
-import { isResolvableAssetUrl } from "@longsightgroup/qti3-core";
+import {
+  isResolvableAssetUrl,
+  MATHML_NAMESPACE,
+  QTI_ASI_NAMESPACE,
+} from "@longsightgroup/qti3-core";
 import {
   parseAuthoredAssetUrl,
   parseResolvedAssetUrl,
@@ -119,7 +123,8 @@ const mathMlElements = new Set([
   "semantics",
 ]);
 
-export function contentElementName(qtiName: string): string | undefined {
+export function contentElementName(qtiName: string, namespaceUri?: string): string | undefined {
+  if (!isSupportedContentNamespace(qtiName, namespaceUri)) return undefined;
   if (qtiName === "qti-content-body" || qtiName === "qti-prompt") return undefined;
   if (htmlContentElements.has(qtiName) || mathMlElements.has(qtiName)) return qtiName;
   if (qtiName === "object") return "object";
@@ -131,9 +136,18 @@ export function contentElementName(qtiName: string): string | undefined {
 
 export function createContentElement(name: string): HTMLElement | MathMLElement {
   if (mathMlElements.has(name)) {
-    return document.createElementNS("http://www.w3.org/1998/Math/MathML", name) as MathMLElement;
+    return document.createElementNS(MATHML_NAMESPACE, name) as MathMLElement;
   }
   return document.createElement(name);
+}
+
+export function isQtiContentNamespace(namespaceUri: string | undefined): boolean {
+  return namespaceUri === undefined || namespaceUri === QTI_ASI_NAMESPACE;
+}
+
+function isSupportedContentNamespace(qtiName: string, namespaceUri: string | undefined): boolean {
+  if (namespaceUri === MATHML_NAMESPACE) return mathMlElements.has(qtiName);
+  return isQtiContentNamespace(namespaceUri);
 }
 
 export function copySafeAttributes(element: Element, attributes: Record<string, string>): void {

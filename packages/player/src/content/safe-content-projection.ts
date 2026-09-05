@@ -29,7 +29,7 @@ export function projectSafeContentNodes(
     }
     if (node.kind !== "element" || unsafeContentElements.has(node.qtiName)) continue;
     const children = projectSafeContentNodes(node.children, resolveAsset);
-    const name = contentElementName(node.qtiName);
+    const name = contentElementName(node.qtiName, node.namespaceUri);
     if (!name) {
       projected.push(...children);
       continue;

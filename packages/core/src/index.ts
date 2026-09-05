@@ -87,6 +87,7 @@ export {
 export { detectPackageMediaType } from "./qti-package-assets.js";
 export { parseQtiXml } from "./parser.js";
 export { numericTuple3, numericTuple4, parseXmlBoolean } from "./parser-values.js";
+export { MATHML_NAMESPACE, QTI_ASI_NAMESPACE } from "./qti-namespaces.js";
 export { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 export {
   applyQtiMediaPlaybackEvent,

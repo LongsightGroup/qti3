@@ -5,7 +5,7 @@ import {
   type QtiDocument,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
-import { contentNodeText } from "../content/content-dom.js";
+import { contentElementName, contentNodeText } from "../content/content-dom.js";
 
 export function currentVariableValue(
   state: QtiAttemptStateV1 | undefined,
@@ -62,7 +62,12 @@ export function mathTemplateValue(
   documentModel: QtiDocument | undefined,
   templateValue: QtiValue,
 ): string | undefined {
-  if (node.qtiName !== "mi" && node.qtiName !== "mo") return undefined;
+  if (
+    (node.qtiName !== "mi" && node.qtiName !== "mo") ||
+    contentElementName(node.qtiName, node.namespaceUri) === undefined
+  ) {
+    return undefined;
+  }
   const identifier = contentNodeText(node).trim();
   if (!identifier) return undefined;
   const declaration = documentModel?.item.templateDeclarations.find(

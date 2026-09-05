@@ -339,6 +339,8 @@ export interface QtiTextContent {
 export interface QtiElementContent {
   kind: "element";
   qtiName: string;
+  /** Expanded XML namespace retained so consumers do not infer semantics from local names alone. */
+  namespaceUri?: string | undefined;
   attributes: Record<string, string>;
   children: QtiContentNode[];
   source?: QtiSourceLocation | undefined;

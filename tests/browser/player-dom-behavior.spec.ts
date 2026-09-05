@@ -102,6 +102,22 @@ async function moveOrderSlotChoiceToTarget(
 }
 
 test.describe("player DOM behavior", () => {
+  test("does not project foreign-namespace elements as QTI content", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:foreign="https://example.invalid/content" identifier="foreign-content" title="foreign-content" time-dependent="false">
+  <qti-item-body>
+    <foreign:p id="foreign-paragraph">Foreign namespace text</foreign:p>
+  </qti-item-body>
+</qti-assessment-item>`,
+    );
+
+    const player = page.locator("qti-assessment-item-player");
+    await expect(player).toContainText("Foreign namespace text");
+    await expect(player.locator("#foreign-paragraph")).toHaveCount(0);
+  });
+
   test("renders unsupported block interactions as alerts", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, UNSUPPORTED_INTERACTION_ITEM);

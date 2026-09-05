@@ -243,7 +243,18 @@ function diagnoseProcessingElements(
 }
 
 function isInteractionElement(node: XmlNode): boolean {
-  return interactionNameToType.has(node.localName) || /^qti-.+-interaction$/.test(node.localName);
+  return (
+    node.uri === QTI_ASI_NAMESPACE &&
+    (interactionNameToType.has(node.localName) || /^qti-.+-interaction$/.test(node.localName))
+  );
+}
+
+function isQtiElement(node: XmlNode, localName?: string): boolean {
+  return node.uri === QTI_ASI_NAMESPACE && (!localName || node.localName === localName);
+}
+
+function isQtiContentElement(node: XmlNode, localNames: ReadonlySet<string>): boolean {
+  return node.uri === QTI_ASI_NAMESPACE && localNames.has(node.localName);
 }
 
 function parseContentChildren(
@@ -282,7 +293,7 @@ function parseContentNode(
     };
   }
 
-  if (node.localName === "qti-printed-variable") {
+  if (isQtiElement(node, "qti-printed-variable")) {
     return {
       kind: "printedVariable",
       identifier: node.attributes.identifier ?? "",
@@ -292,7 +303,7 @@ function parseContentNode(
     };
   }
 
-  if (node.localName === "qti-feedback-block" || node.localName === "qti-feedback-inline") {
+  if (isQtiElement(node, "qti-feedback-block") || isQtiElement(node, "qti-feedback-inline")) {
     return {
       kind: "feedback",
       feedbackType: node.localName === "qti-feedback-block" ? "block" : "inline",
@@ -308,6 +319,7 @@ function parseContentNode(
   return {
     kind: "element",
     qtiName: node.localName,
+    namespaceUri: node.uri,
     attributes: node.attributes,
     children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
     source: node.source,
@@ -324,7 +336,7 @@ function parseInteraction(
   const responseDeclaration = responseIdentifier
     ? responseDeclarationMap.get(responseIdentifier)
     : undefined;
-  const prompt = childElements(node, "qti-prompt")[0];
+  const prompt = childElements(node, "qti-prompt").find((child) => isQtiElement(child));
   const registryStatus = interactionRegistryStatus(node.localName);
   diagnostics.push(...interactionRegistryDiagnostics(node.localName, node.source));
 
@@ -335,10 +347,7 @@ function parseInteraction(
         ? mediaInteractionObject(node)
         : interactionType === "drawing"
           ? drawingInteractionObject(node)
-          : descendants(
-              node,
-              (child) => child.localName === "object" || child.localName === "img",
-            )[0];
+          : descendants(node, (child) => isQtiContentElement(child, objectElementNames))[0];
 
   const promptContent = prompt
     ? parseContentChildren(prompt, diagnostics, responseDeclarationMap, [])
@@ -372,10 +381,12 @@ function parseInteraction(
       interactionType === "gapMatch" || interactionType === "graphicGapMatch"
         ? parseGapMatchSegments(node)
         : undefined,
-    childElements: childElements(node).map((child) => ({
-      qtiName: child.localName,
-      source: child.source,
-    })),
+    childElements: childElements(node)
+      .filter((child) => isQtiElement(child))
+      .map((child) => ({
+        qtiName: child.localName,
+        source: child.source,
+      })),
     attributes: node.attributes,
     text: visibleTextContent(node),
     source: node.source,
@@ -383,40 +394,29 @@ function parseInteraction(
 }
 
 function positionObjectInteractionObject(node: XmlNode): XmlNode | undefined {
-  return childElements(node).find(
-    (child) => child.localName === "object" || child.localName === "img",
-  );
+  return childElements(node).find((child) => isQtiContentElement(child, objectElementNames));
 }
 
 function mediaInteractionObject(node: XmlNode): XmlNode | undefined {
-  return childElements(node).find(
-    (child) =>
-      child.localName === "audio" ||
-      child.localName === "video" ||
-      child.localName === "object" ||
-      child.localName === "img",
-  );
+  return childElements(node).find((child) => isQtiContentElement(child, mediaElementNames));
 }
 
 function drawingInteractionObject(node: XmlNode): XmlNode | undefined {
-  return childElements(node).find(
-    (child) =>
-      child.localName === "object" || child.localName === "img" || child.localName === "picture",
-  );
+  return childElements(node).find((child) => isQtiContentElement(child, drawingElementNames));
 }
 
 function positionObjectStageObject(node: XmlNode): XmlNode | undefined {
   const ancestorStage = nearestAncestor(node, "qti-position-object-stage");
-  const stage = ancestorStage ?? childElements(node, "qti-position-object-stage")[0];
+  const stage =
+    ancestorStage ??
+    childElements(node, "qti-position-object-stage").find((child) => isQtiElement(child));
   if (!stage) return undefined;
-  return childElements(stage).find(
-    (child) => child.localName === "object" || child.localName === "img",
-  );
+  return childElements(stage).find((child) => isQtiContentElement(child, objectElementNames));
 }
 
 function nearestAncestor(node: XmlNode, localName: string): XmlNode | undefined {
   for (let parent = node.parent; parent; parent = parent.parent) {
-    if (parent.localName === localName) return parent;
+    if (isQtiElement(parent, localName)) return parent;
   }
   return undefined;
 }
@@ -431,9 +431,9 @@ function parseHottextSegments(node: XmlNode): QtiInteraction["hottextSegments"] 
       return;
     }
 
-    if (entry.localName === "qti-prompt") return;
+    if (isQtiElement(entry, "qti-prompt")) return;
 
-    if (entry.localName === "qti-hottext") {
+    if (isQtiElement(entry, "qti-hottext")) {
       segments.push({
         kind: "hottext",
         identifier: entry.attributes.identifier ?? "",
@@ -445,7 +445,7 @@ function parseHottextSegments(node: XmlNode): QtiInteraction["hottextSegments"] 
     }
 
     for (const child of entry.content) visit(child);
-    if (entry.localName === "p" || entry.localName === "div") {
+    if (isQtiContentElement(entry, blockBoundaryElementNames)) {
       segments.push({ kind: "text", text: " " });
     }
   };
@@ -464,11 +464,11 @@ function parseGapMatchSegments(node: XmlNode): QtiInteraction["gapMatchSegments"
       return;
     }
 
-    if (entry.localName === "qti-prompt") return;
-    if (entry.localName === "qti-gap-text" || entry.localName === "qti-gap-img") return;
-    if (entry.localName === "object" || entry.localName === "img") return;
+    if (isQtiElement(entry, "qti-prompt")) return;
+    if (isQtiElement(entry, "qti-gap-text") || isQtiElement(entry, "qti-gap-img")) return;
+    if (isQtiContentElement(entry, objectElementNames)) return;
 
-    if (entry.localName === "qti-gap") {
+    if (isQtiElement(entry, "qti-gap")) {
       segments.push({
         kind: "gap",
         identifier: entry.attributes.identifier ?? "",
@@ -479,7 +479,7 @@ function parseGapMatchSegments(node: XmlNode): QtiInteraction["gapMatchSegments"
     }
 
     for (const child of entry.content) visit(child);
-    if (entry.localName === "p" || entry.localName === "div") {
+    if (isQtiContentElement(entry, blockBoundaryElementNames)) {
       segments.push({ kind: "text", text: " " });
     }
   };
@@ -508,7 +508,10 @@ function normalizeInlineContext(value: string): string | undefined {
 
 function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined {
   if (!node) return undefined;
-  const pictureImage = node.localName === "picture" ? childElements(node, "img")[0] : undefined;
+  const pictureImage =
+    node.localName === "picture"
+      ? childElements(node, "img").find((child) => isQtiElement(child))
+      : undefined;
   const data = node.attributes.data ?? node.attributes.src ?? pictureImage?.attributes.src;
   const sources = parseMediaSources(node);
   const tracks = parseMediaTracks(node);
@@ -616,27 +619,31 @@ function formatDimension(value: number): string {
 }
 
 function parseMediaSources(node: XmlNode): QtiMediaSource[] {
-  return childElements(node, "source").map((source) => {
-    const src = source.attributes.src ?? firstSrcsetCandidate(source.attributes.srcset);
-    return {
-      src,
-      type: source.attributes.type ?? assetTypeFromData(src),
-      attributes: source.attributes,
-      source: source.source,
-    };
-  });
+  return childElements(node, "source")
+    .filter((source) => isQtiElement(source))
+    .map((source) => {
+      const src = source.attributes.src ?? firstSrcsetCandidate(source.attributes.srcset);
+      return {
+        src,
+        type: source.attributes.type ?? assetTypeFromData(src),
+        attributes: source.attributes,
+        source: source.source,
+      };
+    });
 }
 
 function parseMediaTracks(node: XmlNode): QtiObjectAsset["tracks"] {
-  return childElements(node, "track").map((track) => ({
-    kind: track.attributes.kind,
-    src: track.attributes.src,
-    srclang: track.attributes.srclang,
-    label: track.attributes.label,
-    default: track.attributes.default !== undefined,
-    attributes: track.attributes,
-    source: track.source,
-  }));
+  return childElements(node, "track")
+    .filter((track) => isQtiElement(track))
+    .map((track) => ({
+      kind: track.attributes.kind,
+      src: track.attributes.src,
+      srclang: track.attributes.srclang,
+      label: track.attributes.label,
+      default: track.attributes.default !== undefined,
+      attributes: track.attributes,
+      source: track.source,
+    }));
 }
 
 function firstSourceType(sources: QtiMediaSource[]): string | undefined {
@@ -683,37 +690,38 @@ function parseChoices(
     "qti-gap",
   ]);
 
-  return descendants(node, (child) => choiceNames.has(child.localName)).map((choice, index) => {
-    const identifier = choice.attributes.identifier ?? "";
-    const asset = parseChoiceAsset(choice);
-    const content = parseContentChildren(choice, diagnostics, responseDeclarationMap, []);
-    const flatChoiceText =
-      content.length > 0
-        ? flatTextFromContent(content, { excludeAnnotations: true })
-        : visibleTextContent(choice);
-    return {
-      identifier,
-      text:
-        flatChoiceText ||
-        choice.attributes["object-label"] ||
-        asset?.text ||
-        identifier ||
-        `Choice ${index + 1}`,
-      content: content.length > 0 ? content : undefined,
-      asset,
-      role: choiceRole(choice),
-      qtiName: choice.localName,
-      attributes: choice.attributes,
-      source: choice.source,
-    };
-  });
+  return descendants(node, (child) => isQtiContentElement(child, choiceNames)).map(
+    (choice, index) => {
+      const identifier = choice.attributes.identifier ?? "";
+      const asset = parseChoiceAsset(choice);
+      const content = parseContentChildren(choice, diagnostics, responseDeclarationMap, []);
+      const flatChoiceText =
+        content.length > 0
+          ? flatTextFromContent(content, { excludeAnnotations: true })
+          : visibleTextContent(choice);
+      return {
+        identifier,
+        text:
+          flatChoiceText ||
+          choice.attributes["object-label"] ||
+          asset?.text ||
+          identifier ||
+          `Choice ${index + 1}`,
+        content: content.length > 0 ? content : undefined,
+        asset,
+        role: choiceRole(choice),
+        qtiName: choice.localName,
+        attributes: choice.attributes,
+        source: choice.source,
+      };
+    },
+  );
 }
 
 function parseChoiceAsset(choice: XmlNode): QtiObjectAsset | undefined {
   if (choice.localName !== "qti-gap-img") return undefined;
-  const assetNode = childElements(choice).find(
-    (child) =>
-      child.localName === "img" || child.localName === "object" || child.localName === "picture",
+  const assetNode = childElements(choice).find((child) =>
+    isQtiContentElement(child, drawingElementNames),
   );
   return parseObjectAsset(assetNode);
 }
@@ -728,7 +736,8 @@ function choiceRole(node: XmlNode): QtiChoiceRole {
     return "hotspot";
   }
   if (node.localName === "qti-simple-associable-choice") {
-    const matchSet = node.parent?.localName === "qti-simple-match-set" ? node.parent : undefined;
+    const matchSet =
+      node.parent && isQtiElement(node.parent, "qti-simple-match-set") ? node.parent : undefined;
     const interaction = nearestInteraction(node);
     if (matchSet && interaction?.localName === "qti-match-interaction") {
       return matchSetIndex(matchSet) === 0 ? "matchSource" : "matchTarget";
@@ -740,13 +749,18 @@ function choiceRole(node: XmlNode): QtiChoiceRole {
 
 function nearestInteraction(node: XmlNode): XmlNode | undefined {
   for (let parent = node.parent; parent; parent = parent.parent) {
-    if (interactionNameToType.has(parent.localName)) return parent;
+    if (isQtiElement(parent) && interactionNameToType.has(parent.localName)) return parent;
   }
   return undefined;
 }
 
 function matchSetIndex(node: XmlNode): number {
   const siblings =
-    node.parent?.children.filter((sibling) => sibling.localName === "qti-simple-match-set") ?? [];
+    node.parent?.children.filter((sibling) => isQtiElement(sibling, "qti-simple-match-set")) ?? [];
   return siblings.indexOf(node);
 }
+
+const objectElementNames = new Set(["object", "img"]);
+const mediaElementNames = new Set(["audio", "video", ...objectElementNames]);
+const drawingElementNames = new Set(["picture", ...objectElementNames]);
+const blockBoundaryElementNames = new Set(["p", "div"]);

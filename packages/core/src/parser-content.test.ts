@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 import { parseQtiXml } from "./parser.js";
 
 describe("QTI item content parsing", () => {
+  it("retains expanded namespaces on rich content nodes", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:foreign="https://example.invalid/content" identifier="content-namespaces" title="content-namespaces" time-dependent="false">
+        <qti-item-body>
+          <p>QTI</p>
+          <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>
+          <foreign:p>Foreign</foreign:p>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    expect(result.document?.item.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "element",
+          qtiName: "p",
+          namespaceUri: "http://www.imsglobal.org/xsd/imsqtiasi_v3p0",
+        }),
+        expect.objectContaining({
+          kind: "element",
+          qtiName: "math",
+          namespaceUri: "http://www.w3.org/1998/Math/MathML",
+        }),
+        expect.objectContaining({
+          kind: "element",
+          qtiName: "p",
+          namespaceUri: "https://example.invalid/content",
+        }),
+      ]),
+    );
+  });
+
   it("preserves authored gap match sentence segments", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="gap-segments" title="gap-segments" time-dependent="false">

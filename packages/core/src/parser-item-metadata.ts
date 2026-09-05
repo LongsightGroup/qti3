@@ -137,6 +137,7 @@ function parseCatalogHtmlChildren(node: XmlNode): QtiContentNode[] {
     content.push({
       kind: "element",
       qtiName: entry.localName,
+      namespaceUri: entry.uri,
       attributes: entry.attributes,
       children: parseCatalogHtmlChildren(entry),
       source: entry.source,

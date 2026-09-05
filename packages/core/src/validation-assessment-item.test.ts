@@ -144,6 +144,28 @@ describe("assessment item validation", () => {
     );
   });
 
+  it("does not treat foreign-namespace media elements as QTI interaction assets", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:foreign="https://example.invalid/not-qti" identifier="foreign-media" title="foreign-media" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+        <qti-item-body>
+          <qti-media-interaction response-identifier="RESPONSE">
+            <foreign:video src="foreign.mp4"/>
+          </qti-media-interaction>
+        </qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document?.item.interactions[0]?.object).toBeUndefined();
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "interaction.object.required",
+        severity: "error",
+      }),
+    );
+  });
+
   it("requires schema-required assessment item root attributes", () => {
     const missingAttributes = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-root-attrs">

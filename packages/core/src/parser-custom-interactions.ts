@@ -242,6 +242,7 @@ function parseCustomMarkupNode(
   return {
     kind: "element",
     qtiName: node.localName,
+    namespaceUri: node.uri,
     attributes: node.attributes,
     children: parseCustomMarkupChildren(node, diagnostics, isInteractionElement, options),
     source: node.source,
