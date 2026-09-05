@@ -211,12 +211,21 @@ function openElement(
   const attributes: Record<string, string> = {};
   const inheritedNamespaces = state.namespaceStack.at(-1)?.namespaces ?? {};
   const namespaces: Record<string, string> = { ...inheritedNamespaces };
+  const uniqueAttributes: ParsedAttribute[] = [];
+  const qualifiedAttributeNames = new Set<string>();
   for (const attribute of parsedAttributes) {
+    if (qualifiedAttributeNames.has(attribute.name)) {
+      state.errors.push(new Error(`Duplicate XML attribute ${attribute.name}.`));
+      continue;
+    }
+    qualifiedAttributeNames.add(attribute.name);
+    uniqueAttributes.push(attribute);
     attributes[attribute.name] = attribute.value;
     if (attribute.name === "xmlns") namespaces[""] = attribute.value;
     else if (attribute.name.startsWith("xmlns:"))
       namespaces[attribute.name.slice(6)] = attribute.value;
   }
+  validateUniqueExpandedAttributeNames(uniqueAttributes, namespaces, state);
 
   const { prefix, localName } = splitQualifiedName(name);
   const path = nodePath(parent, localName);
@@ -495,6 +504,34 @@ function splitQualifiedName(name: string): {
     prefix: name.slice(0, separator),
     localName: name.slice(separator + 1),
   };
+}
+
+function validateUniqueExpandedAttributeNames(
+  attributes: readonly ParsedAttribute[],
+  namespaces: Readonly<Record<string, string>>,
+  state: ParserState,
+): void {
+  const expandedNames = new Map<string, string>();
+  for (const attribute of attributes) {
+    if (attribute.name === "xmlns" || attribute.name.startsWith("xmlns:")) continue;
+
+    const { prefix, localName } = splitQualifiedName(attribute.name);
+    const namespaceUri = prefix ? namespaces[prefix] : "";
+    if (namespaceUri === undefined) continue;
+
+    const expandedName = `${namespaceUri}\u0000${localName}`;
+    const previousName = expandedNames.get(expandedName);
+    if (previousName) {
+      const displayName = namespaceUri ? `{${namespaceUri}}${localName}` : localName;
+      state.errors.push(
+        new Error(
+          `XML attributes ${previousName} and ${attribute.name} have duplicate expanded name ${displayName}.`,
+        ),
+      );
+      continue;
+    }
+    expandedNames.set(expandedName, attribute.name);
+  }
 }
 
 function buildLineStarts(xml: string): number[] {

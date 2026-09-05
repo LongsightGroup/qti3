@@ -103,8 +103,8 @@ describe("parseXmlTree source ranges", () => {
     expect(parsed.root?.children[0]?.text).toBe("&amp;&#x3A9;");
   });
 
-  it("parses attributes with single quotes, whitespace around equals, duplicate last-wins, and xmlns visibility", () => {
-    const xml = `<root xmlns = "urn:root" xmlns:p = 'urn:p' value = 'first' value="second"><p:child/></root>`;
+  it("parses attributes with single quotes, whitespace around equals, and xmlns visibility", () => {
+    const xml = `<root xmlns = "urn:root" xmlns:p = 'urn:p' value = 'first'><p:child/></root>`;
 
     const parsed = parseXmlTree(xml);
     expect(parsed.errors).toEqual([]);
@@ -112,10 +112,27 @@ describe("parseXmlTree source ranges", () => {
     expect(parsed.root?.attributes).toMatchObject({
       xmlns: "urn:root",
       "xmlns:p": "urn:p",
-      value: "second",
+      value: "first",
     });
     expect(parsed.root?.uri).toBe("urn:root");
     expect(parsed.root?.children[0]?.uri).toBe("urn:p");
+  });
+
+  it("rejects duplicate qualified attribute names without applying the later value", () => {
+    const parsed = parseXmlTree(`<root value="first" value="second"/>`);
+
+    expect(parsed.root?.attributes.value).toBe("first");
+    expect(parsed.errors.map((error) => error.message)).toEqual(["Duplicate XML attribute value."]);
+  });
+
+  it("rejects attributes with the same namespace-expanded name", () => {
+    const parsed = parseXmlTree(
+      `<root xmlns:a="urn:attribute" xmlns:b="urn:attribute" a:value="first" b:value="second"/>`,
+    );
+
+    expect(parsed.errors.map((error) => error.message)).toEqual([
+      "XML attributes a:value and b:value have duplicate expanded name {urn:attribute}value.",
+    ]);
   });
 
   it("resolves inherited and overridden default namespaces", () => {
@@ -329,6 +346,22 @@ function sourceSlice(
 }
 
 describe("QTI XML parse diagnostics", () => {
+  it("treats duplicate attributes as fatal XML parse errors", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="first" identifier="second" title="duplicate" time-dependent="false">
+        <qti-item-body><p>Duplicate attribute.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.document).toBeUndefined();
+    expect(result.diagnostics).toContainEqual({
+      code: "xml.parse",
+      severity: "error",
+      message: "Duplicate XML attribute identifier.",
+    });
+  });
+
   it("diagnoses incomplete XML instead of materializing a partial tree as valid", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="incomplete" title="incomplete" time-dependent="false">
