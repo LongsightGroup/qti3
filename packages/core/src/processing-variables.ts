@@ -53,11 +53,11 @@ export function expressionIsOrdered(
   document: QtiDocument,
 ): boolean {
   if (expression.type === "ordered") return true;
+  if (expression.type === "delete") return expressionIsOrdered(expression.collection, document);
   if (
     (expression.type === "variable" ||
       expression.type === "correct" ||
-      expression.type === "default" ||
-      expression.type === "isNull") &&
+      expression.type === "default") &&
     variableCardinality(document, expression.identifier) === "ordered"
   ) {
     return true;
@@ -71,15 +71,41 @@ export function expressionBaseType(
   document: QtiDocument,
 ): QtiBaseType | undefined {
   if (expression.type === "baseValue") return parseBaseType(expression.baseType);
+  if (expression.type === "isNull") return "boolean";
   if (
     expression.type === "variable" ||
     expression.type === "correct" ||
-    expression.type === "default" ||
-    expression.type === "isNull"
+    expression.type === "default"
   ) {
     return resolveVariableDeclaration(document, expression.identifier)?.baseType;
   }
+  if (expression.type === "index") return expressionBaseType(expression.expression, document);
+  if (expression.type === "delete") return expressionBaseType(expression.collection, document);
+  if (
+    expression.type === "random" ||
+    expression.type === "multiple" ||
+    expression.type === "ordered" ||
+    expression.type === "repeat"
+  ) {
+    return commonExpressionBaseType(
+      expression.type === "random" ? expression.values : expression.expressions,
+      document,
+    );
+  }
   return undefined;
+}
+
+function commonExpressionBaseType(
+  expressions: QtiProcessingExpression[],
+  document: QtiDocument,
+): QtiBaseType | undefined {
+  const [first, ...rest] = expressions;
+  if (!first) return undefined;
+  const baseType = expressionBaseType(first, document);
+  if (!baseType) return undefined;
+  return rest.every((expression) => expressionBaseType(expression, document) === baseType)
+    ? baseType
+    : undefined;
 }
 
 function variableCardinality(document: QtiDocument, identifier: string): string | undefined {

@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml } from "./index.js";
 
 describe("processing operators", () => {
+  it("canonicalizes pair values through compound member expressions", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="compound-pair-member" title="compound-pair-member" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="integer">
+          <qti-default-value><qti-value>0</qti-value></qti-default-value>
+        </qti-outcome-declaration>
+        <qti-item-body/>
+        <qti-response-processing>
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-member>
+                <qti-index n="1"><qti-variable identifier="RESPONSE"/></qti-index>
+                <qti-multiple>
+                  <qti-base-value base-type="pair">A B</qti-base-value>
+                </qti-multiple>
+              </qti-member>
+              <qti-set-outcome-value identifier="SCORE">
+                <qti-base-value base-type="integer">1</qti-base-value>
+              </qti-set-outcome-value>
+            </qti-response-if>
+          </qti-response-condition>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(true);
+    const session = createItemSession(result.document!);
+    session.respond("RESPONSE", ["B A"]);
+
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
+
   it("validates base value processing content", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="bad-base-values" title="bad-base-values" time-dependent="false">

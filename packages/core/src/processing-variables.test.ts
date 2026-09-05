@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type {
+  QtiBaseType,
   QtiCardinality,
   QtiDocument,
   QtiOutcomeDeclaration,
@@ -9,6 +10,7 @@ import type {
 } from "./types.js";
 import {
   defaultValueForIdentifier,
+  expressionBaseType,
   expressionIsOrdered,
   getResponseDeclaration,
   resolveVariableValue,
@@ -98,6 +100,59 @@ describe("processing variable resolution", () => {
     expect(expressionIsOrdered({ type: "variable", identifier: "TEMPLATE" }, document)).toBe(false);
   });
 
+  it("propagates declared base types and ordering through collection expressions", () => {
+    const document = documentWithDeclarations({
+      responses: [responseDeclaration("PAIRS", null, "ordered", "pair")],
+    });
+    const pairVariable = { type: "variable", identifier: "PAIRS" } as const;
+
+    expect(expressionBaseType({ type: "index", expression: pairVariable, n: "1" }, document)).toBe(
+      "pair",
+    );
+    expect(
+      expressionBaseType(
+        {
+          type: "multiple",
+          expressions: [
+            { type: "baseValue", baseType: "pair", value: "A B" },
+            { type: "baseValue", baseType: "pair", value: "C D" },
+          ],
+        },
+        document,
+      ),
+    ).toBe("pair");
+    expect(
+      expressionBaseType(
+        {
+          type: "delete",
+          value: { type: "baseValue", baseType: "pair", value: "A B" },
+          collection: pairVariable,
+        },
+        document,
+      ),
+    ).toBe("pair");
+    expect(
+      expressionIsOrdered(
+        {
+          type: "delete",
+          value: { type: "baseValue", baseType: "pair", value: "A B" },
+          collection: pairVariable,
+        },
+        document,
+      ),
+    ).toBe(true);
+  });
+
+  it("reports qti-is-null as a scalar boolean expression", () => {
+    const document = documentWithDeclarations({
+      responses: [responseDeclaration("PAIRS", null, "ordered", "pair")],
+    });
+    const expression = { type: "isNull", identifier: "PAIRS" } as const;
+
+    expect(expressionBaseType(expression, document)).toBe("boolean");
+    expect(expressionIsOrdered(expression, document)).toBe(false);
+  });
+
   it("keeps response-only expression lookup scoped to response declarations", () => {
     const document = documentWithDeclarations({
       outcomes: [outcomeDeclaration("SCORE", 0)],
@@ -141,11 +196,13 @@ function responseDeclaration(
   identifier: string,
   defaultValue: QtiValue,
   cardinality: QtiCardinality = "single",
+  baseType: QtiBaseType = "identifier",
 ): QtiResponseDeclaration {
   return {
     kind: "response",
     identifier,
     cardinality,
+    baseType,
     defaultValue,
     correctResponse: null,
     attributes: {},
