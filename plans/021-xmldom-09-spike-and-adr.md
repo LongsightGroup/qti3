@@ -12,13 +12,14 @@
 - **Depends on**: none
 - **Category**: migration / dependency decision
 - **Planned at**: commit `646dd16`, 2026-08-25
-- **Status**: REJECTED, 2026-08-25 — the non-deprecated 0.9.12 patch is still blocked by the
-  configured seven-day package-age gate; mature 0.9.11 is publisher-deprecated.
+- **Status**: DONE, 2026-09-04 — upgraded the optional migrator and transcoder packages to the
+  non-deprecated 0.9.12 release after it passed the configured seven-day package-age gate.
 
-The 0.9.11 compatibility probe passed all focused and full tests after confined adapter/type
-changes and produced no output deltas. Its manifests, lockfile, and code changes were restored.
-The required decision record documents the XML ownership boundary, evidence, exact blocker, and
-revisit procedure in `docs/decisions/xmldom-and-xml-stack-boundaries.md`.
+The migration uses strict 0.9 parse errors, xmldom-owned DOM types, nullable-node guards, and
+well-formed serialization. Focused migrator/transcoder tests, repository typecheck and build, the
+dependency gate, audit, and 176 transcoder support-evidence cases pass without snapshot or
+generated-output changes. The decision record remains in
+`docs/decisions/xmldom-and-xml-stack-boundaries.md`.
 
 ## Why this matters
 

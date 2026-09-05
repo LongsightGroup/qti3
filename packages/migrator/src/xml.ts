@@ -1,28 +1,40 @@
-import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
+import {
+  DOMParser,
+  onErrorStopParsing,
+  type Document,
+  type Element,
+  type Node,
+  XMLSerializer,
+} from "@xmldom/xmldom";
 
-export type XmlDocument = Document;
+export type XmlDocument = Document & { readonly documentElement: Element };
 export type XmlElement = Element;
 export type XmlNode = Node;
 
-const parser = new DOMParser();
+const parser = new DOMParser({ onError: onErrorStopParsing });
 const serializer = new XMLSerializer();
 
 export function parseXml(xml: string, context: string): XmlDocument {
-  const doc = parser.parseFromString(normalizeXml(xml), "text/xml");
-  if (doc.documentElement.nodeName === "parsererror") {
-    throw new Error(`Failed to parse XML (${context}).`);
+  try {
+    const document = parser.parseFromString(normalizeXml(xml), "text/xml");
+    if (!hasDocumentElement(document)) {
+      throw new Error("Parsed XML has no document element.");
+    }
+    return document;
+  } catch (error) {
+    throw new Error(`Failed to parse XML (${context}).`, { cause: error });
   }
-  return doc;
 }
 
 export function serializeNode(node: XmlNode): string {
-  return serializer.serializeToString(node);
+  return serializer.serializeToString(node, { requireWellFormed: true });
 }
 
 export function serializeChildren(element: XmlElement): string {
   let out = "";
   for (let index = 0; index < element.childNodes.length; index += 1) {
     const child = element.childNodes.item(index);
+    if (!child) continue;
     out += serializeNode(child);
   }
   return out;
@@ -116,4 +128,8 @@ export function isXmlElement(node: XmlNode | null): node is XmlElement {
 
 function normalizeXml(xml: string): string {
   return xml.replace(/^\uFEFF/, "").trimStart();
+}
+
+function hasDocumentElement(document: Document): document is XmlDocument {
+  return document.documentElement !== null;
 }

@@ -1,16 +1,16 @@
-import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
+import {
+  DOMParser,
+  onErrorStopParsing,
+  type Document,
+  type Element,
+  XMLSerializer,
+} from "@xmldom/xmldom";
 import { strToU8 } from "fflate";
 
 import { relativePackagePath } from "./package-manifest.js";
 import type { QtiTranscodeFile } from "./types.js";
 
-const xmlParser = new DOMParser({
-  errorHandler: {
-    warning: () => undefined,
-    error: () => undefined,
-    fatalError: () => undefined,
-  },
-});
+const xmlParser = new DOMParser({ onError: onErrorStopParsing });
 const xmlSerializer = new XMLSerializer();
 
 /** Combine item-level Moodle XML and embed package assets in Moodle file nodes. */
@@ -40,7 +40,12 @@ function serializeEmbeddedQuestion(
   itemPath: string,
   assets: readonly QtiTranscodeFile[],
 ): string {
-  const document = xmlParser.parseFromString(xml, "application/xml");
+  let document: Document;
+  try {
+    document = xmlParser.parseFromString(xml, "application/xml");
+  } catch (error) {
+    throw new Error(`Generated Moodle XML item ${itemPath} is malformed.`, { cause: error });
+  }
   const question = document.getElementsByTagName("question").item(0);
   if (!question) {
     throw new Error("Generated Moodle XML item lacks a question element.");
@@ -58,8 +63,12 @@ function serializeEmbeddedQuestion(
     replacements.set(asset.path, pluginFilePath);
     questionText.appendChild(moodleFileElement(document, asset));
   }
-  replaceElementText(document, htmlText, rewriteHtmlAssetUris(htmlText.textContent, replacements));
-  return xmlSerializer.serializeToString(question);
+  replaceElementText(
+    document,
+    htmlText,
+    rewriteHtmlAssetUris(htmlText.textContent ?? "", replacements),
+  );
+  return xmlSerializer.serializeToString(question, { requireWellFormed: true });
 }
 
 function rewriteHtmlAssetUris(html: string, replacements: ReadonlyMap<string, string>): string {

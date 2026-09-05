@@ -1,17 +1,11 @@
-import { DOMParser } from "@xmldom/xmldom";
+import { DOMParser, onErrorStopParsing, type Element, type Node } from "@xmldom/xmldom";
 
 export { escapeXmlAttribute, escapeXmlText } from "@longsightgroup/qti3-core";
 
 import { validateMoodleXmlDocument } from "./moodle-validation.js";
 import type { QtiTranscodeDiagnostic, QtiTranscodeTarget } from "./types.js";
 
-const parser = new DOMParser({
-  errorHandler: {
-    warning: () => undefined,
-    error: () => undefined,
-    fatalError: () => undefined,
-  },
-});
+const parser = new DOMParser({ onError: onErrorStopParsing });
 
 export function safePackagePath(path: string): boolean {
   if (!path || path.startsWith("/") || path.includes("\\")) return false;
@@ -23,9 +17,13 @@ export function validateGeneratedTargetXml(
   xml: string,
   target: QtiTranscodeTarget,
 ): readonly QtiTranscodeDiagnostic[] {
-  const document = parser.parseFromString(xml, "application/xml");
-  const root = document.documentElement;
-  if (localName(root) === "parsererror") {
+  let root: Element | null;
+  try {
+    root = parser.parseFromString(xml, "application/xml").documentElement;
+  } catch {
+    root = null;
+  }
+  if (!root) {
     return [
       {
         code: "target.xml.malformed",
@@ -80,6 +78,7 @@ function localName(node: Node): string {
 function hasDescendant(node: Node, name: string): boolean {
   for (let index = 0; index < node.childNodes.length; index += 1) {
     const child = node.childNodes.item(index);
+    if (!child) continue;
     if (child.nodeType !== 1) continue;
     if (localName(child) === name || hasDescendant(child, name)) return true;
   }

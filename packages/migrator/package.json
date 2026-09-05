@@ -52,7 +52,7 @@
   "dependencies": {
     "@longsightgroup/qti3-core": "workspace:*",
     "@longsightgroup/qti3-writer": "workspace:*",
-    "@xmldom/xmldom": "^0.8.11",
+    "@xmldom/xmldom": "^0.9.12",
     "fflate": "^0.8.2"
   },
   "devDependencies": {

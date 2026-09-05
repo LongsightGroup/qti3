@@ -70,7 +70,7 @@
       "dependencies": {
         "@longsightgroup/qti3-core": "workspace:*",
         "@longsightgroup/qti3-writer": "workspace:*",
-        "@xmldom/xmldom": "^0.8.11",
+        "@xmldom/xmldom": "^0.9.12",
         "fflate": "^0.8.2"
       },
       "devDependencies": {
@@ -81,7 +81,7 @@
       "dependencies": {
         "@longsightgroup/qti3-core": "workspace:*",
         "@longsightgroup/qti3-writer": "workspace:*",
-        "@xmldom/xmldom": "^0.8.11",
+        "@xmldom/xmldom": "^0.9.12",
         "fflate": "^0.8.2"
       },
       "devDependencies": {}
@@ -202,7 +202,7 @@
     "@types/node@22.19.19",
     "@types/react-dom@19.2.3",
     "@types/react@19.2.14",
-    "@xmldom/xmldom@0.8.13",
+    "@xmldom/xmldom@0.9.12",
     "@vitest/expect@4.1.6",
     "@vitest/mocker@4.1.6",
     "@vitest/pretty-format@4.1.6",

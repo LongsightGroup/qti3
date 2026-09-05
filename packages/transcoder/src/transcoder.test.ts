@@ -374,6 +374,18 @@ describe("Moodle XML profile", () => {
       }),
     ]);
   });
+
+  it("rejects recoverable XML syntax errors instead of validating the recovered DOM", () => {
+    const diagnostics = validateGeneratedTargetXml("<quiz></quiz trailing>", "moodle-xml");
+
+    expect(diagnostics).toEqual([
+      {
+        code: "target.xml.malformed",
+        severity: "error",
+        message: "Generated target XML is not well formed.",
+      },
+    ]);
+  });
 });
 
 describe("qti3 transcoder composite items", () => {

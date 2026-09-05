@@ -119,7 +119,9 @@ function serializeChildrenReplacing(
 ): string {
   let out = "";
   for (let index = 0; index < element.childNodes.length; index += 1) {
-    out += serializeReplacing(element.childNodes.item(index), replacements);
+    const child = element.childNodes.item(index);
+    if (!child) continue;
+    out += serializeReplacing(child, replacements);
   }
   return out;
 }

@@ -1,3 +1,5 @@
+import type { Element, Node } from "@xmldom/xmldom";
+
 import type { QtiTranscodeDiagnostic } from "./types.js";
 
 const QUESTION_TYPES = new Set(["essay", "matching", "multichoice", "numerical", "shortanswer"]);
@@ -69,7 +71,7 @@ function validateEmbeddedFiles(questionText: Element, context: string, failures:
   for (const file of directChildren(questionText, "file")) {
     const name = file.getAttribute("name");
     const path = file.getAttribute("path");
-    const data = file.textContent.trim();
+    const data = file.textContent?.trim() ?? "";
     if (!name || !path || !path.startsWith("/") || !path.endsWith("/") || path.includes("..")) {
       failures.push(`${context} contains an invalid embedded file path`);
     }
@@ -186,7 +188,7 @@ function numericChild(parent: Element, name: string): number | undefined {
 }
 
 function childText(parent: Element, name: string): string | undefined {
-  return directChildren(parent, name)[0]?.textContent.trim();
+  return directChildren(parent, name)[0]?.textContent?.trim();
 }
 
 function nestedText(parent: Element, name: string): string {

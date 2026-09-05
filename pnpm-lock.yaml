@@ -126,8 +126,8 @@ importers:
         specifier: workspace:*
         version: link:../writer
       '@xmldom/xmldom':
-        specifier: ^0.8.11
-        version: 0.8.13
+        specifier: ^0.9.12
+        version: 0.9.12
       fflate:
         specifier: ^0.8.2
         version: 0.8.3
@@ -186,8 +186,8 @@ importers:
         specifier: workspace:*
         version: link:../writer
       '@xmldom/xmldom':
-        specifier: ^0.8.11
-        version: 0.8.13
+        specifier: ^0.9.12
+        version: 0.9.12
       fflate:
         specifier: ^0.8.2
         version: 0.8.3
@@ -633,9 +633,9 @@ packages:
   '@vitest/utils@4.1.6':
     resolution: {integrity: sha512-FxIY+U81R3LGKCxaHHFRQ5+g6/iRgGLmeHWdp2Amj4ljQRrEIWHmZyDfDYBRZlpyqA7qKxtS9DD1dhk8RnRIVQ==}
 
-  '@xmldom/xmldom@0.8.13':
-    resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
-    engines: {node: '>=10.0.0'}
+  '@xmldom/xmldom@0.9.12':
+    resolution: {integrity: sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A==}
+    engines: {node: '>=14.6'}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -1237,7 +1237,7 @@ snapshots:
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.0
 
-  '@xmldom/xmldom@0.8.13': {}
+  '@xmldom/xmldom@0.9.12': {}
 
   assertion-error@2.0.1: {}
 

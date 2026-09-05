@@ -100,6 +100,7 @@ export function directTextOf(element: XmlElement): string {
   const values: string[] = [];
   for (let index = 0; index < element.childNodes.length; index += 1) {
     const child = element.childNodes.item(index);
+    if (!child) continue;
     if (child.nodeType === 3 || child.nodeType === 4) {
       values.push(child.textContent ?? "");
     }
