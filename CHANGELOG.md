@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+## 0.10.4 - 2026-09-08
+
+### Added
+
+- Add configurable ZIP resource limits for entry counts, expanded sizes, and compression ratios,
+  with exported `QtiPackageResourceLimits` and `DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS`.
+- Export `QTI_ASI_NAMESPACE` and `MATHML_NAMESPACE` constants from `@longsightgroup/qti3-core`.
+
+### Changed
+
+- Require custom ZIP inflaters to enforce the `maxOutputLength` supplied in their context.
+- Upgrade `@xmldom/xmldom` to `0.9.12` in the migrator and transcoder.
+- Align all workspace package versions on `0.10.4`.
+
+### Fixed
+
+- Reject malformed numeric values and unsupported float lexical forms instead of accepting
+  partially parsed numbers.
+- Validate submitted response base types and authored interaction domains, including choice
+  identifiers, directed-pair source and target roles, and slider bounds and steps.
+- Normalize validated response values before trusted scoring while preserving the existing
+  `validateQtiResponseVariables()` result contract.
+- Canonicalize unordered pair values for comparison and mapping, and preserve type and ordering
+  information through compound processing expressions.
+- Enforce QTI item and package XML namespaces and reject duplicate XML attributes.
+- Preserve content namespaces through parsing, serialization, and browser rendering, including
+  prefixed MathML content.
+- Reject invalid ZIP entries in the CLI and bound package expansion in core and migration paths.
+- Normalize writer choice and order identifier references to match emitted identifiers.
+
 ## 0.10.3 - 2026-08-25
 
 ### Added
