@@ -18,6 +18,11 @@
   `buildPackageSummary()`.
 - Align all workspace package versions on `0.10.5`.
 
+### Fixed
+
+- Upgrade Vitest to `4.1.11` to address a moderate path-traversal advisory in
+  `@vitest/mocker` redirect mocks (GHSA-82fw-gwwq-j7x9).
+
 ## 0.10.4 - 2026-09-08
 
 ### Added

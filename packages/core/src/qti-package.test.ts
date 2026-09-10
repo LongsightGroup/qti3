@@ -10,7 +10,7 @@ import {
   createDeflatedZip,
   createStoredZip,
   simpleChoiceItemXml,
-} from "./qti-package-test-fixtures.js";
+} from "./qti-package.fixtures.js";
 
 describe("QTI package parser", () => {
   it("parses manifest item-resource packages with dependencies, assets, timing, and standards", () => {

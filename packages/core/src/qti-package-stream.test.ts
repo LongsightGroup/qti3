@@ -5,11 +5,7 @@ import {
   type QtiPackageSource,
   type QtiPackageStreamSummary,
 } from "./index.js";
-import {
-  choiceItemXml,
-  createStoredZip,
-  simpleChoiceItemXml,
-} from "./qti-package-test-fixtures.js";
+import { choiceItemXml, createStoredZip, simpleChoiceItemXml } from "./qti-package.fixtures.js";
 
 const streamLimits = {
   maxEntries: 10_000,
