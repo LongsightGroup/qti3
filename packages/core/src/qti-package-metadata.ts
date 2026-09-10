@@ -282,19 +282,31 @@ function optionalFiniteNumber(raw: string | undefined): number | undefined {
   return Number.isFinite(value) ? value : undefined;
 }
 
-export function primaryTiming(
+export function primaryTimingFromScan(
   assessmentTest: QtiAssessmentTestPackageModel | undefined,
-  items: readonly QtiPackageItem[],
+  timedItemCount: number,
+  soleItemTiming: QtiTimingMetadata | undefined,
 ): QtiTimingMetadata | undefined {
   if (assessmentTest?.timing) return assessmentTest.timing;
+  return timedItemCount === 1 ? soleItemTiming : undefined;
+}
+
+export function primaryTiming(
+  assessmentTest: QtiAssessmentTestPackageModel | undefined,
+  items: readonly Pick<QtiPackageItem, "timing">[],
+): QtiTimingMetadata | undefined {
   const timedItems = items.filter((item) => item.timing !== undefined);
-  return timedItems.length === 1 ? timedItems[0]?.timing : undefined;
+  return primaryTimingFromScan(
+    assessmentTest,
+    timedItems.length,
+    timedItems.length === 1 ? timedItems[0]?.timing : undefined,
+  );
 }
 
 export function packageTitle(
   manifestRoot: QtiPackageXmlNode | undefined,
   assessmentTest: QtiAssessmentTestPackageModel | undefined,
-  items: readonly QtiPackageItem[],
+  items: readonly Pick<QtiPackageItem, "title">[],
 ): string {
   const manifestTitle = manifestRoot
     ? packageDescendants(manifestRoot, "title", QTI_PACKAGE_MANIFEST_NAMESPACE)

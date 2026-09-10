@@ -14,7 +14,6 @@ import {
   resolvePackageHref,
   type PackageXmlFile,
 } from "./qti-package-xml.js";
-import type { QtiPackageEntry } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
 
 interface PendingAssetReference {
@@ -87,8 +86,8 @@ export function discoverContentAssetHrefs(
 export function collectPackageAssets(
   resourcesByIdentifier: ReadonlyMap<string, QtiManifestResource>,
   assessmentTest: QtiAssessmentTestPackageModel | undefined,
-  items: readonly QtiPackageItem[],
-  entriesByPath: ReadonlyMap<string, QtiPackageEntry>,
+  items: readonly Pick<QtiPackageItem, "href" | "manifestResourceIdentifier" | "assetHrefs">[],
+  entriesByPath: { has(path: string): boolean },
   diagnostics: QtiDiagnostic[],
 ): QtiPackageAsset[] {
   const pending: PendingAssetReference[] = [];
@@ -220,7 +219,7 @@ function collectPackageRelativeTextRefs(
 
 function materializeAssets(
   pending: readonly PendingAssetReference[],
-  entriesByPath: ReadonlyMap<string, QtiPackageEntry>,
+  entriesByPath: { has(path: string): boolean },
 ): QtiPackageAsset[] {
   const assetsByHref = new Map<string, PendingAssetReference[]>();
   for (const reference of pending) {

@@ -1,29 +1,13 @@
 import { pushPackageDiagnostic } from "./qti-package-paths.js";
-import { collectPackageAssets } from "./qti-package-assets.js";
-import {
-  detectPackageShape,
-  diagnoseManifestDependencyReferences,
-  diagnosePrimaryResourceHrefs,
-  indexManifestResources,
-  isQtiAssessmentTestResource,
-  isQtiItemResource,
-  parseManifestResources,
-  QTI_PACKAGE_MANIFEST_PATH,
-} from "./qti-package-manifest.js";
+import { QTI_PACKAGE_MANIFEST_PATH } from "./qti-package-manifest.js";
+import { buildPackageSummary, inspectPackageManifest } from "./qti-package-plan.js";
 import {
   itemReferencesForPackageShape,
   parseAssessmentTestPackageModel,
   parsePackageItems,
 } from "./qti-package-items.js";
-import {
-  packageTitle,
-  parseStandardAlignments,
-  primaryTiming,
-  uniqueStandards,
-} from "./qti-package-metadata.js";
 import type { QtiPackageParseResult } from "./qti-package-types.js";
-import { QTI_PACKAGE_MANIFEST_NAMESPACE } from "./qti-namespaces.js";
-import { parseXmlFiles, pushXmlDiagnostics } from "./qti-package-xml.js";
+import { parseXmlFiles } from "./qti-package-xml.js";
 import {
   DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
   decodeUtf8,
@@ -85,53 +69,18 @@ function parseQtiPackageEntries(
 ): QtiPackageParseResult {
   const entriesByPath = indexEntries(entries, diagnostics);
   const xmlFilesByPath = parseXmlFiles(entriesByPath);
-  const manifestXml = xmlFilesByPath.get(QTI_PACKAGE_MANIFEST_PATH);
-
-  if (!manifestXml) {
-    pushPackageDiagnostic(
-      diagnostics,
-      "package.manifest.missing",
-      "error",
-      "QTI package does not contain imsmanifest.xml.",
-      QTI_PACKAGE_MANIFEST_PATH,
-    );
-  } else {
-    pushXmlDiagnostics(manifestXml, diagnostics);
-  }
-
-  const manifestRoot =
-    manifestXml?.root?.localName === "manifest" &&
-    manifestXml.root.uri === QTI_PACKAGE_MANIFEST_NAMESPACE
-      ? manifestXml.root
-      : undefined;
-  if (manifestXml?.root && !manifestRoot) {
-    pushPackageDiagnostic(
-      diagnostics,
-      "package.manifest.root",
-      "error",
-      manifestXml.root.localName === "manifest"
-        ? `Expected imsmanifest.xml manifest in namespace ${QTI_PACKAGE_MANIFEST_NAMESPACE}, found ${manifestXml.root.uri ?? "(none)"}.`
-        : `Expected imsmanifest.xml root manifest, found ${manifestXml.root.localName}.`,
-      QTI_PACKAGE_MANIFEST_PATH,
-    );
-  }
-
-  const manifestResourceRecords = manifestRoot
-    ? parseManifestResources(manifestRoot, entriesByPath, diagnostics)
-    : [];
-  const manifestResources = manifestResourceRecords;
-  const resourcesByIdentifier = indexManifestResources(manifestResourceRecords, diagnostics);
-  diagnoseManifestDependencyReferences(manifestResourceRecords, resourcesByIdentifier, diagnostics);
-
-  const itemResources = manifestResourceRecords.filter((resource) =>
-    isQtiItemResource(resource.type),
+  const {
+    manifestRoot,
+    manifestResources,
+    resourcesByIdentifier,
+    itemResources,
+    assessmentTestResources,
+    packageShape,
+  } = inspectPackageManifest(
+    entriesByPath,
+    xmlFilesByPath.get(QTI_PACKAGE_MANIFEST_PATH),
+    diagnostics,
   );
-  const assessmentTestResources = manifestResourceRecords.filter((resource) =>
-    isQtiAssessmentTestResource(resource.type),
-  );
-  diagnosePrimaryResourceHrefs([...itemResources, ...assessmentTestResources], diagnostics);
-
-  const packageShape = detectPackageShape(itemResources, assessmentTestResources, diagnostics);
   const assessmentTest = parseAssessmentTestPackageModel(
     packageShape,
     assessmentTestResources,
@@ -146,36 +95,27 @@ function parseQtiPackageEntries(
     diagnostics,
   );
   const items = parsePackageItems(itemReferences, entriesByPath, xmlFilesByPath, diagnostics);
-  const assets = collectPackageAssets(
+  const timedItems = items.filter((item) => item.timing !== undefined);
+  const { itemCount: _itemCount, ...summary } = buildPackageSummary({
+    manifestRoot,
+    manifestResources,
     resourcesByIdentifier,
+    packageShape,
     assessmentTest,
-    items,
+    assetItems: items,
+    titleItems: items,
+    timedItemCount: timedItems.length,
+    soleItemTiming: timedItems.length === 1 ? timedItems[0]?.timing : undefined,
+    itemStandards: items.flatMap((item) => item.standards),
     entriesByPath,
     diagnostics,
-  );
-  const manifestStandards = manifestRoot
-    ? parseStandardAlignments(manifestRoot, QTI_PACKAGE_MANIFEST_PATH)
-    : [];
-  const standards = uniqueStandards([
-    ...manifestStandards,
-    ...(assessmentTest?.standards ?? []),
-    ...items.flatMap((item) => item.standards),
-  ]);
-  const timing = primaryTiming(assessmentTest, items);
-  const title = packageTitle(manifestRoot, assessmentTest, items);
+    itemCount: items.length,
+  });
 
   return {
-    ok: diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
-    title,
+    ...summary,
     entries,
-    packageShape,
     items,
-    assets,
-    manifestResources,
-    assessmentTest,
-    timing,
-    standards,
-    diagnostics,
   };
 }
 

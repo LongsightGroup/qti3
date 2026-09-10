@@ -368,3 +368,11 @@ export {
   readQtiJsonValue,
   unknownToDisplayString,
 } from "./value-format.js";
+
+export {
+  parseQtiPackageStream,
+  type QtiPackageSource,
+  type QtiPackageStreamLimits,
+  type QtiPackageStreamEvent,
+  type QtiPackageStreamSummary,
+} from "./qti-package-stream.js";

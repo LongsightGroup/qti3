@@ -306,3 +306,38 @@ const attrs = serializeSharedVocabularyAttributes(
 The registry models authoring-level fields such as `labels-style`, `choices-position`, and
 `media-player-controls`; downstream products should keep UI labels, editor layout, and draft
 property names in their own adapter layer.
+
+## Incremental package parsing
+
+`parseQtiPackageStream(source, limits)` reads an immutable package entry inventory
+through a caller-owned `readEntry(path, maxBytes)` function. The host supplies ZIP
+extraction or object-storage reads and must enforce `maxBytes` during extraction.
+Core reads one item at a time and returns asset references without loading assets.
+
+```ts
+import { parseQtiPackageStream } from "@longsightgroup/qti3-core";
+
+for await (const event of parseQtiPackageStream(source, {
+  maxEntries: 10_000,
+  maxEntryBytes: 8 * 1024 * 1024,
+  maxTotalBytes: 512 * 1024 * 1024,
+  maxDiagnostics: 10_000,
+})) {
+  if (event.kind === "item") {
+    await stageItem(event.index, event.item);
+  } else if (event.summary.ok) {
+    await completeStaging(event.summary);
+  } else {
+    await failStaging(event.summary.diagnostics);
+  }
+}
+```
+
+Item events are provisional: a later entry can fail validation or storage reads.
+Publish only after the terminal summary reports `ok`. Breaking iteration stops
+further reads. Do not collect item events into an array when bounded memory is
+required. The inventory, manifest/test structure, asset references, standards, and
+bounded diagnostics remain in memory; item bodies and parsed models do not.
+Choose entry and total budgets for the host runtime and enforce archive integrity
+at the host's extraction boundary. The synchronous `parseQtiPackage` API still
+returns a complete in-memory package for callers that need that representation.

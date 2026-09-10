@@ -3,7 +3,6 @@ import { normalizePackagePath, pushPackageDiagnostic } from "./qti-package-paths
 import { parseStandardAlignments } from "./qti-package-metadata.js";
 import type { QtiManifestFile, QtiManifestResource, QtiPackageShape } from "./qti-package-types.js";
 import { childPackageElements, packageDescendants, stripHrefSuffix } from "./qti-package-xml.js";
-import type { QtiPackageEntry } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
 import { QTI_PACKAGE_MANIFEST_NAMESPACE } from "./qti-namespaces.js";
 
@@ -21,7 +20,7 @@ export function isQtiAssessmentTestResource(type: string): boolean {
 
 export function parseManifestResources(
   manifestRoot: QtiPackageXmlNode,
-  entriesByPath: ReadonlyMap<string, QtiPackageEntry>,
+  entriesByPath: { has(path: string): boolean },
   diagnostics: QtiDiagnostic[],
 ): QtiManifestResource[] {
   const resourceNodes = packageDescendants(
@@ -72,7 +71,7 @@ export function parseManifestResources(
 
 function parseManifestFiles(
   resourceNode: QtiPackageXmlNode,
-  entriesByPath: ReadonlyMap<string, QtiPackageEntry>,
+  entriesByPath: { has(path: string): boolean },
   diagnostics: QtiDiagnostic[],
 ): QtiManifestFile[] {
   const files: QtiManifestFile[] = [];

@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 0.10.5 - 2026-09-10
+
+### Added
+
+- Add `parseQtiPackageStream()` to `@longsightgroup/qti3-core` for bounded, sequential package
+  parsing through a caller-owned entry inventory and `readEntry(path, maxBytes)` function.
+- Export `QtiPackageSource`, `QtiPackageStreamLimits`, `QtiPackageStreamEvent`, and
+  `QtiPackageStreamSummary` for incremental package staging workflows.
+
+### Changed
+
+- Share package manifest inspection, item parsing, and summary assembly across sync and incremental
+  package parsers through `inspectPackageManifest()`, `parsePackageItem()`, and
+  `buildPackageSummary()`.
+- Align all workspace package versions on `0.10.5`.
+
 ## 0.10.4 - 2026-09-08
 
 ### Added

@@ -346,6 +346,55 @@ export function itemReferencesForPackageShape(
   return references;
 }
 
+export function parsePackageItem(
+  reference: PackageItemReference,
+  entry: QtiPackageEntry,
+  xmlFile: PackageXmlFile | undefined,
+  diagnostics: QtiDiagnostic[],
+): QtiPackageItem {
+  const resolvedXml = xmlFile ?? parsePackageXml(entry);
+  // Full QTI parse for document model; lightweight tree above supplies metadata and asset refs.
+  const parsed = parseQtiXml(resolvedXml.xml);
+  const itemDiagnostics = parsed.diagnostics.map((diagnostic) =>
+    scopeDiagnosticToPackagePath(reference.href, diagnostic),
+  );
+  diagnostics.push(...itemDiagnostics);
+
+  const assetHrefs = resolvedXml.root ? discoverContentAssetHrefs(resolvedXml, diagnostics) : [];
+  const root =
+    resolvedXml.root?.localName === "qti-assessment-item" &&
+    resolvedXml.root.uri === QTI_ASI_NAMESPACE
+      ? resolvedXml.root
+      : undefined;
+  const item = parsed.document?.item;
+  const timeLimits = root
+    ? parseTimeLimits(qtiChildElements(root, "qti-time-limits")[0], reference.href, diagnostics)
+    : undefined;
+
+  return {
+    href: reference.href,
+    source: reference.source,
+    manifestResourceIdentifier: reference.manifestResourceIdentifier,
+    assessmentItemRefIdentifier: reference.assessmentItemRefIdentifier,
+    identifier: item?.identifier,
+    title: item?.title,
+    document: parsed.document,
+    timing: root ? parseTimingMetadata(root, reference.href, diagnostics, timeLimits) : undefined,
+    timeLimits,
+    standards: uniqueStandards([
+      ...reference.standards.filter(
+        (standard) =>
+          standard.resourcePartIdentifier === undefined ||
+          standard.resourcePartIdentifier === item?.identifier,
+      ),
+      ...(root ? parseStandardAlignments(root, reference.href) : []),
+    ]),
+    assetHrefs,
+    diagnostics: itemDiagnostics,
+    xml: resolvedXml.xml,
+  };
+}
+
 export function parsePackageItems(
   references: readonly PackageItemReference[],
   entriesByPath: ReadonlyMap<string, QtiPackageEntry>,
@@ -380,46 +429,7 @@ export function parsePackageItems(
       continue;
     }
 
-    const xmlFile = xmlFilesByPath.get(reference.href) ?? parsePackageXml(entry);
-    // Full QTI parse for document model; lightweight tree above supplies metadata and asset refs.
-    const parsed = parseQtiXml(xmlFile.xml);
-    const itemDiagnostics = parsed.diagnostics.map((diagnostic) =>
-      scopeDiagnosticToPackagePath(reference.href, diagnostic),
-    );
-    diagnostics.push(...itemDiagnostics);
-
-    const assetHrefs = xmlFile.root ? discoverContentAssetHrefs(xmlFile, diagnostics) : [];
-    const root =
-      xmlFile.root?.localName === "qti-assessment-item" && xmlFile.root.uri === QTI_ASI_NAMESPACE
-        ? xmlFile.root
-        : undefined;
-    const item = parsed.document?.item;
-    const timeLimits = root
-      ? parseTimeLimits(qtiChildElements(root, "qti-time-limits")[0], reference.href, diagnostics)
-      : undefined;
-
-    items.push({
-      href: reference.href,
-      source: reference.source,
-      manifestResourceIdentifier: reference.manifestResourceIdentifier,
-      assessmentItemRefIdentifier: reference.assessmentItemRefIdentifier,
-      identifier: item?.identifier,
-      title: item?.title,
-      document: parsed.document,
-      timing: root ? parseTimingMetadata(root, reference.href, diagnostics, timeLimits) : undefined,
-      timeLimits,
-      standards: uniqueStandards([
-        ...reference.standards.filter(
-          (standard) =>
-            standard.resourcePartIdentifier === undefined ||
-            standard.resourcePartIdentifier === item?.identifier,
-        ),
-        ...(root ? parseStandardAlignments(root, reference.href) : []),
-      ]),
-      assetHrefs,
-      diagnostics: itemDiagnostics,
-      xml: xmlFile.xml,
-    });
+    items.push(parsePackageItem(reference, entry, xmlFilesByPath.get(reference.href), diagnostics));
   }
 
   return items;
