@@ -805,8 +805,8 @@ exports[`moodle-xml@1 evidence > transcodes match 1`] = `
     <shuffleanswers>false</shuffleanswers>
     <subquestion format="html"><text>Mulched beds stayed moist two days longer after watering.</text><answer><text>Mulch helped reduce water loss from the soil.</text></answer></subquestion>
     <subquestion format="html"><text>Uncovered beds had more weeds by the third week.</text><answer><text>Bare soil may need more frequent weeding.</text></answer></subquestion>
-    <subquestion format="html"><text></text><answer><text>Light exposure was not identical across all beds.</text></answer></subquestion>
-    <subquestion format="html"><text></text><answer><text>This maintenance detail does not explain plant growth.</text></answer></subquestion>
+    <subquestion format="html"><text>Beds near the fence received less afternoon sun.</text><answer><text>Light exposure was not identical across all beds.</text></answer></subquestion>
+    <subquestion format="html"><text>The garden sign was repainted on Saturday.</text><answer><text>This maintenance detail does not explain plant growth.</text></answer></subquestion>
     <correctfeedback format="html"><text></text></correctfeedback>
     <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
     <incorrectfeedback format="html"><text></text></incorrectfeedback>

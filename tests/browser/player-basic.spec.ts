@@ -52,8 +52,10 @@ test.describe("Basic item player readiness", () => {
     await loadFixture(page, "match");
     await assignMatch(page, "A", "G1");
     await assignMatch(page, "B", "G2");
+    await assignMatch(page, "C", "G3");
+    await assignMatch(page, "D", "G4");
     await suspendRestoreCurrentAttempt(page);
-    await expectResponse(page, ["A G1", "B G2"]);
+    await expectResponse(page, ["A G1", "B G2", "C G3", "D G4"]);
     score = await scoreCurrentAttempt(page);
     expect(score?.outcomes.SCORE).toBe(1);
 

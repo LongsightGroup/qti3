@@ -2,7 +2,7 @@
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="match-reference" title="match-reference" time-dependent="false" xml:lang="en">
   
       <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
-        <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value></qti-correct-response>
+        <qti-correct-response><qti-value>A G1</qti-value><qti-value>B G2</qti-value><qti-value>C G3</qti-value><qti-value>D G4</qti-value></qti-correct-response>
       </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>

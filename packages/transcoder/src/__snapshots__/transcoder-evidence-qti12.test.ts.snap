@@ -781,7 +781,7 @@ exports[`qti12-standard@1 evidence > transcodes match 1`] = `
     </presentation>
     <resprocessing>
       <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0"/></outcomes>
-      <respcondition continue="Yes"><conditionvar><varequal respident="A">G1</varequal></conditionvar><setvar action="Add" varname="SCORE">50</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="B">G2</varequal></conditionvar><setvar action="Add" varname="SCORE">50</setvar></respcondition>
+      <respcondition continue="Yes"><conditionvar><varequal respident="A">G1</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="B">G2</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="C">G3</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="D">G4</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition>
     </resprocessing>
   </item>
 </questestinterop>",

@@ -906,7 +906,7 @@ exports[`canvas-new-quizzes@1 evidence > transcodes match 1`] = `
     </presentation>
     <resprocessing>
       <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
-      <respcondition continue="Yes"><conditionvar><varequal respident="response_A">G1</varequal></conditionvar><setvar action="Add" varname="SCORE">50</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_B">G2</varequal></conditionvar><setvar action="Add" varname="SCORE">50</setvar></respcondition>
+      <respcondition continue="Yes"><conditionvar><varequal respident="response_A">G1</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_B">G2</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_C">G3</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition><respcondition continue="Yes"><conditionvar><varequal respident="response_D">G4</varequal></conditionvar><setvar action="Add" varname="SCORE">25</setvar></respcondition>
     </resprocessing>
   </item>
 </questestinterop>",

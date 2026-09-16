@@ -128,6 +128,14 @@ function createInteractionFixture(
           status: hasAttemptResponse ? "interacting" : "initialized",
         },
       },
+      ...(interactionType === "match"
+        ? [
+            {
+              ...basicCorrectAttempt({ RESPONSE: ["A G1", "B G2"] }, { SCORE: 0 }, id),
+              name: "incomplete",
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -1153,11 +1161,15 @@ function defaultResponse(interactionType: QtiInteractionType): {
       correct: ["A B", "C D"],
     };
   }
-  if (
-    interactionType === "gapMatch" ||
-    interactionType === "graphicGapMatch" ||
-    interactionType === "match"
-  ) {
+  if (interactionType === "match") {
+    return {
+      identifier: "RESPONSE",
+      cardinality: "multiple",
+      baseType: "directedPair",
+      correct: ["A G1", "B G2", "C G3", "D G4"],
+    };
+  }
+  if (interactionType === "gapMatch" || interactionType === "graphicGapMatch") {
     return {
       identifier: "RESPONSE",
       cardinality: "multiple",

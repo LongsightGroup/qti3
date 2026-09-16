@@ -1134,6 +1134,17 @@ test("essay responses survive restore without an automatic grade", async ({ page
   await expectNoAxeViolationsOnPlayer(page);
 });
 
+test("four-observation Match requires all four keyed pairs for credit", async ({ page }) => {
+  await page.goto("/");
+  await loadFixture(page, "match");
+  await provideResponse(page, "match", ["A G1", "B G2"]);
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(0);
+  await provideResponse(page, "match", ["C G3", "D G4"]);
+  await suspendRestoreCurrentAttempt(page);
+  expect(await currentResponse(page)).toEqual(["A G1", "B G2", "C G3", "D G4"]);
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
+});
+
 test("numeric text entry captures, scores, and restores raw companion text", async ({ page }) => {
   await page.goto("/");
   await pasteXml(
