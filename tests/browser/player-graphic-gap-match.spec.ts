@@ -361,7 +361,7 @@ test.describe("player graphic gap match interactions", () => {
     await expect(sourceCButton).toBeHidden();
   });
 
-  test("allows multiple graphic gap match placements when max-associations is omitted", async ({
+  test("allows multiple graphic gap match placements with explicit unlimited maximum", async ({
     page,
   }) => {
     await page.goto("/");
@@ -377,7 +377,7 @@ test.describe("player graphic gap match interactions", () => {
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-no-interaction-max" title="graphic-gap-no-interaction-max" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
   <qti-item-body>
-    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" max-associations="0">
       <object data="${svgBase64DataUrl(targetSvg)}" alt="Timeline target." type="image/svg+xml"/>
       <qti-gap-img identifier="DraggerA" match-max="1"><img alt="a-cw" height="63" src="${choiceSvg("A")}" width="78"/></qti-gap-img>
       <qti-gap-img identifier="DraggerB" match-max="1"><img alt="b-ww2" height="63" src="${choiceSvg("B")}" width="78"/></qti-gap-img>
@@ -444,7 +444,7 @@ test.describe("player graphic gap match interactions", () => {
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="graphic-gap-cloned-source" title="graphic-gap-cloned-source" time-dependent="false">
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair"/>
   <qti-item-body>
-    <qti-graphic-gap-match-interaction response-identifier="RESPONSE">
+    <qti-graphic-gap-match-interaction response-identifier="RESPONSE" max-associations="0">
       <object data="${svgBase64DataUrl(targetSvg)}" alt="Three target slots." type="image/svg+xml"/>
       <qti-gap-img identifier="DraggerA" match-max="2"><img alt="reusable marker" height="63" src="${svgBase64DataUrl(choiceSvg)}" width="78"/></qti-gap-img>
       <qti-associable-hotspot identifier="T1" shape="rect" coords="30,42,100,86" match-max="1"/>

@@ -125,10 +125,10 @@ describe("response-limits", () => {
     expect(maximumAllowedResponses(interaction)).toBe(2);
   });
 
-  it("does not add an implicit graphic gap match maximum when max-associations is omitted", () => {
+  it("defaults graphic gap match to one association when its maximum is omitted", () => {
     expect(
       maximumAllowedResponses(testInteraction({ type: "graphicGapMatch", attributes: {} })),
-    ).toBeUndefined();
+    ).toBe(1);
     expect(
       maximumAllowedResponses(
         testInteraction({

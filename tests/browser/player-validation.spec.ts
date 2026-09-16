@@ -571,3 +571,23 @@ test.describe("player validation", () => {
     await expect(textarea).not.toHaveAttribute("aria-describedby");
   });
 });
+
+for (const maximum of [undefined, "0"] as const) {
+  test(`choice maximum ${maximum ?? "omitted"} applies the QTI selection limit`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice-default-maximum" title="Selection limits" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier"/>
+      <qti-item-body><qti-choice-interaction response-identifier="RESPONSE" ${maximum === undefined ? "" : `max-choices="${maximum}"`}>
+        <qti-simple-choice identifier="A">First</qti-simple-choice><qti-simple-choice identifier="B">Second</qti-simple-choice>
+      </qti-choice-interaction></qti-item-body>
+    </qti-assessment-item>`,
+    );
+    await page.locator('qti-assessment-item-player [data-choice-identifier="A"] input').click();
+    await page.locator('qti-assessment-item-player [data-choice-identifier="B"] input').click();
+    await expectResponse(page, maximum === "0" ? ["A", "B"] : ["A"]);
+  });
+}

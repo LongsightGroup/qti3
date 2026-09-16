@@ -242,7 +242,7 @@ function scoredAssociateXml(): string {
         <qti-default-value><qti-value>0</qti-value></qti-default-value>
       </qti-outcome-declaration>
       <qti-item-body>
-        <qti-associate-interaction response-identifier="RESPONSE">
+        <qti-associate-interaction response-identifier="RESPONSE" max-associations="2">
           <qti-simple-associable-choice identifier="A" match-max="2">A</qti-simple-associable-choice>
           <qti-simple-associable-choice identifier="B" match-max="2">B</qti-simple-associable-choice>
           <qti-simple-associable-choice identifier="C" match-max="2">C</qti-simple-associable-choice>

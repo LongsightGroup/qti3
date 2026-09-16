@@ -67,7 +67,32 @@ export function maximumAllowedResponses(
     return undefined;
   }
   const explicit = responseLimitAttribute(interaction, "max-choices", "max-associations");
-  if (explicit === undefined) return undefined;
+  if (explicit === undefined) {
+    switch (interaction.type) {
+      case "associate":
+      case "match":
+      case "gapMatch":
+      case "graphicAssociate":
+      case "graphicGapMatch":
+      case "choice":
+      case "hottext":
+      case "hotspot":
+      case "positionObject":
+        return 1;
+      case "custom":
+      case "drawing":
+      case "endAttempt":
+      case "graphicOrder":
+      case "inlineChoice":
+      case "order":
+      case "portableCustom":
+      case "selectPoint":
+      case "slider":
+      case "textEntry":
+      case "upload":
+        return undefined;
+    }
+  }
   const parsed = parseNonNegativeInteger(explicit);
   return parsed === undefined || parsed <= 0 ? undefined : parsed;
 }

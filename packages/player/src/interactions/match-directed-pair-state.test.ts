@@ -108,7 +108,7 @@ describe("createMatchDirectedPairState", () => {
     const second = choice("T2", "1");
     const third = choice("T3", "1");
     const state = createMatchDirectedPairState({
-      interaction: interaction(),
+      interaction: interaction({ attributes: { "max-associations": "0" } }),
       update: (value) => updates.push(value),
       selectedPairs,
       validationHost: validationHost().host,

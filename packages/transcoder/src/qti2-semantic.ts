@@ -175,6 +175,21 @@ function mapped(
 ): InteractionMapper {
   return (interaction, revision, path) => {
     const diagnostics: QtiTranscodeDiagnostic[] = [];
+    const legacyGapLimits = interaction.type === "gapMatch" && revision.target === "qti21";
+    if (
+      legacyGapLimits &&
+      ["min-associations", "max-associations"].some(
+        (name) => interaction.attributes[name] !== undefined,
+      )
+    ) {
+      diagnostics.push({
+        code: "profile.qti21.gap_match.association_limits_omitted",
+        severity: "warning",
+        path,
+        message:
+          "QTI 2.1 Gap Match cannot carry interaction-wide association limits; per-choice limits and answer keys are preserved.",
+      });
+    }
     const admitsPrompt =
       interaction.type !== "positionObject" &&
       interaction.type !== "custom" &&
@@ -192,7 +207,9 @@ function mapped(
       path,
       new Set([
         "response-identifier",
-        ...(interaction.type === "graphicGapMatch" ? ["max-associations", "min-associations"] : []),
+        ...(interaction.type === "graphicGapMatch" || legacyGapLimits
+          ? ["max-associations", "min-associations"]
+          : []),
       ]),
     );
     const responseIdentifier = interaction.responseIdentifier

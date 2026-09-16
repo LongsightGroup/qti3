@@ -128,7 +128,7 @@ describe("player-validation", () => {
     expect(diagnostics).toEqual([]);
   });
 
-  it("skips validation policy for unscored responses without authored limits", () => {
+  it("checks default maxima for unscored choices", () => {
     expect(
       responseValidationPolicy(
         { correctResponse: null },
@@ -136,8 +136,8 @@ describe("player-validation", () => {
       ),
     ).toEqual({
       checkMinimum: false,
-      checkMaximum: false,
-      checkMatchMax: false,
+      checkMaximum: true,
+      checkMatchMax: true,
     });
   });
 
@@ -149,7 +149,7 @@ describe("player-validation", () => {
       ),
     ).toMatchObject({
       checkMinimum: true,
-      checkMaximum: false,
+      checkMaximum: true,
       checkMatchMax: true,
     });
   });

@@ -145,7 +145,7 @@ test.describe("player gap match interactions", () => {
   </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
-    <qti-gap-match-interaction response-identifier="RESPONSE">
+    <qti-gap-match-interaction response-identifier="RESPONSE" max-associations="2">
       <qti-gap-text identifier="A" match-max="1">Nixon</qti-gap-text>
       <qti-gap-text identifier="B" match-max="1">Lincoln</qti-gap-text>
       <p><qti-gap identifier="G1"/> resigned. <qti-gap identifier="G2"/> issued the Emancipation Proclamation.</p>

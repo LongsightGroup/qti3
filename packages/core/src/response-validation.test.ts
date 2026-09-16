@@ -461,7 +461,7 @@ function cardinalityItemXml(): string {
           <qti-simple-choice identifier="A">A</qti-simple-choice>
           <qti-simple-choice identifier="B">B</qti-simple-choice>
         </qti-choice-interaction>
-        <qti-choice-interaction response-identifier="MULTIPLE">
+        <qti-choice-interaction response-identifier="MULTIPLE" max-choices="0">
           <qti-simple-choice identifier="A">A</qti-simple-choice>
           <qti-simple-choice identifier="B">B</qti-simple-choice>
         </qti-choice-interaction>
@@ -583,7 +583,7 @@ function associateDomainItemXml(): string {
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="associate-domain" title="associate-domain" time-dependent="false">
       <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
       <qti-item-body>
-        <qti-associate-interaction response-identifier="RESPONSE">
+        <qti-associate-interaction response-identifier="RESPONSE" max-associations="2">
           <qti-simple-associable-choice identifier="A" match-max="2">A</qti-simple-associable-choice>
           <qti-simple-associable-choice identifier="B" match-max="2">B</qti-simple-associable-choice>
         </qti-associate-interaction>

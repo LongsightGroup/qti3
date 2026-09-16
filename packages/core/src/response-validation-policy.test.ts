@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  maximumAllowedResponses,
   minimumMediaPlays,
   minimumRequiredResponses,
   responseValidationPolicy,
@@ -48,7 +49,7 @@ describe("response validation policy", () => {
     expect(minimumMediaPlays(interaction)).toBe(minimum);
   });
 
-  it("skips policy checks for optional unscored interactions without authored limits", () => {
+  it("checks the default maximum for optional unscored choices", () => {
     expect(
       responseValidationPolicy(
         { correctResponse: null },
@@ -56,8 +57,8 @@ describe("response validation policy", () => {
       ),
     ).toEqual({
       checkMinimum: false,
-      checkMaximum: false,
-      checkMatchMax: false,
+      checkMaximum: true,
+      checkMatchMax: true,
     });
   });
 
@@ -82,7 +83,7 @@ describe("response validation policy", () => {
       ),
     ).toMatchObject({
       checkMinimum: true,
-      checkMaximum: false,
+      checkMaximum: true,
       checkMatchMax: true,
     });
   });
@@ -94,4 +95,33 @@ describe("response validation policy", () => {
       ),
     ).toBe(0);
   });
+});
+
+it.each([
+  "associate",
+  "match",
+  "gapMatch",
+  "graphicAssociate",
+  "graphicGapMatch",
+  "choice",
+  "hottext",
+  "hotspot",
+  "positionObject",
+] as const)("defaults %s to one selection and preserves explicit unlimited", (type) => {
+  const attribute = ["choice", "hottext", "hotspot", "positionObject"].includes(type)
+    ? "max-choices"
+    : "max-associations";
+  expect(maximumAllowedResponses(testInteraction({ type }))).toBe(1);
+  expect(
+    maximumAllowedResponses(testInteraction({ type, attributes: { [attribute]: "0" } })),
+  ).toBeUndefined();
+  expect(maximumAllowedResponses(testInteraction({ type, attributes: { [attribute]: "2" } }))).toBe(
+    2,
+  );
+});
+
+it("preserves unbounded Select Point and whole-list ordering defaults", () => {
+  for (const type of ["selectPoint", "order", "graphicOrder"] as const) {
+    expect(maximumAllowedResponses(testInteraction({ type }))).toBeUndefined();
+  }
 });
