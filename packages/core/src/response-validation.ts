@@ -66,6 +66,8 @@ export interface QtiResponseValidationInput {
   item: QtiAssessmentItem;
   responses: QtiResponseVariablesInput;
   allowIncompleteResponses?: boolean | undefined;
+  /** Host policy: require a scored response when no minimum is authored; defaults to false. */
+  requireScoredResponses?: boolean | undefined;
   allowedUndeclaredResponseIdentifiers?: readonly string[] | undefined;
   responseIdentifiers?: Iterable<string> | undefined;
 }
@@ -134,6 +136,7 @@ export function parseQtiResponseVariables(
         undefined,
         value,
         input.allowIncompleteResponses,
+        input.requireScoredResponses,
         diagnostics,
       );
       continue;
@@ -145,6 +148,7 @@ export function parseQtiResponseVariables(
         interaction,
         value,
         input.allowIncompleteResponses,
+        input.requireScoredResponses,
         diagnostics,
       );
     }
@@ -391,9 +395,10 @@ function validateDeclarationResponse(
   interaction: QtiInteraction | undefined,
   value: QtiValue | undefined,
   allowIncompleteResponses: boolean | undefined,
+  requireScoredResponses: boolean | undefined,
   diagnostics: QtiResponseValidationDiagnostic[],
 ): void {
-  const policy = responseValidationPolicy(declaration, interaction);
+  const policy = responseValidationPolicy(declaration, interaction, requireScoredResponses);
   if (!policy.checkMinimum && !policy.checkMaximum && !policy.checkMatchMax) return;
 
   const effectiveValue = value ?? null;
@@ -409,7 +414,11 @@ function validateDeclarationResponse(
         : responseCount(effectiveValue);
 
   if (policy.checkMinimum && !allowIncompleteResponses) {
-    const minimum = effectiveMinimumRequiredResponses(declaration, interaction);
+    const minimum = effectiveMinimumRequiredResponses(
+      declaration,
+      interaction,
+      requireScoredResponses,
+    );
     if (count < minimum) {
       diagnostics.push(
         attachResponseIdentifier(
@@ -444,9 +453,15 @@ function validateDeclarationResponse(
 function effectiveMinimumRequiredResponses(
   declaration: { readonly correctResponse: QtiValue | null },
   interaction: QtiInteraction | undefined,
+  requireScoredResponses: boolean | undefined,
 ): number {
   const minimum = minimumRequiredResponses(interaction);
-  if (declaration.correctResponse === null || hasAuthoredMinimum(interaction)) return minimum;
+  if (
+    !requireScoredResponses ||
+    declaration.correctResponse === null ||
+    hasAuthoredMinimum(interaction)
+  )
+    return minimum;
   return Math.max(minimum, 1);
 }
 

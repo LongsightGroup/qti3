@@ -323,6 +323,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
 
     const nextSessionControl: Required<QtiPlayerSessionControl> = {
       validateResponses: options.sessionControl?.validateResponses ?? true,
+      requireScoredResponses: options.sessionControl?.requireScoredResponses ?? true,
       showFeedback: options.sessionControl?.showFeedback ?? true,
     };
     const result = parseQtiXml(xml);
@@ -407,7 +408,9 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     if (!loadedItem) return undefined;
     const shouldValidateResponses =
       options.validateResponses ?? loadedItem.sessionControl.validateResponses;
-    const responseValidation = shouldValidateResponses ? this.validateResponses() : [];
+    const responseValidation = shouldValidateResponses
+      ? this.validateResponses(options.requireScoredResponses)
+      : [];
     const validationMessages = [...loadedItem.authoringDiagnostics, ...responseValidation];
     if (validationMessages.length > 0) {
       loadedItem.validationMessages = cloneDiagnostics(responseValidation);
@@ -828,11 +831,13 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.style.colorScheme = "light dark";
   }
 
-  private validateResponses(): QtiDiagnostic[] {
+  private validateResponses(requireScoredResponses?: boolean): QtiDiagnostic[] {
     const loadedItem = this.loadedItem;
     if (!loadedItem) return [];
     return validateItemResponses(loadedItem.document, loadedItem.session.serialize(), {
       responseIdentifiers: this.visibleInteractionResponseIdentifiers(),
+      requireScoredResponses:
+        requireScoredResponses ?? loadedItem.sessionControl.requireScoredResponses,
     });
   }
 

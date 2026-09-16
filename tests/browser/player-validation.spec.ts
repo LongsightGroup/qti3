@@ -591,3 +591,24 @@ for (const maximum of [undefined, "0"] as const) {
     await expectResponse(page, maximum === "0" ? ["A", "B"] : ["A"]);
   });
 }
+
+test("host scored-response policy can be disabled without bypassing QTI minima", async ({
+  page,
+}) => {
+  const fixture = interactionFixtures.find((entry) => entry.interactionType === "choice");
+  if (!fixture) throw new Error("Missing fixture");
+  await page.goto("/");
+  await pasteXml(page, fixture.xml);
+  const optionalScore = await page
+    .locator("qti-assessment-item-player")
+    .evaluate((element) => element.scoreAttempt({ requireScoredResponses: false }));
+  expect(optionalScore?.outcomes.SCORE).toBe(0);
+  await pasteXml(page, fixture.xml.replace('max-choices="1"', 'min-choices="1" max-choices="1"'));
+  const requiredScore = await page
+    .locator("qti-assessment-item-player")
+    .evaluate((element) => element.scoreAttempt({ requireScoredResponses: false }));
+  expect(requiredScore).toBeUndefined();
+  await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText(
+    "requires a response",
+  );
+});

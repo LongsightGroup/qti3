@@ -38,7 +38,7 @@ describe("player-validation", () => {
     expect(original[0]!.source!.line).toBe(1);
   });
 
-  it("requires a response when declaration expects scoring", () => {
+  it("requires a scored response when the host policy is enabled", () => {
     const document = {
       item: {
         interactions: [
@@ -68,14 +68,18 @@ describe("player-validation", () => {
       },
     } as unknown as QtiDocument;
 
-    const diagnostics = validateItemResponses(document, {
-      schema: "qti3.attempt-state.v1",
-      itemIdentifier: "item",
-      status: "interacting",
-      responses: { RESPONSE: null },
-      outcomes: {},
-      validationMessages: [],
-    });
+    const diagnostics = validateItemResponses(
+      document,
+      {
+        schema: "qti3.attempt-state.v1",
+        itemIdentifier: "item",
+        status: "interacting",
+        responses: { RESPONSE: null },
+        outcomes: {},
+        validationMessages: [],
+      },
+      { requireScoredResponses: true },
+    );
     expect(diagnostics.some((entry) => entry.code === "response.required")).toBe(true);
   });
 

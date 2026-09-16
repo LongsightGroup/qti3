@@ -21,11 +21,15 @@ export type QtiCatalogRequestPolicy = QtiCatalogSupportResolutionOptions & {
 };
 
 export interface QtiPlayerSessionControl {
+  /** Require scored responses without authored minima; defaults to true in the player. */
+  requireScoredResponses?: boolean | undefined;
   validateResponses?: boolean | undefined;
   showFeedback?: boolean | undefined;
 }
 
 export interface QtiScoreAttemptOptions {
+  /** Override the session host policy while retaining QTI constraint validation. */
+  requireScoredResponses?: boolean | undefined;
   validateResponses?: boolean | undefined;
 }
 

@@ -44,7 +44,7 @@ function interactionRequiresResponse(interaction: QtiInteraction): boolean {
 }
 
 export function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
-  if (!interaction) return 1;
+  if (!interaction) return 0;
   if (interaction.type === "media") return minimumMediaPlays(interaction);
   const explicit = responseLimitAttribute(interaction, "min-choices", "min-associations");
   if (explicit === undefined) return interactionRequiresResponse(interaction) ? 1 : 0;
@@ -121,6 +121,7 @@ export { maximumMediaPlays, minimumMediaPlays };
 export function responseValidationPolicy(
   declaration: { readonly correctResponse: QtiValue | null },
   interaction: QtiInteraction | undefined,
+  requireScoredResponses = false,
 ): QtiResponseValidationPolicy {
   const authoredMinimum =
     interaction === undefined
@@ -128,7 +129,7 @@ export function responseValidationPolicy(
       : responseLimitAttribute(interaction, "min-choices", "min-associations");
   const minimum = interaction === undefined ? undefined : minimumRequiredResponses(interaction);
   const validatesMinimum =
-    declaration.correctResponse !== null ||
+    (requireScoredResponses && declaration.correctResponse !== null) ||
     interaction?.type === "media" ||
     authoredMinimum !== undefined ||
     (minimum !== undefined && minimum > 0);

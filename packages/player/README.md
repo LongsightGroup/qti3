@@ -33,6 +33,7 @@ await player?.loadXml(xml, {
   },
   sessionControl: {
     validateResponses: true,
+    requireScoredResponses: true,
     showFeedback: true,
   },
 });
@@ -457,3 +458,14 @@ pages when you want those messages visible on screen.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3
+
+## Scored-response policy
+
+Core `validateQtiResponseVariables` enforces QTI response constraints by default: an
+answer key does not make an optional response required. Set `requireScoredResponses: true`
+when your host requires answers to scored questions without authored minimums.
+The browser player enables that host policy by default for compatibility; set
+`sessionControl.requireScoredResponses: false` on load, or pass
+`scoreAttempt({ requireScoredResponses: false })`, to use only QTI constraints.
+An explicitly authored zero minimum remains optional under either policy; nonzero
+minimums remain enforced even when the host policy is disabled.

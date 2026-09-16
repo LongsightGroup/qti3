@@ -52,11 +52,15 @@ export function cloneDiagnostics(diagnostics: QtiDiagnostic[]): QtiDiagnostic[] 
 export function validateItemResponses(
   document: QtiDocument,
   state: QtiAttemptStateV1,
-  options: { responseIdentifiers?: Iterable<string> } = {},
+  options: {
+    responseIdentifiers?: Iterable<string>;
+    requireScoredResponses?: boolean | undefined;
+  } = {},
 ): QtiDiagnostic[] {
   return validateQtiResponseVariables({
     item: document.item,
     responses: state.responses,
     responseIdentifiers: options.responseIdentifiers,
+    requireScoredResponses: options.requireScoredResponses,
   }).diagnostics;
 }

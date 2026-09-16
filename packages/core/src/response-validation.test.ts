@@ -212,11 +212,16 @@ describe("QTI response variable validation", () => {
     expect(result.diagnostics).toEqual([]);
   });
 
-  it("requires a response for scored optional interactions without authored minimums", () => {
+  it("requires scored optional responses only when the host policy is enabled", () => {
     const item = parsedItem(scoredOptionalChoiceItemXml());
 
-    const result = validateQtiResponseVariables({ item, responses: {} });
+    const result = validateQtiResponseVariables({
+      item,
+      responses: {},
+      requireScoredResponses: true,
+    });
 
+    expect(validateQtiResponseVariables({ item, responses: {} }).ok).toBe(true);
     expect(result.ok).toBe(false);
     expect(result.diagnostics).toContainEqual(
       expect.objectContaining({
@@ -229,7 +234,11 @@ describe("QTI response variable validation", () => {
   it("honors authored zero minimums for scored optional interactions", () => {
     const item = parsedItem(scoredOptionalChoiceItemXml({ minChoices: 0 }));
 
-    const result = validateQtiResponseVariables({ item, responses: {} });
+    const result = validateQtiResponseVariables({
+      item,
+      responses: {},
+      requireScoredResponses: true,
+    });
 
     expect(result.ok).toBe(true);
     expect(result.diagnostics).toEqual([]);
