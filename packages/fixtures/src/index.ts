@@ -943,7 +943,7 @@ function createBasicExtraItemFeatureToleranceFixture(): QtiFixture {
   </qti-companion-materials-info>
   <qti-stylesheet href="../styles/extra.css" type="text/css" media="screen"/>
   <qti-item-body>
-    <qti-rubric-block view="candidate">
+    <qti-rubric-block view="candidate" use="instructions">
       <qti-content-body>
         <p>Optional rubric guidance remains visible.</p>
       </qti-content-body>
