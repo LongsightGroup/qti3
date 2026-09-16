@@ -49,3 +49,14 @@ it("keeps graphic gap match restricted to multiple directed pairs", () => {
     ).diagnostics,
   ).toContainEqual(expect.objectContaining({ code: "interaction.cardinality" }));
 });
+
+it.each(["associate", "graphicAssociate"])("rejects directedPair declarations for %s", (type) => {
+  const xml = readFileSync(
+    new URL(`../../fixtures/xml/${type}-reference.xml`, import.meta.url),
+    "utf8",
+  );
+  expect(parseQtiXml(xml).diagnostics.filter((entry) => entry.severity === "error")).toEqual([]);
+  expect(
+    parseQtiXml(xml.replace('base-type="pair"', 'base-type="directedPair"')).diagnostics,
+  ).toContainEqual(expect.objectContaining({ code: "interaction.baseType", severity: "error" }));
+});

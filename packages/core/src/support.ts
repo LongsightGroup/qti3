@@ -402,7 +402,9 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
     fixtures: interactionSupportFixtures(interactionType),
     tests: interactionSupportTests(interactionType),
     notes: ["associate", "graphicAssociate", "match", "gapMatch"].includes(interactionType)
-      ? "Supports single and multiple association responses."
+      ? interactionType === "associate" || interactionType === "graphicAssociate"
+        ? "Supports single and multiple unordered pair responses."
+        : "Supports single and multiple directedPair responses."
       : interactionType === "graphicGapMatch"
         ? "Requires multiple directedPair responses."
         : undefined,

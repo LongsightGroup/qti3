@@ -723,7 +723,7 @@ function expectedResponseShape(
     return { cardinalities: ["ordered"], baseTypes: ["identifier"] };
   }
   if (interaction.type === "associate" || interaction.type === "graphicAssociate") {
-    return { cardinalities: ["single", "multiple"], baseTypes: ["pair", "directedPair"] };
+    return { cardinalities: ["single", "multiple"], baseTypes: ["pair"] };
   }
   if (interaction.type === "match" || interaction.type === "gapMatch") {
     return { cardinalities: ["single", "multiple"], baseTypes: ["directedPair"] };
