@@ -357,6 +357,29 @@ suspended or completed.
 React and Preact expose the same `catalogRequestPolicy`, `onCatalogRequest`, and imperative handle
 methods as the Web Component.
 
+For an already resolved PNP profile, use `createPnpPlayerOptions` from
+`@longsightgroup/qti3-pnp` ([integration example](../pnp/README.md#default-player-integration)).
+It maps keyword emphasis and exact catalog selections while reporting remaining host work.
+
+`catalogRequestPolicy`, `getCatalogSupportResolution()`, and `getCatalogDeliveryResolution()`
+accept `exactSelections` for previously resolved catalog choices:
+
+```ts
+player.catalogRequestPolicy = {
+  supports: ["glossary-on-screen", "keyword-translation"],
+  exactSelections: [
+    { catalogId: "term", support: "glossary-on-screen", entryLanguage: "fr" },
+    { catalogId: "term", support: "keyword-translation", entryLanguage: "es" },
+  ],
+};
+```
+
+Each tuple matches its catalog ID exactly and its support/language case-insensitively.
+An absent entry language matches only unlanguaged content. Exact selections replace `languages`
+and `includeDefaultFallback` behavior, while `supports` remains an additional filter. An empty
+`exactSelections` list selects nothing; omitting it preserves the usual ranked language matching.
+Selections enable candidate controls and programmatic requests without choosing host presentation.
+
 ## Companion materials (host chrome)
 
 `qti-companion-materials-info` is item metadata, not item-body content. The player parses

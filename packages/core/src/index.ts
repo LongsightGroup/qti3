@@ -9,6 +9,7 @@ export {
   createCatalogSupportResolution,
   type QtiCatalogSupportResolution,
   type QtiCatalogSupportResolutionOptions,
+  type QtiCatalogSupportSelection,
   type QtiCatalogSelectionReason,
   type QtiResolvedCatalogReference,
   type QtiResolvedCatalogSupport,

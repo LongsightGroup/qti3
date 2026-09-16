@@ -20,10 +20,13 @@
         "@longsightgroup/qti3-a11y": "workspace:*",
         "@longsightgroup/qti3-core": "workspace:*",
         "@longsightgroup/qti3-fixtures": "workspace:*",
-        "@longsightgroup/qti3-pnp": "workspace:*",
+        "@longsightgroup/qti3-migrator": "workspace:*",
         "@longsightgroup/qti3-player": "workspace:*",
         "@longsightgroup/qti3-player-preact": "workspace:*",
-        "@longsightgroup/qti3-player-react": "workspace:*"
+        "@longsightgroup/qti3-player-react": "workspace:*",
+        "@longsightgroup/qti3-pnp": "workspace:*",
+        "@longsightgroup/qti3-transcoder": "workspace:*",
+        "@longsightgroup/qti3-writer": "workspace:*"
       },
       "devDependencies": {
         "@types/react": "19.2.14",

@@ -222,3 +222,32 @@ export const UNSUPPORTED_INTERACTION_ITEM = `
   </qti-item-body>
 </qti-assessment-item>
 `.trim();
+
+// Synthetic fixture, covered by the repository's MIT license.
+export const PNP_MAPPING_ITEM = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pnp-mapping" title="PNP mapping" time-dependent="false">
+  <qti-item-body><p>
+    <span data-catalog-idref="term" class="qti-keyword-emphasis">Selected term</span>
+    <span data-catalog-idref="other">Other term</span>
+    <span data-catalog-idref="directions">Directions</span>
+  </p></qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="term">
+      <qti-card support="glossary-on-screen">
+        <qti-card-entry xml:lang="en" default="true"><qti-html-content>English</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="fr"><qti-html-content>French</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="fr-CA"><qti-html-content>Canadian French</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="es"><qti-html-content>Spanish glossary</qti-html-content></qti-card-entry>
+      </qti-card>
+      <qti-card support="keyword-translation">
+        <qti-card-entry xml:lang="fr"><qti-html-content>French translation</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="es"><qti-html-content>Spanish translation</qti-html-content></qti-card-entry>
+      </qti-card>
+    </qti-catalog>
+    <qti-catalog id="other">
+      <qti-card support="glossary-on-screen" xml:lang="fr"><qti-html-content>Other French glossary</qti-html-content></qti-card>
+    </qti-catalog>
+    <qti-catalog id="directions">
+      <qti-card support="additional-directions" xml:lang="de"><qti-html-content>German directions</qti-html-content></qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+</qti-assessment-item>`;

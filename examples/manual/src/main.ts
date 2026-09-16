@@ -5,10 +5,10 @@ import {
 import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
 import {
   createDefaultQti3PnpCapabilities,
+  createPnpPlayerOptions,
   normalizeQti3Pnp,
   parseQti3PnpXml,
   resolveQti3Pnp,
-  type Qti3PnpResolution,
   type QtiCatalogSupportSummary,
 } from "@longsightgroup/qti3-pnp";
 import { detectPackageMediaType } from "@longsightgroup/qti3-core";
@@ -300,6 +300,7 @@ pnpForm.addEventListener("submit", (event) => {
 resetPnp.addEventListener("click", () => {
   pnpXmlInput.value = samplePnpXml;
   player.keywordEmphasisEnabled = false;
+  player.catalogRequestPolicy = undefined;
   latestPnp = { status: "reset" };
   appendActionLog("pnp-reset", latestPnp);
   renderDebugPanels();
@@ -491,7 +492,9 @@ function applyPnp(): void {
     policy: { onUnsupportedSupport: "diagnostic" },
   });
 
-  applyPnpResolution(resolution);
+  const { playerOptions, hostRequired } = createPnpPlayerOptions(resolution);
+  player.keywordEmphasisEnabled = playerOptions.keywordEmphasisEnabled;
+  player.catalogRequestPolicy = playerOptions.catalogRequestPolicy;
   latestPnp = {
     status: normalized.ok ? "applied" : "applied-with-diagnostics",
     parsed: {
@@ -504,16 +507,11 @@ function applyPnp(): void {
       diagnostics: normalized.diagnostics,
     },
     resolution,
-    appliedPlayerOptions: {
-      keywordEmphasisEnabled: player.keywordEmphasisEnabled,
-    },
+    appliedPlayerOptions: playerOptions,
+    hostRequired,
   };
   appendActionLog("pnp-apply", latestPnp);
   renderDebugPanels();
-}
-
-function applyPnpResolution(resolution: Qti3PnpResolution): void {
-  player.keywordEmphasisEnabled = resolution.display.keywordEmphasis === true;
 }
 
 function pnpCatalogSupports(catalogs: unknown[]): QtiCatalogSupportSummary[] {
@@ -530,6 +528,7 @@ function pnpCatalogSupports(catalogs: unknown[]): QtiCatalogSupportSummary[] {
           catalogId: catalog.id,
           support: card.support,
           default: true,
+          language: typeof card.language === "string" ? card.language : undefined,
         });
         continue;
       }

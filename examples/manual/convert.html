@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="img-src data: blob:; media-src data: blob:; object-src 'none'; frame-src 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Create QTI 3 questions, migrate legacy QTI items, and transcode QTI 3 into older standards. Inspect real output and diagnostics in your browser."
+    />
+    <title>Create and convert · qti3</title>
+    <link rel="stylesheet" href="./src/convert/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="./" aria-label="qti3 homepage">qti3</a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="./#manual">Interactive manual</a
+          ><a href="convert.html" aria-current="page">Create and convert</a
+          ><a href="sv-gallery/">Vocabulary gallery</a
+          ><a href="https://github.com/LongsightGroup/qti3">GitHub source</a>
+        </nav>
+      </div>
+    </header>
+    <main id="content" class="content-width">
+      <div class="intro">
+        <h1>Create and convert</h1>
+        <p>
+          Run the writer, migrator, and transcoder on individual assessment items. Edit the inputs,
+          inspect the XML, and review what each operation preserves or cannot convert.
+        </p>
+        <p class="muted">Processing stays in your browser. Inputs are not uploaded or saved.</p>
+        <nav class="section-nav" aria-label="Conversion examples">
+          <a href="#write">Write QTI 3</a><a href="#migrate">Migrate older QTI</a
+          ><a href="#transcode">Transcode QTI 3</a>
+        </nav>
+      </div>
+      <noscript
+        ><p>
+          These examples need JavaScript to run locally. You can also read the package documentation
+          on GitHub.
+        </p></noscript
+      >
+      <section id="write" aria-labelledby="write-heading" class="operation">
+        <div class="section-heading">
+          <div>
+            <h2 id="write-heading">Write QTI 3</h2>
+            <p>Create a multiple-choice item from plain text and an answer key.</p>
+          </div>
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/writer#readme"
+            >Writer API</a
+          >
+        </div>
+        <div class="workspace">
+          <form id="write-form" action="convert.html#write" method="post" autocomplete="off">
+            <div class="field-pair">
+              <div>
+                <label for="write-identifier">Item identifier</label
+                ><input id="write-identifier" name="identifier" value="planets" required />
+              </div>
+              <div>
+                <label for="write-title">Title</label
+                ><input id="write-title" name="title" value="The red planet" required />
+              </div>
+            </div>
+            <label for="write-prompt">Question</label
+            ><textarea id="write-prompt" name="prompt" class="prompt" required>
+Which planet is known as the red planet?</textarea
+            >
+            <fieldset class="choices">
+              <legend>Choices and correct answer</legend>
+              <p class="hint" id="choice-help">
+                Select the radio button next to the correct answer. All three choices are required.
+              </p>
+              <div class="choice-row">
+                <label class="answer-radio"
+                  ><input
+                    type="radio"
+                    name="correct"
+                    value="A"
+                    required
+                    aria-describedby="choice-help"
+                  /><span>Answer A</span></label
+                ><label class="sr-only" for="choice-A">Choice A text</label
+                ><input id="choice-A" name="choice-A" value="Venus" required />
+              </div>
+              <div class="choice-row">
+                <label class="answer-radio"
+                  ><input
+                    type="radio"
+                    name="correct"
+                    value="B"
+                    checked
+                    required
+                    aria-describedby="choice-help"
+                  /><span>Answer B</span></label
+                ><label class="sr-only" for="choice-B">Choice B text</label
+                ><input id="choice-B" name="choice-B" value="Mars" required />
+              </div>
+              <div class="choice-row">
+                <label class="answer-radio"
+                  ><input
+                    type="radio"
+                    name="correct"
+                    value="C"
+                    required
+                    aria-describedby="choice-help"
+                  /><span>Answer C</span></label
+                ><label class="sr-only" for="choice-C">Choice C text</label
+                ><input id="choice-C" name="choice-C" value="Jupiter" required />
+              </div>
+            </fieldset>
+            <button type="submit" class="primary" data-needs-js disabled>Write QTI 3 XML</button>
+          </form>
+          <div class="result" id="write-result" aria-labelledby="write-output-label">
+            <label id="write-output-label" for="write-output">QTI 3 output</label>
+            <p class="status" data-status role="status" aria-atomic="true">
+              Run the example to generate output.
+            </p>
+            <ul class="diagnostics" data-diagnostics aria-label="Diagnostics"></ul>
+            <textarea
+              id="write-output"
+              data-output
+              readonly
+              spellcheck="false"
+              placeholder="Generated XML will appear here."
+            ></textarea>
+            <div class="actions">
+              <button type="button" data-copy disabled>Copy XML</button
+              ><button type="button" data-download disabled>Download XML</button
+              ><button type="button" data-preview disabled>Preview QTI 3</button>
+            </div>
+            <details data-report hidden>
+              <summary>Conversion report</summary>
+              <pre></pre>
+            </details>
+          </div>
+        </div>
+      </section>
+      <section id="migrate" aria-labelledby="migrate-heading" class="operation">
+        <div class="section-heading">
+          <div>
+            <h2 id="migrate-heading">Migrate older QTI</h2>
+            <p>
+              Convert one legacy item to QTI 3. The migrator uses the writer to produce the XML.
+            </p>
+          </div>
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/migrator#readme"
+            >Migrator API</a
+          >
+        </div>
+        <div class="workspace">
+          <form id="migrate-form" action="convert.html#migrate" method="post">
+            <div class="actions sample-actions">
+              <button type="button" data-legacy-sample="qti12" data-needs-js disabled>
+                Load QTI 1.2 sample</button
+              ><button type="button" data-legacy-sample="qti21" data-needs-js disabled>
+                Load QTI 2.1 sample
+              </button>
+            </div>
+            <label for="migration-xml">Legacy item XML</label
+            ><textarea
+              id="migration-xml"
+              name="xml"
+              class="xml-input"
+              spellcheck="false"
+              required
+              aria-describedby="migration-help"
+            ></textarea>
+            <p id="migration-help" class="hint">
+              Paste a single item. Unsupported content is reported; automatic source repair is off.
+            </p>
+            <button type="submit" class="primary" data-needs-js disabled>Migrate to QTI 3</button>
+          </form>
+          <div class="result" id="migrate-result" aria-labelledby="migrate-output-label">
+            <label id="migrate-output-label" for="migrate-output">Migrated QTI 3 output</label>
+            <p class="status" data-status role="status" aria-atomic="true">
+              Run the example to generate output.
+            </p>
+            <ul class="diagnostics" data-diagnostics aria-label="Diagnostics"></ul>
+            <textarea
+              id="migrate-output"
+              data-output
+              readonly
+              spellcheck="false"
+              placeholder="Generated XML will appear here."
+            ></textarea>
+            <div class="actions">
+              <button type="button" data-copy disabled>Copy XML</button
+              ><button type="button" data-download disabled>Download XML</button
+              ><button type="button" data-preview disabled>Preview QTI 3</button>
+            </div>
+            <details data-report hidden>
+              <summary>Conversion report</summary>
+              <pre></pre>
+            </details>
+          </div>
+        </div>
+      </section>
+      <section id="transcode" aria-labelledby="transcode-heading" class="operation">
+        <div class="section-heading">
+          <div>
+            <h2 id="transcode-heading">Transcode QTI 3</h2>
+            <p>Convert a QTI 3 item to an older standard using an explicit output profile.</p>
+          </div>
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/transcoder#readme"
+            >Transcoder API</a
+          >
+        </div>
+        <div class="workspace">
+          <form id="transcode-form" action="convert.html#transcode" method="post">
+            <div class="actions sample-actions">
+              <button id="load-qti3-sample" type="button" data-needs-js disabled>
+                Load QTI 3 sample
+              </button>
+            </div>
+            <label for="transcode-xml">QTI 3 item XML</label
+            ><textarea
+              id="transcode-xml"
+              name="xml"
+              class="xml-input"
+              spellcheck="false"
+              required
+              aria-describedby="transcode-help"
+            ></textarea>
+            <fieldset class="targets">
+              <legend>Target format</legend>
+              <label
+                ><input type="radio" name="profile" value="qti12-standard@1" required />QTI
+                1.2</label
+              >
+              <label
+                ><input type="radio" name="profile" value="qti21-standard@1" checked required />QTI
+                2.1</label
+              >
+              <label
+                ><input type="radio" name="profile" value="qti22-standard@1" required />QTI
+                2.2</label
+              >
+            </fieldset>
+            <p id="transcode-help" class="hint">
+              Uses the standard @1 profiles. Review warnings and the conversion report for changes
+              in behavior or scoring.
+            </p>
+            <button type="submit" class="primary" data-needs-js disabled>Transcode item</button>
+          </form>
+          <div class="result" id="transcode-result" aria-labelledby="transcode-output-label">
+            <label id="transcode-output-label" for="transcode-output">Target XML output</label>
+            <p class="status" data-status role="status" aria-atomic="true">
+              Run the example to generate output.
+            </p>
+            <ul class="diagnostics" data-diagnostics aria-label="Diagnostics"></ul>
+            <textarea
+              id="transcode-output"
+              data-output
+              readonly
+              spellcheck="false"
+              placeholder="Generated XML will appear here."
+            ></textarea>
+            <div class="actions">
+              <button type="button" data-copy disabled>Copy XML</button
+              ><button type="button" data-download disabled>Download XML</button>
+            </div>
+            <details data-report hidden>
+              <summary>Conversion report</summary>
+              <pre></pre>
+            </details>
+          </div>
+        </div>
+      </section>
+      <section id="preview" class="operation" aria-labelledby="preview-heading" hidden>
+        <h2 id="preview-heading" tabindex="-1">QTI 3 preview</h2>
+        <p id="preview-status" role="status" aria-atomic="true"></p>
+        <qti-assessment-item-player></qti-assessment-item-player>
+      </section>
+      <aside class="scope" aria-labelledby="scope-heading">
+        <h2 id="scope-heading">About these examples</h2>
+        <p>
+          Samples are synthetic and MIT-licensed. This page handles individual items; it does not
+          bundle assets or convert ZIP packages. The preview does not load external resources.
+          Successful XML generation does not establish compatibility with every LMS.
+        </p>
+      </aside>
+    </main>
+    <footer class="content-width"><a href="./#manual">Return to the interactive manual</a></footer>
+    <script type="module" src="./src/convert/main.ts"></script>
+  </body>
+</html>

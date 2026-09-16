@@ -14,6 +14,7 @@
     { "path": "./packages/pnp" },
     { "path": "./packages/a11y" },
     { "path": "./packages/cli" },
-    { "path": "./packages/cli/tsconfig.test.json" }
+    { "path": "./packages/cli/tsconfig.test.json" },
+    { "path": "./examples/manual/tsconfig.convert.json" }
   ]
 }

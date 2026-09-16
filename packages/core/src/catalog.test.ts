@@ -12,6 +12,77 @@ function catalogItem(catalog: string, reference = '<span data-catalog-idref="ter
 }
 
 describe("QTI catalog contracts", () => {
+  it("selects exact catalog/support/language tuples without defaults, cross-products or primary-language fallback", () => {
+    const cards = ["glossary-on-screen", "keyword-translation"]
+      .map(
+        (support) => `
+      <qti-card support="${support}">
+        <qti-card-entry xml:lang="en" default="true"><qti-html-content>English</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="fr"><qti-html-content>French</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="fr-CA"><qti-html-content>Canadian French</qti-html-content></qti-card-entry>
+        <qti-card-entry xml:lang="es"><qti-html-content>Spanish</qti-html-content></qti-card-entry>
+        <qti-card-entry><qti-html-content>No language</qti-html-content></qti-card-entry>
+      </qti-card>`,
+      )
+      .join("");
+    const parsed = parseQtiXml(
+      catalogItem(
+        `<qti-catalog id="term">${cards}</qti-catalog><qti-catalog id="other">${cards}</qti-catalog>`,
+        '<span data-catalog-idref="term">term</span><span data-catalog-idref="other">other</span>',
+      ),
+    );
+    if (!parsed.document) throw new Error("Expected parsed catalog item.");
+    const options = {
+      // Exact selections replace these language/default preferences.
+      languages: "en",
+      includeDefaultFallback: true,
+      exactSelections: [
+        { catalogId: "term", support: "GLOSSARY-ON-SCREEN", entryLanguage: "FR" },
+        { catalogId: "term", support: "keyword-translation", entryLanguage: "es" },
+        { catalogId: "term", support: "glossary-on-screen", entryLanguage: "fr" },
+      ],
+    };
+    const resolution = createCatalogSupportResolution(parsed.document, options);
+    expect(
+      resolution.references.map((reference) =>
+        reference.matches.map((match) => [match.support, match.language]),
+      ),
+    ).toEqual([
+      [
+        ["glossary-on-screen", "fr"],
+        ["keyword-translation", "es"],
+      ],
+      [],
+    ]);
+    expect(
+      createCatalogSupportResolution(parsed.document, {
+        ...options,
+        supports: "keyword-translation",
+      }).references[0]?.matches,
+    ).toHaveLength(1);
+    for (const exactSelections of [
+      [],
+      [{ catalogId: "Term", support: "glossary-on-screen", entryLanguage: "fr" }],
+      [{ catalogId: "term", support: "glossary-on-screen", entryLanguage: "fr-FR" }],
+    ]) {
+      expect(
+        createCatalogSupportResolution(parsed.document, { exactSelections }).references.flatMap(
+          (reference) => reference.matches,
+        ),
+      ).toEqual([]);
+    }
+    const unlanguaged = createCatalogSupportResolution(parsed.document, {
+      exactSelections: [{ catalogId: "term", support: "glossary-on-screen" }],
+    });
+    expect(unlanguaged.references[0]?.matches).toEqual([
+      expect.objectContaining({
+        selectionReason: "unlanguaged",
+        default: false,
+      }),
+    ]);
+    expect(unlanguaged.references[0]?.matches[0]?.language).toBeUndefined();
+  });
+
   it("assigns stable reference identities and discovers references nested in catalog HTML", () => {
     const result = parseQtiXml(
       catalogItem(`

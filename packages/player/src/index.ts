@@ -3,6 +3,7 @@ export type {
   QtiAttemptStateV1,
   QtiCatalogSupportResolution,
   QtiCatalogSupportResolutionOptions,
+  QtiCatalogSupportSelection,
   QtiCompanionMaterialsResolution,
   QtiCompanionMaterialsResolutionOptions,
   QtiItemSessionOptions,

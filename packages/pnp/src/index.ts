@@ -7,6 +7,12 @@ export {
 export { normalizeQti3Pnp } from "./normalize.js";
 export { parseQti3PnpObject } from "./object.js";
 export { resolveQti3Pnp } from "./resolve.js";
+export { createPnpPlayerOptions } from "./player-options.js";
+export type {
+  Qti3PnpPlayerHostRequirements,
+  Qti3PnpPlayerMapping,
+  Qti3PnpPlayerOptions,
+} from "./player-options.js";
 export { validateQti3Pnp } from "./validate.js";
 export { parseQti3PnpXml } from "./xml.js";
 export type {

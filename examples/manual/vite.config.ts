@@ -42,6 +42,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(repoRoot, "examples/manual/index.html"),
+        convert: resolve(repoRoot, "examples/manual/convert.html"),
         "1edtech": resolve(repoRoot, "examples/manual/1edtech.html"),
         "sv-gallery/index": galleryHtmlPath,
       },

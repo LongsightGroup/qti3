@@ -47,6 +47,9 @@ importers:
       '@longsightgroup/qti3-fixtures':
         specifier: workspace:*
         version: link:../../packages/fixtures
+      '@longsightgroup/qti3-migrator':
+        specifier: workspace:*
+        version: link:../../packages/migrator
       '@longsightgroup/qti3-player':
         specifier: workspace:*
         version: link:../../packages/player
@@ -59,6 +62,12 @@ importers:
       '@longsightgroup/qti3-pnp':
         specifier: workspace:*
         version: link:../../packages/pnp
+      '@longsightgroup/qti3-transcoder':
+        specifier: workspace:*
+        version: link:../../packages/transcoder
+      '@longsightgroup/qti3-writer':
+        specifier: workspace:*
+        version: link:../../packages/writer
     devDependencies:
       '@types/react':
         specifier: 19.2.14

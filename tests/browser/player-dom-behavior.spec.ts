@@ -1,3 +1,4 @@
+import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import { expect, test, type Locator } from "@playwright/test";
 import {
   currentResponse,
@@ -18,6 +19,7 @@ import {
   ITEM_LAYOUT_SHARED_VOCABULARY_ITEM,
   MATCH_TABULAR_SHARED_VOCABULARY_ITEM,
   ORDER_SHARED_VOCABULARY_ITEM,
+  PNP_MAPPING_ITEM,
   UNSUPPORTED_INTERACTION_ITEM,
 } from "./fixtures/dom-behavior-items.js";
 import { RICH_ORDER_CONTENT_ITEM } from "./fixtures/rich-order.js";
@@ -1020,4 +1022,96 @@ test.describe("player DOM behavior", () => {
     expect(state.interactionStates.RESPONSE).toEqual({ ok: true, step: 2 });
     await expect(host).toHaveAttribute("data-state", JSON.stringify({ ok: true, step: 2 }));
   });
+});
+
+test("maps PNP through the manual into exact, keyboard-accessible catalog controls and clears old settings", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await pasteXml(page, PNP_MAPPING_ITEM);
+  const player = page.locator("qti-assessment-item-player");
+  const keyword = player.locator(".qti-keyword-emphasis");
+  const controls = player.locator(".qti3-catalog-request");
+  await expect(controls).toHaveCount(0);
+  const initialState = await player.evaluate((element) => element.serialize());
+  await player.evaluate((element) => {
+    const events: unknown[] = [];
+    element.addEventListener("qti-catalogrequest", (event) => {
+      events.push({
+        activation: event.detail.activation,
+        catalogId: event.detail.delivery.catalogId,
+        matches: event.detail.delivery.matches.map((match) => ({
+          support: match.support,
+          language: match.language,
+        })),
+      });
+    });
+    (window as Window & { pnpEvents?: unknown[] }).pnpEvents = events;
+  });
+  await page.locator("#pnp-xml").fill(`<access-for-all-pnp>
+    <keyword-emphasis/>
+    <activate-at-initialization-set><glossary-on-screen language="fr"/></activate-at-initialization-set>
+    <keyword-translation language="es"/>
+    <additional-directions language="de"/>
+  </access-for-all-pnp>`);
+  await page.locator("#apply-pnp").click();
+  await expect(keyword).toHaveCSS("text-decoration-line", "underline");
+  await expect(controls).toHaveCount(2);
+  expect(
+    await page.evaluate(() => (window as Window & { pnpEvents?: unknown[] }).pnpEvents),
+  ).toEqual([]);
+  const button = controls.first();
+  await expect(button).toHaveAccessibleName(/Selected term/);
+  await button.focus();
+  await expect(button).toBeFocused();
+  await button.press("Enter");
+  expect(
+    await page.evaluate(() => (window as Window & { pnpEvents?: unknown[] }).pnpEvents),
+  ).toEqual([
+    {
+      activation: "keyboard",
+      catalogId: "term",
+      matches: [
+        { support: "glossary-on-screen", language: "fr" },
+        { support: "keyword-translation", language: "es" },
+      ],
+    },
+  ]);
+  expect(
+    await player.evaluate((element) =>
+      element.getRenderedCatalogReferences().map((reference) => ({
+        catalogId: reference.catalogId,
+        requested: element.requestCatalog(reference.referenceId),
+      })),
+    ),
+  ).toEqual([
+    { catalogId: "term", requested: true },
+    { catalogId: "other", requested: false },
+    { catalogId: "directions", requested: true },
+  ]);
+  await expectNoAxeViolationsOnPlayer(page);
+  expect(await player.evaluate((element) => element.serialize())).toEqual(initialState);
+
+  await page.locator("#pnp-xml").fill("<access-for-all-pnp/>");
+  await page.locator("#apply-pnp").click();
+  await expect(controls).toHaveCount(0);
+  await expect(keyword).toHaveCSS("text-decoration-line", "none");
+  expect(
+    await player.evaluate((element) =>
+      element
+        .getRenderedCatalogReferences()
+        .some((reference) => element.requestCatalog(reference.referenceId)),
+    ),
+  ).toBe(false);
+
+  await page
+    .locator("#pnp-xml")
+    .fill(
+      '<access-for-all-pnp><keyword-emphasis/><glossary-on-screen language="fr"/></access-for-all-pnp>',
+    );
+  await page.locator("#apply-pnp").click();
+  await expect(controls).toHaveCount(1);
+  await page.locator("#reset-pnp").click();
+  await expect(controls).toHaveCount(0);
+  await expect(keyword).toHaveCSS("text-decoration-line", "none");
 });

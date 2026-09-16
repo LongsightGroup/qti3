@@ -13,6 +13,15 @@ export interface QtiCatalogSupportResolutionOptions {
   supports?: string | readonly string[] | undefined;
   languages?: string | readonly string[] | undefined;
   includeDefaultFallback?: boolean | undefined;
+  /** Exact catalog/support/language tuples. Replaces language ranking and fallback; [] selects nothing. */
+  exactSelections?: readonly QtiCatalogSupportSelection[] | undefined;
+}
+
+/** An already resolved catalog selection; absent language selects only unlanguaged content. */
+export interface QtiCatalogSupportSelection {
+  readonly catalogId: string;
+  readonly support: string;
+  readonly entryLanguage?: string | undefined;
 }
 
 export interface QtiCatalogSupportResolution {
@@ -100,6 +109,26 @@ function matchingCatalogSupports(
 ): QtiResolvedCatalogSupport[] {
   return catalog.cards.flatMap((card) => {
     if (supportFilter && !supportFilter.has(card.support.toLowerCase())) return [];
+    if (options.exactSelections !== undefined) {
+      const selections = options.exactSelections.filter(
+        (selection) =>
+          selection.catalogId === catalog.id &&
+          selection.support.toLowerCase() === card.support.toLowerCase(),
+      );
+      return catalogCandidates(card)
+        .filter((candidate) =>
+          selections.some(
+            (selection) =>
+              selection.entryLanguage?.toLowerCase() === candidate.language?.toLowerCase(),
+          ),
+        )
+        .map((candidate) =>
+          resolvedSupport(catalog, {
+            ...candidate,
+            selectionReason: candidate.language === undefined ? "unlanguaged" : "exact-language",
+          }),
+        );
+    }
     return selectedCandidates(card, languages, options).map((candidate) =>
       resolvedSupport(catalog, candidate),
     );

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src/convert",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/qti3-convert.tsbuildinfo"
+  },
+  "include": ["src/convert/**/*.ts"],
+  "references": [
+    { "path": "../../packages/core" },
+    { "path": "../../packages/player" },
+    { "path": "../../packages/writer" },
+    { "path": "../../packages/migrator" },
+    { "path": "../../packages/transcoder" }
+  ]
+}
