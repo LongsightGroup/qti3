@@ -145,12 +145,17 @@ function buildInteractionReport(input: {
   const declaration = normalized.item.responseDeclarations.find(
     (candidate) => candidate.identifier === interaction?.responseIdentifier,
   );
+  const humanScored = normalized.item.outcomeDeclarations.some(
+    (candidate) =>
+      candidate.identifier === "SCORE" && candidate.attributes["external-scored"] === "human",
+  );
   return {
     ...base,
     fidelity: aggregateFidelity([policy.fidelity], mapping.diagnostics),
-    scoring:
-      policy.scoring === "automatic" &&
-      (!hasCorrectResponse(declaration?.correctResponse) || !responseProcessingEmitted)
+    scoring: humanScored
+      ? "manual"
+      : policy.scoring === "automatic" &&
+          (!hasCorrectResponse(declaration?.correctResponse) || !responseProcessingEmitted)
         ? "unscored"
         : policy.scoring,
     fallback: mapping.fallback,

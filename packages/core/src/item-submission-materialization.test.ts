@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { materializeQtiItemSubmission } from "./index.js";
+import { materializeQtiItemSubmission, scoreQtiItemServerSide } from "./index.js";
 
 describe("QTI item submission materialization", () => {
   it("scores non-adaptive submitted response variables", () => {
@@ -149,6 +149,36 @@ describe("QTI item submission materialization", () => {
       expect.objectContaining({ identifier: "RESPONSE", value: 2 }),
     );
   });
+
+  it.each(["human", "externalMachine"])(
+    "preserves %s scoring intent even with a numeric default and restored state",
+    (externalScored) => {
+      const itemXml = essayXml().replace(
+        "<qti-item-body>",
+        `<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" external-scored="${externalScored}">
+          <qti-default-value><qti-value>7</qti-value></qti-default-value>
+        </qti-outcome-declaration><qti-item-body>`,
+      );
+      const trustedResponses = { RESPONSE: "Use mulch because it retained moisture." };
+      const submitted = materializeQtiItemSubmission({ itemXml, trustedResponses });
+      expect(submitted.ok).toBe(true);
+      expect(submitted.score).toBeNull();
+      expect(submitted.scoringDisposition).toBe("manual-scoring-required");
+      expect(submitted.state?.outcomes.SCORE).toBe(7);
+      const restored = materializeQtiItemSubmission({
+        itemXml,
+        existingState: submitted.state,
+        trustedResponses,
+      });
+      expect(restored.score).toBeNull();
+      expect(restored.scoringDisposition).toBe("manual-scoring-required");
+      expect(restored.state?.responses).toEqual(trustedResponses);
+      const server = scoreQtiItemServerSide({ itemXml, trustedResponses });
+      expect(server.ok).toBe(true);
+      expect(server.diagnostics).toEqual([]);
+      expect(server.score).toBeNull();
+    },
+  );
 
   it("rejects invalid prior attempt state for non-adaptive submissions", () => {
     const result = materializeQtiItemSubmission({

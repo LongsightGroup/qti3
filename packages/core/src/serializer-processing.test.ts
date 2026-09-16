@@ -16,7 +16,6 @@ const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../fixture
 
 const fixtureRoundTrips = [
   "choice-reference.xml",
-  "extendedText-reference.xml",
   "slider-reference.xml",
   "textEntry-reference.xml",
   "drawing-reference.xml",

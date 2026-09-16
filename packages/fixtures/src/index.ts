@@ -100,6 +100,7 @@ function createInteractionFixture(
   qtiName: string,
 ): QtiFixture {
   if (interactionType === "inlineChoice") return createInlineChoiceFixture(qtiName);
+  if (interactionType === "extendedText") return createEssayFixture(qtiName);
 
   const id = `${interactionType}-reference`;
   const response = defaultResponse(interactionType);
@@ -126,6 +127,40 @@ function createInteractionFixture(
           itemIdentifier: id,
           status: hasAttemptResponse ? "interacting" : "initialized",
         },
+      },
+    ],
+  };
+}
+
+function createEssayFixture(qtiName: string): QtiFixture {
+  const id = "extendedText-reference";
+  const response =
+    "Use mulch in the garden beds because the mulched beds retained moisture for longer.";
+  return {
+    id,
+    category: "interaction",
+    interactionType: "extendedText",
+    qtiName,
+    title: "Human-scored garden recommendation",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" external-scored="human"/>
+  <qti-item-body>
+    <p>${itemIntro(id)}</p>
+    ${renderInteractionXml(qtiName, "extendedText")}
+  </qti-item-body>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        ...basicCorrectAttempt({ RESPONSE: response }, { SCORE: null }, id),
+        name: "awaiting-human-score",
+      },
+      {
+        ...basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: null }, id),
+        name: "placeholder-does-not-earn-credit",
       },
     ],
   };

@@ -1,5 +1,5 @@
 import type { QtiAssessmentItem } from "./types.js";
-import { itemExpectsAutomatedScore } from "./item-scoring-expectation.js";
+import { itemExpectsAutomatedScore, itemHasExternalScore } from "./item-scoring-expectation.js";
 
 export type QtiItemSubmissionScoringDisposition =
   | "scored"
@@ -23,7 +23,11 @@ export function itemHasManuallyScoredInteractions(item: QtiAssessmentItem): bool
 }
 
 export function itemNeedsScoringFollowUpWhenUnscored(item: QtiAssessmentItem): boolean {
-  return itemExpectsAutomatedScore(item) || itemHasManuallyScoredInteractions(item);
+  return (
+    itemHasExternalScore(item) ||
+    itemExpectsAutomatedScore(item) ||
+    itemHasManuallyScoredInteractions(item)
+  );
 }
 
 /** Default generic disposition taxonomy shipped by qti3-core for submission materialization. */
@@ -31,6 +35,7 @@ export function classifyQtiItemScoringDisposition(
   item: QtiAssessmentItem,
   score: number | null,
 ): Exclude<QtiItemSubmissionScoringDisposition, "invalid"> {
+  if (itemHasExternalScore(item)) return "manual-scoring-required";
   if (score !== null) return "scored";
   if (itemNeedsScoringFollowUpWhenUnscored(item)) return "manual-scoring-required";
   return "unscored-reference";

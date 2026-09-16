@@ -1119,6 +1119,21 @@ test("maps PNP through the manual into exact, keyboard-accessible catalog contro
   await expect(keyword).toHaveCSS("text-decoration-line", "none");
 });
 
+test("essay responses survive restore without an automatic grade", async ({ page }) => {
+  await page.goto("/");
+  await loadFixture(page, "extendedText");
+  const textarea = page.locator("qti-assessment-item-player textarea");
+  const essay = "Use mulch because the covered beds retained moisture during the hot week.";
+  await textarea.fill(essay);
+  await suspendRestoreCurrentAttempt(page);
+  await expect(textarea).toHaveValue(essay);
+  expect(await currentResponse(page)).toBe(essay);
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBeNull();
+  await textarea.fill("A");
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBeNull();
+  await expectNoAxeViolationsOnPlayer(page);
+});
+
 test("numeric text entry captures, scores, and restores raw companion text", async ({ page }) => {
   await page.goto("/");
   await pasteXml(

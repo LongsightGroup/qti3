@@ -219,6 +219,11 @@ console.log(materialized.outcomeVariables);
 these dispositions to product-specific finalization statuses, grading queues, result
 aggregation, and external exports.
 
+A `SCORE` outcome with `external-scored="human"` or `external-scored="externalMachine"`
+returns `score: null` and `manual-scoring-required` until the host obtains an external grade.
+The serialized outcomes retain authored defaults for round trips; those values are not proof
+of a returned grade. The host owns external grading and finalization.
+
 The `qti3 score` and `qti3 prepare-delivery` CLI commands expose file-oriented server scoring and
 candidate-safe delivery preparation. Their response and state JSON files are server-trusted inputs,
 not raw browser submissions. Secure adaptive turn handling remains a library API for hosts that

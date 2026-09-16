@@ -267,11 +267,22 @@ exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
 
 exports[`brightspace-course-import@1 evidence > transcodes extendedText 1`] = `
 {
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "target.outcome.external_scoring.omitted",
+      "message": "QTI 2.1 cannot declare external scoring; configure external grading in the destination host.",
+      "path": "/outcomeDeclaration/SCORE",
+      "severity": "warning",
+    },
+  ],
   "report": {
-    "affectedPaths": [],
-    "diagnosticCodes": [],
-    "fidelity": "exact",
+    "affectedPaths": [
+      "/outcomeDeclaration/SCORE",
+    ],
+    "diagnosticCodes": [
+      "target.outcome.external_scoring.omitted",
+    ],
+    "fidelity": "lossy",
     "identifier": "extendedText-reference",
     "mappings": [
       {
@@ -289,11 +300,11 @@ exports[`brightspace-course-import@1 evidence > transcodes extendedText 1`] = `
   },
   "xml": "<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="extendedText-reference" title="extendedText-reference" adaptive="false" timeDependent="false" xml:lang="en">
-  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
-  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"></outcomeDeclaration>
 
   <itemBody><p>A constructed-response item asks for a recommendation based on garden moisture data.</p><extendedTextInteraction responseIdentifier="RESPONSE" expectedLines="6"><prompt>Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.</prompt></extendedTextInteraction></itemBody>
-  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
+
 </assessmentItem>",
 }
 `;

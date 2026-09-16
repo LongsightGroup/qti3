@@ -3,6 +3,7 @@ import {
   type QtiAssessmentItem,
   type QtiInteraction,
   type QtiInteractionType,
+  type QtiOutcomeDeclaration,
   type QtiResponseDeclaration,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
@@ -84,7 +85,7 @@ export function writeSemanticQti2Item(
       return fallbackXml ?? serializeResponseDeclaration(declaration);
     }),
     ...item.outcomeDeclarations.map((declaration) =>
-      serializeVariableDeclaration("outcomeDeclaration", declaration),
+      serializeOutcomeDeclaration(declaration, revision, diagnostics),
     ),
     ...item.templateDeclarations.map((declaration) =>
       serializeVariableDeclaration("templateDeclaration", declaration),
@@ -654,6 +655,28 @@ function serializeResponseDeclaration(declaration: QtiResponseDeclaration): stri
   return `<responseDeclaration${variableAttributes(declaration)}>${correct}${mapping}${areaMapping}</responseDeclaration>`;
 }
 
+function serializeOutcomeDeclaration(
+  declaration: QtiOutcomeDeclaration,
+  revision: Qti2Revision,
+  diagnostics: QtiTranscodeDiagnostic[],
+): string {
+  const externalScored = declaration.attributes["external-scored"];
+  if (externalScored && revision.target === "qti21") {
+    diagnostics.push({
+      code: "target.outcome.external_scoring.omitted",
+      severity: "warning",
+      path: `/outcomeDeclaration/${declaration.identifier}`,
+      message:
+        "QTI 2.1 cannot declare external scoring; configure external grading in the destination host.",
+    });
+  }
+  return serializeVariableDeclaration(
+    "outcomeDeclaration",
+    declaration,
+    revision.target === "qti22" ? attributes({ externalScored }) : "",
+  );
+}
+
 function serializeVariableDeclaration(
   element: "outcomeDeclaration" | "templateDeclaration",
   declaration: {
@@ -662,6 +685,7 @@ function serializeVariableDeclaration(
     readonly baseType?: string | undefined;
     readonly defaultValue: QtiValue;
   },
+  extraAttributes = "",
 ): string {
   const defaults =
     declaration.defaultValue === null
@@ -669,7 +693,7 @@ function serializeVariableDeclaration(
       : `<defaultValue>${values(declaration.defaultValue)
           .map((value) => `<value>${escapeXmlText(String(value))}</value>`)
           .join("")}</defaultValue>`;
-  return `<${element}${variableAttributes(declaration)}>${defaults}</${element}>`;
+  return `<${element}${variableAttributes(declaration)}${extraAttributes}>${defaults}</${element}>`;
 }
 
 function variableAttributes(declaration: {

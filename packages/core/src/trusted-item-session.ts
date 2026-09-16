@@ -1,5 +1,5 @@
 import { parseQtiXml } from "./parser.js";
-import { itemExpectsAutomatedScore } from "./item-scoring-expectation.js";
+import { itemExpectsAutomatedScore, itemHasExternalScore } from "./item-scoring-expectation.js";
 import { parseQtiResponseVariables } from "./response-validation.js";
 import { createItemSession, isQtiAttemptStateV1, type QtiItemSession } from "./session.js";
 import type {
@@ -190,6 +190,7 @@ export function runTrustedItemSession(
   }
 
   const shouldScore = input.scoring === "always" || applicationResult.appliedSubmission;
+  const externalScore = itemHasExternalScore(parsedResult.parsed.document.item);
 
   let outcomes = sessionResult.session.serialize().outcomes;
   let state = sessionResult.session.serialize();
@@ -212,7 +213,7 @@ export function runTrustedItemSession(
       scoredResult.scored.state,
       parsedResult.parsed.responseIdentifiers,
     );
-    score = readNumericScore(outcomes.SCORE);
+    score = externalScore ? null : readNumericScore(outcomes.SCORE);
 
     if (scoredResult.scored.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
       return emptyTrustedItemSessionFailure(scoredDiagnostics, {
@@ -241,7 +242,7 @@ export function runTrustedItemSession(
   } else {
     state = stripUndeclaredResponses(state, parsedResult.parsed.responseIdentifiers);
     outcomes = state.outcomes;
-    score = readNumericScore(outcomes.SCORE);
+    score = externalScore ? null : readNumericScore(outcomes.SCORE);
   }
 
   return {

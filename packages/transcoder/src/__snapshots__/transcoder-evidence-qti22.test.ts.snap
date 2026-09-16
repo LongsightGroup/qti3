@@ -208,7 +208,7 @@ exports[`qti22-standard@1 evidence > transcodes extendedText 1`] = `
         "fallback": undefined,
         "fidelity": "exact",
         "index": 0,
-        "scoring": "automatic",
+        "scoring": "manual",
         "sourceInteraction": "extendedText",
       },
     ],
@@ -216,11 +216,11 @@ exports[`qti22-standard@1 evidence > transcodes extendedText 1`] = `
   },
   "xml": "<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p2 https://purl.imsglobal.org/spec/qti/v2p2/schema/xsd/imsqti_v2p2p4.xsd" identifier="extendedText-reference" title="extendedText-reference" adaptive="false" timeDependent="false" xml:lang="en">
-  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>A</value></correctResponse></responseDeclaration>
-  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float" externalScored="human"></outcomeDeclaration>
 
   <itemBody><p>A constructed-response item asks for a recommendation based on garden moisture data.</p><extendedTextInteraction responseIdentifier="RESPONSE" expectedLines="6"><prompt>Write a short recommendation for the school garden committee. Use evidence from the scenario: two beds with mulch retained more moisture during a hot week, while the uncovered bed needed watering every afternoon.</prompt></extendedTextInteraction></itemBody>
-  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p2/rptemplates/match_correct"/>
+
 </assessmentItem>",
 }
 `;
