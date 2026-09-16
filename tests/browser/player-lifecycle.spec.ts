@@ -31,6 +31,60 @@ const CUSTOM_OPERATOR_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 test.describe("player lifecycle", () => {
+  for (const interaction of ["text-entry", "extended-text"]) {
+    test(`ignores old focused ${interaction} controls after restore and reset`, async ({
+      page,
+    }) => {
+      await page.goto("/");
+      const container = interaction === "text-entry" ? "p" : "div";
+      await pasteXml(
+        page,
+        `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="focused-text" title="Focused text" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-item-body><${container}>Value: <qti-${interaction}-interaction response-identifier="RESPONSE"/></${container}></qti-item-body>
+      </qti-assessment-item>`,
+      );
+      const player = page.locator("qti-assessment-item-player");
+      const input = player.getByRole("textbox");
+      await input.fill("saved");
+      const saved = await player.evaluate((element) => element.serialize());
+      for (const action of ["restore", "reset"]) {
+        await input.fill("discarded");
+        await expect(input).toBeFocused();
+        const result = await player.evaluate(
+          (element, payload) => {
+            const oldInput = element.querySelector("input, textarea");
+            if (
+              !(oldInput instanceof HTMLInputElement || oldInput instanceof HTMLTextAreaElement)
+            ) {
+              throw new Error("Expected text control");
+            }
+            let responses = 0;
+            const onResponse = () => {
+              responses += 1;
+            };
+            element.addEventListener("qti-responsechange", onResponse);
+            if (payload.action === "restore") element.restore(payload.saved);
+            else element.reset();
+            oldInput.value = "stale";
+            oldInput.dispatchEvent(new Event("input", { bubbles: true }));
+            oldInput.dispatchEvent(new Event("change", { bubbles: true }));
+            element.removeEventListener("qti-responsechange", onResponse);
+            return { state: element.serialize(), responses };
+          },
+          { action, saved },
+        );
+        expect(result.responses).toBe(0);
+        expect(result.state.responses.RESPONSE).toBe(action === "restore" ? "saved" : undefined);
+        await expect(input).toHaveValue(action === "restore" ? "saved" : "");
+        await input.fill("current");
+        expect(await player.evaluate((element) => element.serialize().responses.RESPONSE)).toBe(
+          "current",
+        );
+      }
+    });
+  }
+
   test("ignores stale loadUrl completions after a newer load starts", async ({ page }) => {
     const choiceFixture = interactionFixtures.find((fixture) => fixture.id === "choice-reference");
     if (!choiceFixture) throw new Error("Missing choice-reference fixture.");

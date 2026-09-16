@@ -675,10 +675,12 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     responseIdentifier: string | undefined,
     interaction?: QtiInteraction,
   ): (value: QtiValue) => void {
+    const session = this.loadedItem?.session;
     return (value) => {
       if (this.attemptIsCompleted()) return;
       const loadedItem = this.loadedItem;
-      if (!responseIdentifier || !loadedItem) return;
+      // Removing a focused control can fire change after restore or reset replaces its session.
+      if (!responseIdentifier || !loadedItem || loadedItem.session !== session) return;
       const maximum = maximumAllowedResponses(interaction);
       if (maximum !== undefined && responseCount(value) > maximum) {
         this.applyInlineValidation(
