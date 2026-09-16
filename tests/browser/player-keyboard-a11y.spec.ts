@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import {
+  currentResponse,
   expectMoveButtons,
   expectResponse,
   expectStringResponse,
@@ -159,7 +160,7 @@ test.describe("player keyboard and accessibility", () => {
       .getByRole("button")
       .focus();
     await page.keyboard.press("Enter");
-    await expectResponse(page, true);
+    expect(await currentResponse(page, "HINT")).toBe(true);
 
     await loadFixture(page, "inlineChoice");
     const inlineChoiceInteraction = page.locator(

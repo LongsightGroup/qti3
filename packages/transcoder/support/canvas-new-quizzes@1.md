@@ -37,7 +37,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `455a912c52906c4d0ae17ce0068a839389813d2bb0288e8bc93e7b9ab5076c9f`
+- Golden SHA-256: `685867bbf92354cf0f67aeda58a8d4f86516e3123bd72422771790d0f5ab625a`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-new-quizzes@1/extendedText`
@@ -69,7 +69,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: choice
-- Golden SHA-256: `619432f1fa4a0784f8425abb66e0ba386c4b9e9a78b280ec05126e18f07adb05`
+- Golden SHA-256: `cfce85b8600b9ed10e5cdb284cfa6141f172f0972f48803c52c02e7835d3411b`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-new-quizzes@1/graphicOrder`
@@ -109,7 +109,7 @@
 - Fidelity: exact
 - Scoring policy: automatic
 - Fallback: —
-- Golden SHA-256: `ec4e23619a08a4652bc854d3b7d4d9640f473fd283973d9cfd474de2c18d98b6`
+- Golden SHA-256: `c06a90c991de15b5ba6e0eb064e614ac80c56b56f4e665637459865c72588b15`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-new-quizzes@1/media`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: automatic
 - Fallback: text-entry
-- Golden SHA-256: `148dc7588029b0e1e078d359f16ad1c52bdf6ccb0a7d9d863d2debdfe278f953`
+- Golden SHA-256: `e59f97876f97cc5b1102b6db66864562259102386f34f3d7345c9318735bd661`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-new-quizzes@1/selectPoint`

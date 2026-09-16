@@ -37,15 +37,15 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `5dae873192c79cc0ce369d457a2183dedc822317a6f6bb4d7dc3d086bdfd4163`
+- Golden SHA-256: `24ebd4dd547ea256f9608334024c016626cd8b06be005df8e3db97d1f4e653a8`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/extendedText`
 
-- Fidelity: exact
+- Fidelity: lossy
 - Scoring policy: manual
 - Fallback: —
-- Golden SHA-256: `f676b170d9d87b2cb5cd5031bb8e1bf7bd526c2449a366c84921d84427c3669f`
+- Golden SHA-256: `b4d42ffb8048566a05c22f0ddd49b7d92183c861d866a88d33115c28abea6fdd`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/gapMatch`
@@ -69,7 +69,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `5c1ad6039ae406f761f904eccd5ebde11d6e8e2acd0d9f4afc8fc3c7c16af295`
+- Golden SHA-256: `53c4aecdb04936bd6bb7ed37d6666e9d58926bd8636cf29b30761240b5137299`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/graphicOrder`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `f3bfcab0bfab6f2d50dc187d3006b0c210ecb6b8d9097842c1578d9b57dbde16`
+- Golden SHA-256: `af2d2bf28bffc8c10a28ae016961a54791f048e9d23f8ae619e1f6bce45521ab`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/selectPoint`

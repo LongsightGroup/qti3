@@ -233,7 +233,13 @@ exports[`moodle-xml@1 evidence > transcodes endAttempt 1`] = `
 {
   "diagnostics": [
     {
-      "code": "profile.moodle.xml.fallback.essay",
+      "code": "profile.moodle.xml.multiple_interactions_manual",
+      "message": "Converted choice to a Moodle essay question for manual grading.",
+      "path": "endAttempt.xml",
+      "severity": "warning",
+    },
+    {
+      "code": "profile.moodle.xml.multiple_interactions_manual",
       "message": "Converted endAttempt to a Moodle essay question for manual grading.",
       "path": "endAttempt.xml",
       "severity": "warning",
@@ -244,7 +250,8 @@ exports[`moodle-xml@1 evidence > transcodes endAttempt 1`] = `
       "endAttempt.xml",
     ],
     "diagnosticCodes": [
-      "profile.moodle.xml.fallback.essay",
+      "profile.moodle.xml.multiple_interactions_manual",
+      "profile.moodle.xml.multiple_interactions_manual",
     ],
     "fidelity": "lossy",
     "identifier": "endAttempt-reference",
@@ -254,12 +261,26 @@ exports[`moodle-xml@1 evidence > transcodes endAttempt 1`] = `
           "endAttempt.xml",
         ],
         "diagnosticCodes": [
-          "profile.moodle.xml.fallback.essay",
+          "profile.moodle.xml.multiple_interactions_manual",
         ],
         "emittedInteraction": "essay",
         "fallback": "extended-text",
         "fidelity": "lossy",
         "index": 0,
+        "scoring": "manual",
+        "sourceInteraction": "choice",
+      },
+      {
+        "affectedPaths": [
+          "endAttempt.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.moodle.xml.multiple_interactions_manual",
+        ],
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
+        "fidelity": "lossy",
+        "index": 1,
         "scoring": "manual",
         "sourceInteraction": "endAttempt",
       },
@@ -270,7 +291,7 @@ exports[`moodle-xml@1 evidence > transcodes endAttempt 1`] = `
 <quiz>
   <question type="essay">
     <name><text>endAttempt-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;Explain whether the attempt should end and why.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A coastal town has replaced a wetland with paved parking. After storms with similar rainfall, more water now reaches the streets and flooding occurs more often. Choose the explanation best supported by these observations. You may request a planning hint before answering.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;Compare how wetland soil and pavement absorb rainfall, then trace where the remaining water flows.&lt;/p&gt;&lt;p&gt;Which explanation best accounts for the increased flooding?&lt;/p&gt;&lt;p&gt;Answer every part of the question in one complete response. Provide a complete written response. Available task elements: Replacing the wetland with pavement reduced water absorption and increased runoff into the streets.; The town's storms must now produce more rain, even though the measured rainfall is similar.; Pavement absorbs more water than wetland soil, so less water reaches the streets.. Explain whether the attempt should end and why.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
@@ -457,8 +478,8 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
 {
   "diagnostics": [
     {
-      "code": "profile.moodle.xml.fallback.essay",
-      "message": "Converted graphicGapMatch to a Moodle essay question for manual grading.",
+      "code": "profile.moodle.xml.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices. Source interaction: graphicGapMatch.",
       "path": "graphicGapMatch.xml",
       "severity": "warning",
     },
@@ -468,7 +489,7 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
       "graphicGapMatch.xml",
     ],
     "diagnosticCodes": [
-      "profile.moodle.xml.fallback.essay",
+      "profile.moodle.xml.fallback.choice",
     ],
     "fidelity": "lossy",
     "identifier": "graphicGapMatch-reference",
@@ -478,13 +499,13 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
           "graphicGapMatch.xml",
         ],
         "diagnosticCodes": [
-          "profile.moodle.xml.fallback.essay",
+          "profile.moodle.xml.fallback.choice",
         ],
-        "emittedInteraction": "essay",
-        "fallback": "extended-text",
+        "emittedInteraction": "multichoice",
+        "fallback": "choice",
         "fidelity": "lossy",
         "index": 0,
-        "scoring": "manual",
+        "scoring": "automatic",
         "sourceInteraction": "graphicGapMatch",
       },
     ],
@@ -492,20 +513,27 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
   },
   "xml": "<?xml version="1.0" encoding="UTF-8"?>
 <quiz>
-  <question type="essay">
+  <question type="multichoice">
     <name><text>graphicGapMatch-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;Provide a complete written response. Available task elements: Plan route; Collect data; Analyze results; Hold celebration; First workflow step; Second workflow step.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
     <hidden>0</hidden>
-    <responseformat>editor</responseformat>
-    <responserequired>1</responserequired>
-    <responsefieldlines>15</responsefieldlines>
-    <attachments>0</attachments>
-    <attachmentsrequired>0</attachmentsrequired>
-    <graderinfo format="html"><text></text></graderinfo>
-    <responsetemplate format="html"><text></text></responsetemplate>
+    <single>false</single>
+    <shuffleanswers>false</shuffleanswers>
+    <answernumbering>abc</answernumbering>
+    <answer fraction="50" format="html"><text>Plan route — First workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Plan route — Second workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Collect data — First workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="50" format="html"><text>Collect data — Second workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Analyze results — First workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Analyze results — Second workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Hold celebration — First workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <answer fraction="-16.6666667" format="html"><text>Hold celebration — Second workflow step</text><feedback format="html"><text></text></feedback></answer>
+    <correctfeedback format="html"><text></text></correctfeedback>
+    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
+    <incorrectfeedback format="html"><text></text></incorrectfeedback>
   </question>
 </quiz>",
 }

@@ -1,5 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="true" time-dependent="false" xml:lang="en">
+import type { QtiFixture } from "./index.js";
+
+/** Synthetic MIT-licensed adaptive item: requesting help is independent of answering. */
+export function createEndAttemptFixture(): QtiFixture {
+  const id = "endAttempt-reference";
+  return {
+    id,
+    category: "interaction",
+    interactionType: "endAttempt",
+    qtiName: "qti-end-attempt-interaction",
+    title: "Planning hint with a separately scored answer",
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" adaptive="true" time-dependent="false" xml:lang="en">
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
@@ -40,4 +51,36 @@
       </qti-response-else>
     </qti-response-condition>
   </qti-response-processing>
-</qti-assessment-item>
+</qti-assessment-item>`,
+    expectedParseDiagnostics: [],
+    expectedValidationDiagnostics: [],
+    attempts: [
+      {
+        name: "answer-after-hint",
+        responses: { HINT: true, RESPONSE: "A" },
+        expectedResponses: { HINT: true, RESPONSE: "A" },
+        expectedOutcomes: { SCORE: 1, FEEDBACK: "PLANNING_HINT", completionStatus: "completed" },
+        expectedState: { status: "completed" },
+      },
+      {
+        name: "hint-alone-earns-no-credit",
+        responses: { HINT: true },
+        expectedResponses: { HINT: true },
+        expectedOutcomes: { SCORE: 0, FEEDBACK: "PLANNING_HINT", completionStatus: "incomplete" },
+        expectedState: { status: "interacting" },
+      },
+      {
+        name: "incorrect-answer-with-hint",
+        responses: { HINT: true, RESPONSE: "B" },
+        expectedOutcomes: { SCORE: 0, FEEDBACK: "PLANNING_HINT", completionStatus: "incomplete" },
+        expectedState: { status: "interacting" },
+      },
+      {
+        name: "correct-answer-without-hint",
+        responses: { RESPONSE: "A" },
+        expectedOutcomes: { SCORE: 1, FEEDBACK: null, completionStatus: "completed" },
+        expectedState: { status: "completed" },
+      },
+    ],
+  };
+}

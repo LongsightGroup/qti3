@@ -276,6 +276,16 @@ exports[`canvas-new-quizzes@1 evidence > transcodes endAttempt 1`] = `
     "identifier": "endAttempt-reference",
     "mappings": [
       {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "response_lid",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "automatic",
+        "sourceInteraction": "choice",
+      },
+      {
         "affectedPaths": [
           "endAttempt.xml",
         ],
@@ -285,7 +295,7 @@ exports[`canvas-new-quizzes@1 evidence > transcodes endAttempt 1`] = `
         "emittedInteraction": "response_str",
         "fallback": "extended-text",
         "fidelity": "lossy",
-        "index": 0,
+        "index": 1,
         "scoring": "manual",
         "sourceInteraction": "endAttempt",
       },
@@ -299,21 +309,25 @@ exports[`canvas-new-quizzes@1 evidence > transcodes endAttempt 1`] = `
   <item ident="endAttempt-reference" title="endAttempt-reference">
     <itemmetadata>
       <qtimetadata>
-        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_choice_question</fieldentry></qtimetadatafield>
         <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
-        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry></fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C</fieldentry></qtimetadatafield>
         <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_endAttempt-reference</fieldentry></qtimetadatafield>
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A coastal town has replaced a wetland with paved parking. After storms with similar rainfall, more water now reaches the streets and flooding occurs more often. Choose the explanation best supported by these observations. You may request a planning hint before answering.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;Compare how wetland soil and pavement absorb rainfall, then trace where the remaining water flows.&lt;/p&gt;&lt;p&gt;Which explanation best accounts for the increased flooding?&lt;/p&gt;</mattext></material>
 
 
-      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Explain whether the attempt should end and why.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+      <response_lid ident="response1" rcardinality="Single">
+        <render_choice shuffle="No"><response_label ident="A"><material><mattext texttype="text/html">Replacing the wetland with pavement reduced water absorption and increased runoff into the streets.</mattext></material></response_label><response_label ident="B"><material><mattext texttype="text/html">The town's storms must now produce more rain, even though the measured rainfall is similar.</mattext></material></response_label><response_label ident="C"><material><mattext texttype="text/html">Pavement absorbs more water than wetland soil, so less water reaches the streets.</mattext></material></response_label></render_choice>
+      </response_lid>
+      <response_str ident="response2" rcardinality="Single"><material><mattext texttype="text/plain">Explain whether the attempt should end and why.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
     </presentation>
     <resprocessing>
       <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
-      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+      <respcondition continue="No"><conditionvar><varequal respident="response1">A</varequal></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
+
     </resprocessing>
   </item>
 </questestinterop>",
@@ -504,8 +518,8 @@ exports[`canvas-new-quizzes@1 evidence > transcodes graphicGapMatch 1`] = `
 {
   "diagnostics": [
     {
-      "code": "profile.qti12.fallback.choice_without_labels",
-      "message": "Accessible relationship labels were unavailable, so the task requires manual grading.",
+      "code": "profile.qti12.fallback.choice",
+      "message": "Converted the relationship task to explicit labeled relationship choices with equivalent deterministic scoring.",
       "path": "graphicGapMatch.xml",
       "severity": "warning",
     },
@@ -515,7 +529,7 @@ exports[`canvas-new-quizzes@1 evidence > transcodes graphicGapMatch 1`] = `
       "graphicGapMatch.xml",
     ],
     "diagnosticCodes": [
-      "profile.qti12.fallback.choice_without_labels",
+      "profile.qti12.fallback.choice",
     ],
     "fidelity": "lossy",
     "identifier": "graphicGapMatch-reference",
@@ -525,13 +539,13 @@ exports[`canvas-new-quizzes@1 evidence > transcodes graphicGapMatch 1`] = `
           "graphicGapMatch.xml",
         ],
         "diagnosticCodes": [
-          "profile.qti12.fallback.choice_without_labels",
+          "profile.qti12.fallback.choice",
         ],
-        "emittedInteraction": "response_str",
-        "fallback": "extended-text",
+        "emittedInteraction": "response_lid",
+        "fallback": "choice",
         "fidelity": "lossy",
         "index": 0,
-        "scoring": "manual",
+        "scoring": "automatic",
         "sourceInteraction": "graphicGapMatch",
       },
     ],
@@ -544,7 +558,7 @@ exports[`canvas-new-quizzes@1 evidence > transcodes graphicGapMatch 1`] = `
   <item ident="graphicGapMatch-reference" title="graphicGapMatch-reference">
     <itemmetadata>
       <qtimetadata>
-        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>essay_question</fieldentry></qtimetadatafield>
+        <qtimetadatafield><fieldlabel>question_type</fieldlabel><fieldentry>multiple_answers_question</fieldentry></qtimetadatafield>
         <qtimetadatafield><fieldlabel>points_possible</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>
         <qtimetadatafield><fieldlabel>original_answer_ids</fieldlabel><fieldentry>A,B,C,D,G1,G2</fieldentry></qtimetadatafield>
         <qtimetadatafield><fieldlabel>assessment_question_identifierref</fieldlabel><fieldentry>AQ_graphicGapMatch-reference</fieldentry></qtimetadatafield>
@@ -554,11 +568,11 @@ exports[`canvas-new-quizzes@1 evidence > transcodes graphicGapMatch 1`] = `
       <material><mattext texttype="text/html">&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;</mattext></material>
       <material><matimage uri="hotspot-flow-unlabeled.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
 
-      <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Describe the requested relationships.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>
+      <response_lid ident="response1" rcardinality="Multiple"><material><mattext texttype="text/plain">Select the correct relationships.</mattext></material><render_choice shuffle="No"><response_label ident="PAIR_A_G1"><material><mattext texttype="text/plain">Plan route — First workflow step</mattext></material></response_label><response_label ident="PAIR_A_G2"><material><mattext texttype="text/plain">Plan route — Second workflow step</mattext></material></response_label><response_label ident="PAIR_B_G1"><material><mattext texttype="text/plain">Collect data — First workflow step</mattext></material></response_label><response_label ident="PAIR_B_G2"><material><mattext texttype="text/plain">Collect data — Second workflow step</mattext></material></response_label><response_label ident="PAIR_C_G1"><material><mattext texttype="text/plain">Analyze results — First workflow step</mattext></material></response_label><response_label ident="PAIR_C_G2"><material><mattext texttype="text/plain">Analyze results — Second workflow step</mattext></material></response_label><response_label ident="PAIR_D_G1"><material><mattext texttype="text/plain">Hold celebration — First workflow step</mattext></material></response_label><response_label ident="PAIR_D_G2"><material><mattext texttype="text/plain">Hold celebration — Second workflow step</mattext></material></response_label></render_choice></response_lid>
     </presentation>
     <resprocessing>
       <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0" minvalue="0" maxvalue="100"/></outcomes>
-      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
+      <respcondition continue="No"><conditionvar><and><varequal respident="response1">PAIR_A_G1</varequal><varequal respident="response1">PAIR_B_G2</varequal><not><varequal respident="response1">PAIR_A_G2</varequal></not><not><varequal respident="response1">PAIR_B_G1</varequal></not><not><varequal respident="response1">PAIR_C_G1</varequal></not><not><varequal respident="response1">PAIR_C_G2</varequal></not><not><varequal respident="response1">PAIR_D_G1</varequal></not><not><varequal respident="response1">PAIR_D_G2</varequal></not></and></conditionvar><setvar action="Set" varname="SCORE">100</setvar></respcondition>
     </resprocessing>
   </item>
 </questestinterop>",

@@ -37,7 +37,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `918860ff0268dc9dbefe583563204e57a00910261f83fee0d36ecb9111d7f519`
+- Golden SHA-256: `ea8e5992bc7d777d6f45bd21a55b07dec2a1e811b13caefee79b4bff47450e1f`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/extendedText`
@@ -45,7 +45,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: —
-- Golden SHA-256: `39c0cd5d23d2682255f3063b1776766b0b04b6775db125de50aba0d2dccc05a2`
+- Golden SHA-256: `b4d42ffb8048566a05c22f0ddd49b7d92183c861d866a88d33115c28abea6fdd`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/gapMatch`
@@ -69,7 +69,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `b1366de09c649023218eac15ce418680639293ee2c11df1dc9a232217aadaeb3`
+- Golden SHA-256: `b4f25d6bd5ee1d2e7882a3b0f380ca1287f6944bdf8c164512889a3548b4f426`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/graphicOrder`
@@ -141,7 +141,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `288a82121ee5119e81cace765720a4ea88ab1bfd4a62839a87f5c658acad2879`
+- Golden SHA-256: `bc3d3a9e4f82ae09200af46b5a0b5ce50feebba2ccfd45aa1d9f5fd8680b83a8`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/selectPoint`

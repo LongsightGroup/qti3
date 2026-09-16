@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { parseQtiXml } from "../../packages/core/src/index.js";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { provideResponse } from "./player-helpers.js";
 import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
@@ -13,9 +14,14 @@ test.describe("player interaction sweep", () => {
 
       const attempt = fixture.attempts[0];
       if (!attempt) throw new Error(`Missing attempt for ${fixture.id}.`);
+      const item = parseQtiXml(fixture.xml).document?.item;
 
       for (const [responseIdentifier, response] of Object.entries(attempt.responses)) {
-        await provideResponse(page, fixture.interactionType, response, responseIdentifier);
+        const interaction = item?.interactions.find(
+          (entry) => entry.responseIdentifier === responseIdentifier,
+        );
+        if (!interaction) throw new Error(`Missing interaction for ${responseIdentifier}.`);
+        await provideResponse(page, interaction.type, response, responseIdentifier);
       }
 
       const stateBeforeScore = await page

@@ -16,6 +16,24 @@ const interactions = [...interactionSupport, ...deprecatedInteractionSupport];
 
 describe("qti3 transcoder reverse-migration evidence", () => {
   for (const profile of ["qti21-standard@1", "qti22-standard@1"] as const) {
+    it(`${profile} reports the composite planning-hint item as unsupported for reverse migration`, () => {
+      const xml = readFileSync("packages/fixtures/xml/endAttempt-reference.xml", "utf8");
+      const result = transcodeQti3Item({ kind: "xml", xml }, { profile });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.report.mappings.map((mapping) => mapping.sourceInteraction)).toEqual([
+        "choice",
+        "endAttempt",
+      ]);
+      const reverse = migrateQtiItemToQti3(
+        { filename: "item.xml", xml: result.xml },
+        { repairPolicy: "safe" },
+      );
+      expect(reverse.authoringItem).toBeUndefined();
+      expect(reverse.diagnostics).toContainEqual(
+        expect.objectContaining({ code: "qti2_composite_interactions_unsupported" }),
+      );
+    });
     for (const interaction of interactions) {
       it(`${profile} preserves ${interaction.interactionType} through reverse migration`, () => {
         const result = transcodeQti3Item(
@@ -182,6 +200,16 @@ describe("qti3 transcoder reverse-migration evidence", () => {
 });
 
 function fixtureXml(interactionType: QtiInteractionType): string {
+  // Keep primitive reverse-migration coverage independent of the composite public hint item.
+  if (interactionType === "endAttempt") {
+    return writeQti3AssessmentItem({
+      interactionType: "endAttempt",
+      identifier: "end-attempt-control",
+      title: "Finish",
+      bodyHtml: qti3TrustedXmlFragment("<p>Finish reviewing these instructions.</p>"),
+      buttonTitle: "Finish",
+    });
+  }
   if (interactionType === "custom") {
     return writeQti3AssessmentItem({
       interactionType: "custom",

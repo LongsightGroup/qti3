@@ -6,6 +6,10 @@ profiles do not claim a live vendor import unless a separate reviewed vendor-imp
 
 Per-profile executable evidence:
 
+Registry cases exercise individual interactions. The End Attempt case uses a standalone
+finish control because the public planning-hint item is composite; composite QTI 2.x
+reverse migration is explicitly unsupported and covered by regression tests.
+
 - [`blackboard-question-banks@1`](./support/blackboard-question-banks@1.md)
 - [`brightspace-course-import@1`](./support/brightspace-course-import@1.md)
 - [`canvas-classic-quizzes@1`](./support/canvas-classic-quizzes@1.md)

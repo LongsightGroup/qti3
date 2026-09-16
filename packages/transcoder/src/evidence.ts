@@ -78,7 +78,7 @@ export function validateTranscoderEvidenceCase(
   if (
     result.report.mappings.length !== sourceItem.interactions.length ||
     !result.report.mappings.every(
-      (mapping) => mapping.sourceInteraction === evidenceCase.interaction,
+      (mapping, index) => mapping.sourceInteraction === sourceItem.interactions[index]?.type,
     )
   ) {
     push("behavior report does not cover every source interaction.");

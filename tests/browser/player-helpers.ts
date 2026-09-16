@@ -125,11 +125,11 @@ export async function expectResponse(page: Page, expected: unknown): Promise<voi
   expect(await currentResponse(page)).toEqual(expected);
 }
 
-export async function currentResponse(page: Page): Promise<unknown> {
+export async function currentResponse(page: Page, identifier = "RESPONSE"): Promise<unknown> {
   const state = await page.locator("qti-assessment-item-player").evaluate((element) => {
     return element.serialize();
   });
-  return state.responses.RESPONSE;
+  return state.responses[identifier];
 }
 
 export async function expectStringResponse(page: Page, pattern: RegExp): Promise<string> {

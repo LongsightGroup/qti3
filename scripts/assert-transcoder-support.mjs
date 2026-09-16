@@ -135,6 +135,10 @@ profiles do not claim a live vendor import unless a separate reviewed vendor-imp
 
 Per-profile executable evidence:
 
+Registry cases exercise individual interactions. The End Attempt case uses a standalone
+finish control because the public planning-hint item is composite; composite QTI 2.x
+reverse migration is explicitly unsupported and covered by regression tests.
+
 ${links}
 `;
 }
@@ -165,6 +169,15 @@ function relativeSupportPath(profileId) {
 }
 
 function fixtureXml(interactionType) {
+  if (interactionType === "endAttempt") {
+    return writeQti3AssessmentItem({
+      interactionType: "endAttempt",
+      identifier: "end-attempt-control",
+      title: "Finish",
+      bodyHtml: qti3TrustedXmlFragment("<p>Finish reviewing these instructions.</p>"),
+      buttonTitle: "Finish",
+    });
+  }
   if (interactionType === "custom") {
     return writeQti3AssessmentItem({
       interactionType: "custom",

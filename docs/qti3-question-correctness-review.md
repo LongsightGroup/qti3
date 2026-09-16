@@ -14,11 +14,18 @@ Each finding has an example and one proposed fix sentence. P1 means a high-prior
 interoperability defect; P2 means a narrower correctness issue or a policy decision.
 Layer labels distinguish engine behavior, fixture markup, answer keys, and host policy.
 
+**Implementation status:** D01–D19 have been repaired. The findings and examples below
+preserve the pre-fix behavior so their IDs remain useful when reviewing the changes.
+The final implementation passes `pnpm verify` with all 1,929 tests enabled, including
+the local external conformance suite, and all 41 question documents validate against
+the official QTI 3.0.1 item schema. All 514 browser cases pass, including focused reruns
+after updating the four tests that depended on the corrected fixture contracts.
+
 Examples marked **probe** are synthetic variants, not claims about the unchanged public
 fixture; other XML examples are shortened fixture excerpts unless identified as proposed
 markup. Item-parse rejection is evidence about declarations, not proof of candidate input
-capture or browser rendering. Browser checks listed as acceptance work remain unperformed,
-and none of the proposed fixes have been implemented.
+capture or browser rendering. Verification statements within individual findings describe
+the original review; implementation checks are summarized above.
 
 ## Response contracts
 
@@ -611,7 +618,7 @@ independent of the D11 nesting defect.
 **Fix:** Bind the hint control to an unscored `HINT` response and add a separate substantive
 answer interaction whose response processing determines the score.
 
-## Verification evidence and limits
+## Original review evidence and limits
 
 The original offline schema run used the official item schema and its locally resolved
 imports; it passed 32 questions and rejected the nine listed above, comprising six
@@ -634,8 +641,8 @@ Gap Match's omitted maximum, Choice's omitted/zero maximum, both D07 minimum var
 and the D19 hint response. Declaration probes stop at the item boundary; they do not
 establish candidate collection capture or rendering.
 
-Browser rendering, keyboard behavior, accessibility, picture source selection, and
-external human-scoring delivery remain untested here. Proposed browser acceptance work
-in D01, D02, and D05 describes the evidence needed for implementation, not results of
-this review. Re-run the complete fixture schema gate after repairs, since resolving
-one reported error can reveal another independent failure.
+At the original review stage, browser rendering, keyboard behavior, accessibility,
+picture source selection, and external human-scoring delivery were untested.
+The later implementation adds capture, restoration, scoring, browser, and accessibility
+regressions; external grading remains a host responsibility, with submission materialization
+now preserving its pending status. The complete fixture schema gate was rerun after repairs.

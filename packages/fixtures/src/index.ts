@@ -9,6 +9,7 @@ import {
 } from "@longsightgroup/qti3-core";
 import { createBasicRichInlineChoiceFixture } from "./basic-rich-inline-choice.fixture.js";
 import { catalogFixtures } from "./catalog.fixture.js";
+import { createEndAttemptFixture } from "./end-attempt.fixture.js";
 import { basicCorrectAttempt, type QtiFixtureAttempt } from "./fixture-attempts.js";
 import { createRandomIntegerTemplateFixture } from "./random-integer-template.fixture.js";
 import {
@@ -101,6 +102,7 @@ function createInteractionFixture(
 ): QtiFixture {
   if (interactionType === "inlineChoice") return createInlineChoiceFixture(qtiName);
   if (interactionType === "extendedText") return createEssayFixture(qtiName);
+  if (interactionType === "endAttempt") return createEndAttemptFixture();
 
   const id = `${interactionType}-reference`;
   const response = defaultResponse(interactionType);
@@ -1110,9 +1112,6 @@ function defaultResponse(interactionType: QtiInteractionType): {
   if (interactionType === "media") {
     return { identifier: "RESPONSE", cardinality: "single", baseType: "integer", correct: 1 };
   }
-  if (interactionType === "endAttempt") {
-    return { identifier: "RESPONSE", cardinality: "single", baseType: "boolean", correct: true };
-  }
   if (interactionType === "choice") {
     return {
       identifier: "RESPONSE",
@@ -1214,9 +1213,6 @@ function defaultResponse(interactionType: QtiInteractionType): {
 }
 
 function renderInteractionXml(qtiName: string, interactionType: QtiInteractionType): string {
-  if (interactionType === "endAttempt") {
-    return `<p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><${qtiName} response-identifier="RESPONSE" title="Show planning hint"/></p>`;
-  }
   if (interactionType === "media") {
     return `<${qtiName} response-identifier="RESPONSE" autostart="false" min-plays="1"><qti-prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</qti-prompt><object data="${silentWavDataUri}" type="audio/wav">Silent town-hall audio excerpt</object></${qtiName}>`;
   }
@@ -1285,8 +1281,6 @@ function itemIntro(identifier: string): string {
       "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     "drawing-reference":
       "A science item asks the student to annotate a field-study workflow diagram.",
-    "endAttempt-reference":
-      "An adaptive science item lets the student request a planning hint before answering.",
     "extendedText-reference":
       "A constructed-response item asks for a recommendation based on garden moisture data.",
     "gapMatch-reference":

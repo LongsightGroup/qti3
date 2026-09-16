@@ -1,6 +1,7 @@
 import {
   deprecatedInteractionSupport,
   interactionSupport,
+  parseQtiXml,
   type QtiInteractionType,
 } from "@longsightgroup/qti3-core";
 import { expect } from "vitest";
@@ -17,10 +18,12 @@ export function expectTranscodeEvidenceCase(
   profile: QtiTranscodeProfileId,
   interactionType: QtiInteractionType,
 ): void {
+  const xml = fixtureXml(interactionType);
+  const interactions = parseQtiXml(xml).document?.item.interactions;
   const result = transcodeQti3Item(
     {
       kind: "xml",
-      xml: fixtureXml(interactionType),
+      xml,
       sourcePath: `${interactionType}.xml`,
     },
     { profile },
@@ -34,7 +37,7 @@ export function expectTranscodeEvidenceCase(
   for (const [index, mapping] of result.report.mappings.entries()) {
     expect(mapping).toMatchObject({
       index,
-      sourceInteraction: interactionType,
+      sourceInteraction: interactions?.[index]?.type,
       emittedInteraction: expect.any(String),
       affectedPaths: expect.any(Array),
       diagnosticCodes: expect.any(Array),

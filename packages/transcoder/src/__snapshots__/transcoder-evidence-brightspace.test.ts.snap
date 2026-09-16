@@ -215,7 +215,7 @@ exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
     {
       "code": "profile.brightspace.end_attempt.manual_fallback",
       "message": "Converted the end-attempt interaction to a written response for the Brightspace course importer. Review the prompt and score the response manually.",
-      "path": "/itemBody/interactions/0",
+      "path": "/itemBody/interactions/1",
       "severity": "warning",
     },
     {
@@ -227,7 +227,7 @@ exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
   ],
   "report": {
     "affectedPaths": [
-      "/itemBody/interactions/0",
+      "/itemBody/interactions/1",
       "/responseProcessing",
     ],
     "diagnosticCodes": [
@@ -238,8 +238,18 @@ exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
     "identifier": "endAttempt-reference",
     "mappings": [
       {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "choiceInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 0,
+        "scoring": "unscored",
+        "sourceInteraction": "choice",
+      },
+      {
         "affectedPaths": [
-          "/itemBody/interactions/0",
+          "/itemBody/interactions/1",
         ],
         "diagnosticCodes": [
           "profile.brightspace.end_attempt.manual_fallback",
@@ -247,7 +257,7 @@ exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
         "emittedInteraction": "extendedTextInteraction",
         "fallback": "extended-text",
         "fidelity": "lossy",
-        "index": 0,
+        "index": 1,
         "scoring": "manual",
         "sourceInteraction": "endAttempt",
       },
@@ -255,11 +265,13 @@ exports[`brightspace-course-import@1 evidence > transcodes endAttempt 1`] = `
     "sourcePath": "endAttempt.xml",
   },
   "xml": "<?xml version="1.0" encoding="UTF-8"?>
-<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="false" timeDependent="false" xml:lang="en">
-  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="true" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <responseDeclaration identifier="HINT" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+  <outcomeDeclaration identifier="FEEDBACK" cardinality="single" baseType="identifier"></outcomeDeclaration>
 
-  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt><p>Enter your response.</p></prompt></extendedTextInteraction></p></itemBody>
+  <itemBody><p>A coastal town has replaced a wetland with paved parking. After storms with similar rainfall, more water now reaches the streets and flooding occurs more often. Choose the explanation best supported by these observations. You may request a planning hint before answering.</p><choiceInteraction responseIdentifier="RESPONSE" minChoices="0" maxChoices="1"><prompt>Which explanation best accounts for the increased flooding?</prompt><simpleChoice identifier="A">Replacing the wetland with pavement reduced water absorption and increased runoff into the streets.</simpleChoice><simpleChoice identifier="B">The town's storms must now produce more rain, even though the measured rainfall is similar.</simpleChoice><simpleChoice identifier="C">Pavement absorbs more water than wetland soil, so less water reaches the streets.</simpleChoice></choiceInteraction><div><extendedTextInteraction responseIdentifier="HINT"><prompt><p>Enter your response.</p></prompt></extendedTextInteraction></div><feedbackBlock identifier="PLANNING_HINT" outcomeIdentifier="FEEDBACK" showHide="show"><div><p>Compare how wetland soil and pavement absorb rainfall, then trace where the remaining water flows.</p></div></feedbackBlock></itemBody>
 
 </assessmentItem>",
 }

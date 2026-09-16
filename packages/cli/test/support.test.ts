@@ -29,7 +29,9 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
         const xml = await readFile(join(directory, `${fixture.id}.xml`), "utf8");
         const result = parseQtiXml(xml);
         expect(result.ok).toBe(true);
-        expect(result.document?.item.interactions[0]?.type).toBe(fixture.interactionType);
+        expect(result.document?.item.interactions.map((interaction) => interaction.type)).toContain(
+          fixture.interactionType,
+        );
       }
 
       await expect(runCli(["validate-dir", directory])).resolves.toMatchObject({ code: 0 });

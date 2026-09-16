@@ -171,23 +171,66 @@ exports[`qti21-standard@1 evidence > transcodes endAttempt 1`] = `
       {
         "affectedPaths": [],
         "diagnosticCodes": [],
-        "emittedInteraction": "endAttemptInteraction",
+        "emittedInteraction": "choiceInteraction",
         "fallback": undefined,
         "fidelity": "exact",
         "index": 0,
         "scoring": "automatic",
+        "sourceInteraction": "choice",
+      },
+      {
+        "affectedPaths": [],
+        "diagnosticCodes": [],
+        "emittedInteraction": "endAttemptInteraction",
+        "fallback": undefined,
+        "fidelity": "exact",
+        "index": 1,
+        "scoring": "unscored",
         "sourceInteraction": "endAttempt",
       },
     ],
     "sourcePath": "endAttempt.xml",
   },
   "xml": "<?xml version="1.0" encoding="UTF-8"?>
-<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="false" timeDependent="false" xml:lang="en">
-  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="boolean"><correctResponse><value>true</value></correctResponse></responseDeclaration>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 https://www.imsglobal.org/xsd/imsqti_v2p1p2.xsd" identifier="endAttempt-reference" title="endAttempt-reference" adaptive="true" timeDependent="false" xml:lang="en">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+  <responseDeclaration identifier="HINT" cardinality="single" baseType="boolean"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
+  <outcomeDeclaration identifier="FEEDBACK" cardinality="single" baseType="identifier"></outcomeDeclaration>
 
-  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><p><endAttemptInteraction responseIdentifier="RESPONSE" title="Show planning hint"></endAttemptInteraction></p></p></itemBody>
-  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
+  <itemBody><p>A coastal town has replaced a wetland with paved parking. After storms with similar rainfall, more water now reaches the streets and flooding occurs more often. Choose the explanation best supported by these observations. You may request a planning hint before answering.</p><choiceInteraction responseIdentifier="RESPONSE" minChoices="0" maxChoices="1"><prompt>Which explanation best accounts for the increased flooding?</prompt><simpleChoice identifier="A">Replacing the wetland with pavement reduced water absorption and increased runoff into the streets.</simpleChoice><simpleChoice identifier="B">The town's storms must now produce more rain, even though the measured rainfall is similar.</simpleChoice><simpleChoice identifier="C">Pavement absorbs more water than wetland soil, so less water reaches the streets.</simpleChoice></choiceInteraction><p><endAttemptInteraction responseIdentifier="HINT" title="Show planning hint"></endAttemptInteraction></p><feedbackBlock identifier="PLANNING_HINT" outcomeIdentifier="FEEDBACK" showHide="show"><div><p>Compare how wetland soil and pavement absorb rainfall, then trace where the remaining water flows.</p></div></feedbackBlock></itemBody>
+  <responseProcessing>
+  <responseCondition>
+    <responseIf>
+      <variable identifier="HINT"/>
+      <setOutcomeValue identifier="FEEDBACK">
+        <baseValue baseType="identifier">PLANNING_HINT</baseValue>
+      </setOutcomeValue>
+    </responseIf>
+  </responseCondition>
+  <responseCondition>
+    <responseIf>
+      <match>
+        <variable identifier="RESPONSE"/>
+        <correct identifier="RESPONSE"/>
+      </match>
+      <setOutcomeValue identifier="SCORE">
+        <baseValue baseType="float">1</baseValue>
+      </setOutcomeValue>
+      <setOutcomeValue identifier="completionStatus">
+        <baseValue baseType="identifier">completed</baseValue>
+      </setOutcomeValue>
+    </responseIf>
+    <responseElse>
+      <setOutcomeValue identifier="SCORE">
+        <baseValue baseType="float">0</baseValue>
+      </setOutcomeValue>
+      <setOutcomeValue identifier="completionStatus">
+        <baseValue baseType="identifier">incomplete</baseValue>
+      </setOutcomeValue>
+    </responseElse>
+  </responseCondition>
+</responseProcessing>
 </assessmentItem>",
 }
 `;
@@ -238,19 +281,34 @@ exports[`qti21-standard@1 evidence > transcodes extendedText 1`] = `
 
 exports[`qti21-standard@1 evidence > transcodes gapMatch 1`] = `
 {
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "profile.qti21.gap_match.association_limits_omitted",
+      "message": "QTI 2.1 Gap Match cannot carry interaction-wide association limits; per-choice limits and answer keys are preserved.",
+      "path": "/itemBody/interactions/0",
+      "severity": "warning",
+    },
+  ],
   "report": {
-    "affectedPaths": [],
-    "diagnosticCodes": [],
-    "fidelity": "exact",
+    "affectedPaths": [
+      "/itemBody/interactions/0",
+    ],
+    "diagnosticCodes": [
+      "profile.qti21.gap_match.association_limits_omitted",
+    ],
+    "fidelity": "lossy",
     "identifier": "gapMatch-reference",
     "mappings": [
       {
-        "affectedPaths": [],
-        "diagnosticCodes": [],
+        "affectedPaths": [
+          "/itemBody/interactions/0",
+        ],
+        "diagnosticCodes": [
+          "profile.qti21.gap_match.association_limits_omitted",
+        ],
         "emittedInteraction": "gapMatchInteraction",
         "fallback": undefined,
-        "fidelity": "exact",
+        "fidelity": "lossy",
         "index": 0,
         "scoring": "automatic",
         "sourceInteraction": "gapMatch",
@@ -263,7 +321,7 @@ exports[`qti21-standard@1 evidence > transcodes gapMatch 1`] = `
   <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value><value>B G2</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE" maxAssociations="2"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report's <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
+  <itemBody><p>A science vocabulary item asks the student to complete a field-notes sentence from a word bank.</p><gapMatchInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-notes sentence using the word bank.</prompt><gapText identifier="A" matchMax="1">evidence</gapText><gapText identifier="B" matchMax="1">claim</gapText><gapText identifier="C" matchMax="1">opinion</gapText><gapText identifier="D" matchMax="1">caption</gapText><p>The water sample data are the <gap identifier="G1"></gap> that supports the report's <gap identifier="G2"></gap> about stream health. </p></gapMatchInteraction></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }

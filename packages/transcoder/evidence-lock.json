@@ -76,7 +76,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "918860ff0268dc9dbefe583563204e57a00910261f83fee0d36ecb9111d7f519",
+    "sha256": "ea8e5992bc7d777d6f45bd21a55b07dec2a1e811b13caefee79b4bff47450e1f",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -94,7 +94,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "—",
-    "sha256": "39c0cd5d23d2682255f3063b1776766b0b04b6775db125de50aba0d2dccc05a2",
+    "sha256": "b4d42ffb8048566a05c22f0ddd49b7d92183c861d866a88d33115c28abea6fdd",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -148,7 +148,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "b1366de09c649023218eac15ce418680639293ee2c11df1dc9a232217aadaeb3",
+    "sha256": "b4f25d6bd5ee1d2e7882a3b0f380ca1287f6944bdf8c164512889a3548b4f426",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -310,7 +310,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "288a82121ee5119e81cace765720a4ea88ab1bfd4a62839a87f5c658acad2879",
+    "sha256": "bc3d3a9e4f82ae09200af46b5a0b5ce50feebba2ccfd45aa1d9f5fd8680b83a8",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -472,7 +472,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "5dae873192c79cc0ce369d457a2183dedc822317a6f6bb4d7dc3d086bdfd4163",
+    "sha256": "24ebd4dd547ea256f9608334024c016626cd8b06be005df8e3db97d1f4e653a8",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -487,10 +487,10 @@
   },
   {
     "caseId": "brightspace-course-import@1/extendedText",
-    "fidelity": "exact",
+    "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "—",
-    "sha256": "f676b170d9d87b2cb5cd5031bb8e1bf7bd526c2449a366c84921d84427c3669f",
+    "sha256": "b4d42ffb8048566a05c22f0ddd49b7d92183c861d866a88d33115c28abea6fdd",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -544,7 +544,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "5c1ad6039ae406f761f904eccd5ebde11d6e8e2acd0d9f4afc8fc3c7c16af295",
+    "sha256": "53c4aecdb04936bd6bb7ed37d6666e9d58926bd8636cf29b30761240b5137299",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -706,7 +706,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "f3bfcab0bfab6f2d50dc187d3006b0c210ecb6b8d9097842c1578d9b57dbde16",
+    "sha256": "af2d2bf28bffc8c10a28ae016961a54791f048e9d23f8ae619e1f6bce45521ab",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -868,7 +868,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "455a912c52906c4d0ae17ce0068a839389813d2bb0288e8bc93e7b9ab5076c9f",
+    "sha256": "685867bbf92354cf0f67aeda58a8d4f86516e3123bd72422771790d0f5ab625a",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -940,7 +940,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "619432f1fa4a0784f8425abb66e0ba386c4b9e9a78b280ec05126e18f07adb05",
+    "sha256": "cfce85b8600b9ed10e5cdb284cfa6141f172f0972f48803c52c02e7835d3411b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1030,7 +1030,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "ec4e23619a08a4652bc854d3b7d4d9640f473fd283973d9cfd474de2c18d98b6",
+    "sha256": "c06a90c991de15b5ba6e0eb064e614ac80c56b56f4e665637459865c72588b15",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1102,7 +1102,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "148dc7588029b0e1e078d359f16ad1c52bdf6ccb0a7d9d863d2debdfe278f953",
+    "sha256": "e59f97876f97cc5b1102b6db66864562259102386f34f3d7345c9318735bd661",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1264,7 +1264,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "455a912c52906c4d0ae17ce0068a839389813d2bb0288e8bc93e7b9ab5076c9f",
+    "sha256": "685867bbf92354cf0f67aeda58a8d4f86516e3123bd72422771790d0f5ab625a",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1336,7 +1336,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "619432f1fa4a0784f8425abb66e0ba386c4b9e9a78b280ec05126e18f07adb05",
+    "sha256": "cfce85b8600b9ed10e5cdb284cfa6141f172f0972f48803c52c02e7835d3411b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1426,7 +1426,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "ec4e23619a08a4652bc854d3b7d4d9640f473fd283973d9cfd474de2c18d98b6",
+    "sha256": "c06a90c991de15b5ba6e0eb064e614ac80c56b56f4e665637459865c72588b15",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1498,7 +1498,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "148dc7588029b0e1e078d359f16ad1c52bdf6ccb0a7d9d863d2debdfe278f953",
+    "sha256": "e59f97876f97cc5b1102b6db66864562259102386f34f3d7345c9318735bd661",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1656,7 +1656,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "bc9d997136c2ab49bbaa625a256a0c2487b273c4a155310d450a1e12bb9be19e",
+    "sha256": "1cd9d831bf3673c086ddc6d381a0153a36f35d7f1a41b20a1f46491ef9d24286",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1724,7 +1724,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "7e65d88f31c3584582b352f196d69dfbe3197a33081b4fbf8d21f94c325f0135",
+    "sha256": "4e46007ecd8cda359c738ab6b4c0427a89972d751abf31ca00d8e402d9d2b63b",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1809,7 +1809,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "dbadf5f1901548597c0773214e3ac52cef0266ad55df93e740c8ceb7869f59f1",
+    "sha256": "e59c9df5fd2bb0c02db92e82cde4f37c6ecf8cc44366d159ce359799089c37db",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -1877,7 +1877,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "text-entry",
-    "sha256": "fb3b77ce6064fa824b421d9bf9877b3c53fd7da97bbba19074980fa9ab389a46",
+    "sha256": "5f1e1ed449d59fbb423cfe4ce15af98bdf655b869c6d30427bf829b6c7dc2245",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2034,7 +2034,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "9ba3ffd921d794ef92e1ca03d53252d656049eecd8a7aece712b0e7784ce5138",
+    "sha256": "e31d48dc56175fad0bf39f38193a33adce8268572cad0f40bad699161f5e3992",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2106,7 +2106,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "choice",
-    "sha256": "463cb800fd722e3eb7de41e8acf8e8e16ec81f828fccb3af52d0e07a1f963778",
+    "sha256": "9dc77934677c4b7cf0c0de243592d8081d5ce7c2ebcee061f7d446fecdae72a5",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2196,7 +2196,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "3662646badeb0da1bc12f84c1f2de71c049a474a273042e2f129b3294a35655c",
+    "sha256": "ddfe89c86890cccdf49d7b7a49b790647db17063eaec83877d7250150a4b938f",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2428,9 +2428,9 @@
   {
     "caseId": "qti21-standard@1/endAttempt",
     "fidelity": "exact",
-    "scoring": "automatic",
+    "scoring": "unscored",
     "fallback": "—",
-    "sha256": "9ad2314157ae46b9e6cbc7426e7a524123643932c0094f8a5f8c5fdf8032d934",
+    "sha256": "5daa394e1c2983ee1b1537d321a4089fa542f4a435ec241069ccbe5aa4e30fee",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2445,10 +2445,10 @@
   },
   {
     "caseId": "qti21-standard@1/extendedText",
-    "fidelity": "exact",
-    "scoring": "automatic",
+    "fidelity": "lossy",
+    "scoring": "manual",
     "fallback": "—",
-    "sha256": "d7ee95085e6693a78002dab4086a80c464a148d01c47716db62fa3cfec34400b",
+    "sha256": "b4d42ffb8048566a05c22f0ddd49b7d92183c861d866a88d33115c28abea6fdd",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2463,10 +2463,10 @@
   },
   {
     "caseId": "qti21-standard@1/gapMatch",
-    "fidelity": "exact",
+    "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "385f23dddc2af05cfb276d0fd5e8d2680bcac5a9bc2231e6126cf9ebb7ea5bef",
+    "sha256": "a00d76318eac98a390744456286cc930cab26e4983277a21deec854a44597951",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2484,7 +2484,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "43770750e6fb69cbfd7bbc750a4929e1edaa426af7344ccacf47471ef28445e4",
+    "sha256": "1357dc59458980be1fec59ee9219089c69edb92edff338e9d5e8bfe2fde0c3b4",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2502,7 +2502,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "669f97e93f664d7d64b4fe1434044d007e951e57de9ff80413f31bd71ea36500",
+    "sha256": "041b8469b7c1d04cad223900c233fb99ba88aa1efec5f78f36ae1e74d401b302",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2592,7 +2592,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "d52e77574c3ed83c284fcc81abe6cbe4ca737c715b93ea2189ac634f27138b28",
+    "sha256": "8d66eecc20b4d24c9487e0edf0da8fd509a3d9b8e9e818733d5296db6d7ad7dc",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2664,7 +2664,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "4f7f175e438e1f24387724d04a777e6b889d288760c655408599a5c6e3b44a70",
+    "sha256": "fc7576f2413d0875ddedca13377ba645df8be062da45a6d5f65ec794d6c308a6",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2824,9 +2824,9 @@
   {
     "caseId": "qti22-standard@1/endAttempt",
     "fidelity": "exact",
-    "scoring": "automatic",
+    "scoring": "unscored",
     "fallback": "—",
-    "sha256": "981be050e80f967d24a9841054ecda2dbd7adf63f4b0eab8e02c135859c90957",
+    "sha256": "a47eedaa17bca5ae74427d30511d929e499075cc8f77fe3fe10090bf1cb70f0a",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2842,9 +2842,9 @@
   {
     "caseId": "qti22-standard@1/extendedText",
     "fidelity": "exact",
-    "scoring": "automatic",
+    "scoring": "manual",
     "fallback": "—",
-    "sha256": "f69f68a24103431a74f441b3adcd81aaca618704e80772795f936e39309ec071",
+    "sha256": "8dcecaca8d3e63bf1847f1454846a5bd72e93884138e58f31dfcbd71db38bab3",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2862,7 +2862,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "b3974b5bf617fa26a20ca5bee1f2b6bfc79023e8c212d3fbb044623499908be1",
+    "sha256": "eb306e072d591c93aa8814deaca0550bf9ad0920a5ae5711f07d400ab127b8b8",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2880,7 +2880,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "1e4f6d58ce2611e5d7fe19a666f575c2faa54c9a04529fe9b1069990423b31c3",
+    "sha256": "e37158a95325446f804f76ba7efc5241a9a3404bd9bb1b3cb6720e8f63fe4d41",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2898,7 +2898,7 @@
     "fidelity": "lossy",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "cbbd8324c9ae3ccb68b52550095816fa474933d2c52b66816de5178df7317f31",
+    "sha256": "55078b51fbaf5d1b9a9ea089a992acc7b0ec28cf7ab951634c38b43a1944bee6",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -2988,7 +2988,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "c43b41c874ec590a89d3b05ea7efa87ae0e949c9e766bfc7672ce476cc782b7d",
+    "sha256": "c4278f70142dfd6e5e369064b06f76ced189799ec028f5c48575e681a81701e0",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -3060,7 +3060,7 @@
     "fidelity": "exact",
     "scoring": "automatic",
     "fallback": "—",
-    "sha256": "307b00a9ccb978c51088f23b1f65e5a23108c3db311c5a1e7df4bcc3bbbfc9f1",
+    "sha256": "aa399acca6d780131ed3b3e81acffa640444de03b99dcc156275c6877e4d40c3",
     "evidence": [
       "source-semantic",
       "target-semantic",

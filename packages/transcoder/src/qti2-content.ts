@@ -98,6 +98,7 @@ function substituteStagedPositionObjectXml(
 }
 
 function contentElementName(name: string): string {
+  if (name === "qti-content-body") return "div";
   const qti = name.startsWith("qti-") ? name.slice(4) : name;
   return qti.replace(/-([a-z])/g, (_match, character: string) => character.toUpperCase());
 }
