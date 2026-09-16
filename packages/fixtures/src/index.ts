@@ -314,14 +314,14 @@ function createTemplateContentFixture(): QtiFixture {
     title: "Template content and MathML variable reference fixture",
     xml: `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${id}" title="${id}" time-dependent="false" xml:lang="en">
-  <qti-template-declaration identifier="PATH" cardinality="single" base-type="identifier"/>
-  <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer" math-variable="true"/>
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
     <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
   </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
+  <qti-template-declaration identifier="PATH" cardinality="single" base-type="identifier"/>
+  <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer" math-variable="true"/>
   <qti-template-processing>
     <qti-set-template-value identifier="PATH"><qti-base-value base-type="identifier">reference</qti-base-value></qti-set-template-value>
     <qti-set-template-value identifier="COUNT"><qti-base-value base-type="integer">3</qti-base-value></qti-set-template-value>

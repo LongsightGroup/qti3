@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { parseQtiPackageXmlTree } from "@longsightgroup/qti3-core";
 import { expect, it } from "vitest";
-import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
+import {
+  canonicalFixtures,
+  basicItemPlayerFixtures,
+  basicItemPlayerToleranceFixtures,
+} from "@longsightgroup/qti3-fixtures";
 
 it.each(canonicalFixtures)("keeps published $id XML synchronized with its generator", (fixture) => {
   expect(
@@ -27,5 +31,35 @@ it.each(["endAttempt-reference", "adaptive-feedback-reference"])(
           node.children.some((child) => child.localName === "qti-end-attempt-interaction"),
       ),
     ).toBe(true);
+  },
+);
+
+// QTI 3.0.1 AssessmentItemDType sequence; this check deliberately needs no runtime XSD engine.
+const itemChildOrder = [
+  "qti-context-declaration",
+  "qti-response-declaration",
+  "qti-outcome-declaration",
+  "qti-template-declaration",
+  "qti-template-processing",
+  "qti-assessment-stimulus-ref",
+  "qti-companion-materials-info",
+  "qti-stylesheet",
+  "qti-item-body",
+  "qti-catalog-info",
+  "qti-response-processing",
+  "qti-modal-feedback",
+];
+
+it.each([...canonicalFixtures, ...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures])(
+  "generates $id in the complete item child order",
+  (fixture) => {
+    const root = parseQtiPackageXmlTree(fixture.xml).root;
+    expect(root?.localName).toBe("qti-assessment-item");
+    const ranks =
+      root?.children.map((child) => {
+        expect(itemChildOrder).toContain(child.localName);
+        return itemChildOrder.indexOf(child.localName);
+      }) ?? [];
+    expect(ranks).toEqual(ranks.toSorted((left, right) => left - right));
   },
 );
