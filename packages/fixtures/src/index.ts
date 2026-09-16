@@ -818,7 +818,7 @@ function createBasicSharedVocabularyFixture(): QtiFixture {
       <qti-gap-text identifier="B" match-max="1">target passage</qti-gap-text>
       <p>Shared vocabulary positions the <qti-gap identifier="G1" class="qti-input-width-10"/> beside the <qti-gap identifier="G2" class="qti-input-width-20"/>.</p>
     </qti-gap-match-interaction>
-    <qti-text-entry-interaction response-identifier="BLOCK_TEXT_WIDTH_RESPONSE" class="qti-input-width-20" expected-length="4"/>
+    <p><qti-text-entry-interaction response-identifier="BLOCK_TEXT_WIDTH_RESPONSE" class="qti-input-width-20" expected-length="4"/></p>
     <p>Shared vocabulary sizes inline text entry <qti-text-entry-interaction response-identifier="INLINE_TEXT_WIDTH_RESPONSE" class="qti-input-width-4" expected-length="30"/> and inline choice <qti-inline-choice-interaction response-identifier="INLINE_CHOICE_WIDTH_RESPONSE" class="qti-input-width-15">
       <qti-inline-choice identifier="A">narrow</qti-inline-choice>
       <qti-inline-choice identifier="B">wide</qti-inline-choice>
