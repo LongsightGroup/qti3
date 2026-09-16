@@ -650,7 +650,7 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "order":
       return setOf(common, ["qti-simple-choice"]);
     case "associate":
-      return setOf(common, ["qti-simple-match-set", "qti-simple-associable-choice"]);
+      return setOf(common, ["qti-simple-associable-choice"]);
     case "match":
       return setOf(common, ["qti-simple-match-set"]);
     case "gapMatch":

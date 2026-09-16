@@ -295,14 +295,14 @@ test.describe("player validation", () => {
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
   <qti-item-body>
     <qti-associate-interaction response-identifier="RESPONSE" min-associations="0" max-associations="1" data-max-selections-message="Only one pair.">
-      <qti-simple-match-set>
+
         <qti-simple-associable-choice identifier="A" match-max="2">Alpha</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="B" match-max="2">Beta</qti-simple-associable-choice>
-      </qti-simple-match-set>
-      <qti-simple-match-set>
+
+
         <qti-simple-associable-choice identifier="C" match-max="2">Gamma</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="D" match-max="2">Delta</qti-simple-associable-choice>
-      </qti-simple-match-set>
+
     </qti-associate-interaction>
   </qti-item-body>
 </qti-assessment-item>`,
@@ -422,11 +422,11 @@ test.describe("player validation", () => {
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
     <qti-associate-interaction response-identifier="RESPONSE" min-associations="0" max-associations="0">
-      <qti-simple-match-set>
+
         <qti-simple-associable-choice identifier="A" match-max="1">Alpha</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="B" match-max="0">Beta</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="C" match-max="1">Gamma</qti-simple-associable-choice>
-      </qti-simple-match-set>
+
     </qti-associate-interaction>
   </qti-item-body>
 </qti-assessment-item>`,
@@ -460,12 +460,12 @@ test.describe("player validation", () => {
   <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair"/>
   <qti-item-body>
     <qti-associate-interaction response-identifier="RESPONSE" min-associations="0" max-associations="0">
-      <qti-simple-match-set>
+
         <qti-simple-associable-choice identifier="A" match-max="2">Alpha</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="B" match-max="1">Beta</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="C" match-max="1">Gamma</qti-simple-associable-choice>
         <qti-simple-associable-choice identifier="D" match-max="1">Delta</qti-simple-associable-choice>
-      </qti-simple-match-set>
+
     </qti-associate-interaction>
   </qti-item-body>
 </qti-assessment-item>`,

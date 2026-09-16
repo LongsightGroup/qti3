@@ -952,10 +952,10 @@ describe("@longsightgroup/qti3-core cross-cutting", () => {
             <qti-simple-choice identifier="B">B</qti-simple-choice>
           </qti-choice-interaction>
           <qti-associate-interaction response-identifier="ASSOCIATE" min-associations="-1" max-associations="many">
-            <qti-simple-match-set>
+
               <qti-simple-associable-choice identifier="C">C</qti-simple-associable-choice>
               <qti-simple-associable-choice identifier="E" match-min="2" match-max="1">E</qti-simple-associable-choice>
-            </qti-simple-match-set>
+
           </qti-associate-interaction>
           <qti-gap-match-interaction response-identifier="GAP">
             <qti-gap-text identifier="D" match-max="none">D</qti-gap-text>

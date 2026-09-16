@@ -106,3 +106,19 @@ it("counts directed target uses and repeated allowed occurrences", () => {
     true,
   );
 });
+
+it("rejects Match-only wrappers inside Associate", () => {
+  const xml = readFileSync(
+    new URL("../../fixtures/xml/associate-reference.xml", import.meta.url),
+    "utf8",
+  );
+  const wrapped = xml
+    .replace(
+      '<qti-simple-associable-choice identifier="A"',
+      '<qti-simple-match-set><qti-simple-associable-choice identifier="A"',
+    )
+    .replace("</qti-associate-interaction>", "</qti-simple-match-set></qti-associate-interaction>");
+  expect(parseQtiXml(wrapped).diagnostics).toContainEqual(
+    expect.objectContaining({ code: "interaction.child.unsupported", severity: "error" }),
+  );
+});
