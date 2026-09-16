@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertQtiAttemptStateV1,
   captureQtiTextResponse,
   createItemSession,
   formatQtiTextResponse,
+  isQtiAttemptStateV1,
   parseQtiXml,
   validateQtiResponseVariables,
 } from "./index.js";
@@ -100,6 +102,63 @@ describe("text response contracts", () => {
       expect(editable).toBe(text);
       expect(captureQtiTextResponse(interaction, `${editable} `)).toBe(value);
       expect(formatQtiTextResponse(interaction, `  ${text}  `)).toBe(`  ${text}  `);
+    },
+  );
+
+  it.each([
+    { label: "positive infinite exponent", text: `0e${"9".repeat(310)}` },
+    { label: "negative infinite exponent", text: `0e-${"9".repeat(310)}` },
+    { label: "positive unsafe exponent", text: "0e9007199254740992" },
+    { label: "negative unsafe exponent", text: "0e-9007199254740992" },
+    { label: "unsafe decimal-place count", text: "0.0e-9007199254740991" },
+  ])("preserves text with $label in a valid restorable record", ({ text }) => {
+    const { document, interaction } = parsed("record", "");
+    const value = captureQtiTextResponse(interaction, text);
+    expect(value).toEqual({
+      stringValue: text,
+      floatValue: null,
+      integerValue: null,
+      leftDigits: null,
+      rightDigits: null,
+      ndp: null,
+      nsf: null,
+      exponent: null,
+    });
+    expect(
+      validateQtiResponseVariables({
+        item: document.item,
+        responses: { RESPONSE: value },
+      }).ok,
+    ).toBe(true);
+    const session = createItemSession(document);
+    session.respond("RESPONSE", value);
+    const state = session.serialize();
+    expect(isQtiAttemptStateV1(state)).toBe(true);
+    const persisted: unknown = JSON.parse(JSON.stringify(state));
+    assertQtiAttemptStateV1(persisted);
+    expect(persisted).toEqual(state);
+    expect(createItemSession(document, persisted).serialize().responses.RESPONSE).toEqual(value);
+  });
+
+  it.each([
+    { text: "0e9007199254740991", exponent: Number.MAX_SAFE_INTEGER, ndp: 0 },
+    {
+      text: "0e-9007199254740991",
+      exponent: -Number.MAX_SAFE_INTEGER,
+      ndp: Number.MAX_SAFE_INTEGER,
+    },
+  ])(
+    "accepts representable record metadata at the boundary for $text",
+    ({ text, exponent, ndp }) => {
+      const { document, interaction } = parsed("record", "");
+      const value = captureQtiTextResponse(interaction, text);
+      expect(value).toMatchObject({ stringValue: text, floatValue: 0, exponent, ndp });
+      expect(
+        validateQtiResponseVariables({
+          item: document.item,
+          responses: { RESPONSE: value },
+        }).ok,
+      ).toBe(true);
     },
   );
 

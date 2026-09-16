@@ -56,6 +56,9 @@ function numericRecord(text: string, base: number): QtiRecordValue {
   const digits = left + right;
   if (!digits || digits.split("").some((digit) => Number.parseInt(digit, 36) >= base)) return empty;
   const exponent = match[4] === undefined ? null : Number(match[4]);
+  if (exponent !== null && !Number.isSafeInteger(exponent)) return empty;
+  const ndp = Math.max(0, right.length - (exponent ?? 0));
+  if (!Number.isSafeInteger(ndp)) return empty;
   const magnitude =
     (Number.parseInt(left || "0", base) +
       right
@@ -75,7 +78,7 @@ function numericRecord(text: string, base: number): QtiRecordValue {
     integerValue: integer,
     leftDigits: left.length,
     rightDigits: right.length,
-    ndp: Math.max(0, right.length - (exponent ?? 0)),
+    ndp,
     nsf: digits.replace(/^0+/, "").length || 1,
     exponent,
   };

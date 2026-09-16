@@ -1255,6 +1255,47 @@ test("record text entry preserves significant digits through restore", async ({ 
   await expectNoAxeViolationsOnPlayer(page);
 });
 
+for (const interaction of ["text-entry", "extended-text"]) {
+  test(`record ${interaction} preserves overflowing numeric input through JSON restore`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="record-overflow" title="Record overflow" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="record"/>
+      <qti-item-body><div>Decimal value: <qti-${interaction}-interaction response-identifier="RESPONSE"/></div></qti-item-body>
+    </qti-assessment-item>`,
+    );
+    const player = page.locator("qti-assessment-item-player");
+    const input = player.getByRole("textbox");
+    for (const text of [`0e${"9".repeat(310)}`, "0.0e-9007199254740991"]) {
+      await input.fill(text);
+      const response = await currentResponse(page);
+      expect(response).toEqual({
+        stringValue: text,
+        floatValue: null,
+        integerValue: null,
+        leftDigits: null,
+        rightDigits: null,
+        ndp: null,
+        nsf: null,
+        exponent: null,
+      });
+      const saved = await player.evaluate((element) => JSON.stringify(element.serialize()));
+      await input.fill("12");
+      await input.blur();
+      await player.evaluate((element, json) => element.restore(JSON.parse(json)), saved);
+      await expect(input).toHaveValue(text);
+      expect(await currentResponse(page)).toEqual(response);
+      expect(await scoreCurrentAttempt(page)).toBeDefined();
+      expect(await player.evaluate((element) => element.serialize().validationMessages)).toEqual(
+        [],
+      );
+    }
+  });
+}
+
 for (const cardinality of ["multiple", "ordered"]) {
   test(`extended text ${cardinality} captures separate responses and restores keyboard controls`, async ({
     page,
