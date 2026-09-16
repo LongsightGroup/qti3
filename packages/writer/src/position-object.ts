@@ -14,7 +14,6 @@ import {
 import {
   interactionAttributeList,
   optionalBodySection,
-  optionalPromptSection,
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import {
@@ -69,10 +68,11 @@ export function renderQti3PositionObjectItem(input: Qti3PositionObjectBuilderInp
       longDescription.attributeXml,
     ],
   });
-  const bodyXml = `${optionalBodySection(input.bodyHtml)}${longDescription.blockXml}    <qti-position-object-stage>
+  const promptXml = input.promptHtml?.trim() ? `<div>${input.promptHtml}</div>\n` : "";
+  const bodyXml = `${optionalBodySection(input.bodyHtml)}${promptXml}${longDescription.blockXml}    <qti-position-object-stage>
       <object ${xmlAttributeList(renderGraphicObjectAttributes(input.stageObject))}/>
       <qti-position-object-interaction ${interactionAttrs}>
-${optionalPromptSection(input.promptHtml)}        <object ${xmlAttributeList(renderGraphicObjectAttributes(input.movableObject))}/>
+        <object ${xmlAttributeList(renderGraphicObjectAttributes(input.movableObject))}/>
       </qti-position-object-interaction>
     </qti-position-object-stage>`;
 

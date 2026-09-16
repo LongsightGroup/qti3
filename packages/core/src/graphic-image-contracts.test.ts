@@ -71,3 +71,23 @@ it("requires Graphic Gap Match hotspots after its image and gap choices", () => 
       expect.objectContaining({ code: "interaction.graphicGapMatch.children", severity: "error" }),
     );
 });
+
+it("requires exactly one marker image inside Position Object", () => {
+  const xml = readFileSync(
+    new URL("../../fixtures/xml/positionObject-reference.xml", import.meta.url),
+    "utf8",
+  );
+  for (const child of [
+    "<qti-prompt>Move it</qti-prompt>",
+    '<img src="extra.png" alt="Extra"/>',
+    '<qti-position-object-stage><img src="nested.png" alt="Nested"/></qti-position-object-stage>',
+  ]) {
+    const invalid = xml.replace(
+      "</qti-position-object-interaction>",
+      `${child}</qti-position-object-interaction>`,
+    );
+    expect(parseQtiXml(invalid).diagnostics).toContainEqual(
+      expect.objectContaining({ code: "interaction.positionObject.children", severity: "error" }),
+    );
+  }
+});

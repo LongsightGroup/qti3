@@ -95,14 +95,14 @@ describe("vendor QTI 2.1 profiles", () => {
   <qti-response-declaration identifier="FIRST" cardinality="single" base-type="point"/>
   <qti-response-declaration identifier="SECOND" cardinality="single" base-type="point"/>
   <qti-item-body>
-    <qti-position-object-stage>
+    <div>Place the first marker.</div><div>Place the second marker.</div><qti-position-object-stage>
       <object data="stage.svg" type="image/svg+xml"/>
       <qti-position-object-interaction response-identifier="FIRST">
-        <qti-prompt>Place the first marker.</qti-prompt>
+
         <object data="first.svg" type="image/svg+xml"/>
       </qti-position-object-interaction>
       <qti-position-object-interaction response-identifier="SECOND">
-        <qti-prompt>Place the second marker.</qti-prompt>
+
         <object data="second.svg" type="image/svg+xml"/>
       </qti-position-object-interaction>
     </qti-position-object-stage>

@@ -35,6 +35,7 @@ export function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDi
     validateInteractionChoices(interaction, diagnostics);
     validateInteractionChildren(interaction, diagnostics);
     validateGraphicGapMatchChildren(interaction, diagnostics);
+    validatePositionObjectChildren(interaction, diagnostics);
     validateInteractionRequiredAttributes(interaction, diagnostics);
     validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
@@ -676,7 +677,7 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "hotspot":
       return setOf(common, ["object", "img", "picture", "qti-hotspot-choice"]);
     case "positionObject":
-      return setOf(common, ["object", "img", "picture", "qti-position-object-stage"]);
+      return new Set(["object", "img", "picture"]);
     case "selectPoint":
       return setOf(common, ["object", "img", "picture"]);
     case "media":
@@ -878,6 +879,28 @@ function validateGraphicGapMatchChildren(
     severity: "error",
     message:
       "Graphic Gap Match requires an optional prompt, one image, gap choices, then one or more associable hotspots, in that order.",
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
+}
+
+function validatePositionObjectChildren(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.type !== "positionObject") return;
+  const [child] = interaction.childElements;
+  if (
+    interaction.childElements.length === 1 &&
+    child &&
+    ["object", "img", "picture"].includes(child.qtiName)
+  )
+    return;
+  diagnostics.push({
+    code: "interaction.positionObject.children",
+    severity: "error",
+    message:
+      "Position Object requires exactly one marker image (object, img, or picture); instructions belong before its stage.",
     path: interaction.source?.path,
     source: interaction.source,
   });

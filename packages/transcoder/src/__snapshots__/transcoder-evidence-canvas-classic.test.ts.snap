@@ -1172,7 +1172,7 @@ exports[`canvas-classic-quizzes@1 evidence > transcodes positionObject 1`] = `
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"&gt;&lt;/object&gt;&lt;p&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;A diagram item asks the student to move a field-note marker onto the data-collection step.&lt;/p&gt;&lt;div&gt;Drag the field-note marker onto the Collect water data step in the workflow.&lt;/div&gt;&lt;object data="hotspot-flow.svg" type="image/svg+xml" width="480" height="300"&gt;&lt;/object&gt;</mattext></material>
       <material><matimage uri="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2048'%3E%3Crect%20x='4'%20y='4'%20width='56'%20height='40'%20rx='8'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3Cpath%20d='M32%2044%20L24%2058%20L40%2058%20Z'%20fill='%23fff3bf'%20stroke='%23212529'%20stroke-width='4'/%3E%3C/svg%3E" imagtype="image/svg+xml" label="Question media" width="64" height="48"></matimage></material>
       <material><matimage uri="hotspot-flow.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
 
