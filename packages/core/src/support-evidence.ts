@@ -70,7 +70,10 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
       "tests/browser/player-graphic-gap-match.spec.ts",
       "tests/browser/player-graphic.spec.ts",
     ],
-    graphicOrder: ["tests/browser/player-graphic.spec.ts"],
+    graphicOrder: [
+      "packages/core/src/graphic-image-contracts.test.ts",
+      "tests/browser/player-graphic.spec.ts",
+    ],
     hotspot: ["tests/browser/player-graphic.spec.ts"],
     hottext: ["tests/browser/player-hottext.spec.ts", "tests/browser/player-dom-behavior.spec.ts"],
     inlineChoice: ["tests/browser/player-inline-choice.spec.ts"],

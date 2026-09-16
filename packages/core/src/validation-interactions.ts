@@ -660,22 +660,25 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
     case "hottext":
       return setOf(common, staticContentNames());
     case "graphicOrder":
-      return setOf(common, ["object", "qti-hotspot-choice"]);
+      return setOf(common, ["object", "img", "picture", "qti-hotspot-choice"]);
     case "graphicAssociate":
-      return setOf(common, ["object", "qti-associable-hotspot"]);
+      return setOf(common, ["object", "img", "picture", "qti-associable-hotspot"]);
     case "graphicGapMatch":
       return setOf(common, [
         "object",
+        "img",
+        "picture",
         "qti-gap-text",
         "qti-gap-img",
         "qti-associable-hotspot",
         ...staticContentNames(),
       ]);
     case "hotspot":
-      return setOf(common, ["object", "qti-hotspot-choice"]);
+      return setOf(common, ["object", "img", "picture", "qti-hotspot-choice"]);
     case "positionObject":
-      return setOf(common, ["object", "img", "qti-position-object-stage"]);
+      return setOf(common, ["object", "img", "picture", "qti-position-object-stage"]);
     case "selectPoint":
+      return setOf(common, ["object", "img", "picture"]);
     case "media":
       return setOf(common, ["audio", "video", "object", "img"]);
     case "drawing":

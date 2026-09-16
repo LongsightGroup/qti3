@@ -1,6 +1,9 @@
+import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { expect, test } from "@playwright/test";
 import {
   clickAuthoredCoordinate,
+  provideResponse,
+  currentResponse,
   createStoredZip,
   decodeDataUrlText,
   expectImageLoaded,
@@ -840,3 +843,43 @@ test.describe("player graphic interactions", () => {
     await expect(darkButton).toHaveCSS("stroke", "rgb(0, 95, 204)");
   });
 });
+
+for (const type of [
+  "hotspot",
+  "graphicOrder",
+  "graphicAssociate",
+  "graphicGapMatch",
+  "positionObject",
+  "selectPoint",
+]) {
+  for (const form of ["img", "picture"]) {
+    test(`${type} delivers ${form} assets and preserves coordinate responses`, async ({ page }) => {
+      const fixture = interactionFixtures.find((entry) => entry.interactionType === type);
+      if (!fixture) throw new Error("Missing fixture");
+      const xml = fixture.xml.replace(/<object\s[^>]*\/>/g, (object) => {
+        const img = object
+          .replace("<object", "<img")
+          .replace(' data="', ' src="')
+          .replace("/>", ' alt="Workflow"/>');
+        const src = /src="([^"]*)"/.exec(img)?.[1];
+        return form === "img"
+          ? img
+          : `<picture><source srcset="${src} 1x" type="image/svg+xml"/>${img}</picture>`;
+      });
+      await page.goto("/");
+      await pasteXml(page, xml);
+      const image = page.locator("qti-assessment-item-player img").first();
+      await expect(image).toHaveAttribute("alt", "Workflow");
+      await expectImageLoaded(image);
+      if (form === "picture")
+        await expect(
+          page.locator("qti-assessment-item-player picture source").first(),
+        ).toHaveAttribute("srcset", /1x$/);
+      const response = fixture.attempts[0]?.responses.RESPONSE;
+      await provideResponse(page, type, response);
+      if (type === "positionObject" && typeof response === "string")
+        await expectPointResponse(page, response);
+      else expect(await currentResponse(page)).toEqual(response);
+    });
+  }
+}

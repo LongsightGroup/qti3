@@ -108,7 +108,11 @@ function objectAssetUrlDiagnostics(
     diagnostics.push(unsafeAssetUrlDiagnostic(interaction, label, object.source));
   }
   const sourceContext =
-    interaction.type === "media" && mediaObjectType(object) ? "media" : "navigation";
+    interaction.type === "media" && mediaObjectType(object)
+      ? "media"
+      : objectIsImage(object)
+        ? "image"
+        : "navigation";
   for (const source of object.sources) {
     if (!source.src || parseAuthoredAssetUrl(source.src, sourceContext)) continue;
     diagnostics.push(unsafeAssetUrlDiagnostic(interaction, `${label} source`, source.source));

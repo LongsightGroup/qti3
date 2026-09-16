@@ -76,7 +76,9 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   if (isQtiContentNamespace(node.namespaceUri) && node.qtiName === "qti-position-object-stage") {
     return renderContentNodes(
       node.children.filter(
-        (child) => !("qtiName" in child) || (child.qtiName !== "object" && child.qtiName !== "img"),
+        (child) =>
+          !("qtiName" in child) ||
+          (child.qtiName !== "object" && child.qtiName !== "img" && child.qtiName !== "picture"),
       ),
       context,
     );

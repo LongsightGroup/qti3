@@ -1,3 +1,4 @@
+import { createGraphicImage } from "./graphic-image.js";
 import { numericTuple3, numericTuple4, qtiValueToIdentifierList } from "@longsightgroup/qti3-core";
 import type {
   QtiChoice,
@@ -6,7 +7,6 @@ import type {
   QtiValue,
 } from "@longsightgroup/qti3-core";
 import { errorView } from "./player-validation.js";
-import { parseAuthoredAssetUrl } from "./asset-url-policy.js";
 
 export function responseGroup(className?: string): HTMLElement {
   const group = document.createElement("div");
@@ -85,6 +85,7 @@ export function objectHeight(interaction: QtiInteraction): number {
 
 export function objectIsImage(object: QtiObjectAsset): boolean {
   return (
+    object.imageAttributes !== undefined ||
     object.type?.startsWith("image/") === true ||
     object.data?.startsWith("data:image/") === true ||
     /\.(svg|png|jpg|jpeg|gif|webp)(?:[?#].*)?$/i.test(object.data ?? "")
@@ -97,12 +98,9 @@ export function appendGraphicObjectImage(
   alt: string,
 ): void {
   if (!object.data || !objectIsImage(object)) return;
-  const src = parseAuthoredAssetUrl(object.data, "image");
-  if (!src) return;
-  const image = document.createElement("img");
+  const image = createGraphicImage(object, alt);
+  if (!image) return;
   image.className = "qti3-graphic-object-image";
-  image.src = src;
-  image.alt = alt;
   surface.append(image);
 }
 

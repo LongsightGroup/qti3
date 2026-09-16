@@ -18,7 +18,7 @@ import {
   pointToString,
 } from "./point-value.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
-import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
+import { createGraphicImage } from "../graphic-image.js";
 
 export function renderPositionObjectResponse(
   interaction: QtiInteraction,
@@ -68,11 +68,8 @@ export function renderPositionObjectResponse(
   marker.draggable = false;
 
   if (movableObject?.data && objectIsImage(movableObject)) {
-    const src = parseAuthoredAssetUrl(movableObject.data, "image");
-    if (src) {
-      const image = document.createElement("img");
-      image.src = src;
-      image.alt = "";
+    const image = createGraphicImage(movableObject, "");
+    if (image) {
       marker.append(image);
     } else {
       marker.textContent = messages.message("placeObject");

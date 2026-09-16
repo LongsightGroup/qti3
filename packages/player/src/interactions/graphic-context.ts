@@ -1,3 +1,4 @@
+import { createGraphicImage } from "../graphic-image.js";
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { objectIsImage } from "../interaction-support.js";
 import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
@@ -10,15 +11,10 @@ export function appendGraphicContext(group: HTMLElement, interaction: QtiInterac
   const label = interaction.prompt ?? (object.text || "Graphic interaction");
 
   if (object.data && objectIsImage(object)) {
-    const src = parseAuthoredAssetUrl(object.data, "image");
-    if (src) {
-      const image = document.createElement("img");
-      image.src = src;
-      image.alt = label;
+    const image = createGraphicImage(object, object.text || label);
+    if (image) {
       image.style.maxInlineSize = "100%";
       image.style.blockSize = "auto";
-      if (object.width) image.width = Number(object.width);
-      if (object.height) image.height = Number(object.height);
       context.append(image);
     } else {
       context.textContent = label;

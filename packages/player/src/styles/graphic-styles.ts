@@ -237,6 +237,8 @@ button.qti3-hotspot-button[data-shape="circle"] {
   pointer-events: none;
 }
 
+.qti3-graphic-object-image > img { inline-size: 100%; block-size: 100%; object-fit: contain; }
+
 .qti3-position-object-marker {
   position: absolute;
   inline-size: var(--qti3-position-object-marker-inline-size, 2rem);

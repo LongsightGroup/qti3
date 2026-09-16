@@ -250,6 +250,8 @@ export interface QtiGapMatchGapSegment {
 }
 
 export interface QtiObjectAsset {
+  /** Attributes of an authored image or picture fallback, when present. */
+  imageAttributes?: Record<string, string> | undefined;
   data?: string | undefined;
   type?: string | undefined;
   width?: string | undefined;

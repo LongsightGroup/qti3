@@ -46,7 +46,7 @@ export function renderSelectPointResponse(
 
   const object = interaction.object;
   if (object) {
-    appendGraphicObjectImage(surface, object, "");
+    appendGraphicObjectImage(surface, object, object.text);
   }
 
   const width = objectWidth(interaction);

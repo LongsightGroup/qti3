@@ -518,6 +518,7 @@ function parseObjectAsset(node: XmlNode | undefined): QtiObjectAsset | undefined
   const inferredSvgDimensions = inlineSvgDimensions(data);
   return {
     data,
+    imageAttributes: node.localName === "img" ? node.attributes : pictureImage?.attributes,
     type:
       node.attributes.type ??
       pictureImage?.attributes.type ??
@@ -655,10 +656,7 @@ function firstSourceType(sources: QtiMediaSource[]): string | undefined {
 }
 
 function firstSrcsetCandidate(srcset: string | undefined): string | undefined {
-  return srcset
-    ?.split(",")
-    .map((candidate) => candidate.trim().split(/\s+/)[0])
-    .find((candidate) => candidate && candidate.length > 0);
+  return srcset?.trim().split(/\s+/)[0]?.replace(/,+$/, "");
 }
 
 function assetTypeFromData(data: string | undefined): string | undefined {
@@ -760,7 +758,7 @@ function matchSetIndex(node: XmlNode): number {
   return siblings.indexOf(node);
 }
 
-const objectElementNames = new Set(["object", "img"]);
-const mediaElementNames = new Set(["audio", "video", ...objectElementNames]);
+const objectElementNames = new Set(["object", "img", "picture"]);
+const mediaElementNames = new Set(["audio", "video", "object", "img"]);
 const drawingElementNames = new Set(["picture", ...objectElementNames]);
 const blockBoundaryElementNames = new Set(["p", "div"]);
