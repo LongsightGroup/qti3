@@ -22,37 +22,31 @@ test.describe("player graphic gap match interactions", () => {
       page.locator("qti-assessment-item-player .qti3-graphic-context img"),
     ).toHaveAttribute("src", /hotspot-flow-unlabeled\.svg$/);
     await expectImageLoaded(page.locator("qti-assessment-item-player .qti3-graphic-context img"));
-    await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).toBeVisible();
-    await expect(
-      page.locator("qti-assessment-item-player .qti3-gap-button").first(),
-    ).toHaveAccessibleName("Gap 1, empty");
-    await expect(page.locator("qti-assessment-item-player .qti3-gap-button").first()).toHaveText(
-      "",
-    );
-    await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).not.toContainText(
-      "Empty",
-    );
-    await expect(page.locator("qti-assessment-item-player .qti3-gap-region")).not.toContainText(
-      "G1",
-    );
-    const gapRowSpacing = await page
-      .locator("qti-assessment-item-player .qti3-gap-region")
-      .evaluate((gapRegion) => {
-        const sourceRegion = gapRegion.previousElementSibling;
-        if (!sourceRegion) return 0;
-        return gapRegion.getBoundingClientRect().top - sourceRegion.getBoundingClientRect().bottom;
-      });
-    expect(gapRowSpacing).toBeGreaterThanOrEqual(6);
-
+    const surface = page.locator("qti-assessment-item-player .qti3-graphic-gap-match-surface");
     const source = page.locator('qti-assessment-item-player [data-choice-identifier="A"]').first();
-    const target = page.locator('qti-assessment-item-player [data-gap-identifier="G1"]').first();
+    const target = surface.locator('[data-gap-identifier="G1"]');
+    await expect(target).toHaveAccessibleName("First workflow step, empty");
+    await expect(target).toHaveText("");
+    await expect(target).toHaveCSS("position", "absolute");
+    const coordinates = await target.evaluate((element) => {
+      const parent = element.parentElement;
+      if (!parent) throw new Error("Missing target surface.");
+      const style = getComputedStyle(element);
+      return {
+        x: (Number.parseFloat(style.left) / parent.clientWidth) * 480,
+        y: (Number.parseFloat(style.top) / parent.clientHeight) * 300,
+      };
+    });
+    expect(coordinates.x).toBeCloseTo(24, 0);
+    expect(coordinates.y).toBeCloseTo(52, 0);
+
     await dragCenter(page, source, target);
     await expectResponse(page, ["A G1"]);
-    await expect(target.getByRole("button", { name: "Gap 1, assigned Plan route" })).toHaveText(
-      "Plan route",
-    );
-
-    await target.getByRole("button", { name: "Gap 1, assigned Plan route" }).focus();
+    await expect(target).toHaveAccessibleName("First workflow step, assigned Plan route");
+    await expect(
+      surface.locator('[data-origin-gap-identifier="G1"].qti3-graphic-gap-label'),
+    ).toContainText("Plan route");
+    await target.focus();
     await page.keyboard.press("Delete");
     await expectResponse(page, []);
   });

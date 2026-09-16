@@ -34,6 +34,7 @@ export function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDi
     validateInteractionSharedVocabulary(interaction, diagnostics);
     validateInteractionChoices(interaction, diagnostics);
     validateInteractionChildren(interaction, diagnostics);
+    validateGraphicGapMatchChildren(interaction, diagnostics);
     validateInteractionRequiredAttributes(interaction, diagnostics);
     validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
@@ -671,7 +672,6 @@ function allowedInteractionChildren(interaction: QtiInteraction): Set<string> | 
         "qti-gap-text",
         "qti-gap-img",
         "qti-associable-hotspot",
-        ...staticContentNames(),
       ]);
     case "hotspot":
       return setOf(common, ["object", "img", "picture", "qti-hotspot-choice"]);
@@ -858,4 +858,27 @@ function validateTextInteractionContract(
       );
     }
   }
+}
+
+function validateGraphicGapMatchChildren(
+  interaction: QtiInteraction,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.type !== "graphicGapMatch") return;
+  const names = interaction.childElements.map((child) => child.qtiName);
+  const sequence = names.join(" ");
+  if (
+    /^(?:qti-prompt )?(?:object|img|picture)(?: qti-gap-(?:text|img))+(?: qti-associable-hotspot)+$/.test(
+      sequence,
+    )
+  )
+    return;
+  diagnostics.push({
+    code: "interaction.graphicGapMatch.children",
+    severity: "error",
+    message:
+      "Graphic Gap Match requires an optional prompt, one image, gap choices, then one or more associable hotspots, in that order.",
+    path: interaction.source?.path,
+    source: interaction.source,
+  });
 }

@@ -70,7 +70,9 @@ export function pairSides(interaction: QtiInteraction): readonly [QtiChoice[], Q
   if (interaction.type === "gapMatch" || interaction.type === "graphicGapMatch") {
     return [
       interaction.choices.filter((choice) => choice.role === "gapChoice"),
-      interaction.choices.filter((choice) => choice.role === "gap"),
+      interaction.choices.filter((choice) =>
+        interaction.type === "graphicGapMatch" ? choice.role === "hotspot" : choice.role === "gap",
+      ),
     ];
   }
   const choices = interaction.choices.filter(

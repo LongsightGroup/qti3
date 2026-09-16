@@ -471,7 +471,7 @@ describe("qti3 transcoder scoring and custom payload contracts", () => {
   });
 
   it.each(["qti21-standard@1", "qti22-standard@1"] as const)(
-    "uses a textual %s fallback for graphic gap matches without image geometry",
+    "uses a textual %s fallback for graphic gap matches with text choices",
     (profile) => {
       const result = transcodeQti3Item(
         { kind: "xml", xml: fixtureXml("graphicGapMatch") },
@@ -480,7 +480,8 @@ describe("qti3 transcoder scoring and custom payload contracts", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.xml).toContain("<gapMatchInteraction");
-      expect(result.xml).toContain("The first step is to");
+      expect(result.xml).toContain('gap identifier="G1"');
+      expect(result.xml).toContain('gap identifier="G2"');
       expect(result.xml).not.toContain("data:image/svg+xml");
       expect(result.assets).toEqual([]);
       expect(result.report.mappings[0]).toMatchObject({

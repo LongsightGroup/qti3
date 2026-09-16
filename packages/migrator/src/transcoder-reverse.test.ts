@@ -42,7 +42,8 @@ describe("qti3 transcoder reverse-migration evidence", () => {
               : interaction.interactionType;
         expect(reverse.authoringItem?.interactionType).toBe(expectedInteraction);
         if (interaction.interactionType === "graphicGapMatch") {
-          expect(reverse.authoringItem?.bodyHtml).toContain("The first step is to");
+          expect(reverse.authoringItem?.bodyHtml).toContain('qti-gap identifier="G1"');
+          expect(reverse.authoringItem?.bodyHtml).toContain('qti-gap identifier="G2"');
         }
         expect(reverse.diagnostics.some((entry) => entry.severity === "error")).toBe(false);
       });

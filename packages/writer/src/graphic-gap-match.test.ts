@@ -52,7 +52,7 @@ describe("qti3-writer graphic gap match", () => {
     expect(xml.indexOf('data-qti-a11y-content-role="long-description"')).toBeLessThan(
       xml.indexOf("<qti-graphic-gap-match-interaction"),
     );
-    expect(xml.indexOf("<p>Context</p>")).toBeGreaterThan(
+    expect(xml.indexOf("<p>Context</p>")).toBeLessThan(
       xml.indexOf("<qti-graphic-gap-match-interaction"),
     );
     expect(xml).toContain("<qti-gap-text");
@@ -96,8 +96,8 @@ describe("qti3-writer graphic gap match", () => {
     expect(item.responseProcessing?.template).toContain("rptemplates/map_response");
   });
 
-  it("writes graphic gap match items with inline qti-gap targets in trusted bodyHtml", () => {
-    const xml = buildQti3GraphicGapMatchItem({
+  it("rejects inline qti-gap targets for Graphic Gap Match", () => {
+    const diagnostics = validateQti3GraphicGapMatchItem({
       identifier: "graphic-gap-match-inline",
       title: "Graphic Gap Match Inline",
       promptHtml: qti3TrustedXmlFragment("Complete the workflow sentence."),
@@ -127,32 +127,8 @@ describe("qti3-writer graphic gap match", () => {
       scoring: "map_response",
     });
 
-    expect(xml).toContain('<qti-gap identifier="G1"');
-    expect(xml).not.toContain("qti-associable-hotspot");
-
-    const item = expectValidParsedItem(xml);
-    expect(item.responseDeclarations[0]).toMatchObject({
-      cardinality: "multiple",
-      baseType: "directedPair",
-      correctResponse: ["A G1", "B G2"],
-    });
-    expect(item.responseDeclarations[0]?.mapping?.entries).toEqual([
-      expect.objectContaining({ mapKey: "A G1", mappedValue: 1 }),
-      expect.objectContaining({ mapKey: "B G2", mappedValue: 1 }),
-    ]);
-    expect(item.interactions[0]?.choices.map((choice) => [choice.role, choice.identifier])).toEqual(
-      [
-        ["gapChoice", "A"],
-        ["gapChoice", "B"],
-        ["gap", "G1"],
-        ["gap", "G2"],
-      ],
-    );
-    expect(item.interactions[0]?.gapMatchSegments).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ kind: "gap", identifier: "G1" }),
-        expect.objectContaining({ kind: "gap", identifier: "G2" }),
-      ]),
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({ code: "invalid_graphic_gap_match_inline_target" }),
     );
   });
 

@@ -460,7 +460,7 @@ exports[`brightspace-course-import@1 evidence > transcodes graphicGapMatch 1`] =
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>A diagram-labeling item asks the student to complete two workflow labels from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-study workflow labels.<div><p>Source options:</p><ul><li>Plan route</li><li>Collect data</li><li>Analyze results</li><li>Hold celebration</li><li>G1</li><li>G2</li></ul></div><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object><p>The first step is to  [response]  before the class can  [response]  at the stream.</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>A diagram-labeling item asks the student to complete two workflow labels from a word bank.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt>Complete the field-study workflow labels.<div><p>Source options:</p><ul><li>Plan route</li><li>Collect data</li><li>Analyze results</li><li>Hold celebration</li><li>First workflow step</li><li>Second workflow step</li></ul></div><object data="hotspot-flow-unlabeled.svg" type="image/svg+xml" width="480" height="300"></object></prompt></extendedTextInteraction></itemBody>
 
 </assessmentItem>",
 }

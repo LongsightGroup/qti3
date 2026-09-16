@@ -323,8 +323,9 @@ export async function assignGap(
     await choices.getByRole("button", { name: source }).click();
   }
   await page
-    .locator(`qti-assessment-item-player [data-gap-identifier="${gapIdentifier}"]`)
-    .getByRole("button")
+    .locator(
+      `qti-assessment-item-player button[data-gap-identifier="${gapIdentifier}"], qti-assessment-item-player [data-gap-identifier="${gapIdentifier}"] button`,
+    )
     .first()
     .click();
 }

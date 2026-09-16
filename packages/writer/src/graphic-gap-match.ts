@@ -98,11 +98,10 @@ export function renderQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderI
         .map((line) => `      ${line}`)
         .join("\n")
     : "";
-  const bodyXml = `${longDescription.blockXml}    <qti-graphic-gap-match-interaction ${interactionAttrs}>
+  const bodyXml = `${longDescription.blockXml}${bodyFragment}\n    <qti-graphic-gap-match-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.object))}/>
 ${choicesXml}
 ${targetsXml}
-${bodyFragment}
     </qti-graphic-gap-match-interaction>`;
 
   return assessmentItemShell({
@@ -246,6 +245,13 @@ function validateTargets(
   for (const [index, target] of input.targets.entries()) {
     const path = `targets.${index}`;
     if (target.targetType === "inlineGap") {
+      diagnostics.push(
+        writerDiagnostic(
+          "invalid_graphic_gap_match_inline_target",
+          path,
+          "Graphic Gap Match requires hotspot targets; use Gap Match for inline text gaps.",
+        ),
+      );
       const identifierDiagnostic = validateQtiIdentifier(
         `${path}.identifier`,
         "Graphic gap target identifier",

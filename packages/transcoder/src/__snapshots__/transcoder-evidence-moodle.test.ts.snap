@@ -457,8 +457,8 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
 {
   "diagnostics": [
     {
-      "code": "profile.moodle.xml.fallback.choice",
-      "message": "Converted the relationship task to explicit labeled relationship choices. Source interaction: graphicGapMatch.",
+      "code": "profile.moodle.xml.fallback.essay",
+      "message": "Converted graphicGapMatch to a Moodle essay question for manual grading.",
       "path": "graphicGapMatch.xml",
       "severity": "warning",
     },
@@ -468,7 +468,7 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
       "graphicGapMatch.xml",
     ],
     "diagnosticCodes": [
-      "profile.moodle.xml.fallback.choice",
+      "profile.moodle.xml.fallback.essay",
     ],
     "fidelity": "lossy",
     "identifier": "graphicGapMatch-reference",
@@ -478,13 +478,13 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
           "graphicGapMatch.xml",
         ],
         "diagnosticCodes": [
-          "profile.moodle.xml.fallback.choice",
+          "profile.moodle.xml.fallback.essay",
         ],
-        "emittedInteraction": "multichoice",
-        "fallback": "choice",
+        "emittedInteraction": "essay",
+        "fallback": "extended-text",
         "fidelity": "lossy",
         "index": 0,
-        "scoring": "automatic",
+        "scoring": "manual",
         "sourceInteraction": "graphicGapMatch",
       },
     ],
@@ -492,27 +492,20 @@ exports[`moodle-xml@1 evidence > transcodes graphicGapMatch 1`] = `
   },
   "xml": "<?xml version="1.0" encoding="UTF-8"?>
 <quiz>
-  <question type="multichoice">
+  <question type="essay">
     <name><text>graphicGapMatch-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;A diagram-labeling item asks the student to complete two workflow labels from a word bank.&lt;/p&gt;&lt;p&gt;Complete the field-study workflow labels.&lt;/p&gt;&lt;p&gt;&lt;img src="hotspot-flow-unlabeled.svg" alt="Question media"&gt;&lt;/p&gt;&lt;p&gt;Provide a complete written response. Available task elements: Plan route; Collect data; Analyze results; Hold celebration; First workflow step; Second workflow step.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>
     <hidden>0</hidden>
-    <single>false</single>
-    <shuffleanswers>false</shuffleanswers>
-    <answernumbering>abc</answernumbering>
-    <answer fraction="50" format="html"><text>Plan route — G1</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="-16.6666667" format="html"><text>Plan route — G2</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="-16.6666667" format="html"><text>Collect data — G1</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="50" format="html"><text>Collect data — G2</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="-16.6666667" format="html"><text>Analyze results — G1</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="-16.6666667" format="html"><text>Analyze results — G2</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="-16.6666667" format="html"><text>Hold celebration — G1</text><feedback format="html"><text></text></feedback></answer>
-    <answer fraction="-16.6666667" format="html"><text>Hold celebration — G2</text><feedback format="html"><text></text></feedback></answer>
-    <correctfeedback format="html"><text></text></correctfeedback>
-    <partiallycorrectfeedback format="html"><text></text></partiallycorrectfeedback>
-    <incorrectfeedback format="html"><text></text></incorrectfeedback>
+    <responseformat>editor</responseformat>
+    <responserequired>1</responserequired>
+    <responsefieldlines>15</responsefieldlines>
+    <attachments>0</attachments>
+    <attachmentsrequired>0</attachmentsrequired>
+    <graderinfo format="html"><text></text></graderinfo>
+    <responsetemplate format="html"><text></text></responsetemplate>
   </question>
 </quiz>",
 }

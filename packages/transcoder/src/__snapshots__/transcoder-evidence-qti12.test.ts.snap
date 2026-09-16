@@ -448,8 +448,8 @@ exports[`qti12-standard@1 evidence > transcodes graphicGapMatch 1`] = `
 {
   "diagnostics": [
     {
-      "code": "profile.qti12.fallback.choice",
-      "message": "Converted the relationship task to explicit labeled relationship choices with equivalent deterministic scoring.",
+      "code": "profile.qti12.fallback.choice_without_labels",
+      "message": "Accessible relationship labels were unavailable, so the task requires manual grading.",
       "path": "graphicGapMatch.xml",
       "severity": "warning",
     },
@@ -459,7 +459,7 @@ exports[`qti12-standard@1 evidence > transcodes graphicGapMatch 1`] = `
       "graphicGapMatch.xml",
     ],
     "diagnosticCodes": [
-      "profile.qti12.fallback.choice",
+      "profile.qti12.fallback.choice_without_labels",
     ],
     "fidelity": "lossy",
     "identifier": "graphicGapMatch-reference",
@@ -469,13 +469,13 @@ exports[`qti12-standard@1 evidence > transcodes graphicGapMatch 1`] = `
           "graphicGapMatch.xml",
         ],
         "diagnosticCodes": [
-          "profile.qti12.fallback.choice",
+          "profile.qti12.fallback.choice_without_labels",
         ],
-        "emittedInteraction": "response_lid",
-        "fallback": "choice",
+        "emittedInteraction": "response_str",
+        "fallback": "extended-text",
         "fidelity": "lossy",
         "index": 0,
-        "scoring": "automatic",
+        "scoring": "manual",
         "sourceInteraction": "graphicGapMatch",
       },
     ],
@@ -491,11 +491,11 @@ exports[`qti12-standard@1 evidence > transcodes graphicGapMatch 1`] = `
       <material><mattext texttype="text/html">A diagram-labeling item asks the student to complete two workflow labels from a word bank. Complete the field-study workflow labels.</mattext></material>
       <material><matimage uri="hotspot-flow-unlabeled.svg" imagtype="image/svg+xml" label="Question media" width="480" height="300"></matimage></material>
 
-      <response_lid ident="RESPONSE" rcardinality="Multiple"><material><mattext texttype="text/plain">Select the correct relationships.</mattext></material><render_choice shuffle="No"><response_label ident="PAIR_A_G1"><material><mattext texttype="text/plain">Plan route — G1</mattext></material></response_label><response_label ident="PAIR_A_G2"><material><mattext texttype="text/plain">Plan route — G2</mattext></material></response_label><response_label ident="PAIR_B_G1"><material><mattext texttype="text/plain">Collect data — G1</mattext></material></response_label><response_label ident="PAIR_B_G2"><material><mattext texttype="text/plain">Collect data — G2</mattext></material></response_label><response_label ident="PAIR_C_G1"><material><mattext texttype="text/plain">Analyze results — G1</mattext></material></response_label><response_label ident="PAIR_C_G2"><material><mattext texttype="text/plain">Analyze results — G2</mattext></material></response_label><response_label ident="PAIR_D_G1"><material><mattext texttype="text/plain">Hold celebration — G1</mattext></material></response_label><response_label ident="PAIR_D_G2"><material><mattext texttype="text/plain">Hold celebration — G2</mattext></material></response_label></render_choice></response_lid>
+      <response_str ident="RESPONSE" rcardinality="Single"><material><mattext texttype="text/plain">Describe the requested relationships.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"></render_fib></response_str>
     </presentation>
     <resprocessing>
       <outcomes><decvar varname="SCORE" vartype="Decimal" defaultval="0"/></outcomes>
-      <respcondition continue="Yes"><conditionvar><and><varequal respident="RESPONSE">PAIR_A_G1</varequal><varequal respident="RESPONSE">PAIR_B_G2</varequal><not><varequal respident="RESPONSE">PAIR_A_G2</varequal></not><not><varequal respident="RESPONSE">PAIR_B_G1</varequal></not><not><varequal respident="RESPONSE">PAIR_C_G1</varequal></not><not><varequal respident="RESPONSE">PAIR_C_G2</varequal></not><not><varequal respident="RESPONSE">PAIR_D_G1</varequal></not><not><varequal respident="RESPONSE">PAIR_D_G2</varequal></not></and></conditionvar><setvar action="Add" varname="SCORE">1</setvar></respcondition>
+      <respcondition continue="No"><conditionvar><other/></conditionvar></respcondition>
     </resprocessing>
   </item>
 </questestinterop>",

@@ -51,3 +51,23 @@ for (const type of [
       });
   });
 }
+
+it("requires Graphic Gap Match hotspots after its image and gap choices", () => {
+  const xml = readFileSync(
+    new URL("../../fixtures/xml/graphicGapMatch-reference.xml", import.meta.url),
+    "utf8",
+  );
+  const target = /<qti-associable-hotspot[^>]*\/>/g;
+  const invalidItems = [
+    xml.replace(target, ""),
+    xml.replace(target, '<p><qti-gap identifier="TEXT_GAP"/></p>'),
+    xml.replace(
+      '<qti-gap-text identifier="A"',
+      '<qti-associable-hotspot identifier="EARLY" shape="rect" coords="1,1,10,10" match-max="1"/><qti-gap-text identifier="A"',
+    ),
+  ];
+  for (const invalid of invalidItems)
+    expect(parseQtiXml(invalid).diagnostics).toContainEqual(
+      expect.objectContaining({ code: "interaction.graphicGapMatch.children", severity: "error" }),
+    );
+});
