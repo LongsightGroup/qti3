@@ -723,13 +723,12 @@ function expectedResponseShape(
     return { cardinalities: ["ordered"], baseTypes: ["identifier"] };
   }
   if (interaction.type === "associate" || interaction.type === "graphicAssociate") {
-    return { cardinalities: ["multiple"], baseTypes: ["pair", "directedPair"] };
+    return { cardinalities: ["single", "multiple"], baseTypes: ["pair", "directedPair"] };
   }
-  if (
-    interaction.type === "match" ||
-    interaction.type === "gapMatch" ||
-    interaction.type === "graphicGapMatch"
-  ) {
+  if (interaction.type === "match" || interaction.type === "gapMatch") {
+    return { cardinalities: ["single", "multiple"], baseTypes: ["directedPair"] };
+  }
+  if (interaction.type === "graphicGapMatch") {
     return { cardinalities: ["multiple"], baseTypes: ["directedPair"] };
   }
   if (interaction.type === "selectPoint" || interaction.type === "positionObject") {

@@ -401,6 +401,11 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
     process: true,
     fixtures: interactionSupportFixtures(interactionType),
     tests: interactionSupportTests(interactionType),
+    notes: ["associate", "graphicAssociate", "match", "gapMatch"].includes(interactionType)
+      ? "Supports single and multiple association responses."
+      : interactionType === "graphicGapMatch"
+        ? "Requires multiple directedPair responses."
+        : undefined,
   };
 }
 

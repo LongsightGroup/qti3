@@ -51,7 +51,11 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
     "tests/browser/player-interaction-sweep.spec.ts",
   ];
   const extras: Partial<Record<QtiInteractionType, string[]>> = {
-    associate: browserKeyboardA11yTests,
+    associate: [
+      ...browserKeyboardA11yTests,
+      "packages/core/src/association-contracts.test.ts",
+      "tests/browser/player-dom-behavior.spec.ts",
+    ],
     choice: ["tests/browser/player-choice.spec.ts", "tests/browser/player-dom-behavior.spec.ts"],
     drawing: ["tests/browser/player-graphic.spec.ts"],
     endAttempt: ["tests/browser/player-dom-behavior.spec.ts", ...browserKeyboardA11yTests],

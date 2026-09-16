@@ -1,4 +1,4 @@
-import type { QtiChoice, QtiValue } from "@longsightgroup/qti3-core";
+import type { QtiChoice } from "@longsightgroup/qti3-core";
 import {
   clearSingleUseSourceAssignments,
   sourceUseLimitExceeded,
@@ -46,7 +46,7 @@ export function applyGapMatchAssignments(
   }
 }
 
-export function gapMatchResponseValue(assignments: Map<string, QtiChoice>): QtiValue {
+export function gapMatchResponseValue(assignments: Map<string, QtiChoice>): string[] {
   return [...assignments.entries()].map(
     ([gapIdentifier, source]) => `${source.identifier} ${gapIdentifier}`,
   );

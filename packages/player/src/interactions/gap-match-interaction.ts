@@ -193,7 +193,8 @@ export function renderGapMatchResponse(
   const assignments = new Map<string, QtiChoice>();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
-  const maximumAssignments = maximumAllowedResponses(interaction);
+  const maximumAssignments =
+    interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
   const sharedVocabularyLayout = sharedVocabularyChoicesLayout(interaction);
   const usesGapPlacement = gapMatchUsesPlacement(interaction);
   const gapSegmentAttributes = new Map(
@@ -221,7 +222,8 @@ export function renderGapMatchResponse(
   }
 
   const commit = () => {
-    update(gapMatchResponseValue(assignments));
+    const value = gapMatchResponseValue(assignments);
+    update(interaction.responseCardinality === "single" ? (value[0] ?? null) : value);
   };
   const syncSources = () => {
     syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
@@ -358,7 +360,8 @@ function renderGraphicGapMatchResponse(
   const height = objectHeight(interaction);
   const sources = sourceChoices(interaction);
   const gaps = targetChoices(interaction).filter((choice) => choice.role === "hotspot");
-  const maximumAssignments = maximumAllowedResponses(interaction);
+  const maximumAssignments =
+    interaction.responseCardinality === "single" ? 1 : maximumAllowedResponses(interaction);
   if (sources.length === 0 || gaps.length === 0) {
     group.append(missingChoicesMessage(interaction));
     return group;
@@ -414,7 +417,8 @@ function renderGraphicGapMatchResponse(
   summary.setAttribute("aria-live", "polite");
 
   const commit = () => {
-    update(gapMatchResponseValue(assignments));
+    const value = gapMatchResponseValue(assignments);
+    update(interaction.responseCardinality === "single" ? (value[0] ?? null) : value);
   };
   const syncSources = () => {
     syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);

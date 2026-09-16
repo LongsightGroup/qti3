@@ -1,3 +1,4 @@
+import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import { expect, test, type Locator } from "@playwright/test";
 import {
@@ -1195,6 +1196,31 @@ for (const cardinality of ["multiple", "ordered"]) {
     await expect(inputs.nth(0)).toHaveValue("mulch");
     await expect(inputs.nth(1)).toHaveValue("watering");
     await expectNoAxeViolationsOnPlayer(page);
+    expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
+  });
+}
+
+for (const type of ["associate", "graphicAssociate", "match", "gapMatch"] as const) {
+  test(`single ${type} emits a scalar response`, async ({ page }) => {
+    const fixture = interactionFixtures.find((entry) => entry.interactionType === type);
+    if (!fixture) throw new Error("Missing fixture");
+    const response = fixture.attempts[0]?.responses.RESPONSE;
+    const pair = Array.isArray(response) ? response[0] : response;
+    if (typeof pair !== "string") throw new Error("Missing pair");
+    await page.goto("/");
+    await pasteXml(
+      page,
+      fixture.xml
+        .replace('cardinality="multiple"', 'cardinality="single"')
+        .replace(
+          /(<qti-correct-response>\s*<qti-value>[^<]*<\/qti-value>)[\s\S]*?<\/qti-correct-response>/,
+          "$1</qti-correct-response>",
+        ),
+    );
+    await provideResponse(page, type, [pair]);
+    expect(await currentResponse(page)).toBe(pair);
+    await suspendRestoreCurrentAttempt(page);
+    expect(await currentResponse(page)).toBe(pair);
     expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
   });
 }
