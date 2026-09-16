@@ -2,6 +2,8 @@ import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import { expect, test, type Locator } from "@playwright/test";
 import {
   currentResponse,
+  suspendRestoreCurrentAttempt,
+  scoreCurrentAttempt,
   expectMoveButtons,
   loadFixture,
   pasteXml,
@@ -1114,4 +1116,48 @@ test("maps PNP through the manual into exact, keyboard-accessible catalog contro
   await page.locator("#reset-pnp").click();
   await expect(controls).toHaveCount(0);
   await expect(keyword).toHaveCSS("text-decoration-line", "none");
+});
+
+test("numeric text entry captures, scores, and restores raw companion text", async ({ page }) => {
+  await page.goto("/");
+  await pasteXml(
+    page,
+    `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-text" title="Numeric text" time-dependent="false">
+    <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"><qti-correct-response><qti-value>255</qti-value></qti-correct-response></qti-response-declaration>
+    <qti-response-declaration identifier="RAW" cardinality="single" base-type="string"/>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+    <qti-item-body><p>Hexadecimal value: <qti-text-entry-interaction response-identifier="RESPONSE" string-identifier="RAW" base="16"/></p></qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  </qti-assessment-item>`,
+  );
+  const input = page.locator("qti-assessment-item-player input.qti3-text-input");
+  await input.focus();
+  await page.keyboard.type("0ff");
+  expect(await currentResponse(page)).toBe(255);
+  await suspendRestoreCurrentAttempt(page);
+  await expect(input).toHaveValue("0ff");
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
+  await expectNoAxeViolationsOnPlayer(page);
+});
+
+test("record text entry preserves significant digits through restore", async ({ page }) => {
+  await page.goto("/");
+  await pasteXml(
+    page,
+    `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="record-text" title="Record text" time-dependent="false">
+    <qti-response-declaration identifier="RESPONSE" cardinality="record"/>
+    <qti-item-body><p>Decimal value: <qti-text-entry-interaction response-identifier="RESPONSE"/></p></qti-item-body>
+  </qti-assessment-item>`,
+  );
+  const input = page.locator("qti-assessment-item-player input.qti3-text-input");
+  await input.fill("1.20e-2");
+  expect(await currentResponse(page)).toMatchObject({
+    stringValue: "1.20e-2",
+    floatValue: 0.012,
+    nsf: 3,
+    ndp: 4,
+  });
+  await suspendRestoreCurrentAttempt(page);
+  await expect(input).toHaveValue("1.20e-2");
+  await expectNoAxeViolationsOnPlayer(page);
 });

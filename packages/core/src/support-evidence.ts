@@ -81,7 +81,10 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
       "tests/browser/player-slider-cross-browser.spec.ts",
       ...browserKeyboardA11yTests,
     ],
-    textEntry: ["tests/browser/player-dom-behavior.spec.ts"],
+    textEntry: [
+      "packages/core/src/text-response.test.ts",
+      "tests/browser/player-dom-behavior.spec.ts",
+    ],
     upload: ["tests/browser/player-dom-behavior.spec.ts"],
   };
   return [...base, ...(extras[interactionType] ?? [])];

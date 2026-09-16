@@ -8,6 +8,7 @@ import type {
   QtiScalarValue,
   QtiValue,
 } from "./types.js";
+import { isQtiTextResponseRecord } from "./text-response.js";
 import { assertNever } from "./assert-never.js";
 import { isNullResponse, isRecordValue, valueContainer } from "./processing-values.js";
 import { listNamedResponseInputs, type QtiNamedResponseInput } from "./response-input.js";
@@ -113,6 +114,14 @@ export function parseQtiResponseVariables(
       if (cardinalityMatches && parsedValue !== undefined) {
         responses.set(declaration.identifier, parsedValue);
         validateResponseDomain(declaration, interactions ?? [], parsedValue, diagnostics);
+        if (
+          declaration.cardinality === "record" &&
+          parsedValue !== null &&
+          interactions?.some((interaction) => interaction.type === "textEntry") &&
+          !isQtiTextResponseRecord(parsedValue)
+        ) {
+          pushResponseDomainDiagnostic(declaration, parsedValue, diagnostics);
+        }
       }
     }
 

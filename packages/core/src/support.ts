@@ -414,7 +414,8 @@ function extendedTextInteractionEntry(): QtiInteractionElementSupport {
 function textEntryInteractionEntry(): QtiInteractionElementSupport {
   return {
     ...entry("qti-text-entry-interaction", "textEntry"),
-    notes: "Supports placeholder-text and pattern-mask on text-entry controls.",
+    notes:
+      "Supports single string/integer/float and numeric record responses, base 2–36, string-identifier, placeholder-text and pattern-mask; text-entry format is plain only.",
   };
 }
 

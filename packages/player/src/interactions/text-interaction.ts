@@ -1,4 +1,8 @@
-import { type QtiInteraction, type QtiValue } from "@longsightgroup/qti3-core";
+import {
+  qtiTextResponseString,
+  type QtiInteraction,
+  type QtiValue,
+} from "@longsightgroup/qti3-core";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import {
@@ -9,7 +13,6 @@ import {
   extendedTextCounterState,
   syncExtendedTextCounter,
 } from "./extended-text-shared.js";
-import { scalarString } from "./text-value.js";
 import { wireTextControlConstraints } from "./text-control-constraints.js";
 import { applyInputWidth, inputWidth } from "./shared-vocabulary.js";
 
@@ -53,7 +56,7 @@ export function renderTextResponse(
   const control =
     mode === "extended" ? document.createElement("textarea") : document.createElement("input");
   control.className = mode === "extended" ? "qti3-textarea" : "qti3-text-input";
-  control.value = scalarString(currentValue);
+  control.value = qtiTextResponseString(currentValue);
   regions.control(control);
   control.setAttribute(
     "aria-label",
@@ -99,7 +102,7 @@ export function renderInlineTextEntry(
   group.className = "qti3-inline-text-response";
   const input = document.createElement("input");
   input.className = "qti3-text-input qti3-inline-text-input";
-  input.value = scalarString(currentValue);
+  input.value = qtiTextResponseString(currentValue);
   regions.control(input);
   input.setAttribute(
     "aria-label",

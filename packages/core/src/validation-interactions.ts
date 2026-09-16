@@ -38,6 +38,7 @@ export function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDi
     validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
     validatePatternMaskAttribute(interaction, diagnostics);
+    validateTextEntryContract(interaction, responseDeclarations, diagnostics);
     validateGraphicHotspotObjectDimensions(interaction, diagnostics);
     validateCorrectResponseReferences(
       interaction,
@@ -740,7 +741,10 @@ function expectedResponseShape(
   if (interaction.type === "upload") {
     return { cardinalities: ["single"], baseTypes: ["file"] };
   }
-  if (interaction.type === "textEntry" || interaction.type === "extendedText") {
+  if (interaction.type === "textEntry") {
+    return { cardinalities: ["single", "record"], baseTypes: ["string", "integer", "float"] };
+  }
+  if (interaction.type === "extendedText") {
     return { cardinalities: ["single"], baseTypes: ["string"] };
   }
   if (interaction.type === "drawing") return { cardinalities: ["single"], baseTypes: ["file"] };
@@ -779,4 +783,47 @@ function needsChoices(interaction: QtiInteraction): boolean {
     interaction.type === "graphicGapMatch" ||
     interaction.type === "hotspot"
   );
+}
+
+function validateTextEntryContract(
+  interaction: QtiInteraction,
+  declarations: ReadonlyMap<string, QtiResponseDeclaration>,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (interaction.type !== "textEntry") return;
+  const report = (code: string, message: string) =>
+    diagnostics.push({
+      code,
+      severity: "error",
+      message,
+      path: interaction.source?.path,
+      source: interaction.source,
+    });
+  const base = Number(interaction.attributes.base ?? 10);
+  if (!Number.isInteger(base) || base < 2 || base > 36) {
+    report("interaction.text.base", "Text response base must be an integer from 2 through 36.");
+  }
+  const format = interaction.attributes.format;
+  if (format !== undefined && format !== "plain") {
+    report(
+      "interaction.text.format.unsupported",
+      `Text-entry format ${format} is not supported; use plain text.`,
+    );
+  }
+  const companion = interaction.attributes["string-identifier"];
+  if (companion !== undefined) {
+    const declaration = declarations.get(companion);
+    if (
+      !declaration ||
+      declaration.baseType !== "string" ||
+      declaration.cardinality !== interaction.responseCardinality ||
+      companion === interaction.responseIdentifier ||
+      (interaction.responseBaseType !== "integer" && interaction.responseBaseType !== "float")
+    ) {
+      report(
+        "interaction.text.stringIdentifier",
+        "string-identifier must reference a separate string response with matching cardinality for a numeric text interaction.",
+      );
+    }
+  }
 }

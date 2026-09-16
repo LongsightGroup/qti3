@@ -1,5 +1,6 @@
 import {
   assertQtiAttemptStateV1,
+  captureQtiTextResponse,
   createItemSession,
   createCatalogSupportResolution,
   createCompanionMaterialsResolution,
@@ -654,7 +655,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       interaction,
       messages: this.playerMessages(),
       update: this.bindResponseUpdate(responseIdentifier, interaction),
-      currentValue: responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
+      currentValue: responseIdentifier
+        ? this.currentResponseValue(
+            interaction.attributes["string-identifier"] ?? responseIdentifier,
+          )
+        : null,
       isCompleted: () => this.attemptIsCompleted(),
       endAttempt: () => this.endAttempt(),
       renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
@@ -680,6 +685,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         );
         return;
       }
+      if (interaction?.type === "textEntry" && typeof value === "string") {
+        const companion = interaction.attributes["string-identifier"];
+        if (companion) loadedItem.session.respond(companion, value);
+        value = captureQtiTextResponse(interaction, value);
+      }
       loadedItem.session.respond(responseIdentifier, value);
       this.applyInlineValidation(responseIdentifier, undefined);
       this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
@@ -697,7 +707,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         return renderEmbeddedInteractionSection({
           interaction: embeddedInteraction,
           update: this.bindResponseUpdate(responseIdentifier, embeddedInteraction),
-          currentValue: responseIdentifier ? this.currentResponseValue(responseIdentifier) : null,
+          currentValue: responseIdentifier
+            ? this.currentResponseValue(
+                embeddedInteraction.attributes["string-identifier"] ?? responseIdentifier,
+              )
+            : null,
           messages: this.playerMessages(),
           endAttempt: () => this.endAttempt(),
         });
