@@ -14,6 +14,7 @@ import { isNullResponse, isRecordValue, valueContainer } from "./processing-valu
 import { listNamedResponseInputs, type QtiNamedResponseInput } from "./response-input.js";
 import {
   matchMaxDiagnostics,
+  matchMinDiagnostics,
   maximumAllowedResponses,
   maximumResponseDiagnostic,
   mediaPlayCount,
@@ -34,6 +35,7 @@ export type QtiResponseValidationDiagnosticCode =
   | "response.required"
   | "response.maximum"
   | "response.matchMax"
+  | "response.matchMin"
   | "response.cardinality"
   | "response.baseType"
   | "response.domain"
@@ -398,6 +400,13 @@ function validateDeclarationResponse(
   requireScoredResponses: boolean | undefined,
   diagnostics: QtiResponseValidationDiagnostic[],
 ): void {
+  if (interaction && !allowIncompleteResponses) {
+    diagnostics.push(
+      ...matchMinDiagnostics(declaration.identifier, interaction, value ?? null).map((diagnostic) =>
+        attachResponseIdentifier(declaration.identifier, diagnostic),
+      ),
+    );
+  }
   const policy = responseValidationPolicy(declaration, interaction, requireScoredResponses);
   if (!policy.checkMinimum && !policy.checkMaximum && !policy.checkMatchMax) return;
 
@@ -488,6 +497,7 @@ function isResponseValidationDiagnosticCode(
     code === "response.required" ||
     code === "response.maximum" ||
     code === "response.matchMax" ||
+    code === "response.matchMin" ||
     code === "response.cardinality" ||
     code === "response.baseType" ||
     code === "response.domain" ||

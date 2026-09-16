@@ -257,3 +257,39 @@ export function matchMaxDiagnostics(
   }
   return diagnostics;
 }
+
+/** Enforce authored per-choice minimum uses when a response is finalized. */
+export function matchMinDiagnostics(
+  responseIdentifier: string,
+  interaction: QtiInteraction,
+  response: QtiValue,
+): QtiDiagnostic[] {
+  if (
+    !["associate", "graphicAssociate", "match", "gapMatch", "graphicGapMatch"].includes(
+      interaction.type,
+    )
+  )
+    return [];
+  const pairs = qtiValueToIdentifierList(response);
+  const diagnostics: QtiDiagnostic[] = [];
+  for (const choice of interaction.choices) {
+    const minimum = parseNonNegativeInteger(choice.attributes["match-min"] ?? "0") ?? 0;
+    if (minimum === 0) continue;
+    const side =
+      choice.role === "matchSource" || choice.role === "gapChoice"
+        ? "source"
+        : choice.role === "matchTarget" ||
+            (interaction.type === "graphicGapMatch" && choice.role === "hotspot")
+          ? "target"
+          : "either";
+    if (directedPairChoiceUseCount(choice, pairs, side) >= minimum) continue;
+    diagnostics.push({
+      code: "response.matchMin",
+      severity: "error",
+      message: `${choice.text || choice.identifier} must be used at least ${minimum} time${minimum === 1 ? "" : "s"}.`,
+      path: responseIdentifier,
+      source: choice.source,
+    });
+  }
+  return diagnostics;
+}

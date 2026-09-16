@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
-import { expectResponse, pasteXml } from "./player-helpers.js";
+import { expectResponse, pasteXml, provideResponse } from "./player-helpers.js";
 
 test.describe("player validation", () => {
   test("associates validation messages with unanswered controls", async ({ page }) => {
@@ -611,4 +611,21 @@ test("host scored-response policy can be disabled without bypassing QTI minima",
   await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText(
     "requires a response",
   );
+});
+
+test("reports an unused required association choice when scoring", async ({ page }) => {
+  const fixture = interactionFixtures.find((entry) => entry.interactionType === "associate");
+  if (!fixture) throw new Error("Missing fixture");
+  const xml = fixture.xml
+    .replaceAll("<qti-simple-match-set>", "")
+    .replaceAll("</qti-simple-match-set>", "")
+    .replace('identifier="A"', 'identifier="A" match-min="1"');
+  await page.goto("/");
+  await pasteXml(page, xml);
+  await provideResponse(page, "associate", ["C D"]);
+  await page.locator("#debug-score").click();
+  await expect(page.locator('[data-validation-for="RESPONSE"]')).toContainText(
+    "must be used at least 1 time",
+  );
+  await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
 });
