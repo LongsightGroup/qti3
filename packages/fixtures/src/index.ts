@@ -334,7 +334,7 @@ function createTemplateContentFixture(): QtiFixture {
       <qti-content-body><p>The alternate field site is the south meadow, which is not part of this delivered item variant.</p></qti-content-body>
     </qti-template-block>
     <p>The checklist shows the <qti-template-inline template-identifier="PATH" identifier="reference" show-hide="show">north marsh observation</qti-template-inline><qti-template-inline template-identifier="PATH" identifier="reference" show-hide="hide">south meadow observation</qti-template-inline> because the item variant selected that site before delivery.</p>
-    <p>If one additional species is confirmed, the total would be <math><mrow><mi>COUNT</mi><mo>+</mo><mn>1</mn></mrow></math>.</p>
+    <p>If one additional species is confirmed, the total would be <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mi>COUNT</mi><mo>+</mo><mn>1</mn></mrow></math>.</p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
       <qti-simple-choice identifier="A">The north marsh branch is the delivered version, so the observation count applies to that site.</qti-simple-choice>
       <qti-simple-choice identifier="B">Both site branches should be treated as visible observations from the same visit.</qti-simple-choice>
@@ -703,7 +703,7 @@ function createBasicMathMlFixture(): QtiFixture {
   </qti-response-declaration>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-item-body>
-    <p>Solve <math><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math>: <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
+    <p>Solve <math xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow></math>: <qti-text-entry-interaction response-identifier="RESPONSE" expected-length="4"/></p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`,

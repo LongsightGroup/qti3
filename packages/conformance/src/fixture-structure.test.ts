@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { parseQtiPackageXmlTree } from "@longsightgroup/qti3-core";
+import { parseQtiPackageXmlTree, type QtiPackageXmlNode } from "@longsightgroup/qti3-core";
 import { expect, it } from "vitest";
 import {
   canonicalFixtures,
@@ -49,6 +49,26 @@ const itemChildOrder = [
   "qti-response-processing",
   "qti-modal-feedback",
 ];
+
+it.each([
+  canonicalFixtures.find((fixture) => fixture.id === "template-content-reference"),
+  basicItemPlayerFixtures.find((fixture) => fixture.id === "basic-mathml"),
+])("places every MathML element in the MathML namespace in $id", (fixture) => {
+  if (!fixture) throw new Error("Missing MathML fixture");
+  const root = parseQtiPackageXmlTree(fixture.xml).root;
+  if (!root) throw new Error("Missing item root");
+  const nodes = descendants(root);
+  const math = nodes.find((node) => node.localName === "math");
+  expect(math).toBeDefined();
+  if (!math) return;
+  for (const node of [math, ...descendants(math)]) {
+    expect(node.uri).toBe("http://www.w3.org/1998/Math/MathML");
+  }
+});
+
+function descendants(node: QtiPackageXmlNode): QtiPackageXmlNode[] {
+  return node.children.flatMap((child) => [child, ...descendants(child)]);
+}
 
 it.each([...canonicalFixtures, ...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures])(
   "generates $id in the complete item child order",
