@@ -76,7 +76,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "ea8e5992bc7d777d6f45bd21a55b07dec2a1e811b13caefee79b4bff47450e1f",
+    "sha256": "307e30bbea590499eb8be373fac0043c3db5e3dc41059d34a46ae7b51a41f879",
     "evidence": [
       "source-semantic",
       "target-semantic",
@@ -472,7 +472,7 @@
     "fidelity": "lossy",
     "scoring": "manual",
     "fallback": "extended-text",
-    "sha256": "24ebd4dd547ea256f9608334024c016626cd8b06be005df8e3db97d1f4e653a8",
+    "sha256": "384de4d1a3135d4570498a9026d17b14285ba176348158185a13a87e3638b862",
     "evidence": [
       "source-semantic",
       "target-semantic",

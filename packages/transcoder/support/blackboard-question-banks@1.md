@@ -37,7 +37,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `ea8e5992bc7d777d6f45bd21a55b07dec2a1e811b13caefee79b4bff47450e1f`
+- Golden SHA-256: `307e30bbea590499eb8be373fac0043c3db5e3dc41059d34a46ae7b51a41f879`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/extendedText`

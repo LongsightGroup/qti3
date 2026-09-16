@@ -80,6 +80,15 @@ try {
         }
       }
     }
+    if (qtiTranscodeProfiles[profile].target !== "qti12") {
+      variants.push([
+        "nested-end-attempt",
+        (await fixtureXml("endAttempt")).replace(
+          /<p>(<qti-end-attempt-interaction[^>]*\/>)<\/p>/,
+          '<div><p id="outer">Before <span id="inner" class="context">inside <strong id="emphasis">start $1 finish</strong> outside</span> after</p></div>',
+        ),
+      ]);
+    }
     for (const [variant, xml] of variants) {
       const variantCase = `${profile}/variant/${variant}`;
       const variantResult = transcodeQti3Item({ kind: "xml", xml }, { profile });

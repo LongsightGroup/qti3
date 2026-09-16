@@ -6,64 +6,150 @@ import { attributes, semanticAttributes } from "./qti2-wire.js";
 import type { QtiTranscodeDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
+interface ContentFragment {
+  readonly xml: string;
+  readonly blockFallback: boolean;
+}
+
+// These QTI 2 containers accept inline content only; essay fallbacks must become siblings.
+const inlineContentContainers = new Set([
+  "p",
+  "pre",
+  "address",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "a",
+  "abbr",
+  "acronym",
+  "b",
+  "bdo",
+  "big",
+  "cite",
+  "code",
+  "dfn",
+  "em",
+  "i",
+  "kbd",
+  "q",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "tt",
+  "var",
+]);
+
+/** Serialize content, lifting introduced block interactions out of inline ancestors. */
 export function serializeQti2Content(
   nodes: readonly QtiContentNode[],
   mappings: readonly Qti2MappedInteraction[],
   revision: Qti2Revision,
   diagnostics: QtiTranscodeDiagnostic[],
 ): string {
-  return nodes
-    .map((node) => {
-      switch (node.kind) {
-        case "text":
-          return escapeXmlText(node.text);
-        case "interaction":
-          return mappings[node.interactionIndex]?.xml ?? "";
-        case "printedVariable":
-          return `<printedVariable identifier="${escapeXmlAttribute(node.identifier)}"${attributes({
-            format: node.format,
-          })}></printedVariable>`;
-        case "feedback":
-          return `<feedback${node.feedbackType === "block" ? "Block" : "Inline"} identifier="${escapeXmlAttribute(
-            node.identifier,
-          )}" outcomeIdentifier="${escapeXmlAttribute(node.outcomeIdentifier)}" showHide="${node.showHide}">${serializeQti2Content(
-            node.children,
-            mappings,
-            revision,
-            diagnostics,
-          )}</feedback${node.feedbackType === "block" ? "Block" : "Inline"}>`;
-        case "element": {
-          let name = contentElementName(node.qtiName);
-          // Vendor essay fallbacks turn inline controls into block interactions.
-          // Preserve the surrounding text and attributes in a flow-content container.
-          if (
-            name === "p" &&
-            node.children.some(
-              (child) =>
-                child.kind === "interaction" &&
-                mappings[child.interactionIndex]?.kind === "extended-text-fallback",
-            )
-          )
-            name = "div";
-          if (name === "positionObjectStage") {
-            const stagedSubstitution = substituteStagedPositionObjectXml(node, mappings);
-            if (stagedSubstitution !== undefined) return stagedSubstitution;
-          }
-          return `<${name}${semanticAttributes(
-            node.attributes,
-            revision,
-            diagnostics,
-            `/itemBody/${name}`,
-          )}>${
-            name === "positionObjectStage"
-              ? serializePositionObjectStageChildren(node, mappings, revision, diagnostics)
-              : serializeQti2Content(node.children, mappings, revision, diagnostics)
-          }</${name}>`;
-        }
-      }
-      throw new Error(`Unreachable QTI content node: ${JSON.stringify(node)}`);
-    })
+  return contentFragments(nodes, mappings, revision, diagnostics)
+    .map((fragment) => fragment.xml)
     .join("");
+}
+
+function contentFragments(
+  nodes: readonly QtiContentNode[],
+  mappings: readonly Qti2MappedInteraction[],
+  revision: Qti2Revision,
+  diagnostics: QtiTranscodeDiagnostic[],
+): ContentFragment[] {
+  return nodes.flatMap((node): ContentFragment[] => {
+    const inline = (xml: string): ContentFragment[] => [{ xml, blockFallback: false }];
+    switch (node.kind) {
+      case "text":
+        return inline(escapeXmlText(node.text));
+      case "interaction": {
+        const mapping = mappings[node.interactionIndex];
+        return [
+          { xml: mapping?.xml ?? "", blockFallback: mapping?.kind === "extended-text-fallback" },
+        ];
+      }
+      case "printedVariable":
+        return inline(
+          `<printedVariable identifier="${escapeXmlAttribute(node.identifier)}"${attributes({ format: node.format })}></printedVariable>`,
+        );
+      case "feedback": {
+        const name = node.feedbackType === "block" ? "feedbackBlock" : "feedbackInline";
+        return inline(
+          `<${name} identifier="${escapeXmlAttribute(node.identifier)}" outcomeIdentifier="${escapeXmlAttribute(node.outcomeIdentifier)}" showHide="${node.showHide}">${serializeQti2Content(node.children, mappings, revision, diagnostics)}</${name}>`,
+        );
+      }
+      case "element": {
+        const name = contentElementName(node.qtiName);
+        if (name === "positionObjectStage") {
+          const substitution = substituteStagedPositionObjectXml(node, mappings);
+          if (substitution !== undefined) return inline(substitution);
+          return inline(
+            `<${name}${semanticAttributes(node.attributes, revision, diagnostics, `/itemBody/${name}`)}>${serializePositionObjectStageChildren(node, mappings, revision, diagnostics)}</${name}>`,
+          );
+        }
+        const children = contentFragments(node.children, mappings, revision, diagnostics);
+        const hasBlock = children.some((child) => child.blockFallback);
+        if (hasBlock && inlineContentContainers.has(name)) {
+          return splitInlineContainer(name, node.attributes, children, revision, diagnostics);
+        }
+        return inline(
+          `<${name}${semanticAttributes(node.attributes, revision, diagnostics, `/itemBody/${name}`)}>${children.map((child) => child.xml).join("")}</${name}>`,
+        );
+      }
+    }
+    throw new Error(`Unreachable QTI content node: ${JSON.stringify(node)}`);
+  });
+}
+
+function splitInlineContainer(
+  name: string,
+  authoredAttributes: Readonly<Record<string, string>>,
+  children: readonly ContentFragment[],
+  revision: Qti2Revision,
+  diagnostics: QtiTranscodeDiagnostic[],
+): ContentFragment[] {
+  const result: ContentFragment[] = [];
+  let pending: string[] = [];
+  let wrapped = false;
+  const firstAttributes = semanticAttributes(
+    authoredAttributes,
+    revision,
+    diagnostics,
+    `/itemBody/${name}`,
+  );
+  const continuationAttributes = semanticAttributes(
+    authoredAttributes,
+    revision,
+    [],
+    `/itemBody/${name}`,
+    new Set(["id"]),
+  );
+  const flush = () => {
+    // Preserve an authored anchor even when the first child is the lifted interaction.
+    if (pending.length === 0 && (wrapped || !authoredAttributes.id)) return;
+    result.push({
+      xml: `<${name}${wrapped ? continuationAttributes : firstAttributes}>${pending.join("")}</${name}>`,
+      blockFallback: false,
+    });
+    wrapped = true;
+    pending = [];
+  };
+  for (const child of children) {
+    if (child.blockFallback) {
+      flush();
+      result.push(child);
+    } else {
+      pending.push(child.xml);
+    }
+  }
+  flush();
+  return result;
 }
 
 export function serializeQti2Choice(

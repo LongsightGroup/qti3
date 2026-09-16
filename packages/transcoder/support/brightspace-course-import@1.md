@@ -37,7 +37,7 @@
 - Fidelity: lossy
 - Scoring policy: manual
 - Fallback: extended-text
-- Golden SHA-256: `24ebd4dd547ea256f9608334024c016626cd8b06be005df8e3db97d1f4e653a8`
+- Golden SHA-256: `384de4d1a3135d4570498a9026d17b14285ba176348158185a13a87e3638b862`
 - Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/extendedText`

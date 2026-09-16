@@ -1,9 +1,68 @@
 import { describe, expect, it } from "vitest";
+import {
+  parseQtiPackageXmlTree,
+  parseQtiXml,
+  type QtiPackageXmlNode,
+} from "@longsightgroup/qti3-core";
 
 import { qtiTranscodeProfiles, transcodeQti3Item, transcodeQti3Package } from "./index.js";
 import { fixtureXml, vendorFixturePackage } from "./transcoder.test-helpers.js";
 
 describe("vendor QTI 2.1 profiles", () => {
+  it.each(["blackboard-question-banks@1", "brightspace-course-import@1"] as const)(
+    "keeps empty anchors before lifted fallbacks for %s",
+    (profile) => {
+      const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="anchored-control" title="Anchored control" time-dependent="false">
+          <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="boolean"/>
+          <qti-item-body><div><p><span id="anchor"><qti-end-attempt-interaction response-identifier="RESPONSE" title="Finish"/></span></p></div></qti-item-body>
+        </qti-assessment-item>`;
+      expect(parseQtiXml(xml).ok).toBe(true);
+      const result = transcodeQti3Item({ kind: "xml", xml }, { profile });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.xml).toContain('<p><span id="anchor"></span></p><extendedTextInteraction');
+      expect(result.xml.match(/id="anchor"/g)).toHaveLength(1);
+    },
+  );
+
+  it.each(["blackboard-question-banks@1", "brightspace-course-import@1"] as const)(
+    "lifts nested essay fallbacks while preserving surrounding text and unique anchors for %s",
+    (profile) => {
+      const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="nested-controls" title="Nested controls" time-dependent="false">
+        <qti-response-declaration identifier="FIRST" cardinality="single" base-type="boolean"/>
+        <qti-response-declaration identifier="SECOND" cardinality="single" base-type="boolean"/>
+        <qti-item-body><div><p id="outer">Before <span id="inner" class="context">inside <strong id="emphasis">start <qti-end-attempt-interaction response-identifier="FIRST" title="First"/> between <qti-end-attempt-interaction response-identifier="SECOND" title="Second"/> finish</strong> outside</span> after</p></div></qti-item-body>
+      </qti-assessment-item>`;
+      expect(parseQtiXml(xml).ok).toBe(true);
+      const result = transcodeQti3Item({ kind: "xml", xml }, { profile });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const root = parseQtiPackageXmlTree(result.xml).root;
+      if (!root) throw new Error("Expected exported item");
+      const nodes: QtiPackageXmlNode[] = [];
+      const parents: string[] = [];
+      const visit = (node: QtiPackageXmlNode, parent?: QtiPackageXmlNode) => {
+        nodes.push(node);
+        if (node.localName === "extendedTextInteraction") parents.push(parent?.localName ?? "");
+        for (const child of node.children) visit(child, node);
+      };
+      visit(root);
+      expect(parents).toEqual(["div", "div"]);
+      for (const id of ["outer", "inner", "emphasis"]) {
+        expect(nodes.filter((node) => node.attributes.id === id)).toHaveLength(1);
+      }
+      expect(result.xml).toMatch(
+        /Before[\s\S]*inside[\s\S]*start[\s\S]*responseIdentifier="FIRST"[\s\S]*between[\s\S]*responseIdentifier="SECOND"[\s\S]*finish[\s\S]*outside[\s\S]*after/,
+      );
+      expect(result.xml).toContain('<span class="context">');
+      expect(result.xml).toContain("<strong> between </strong>");
+      expect(result.report.mappings.map((mapping) => mapping.scoring)).toEqual([
+        "manual",
+        "manual",
+      ]);
+    },
+  );
+
   it.each(["blackboard-question-banks@1", "brightspace-course-import@1"] as const)(
     "requires an explicit conservative policy for every non-native interaction in %s",
     (profileId) => {
