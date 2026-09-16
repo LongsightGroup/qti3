@@ -144,6 +144,7 @@ function manualExtendedTextFallback(
       interaction,
       revision,
       diagnostics,
+      path,
     )}</prompt></extendedTextInteraction>`,
     diagnostics,
     scoring: "manual",
@@ -154,6 +155,7 @@ function manualFallbackPrompt(
   interaction: QtiInteraction,
   revision: Qti2Revision,
   diagnostics: QtiTranscodeDiagnostic[],
+  path: string,
 ): string {
   const prompt =
     interaction.promptContent && interaction.promptContent.length > 0
@@ -164,12 +166,15 @@ function manualFallbackPrompt(
   const choices =
     interaction.choices.length > 0
       ? `<div><p>Source options:</p><ul>${interaction.choices
-          .map((choice) => `<li>${serializeChoiceContent(choice, revision, diagnostics)}</li>`)
+          .map(
+            (choice, index) =>
+              `<li>${serializeChoiceContent(choice, revision, diagnostics, `${path}/choices/${index}`)}</li>`,
+          )
           .join("")}</ul></div>`
       : "";
   const objects = [interaction.object, interaction.positionObjectStage]
     .filter((object): object is QtiObjectAsset => object !== undefined)
-    .map(serializeObject)
+    .map((object, index) => serializeObject(object, diagnostics, `${path}/objects/${index}`))
     .join("");
   const custom = interaction.customInteraction ?? interaction.portableCustom;
   const customContent =
@@ -187,11 +192,12 @@ function serializeChoiceContent(
   choice: QtiChoice,
   revision: Qti2Revision,
   diagnostics: QtiTranscodeDiagnostic[],
+  path: string,
 ): string {
   return choice.content && choice.content.length > 0
     ? serializeQti2Content(choice.content, [], revision, diagnostics)
     : choice.asset
-      ? `${serializeObject(choice.asset)}${choice.text ? `<p>${escapeXmlText(choice.text)}</p>` : ""}`
+      ? `${serializeObject(choice.asset, diagnostics, `${path}/asset`)}${choice.text ? `<p>${escapeXmlText(choice.text)}</p>` : ""}`
       : escapeXmlText(choiceAccessibleText(choice));
 }
 

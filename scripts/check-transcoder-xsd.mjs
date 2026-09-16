@@ -62,30 +62,47 @@ try {
         passedCases.push(`${profile}/${interaction.interactionType}`);
       }
     }
-    const accessibilityCase = `${profile}/variant/accessibility-choice`;
-    const accessibilityResult = transcodeQti3Item(
-      { kind: "xml", xml: accessibilityVariantXml() },
-      { profile },
-    );
-    if (!accessibilityResult.ok) {
-      failures.push(`${accessibilityCase} failed conversion.`);
-    } else {
-      const accessibilityInstance = join(
-        temporaryRoot,
-        `${profile.replaceAll(/[^a-z0-9]/gi, "_")}-accessibility-choice.xml`,
-      );
-      await writeFile(accessibilityInstance, accessibilityResult.xml, "utf8");
-      const accessibilityValidation = spawnSync(
-        "java",
-        ["-cp", temporaryRoot, "ValidateXml", schema, accessibilityInstance],
-        { encoding: "utf8" },
-      );
-      if (accessibilityValidation.status !== 0) {
-        failures.push(
-          `${accessibilityCase} failed XSD validation:\n${accessibilityValidation.stderr.trim()}`,
-        );
+    const variants = [["accessibility-choice", accessibilityVariantXml()]];
+    if (qtiTranscodeProfiles[profile].target !== "qti12") {
+      for (const interaction of [
+        "hotspot",
+        "graphicOrder",
+        "graphicAssociate",
+        "graphicGapMatch",
+        "positionObject",
+        "selectPoint",
+      ]) {
+        for (const form of ["img", "picture"]) {
+          variants.push([
+            `${interaction}-${form}`,
+            await graphicImageVariantXml(interaction, form),
+          ]);
+        }
+      }
+    }
+    for (const [variant, xml] of variants) {
+      const variantCase = `${profile}/variant/${variant}`;
+      const variantResult = transcodeQti3Item({ kind: "xml", xml }, { profile });
+      if (!variantResult.ok) {
+        failures.push(`${variantCase} failed conversion.`);
       } else {
-        passedVariantCases.push(accessibilityCase);
+        const variantInstance = join(
+          temporaryRoot,
+          `${profile.replaceAll(/[^a-z0-9]/gi, "_")}-${variant}.xml`,
+        );
+        await writeFile(variantInstance, variantResult.xml, "utf8");
+        const variantValidation = spawnSync(
+          "java",
+          ["-cp", temporaryRoot, "ValidateXml", schema, variantInstance],
+          { encoding: "utf8" },
+        );
+        if (variantValidation.status !== 0) {
+          failures.push(
+            `${variantCase} failed XSD validation:\n${variantValidation.stderr.trim()}`,
+          );
+        } else {
+          passedVariantCases.push(variantCase);
+        }
       }
     }
     const target = qtiTranscodeProfiles[profile].target;
@@ -216,4 +233,16 @@ function accessibilityVariantXml() {
   <qti-item-body><qti-choice-interaction response-identifier="RESPONSE" aria-label="Choose accessibly"><qti-simple-choice identifier="A" aria-label="Accessible Alpha">Alpha</qti-simple-choice><qti-simple-choice identifier="B">Beta</qti-simple-choice></qti-choice-interaction></qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>`;
+}
+
+async function graphicImageVariantXml(interaction, form) {
+  return (await fixtureXml(interaction)).replace(/<object\s[^>]*\/>/g, (object) => {
+    const image = object
+      .replace("<object", "<img")
+      .replace(" data=", " src=")
+      .replace("/>", ' alt="Workflow"/>');
+    return form === "picture"
+      ? `<picture><source srcset="small.webp 1x, large.webp 2x" type="image/webp"/>${image}</picture>`
+      : image;
+  });
 }

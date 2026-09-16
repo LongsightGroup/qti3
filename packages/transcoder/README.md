@@ -39,6 +39,10 @@ model. Interaction mappers are executable and exhaustive over the core registry.
 share semantic mappers but have separate wire serializers; QTI 1.2 owns explicit native and
 fallback response/scoring mappings. Composite items produce one mapping report per interaction.
 
+QTI 2 graphic exports project `img` and `picture` assets to legacy `object` elements, including
+Position Object backgrounds. Responsive sources use the fallback image and emit
+`target.image.responsive_sources_omitted`, marking the conversion as lossy.
+
 Package transcoding preserves safe source paths, assessment-test section structure, item
 dependencies, and per-resource asset ownership. Generated reports use deterministic
 `assets/generated/<sha256>.json` paths.

@@ -55,11 +55,26 @@ function targetAttributeName(name: string, revision: Qti2Revision): string {
   return name.replace(/-([a-z])/g, (_match, character: string) => character.toUpperCase());
 }
 
-export function serializeObject(object: QtiObjectAsset): string {
-  const sources = object.sources
+/** Project an asset to a legacy object, reporting responsive image selection loss. */
+export function serializeObject(
+  object: QtiObjectAsset,
+  diagnostics: QtiTranscodeDiagnostic[],
+  path: string,
+): string {
+  const image = object.imageAttributes !== undefined;
+  if (image && (object.sources.length > 0 || object.imageAttributes?.srcset)) {
+    diagnostics.push({
+      code: "target.image.responsive_sources_omitted",
+      severity: "warning",
+      path,
+      message:
+        "QTI 2 graphics use the fallback image; picture sources and image srcset selection are not preserved.",
+    });
+  }
+  const sources = (image ? [] : object.sources)
     .map((source) => `<source${attributes({ src: source.src, type: source.type })}></source>`)
     .join("");
-  const tracks = object.tracks
+  const tracks = (image ? [] : object.tracks)
     .map(
       (track) =>
         `<track${attributes({

@@ -221,6 +221,9 @@ function mapped(
       kind: "native",
       source: interaction.type,
       emitted,
+      stageObjectXml: interaction.positionObjectStage?.imageAttributes
+        ? serializeObject(interaction.positionObjectStage, diagnostics, `${path}/stage`)
+        : undefined,
       xml: `<${emitted}${responseIdentifier}${interactionAttributes}>${prompt}${body(
         interaction,
         revision,
@@ -303,8 +306,15 @@ function emptyBody(): string {
   return "";
 }
 
-function objectOnly(interaction: QtiInteraction): string {
-  return interaction.object ? serializeObject(interaction.object) : "";
+function objectOnly(
+  interaction: QtiInteraction,
+  _revision: Qti2Revision,
+  diagnostics: QtiTranscodeDiagnostic[],
+  path: string,
+): string {
+  return interaction.object
+    ? serializeObject(interaction.object, diagnostics, `${path}/object`)
+    : "";
 }
 
 function simpleChoices(
@@ -430,7 +440,7 @@ function gapMatchBody(
             diagnostics,
             `${path}/choices/${index}`,
             new Set(["identifier"]),
-          )}>${serializeObject(choice.asset)}</gapImg>`
+          )}>${serializeObject(choice.asset, diagnostics, `${path}/choices/${index}/asset`)}</gapImg>`
         : serializeQti2Choice(choice, "gapText", revision, diagnostics, `${path}/choices/${index}`),
     )
     .join("");
@@ -456,7 +466,9 @@ function hotspotBody(
   diagnostics: QtiTranscodeDiagnostic[],
   path: string,
 ): string {
-  const object = interaction.object ? serializeObject(interaction.object) : "";
+  const object = interaction.object
+    ? serializeObject(interaction.object, diagnostics, `${path}/object`)
+    : "";
   return `${object}${interaction.choices
     .filter((choice) => choice.role === "hotspot")
     .map(
@@ -478,7 +490,9 @@ function graphicAssociationBody(
   diagnostics: QtiTranscodeDiagnostic[],
   path: string,
 ): string {
-  const object = interaction.object ? serializeObject(interaction.object) : "";
+  const object = interaction.object
+    ? serializeObject(interaction.object, diagnostics, `${path}/object`)
+    : "";
   return `${object}${interaction.choices
     .filter((choice) => choice.role === "hotspot")
     .map(
@@ -548,7 +562,9 @@ function graphicGapMatchBody(
   diagnostics: QtiTranscodeDiagnostic[],
   path: string,
 ): string {
-  const object = interaction.object ? serializeObject(interaction.object) : "";
+  const object = interaction.object
+    ? serializeObject(interaction.object, diagnostics, `${path}/object`)
+    : "";
   const choices = interaction.choices
     .filter((choice) => choice.role === "gapChoice")
     .map((choice, index) => {
@@ -560,7 +576,7 @@ function graphicGapMatchBody(
         new Set(["identifier"]),
       );
       return choice.asset
-        ? `<gapImg identifier="${escapeXmlAttribute(choice.identifier)}"${choiceAttributes}>${serializeObject(choice.asset)}</gapImg>`
+        ? `<gapImg identifier="${escapeXmlAttribute(choice.identifier)}"${choiceAttributes}>${serializeObject(choice.asset, diagnostics, `${path}/choices/${index}/asset`)}</gapImg>`
         : "";
     })
     .join("");
@@ -596,7 +612,7 @@ function textualGraphicGapFallbackBody(
             diagnostics,
             `${path}/choices/${index}`,
             new Set(["identifier"]),
-          )}>${serializeObject(choice.asset)}</gapImg>`
+          )}>${serializeObject(choice.asset, diagnostics, `${path}/choices/${index}/asset`)}</gapImg>`
         : serializeQti2Choice(choice, "gapText", revision, diagnostics, `${path}/choices/${index}`),
     )
     .join("");
@@ -624,7 +640,7 @@ function textualGraphicGapFallbackBody(
           )
           .join(" ");
   const contextObject = interaction.object
-    ? `<div>${serializeObject(interaction.object)}</div>`
+    ? `<div>${serializeObject(interaction.object, diagnostics, `${path}/object`)}</div>`
     : "";
   return `${choices}${contextObject}<p>${content}</p>`;
 }

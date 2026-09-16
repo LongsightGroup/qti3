@@ -11,7 +11,11 @@ interface Qti2MappedInteractionBase {
 
 /** Typed wire mapping result after policy dispatch and native serialization. */
 export type Qti2MappedInteraction =
-  | (Qti2MappedInteractionBase & { readonly kind: "native" })
+  | (Qti2MappedInteractionBase & {
+      readonly kind: "native";
+      /** Legacy background projection for an authored Position Object image or picture. */
+      readonly stageObjectXml?: string | undefined;
+    })
   | (Qti2MappedInteractionBase & {
       readonly kind: "extended-text-fallback";
       readonly scoring: "manual";

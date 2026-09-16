@@ -54,7 +54,11 @@ export function serializeQti2Content(
             revision,
             diagnostics,
             `/itemBody/${name}`,
-          )}>${serializeQti2Content(node.children, mappings, revision, diagnostics)}</${name}>`;
+          )}>${
+            name === "positionObjectStage"
+              ? serializePositionObjectStageChildren(node, mappings, revision, diagnostics)
+              : serializeQti2Content(node.children, mappings, revision, diagnostics)
+          }</${name}>`;
         }
       }
       throw new Error(`Unreachable QTI content node: ${JSON.stringify(node)}`);
@@ -95,6 +99,25 @@ function substituteStagedPositionObjectXml(
     substitutionXml.push(mapping.xml);
   }
   return substitutionXml.join("");
+}
+
+function serializePositionObjectStageChildren(
+  node: QtiContentNode & { readonly kind: "element" },
+  mappings: readonly Qti2MappedInteraction[],
+  revision: Qti2Revision,
+  diagnostics: QtiTranscodeDiagnostic[],
+): string {
+  const background = node.children.flatMap((child) => {
+    const mapping = child.kind === "interaction" ? mappings[child.interactionIndex] : undefined;
+    return mapping?.kind === "native" && mapping.stageObjectXml ? [mapping.stageObjectXml] : [];
+  })[0];
+  return node.children
+    .map((child) =>
+      background && child.kind === "element" && ["img", "picture"].includes(child.qtiName)
+        ? background
+        : serializeQti2Content([child], mappings, revision, diagnostics),
+    )
+    .join("");
 }
 
 function contentElementName(name: string): string {
