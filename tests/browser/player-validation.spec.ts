@@ -3,6 +3,41 @@ import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { expectResponse, pasteXml, provideResponse } from "./player-helpers.js";
 
 test.describe("player validation", () => {
+  test("blocks required record text entry after its text is cleared", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="required-record" title="Required record" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="record">
+        <qti-correct-response><qti-value field-identifier="floatValue" base-type="float">12</qti-value></qti-correct-response>
+      </qti-response-declaration>
+      <qti-item-body><p>Value: <qti-text-entry-interaction response-identifier="RESPONSE"/></p></qti-item-body>
+    </qti-assessment-item>`,
+    );
+    const player = page.locator("qti-assessment-item-player");
+    const input = player.getByRole("textbox");
+    expect(await player.evaluate((element) => element.scoreAttempt() === undefined)).toBe(true);
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+
+    await input.fill("12");
+    await input.fill("");
+    expect(await player.evaluate((element) => element.scoreAttempt() === undefined)).toBe(true);
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    const cleared = await player.evaluate((element) => element.serialize());
+    expect(cleared.responses.RESPONSE).toMatchObject({ stringValue: "", floatValue: null });
+    expect(cleared.validationMessages).toContainEqual(
+      expect.objectContaining({ code: "response.required", path: "RESPONSE" }),
+    );
+    const describedBy = await input.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    await expect(page.locator(`#${describedBy}`)).toContainText("RESPONSE requires a response.");
+
+    await input.fill("0");
+    expect(await player.evaluate((element) => element.scoreAttempt() !== undefined)).toBe(true);
+    await expect(input).not.toHaveAttribute("aria-invalid", "true");
+    expect(await player.evaluate((element) => element.serialize().validationMessages)).toEqual([]);
+  });
+
   test("associates validation messages with unanswered controls", async ({ page }) => {
     const fixture =
       interactionFixtures.find((item) => item.interactionType === "choice") ??

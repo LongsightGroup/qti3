@@ -412,7 +412,7 @@ function validateDeclarationResponse(
 
   const effectiveValue = value ?? null;
   const count =
-    interaction?.type === "extendedText"
+    interaction?.type === "extendedText" || interaction?.type === "textEntry"
       ? Array.isArray(effectiveValue)
         ? effectiveValue.filter((entry) => entry !== "").length
         : qtiTextResponseString(effectiveValue) === ""

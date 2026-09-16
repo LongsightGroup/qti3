@@ -113,6 +113,42 @@ describe("text response contracts", () => {
       ).toBe(true);
     }
   });
+
+  it.each(["text-entry", "extended-text"])(
+    "requires nonempty text in scored %s records",
+    (interactionType) => {
+      const result =
+        parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="required-record" title="Required record" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="record">
+          <qti-correct-response><qti-value field-identifier="floatValue" base-type="float">12</qti-value></qti-correct-response>
+        </qti-response-declaration>
+        <qti-item-body><qti-${interactionType}-interaction response-identifier="RESPONSE"/></qti-item-body>
+      </qti-assessment-item>`);
+      expect(result.ok).toBe(true);
+      const item = result.document?.item;
+      const interaction = item?.interactions[0];
+      if (!item || !interaction) throw new Error("Expected record interaction");
+      for (const response of [null, captureQtiTextResponse(interaction, "")]) {
+        const input = { item, responses: { RESPONSE: response }, requireScoredResponses: true };
+        expect(validateQtiResponseVariables(input).diagnostics).toContainEqual(
+          expect.objectContaining({ code: "response.required", identifier: "RESPONSE" }),
+        );
+        expect(validateQtiResponseVariables({ ...input, allowIncompleteResponses: true }).ok).toBe(
+          true,
+        );
+        expect(validateQtiResponseVariables({ ...input, requireScoredResponses: false }).ok).toBe(
+          true,
+        );
+      }
+      expect(
+        validateQtiResponseVariables({
+          item,
+          responses: { RESPONSE: captureQtiTextResponse(interaction, "0") },
+          requireScoredResponses: true,
+        }).ok,
+      ).toBe(true);
+    },
+  );
 });
 
 it.each(["multiple", "ordered"])("validates extended %s response string limits", (cardinality) => {
