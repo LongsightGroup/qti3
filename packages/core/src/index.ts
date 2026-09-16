@@ -378,4 +378,8 @@ export {
   type QtiPackageStreamSummary,
 } from "./qti-package-stream.js";
 
-export { captureQtiTextResponse, qtiTextResponseString } from "./text-response.js";
+export {
+  captureQtiTextResponse,
+  formatQtiTextResponse,
+  qtiTextResponseString,
+} from "./text-response.js";

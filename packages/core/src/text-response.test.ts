@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   captureQtiTextResponse,
   createItemSession,
+  formatQtiTextResponse,
   parseQtiXml,
   validateQtiResponseVariables,
 } from "./index.js";
@@ -76,6 +77,31 @@ describe("text response contracts", () => {
       }).ok,
     ).toBe(false);
   });
+
+  it.each([
+    ["integer", 16, "ff", 255],
+    ["integer", 36, "-zz", -1295],
+    ["float", 2, "10.1", 2.5],
+    ["float", 10, "0.125", 0.125],
+  ])(
+    "restores %s text in base %s without changing its numeric value",
+    (baseType, base, text, value) => {
+      const { document, interaction } = parsed(
+        "single",
+        `base-type="${baseType}"`,
+        `base="${base}"`,
+      );
+      const session = createItemSession(document);
+      session.respond("RESPONSE", captureQtiTextResponse(interaction, text));
+      const restored = createItemSession(document, session.serialize()).serialize().responses
+        .RESPONSE;
+      expect(restored).toBe(value);
+      const editable = formatQtiTextResponse(interaction, restored ?? null);
+      expect(editable).toBe(text);
+      expect(captureQtiTextResponse(interaction, `${editable} `)).toBe(value);
+      expect(formatQtiTextResponse(interaction, `  ${text}  `)).toBe(`  ${text}  `);
+    },
+  );
 
   it("validates companion declarations, radix, and unsupported formats", () => {
     parsed("single", 'base-type="integer"', 'string-identifier="RAW"');

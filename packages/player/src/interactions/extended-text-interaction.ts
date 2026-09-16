@@ -1,4 +1,5 @@
 import {
+  formatQtiTextResponse,
   qtiTextResponseString,
   type QtiInteraction,
   type QtiValue,
@@ -32,7 +33,9 @@ export function renderExtendedTextResponse(
   const group = document.createElement("div");
   group.className = "qti3-text-collection";
   const rows = document.createElement("div");
-  const values = Array.isArray(currentValue) ? currentValue.map(qtiTextResponseString) : [];
+  const values = Array.isArray(currentValue)
+    ? currentValue.map((value) => formatQtiTextResponse(interaction, value))
+    : [];
   const maximum = Number(interaction.attributes["max-strings"] ?? 0);
   const initialCount = Math.min(
     maximum,

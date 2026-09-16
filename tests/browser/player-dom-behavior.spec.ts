@@ -1167,6 +1167,72 @@ test("numeric text entry captures, scores, and restores raw companion text", asy
   await expectNoAxeViolationsOnPlayer(page);
 });
 
+for (const scenario of [
+  {
+    type: "text-entry",
+    cardinality: "single",
+    baseType: "integer",
+    base: 16,
+    texts: ["ff"],
+    values: [255],
+  },
+  {
+    type: "extended-text",
+    cardinality: "single",
+    baseType: "float",
+    base: 2,
+    texts: ["10.1"],
+    values: [2.5],
+  },
+  {
+    type: "extended-text",
+    cardinality: "multiple",
+    baseType: "integer",
+    base: 16,
+    texts: ["ff", "a"],
+    values: [255, 10],
+  },
+  {
+    type: "extended-text",
+    cardinality: "ordered",
+    baseType: "float",
+    base: 2,
+    texts: ["10.1", "1.1"],
+    values: [2.5, 1.5],
+  },
+]) {
+  test(`${scenario.type} ${scenario.cardinality} restores numeric answers in the authored base without a companion`, async ({
+    page,
+  }) => {
+    const collection = scenario.cardinality !== "single";
+    const interaction = `<qti-${scenario.type}-interaction response-identifier="RESPONSE" base="${scenario.base}" ${collection ? 'min-strings="2" max-strings="2"' : ""}/>`;
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="radix-restore" title="Radix restore" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="${scenario.cardinality}" base-type="${scenario.baseType}"><qti-correct-response>${scenario.values.map((value) => `<qti-value>${value}</qti-value>`).join("")}</qti-correct-response></qti-response-declaration>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+      <qti-item-body>${scenario.type === "text-entry" ? `<p>Value: ${interaction}</p>` : interaction}</qti-item-body>
+      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+    </qti-assessment-item>`,
+    );
+    const inputs = page.locator(
+      "qti-assessment-item-player input, qti-assessment-item-player textarea",
+    );
+    for (const [index, text] of scenario.texts.entries()) await inputs.nth(index).fill(text);
+    const expected = collection ? scenario.values : scenario.values[0];
+    expect(await currentResponse(page)).toEqual(expected);
+    expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
+    await suspendRestoreCurrentAttempt(page);
+    for (const [index, text] of scenario.texts.entries()) {
+      await expect(inputs.nth(index)).toHaveValue(text);
+      await inputs.nth(index).fill(`${text} `);
+    }
+    expect(await currentResponse(page)).toEqual(expected);
+    expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
+  });
+}
+
 test("record text entry preserves significant digits through restore", async ({ page }) => {
   await page.goto("/");
   await pasteXml(

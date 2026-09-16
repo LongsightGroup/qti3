@@ -19,6 +19,15 @@ export function qtiTextResponseString(value: QtiValue): string {
   return value === null ? "" : String(value);
 }
 
+/** Format a captured scalar in its authored radix, preserving companion and record text. */
+export function formatQtiTextResponse(interaction: QtiInteraction, value: QtiValue): string {
+  const base = radix(interaction);
+  if (typeof value === "number" && Number.isInteger(base) && base >= 2 && base <= 36) {
+    return value.toString(base);
+  }
+  return qtiTextResponseString(value);
+}
+
 function radix(interaction: QtiInteraction): number {
   return Number(interaction.attributes.base ?? 10);
 }
