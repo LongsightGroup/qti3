@@ -38,7 +38,7 @@ export function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDi
     validatePortableCustomInteraction(interaction, item, diagnostics);
     validateInteractionLimitAttributes(interaction, diagnostics);
     validatePatternMaskAttribute(interaction, diagnostics);
-    validateTextEntryContract(interaction, responseDeclarations, diagnostics);
+    validateTextInteractionContract(interaction, responseDeclarations, diagnostics);
     validateGraphicHotspotObjectDimensions(interaction, diagnostics);
     validateCorrectResponseReferences(
       interaction,
@@ -745,7 +745,10 @@ function expectedResponseShape(
     return { cardinalities: ["single", "record"], baseTypes: ["string", "integer", "float"] };
   }
   if (interaction.type === "extendedText") {
-    return { cardinalities: ["single"], baseTypes: ["string"] };
+    return {
+      cardinalities: ["single", "multiple", "ordered", "record"],
+      baseTypes: ["string", "integer", "float"],
+    };
   }
   if (interaction.type === "drawing") return { cardinalities: ["single"], baseTypes: ["file"] };
   if (interaction.type === "portableCustom") {
@@ -785,12 +788,12 @@ function needsChoices(interaction: QtiInteraction): boolean {
   );
 }
 
-function validateTextEntryContract(
+function validateTextInteractionContract(
   interaction: QtiInteraction,
   declarations: ReadonlyMap<string, QtiResponseDeclaration>,
   diagnostics: QtiDiagnostic[],
 ): void {
-  if (interaction.type !== "textEntry") return;
+  if (interaction.type !== "textEntry" && interaction.type !== "extendedText") return;
   const report = (code: string, message: string) =>
     diagnostics.push({
       code,
@@ -804,11 +807,38 @@ function validateTextEntryContract(
     report("interaction.text.base", "Text response base must be an integer from 2 through 36.");
   }
   const format = interaction.attributes.format;
-  if (format !== undefined && format !== "plain") {
+  if (
+    format !== undefined &&
+    format !== "plain" &&
+    !(interaction.type === "extendedText" && format === "preformatted") &&
+    !(
+      interaction.type === "extendedText" &&
+      format === "xhtml" &&
+      interaction.responseBaseType === "string"
+    )
+  ) {
     report(
       "interaction.text.format.unsupported",
-      `Text-entry format ${format} is not supported; use plain text.`,
+      `Text format ${format} is not supported; use plain text.`,
     );
+  }
+  if (interaction.type === "extendedText") {
+    const container =
+      interaction.responseCardinality === "multiple" ||
+      interaction.responseCardinality === "ordered";
+    const max = interaction.attributes["max-strings"];
+    const min = interaction.attributes["min-strings"] ?? "0";
+    if (
+      (container && max === undefined) ||
+      (max !== undefined && !isNonNegativeInteger(max)) ||
+      !isNonNegativeInteger(min) ||
+      Number(min) > (container ? Number(max) : 1)
+    ) {
+      report(
+        "interaction.text.strings",
+        "Extended text requires valid min-strings/max-strings limits; containers require max-strings and the minimum must not exceed the maximum.",
+      );
+    }
   }
   const companion = interaction.attributes["string-identifier"];
   if (companion !== undefined) {

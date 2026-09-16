@@ -56,6 +56,7 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
     drawing: ["tests/browser/player-graphic.spec.ts"],
     endAttempt: ["tests/browser/player-dom-behavior.spec.ts", ...browserKeyboardA11yTests],
     extendedText: [
+      "packages/core/src/text-response.test.ts",
       "tests/browser/player-dom-behavior.spec.ts",
       "tests/browser/player-extended-text-xhtml.spec.ts",
     ],

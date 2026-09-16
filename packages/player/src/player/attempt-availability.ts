@@ -21,7 +21,7 @@ export function syncAttemptAvailability(
   >(
     ".qti3-interaction button, .qti3-interaction input, .qti3-interaction select, .qti3-interaction textarea",
   )) {
-    control.disabled = options.completed;
+    control.disabled = options.completed || control.dataset.responseDisabled === "true";
   }
 
   for (const element of root.querySelectorAll<HTMLElement>(

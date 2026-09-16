@@ -685,10 +685,15 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         );
         return;
       }
-      if (interaction?.type === "textEntry" && typeof value === "string") {
+      if (interaction?.type === "textEntry" || interaction?.type === "extendedText") {
         const companion = interaction.attributes["string-identifier"];
         if (companion) loadedItem.session.respond(companion, value);
-        value = captureQtiTextResponse(interaction, value);
+        if (typeof value === "string") value = captureQtiTextResponse(interaction, value);
+        else if (Array.isArray(value))
+          value = value.flatMap((entry) => {
+            const captured = captureQtiTextResponse(interaction, String(entry));
+            return typeof captured === "string" || typeof captured === "number" ? [captured] : [];
+          });
       }
       loadedItem.session.respond(responseIdentifier, value);
       this.applyInlineValidation(responseIdentifier, undefined);

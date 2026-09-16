@@ -34,6 +34,8 @@ export const defaultPlayerMessageCatalog: PlayerMessageCatalog = {
     upload: "Upload",
   },
   strings: {
+    addTextResponse: "Add response",
+    textResponsePosition: "{label} {index}",
     remove: "Remove",
     removePair: "Remove {label}",
     removeOrderedChoice: "Remove {label} from order",

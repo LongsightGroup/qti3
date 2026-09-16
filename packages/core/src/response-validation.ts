@@ -8,7 +8,7 @@ import type {
   QtiScalarValue,
   QtiValue,
 } from "./types.js";
-import { isQtiTextResponseRecord } from "./text-response.js";
+import { isQtiTextResponseRecord, qtiTextResponseString } from "./text-response.js";
 import { assertNever } from "./assert-never.js";
 import { isNullResponse, isRecordValue, valueContainer } from "./processing-values.js";
 import { listNamedResponseInputs, type QtiNamedResponseInput } from "./response-input.js";
@@ -117,7 +117,10 @@ export function parseQtiResponseVariables(
         if (
           declaration.cardinality === "record" &&
           parsedValue !== null &&
-          interactions?.some((interaction) => interaction.type === "textEntry") &&
+          interactions?.some(
+            (interaction) =>
+              interaction.type === "textEntry" || interaction.type === "extendedText",
+          ) &&
           !isQtiTextResponseRecord(parsedValue)
         ) {
           pushResponseDomainDiagnostic(declaration, parsedValue, diagnostics);
@@ -395,7 +398,15 @@ function validateDeclarationResponse(
 
   const effectiveValue = value ?? null;
   const count =
-    interaction?.type === "media" ? mediaPlayCount(effectiveValue) : responseCount(effectiveValue);
+    interaction?.type === "extendedText"
+      ? Array.isArray(effectiveValue)
+        ? effectiveValue.filter((entry) => entry !== "").length
+        : qtiTextResponseString(effectiveValue) === ""
+          ? 0
+          : 1
+      : interaction?.type === "media"
+        ? mediaPlayCount(effectiveValue)
+        : responseCount(effectiveValue);
 
   if (policy.checkMinimum && !allowIncompleteResponses) {
     const minimum = effectiveMinimumRequiredResponses(declaration, interaction);

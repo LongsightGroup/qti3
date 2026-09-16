@@ -407,7 +407,8 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
 function extendedTextInteractionEntry(): QtiInteractionElementSupport {
   return {
     ...entry("qti-extended-text-interaction", "extendedText"),
-    notes: "Supports plain and format=xhtml extended text.",
+    notes:
+      "Supports single, multiple, ordered and numeric record responses; string/integer/float values; min-strings/max-strings; plain, preformatted and string XHTML capture.",
   };
 }
 

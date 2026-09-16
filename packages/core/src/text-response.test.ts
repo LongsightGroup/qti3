@@ -88,3 +88,57 @@ describe("text response contracts", () => {
     }
   });
 });
+
+it.each(["multiple", "ordered"])("validates extended %s response string limits", (cardinality) => {
+  const xml = textItem(
+    cardinality,
+    'base-type="string"',
+    'min-strings="2" max-strings="2"',
+  ).replaceAll("qti-text-entry-interaction", "qti-extended-text-interaction");
+  const result = parseQtiXml(xml);
+  expect(result.diagnostics.filter((entry) => entry.severity === "error")).toEqual([]);
+  if (!result.document) throw new Error("Expected extended text item");
+  const item = result.document.item;
+  expect(
+    validateQtiResponseVariables({ item, responses: { RESPONSE: ["mulch", "watering"] } }).ok,
+  ).toBe(true);
+  expect(
+    validateQtiResponseVariables({ item, responses: { RESPONSE: ["mulch", ""] } }).diagnostics,
+  ).toContainEqual(expect.objectContaining({ code: "response.required" }));
+  expect(
+    validateQtiResponseVariables({
+      item,
+      responses: { RESPONSE: ["mulch"] },
+      allowIncompleteResponses: true,
+    }).ok,
+  ).toBe(true);
+  expect(
+    validateQtiResponseVariables({ item, responses: { RESPONSE: ["one", "two", "three"] } })
+      .diagnostics,
+  ).toContainEqual(expect.objectContaining({ code: "response.maximum" }));
+});
+
+it("requires a maximum for extended text containers and supports numeric records", () => {
+  expect(
+    parseQtiXml(
+      textItem("ordered", 'base-type="string"').replaceAll(
+        "qti-text-entry-interaction",
+        "qti-extended-text-interaction",
+      ),
+    ).diagnostics,
+  ).toContainEqual(expect.objectContaining({ code: "interaction.text.strings" }));
+  const result = parseQtiXml(
+    textItem("record", "").replaceAll(
+      "qti-text-entry-interaction",
+      "qti-extended-text-interaction",
+    ),
+  );
+  expect(result.diagnostics.filter((entry) => entry.severity === "error")).toEqual([]);
+  const interaction = result.document?.item.interactions[0];
+  if (!interaction) throw new Error("Expected record interaction");
+  expect(captureQtiTextResponse(interaction, "12.00")).toMatchObject({
+    floatValue: 12,
+    nsf: 4,
+    ndp: 2,
+  });
+});

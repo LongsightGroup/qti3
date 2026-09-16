@@ -31,6 +31,8 @@ export function responseLimitAttribute(
   choiceKey: "min-choices" | "max-choices",
   associationKey: "min-associations" | "max-associations",
 ): string | undefined {
+  if (interaction.type === "extendedText")
+    return interaction.attributes[choiceKey === "min-choices" ? "min-strings" : "max-strings"];
   if (interaction.type === "order" || interaction.type === "graphicOrder") {
     return interaction.attributes[choiceKey];
   }
@@ -54,6 +56,10 @@ export function maximumAllowedResponses(
 ): number | undefined {
   if (!interaction) return undefined;
   if (interaction.type === "media") return maximumMediaPlays(interaction);
+  if (interaction.type === "extendedText") {
+    const maximum = interaction.attributes["max-strings"];
+    return maximum === undefined ? undefined : parseNonNegativeInteger(maximum);
+  }
   if (
     (interaction.type === "order" || interaction.type === "graphicOrder") &&
     !orderSubsetLimitsActive(interaction)

@@ -17,6 +17,8 @@ export interface PlayerMessageManifestEntry {
 }
 
 export const PLAYER_MESSAGE_MANIFEST = [
+  { key: "addTextResponse", resolver: "plain" },
+  { key: "textResponsePosition", resolver: "template", params: ["label", "index"] },
   { key: "remove", resolver: "plain" },
   { key: "removePair", resolver: "template", params: ["label"] },
   { key: "removeOrderedChoice", resolver: "template", params: ["label"] },

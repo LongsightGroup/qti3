@@ -8,7 +8,10 @@ export function usesChoiceSet(interaction: QtiInteraction): boolean {
 }
 
 export function usesOrderedResponse(interaction: QtiInteraction): boolean {
-  return interaction.responseCardinality === "ordered" || interaction.type === "order";
+  return (
+    interaction.type !== "extendedText" &&
+    (interaction.responseCardinality === "ordered" || interaction.type === "order")
+  );
 }
 
 const explicitNonPairInteractionTypes = new Set<QtiInteraction["type"]>([

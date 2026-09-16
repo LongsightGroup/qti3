@@ -1161,3 +1161,40 @@ test("record text entry preserves significant digits through restore", async ({ 
   await expect(input).toHaveValue("1.20e-2");
   await expectNoAxeViolationsOnPlayer(page);
 });
+
+for (const cardinality of ["multiple", "ordered"]) {
+  test(`extended text ${cardinality} captures separate responses and restores keyboard controls`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="extended-${cardinality}" title="Two gardening actions" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="${cardinality}" base-type="string"><qti-correct-response><qti-value>mulch</qti-value><qti-value>watering</qti-value></qti-correct-response></qti-response-declaration>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+      <qti-item-body><qti-extended-text-interaction response-identifier="RESPONSE" min-strings="2" max-strings="2"><qti-prompt>Gardening action</qti-prompt></qti-extended-text-interaction></qti-item-body>
+      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+    </qti-assessment-item>`,
+    );
+    const inputs = page.locator("qti-assessment-item-player textarea");
+    await expect(inputs).toHaveCount(2);
+    await inputs.nth(0).focus();
+    await page.keyboard.type("mulch");
+    await inputs.nth(1).focus();
+    await page.keyboard.type("watering");
+    expect(await currentResponse(page)).toEqual(["mulch", "watering"]);
+    await expect(page.getByRole("button", { name: "Add response", exact: true })).toBeDisabled();
+    await page.getByRole("button", { name: "Remove Gardening action 2", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    expect(await currentResponse(page)).toEqual(["mulch"]);
+    await page.getByRole("button", { name: "Add response", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await expect(inputs.nth(1)).toBeFocused();
+    await page.keyboard.type("watering");
+    await suspendRestoreCurrentAttempt(page);
+    await expect(inputs.nth(0)).toHaveValue("mulch");
+    await expect(inputs.nth(1)).toHaveValue("watering");
+    await expectNoAxeViolationsOnPlayer(page);
+    expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
+  });
+}
