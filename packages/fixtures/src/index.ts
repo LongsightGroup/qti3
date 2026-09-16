@@ -504,7 +504,7 @@ function createAdaptiveFeedbackFixture(): QtiFixture {
       <qti-simple-choice identifier="C">Revise the claim to say rainfall has no connection to soil movement.</qti-simple-choice>
       <qti-simple-choice identifier="D">Focus only on the names of the sites, not the measured plant cover.</qti-simple-choice>
     </qti-choice-interaction>
-    <qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/>
+    <p><qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/></p>
     <qti-feedback-block identifier="HINT_FEEDBACK" outcome-identifier="FEEDBACK" show-hide="show">
       <qti-content-body><p>Hint: Compare the rows with the lowest plant cover to the rows with the most soil movement after rain.</p></qti-content-body>
     </qti-feedback-block>
@@ -1168,7 +1168,7 @@ function defaultResponse(interactionType: QtiInteractionType): {
 
 function renderInteractionXml(qtiName: string, interactionType: QtiInteractionType): string {
   if (interactionType === "endAttempt") {
-    return `<p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><${qtiName} response-identifier="RESPONSE" title="Show planning hint"/>`;
+    return `<p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><${qtiName} response-identifier="RESPONSE" title="Show planning hint"/></p>`;
   }
   if (interactionType === "media") {
     return `<${qtiName} response-identifier="RESPONSE" autostart="false" min-plays="1"><qti-prompt>Play the town-hall audio excerpt once before answering the follow-up question about the speaker's claim. This fixture uses silent audio so browser media controls can be tested without shipping copyrighted material.</qti-prompt><object data="${silentWavDataUri}" type="audio/wav">Silent town-hall audio excerpt</object></${qtiName}>`;

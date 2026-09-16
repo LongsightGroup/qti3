@@ -16,7 +16,7 @@
       <qti-simple-choice identifier="C">Revise the claim to say rainfall has no connection to soil movement.</qti-simple-choice>
       <qti-simple-choice identifier="D">Focus only on the names of the sites, not the measured plant cover.</qti-simple-choice>
     </qti-choice-interaction>
-    <qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/>
+    <p><qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/></p>
     <qti-feedback-block identifier="HINT_FEEDBACK" outcome-identifier="FEEDBACK" show-hide="show">
       <qti-content-body><p>Hint: Compare the rows with the lowest plant cover to the rows with the most soil movement after rain.</p></qti-content-body>
     </qti-feedback-block>

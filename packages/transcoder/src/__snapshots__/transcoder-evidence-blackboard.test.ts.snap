@@ -270,7 +270,7 @@ exports[`blackboard-question-banks@1 evidence > transcodes endAttempt 1`] = `
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt><p>Enter your response.</p></prompt></extendedTextInteraction></itemBody>
+  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><extendedTextInteraction responseIdentifier="RESPONSE"><prompt><p>Enter your response.</p></prompt></extendedTextInteraction></p></itemBody>
 
 </assessmentItem>",
 }

@@ -270,7 +270,7 @@ exports[`moodle-xml@1 evidence > transcodes endAttempt 1`] = `
 <quiz>
   <question type="essay">
     <name><text>endAttempt-reference</text></name>
-    <questiontext format="html"><text>&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;&lt;p&gt;Explain whether the attempt should end and why.&lt;/p&gt;</text></questiontext>
+    <questiontext format="html"><text>&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;Explain whether the attempt should end and why.&lt;/p&gt;</text></questiontext>
     <generalfeedback format="html"><text></text></generalfeedback>
     <defaultgrade>1</defaultgrade>
     <penalty>0</penalty>

@@ -306,7 +306,7 @@ exports[`canvas-classic-quizzes@1 evidence > transcodes endAttempt 1`] = `
       </qtimetadata>
     </itemmetadata>
     <presentation>
-      <material><mattext texttype="text/html">&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;</mattext></material>
+      <material><mattext texttype="text/html">&lt;p&gt;An adaptive science item lets the student request a planning hint before answering.&lt;/p&gt;&lt;p&gt;A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.&lt;/p&gt;&lt;p&gt;&lt;/p&gt;</mattext></material>
 
 
       <response_str ident="response1" rcardinality="Single"><material><mattext texttype="text/plain">Explain whether the attempt should end and why.</mattext></material><render_fib fibtype="String" prompt="Box" rows="8" columns="72"><response_label ident="answer1" rshuffle="No"></response_label></render_fib></response_str>

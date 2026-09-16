@@ -191,6 +191,7 @@ function mapped(
       });
     }
     const admitsPrompt =
+      interaction.type !== "endAttempt" &&
       interaction.type !== "positionObject" &&
       interaction.type !== "custom" &&
       interaction.type !== "portableCustom";
@@ -219,20 +220,12 @@ function mapped(
       kind: "native",
       source: interaction.type,
       emitted,
-      xml:
-        interaction.type === "endAttempt"
-          ? `<p><${emitted}${responseIdentifier}${interactionAttributes}>${body(
-              interaction,
-              revision,
-              diagnostics,
-              path,
-            )}</${emitted}></p>`
-          : `<${emitted}${responseIdentifier}${interactionAttributes}>${prompt}${body(
-              interaction,
-              revision,
-              diagnostics,
-              path,
-            )}</${emitted}>`,
+      xml: `<${emitted}${responseIdentifier}${interactionAttributes}>${prompt}${body(
+        interaction,
+        revision,
+        diagnostics,
+        path,
+      )}</${emitted}>`,
       diagnostics,
     };
   };

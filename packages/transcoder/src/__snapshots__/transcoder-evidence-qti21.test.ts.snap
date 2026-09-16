@@ -186,7 +186,7 @@ exports[`qti21-standard@1 evidence > transcodes endAttempt 1`] = `
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="boolean"><correctResponse><value>true</value></correctResponse></responseDeclaration>
   <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>
 
-  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><endAttemptInteraction responseIdentifier="RESPONSE" title="Show planning hint"></endAttemptInteraction></p></itemBody>
+  <itemBody><p>An adaptive science item lets the student request a planning hint before answering.</p><p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><p><endAttemptInteraction responseIdentifier="RESPONSE" title="Show planning hint"></endAttemptInteraction></p></p></itemBody>
   <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>",
 }

@@ -9,7 +9,7 @@
   </qti-outcome-declaration>
   <qti-item-body>
     <p>An adaptive science item lets the student request a planning hint before answering.</p>
-    <p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><qti-end-attempt-interaction response-identifier="RESPONSE" title="Show planning hint"/>
+    <p>A student is comparing two explanations for why a coastal town floods more often after storms. The end-attempt control lets the student request a scaffold before submitting the final answer.</p><p><qti-end-attempt-interaction response-identifier="RESPONSE" title="Show planning hint"/></p>
   </qti-item-body>
   <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
 </qti-assessment-item>

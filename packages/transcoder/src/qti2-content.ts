@@ -33,7 +33,18 @@ export function serializeQti2Content(
             diagnostics,
           )}</feedback${node.feedbackType === "block" ? "Block" : "Inline"}>`;
         case "element": {
-          const name = contentElementName(node.qtiName);
+          let name = contentElementName(node.qtiName);
+          // Vendor essay fallbacks turn inline controls into block interactions.
+          // Preserve the surrounding text and attributes in a flow-content container.
+          if (
+            name === "p" &&
+            node.children.some(
+              (child) =>
+                child.kind === "interaction" &&
+                mappings[child.interactionIndex]?.kind === "extended-text-fallback",
+            )
+          )
+            name = "div";
           if (name === "positionObjectStage") {
             const stagedSubstitution = substituteStagedPositionObjectXml(node, mappings);
             if (stagedSubstitution !== undefined) return stagedSubstitution;
