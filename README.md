@@ -523,6 +523,8 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 - Hosts can check restored JSON with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
 - Reset and restore replace the active session; events from old controls cannot overwrite its responses.
 - Non-adaptive items reset authored outcomes before each scoring run.
+- Single integer/float outcomes without an authored default initialize to zero; other
+  undeclared defaults remain NULL, and non-adaptive scoring resets to these effective defaults.
 - Adaptive items retain outcome values across response-processing runs.
 - For non-adaptive items, `endAttempt()` completes the item after a valid score run.
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.

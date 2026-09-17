@@ -85,7 +85,8 @@ test.describe("Basic item player readiness", () => {
 
     const score = await scoreCurrentAttempt(page);
     expect(score?.state.responses.RESPONSE).toBe("A concise answer");
-    expect(score?.outcomes.SCORE).toBeNull();
+    // The numeric default is zero; this human-scored fixture has no automated grade.
+    expect(score?.outcomes.SCORE).toBe(0);
   });
 
   test("preserves Basic graphic alt text in rendered output", async ({ page }) => {

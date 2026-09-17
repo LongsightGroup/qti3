@@ -301,7 +301,7 @@ describe("template processing", () => {
     expect(session.serialize().templateValues).toEqual({ A: 2 });
     expect(session.serialize().responses).toEqual({});
     expect(session.serialize().outcomes).toMatchObject({
-      SCORE: null,
+      SCORE: 0,
       TRACE: null,
       completionStatus: "not_attempted",
     });

@@ -240,7 +240,8 @@ describe("QTI delivery trust boundary", () => {
 
     const browserSession = createItemSession(redacted.document!);
     browserSession.respond("RESPONSE", "A");
-    expect(browserSession.score().outcomes.SCORE).toBeNull();
+    // Numeric initialization is not a computed or authoritative grade.
+    expect(browserSession.score().outcomes.SCORE).toBe(0);
 
     const correct = scoreQtiItemServerSide({
       itemXml: authoritative,

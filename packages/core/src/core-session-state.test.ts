@@ -7,6 +7,41 @@ import {
 } from "./index.js";
 
 describe("core session state", () => {
+  it.each([false, true])(
+    "initializes numeric outcomes and resets only non-adaptive items (%s)",
+    (adaptive) => {
+      const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="defaults" title="Defaults" adaptive="${adaptive}" time-dependent="false">
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="COUNT" cardinality="single" base-type="integer"/>
+        <qti-outcome-declaration identifier="AUTHORED" cardinality="single" base-type="integer"><qti-default-value><qti-value>7</qti-value></qti-default-value></qti-outcome-declaration>
+        <qti-outcome-declaration identifier="LIST" cardinality="multiple" base-type="float"/>
+        <qti-outcome-declaration identifier="ORDER" cardinality="ordered" base-type="integer"/>
+        <qti-outcome-declaration identifier="TEXT" cardinality="single" base-type="string"/>
+        <qti-item-body><p>Numeric defaults.</p></qti-item-body>
+        <qti-response-processing>
+          <qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value>
+        </qti-response-processing>
+      </qti-assessment-item>
+    `);
+      expect(result.ok).toBe(true);
+      if (!result.document) throw new Error("Expected parsed item");
+      const session = createItemSession(result.document);
+      expect(session.serialize().outcomes).toMatchObject({
+        SCORE: 0,
+        COUNT: 0,
+        AUTHORED: 7,
+        LIST: null,
+        ORDER: null,
+        TEXT: null,
+      });
+      expect(session.score().outcomes.SCORE).toBe(1);
+      expect(session.score().outcomes.SCORE).toBe(adaptive ? 2 : 1);
+      const restored = createItemSession(result.document, session.serialize());
+      expect(restored.score().outcomes.SCORE).toBe(adaptive ? 3 : 1);
+    },
+  );
+
   it("parses and scores a choice item", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="choice" title="choice" time-dependent="false">

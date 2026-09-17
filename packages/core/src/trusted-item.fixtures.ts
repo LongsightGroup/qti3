@@ -100,12 +100,13 @@ export function adaptiveTemplatePresentationItemXml(): string {
   `;
 }
 
-export function noScoreProcessingItemXml(): string {
+export function nullScoreProcessingItemXml(): string {
   return `
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="missing-score" title="missing-score" time-dependent="false">
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
       <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-      <qti-item-body><p>No processing.</p></qti-item-body>
+      <qti-item-body><p>NULL score.</p></qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-null/></qti-set-outcome-value></qti-response-processing>
     </qti-assessment-item>
   `;
 }

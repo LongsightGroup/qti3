@@ -4,7 +4,7 @@ import {
   adaptiveChoiceItemXml,
   adaptiveTemplatePresentationItemXml,
   adaptiveTemplateItemXml,
-  noScoreProcessingItemXml,
+  nullScoreProcessingItemXml,
 } from "./trusted-item.fixtures.js";
 
 describe("adaptive QTI item turns", () => {
@@ -131,7 +131,7 @@ describe("adaptive QTI item turns", () => {
 
   it("fails when adaptive turn scoring does not produce a numeric SCORE", () => {
     const result = processQtiAdaptiveItemTurn({
-      itemXml: noScoreProcessingItemXml(),
+      itemXml: nullScoreProcessingItemXml(),
       trustedResponses: { RESPONSE: "A" },
     });
 

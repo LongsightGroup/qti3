@@ -131,7 +131,10 @@ export function createItemSession(
     templateValues[declaration.identifier] = cloneValue(declaration.defaultValue);
   }
   for (const outcome of document.item.outcomeDeclarations) {
-    outcomes[outcome.identifier] = cloneValue(outcome.defaultValue);
+    const numericSingle =
+      outcome.cardinality === "single" &&
+      (outcome.baseType === "integer" || outcome.baseType === "float");
+    outcomes[outcome.identifier] = cloneValue(outcome.defaultValue ?? (numericSingle ? 0 : null));
   }
   outcomes[COMPLETION_STATUS] = COMPLETION_NOT_ATTEMPTED;
   const baseResponses = cloneValueRecord(responses);

@@ -1119,7 +1119,9 @@ test("maps PNP through the manual into exact, keyboard-accessible catalog contro
   await expect(keyword).toHaveCSS("text-decoration-line", "none");
 });
 
-test("essay responses survive restore without an automatic grade", async ({ page }) => {
+test("essay responses survive restore and retain the ungraded numeric default", async ({
+  page,
+}) => {
   await page.goto("/");
   await loadFixture(page, "extendedText");
   const textarea = page.locator("qti-assessment-item-player textarea");
@@ -1128,9 +1130,9 @@ test("essay responses survive restore without an automatic grade", async ({ page
   await suspendRestoreCurrentAttempt(page);
   await expect(textarea).toHaveValue(essay);
   expect(await currentResponse(page)).toBe(essay);
-  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBeNull();
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(0);
   await textarea.fill("A");
-  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBeNull();
+  expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(0);
   await expectNoAxeViolationsOnPlayer(page);
 });
 

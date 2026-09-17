@@ -7,7 +7,7 @@ import {
   readQtiJsonValue,
   scoreQtiItemServerSide,
 } from "./index.js";
-import { noScoreProcessingItemXml } from "./trusted-item.fixtures.js";
+import { nullScoreProcessingItemXml } from "./trusted-item.fixtures.js";
 
 describe("server-side QTI scoring", () => {
   it("scores correct and wrong responses from authoritative XML", () => {
@@ -119,7 +119,7 @@ describe("server-side QTI scoring", () => {
     );
 
     const missingScore = scoreQtiItemServerSide({
-      itemXml: noScoreProcessingItemXml(),
+      itemXml: nullScoreProcessingItemXml(),
       trustedResponses: { RESPONSE: "A" },
     });
     expect(missingScore.ok).toBe(false);

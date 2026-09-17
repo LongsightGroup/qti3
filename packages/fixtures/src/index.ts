@@ -165,11 +165,11 @@ function createEssayFixture(qtiName: string): QtiFixture {
     expectedValidationDiagnostics: [],
     attempts: [
       {
-        ...basicCorrectAttempt({ RESPONSE: response }, { SCORE: null }, id),
+        ...basicCorrectAttempt({ RESPONSE: response }, { SCORE: 0 }, id),
         name: "awaiting-human-score",
       },
       {
-        ...basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: null }, id),
+        ...basicCorrectAttempt({ RESPONSE: "A" }, { SCORE: 0 }, id),
         name: "placeholder-does-not-earn-credit",
       },
     ],
