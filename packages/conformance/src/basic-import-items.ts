@@ -1,3 +1,4 @@
+import { comparePackageAssets, type QtiPackageAssetEvidence } from "./package-asset-evidence.js";
 import { syntheticImportPackage, textConstraintPackagePath } from "./synthetic-import-package.js";
 import { verifyQtiValidatorEvidence, type QtiValidatorEvidence } from "./validator-evidence.js";
 export type { QtiValidatorEvidence } from "./validator-evidence.js";
@@ -57,6 +58,7 @@ export interface QtiPackageImportEvidence {
   readonly packagePath: string;
   readonly itemResourceHrefs: readonly string[];
   readonly ignoredResourceHrefs: readonly string[];
+  readonly assets: readonly QtiPackageAssetEvidence[];
   readonly diagnostics: readonly QtiDiagnostic[];
 }
 
@@ -454,12 +456,8 @@ async function runCriterion(
   const importedItem = packageIndex.itemsByPackageItem.get(itemKey);
   let xml = importedItem?.xml;
 
-  if (xml === undefined && packageIndex.packageReadFailures.has(criterionEntry.packagePath)) {
-    return failedRow(
-      criterionEntry,
-      packageIndex.packageReadFailures.get(criterionEntry.packagePath)!,
-    );
-  }
+  const packageFailure = packageIndex.packageReadFailures.get(criterionEntry.packagePath);
+  if (packageFailure) return failedRow(criterionEntry, packageFailure);
 
   if (xml === undefined && criterionEntry.expectation === "invalid-item") {
     try {
@@ -815,6 +813,7 @@ async function buildPackageImportIndex(
           packagePath,
           itemResourceHrefs: [],
           ignoredResourceHrefs: [],
+          assets: [],
           diagnostics: [failure],
         });
         continue;
@@ -830,10 +829,15 @@ async function buildPackageImportIndex(
           packagePath,
           itemResourceHrefs: [],
           ignoredResourceHrefs: [],
+          assets: [],
           diagnostics: [failure],
         });
         continue;
       }
+
+      const assetEvidence = await comparePackageAssets(qtiRoot, packagePath, parsed);
+      const assetFailure = assetEvidence.diagnostics[0];
+      if (assetFailure) packageReadFailures.set(packagePath, assetFailure);
 
       const itemResourceHrefs = manifestResourceHrefs(
         parsed.manifestResources,
@@ -861,7 +865,8 @@ async function buildPackageImportIndex(
         packagePath,
         itemResourceHrefs,
         ignoredResourceHrefs,
-        diagnostics: manifestDiagnostics,
+        assets: assetEvidence.assets,
+        diagnostics: [...manifestDiagnostics, ...assetEvidence.diagnostics],
       });
     } catch (cause: unknown) {
       const failure = certificationDiagnostic(
@@ -874,6 +879,7 @@ async function buildPackageImportIndex(
         packagePath,
         itemResourceHrefs: [],
         ignoredResourceHrefs: [],
+        assets: [],
         diagnostics: [failure],
       });
     }
