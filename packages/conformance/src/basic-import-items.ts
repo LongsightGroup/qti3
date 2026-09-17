@@ -1,10 +1,16 @@
+import { compareImportedItem, type QtiImportObservation } from "./item-import-preservation.js";
 import {
   evaluateBasicImportItemChecklist,
   type QtiImportChecklistCoverage,
 } from "./basic-import-item-checklist.js";
 import { readFile, stat } from "node:fs/promises";
 import { join, posix } from "node:path";
-import { parseQtiXml, validateAssessmentItem, type QtiDiagnostic } from "@longsightgroup/qti3-core";
+import {
+  parseQtiXml,
+  validateAssessmentItem,
+  type QtiDiagnostic,
+  type QtiPackageItem,
+} from "@longsightgroup/qti3-core";
 import {
   certificationDiagnostic,
   manifestResourceHrefs,
@@ -38,6 +44,7 @@ export interface QtiBasicImportAcceptanceCriterion {
 export type QtiCertificationRowStatus = "passed" | "failed";
 
 export interface QtiCertificationReportRow extends QtiBasicImportAcceptanceCriterion {
+  readonly observations?: readonly QtiImportObservation[] | undefined;
   readonly status: QtiCertificationRowStatus;
   readonly diagnostics: readonly QtiDiagnostic[];
 }
@@ -427,7 +434,8 @@ async function runCriterion(
 
   const packageEntryPath = packageEntryPathForCriterion(criterionEntry);
   const itemKey = packageItemKey(criterionEntry.packagePath, packageEntryPath);
-  let xml = packageIndex.xmlByPackageItem.get(itemKey);
+  const importedItem = packageIndex.itemsByPackageItem.get(itemKey);
+  let xml = importedItem?.xml;
 
   if (xml === undefined && packageIndex.packageReadFailures.has(criterionEntry.packagePath)) {
     return failedRow(
@@ -461,7 +469,7 @@ async function runCriterion(
     );
   }
 
-  return runXmlCriterion(criterionEntry, xml);
+  return runXmlCriterion(criterionEntry, xml, importedItem);
 }
 
 async function runLooseXmlCriterion(
@@ -484,8 +492,9 @@ async function runLooseXmlCriterion(
 function runXmlCriterion(
   criterionEntry: QtiBasicImportAcceptanceCriterion,
   xml: string,
+  importedItem?: QtiPackageItem,
 ): QtiCertificationReportRow {
-  const parseResult = parseQtiXml(xml);
+  const parseResult = importedItem ?? parseQtiXml(xml);
   const validationDiagnostics = parseResult.document
     ? validateAssessmentItem(parseResult.document).diagnostics
     : [];
@@ -514,12 +523,24 @@ function runXmlCriterion(
     return { ...criterionEntry, status: "failed", diagnostics };
   }
 
-  const evidenceDiagnostic = evidenceDiagnosticFor(criterionEntry, xml, parseResult.document);
+  const preservation = compareImportedItem(xml, parseResult.document);
+  const evidenceDiagnostic = evidenceDiagnosticFor(
+    criterionEntry,
+    parseResult.document,
+    preservation.observations,
+  );
   return {
     ...criterionEntry,
-    status: evidenceDiagnostic === undefined ? "passed" : "failed",
-    diagnostics:
-      evidenceDiagnostic === undefined ? diagnostics : [...diagnostics, evidenceDiagnostic],
+    status:
+      evidenceDiagnostic === undefined && preservation.diagnostics.length === 0
+        ? "passed"
+        : "failed",
+    observations: preservation.observations,
+    diagnostics: [
+      ...diagnostics,
+      ...preservation.diagnostics,
+      ...(evidenceDiagnostic ? [evidenceDiagnostic] : []),
+    ],
   };
 }
 
@@ -545,8 +566,8 @@ async function readValidatorEvidence(
 
 function evidenceDiagnosticFor(
   criterionEntry: QtiBasicImportAcceptanceCriterion,
-  xml: string,
   document: NonNullable<ReturnType<typeof parseQtiXml>["document"]>,
+  observations: readonly QtiImportObservation[],
 ): QtiDiagnostic | undefined {
   const interaction = document.item.interactions[0];
   if (!interaction) {
@@ -630,17 +651,20 @@ function evidenceDiagnosticFor(
 
   if (
     criterionEntry.expectation === "stores-alt-text" &&
-    !/<img\b[^>]*\balt\s*=\s*["'][^"']+["']/i.test(xml)
+    !observations.some(
+      (entry) =>
+        entry.field.endsWith(".alt") && typeof entry.actual === "string" && entry.actual.length > 0,
+    )
   ) {
     return diagnostic(
       "certification.evidence.altText",
-      `${criterionEntry.acId} did not preserve img alt text in source evidence.`,
+      `${criterionEntry.acId} did not preserve img alt text in the imported model.`,
     );
   }
 
   if (
     criterionEntry.expectation === "stores-fixed-template" &&
-    !/<qti-response-processing\b[^>]*\btemplate\s*=\s*["'][^"']+["']/i.test(xml)
+    !document.item.responseProcessing?.template
   ) {
     return diagnostic(
       "certification.evidence.fixedTemplate",
@@ -761,7 +785,7 @@ function textEntryClassCriteria(
 }
 
 interface QtiPackageImportIndex {
-  readonly xmlByPackageItem: ReadonlyMap<string, string>;
+  readonly itemsByPackageItem: ReadonlyMap<string, QtiPackageItem>;
   readonly evidenceByPackage: ReadonlyMap<string, QtiPackageImportEvidence>;
   readonly packageReadFailures: ReadonlyMap<string, QtiDiagnostic>;
 }
@@ -770,7 +794,7 @@ async function buildPackageImportIndex(
   qtiRoot: string,
   criteria: readonly QtiBasicImportAcceptanceCriterion[],
 ): Promise<QtiPackageImportIndex> {
-  const xmlByPackageItem = new Map<string, string>();
+  const itemsByPackageItem = new Map<string, QtiPackageItem>();
   const evidenceByPackage = new Map<string, QtiPackageImportEvidence>();
   const packageReadFailures = new Map<string, QtiDiagnostic>();
   const uniquePackagePaths = [
@@ -830,7 +854,7 @@ async function buildPackageImportIndex(
       for (const href of itemResourceHrefs) {
         const item = itemsByHref.get(href);
         if (item) {
-          xmlByPackageItem.set(packageItemKey(packagePath, href), item.xml);
+          itemsByPackageItem.set(packageItemKey(packagePath, href), item);
         }
       }
 
@@ -856,7 +880,7 @@ async function buildPackageImportIndex(
     }
   }
 
-  return { xmlByPackageItem, evidenceByPackage, packageReadFailures };
+  return { itemsByPackageItem, evidenceByPackage, packageReadFailures };
 }
 
 function isUnreadablePackage(parsed: ReturnType<typeof parseOfficialQtiPackage>): boolean {
