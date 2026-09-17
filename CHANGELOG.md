@@ -2,11 +2,61 @@
 
 ## Unreleased
 
-- Export `scopeDiagnosticToPackagePath()` from core and use it in conformance reports
-  to keep diagnostic paths and source locations aligned without duplicate separators.
+## 0.11.0 - 2026-09-17
 
-- Export `uniqueDiagnostics()` and `diagnosticKey()` from core for shared diagnostic
-  identity in CLI and conformance reports, preserving distinct messages and paths containing newlines.
+### Added
+
+- Add `readQtiPackageZipEntriesAsync()` with the same archive validation and resource limits
+  as the synchronous reader, plus `parseQtiPackageFromEntries()` for importing extracted files.
+- Expose `xmlFiles` and `QtiPackageXmlFileSummary` on batch package results so callers can
+  classify XML roots and inspect syntax diagnostics without parsing those files again.
+- Add a local saved-package library at `/library.html`. It stores original package files in
+  IndexedDB and restores item models, XML, media, stylesheets, and diagnostics through core.
+- Verify supported official validator reports against the exact package and an explicitly trusted
+  report digest. Generate reproducible Basic IMPORT evidence for item models and original asset bytes
+  using externally supplied certification content.
+- Export `isQtiItemResource()`, `scopeDiagnosticToPackagePath()`, `uniqueDiagnostics()`, and
+  `diagnosticKey()` from core for shared package classification and diagnostic handling.
+
+### Changed
+
+- Align the root and all 12 published package versions on `0.11.0`.
+- Use core's package graph, ZIP validation, asset resolution, and diagnostics in CLI inspection
+  and reference pages. CLI inspect mode still discovers unreferenced items; strict validation rejects
+  them. Reference pages require `imsmanifest.xml` for ZIP imports.
+
+### Fixed
+
+- Initialize single integer and float outcomes without an authored default to zero. Preserve
+  effective template-set defaults across processing and discard values from rejected template attempts.
+- Honor each string mapping entry's case-sensitivity setting, map repeated response values once,
+  and use the first authored matching area for each point.
+- Evaluate numeric equality tolerances, inclusive bounds, and variable tolerances; return NULL for
+  nonnumeric `qti-equal` operands. Resolve `qti-equal-rounded` defaults and variable figures.
+- Evaluate arbitrary `qti-is-null` operands and select `qti-random` values from evaluated containers.
+  Preserve contiguous ordering for ordered `qti-contains` and apply authored interpolation thresholds.
+- Invert `show-hide="hide"` conditions for modal feedback and adaptive candidate XML.
+- Resolve and preserve built-in attempt counts, duration, and context across scoring, suspension,
+  resume, and state restoration.
+- Preserve repeated Graphic Gap Match placements and reject restored responses that exceed
+  `match-max` or `max-associations`.
+- Implement XML Schema pattern syntax, including name escapes, Unicode classes, and class subtraction,
+  with explicit diagnostics for unsupported syntax and resource limits.
+- Validate assessment-item child order in core, preserve LOM package titles, and emit schema-valid
+  writer package manifests.
+- Share diagnostic identity and package-path scoping across core, CLI, and conformance, preserving
+  distinct fields containing newlines and keeping diagnostic paths and source locations aligned.
+
+### Compatibility
+
+- A declared numeric `SCORE` without an authored default now starts at `0`. Hosts that used NULL
+  to mean unscored should use lifecycle or scoring-disposition information. `qti-default(SCORE)`
+  still returns NULL when no default was authored.
+- Duplicate mapped values no longer earn repeated credit, and overlapping areas no longer apply
+  more than one mapping entry to the same point.
+- Use `qti-match` for identifier comparisons; `qti-equal` requires numeric operands.
+- Interpolation tables now follow authored descending thresholds. Tables built around the previous
+  low-to-high behavior need review.
 
 ## 0.10.6 - 2026-09-17
 

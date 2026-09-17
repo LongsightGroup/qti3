@@ -184,6 +184,11 @@ node packages/cli/dist/index.js support-matrix
 QTI package and assessment-test support belongs in tooling, fixtures, and examples for import,
 inspection, validation, and item loading. The browser player renders one assessment item at a time.
 
+Core's batch package parsers return an `xmlFiles` inventory with root names, namespaces, and
+syntax diagnostics, including unreferenced XML files. CLI inspection uses this inventory to avoid
+parsing those files again for discovery. See
+[batch package import](packages/core/README.md#batch-import-from-extracted-entries).
+
 The transcoder converts QTI 3 items and packages through versioned profiles. Standard QTI output
 and product-specific compatibility use separate profiles. Each conversion returns typed mapping
 diagnostics instead of selecting an LMS dialect or fallback automatically.
@@ -617,6 +622,10 @@ The root and all 12 published packages use the same version. Release preparation
 manifests and the [changelog](CHANGELOG.md), then runs `pnpm release:check`. Pushing a matching
 `v<version>` tag starts the [Publish workflow](.github/workflows/publish.yml), which reruns the checks,
 packs each package, and publishes the tarballs. The workflow can also be dispatched manually.
+
+Hosts upgrading from `0.10.x` should review the
+[0.11.0 compatibility notes](CHANGELOG.md#0110---2026-09-17) for changes to numeric defaults,
+mapping scores, comparisons, and interpolation tables.
 
 ## Certification
 
