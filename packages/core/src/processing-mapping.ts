@@ -69,9 +69,12 @@ export function scoreAreaMapping(
     for (const [index, entry] of areaMapping.entries.entries()) {
       if (!pointInsideArea(parsed, entry)) continue;
       matchedArea = true;
-      if (matchedAreaIndexes.has(index)) continue;
-      matchedAreaIndexes.add(index);
-      score += entry.mappedValue;
+      if (!matchedAreaIndexes.has(index)) {
+        matchedAreaIndexes.add(index);
+        score += entry.mappedValue;
+      }
+      // Authored priority applies even when this area was already counted.
+      break;
     }
     if (!matchedArea) score += areaMapping.defaultValue;
   }

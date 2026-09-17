@@ -2,6 +2,33 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml } from "./index.js";
 
 describe("processing mapping", () => {
+  it("uses first-authored overlapping areas and counts each area once", () => {
+    const parsed = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="overlap" title="Overlapping areas" time-dependent="false">
+        <qti-response-declaration identifier="R" cardinality="multiple" base-type="point">
+          <qti-area-mapping default-value="-1">
+            <qti-area-map-entry shape="rect" coords="0,0,20,20" mapped-value="1"/>
+            <qti-area-map-entry shape="rect" coords="0,0,100,100" mapped-value="2"/>
+          </qti-area-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><p>Overlapping areas.</p></qti-item-body>
+        <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-map-response-point identifier="R"/></qti-set-outcome-value></qti-response-processing>
+      </qti-assessment-item>
+    `);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    const session = createItemSession(parsed.document);
+    session.respond("R", ["10 10"]);
+    expect(session.score().outcomes.SCORE).toBe(1);
+    session.respond("R", ["10 10", "11 11"]);
+    expect(session.score().outcomes.SCORE).toBe(1);
+    session.respond("R", ["10 10", "11 11", "50 50"]);
+    expect(session.score().outcomes.SCORE).toBe(3);
+    session.respond("R", ["10 10", "200 200"]);
+    expect(session.score().outcomes.SCORE).toBe(0);
+  });
+
   it.each(["custom", "template"])("maps distinct values once through %s processing", (mode) => {
     const parsed = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duplicate-map" title="Duplicate mapping" time-dependent="false">

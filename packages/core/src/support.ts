@@ -147,7 +147,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     notes:
       "String map entries honor case-sensitive (default false); mapping counts each distinct response value once using QTI base-type equality, then applies bounds.",
   },
-  mappingProcessingEntry("qti-map-response-point"),
+  {
+    ...mappingProcessingEntry("qti-map-response-point"),
+    notes:
+      "Each point selects the first matching authored area; each selected area contributes at most once.",
+  },
   responseProcessingEntry("qti-variable", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/template-processing-reference.xml",
