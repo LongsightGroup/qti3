@@ -105,14 +105,11 @@ The checker reruns the importer and compares scope, coverage, values, diagnostic
 and input/build identity. Changed or stale evidence fails. Collection time and
 machine location may differ. Official checklists and member reports remain external.
 
-`.github/workflows/certification.yml` provides a manual workflow for a dedicated
-self-hosted runner labeled `qti-certification`. Provision its protected environment
-with required reviewers, member-authorized fixture checkout, Node/browser support,
-and `QTI3_EXTERNAL_QTI_DIR` before dispatch. The runner owner must retain the private
-output directory. The workflow does not publish raw reports, assertion output, or
-member content as Actions artifacts. Public CI and release publishing keep their
-existing responsibilities. Adding this workflow does not provision a runner or
-change GitHub environment protection settings.
+Run `pnpm certification:check` locally on a trusted machine with member-authorized
+fixtures. Keep official inputs, logs, and generated reports outside this repository
+and public Actions artifacts. Public GitHub Actions runs synthetic tests, browser
+checks, and release validation. If recurring certification automation becomes useful,
+run these same commands in private CI.
 
 ## Official validator reports
 

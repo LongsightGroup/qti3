@@ -399,7 +399,7 @@ accessibility checks, dependency policy, build, source-map validation, package e
 checks, transcoder evidence and legacy XSD validation, browser coverage, support metadata, and the
 built CLI fixture runner. It does not require official 1EdTech certification artifacts.
 
-Run certification checks separately:
+Run certification checks locally with member-authorized files kept outside this repository:
 
 ```sh
 QTI3_EXTERNAL_QTI_DIR=/path/to/official/qti \
@@ -415,6 +415,10 @@ The full certification gate also writes and checks reproducible item evidence fo
 clean committed candidate. Set `QTI3_CERTIFICATION_OUTPUT_DIR` to private storage
 outside this repository, or retain the temporary output directory printed by the
 command. See [certification evidence](packages/conformance/README.md#reproducible-certification-evidence).
+
+Public GitHub Actions runs synthetic tests, browser checks, and release validation.
+Keep official fixtures, certification logs, and reports in private storage. Any future
+recurring certification automation belongs in private CI.
 
 Start the browser harness with:
 

@@ -59,9 +59,9 @@ CERT-07 has not started.
 - Reports record actual revisions, checklist/input/runtime hashes, and clean-source
   status. A saved report must match a fresh full run. The full local gate at
   `fa164d7` passed, including 532 browser tests and the saved-report comparison.
-- The dedicated private certification workflow is implemented. Its protected
-  environment, member-authorized runner, and private archive still require provisioning;
-  no Actions certification run or certification submission is claimed.
+- Certification checks run locally with private inputs and evidence storage. Public
+  GitHub Actions runs synthetic tests, browser checks, and release validation. Any
+  future recurring certification automation belongs in private CI.
 
 Detailed member instructions returned Access Denied after authentication. Current
 checklist acceptance, the library/CLI demonstration, and the alias/supplement
@@ -224,10 +224,9 @@ run `pnpm verify` and affected Playwright suites before accepting the workstream
 
 ## CERT-04 — Make certification runs complete and reproducible
 
-Extend the conformance report and CLI; add a focused certification workflow such as
-`.github/workflows/certification.yml`. Match existing typed diagnostics and CLI exit
-code conventions in `packages/cli/src/commands/certification.ts` and
-`packages/cli/test/support.test.ts`.
+Extend the conformance report and CLI, with `pnpm certification:check` as the local
+entry point. Match existing typed diagnostics and CLI exit code conventions in
+`packages/cli/src/commands/certification.ts` and `packages/cli/test/support.test.ts`.
 
 1. Record the actual qti3 commit/version, conformance checkout commit, workbook and
    package SHA-256 values, selected scope, execution time, environment, and row results.
@@ -242,7 +241,7 @@ code conventions in `packages/cli/src/commands/certification.ts` and
    raw reports, workbook copies, and screenshots in external/private artifact storage;
    do not attach them to publicly downloadable CI artifacts. Ordinary public CI can
    continue to use synthetic fixtures. Member credentials must not reach untrusted PRs.
-5. Add a dedicated certification trigger that fails when official inputs are missing.
+5. Make `pnpm certification:check` fail when official inputs are missing.
    Retain useful reports even when tests fail. Keep the publishing workflow's existing
    responsibility intact; a green release build must not acquire a certification label.
 6. Correct `README.md` and package documentation to describe the gates actually run,
@@ -277,7 +276,7 @@ certification scope and current official instructions, not on convenience.
    tests. Define how errors and warnings affect the verdict from the official rules.
 5. Make `requireValidatorEvidence` succeed for accepted, correctly scoped passing
    evidence and fail with a specific diagnostic for each other condition. Wire the
-   policy consistently through CLI and the certification workflow. A passing report
+   policy consistently through CLI and the local certification commands. A passing report
    must never override a failed importer acceptance row.
 6. Add a genuine successful external integration run, plus tests for failed verdict,
    malformed report, partial coverage, wrong version/profile/package, changed content,
@@ -351,7 +350,7 @@ commands alone do not enforce every exit criterion in this plan.
 
 Primary implementation scope: `packages/conformance`, certification and evidence
 commands/tests in `packages/cli`, relevant documentation, `package.json`, focused
-scripts, and a certification workflow. Modify core/player/writer behavior only for
+scripts, and local certification commands. Modify core/player/writer behavior only for
 a demonstrated applicable requirement, with regression and support metadata.
 Follow `basic-import-items.test.ts` for real temporary-file tests and typed report
 assertions; use `packages/cli/test/cli-harness.ts` for CLI behavior.
@@ -375,8 +374,8 @@ restricted content. Continue independent steps that do not depend on that decisi
 
 1. Restore access to the detailed member instructions and obtain confirmation of
    the applicable checklist, product boundary, and documented aliases/supplement.
-2. Provision the dedicated protected runner if ongoing CI evidence collection is
-   desired. Local reproducible evidence already works without that infrastructure.
+2. Run the local certification commands against the final committed candidate and
+   retain evidence privately. Consider private CI only if recurring collection is needed.
 3. Have the maintainer approve the private checklist, reports, artifact manifest,
    and demonstration instructions, then submit through the accepted
    member process and address official review findings under CERT-07.
