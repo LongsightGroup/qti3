@@ -52,7 +52,7 @@ export function expressionIsOrdered(
   expression: QtiProcessingExpression,
   document: QtiDocument,
 ): boolean {
-  if (expression.type === "ordered") return true;
+  if (expression.type === "ordered" || expression.type === "repeat") return true;
   if (expression.type === "delete") return expressionIsOrdered(expression.collection, document);
   if (
     (expression.type === "variable" ||

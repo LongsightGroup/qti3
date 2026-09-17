@@ -118,6 +118,11 @@ export function evaluateComparisonExpression(
       const baseType =
         expressionBaseType(expression.collection, context.document) ??
         expressionBaseType(expression.values, context.document);
+      if (expressionIsOrdered(expression.collection, context.document)) {
+        return collection.some((_, offset) =>
+          valuesEqual(collection.slice(offset, offset + values.length), values, true, baseType),
+        );
+      }
       return containsValues(collection, values, baseType);
     }
     default:

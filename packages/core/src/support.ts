@@ -182,7 +182,15 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
   operatorProcessingEntry("qti-index"),
-  operatorProcessingEntry("qti-contains"),
+  {
+    ...operatorProcessingEntry(
+      "qti-contains",
+      [],
+      ["packages/core/src/processing-containment.test.ts"],
+    ),
+    notes:
+      "Multiple containers use multiset containment; ordered containers require a contiguous sequence and preserve duplicate counts, including variable/delete/repeat operands.",
+  },
   operatorProcessingEntry("qti-container-size", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
