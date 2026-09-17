@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { parseQtiXml } from "@longsightgroup/qti3-core";
 import { readTextInput } from "./cli-io.js";
 import { basicItemPlayerReport } from "./commands/basic-item-player.js";
@@ -134,6 +136,17 @@ async function executeCli(args: string[]): Promise<CliCommandResult> {
   return errorResult(USAGE);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+function isCliEntryPoint(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    // Library imports can have no file-backed entry point, such as node --eval.
+    return false;
+  }
+}
+
+if (isCliEntryPoint()) {
   process.exitCode = await main();
 }
