@@ -20,7 +20,6 @@
 
 ### Changed
 
-- Align the root and all 12 published package versions on `0.11.0`.
 - Use core's package graph, ZIP validation, asset resolution, and diagnostics in CLI inspection
   and reference pages. CLI inspect mode still discovers unreferenced items; strict validation rejects
   them. Reference pages require `imsmanifest.xml` for ZIP imports.
@@ -76,7 +75,6 @@
 - Make core response validation enforce QTI constraints without requiring an answer solely because
   it has a correct response. Hosts can enable `requireScoredResponses`; the browser player enables
   it by default. Explicitly authored zero minimums remain optional.
-- Align the root and all published package versions on `0.10.6`.
 
 ### Fixed
 
@@ -119,7 +117,6 @@
 - Share package manifest inspection, item parsing, and summary assembly across sync and incremental
   package parsers through `inspectPackageManifest()`, `parsePackageItem()`, and
   `buildPackageSummary()`.
-- Align all workspace package versions on `0.10.5`.
 
 ### Fixed
 
@@ -138,7 +135,6 @@
 
 - Require custom ZIP inflaters to enforce the `maxOutputLength` supplied in their context.
 - Upgrade `@xmldom/xmldom` to `0.9.12` in the migrator and transcoder.
-- Align all workspace package versions on `0.10.4`.
 
 ### Fixed
 
@@ -177,7 +173,6 @@
   commands now share typed parsing, package inspection, and output failures.
 - Upgrade Vite and add dependency-advisory, Node.js version-boundary, Playwright artifact, and
   package-export checks to the release pipeline.
-- Align all workspace package versions on `0.10.3`.
 
 ### Fixed
 
@@ -206,7 +201,6 @@
   2.1, QTI 2.2, Canvas, and Moodle output.
 - Split generated transcoder support evidence into per-profile reports while retaining a concise
   generated support index.
-- Align all workspace package versions on `0.10.2`.
 
 ## 0.10.1 - 2026-07-24
 
@@ -214,7 +208,6 @@
 
 - Treat QTI 3 manifests that declare an assessment-test resource and its dependent item resources
   as assessment packages and resolve their items from the assessment-test structure.
-- Align all workspace package versions on `0.10.1`.
 
 ### Fixed
 
@@ -248,7 +241,6 @@
   migrator and transcoder.
 - Normalize XML boolean parsing across core declarations, processing, catalogs, validation, and
   attempt-state handling.
-- Align all workspace package versions on `0.10.0`.
 
 ## 0.9.10 - 2026-07-21
 
@@ -263,7 +255,6 @@
 
 - Evaluate Basic IMPORT conformance from the typed assessment-test hierarchy.
 - Expand package media-type detection for HTML, JSON, and M4A importer assets.
-- Align all workspace package versions on `0.9.10`.
 
 ## 0.9.9 - 2026-07-21
 
@@ -287,7 +278,6 @@
   focused request-control modules in the player package.
 - Extend player content sanitization for catalog media elements and package-relative asset
   resolution through `sanitizeContentAttributes()`.
-- Align all workspace package versions on `0.9.9`.
 
 ## 0.9.7 - 2026-07-06
 
@@ -302,7 +292,6 @@
 
 - Split the writer package-emission layer into focused build, manifest, ZIP, and public type modules.
 - Reuse core package path normalization and manifest constants across core, writer, and migrator.
-- Align all workspace package versions on `0.9.7`.
 
 ## 0.9.6 - 2026-07-05
 
@@ -321,9 +310,6 @@
 
 ### Changed
 
-- Align all workspace package versions on `0.9.6` so writer, migrator, core, player,
-  adapters, conformance, fixtures, accessibility, CLI, and PNP packages can be published
-  as a consistent release set.
 - Document the writer and migrator package boundaries in the root package overview.
 
 ## 0.9.5 - 2026-06-30
@@ -632,7 +618,6 @@ publication and package metadata issues.
 ### Changed
 
 - Add checked-in `.oxfmtrc.json` for deterministic formatting.
-- Align workspace package versions on `0.6.0`.
 
 ## 0.5.1 - 2026-05-24
 
@@ -677,7 +662,6 @@ publication and package metadata issues.
 - Add `validatePlayerMessageCatalog()` with structured diagnostics for unknown keys and placeholder
   mistakes; split browser locale tests into `player-chrome-locale.spec.ts` and
   `player-graphic-locale.spec.ts`.
-- Align workspace package versions on `0.5.0`.
 
 ### Removed
 
