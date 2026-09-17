@@ -315,9 +315,20 @@ export function packageTitle(
     : undefined;
   return (
     assessmentTest?.title ??
+    manifestLomTitle(manifestRoot) ??
     manifestTitle ??
     items.find((item) => item.title !== undefined)?.title ??
     manifestRoot?.attributes.identifier ??
     ""
   );
+}
+
+function manifestLomTitle(root: QtiPackageXmlNode | undefined): string | undefined {
+  if (!root) return undefined;
+  const lomNamespace = "http://ltsc.ieee.org/xsd/LOM";
+  let nodes = childPackageElements(root, "metadata", QTI_PACKAGE_MANIFEST_NAMESPACE);
+  for (const name of ["lom", "general", "title", "string"]) {
+    nodes = nodes.flatMap((node) => childPackageElements(node, name, lomNamespace));
+  }
+  return nodes.map((node) => node.text.trim()).find((text) => text.length > 0);
 }

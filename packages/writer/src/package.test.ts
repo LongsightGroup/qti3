@@ -41,6 +41,9 @@ describe("qti3 package writer", () => {
     const withTitle = writeQti3PackageManifestResult({ ...packageInput(), title: "A & <B>" });
     if (!withTitle.ok) throw new Error("Expected package manifest");
     expect(withTitle.xml).toContain("<lom:string>A &amp; &lt;B&gt;</lom:string>");
+    expect(
+      parseQtiPackage(writeQti3PackageZip({ ...packageInput(), title: "A & <B>" })).title,
+    ).toBe("A & <B>");
   });
 
   it("writes package files with generated item XML and asset bytes", () => {
