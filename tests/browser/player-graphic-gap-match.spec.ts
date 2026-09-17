@@ -1,5 +1,7 @@
+import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import { expect, test } from "@playwright/test";
 import {
+  multipleGraphicGapItem,
   FITTING_GAP_IMG_GRAPHIC_GAP_MATCH_ITEM,
   GRAPHIC_GAP_SELECTION_THEMES_ITEM,
   GRAPHIC_GAP_UNSELECTED_HIDDEN_ITEM,
@@ -14,6 +16,85 @@ import {
 } from "./player-helpers.js";
 
 test.describe("player graphic gap match interactions", () => {
+  for (const repeated of [false, true]) {
+    test(`retains ${repeated ? "repeated" : "distinct"} pairs in one hotspot through scoring, restoration, and keyboard removal`, async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await pasteXml(page, multipleGraphicGapItem(repeated));
+      const player = page.locator("qti-assessment-item-player");
+      const bank = player.locator(".qti3-graphic-gap-source-region");
+      const target = player.locator('[data-gap-identifier="G1"]');
+      const second = repeated ? "Alpha" : "Beta";
+      for (const label of ["Alpha", second]) {
+        await bank.getByRole("button", { name: label, exact: true }).press("Space");
+        await target.press("Enter");
+        await expect(target).toBeFocused();
+      }
+      const pairs = ["A G1", `${repeated ? "A" : "B"} G1`];
+      await expectResponse(page, pairs);
+      await expect(target).toHaveAccessibleName(`First target, assigned Alpha, ${second}`);
+      await expect(player.locator(".qti3-selection-summary")).toContainText("2");
+      if (repeated) await expect(bank.locator('[data-choice-identifier="A"]')).toBeHidden();
+      await bank.getByRole("button", { name: "Gamma", exact: true }).click();
+      await target.click();
+      await expectResponse(page, pairs);
+      await expect(player.locator('[data-validation-for="RESPONSE"]')).toContainText("at most 2");
+      await page.locator("#debug-score").click();
+      const saved = await player.evaluate((element) => element.serialize());
+      expect(saved.outcomes.SCORE).toBe(1);
+      await player.evaluate((element, state) => {
+        element.reset();
+        element.restore(state);
+      }, saved);
+      await expectResponse(page, pairs);
+      const remove = player.getByRole("button", {
+        name: `Remove ${second} to First target`,
+        exact: true,
+      });
+      await expect(remove).toHaveCount(repeated ? 2 : 1);
+      await expectNoAxeViolationsOnPlayer(page);
+      await remove.last().press("Enter");
+      await expectResponse(page, ["A G1"]);
+      await expect(target).toBeFocused();
+      await expect(bank.getByRole("button", { name: second, exact: true })).toBeVisible();
+      await target.press("Delete");
+      await expectResponse(page, []);
+      await expect(target).toBeFocused();
+    });
+  }
+
+  test("moves one repeated instance and enforces the overall association limit", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await pasteXml(page, multipleGraphicGapItem(true, 2));
+    const player = page.locator("qti-assessment-item-player");
+    const bank = player.locator(".qti3-graphic-gap-source-region");
+    const first = player.locator('[data-gap-identifier="G1"]');
+    const second = player.locator('[data-gap-identifier="G2"]');
+    for (let count = 0; count < 2; count += 1) {
+      await bank.getByRole("button", { name: "Alpha", exact: true }).click();
+      await first.click();
+    }
+    await bank.getByRole("button", { name: "Gamma", exact: true }).click();
+    await second.click();
+    await expectResponse(page, ["A G1", "A G1"]);
+    await dragCenter(
+      page,
+      player.locator('.qti3-graphic-gap-instance[data-choice-identifier="A"]').last(),
+      second,
+    );
+    await expectResponse(page, ["A G1", "A G2"]);
+    await dragCenter(
+      page,
+      player.locator('.qti3-graphic-gap-label[data-origin-gap-identifier="G2"]'),
+      bank,
+    );
+    await expectResponse(page, ["A G1"]);
+    await expect(bank.getByRole("button", { name: "Alpha", exact: true })).toBeVisible();
+  });
+
   test("assigns graphic gap match choices with pointer drag and removal", async ({ page }) => {
     await page.goto("/");
     await loadFixture(page, "graphicGapMatch");

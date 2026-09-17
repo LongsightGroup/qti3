@@ -452,7 +452,7 @@ function entry(qtiName: string, interactionType: QtiInteractionType): QtiInterac
         ? "Supports single and multiple unordered pair responses."
         : "Supports single and multiple directedPair responses."
       : interactionType === "graphicGapMatch"
-        ? "Requires multiple directedPair responses."
+        ? "Requires multiple directedPair responses; multiple and repeated placements in one hotspot preserve each association through rendering, removal, scoring, and restoration, subject to source/target match-max and max-associations."
         : undefined,
   };
 }

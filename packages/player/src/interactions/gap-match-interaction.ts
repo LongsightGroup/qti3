@@ -19,7 +19,7 @@ import {
   responseGroup,
   valueToStrings,
 } from "../interaction-support.js";
-import { reportMaximumResponseExceeded } from "../inline-validation.js";
+import { dispatchInlineValidation, reportMaximumResponseExceeded } from "../inline-validation.js";
 import { createQtiInteractionRegionMarkers } from "../player/interaction-regions.js";
 import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import { maximumAllowedResponses } from "../response-limits.js";
@@ -29,6 +29,13 @@ import {
   gapMatchResponseValue,
   tryGapMatchAssignment,
 } from "./gap-match-assignment.js";
+import {
+  assignGraphicGapInstance,
+  graphicGapResponse,
+  removeGraphicGapInstance,
+  type GraphicGapAssignments,
+} from "./graphic-gap-assignments.js";
+import { createAssociationPairChip } from "./pair-chip.js";
 import { syncGapMatchSourceBank } from "./gap-match-source-bank.js";
 import { appendInlineControl, normalizeInlineSegmentText } from "./inline-controls.js";
 import {
@@ -366,7 +373,7 @@ function renderGraphicGapMatchResponse(
     group.append(missingChoicesMessage(interaction));
     return group;
   }
-  const assignments = new Map<string, QtiChoice>();
+  let assignments: GraphicGapAssignments = new Map();
   let selectedSource: QtiChoice | undefined;
   let draggedSource: string | undefined;
   let draggedOriginGap: string | undefined;
@@ -374,7 +381,11 @@ function renderGraphicGapMatchResponse(
   for (const pair of valueToStrings(currentValue)) {
     const [sourceIdentifier, gapIdentifier] = pair.split(/\s+/);
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
-    if (source && gapIdentifier) assignments.set(gapIdentifier, source);
+    if (source && gapIdentifier) {
+      const placed = assignments.get(gapIdentifier) ?? [];
+      placed.push(source);
+      assignments.set(gapIdentifier, placed);
+    }
   }
 
   const surface = document.createElement("div");
@@ -417,11 +428,16 @@ function renderGraphicGapMatchResponse(
   summary.setAttribute("aria-live", "polite");
 
   const commit = () => {
-    const value = gapMatchResponseValue(assignments);
+    const value = graphicGapResponse(assignments);
     update(interaction.responseCardinality === "single" ? (value[0] ?? null) : value);
   };
   const syncSources = () => {
-    syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
+    syncGapMatchSourceBank(
+      sourceRegion,
+      sources,
+      new Map([...assignments.values()].flat().map((source, index) => [String(index), source])),
+      selectedSource?.identifier,
+    );
   };
   const resetDrag = () => {
     draggedSource = undefined;
@@ -439,28 +455,39 @@ function renderGraphicGapMatchResponse(
   ) => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
     if (!source) return;
-    const result = tryGapMatchAssignment(assignments, gap.identifier, source, {
-      ...(originGapIdentifier === undefined ? {} : { originGapIdentifier }),
-      ...(maximumAssignments === undefined ? {} : { maximumAssignments }),
-    });
+    const result = assignGraphicGapInstance(
+      assignments,
+      gap,
+      source,
+      maximumAssignments,
+      originGapIdentifier,
+    );
     selectedSource = undefined;
     if (!result.accepted) {
-      if (maximumAssignments !== undefined) {
-        reportMaximumResponseExceeded(group, interaction, maximumAssignments);
+      if (result.choice && interaction.responseIdentifier) {
+        dispatchInlineValidation(group, interaction.responseIdentifier, {
+          code: "response.matchMax",
+          severity: "error",
+          message: `${result.choice.text || result.choice.identifier} may be used at most ${result.maximum} times.`,
+          path: interaction.responseIdentifier,
+        });
+      } else {
+        reportMaximumResponseExceeded(group, interaction, result.maximum);
       }
       syncSources();
       return;
     }
-    applyGapMatchAssignments(assignments, result.next);
+    assignments = result.next;
     syncSources();
-    renderTargets();
+    renderTargets(gap.identifier);
     commit();
   };
-  const clearAssignment = (gapIdentifier: string) => {
+  const clearAssignment = (gapIdentifier: string, sourceIdentifier?: string) => {
     if (!assignments.has(gapIdentifier)) return;
-    assignments.delete(gapIdentifier);
+    if (sourceIdentifier === undefined) assignments.delete(gapIdentifier);
+    else removeGraphicGapInstance(assignments, gapIdentifier, sourceIdentifier);
     resetDrag();
-    renderTargets();
+    renderTargets(gapIdentifier);
     commit();
   };
   sourceRegion.addEventListener("dragover", (event) => {
@@ -478,14 +505,18 @@ function renderGraphicGapMatchResponse(
     if (!originGapIdentifier) return;
     event.preventDefault();
     sourceRegion.classList.remove("qti3-drop-target");
-    clearAssignment(originGapIdentifier);
+    clearAssignment(
+      originGapIdentifier,
+      event.dataTransfer?.getData("text/plain") || draggedSource,
+    );
   });
   const targetLabel = (gap: QtiChoice, index: number) =>
     gap.attributes["aria-label"] ||
     gap.attributes["hotspot-label"] ||
     messages.message("graphicGapTargetLabel", { index: index + 1 });
   const renderTargetButton = (gap: QtiChoice, index: number): HTMLButtonElement => {
-    const assigned = assignments.get(gap.identifier);
+    const placements = assignments.get(gap.identifier) ?? [];
+    const assigned = placements[0];
     const label = targetLabel(gap, index);
     const button = document.createElement("button");
     button.type = "button";
@@ -496,10 +527,13 @@ function renderGraphicGapMatchResponse(
     button.setAttribute(
       "aria-label",
       assigned
-        ? messages.message("gapAssignedState", { label, assigned: assigned.text })
+        ? messages.message("gapAssignedState", {
+            label,
+            assigned: placements.map((source) => source.text || source.identifier).join(", "),
+          })
         : messages.message("gapEmptyState", { label }),
     );
-    if (assigned) {
+    if (assigned && placements.length === 1) {
       button.draggable = true;
       button.addEventListener("dragstart", (event) => {
         startGraphicGapDrag(
@@ -561,25 +595,66 @@ function renderGraphicGapMatchResponse(
     appendChoiceVisual(assignedLabel, assigned);
     return assignedLabel;
   };
+  const pairList = document.createElement("ul");
+  pairList.className = "qti3-pair-list";
+  pairList.setAttribute(
+    "aria-label",
+    messages.message("interactionSelectedPairsList", { type: interaction.type }),
+  );
   const renderTargetNodes = (gap: QtiChoice, index: number): HTMLElement[] => {
     const button = renderTargetButton(gap, index);
-    const assigned = assignments.get(gap.identifier);
-    if (assigned) {
-      return [button, renderAssignedLabel(gap, assigned)];
+    const placed = assignments.get(gap.identifier) ?? [];
+    if (placed.length === 1 && placed[0]) return [button, renderAssignedLabel(gap, placed[0])];
+    if (placed.length === 0) return [button];
+    const labels = document.createElement("span");
+    labels.className = "qti3-graphic-gap-label";
+    labels.style.display = "grid";
+    labels.style.gap = "0.25rem";
+    placeGraphicGapLabelBelow(labels, gap, width, height);
+    for (const source of placed) {
+      const label = renderAssignedLabel(gap, source);
+      label.className = "qti3-graphic-gap-instance";
+      labels.append(label);
     }
-    return [button];
+    return [button, labels];
   };
-  const renderTargets = () => {
+  const renderTargets = (focusGap?: string) => {
     surface
       .querySelectorAll(".qti3-graphic-gap-hotspot, .qti3-graphic-gap-label")
       .forEach((target) => target.remove());
     for (const [index, gap] of gaps.entries()) {
       surface.append(...renderTargetNodes(gap, index));
     }
+    const count = graphicGapResponse(assignments).length;
+    const maxStack = Math.max(1, ...[...assignments.values()].map((placed) => placed.length));
+    surface.style.setProperty(
+      "--qti3-graphic-gap-label-block-size",
+      `${graphicGapLabelBlockSize(sources) * maxStack}rem`,
+    );
     summary.textContent =
-      assignments.size > 0
-        ? messages.message("gapLabelsPlacedCount", { count: assignments.size })
+      count > 0
+        ? messages.message("gapLabelsPlacedCount", { count })
         : messages.message("gapNoLabelsPlaced");
+    pairList.replaceChildren(
+      ...[...assignments].flatMap(([id, placed]) => {
+        const index = gaps.findIndex((gap) => gap.identifier === id);
+        const gap = gaps[index];
+        if (!gap) return [];
+        return placed.map((source) =>
+          createAssociationPairChip({
+            source: { choice: source, label: source.text || source.identifier },
+            target: { choice: undefined, label: targetLabel(gap, index) },
+            messages,
+            onRemove: () => clearAssignment(id, source.identifier),
+          }),
+        );
+      }),
+    );
+    if (focusGap !== undefined) {
+      [...surface.querySelectorAll<HTMLButtonElement>("button[data-gap-identifier]")]
+        .find((button) => button.dataset.gapIdentifier === focusGap)
+        ?.focus();
+    }
   };
 
   for (const source of sources) {
@@ -606,6 +681,6 @@ function renderGraphicGapMatchResponse(
   } else {
     appendSharedVocabularyChoicesLayout(layout, sourceRegion, surface, sharedVocabularyLayout);
   }
-  group.append(layout, summary);
+  group.append(layout, summary, pairList);
   return group;
 }

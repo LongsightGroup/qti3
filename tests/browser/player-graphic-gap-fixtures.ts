@@ -56,3 +56,23 @@ export const FITTING_GAP_IMG_GRAPHIC_GAP_MATCH_ITEM = `<?xml version="1.0" encod
     </qti-graphic-gap-match-interaction>
   </qti-item-body>
 </qti-assessment-item>`;
+
+/** Synthetic MIT-licensed regression item: two placements may share a hotspot. */
+export function multipleGraphicGapItem(repeated = false, maximum = 3): string {
+  return `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="multiple-graphic-gap" title="Multiple labels" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+    <qti-correct-response><qti-value>A G1</qti-value><qti-value>${repeated ? "A" : "B"} G1</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body><qti-graphic-gap-match-interaction response-identifier="RESPONSE" max-associations="${maximum}">
+    <qti-prompt>Place two labels in the first target.</qti-prompt>
+    <object data="${graySvgDataUrl(400, 160)}" type="image/svg+xml" width="400" height="160">Two target areas.</object>
+    <qti-gap-text identifier="A" match-max="2">Alpha</qti-gap-text>
+    <qti-gap-text identifier="B" match-max="1">Beta</qti-gap-text>
+    <qti-gap-text identifier="C" match-max="0">Gamma</qti-gap-text>
+    <qti-associable-hotspot identifier="G1" hotspot-label="First target" shape="rect" coords="25,25,125,100" match-max="2"/>
+    <qti-associable-hotspot identifier="G2" hotspot-label="Second target" shape="rect" coords="225,25,325,100" match-max="0"/>
+  </qti-graphic-gap-match-interaction></qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>`;
+}

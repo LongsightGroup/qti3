@@ -250,7 +250,9 @@ function contractForInteraction(interactionType: QtiInteractionType): Interactio
       keyboardModel: [
         "Enter or Space selects a source token.",
         "Enter or Space on a target gap assigns the selected source.",
-        "Remove buttons clear assigned gaps.",
+        interactionType === "graphicGapMatch"
+          ? "Remove buttons clear one placement and return focus to its target; Delete or Backspace on a target clears all its placements."
+          : "Remove buttons clear assigned gaps.",
         "Pointer drag from a source token to a target gap is a progressive enhancement.",
       ],
       requiredStates: [
@@ -469,6 +471,7 @@ function automatedProofFor(contract: InteractionA11yContract): string[] {
   if (contract.interactionType === "graphicGapMatch") {
     proof.push(
       "image-backed gap choice keyboard, pointer, forced-colors, and narrow reflow browser coverage",
+      "multiple and repeated hotspot placements, individual keyboard removal, focus restoration, and axe-core browser coverage",
     );
   }
   proof.push("forced-colors, reduced-motion, and narrow viewport browser checks");
