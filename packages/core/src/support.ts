@@ -145,7 +145,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   {
     ...mappingProcessingEntry("qti-map-response"),
     notes:
-      "String map entries honor case-sensitive (default false); other base types retain their QTI equality rules.",
+      "String map entries honor case-sensitive (default false); mapping counts each distinct response value once using QTI base-type equality, then applies bounds.",
   },
   mappingProcessingEntry("qti-map-response-point"),
   responseProcessingEntry("qti-variable", [

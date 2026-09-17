@@ -148,7 +148,11 @@ function scoreMapping(
     return entry?.mappedValue ?? mapping.defaultValue;
   };
   if (Array.isArray(response)) {
-    const score = response.reduce<number>((sum, value) => sum + mappedValue(String(value)), 0);
+    const distinct = response.filter(
+      (value, index) =>
+        response.findIndex((candidate) => valuesEqual(candidate, value, false, baseType)) === index,
+    );
+    const score = distinct.reduce<number>((sum, value) => sum + mappedValue(String(value)), 0);
     return clampMappedScore(score, mapping.attributes);
   }
   const score = response === null || isRecordValue(response) ? 0 : mappedValue(String(response));

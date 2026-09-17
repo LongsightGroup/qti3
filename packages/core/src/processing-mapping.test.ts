@@ -2,6 +2,58 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml } from "./index.js";
 
 describe("processing mapping", () => {
+  it.each(["custom", "template"])("maps distinct values once through %s processing", (mode) => {
+    const parsed = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="duplicate-map" title="Duplicate mapping" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="string">
+          <qti-mapping default-value="-0.25" lower-bound="-1" upper-bound="2">
+            <qti-map-entry map-key="B" mapped-value="1"/>
+            <qti-map-entry map-key="C" mapped-value="0.5"/>
+          </qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><qti-extended-text-interaction response-identifier="RESPONSE" max-strings="5"/></qti-item-body>
+        ${
+          mode === "template"
+            ? '<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml"/>'
+            : '<qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-map-response identifier="RESPONSE"/></qti-set-outcome-value></qti-response-processing>'
+        }
+      </qti-assessment-item>
+    `);
+    expect(parsed.diagnostics.filter((entry) => entry.severity === "error")).toEqual([]);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    const session = createItemSession(parsed.document);
+    session.respond("RESPONSE", ["B", "B", "C"]);
+    expect(session.score().outcomes.SCORE).toBe(1.5);
+    session.respond("RESPONSE", ["unknown", "unknown"]);
+    expect(session.score().outcomes.SCORE).toBe(-0.25);
+    session.respond("RESPONSE", ["B", "b"]);
+    expect(session.score().outcomes.SCORE).toBe(2);
+    session.respond("RESPONSE", ["B", "b", "C"]);
+    expect(session.score().outcomes.SCORE).toBe(2);
+    session.respond("RESPONSE", null);
+    expect(session.score().outcomes.SCORE).toBe(0);
+  });
+
+  it.each(["multiple", "ordered"])("deduplicates QTI pair values in %s mappings", (cardinality) => {
+    const parsed = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pair-map" title="Pair mapping" time-dependent="false">
+        <qti-response-declaration identifier="R" cardinality="${cardinality}" base-type="pair">
+          <qti-mapping default-value="0"><qti-map-entry map-key="A B" mapped-value="1"/></qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><p>Pair mapping.</p></qti-item-body>
+        <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-map-response identifier="R"/></qti-set-outcome-value></qti-response-processing>
+      </qti-assessment-item>
+    `);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    const session = createItemSession(parsed.document);
+    session.respond("R", ["A B", "B A", "A  B"]);
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
+
   it.each([
     ["string", "", 1],
     ["string", 'case-sensitive="false"', 1],
