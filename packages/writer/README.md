@@ -109,6 +109,10 @@ Package writing currently targets item-bank packages. Assets are explicit: decla
 item that owns the manifest resource. The writer does not rewrite URLs inside trusted item XML.
 `@longsightgroup/qti3-core` infers asset media types from file extensions when packages are parsed.
 
+Manifests declare `QTI Item Bank` metadata with schema version `3.0.1` and include the required
+`organizations` element. An optional package title is stored in LOM metadata and restored by the
+core package importer. Content validation of a generated package does not certify the writer.
+
 ## Trusted Fragments
 
 `bodyHtml`, `promptHtml`, and rich choice content use `Qti3TrustedXmlFragment`. The writer escapes

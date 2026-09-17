@@ -31,6 +31,43 @@ See [the official conformance requirements, §§2.2 and 4](https://www.imsglobal
 
 ## Current evidence and remaining gaps
 
+### Execution record — 2026-09-17
+
+The first implementation pass completed CERT-02, CERT-03, and CERT-05 for the
+selected item-only scope. CERT-04 tooling is implemented and has passed locally.
+CERT-01 still needs confirmation of the submission contract, and CERT-06 remains
+a draft until those questions and the clean-checkout rehearsal are complete.
+CERT-07 has not started.
+
+- The acceptance crosswalk preserves all 69 physical worksheet rows, including
+  repeated IDs and explicit aliases. All 69 rows pass across 70 executable cases.
+  A synthetic supplement proves the expected-length requirement absent from its
+  official text-entry fixture. These interpretations remain visible for official review.
+- Import evidence now compares exact values from the returned package item models,
+  keeps image descriptions associated with their images, and compares imported
+  asset bytes with the source resources. Negative controls detect lost or changed data.
+- Actual member-validator runs exposed missing manifest metadata and organizations
+  in the package writer. Those defects and LOM title round-tripping are fixed.
+  A corrected synthetic ZIP passed the official validator's 12 checks with no errors,
+  warnings, exceptions, or unrun checks. This establishes content validation only.
+- C16 now accepts a matching passing Qti30Inspector JSON report with explicit
+  operator-attested capture provenance and artifact binding. Genuine failed evidence
+  is rejected. The supported report format does not attest a certification profile
+  or independently authenticate its origin.
+- Reports record actual revisions, checklist/input/runtime hashes, and clean-source
+  status. A saved report must match a fresh full run. The full local gate at
+  `fa164d7` passed, including 532 browser tests and the saved-report comparison.
+- The dedicated private certification workflow is implemented. Its protected
+  environment, member-authorized runner, and private archive still require provisioning;
+  no Actions certification run or certification submission is claimed.
+
+Detailed member instructions returned Access Denied after authentication. Current
+checklist acceptance, the library/CLI demonstration, and the alias/supplement
+interpretations need 1EdTech confirmation. Account details, original reports, the
+completed checklist draft, and submission correspondence belong outside this repository.
+
+### Baseline before implementation
+
 | Evidence at `ca5419b`                                                       | What it establishes                                                                                        | What it does not establish                                                           |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `pnpm verify`: 2,195 tests passed; full browser suite: 532 passed           | Current automated regression baseline, including required external fixture tests in the recorded local run | Complete coverage of an official certification checklist                             |
@@ -332,17 +369,18 @@ scope conflicts with product boundaries, official materials contradict each othe
 report parsing requires an undocumented format, or evidence would require publishing
 restricted content. Continue independent steps that do not depend on that decision.
 
-## Immediate next session
+## Remaining execution
 
-1. Reconcile the local IMPORT checklist against all 69 existing item cases, preserving
-   duplicate IDs and flagging weak or missing assertions.
-2. Produce the first exact gap report and prioritize fixes by required acceptance row.
-3. Confirm member access and the product/scope with the maintainer while those checks run.
-4. Start CERT-03 with the alt-text/template preservation and exact-value evidence gaps.
+1. Rehearse the committed candidate from a clean checkout and freeze the private
+   checklist, reports, artifact manifest, and demonstration instructions.
+2. Restore access to the detailed member instructions and obtain confirmation of
+   the applicable checklist, product boundary, and documented aliases/supplement.
+3. Provision the dedicated protected runner if ongoing CI evidence collection is
+   desired. Local reproducible evidence already works without that infrastructure.
+4. Have the maintainer approve the concrete dossier, then submit through the accepted
+   member process and address official review findings under CERT-07.
 
-The first concrete deliverable is an acceptance crosswalk with named failures and
-missing proof. Scheduling submission follows that measured gap list; an official
-approval date cannot be promised from the current test count.
+An official approval date cannot be promised from the local test count.
 
 ## Sources and limitations
 
@@ -354,7 +392,8 @@ approval date cannot be promised from the current test count.
   and `QTI 3 Delivery Certification Checklist.xlsx`. Workbook revision and cell
   references belong in the external crosswalk, not copied member content in this repo.
 
-This planning pass inspected the evidence runners, CLI paths, workflow, documentation,
+The original planning pass inspected the evidence runners, CLI paths, workflow, documentation,
 and local checklist structure. It did not audit every Advanced/Delivery acceptance
 criterion, obtain authenticated validator output, or rerun the release gate. The
 automated baseline above comes from the completed verification at `ca5419b`.
+The execution record describes the subsequent implementation and external validator runs.
