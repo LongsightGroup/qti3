@@ -10,6 +10,7 @@ export const QTI_PACKAGE_MANIFEST_PATH = "imsmanifest.xml";
 
 export const QTI_ITEM_RESOURCE_TYPE = "imsqti_item_xmlv3p0";
 
+/** Recognize QTI 3 item resource types, including their version suffixes. */
 export function isQtiItemResource(type: string): boolean {
   return type.toLowerCase().startsWith(QTI_ITEM_RESOURCE_TYPE);
 }

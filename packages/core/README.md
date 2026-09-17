@@ -454,3 +454,8 @@ when output exceeds that budget. Entries returned by either reader are
 provisional: reject the archive when `diagnostics` contains an error, even when
 some entries were extracted. Limits must be positive safe integers; `Infinity`
 explicitly disables a budget and should be reserved for trusted input.
+
+`isQtiItemResource(type)` classifies manifest item resource types. Package content
+uses `isResolvableAssetUrl` for relative references; external URLs and fragments
+are not package inventory entries. Root-absolute content paths such as `/media/a.png`
+produce `package.path.absolute` instead of being rebased beneath an item's directory.

@@ -6,6 +6,7 @@ import {
   discoverQtiPackageContentAssets,
   parseQtiPackage,
   parseQtiPackageFromEntries,
+  isQtiItemResource,
 } from "./index.js";
 import { choiceItemXml, simpleChoiceItemXml } from "./qti-package.fixtures.js";
 
@@ -674,5 +675,35 @@ describe("batch import from extracted entries", () => {
     const original = parseQtiPackage(createStoredZip({ "item.xml": simpleChoiceItemXml() }));
     expect(original.ok).toBe(false);
     expect(parseQtiPackageFromEntries(original.entries)).toEqual(original);
+  });
+});
+
+describe("package reference classification", () => {
+  it("rejects root-absolute content references instead of rebasing them into the item directory", () => {
+    const result = discoverQtiPackageContentAssets(
+      '<qti-item-body><img src="/media/image.svg"/><qti-file-href>/materials/reference.pdf</qti-file-href></qti-item-body>',
+      "items/item.xml",
+    );
+    expect(result.hrefs).toEqual([]);
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+      "package.path.absolute",
+      "package.path.absolute",
+    ]);
+  });
+  it("resolves relative content and leaves external URLs and fragments outside the package inventory", () => {
+    const result = discoverQtiPackageContentAssets(
+      '<qti-item-body><img src=" ../media/image.svg?size=2#shape "/><img src="//example.org/image.svg"/><img src="HTTPS://example.org/image.svg"/><img src="DATA:image/png;base64,abc"/><img src="#local"/><qti-file-href>MAILTO:hello@example.org</qti-file-href></qti-item-body>',
+      "items/item.xml",
+    );
+    expect(result.hrefs).toEqual(["media/image.svg"]);
+    expect(result.diagnostics).toEqual([]);
+  });
+  it.each([
+    ["imsqti_item_xmlv3p0", true],
+    ["IMSQTI_ITEM_XMLV3P0P1", true],
+    ["imsqti_test_xmlv3p0", false],
+    ["imsqti_item_xmlv2p2", false],
+  ])("classifies resource type %s", (type, expected) => {
+    expect(isQtiItemResource(type)).toBe(expected);
   });
 });

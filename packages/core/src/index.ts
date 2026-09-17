@@ -57,6 +57,7 @@ export {
   discoverQtiPackageContentAssets,
   normalizePackagePath,
   QTI_ITEM_RESOURCE_TYPE,
+  isQtiItemResource,
   QTI_PACKAGE_MANIFEST_PATH,
   parseQtiPackage,
   parseQtiPackageFromEntries,

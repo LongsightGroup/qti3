@@ -1,4 +1,5 @@
-import { pushPackageDiagnostic } from "./qti-package-paths.js";
+import { isResolvableAssetUrl } from "./asset-url.js";
+import { normalizePackagePath, pushPackageDiagnostic } from "./qti-package-paths.js";
 import { parseQtiPackageXmlTree } from "./package-xml.js";
 import type {
   QtiAssessmentTestPackageModel,
@@ -8,12 +9,7 @@ import type {
   QtiPackageContentAssetDiscovery,
   QtiPackageItem,
 } from "./qti-package-types.js";
-import {
-  isPackageRelativeHref,
-  packageDescendants,
-  resolvePackageHref,
-  type PackageXmlFile,
-} from "./qti-package-xml.js";
+import { packageDescendants, resolvePackageHref, type PackageXmlFile } from "./qti-package-xml.js";
 import type { QtiDiagnostic } from "./types.js";
 
 interface PendingAssetReference {
@@ -196,9 +192,7 @@ function collectPackageRelativeAttributeRefs(
   diagnostics: QtiDiagnostic[],
 ): void {
   for (const node of packageDescendants(xmlFile.root, localName)) {
-    const href = node.attributes[attribute];
-    if (!isPackageRelativeHref(href)) continue;
-    const resolved = resolvePackageHref(xmlFile.path, href.trim(), diagnostics);
+    const resolved = resolveContentAssetHref(xmlFile.path, node.attributes[attribute], diagnostics);
     if (resolved) refs.push(resolved);
   }
 }
@@ -210,11 +204,24 @@ function collectPackageRelativeTextRefs(
   diagnostics: QtiDiagnostic[],
 ): void {
   for (const node of packageDescendants(xmlFile.root, localName)) {
-    const href = node.text.trim();
-    if (!isPackageRelativeHref(href)) continue;
-    const resolved = resolvePackageHref(xmlFile.path, href, diagnostics);
+    const resolved = resolveContentAssetHref(xmlFile.path, node.text, diagnostics);
     if (resolved) refs.push(resolved);
   }
+}
+
+function resolveContentAssetHref(
+  sourcePath: string,
+  value: string | undefined,
+  diagnostics: QtiDiagnostic[],
+): string | undefined {
+  const href = value?.trim() ?? "";
+  // A server-root path cannot name content inside a portable QTI package.
+  // Network-path URLs are external, like URLs with an explicit scheme.
+  if (href.startsWith("/") && !href.startsWith("//")) {
+    return normalizePackagePath(href, "package asset reference", diagnostics);
+  }
+  if (!isResolvableAssetUrl(href)) return undefined;
+  return resolvePackageHref(sourcePath, href, diagnostics);
 }
 
 function materializeAssets(

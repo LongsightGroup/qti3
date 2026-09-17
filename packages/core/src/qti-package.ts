@@ -31,7 +31,11 @@ export {
 };
 export { discoverQtiPackageContentAssets } from "./qti-package-assets.js";
 export { normalizePackagePath } from "./qti-package-paths.js";
-export { QTI_ITEM_RESOURCE_TYPE, QTI_PACKAGE_MANIFEST_PATH } from "./qti-package-manifest.js";
+export {
+  QTI_ITEM_RESOURCE_TYPE,
+  QTI_PACKAGE_MANIFEST_PATH,
+  isQtiItemResource,
+} from "./qti-package-manifest.js";
 export type { QtiPackageEntry };
 
 export type {

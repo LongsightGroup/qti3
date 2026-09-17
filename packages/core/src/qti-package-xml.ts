@@ -1,3 +1,4 @@
+import { isResolvableAssetUrl } from "./asset-url.js";
 import { parseQtiPackageXmlTree, type QtiPackageXmlNode } from "./package-xml.js";
 import { normalizePackagePath, pushPackageDiagnostic } from "./qti-package-paths.js";
 import { decodeUtf8, type QtiPackageEntry } from "./qti-package-zip.js";
@@ -78,18 +79,16 @@ export function resolvePackageHref(
   diagnostics: QtiDiagnostic[],
 ): string | undefined {
   const strippedHref = stripHrefSuffix(href);
+  // Diagnose absolute package references before adding the containing directory.
+  if (!isResolvableAssetUrl(strippedHref)) {
+    return normalizePackagePath(strippedHref, "package reference", diagnostics);
+  }
   const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
   return normalizePackagePath(`${base}${strippedHref}`, "package reference", diagnostics);
 }
 
 export function stripHrefSuffix(href: string): string {
   return href.split(/[?#]/, 1)[0] ?? "";
-}
-
-export function isPackageRelativeHref(href: string | undefined): href is string {
-  const trimmed = href?.trim() ?? "";
-  if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("//")) return false;
-  return !/^[a-z][a-z0-9+.-]*:/i.test(trimmed);
 }
 
 export function joinPackagePath(packagePath: string, localPath: string): string {
