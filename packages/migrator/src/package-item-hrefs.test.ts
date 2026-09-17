@@ -23,6 +23,8 @@ function firstEntryWithDeclaredSize(bytes: Uint8Array, uncompressedSize: number)
   for (let offset = 0; offset <= view.byteLength - 46; offset += 1) {
     if (view.getUint32(offset, true) !== 0x02014b50) continue;
     view.setUint32(offset + 24, uncompressedSize, true);
+    const localHeader = view.getUint32(offset + 42, true);
+    view.setUint32(localHeader + 22, uncompressedSize, true);
     return altered;
   }
   throw new Error("Expected ZIP central directory entry.");

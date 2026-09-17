@@ -414,3 +414,19 @@ bounded diagnostics remain in memory; item bodies and parsed models do not.
 Choose entry and total budgets for the host runtime and enforce archive integrity
 at the host's extraction boundary. The synchronous `parseQtiPackage` API still
 returns a complete in-memory package for callers that need that representation.
+
+## ZIP extraction in browsers and other async runtimes
+
+`readQtiPackageZipEntriesAsync(bytes, { inflateRaw, limits }, diagnostics)` uses the
+same archive reader as `readQtiPackageZipEntries`. Its inflater returns a promise;
+the existing synchronous API is unchanged. Both readers validate central/local
+headers, canonical paths, duplicate entries, overlapping bodies, and resource
+budgets. Multi-disk archives, ZIP64, encryption, and unsupported compression
+methods produce typed diagnostics. CRC checks are not currently performed.
+
+The host inflater must enforce `context.maxOutputLength` **during** expansion.
+The browser example uses a bounded `DecompressionStream` reader and cancels it
+when output exceeds that budget. Entries returned by either reader are
+provisional: reject the archive when `diagnostics` contains an error, even when
+some entries were extracted. Limits must be positive safe integers; `Infinity`
+explicitly disables a budget and should be reserved for trusted input.

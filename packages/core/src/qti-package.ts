@@ -12,12 +12,18 @@ import {
   DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
   decodeUtf8,
   readQtiPackageZipEntries,
+  readQtiPackageZipEntriesAsync,
   type QtiPackageEntry,
   type QtiPackageParseOptions,
 } from "./qti-package-zip.js";
 import type { QtiDiagnostic } from "./types.js";
 
-export { DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS, decodeUtf8, readQtiPackageZipEntries };
+export {
+  DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
+  decodeUtf8,
+  readQtiPackageZipEntries,
+  readQtiPackageZipEntriesAsync,
+};
 export { discoverQtiPackageContentAssets } from "./qti-package-assets.js";
 export { normalizePackagePath } from "./qti-package-paths.js";
 export { QTI_ITEM_RESOURCE_TYPE, QTI_PACKAGE_MANIFEST_PATH } from "./qti-package-manifest.js";
@@ -48,6 +54,8 @@ export type {
 export type {
   QtiPackageInflateContext,
   QtiPackageInflateRaw,
+  QtiPackageInflateRawAsync,
+  QtiPackageZipAsyncOptions,
   QtiPackageParseOptions,
   QtiPackageResourceLimits,
 } from "./qti-package-zip.js";

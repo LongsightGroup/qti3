@@ -1,6 +1,10 @@
 import { inflateRawSync } from "node:zlib";
 import { expect, test } from "@playwright/test";
-import { parseQtiPackage } from "../../packages/core/src/index.js";
+import {
+  parseQtiPackage,
+  readQtiPackageZipEntries,
+  type QtiDiagnostic,
+} from "../../packages/core/src/index.js";
 import {
   createDeflatedZip,
   createItemPackageZip,
@@ -103,6 +107,17 @@ test("rejects malformed ZIP headers, ambiguous paths, unsupported methods, and r
     );
     expect(result.ok).toBe(false);
     expect(result.diagnostics[0].severity).toBe("error");
+    const diagnostics: QtiDiagnostic[] = [];
+    readQtiPackageZipEntries(
+      input.bytes,
+      {
+        limits: input.limits,
+        inflateRaw: (bytes, context) =>
+          inflateRawSync(bytes, { maxOutputLength: context.maxOutputLength }),
+      },
+      diagnostics,
+    );
+    expect(result.diagnostics).toEqual(JSON.parse(JSON.stringify(diagnostics)));
   }
 });
 
@@ -122,7 +137,7 @@ test("cancels DEFLATE that expands beyond its declared size", async ({ page }) =
     [...zip],
   );
   expect(result.ok).toBe(false);
-  expect(result.diagnostics[0].message).toContain("declared byte budget");
+  expect(result.diagnostics[0].code).toBe("package.zip.entry.inflate");
 });
 
 test("discards provisional item events when the terminal core summary fails", async ({ page }) => {
@@ -218,7 +233,9 @@ test("a failed import reports diagnostics without adding a saved package", async
   await expect(page.getByRole("status")).toContainText("Package import failed. Nothing was saved.");
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
   await page.getByText("Import and player diagnostics", { exact: true }).click();
-  await expect(page.locator("#library-diagnostics")).toContainText("package.zip.invalid");
+  await expect(page.locator("#library-diagnostics")).toContainText(
+    "package.zip.centralDirectory.missing",
+  );
 });
 
 test("a fresh page restores every byte, full item models, images, styles, and responses without uploading", async ({

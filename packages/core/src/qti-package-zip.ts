@@ -20,6 +20,12 @@ export type QtiPackageInflateRaw = (
   context: QtiPackageInflateContext,
 ) => Uint8Array;
 
+/** Async raw DEFLATE adapter; enforce the same output budget as the sync adapter. */
+export type QtiPackageInflateRawAsync = (
+  bytes: Uint8Array,
+  context: QtiPackageInflateContext,
+) => Promise<Uint8Array>;
+
 /** Resource budgets applied before and after QTI package entry expansion. */
 export interface QtiPackageResourceLimits {
   readonly maxEntries: number;
@@ -43,20 +49,124 @@ export interface QtiPackageParseOptions {
   readonly limits?: Partial<QtiPackageResourceLimits> | undefined;
 }
 
+/** Options for ZIP extraction with an asynchronous host inflater. */
+export interface QtiPackageZipAsyncOptions {
+  readonly inflateRaw?: QtiPackageInflateRawAsync | undefined;
+  readonly limits?: Partial<QtiPackageResourceLimits> | undefined;
+}
+
 /** Decoded ZIP entry from a QTI package. */
 export interface QtiPackageEntry {
   readonly path: string;
   readonly bytes: Uint8Array;
 }
 
-/** Read stored ZIP entries and optionally inflate raw DEFLATE entries through caller code. */
+interface ZipEntry extends QtiPackageInflateContext {
+  readonly compressed: Uint8Array;
+}
+
+/** Read stored ZIP entries and optionally inflate raw DEFLATE entries through caller code.
+ * Entries are provisional: reject the archive if diagnostics contains an error.
+ */
 export function readQtiPackageZipEntries(
   bytes: Uint8Array,
   options: QtiPackageParseOptions,
   diagnostics: QtiDiagnostic[],
 ): QtiPackageEntry[] {
+  const entries: QtiPackageEntry[] = [];
+  for (const entry of inspectZipEntries(bytes, options.limits, diagnostics)) {
+    try {
+      let expanded = entry.compressed;
+      if (entry.compressionMethod !== 0) {
+        const inflateRaw = options.inflateRaw;
+        if (!inflateRaw) {
+          diagnoseMissingInflater(entry, diagnostics);
+          continue;
+        }
+        expanded = inflateRaw(entry.compressed, entry);
+      }
+      appendExpandedEntry(entries, entry, expanded, diagnostics);
+    } catch {
+      diagnoseInflateFailure(entry, diagnostics);
+    }
+  }
+  return entries;
+}
+
+/** Async counterpart with identical archive validation, limits, and diagnostics. */
+export async function readQtiPackageZipEntriesAsync(
+  bytes: Uint8Array,
+  options: QtiPackageZipAsyncOptions,
+  diagnostics: QtiDiagnostic[],
+): Promise<QtiPackageEntry[]> {
+  const entries: QtiPackageEntry[] = [];
+  for (const entry of inspectZipEntries(bytes, options.limits, diagnostics)) {
+    try {
+      let expanded = entry.compressed;
+      if (entry.compressionMethod !== 0) {
+        const inflateRaw = options.inflateRaw;
+        if (!inflateRaw) {
+          diagnoseMissingInflater(entry, diagnostics);
+          continue;
+        }
+        expanded = await inflateRaw(entry.compressed, entry);
+      }
+      appendExpandedEntry(entries, entry, expanded, diagnostics);
+    } catch {
+      diagnoseInflateFailure(entry, diagnostics);
+    }
+  }
+  return entries;
+}
+
+function diagnoseMissingInflater(entry: ZipEntry, diagnostics: QtiDiagnostic[]): void {
+  pushPackageDiagnostic(
+    diagnostics,
+    "package.zip.entry.compression.unsupported",
+    "error",
+    `ZIP entry ${entry.path} uses DEFLATE compression, but no inflateRaw option was provided.`,
+    entry.path,
+  );
+}
+
+function appendExpandedEntry(
+  entries: QtiPackageEntry[],
+  entry: ZipEntry,
+  expanded: Uint8Array,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (expanded.length === entry.uncompressedSize) {
+    entries.push({ path: entry.path, bytes: expanded });
+  } else {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.zip.entry.size",
+      "error",
+      `ZIP entry ${entry.path} expanded to ${expanded.length} bytes; expected ${entry.uncompressedSize}.`,
+      entry.path,
+    );
+  }
+}
+
+function diagnoseInflateFailure(entry: ZipEntry, diagnostics: QtiDiagnostic[]): void {
+  pushPackageDiagnostic(
+    diagnostics,
+    "package.zip.entry.inflate",
+    "error",
+    `ZIP entry ${entry.path} could not be inflated.`,
+    entry.path,
+  );
+}
+
+function inspectZipEntries(
+  bytes: Uint8Array,
+  overrides: QtiPackageParseOptions["limits"],
+  diagnostics: QtiDiagnostic[],
+): ZipEntry[] {
+  const limits = resolveResourceLimits(overrides, diagnostics);
+  if (!limits) return [];
   try {
-    return readZipEntriesUnsafe(bytes, options, diagnostics);
+    return readZipDirectory(bytes, limits, diagnostics);
   } catch {
     pushPackageDiagnostic(
       diagnostics,
@@ -94,11 +204,11 @@ export function decodeUtf8(bytes: Uint8Array): string {
   return text;
 }
 
-function readZipEntriesUnsafe(
+function readZipDirectory(
   bytes: Uint8Array,
-  options: QtiPackageParseOptions,
+  limits: QtiPackageResourceLimits,
   diagnostics: QtiDiagnostic[],
-): QtiPackageEntry[] {
+): ZipEntry[] {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const eocdOffset = findEndOfCentralDirectory(view);
   if (eocdOffset < 0) {
@@ -111,7 +221,6 @@ function readZipEntriesUnsafe(
     return [];
   }
 
-  const limits = resolveResourceLimits(options.limits);
   const entryCount = view.getUint16(eocdOffset + 10, true);
   if (entryCount > limits.maxEntries) {
     pushPackageDiagnostic(
@@ -122,12 +231,38 @@ function readZipEntriesUnsafe(
     );
     return [];
   }
+  if (
+    view.getUint16(eocdOffset + 4, true) !== 0 ||
+    view.getUint16(eocdOffset + 6, true) !== 0 ||
+    view.getUint16(eocdOffset + 8, true) !== entryCount ||
+    entryCount === 0xffff
+  ) {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.zip.format.unsupported",
+      "error",
+      "Multi-disk and ZIP64 packages are not supported.",
+    );
+    return [];
+  }
   let offset = view.getUint32(eocdOffset + 16, true);
+  const directoryStart = offset;
+  if (offset + view.getUint32(eocdOffset + 12, true) !== eocdOffset) {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.zip.centralDirectory.bounds",
+      "error",
+      "ZIP central directory bounds are invalid.",
+    );
+    return [];
+  }
+  const paths = new Set<string>();
+  const ranges: { start: number; end: number }[] = [];
   let totalUncompressedBytes = 0;
-  const entries: QtiPackageEntry[] = [];
+  const entries: ZipEntry[] = [];
 
   for (let index = 0; index < entryCount; index += 1) {
-    if (offset + 46 > view.byteLength) {
+    if (offset + 46 > eocdOffset) {
       pushPackageDiagnostic(
         diagnostics,
         "package.zip.centralDirectory.truncated",
@@ -147,6 +282,7 @@ function readZipEntriesUnsafe(
       break;
     }
 
+    const flags = view.getUint16(offset + 8, true);
     const compressionMethod = view.getUint16(offset + 10, true);
     const compressedSize = view.getUint32(offset + 20, true);
     const uncompressedSize = view.getUint32(offset + 24, true);
@@ -155,10 +291,11 @@ function readZipEntriesUnsafe(
     const nameLength = view.getUint16(offset + 28, true);
     const extraLength = view.getUint16(offset + 30, true);
     const commentLength = view.getUint16(offset + 32, true);
+    const disk = view.getUint16(offset + 34, true);
     const localHeaderOffset = view.getUint32(offset + 42, true);
     const nameStart = offset + 46;
     const nameEnd = nameStart + nameLength;
-    if (nameEnd > view.byteLength) {
+    if (nameEnd + extraLength + commentLength > eocdOffset) {
       pushPackageDiagnostic(
         diagnostics,
         "package.zip.centralDirectory.name",
@@ -169,9 +306,52 @@ function readZipEntriesUnsafe(
     }
 
     const rawName = bytes.slice(nameStart, nameEnd);
-    const decodedName = decodeUtf8(rawName).replaceAll("\\", "/");
+    const decodedName = decodeUtf8(rawName);
     offset += 46 + nameLength + extraLength + commentLength;
-    if (decodedName.endsWith("/")) continue;
+    if (!isValidUtf8(rawName)) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.zip.entry.name",
+        "error",
+        "ZIP entry name is not valid UTF-8.",
+      );
+      continue;
+    }
+    if (
+      disk !== 0 ||
+      compressedSize === 0xffffffff ||
+      uncompressedSize === 0xffffffff ||
+      localHeaderOffset === 0xffffffff
+    ) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.zip.format.unsupported",
+        "error",
+        "Multi-disk and ZIP64 entries are not supported.",
+        decodedName,
+      );
+      continue;
+    }
+    if ((flags & ~0x080e) !== 0) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.zip.entry.flags.unsupported",
+        "error",
+        "ZIP encryption or entry flags are unsupported.",
+        decodedName,
+      );
+      continue;
+    }
+    if (compressionMethod !== 0 && compressionMethod !== 8) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.zip.entry.compression.unsupported",
+        "error",
+        `ZIP entry ${decodedName} uses unsupported compression method ${compressionMethod}.`,
+        decodedName,
+      );
+      continue;
+    }
 
     if (declaredExpandedSize > limits.maxEntryUncompressedBytes) {
       pushPackageDiagnostic(
@@ -204,10 +384,32 @@ function readZipEntriesUnsafe(
     }
     totalUncompressedBytes += declaredExpandedSize;
 
-    const path = normalizePackagePath(decodedName, "ZIP entry", diagnostics);
-    if (!path) continue;
+    const name = decodedName.endsWith("/") ? decodedName.slice(0, -1) : decodedName;
+    const path = normalizePackagePath(name, "ZIP entry", diagnostics);
+    if (path === undefined) continue;
+    if (!path || path !== name || name.includes("\\") || name.includes("\0")) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.zip.entry.path",
+        "error",
+        "ZIP entry paths must be canonical and package-relative.",
+        decodedName,
+      );
+      continue;
+    }
+    if (paths.has(path)) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.entry.duplicate",
+        "error",
+        `QTI package contains duplicate entry ${path}.`,
+        path,
+      );
+      continue;
+    }
+    paths.add(path);
 
-    const content = zipEntryBytes(
+    const content = readCompressedEntry(
       bytes,
       view,
       {
@@ -216,18 +418,61 @@ function readZipEntriesUnsafe(
         uncompressedSize,
         compressionMethod,
         localHeaderOffset,
+        flags,
+        rawName,
       },
-      options,
-      limits,
+      directoryStart,
+      ranges,
       diagnostics,
     );
-    if (content) entries.push({ path, bytes: content });
+    if (!content) continue;
+    if (decodedName.endsWith("/")) {
+      if (uncompressedSize !== 0 || (compressionMethod === 0 && compressedSize !== 0))
+        pushPackageDiagnostic(
+          diagnostics,
+          "package.zip.directory.content",
+          "error",
+          "ZIP directory has unexpected content.",
+          path,
+        );
+      continue;
+    }
+    entries.push({
+      path,
+      compressed: content,
+      compressedSize,
+      uncompressedSize,
+      compressionMethod,
+      maxOutputLength: Math.max(1, uncompressedSize),
+    });
   }
 
+  if (offset !== eocdOffset) {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.zip.centralDirectory.count",
+      "error",
+      "ZIP entry count does not match the central directory.",
+    );
+  }
+  ranges.sort((left, right) => left.start - right.start);
+  for (let index = 1; index < ranges.length; index++) {
+    const previous = ranges[index - 1];
+    const current = ranges[index];
+    if (previous && current && previous.end > current.start) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.zip.entry.overlap",
+        "error",
+        "ZIP entry bodies overlap.",
+      );
+      return [];
+    }
+  }
   return entries;
 }
 
-function zipEntryBytes(
+function readCompressedEntry(
   bytes: Uint8Array,
   view: DataView,
   entry: {
@@ -236,12 +481,14 @@ function zipEntryBytes(
     readonly uncompressedSize: number;
     readonly compressionMethod: number;
     readonly localHeaderOffset: number;
+    readonly flags: number;
+    readonly rawName: Uint8Array;
   },
-  options: QtiPackageParseOptions,
-  limits: QtiPackageResourceLimits,
+  directoryStart: number,
+  ranges: { start: number; end: number }[],
   diagnostics: QtiDiagnostic[],
 ): Uint8Array | undefined {
-  if (entry.localHeaderOffset + 30 > view.byteLength) {
+  if (entry.localHeaderOffset + 30 > directoryStart) {
     pushPackageDiagnostic(
       diagnostics,
       "package.zip.localHeader.truncated",
@@ -267,7 +514,7 @@ function zipEntryBytes(
   const extraLength = view.getUint16(entry.localHeaderOffset + 28, true);
   const dataOffset = entry.localHeaderOffset + 30 + nameLength + extraLength;
   const dataEnd = dataOffset + entry.compressedSize;
-  if (dataEnd > view.byteLength) {
+  if (dataEnd > directoryStart) {
     pushPackageDiagnostic(
       diagnostics,
       "package.zip.entry.truncated",
@@ -278,59 +525,37 @@ function zipEntryBytes(
     return undefined;
   }
 
-  const compressed = bytes.slice(dataOffset, dataEnd);
-  if (entry.compressionMethod === 0) {
-    return validateExpandedSize(compressed, entry, limits, diagnostics);
-  }
-
-  if (entry.compressionMethod === 8) {
-    const inflateRaw = options.inflateRaw;
-    if (!inflateRaw) {
-      pushPackageDiagnostic(
-        diagnostics,
-        "package.zip.entry.compression.unsupported",
-        "error",
-        `ZIP entry ${entry.path} uses DEFLATE compression, but no inflateRaw option was provided.`,
-        entry.path,
-      );
-      return undefined;
-    }
-
-    try {
-      const expanded = inflateRaw(compressed, {
-        path: entry.path,
-        compressedSize: entry.compressedSize,
-        uncompressedSize: entry.uncompressedSize,
-        compressionMethod: entry.compressionMethod,
-        maxOutputLength: Math.max(1, entry.uncompressedSize),
-      });
-      return validateExpandedSize(expanded, entry, limits, diagnostics);
-    } catch {
-      pushPackageDiagnostic(
-        diagnostics,
-        "package.zip.entry.inflate",
-        "error",
-        `ZIP entry ${entry.path} could not be inflated.`,
-        entry.path,
-      );
-      return undefined;
-    }
-  }
-
-  pushPackageDiagnostic(
-    diagnostics,
-    "package.zip.entry.compression.unsupported",
-    "error",
-    `ZIP entry ${entry.path} uses unsupported compression method ${entry.compressionMethod}.`,
-    entry.path,
+  const localName = bytes.subarray(
+    entry.localHeaderOffset + 30,
+    entry.localHeaderOffset + 30 + nameLength,
   );
-  return undefined;
+  if (
+    view.getUint16(entry.localHeaderOffset + 6, true) !== entry.flags ||
+    view.getUint16(entry.localHeaderOffset + 8, true) !== entry.compressionMethod ||
+    localName.length !== entry.rawName.length ||
+    localName.some((value, index) => value !== entry.rawName[index]) ||
+    (!(entry.flags & 8) &&
+      (view.getUint32(entry.localHeaderOffset + 18, true) !== entry.compressedSize ||
+        view.getUint32(entry.localHeaderOffset + 22, true) !== entry.uncompressedSize))
+  ) {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.zip.localHeader.mismatch",
+      "error",
+      `ZIP local and central entries for ${entry.path} do not match.`,
+      entry.path,
+    );
+    return undefined;
+  }
+  ranges.push({ start: entry.localHeaderOffset, end: dataEnd });
+  return bytes.slice(dataOffset, dataEnd);
 }
 
-function resolveResourceLimits(
+export function resolveResourceLimits(
   overrides: QtiPackageParseOptions["limits"],
-): QtiPackageResourceLimits {
-  return {
+  diagnostics: QtiDiagnostic[],
+): QtiPackageResourceLimits | undefined {
+  const limits = {
     maxEntries: overrides?.maxEntries ?? DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS.maxEntries,
     maxEntryUncompressedBytes:
       overrides?.maxEntryUncompressedBytes ??
@@ -341,6 +566,20 @@ function resolveResourceLimits(
     maxCompressionRatio:
       overrides?.maxCompressionRatio ?? DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS.maxCompressionRatio,
   };
+  if (
+    Object.values(limits).some(
+      (limit) => limit !== Infinity && (!Number.isSafeInteger(limit) || limit <= 0),
+    )
+  ) {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.limit.invalid",
+      "error",
+      "Package resource limits must be positive safe integers or Infinity.",
+    );
+    return undefined;
+  }
+  return limits;
 }
 
 function exceedsCompressionRatio(
@@ -354,35 +593,14 @@ function exceedsCompressionRatio(
   return uncompressedSize / compressedSize > limits.maxCompressionRatio;
 }
 
-function validateExpandedSize(
-  expanded: Uint8Array,
-  entry: {
-    readonly path: string;
-    readonly uncompressedSize: number;
-  },
-  limits: QtiPackageResourceLimits,
-  diagnostics: QtiDiagnostic[],
-): Uint8Array | undefined {
-  if (
-    expanded.length === entry.uncompressedSize &&
-    expanded.length <= limits.maxEntryUncompressedBytes
-  ) {
-    return expanded;
-  }
-  pushPackageDiagnostic(
-    diagnostics,
-    "package.zip.entry.size",
-    "error",
-    `ZIP entry ${entry.path} expanded to ${expanded.length} bytes; expected ${entry.uncompressedSize}.`,
-    entry.path,
-  );
-  return undefined;
-}
-
 function findEndOfCentralDirectory(view: DataView): number {
   const minimumOffset = Math.max(0, view.byteLength - 65557);
   for (let offset = view.byteLength - 22; offset >= minimumOffset; offset -= 1) {
-    if (view.getUint32(offset, true) === 0x06054b50) return offset;
+    if (
+      view.getUint32(offset, true) === 0x06054b50 &&
+      offset + 22 + view.getUint16(offset + 20, true) === view.byteLength
+    )
+      return offset;
   }
   return -1;
 }
@@ -447,4 +665,19 @@ function decodeUtf8CodePoint(
 
 function isUtf8Continuation(value: number | undefined): value is number {
   return value !== undefined && value >= 0x80 && value <= 0xbf;
+}
+
+function isValidUtf8(bytes: Uint8Array): boolean {
+  for (let index = 0; index < bytes.length; ) {
+    const byte = bytes[index];
+    if (byte === undefined) return false;
+    if (byte < 0x80) {
+      index++;
+      continue;
+    }
+    const decoded = decodeUtf8CodePoint(bytes, index);
+    if (decoded.length === 1) return false;
+    index += decoded.length;
+  }
+  return true;
 }
