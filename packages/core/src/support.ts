@@ -321,7 +321,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
       ...browserFeedbackTests,
     ],
     notes:
-      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Response processing supplies the outcome value used for visibility, and the player renders the matching feedback in player-feedback.spec.ts.",
+      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Response processing supplies the scalar/container outcome used for show/hide visibility, including inverse hide conditions, and the player renders the matching feedback in player-feedback.spec.ts.",
   },
   {
     qtiName: "qti-companion-materials-info",

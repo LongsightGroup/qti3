@@ -80,11 +80,12 @@ export function visibleModalFeedback(
   outcomes: Record<string, QtiValue>,
 ): QtiModalFeedback[] {
   return item.modalFeedback.filter((feedback) => {
-    if (feedback.showHide === "hide") return false;
     const outcome = outcomes[feedback.outcomeIdentifier];
     const outcomeValue: QtiValue = outcome === undefined ? null : outcome;
-    if (Array.isArray(outcomeValue)) return outcomeValue.includes(feedback.identifier);
-    return qtiValueToString(outcomeValue) === feedback.identifier;
+    const matches = Array.isArray(outcomeValue)
+      ? outcomeValue.includes(feedback.identifier)
+      : qtiValueToString(outcomeValue) === feedback.identifier;
+    return feedback.showHide === "hide" ? !matches : matches;
   });
 }
 

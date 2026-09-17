@@ -2,6 +2,23 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml, visibleModalFeedback } from "./index.js";
 
 describe("response processing", () => {
+  it("inverts modal hide visibility for scalar, container, and NULL outcomes", () => {
+    const parsed =
+      parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="modal-hide" title="Modal hide" time-dependent="false">
+      <qti-outcome-declaration identifier="FEEDBACK" cardinality="multiple" base-type="identifier"/>
+      <qti-item-body><p>Modal feedback.</p></qti-item-body>
+      <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="HELP" show-hide="hide"><qti-content-body><p>Help.</p></qti-content-body></qti-modal-feedback>
+    </qti-assessment-item>`);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    for (const outcome of ["OTHER", ["OTHER"], null]) {
+      expect(visibleModalFeedback(parsed.document.item, { FEEDBACK: outcome })).toHaveLength(1);
+    }
+    for (const outcome of ["HELP", ["HELP", "OTHER"]]) {
+      expect(visibleModalFeedback(parsed.document.item, { FEEDBACK: outcome })).toEqual([]);
+    }
+  });
+
   it("diagnoses unsupported and response-processing-forbidden processing elements", () => {
     const unsupported = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="unsupported-processing" title="unsupported-processing" time-dependent="false">

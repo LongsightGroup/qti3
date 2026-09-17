@@ -36,6 +36,7 @@ test.describe("player feedback", () => {
   </qti-response-processing>
   <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="correct" show-hide="show">Correct feedback.</qti-modal-feedback>
   <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="incorrect" show-hide="show">Incorrect feedback.</qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="correct" show-hide="hide"><qti-content-body><p>Try a different answer.</p></qti-content-body></qti-modal-feedback>
 </qti-assessment-item>`;
 
     await page.goto("/");
@@ -48,6 +49,13 @@ test.describe("player feedback", () => {
     await expect(feedback).toContainText("Correct feedback.");
     await expect(feedback).not.toContainText("Incorrect feedback.");
     await expect(feedback).toHaveAttribute("aria-live", "polite");
+    await expect(feedback).not.toContainText("Try a different answer.");
+
+    await page.getByRole("radio", { name: "B. B", exact: true }).check();
+    await page.locator("#debug-score").click();
+    await expect(feedback).toContainText("Try a different answer.");
+    await expect(feedback).toContainText("Incorrect feedback.");
+    await expect(feedback).not.toContainText("Correct feedback.");
   });
 
   test("renders printed variables and body feedback from current outcomes", async ({ page }) => {
