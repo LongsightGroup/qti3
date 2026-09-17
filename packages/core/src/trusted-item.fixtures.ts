@@ -20,7 +20,6 @@ export function adaptiveChoiceItemXml(): string {
         <qti-feedback-block outcome-identifier="TRACE" identifier="start" show-hide="show">Start feedback.</qti-feedback-block>
         <qti-feedback-block outcome-identifier="TRACE" identifier="wrong-first" show-hide="hide">Hidden retry.</qti-feedback-block>
       </qti-item-body>
-      <qti-modal-feedback outcome-identifier="TRACE" identifier="wrong-first" show-hide="show">Modal retry.</qti-modal-feedback>
       <qti-response-processing>
         <qti-response-condition>
           <qti-response-if>
@@ -42,6 +41,7 @@ export function adaptiveChoiceItemXml(): string {
           </qti-response-else>
         </qti-response-condition>
       </qti-response-processing>
+      <qti-modal-feedback outcome-identifier="TRACE" identifier="wrong-first" show-hide="show">Modal retry.</qti-modal-feedback>
     </qti-assessment-item>
   `;
 }
@@ -51,12 +51,12 @@ export function adaptiveTemplateItemXml(): string {
     <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="adaptive-template" adaptive="true" title="adaptive-template" time-dependent="false">
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
       <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
-      <qti-item-body><p>Template adaptive item <qti-printed-variable identifier="MISSING_TEMPLATE"/>.</p></qti-item-body>
       <qti-template-processing>
         <qti-set-correct-response identifier="RESPONSE">
           <qti-base-value base-type="identifier">A</qti-base-value>
         </qti-set-correct-response>
       </qti-template-processing>
+      <qti-item-body><p>Template adaptive item <qti-printed-variable identifier="MISSING_TEMPLATE"/>.</p></qti-item-body>
     </qti-assessment-item>
   `;
 }

@@ -101,8 +101,8 @@ describe("QTI custom interaction parsing", () => {
   it("parses printed variables and feedback inside legacy custom markup", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="custom-markup-qti" title="custom-markup-qti" time-dependent="false">
-        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-item-body>
           <qti-custom-interaction response-identifier="RESPONSE">
             <div>

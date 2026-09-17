@@ -1,3 +1,4 @@
+import { validateAssessmentItemChildren } from "./validation-item-children.js";
 import type {
   QtiAssessmentItem,
   QtiBaseType,
@@ -44,6 +45,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
 
   requireIdentifier("qti-assessment-item", item.identifier, diagnostics, item.source);
   validateAssessmentItemRoot(item, diagnostics);
+  validateAssessmentItemChildren(item, diagnostics);
   validateItemBody(item, diagnostics);
   validateItemBodySharedVocabulary(item, diagnostics);
   validateDeclarationIdentifiers(item, diagnostics);

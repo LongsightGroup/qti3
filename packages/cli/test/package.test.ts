@@ -596,7 +596,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       expect(code).toBe(1);
       expect(requiredEntry(report.results).diagnostics).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ code: "package.itemChild.order", severity: "error" }),
+          expect.objectContaining({ code: "assessmentItem.child.order", severity: "error" }),
         ]),
       );
     } finally {

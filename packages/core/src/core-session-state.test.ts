@@ -177,9 +177,9 @@ describe("core session state", () => {
   it("rejects incompatible restored attempt state", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-target" title="state-target" time-dependent="false">
-        <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="TEMPLATE" cardinality="single" base-type="integer"/>
         <qti-item-body><p>State target.</p></qti-item-body>
       </qti-assessment-item>
     `);
@@ -240,11 +240,11 @@ describe("core session state", () => {
   it("rejects restored state values that do not match declarations", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="state-value-shape" title="state-value-shape" time-dependent="false">
-        <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="CHOICE" cardinality="single" base-type="identifier"/>
         <qti-response-declaration identifier="ORDER" cardinality="ordered" base-type="identifier"/>
         <qti-response-declaration identifier="POINT" cardinality="single" base-type="point"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="COUNT" cardinality="single" base-type="integer"/>
         <qti-item-body>
           <qti-choice-interaction response-identifier="CHOICE">
             <qti-simple-choice identifier="A">A</qti-simple-choice>

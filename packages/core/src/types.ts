@@ -459,6 +459,13 @@ export interface QtiAssessmentItem {
   stylesheets: QtiStylesheet[];
   body: QtiContentNode[];
   bodyText: string;
+  /** Authored direct children in XML order; omitted for items created without source XML. */
+  sourceChildren?:
+    | readonly {
+        readonly qtiName: string;
+        readonly source?: QtiSourceLocation | undefined;
+      }[]
+    | undefined;
   source?: QtiSourceLocation | undefined;
 }
 

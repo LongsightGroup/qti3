@@ -11,6 +11,35 @@ import {
 import { choiceItemXml, simpleChoiceItemXml } from "./qti-package.fixtures.js";
 
 describe("QTI package parser", () => {
+  it("reports unsupported item time limits while preserving authored timing metadata", () => {
+    const result = parseQtiPackageFromEntries([
+      {
+        path: "imsmanifest.xml",
+        bytes: new TextEncoder().encode(
+          `<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="timing"><resources><resource identifier="item" type="imsqti_item_xmlv3p0" href="item.xml"><file href="item.xml"/></resource></resources></manifest>`,
+        ),
+      },
+      {
+        path: "item.xml",
+        bytes: new TextEncoder().encode(
+          simpleChoiceItemXml().replace(
+            "<qti-item-body>",
+            '<qti-time-limits max-time="120"/><qti-item-body>',
+          ),
+        ),
+      },
+    ]);
+    expect(result.ok).toBe(false);
+    expect(result.items[0]?.timing?.maxTime).toBe("120");
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "assessmentItem.child.unsupported",
+        severity: "error",
+        message: expect.stringContaining("qti-time-limits"),
+      }),
+    );
+  });
+
   it("parses manifest item-resource packages with dependencies, assets, timing, and standards", () => {
     const result = parseQtiPackage(
       createStoredZip({
@@ -76,7 +105,6 @@ describe("QTI package parser", () => {
         timing: expect.objectContaining({
           sourcePath: "items/choice.xml",
           timeDependent: true,
-          maxTime: "120",
         }),
       }),
     ]);

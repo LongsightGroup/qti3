@@ -459,3 +459,12 @@ explicitly disables a budget and should be reserved for trusted input.
 uses `isResolvableAssetUrl` for relative references; external URLs and fragments
 are not package inventory entries. Root-absolute content paths such as `/media/a.png`
 produce `package.path.absolute` instead of being rebased beneath an item's directory.
+
+`parseQtiXml` retains authored top-level child names and locations in
+`item.sourceChildren`. `validateAssessmentItem` uses that source metadata to check
+the QTI 3.0.1 assessment-item sequence and reject unsupported direct children with
+`assessmentItem.child.order` and `assessmentItem.child.unsupported` diagnostics.
+These checks apply to ordinary item parsing, package import, CLI inspection, and
+fixture validation. Programmatically created items without source metadata have
+no authored XML order to check. This is an explicit structural check, not runtime
+XSD validation.

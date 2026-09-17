@@ -3,6 +3,72 @@ import { parseQtiXml } from "./parser.js";
 import { validateAssessmentItem } from "./validation.js";
 
 describe("assessment item validation", () => {
+  it("validates authored child order through parsing and standalone validation", () => {
+    const parsed =
+      parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="order" title="Order" time-dependent="false">
+  <qti-item-body><p>Answer.</p></qti-item-body>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+</qti-assessment-item>`);
+    const expected = {
+      code: "assessmentItem.child.order",
+      severity: "error",
+      path: "/qti-assessment-item/qti-response-declaration[1]",
+      source: expect.objectContaining({ line: 3, column: 3 }),
+    };
+    expect(parsed.ok).toBe(false);
+    expect(parsed.diagnostics).toContainEqual(expect.objectContaining(expected));
+    if (!parsed.document) throw new Error("Expected parsed item with structural diagnostics");
+
+    const restored = structuredClone(parsed.document);
+    restored.diagnostics = [];
+    const validated = validateAssessmentItem(restored);
+    expect(validated.ok).toBe(false);
+    expect(validated.diagnostics).toContainEqual(expect.objectContaining(expected));
+  });
+
+  it("accepts the QTI 3.0.1 child sequence and repeated declarations", () => {
+    const parsed =
+      parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="sequence" title="Sequence" time-dependent="false">
+  <qti-context-declaration identifier="QTI_CONTEXT" cardinality="record"/>
+  <qti-response-declaration identifier="R1" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="R2" cardinality="single" base-type="string"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-template-declaration identifier="T" cardinality="single" base-type="integer"/>
+  <qti-template-processing><qti-set-template-value identifier="T"><qti-base-value base-type="integer">1</qti-base-value></qti-set-template-value></qti-template-processing>
+  <qti-assessment-stimulus-ref identifier="STIMULUS" href="stimulus.xml"/>
+  <qti-companion-materials-info/>
+  <qti-stylesheet href="item.css" type="text/css"/>
+  <qti-item-body><p>Sequence.</p></qti-item-body>
+  <qti-catalog-info><qti-catalog id="glossary"><qti-card support="glossary-on-screen"><qti-html-content><p>A definition.</p></qti-html-content></qti-card></qti-catalog></qti-catalog-info>
+  <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value></qti-response-processing>
+  <qti-modal-feedback identifier="correct" outcome-identifier="FEEDBACK" show-hide="show"><p>Correct.</p></qti-modal-feedback>
+</qti-assessment-item>`);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    expect(validateAssessmentItem(parsed.document).ok).toBe(true);
+  });
+
+  it.each(["qti-time-limits", "qti-unknown", "div"])(
+    "rejects %s as an assessment-item direct child",
+    (qtiName) => {
+      const parsed =
+        parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="child" title="Child" time-dependent="false">
+  <${qtiName}/>
+  <qti-item-body/>
+</qti-assessment-item>`);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code: "assessmentItem.child.unsupported",
+          severity: "error",
+          path: `/qti-assessment-item/${qtiName}[1]`,
+          source: expect.objectContaining({ line: 2, column: 3 }),
+        }),
+      );
+    },
+  );
+
   it("validates response declaration references and response shape", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid" title="invalid" time-dependent="false">

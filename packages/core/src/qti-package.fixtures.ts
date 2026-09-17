@@ -9,7 +9,6 @@ export function choiceItemXml(): string {
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
   <qti-assessment-stimulus-ref identifier="stimulus" href="../stimuli/stimulus.xml"/>
   <qti-stylesheet href="../styles/item.css" type="text/css"/>
-  <qti-time-limits max-time="120"/>
   <qti-item-body>
     <p><img src="../media/prompt.png" alt="Prompt"/></p>
     <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">

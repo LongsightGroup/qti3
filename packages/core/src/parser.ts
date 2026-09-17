@@ -178,6 +178,10 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
 
   return {
     identifier,
+    sourceChildren: node.children.map((child) => ({
+      qtiName: child.localName,
+      source: child.source,
+    })),
     title: node.attributes.title,
     language: node.attributes["xml:lang"] ?? node.attributes.lang,
     adaptive: parseXmlBoolean(node.attributes.adaptive) === true,

@@ -86,7 +86,6 @@ async function inspectPackage(
       const parsed = parseQtiPackageXmlTree(xml);
       return { path: entry.path, xml, root: parsed.root, errors: parsed.errors };
     });
-  const byPath = new Map(xmlFiles.map((entry) => [entry.path, entry]));
   const selectedPaths = new Set(imported.items.map((item) => item.href));
   const itemDiagnosticKeys = new Set(
     imported.items.flatMap((item) => item.diagnostics.map(diagnosticKey)),
@@ -101,19 +100,13 @@ async function inspectPackage(
         : diagnostic,
     );
   const results = imported.items.map((item) =>
-    inspectionItem(
-      item.href,
-      item.source,
-      item.xml,
-      {
-        ok:
-          item.document !== undefined &&
-          item.diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
-        document: item.document,
-        diagnostics: [...item.diagnostics],
-      },
-      strict ? byPath.get(item.href) : undefined,
-    ),
+    inspectionItem(item.href, item.source, item.xml, {
+      ok:
+        item.document !== undefined &&
+        item.diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
+      document: item.document,
+      diagnostics: [...item.diagnostics],
+    }),
   );
   const assessmentTestFiles: string[] = [];
   for (const xmlFile of xmlFiles) {
@@ -187,12 +180,8 @@ function inspectionItem(
   source: PackageInspectionReport["results"][number]["source"],
   xml: string,
   parsed: QtiParseResult,
-  strictXml?: PackageXmlFile,
 ): PackageInspectionReport["results"][number] {
-  const diagnostics = uniqueDiagnostics([
-    ...parsed.diagnostics,
-    ...(strictXml ? packageXmlDiagnostics(strictXml) : []),
-  ]);
+  const diagnostics = uniqueDiagnostics(parsed.diagnostics);
   return {
     file,
     source,
@@ -202,66 +191,4 @@ function inspectionItem(
       parsed.document?.item.interactions.map((interaction) => interaction.qtiName) ?? [],
     basicFeatures: detectBasicItemFeatures(xml, parsed),
   };
-}
-
-function assessmentItemChildOrder(localName: string): number | undefined {
-  switch (localName) {
-    case "qti-context-declaration":
-      return 1;
-    case "qti-response-declaration":
-      return 2;
-    case "qti-outcome-declaration":
-      return 3;
-    case "qti-template-declaration":
-      return 4;
-    case "qti-template-processing":
-      return 5;
-    case "qti-assessment-stimulus-ref":
-      return 6;
-    case "qti-companion-materials-info":
-      return 7;
-    case "qti-stylesheet":
-      return 8;
-    case "qti-item-body":
-      return 9;
-    case "qti-catalog-info":
-      return 10;
-    case "qti-response-processing":
-      return 11;
-    case "qti-modal-feedback":
-      return 12;
-    default:
-      return undefined;
-  }
-}
-
-function packageXmlDiagnostics(xmlFile: PackageXmlFile): QtiDiagnostic[] {
-  if (xmlFile.root?.localName !== "qti-assessment-item") return [];
-  const diagnostics: QtiDiagnostic[] = [];
-  let lastOrder = 0;
-
-  for (const child of xmlFile.root.children) {
-    const order = assessmentItemChildOrder(child.localName);
-    if (!order) {
-      diagnostics.push({
-        code: "package.itemChild.unsupported",
-        severity: "error",
-        message: `qti-assessment-item contains unsupported child ${child.localName}.`,
-        path: xmlFile.path,
-      });
-      continue;
-    }
-    if (order < lastOrder) {
-      diagnostics.push({
-        code: "package.itemChild.order",
-        severity: "error",
-        message: `${child.localName} appears out of QTI 3 qti-assessment-item child order.`,
-        path: xmlFile.path,
-      });
-      continue;
-    }
-    lastOrder = order;
-  }
-
-  return diagnostics;
 }

@@ -802,10 +802,10 @@ describe("@longsightgroup/qti3-core cross-cutting", () => {
   it("preserves portable custom interaction launch metadata", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="pci" title="pci" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-template-declaration identifier="START" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>2</qti-value></qti-default-value>
         </qti-template-declaration>
-        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
         <qti-item-body>
           <qti-portable-custom-interaction
             response-identifier="RESPONSE"

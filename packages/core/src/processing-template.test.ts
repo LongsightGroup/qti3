@@ -53,10 +53,10 @@ describe("template processing", () => {
   it("runs deterministic template processing before scoring", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated" title="templated" time-dependent="false">
-        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
-        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-random-integer min="2" max="2"/>
@@ -89,10 +89,10 @@ describe("template processing", () => {
   it("restores generated template values before deriving correct responses", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated-restore" title="templated-restore" time-dependent="false">
-        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
-        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-random-integer min="1" max="100"/>
@@ -132,9 +132,9 @@ describe("template processing", () => {
   it("evaluates template conditions and templated default values", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-condition" title="template-condition" time-dependent="false">
-        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-processing>
           <qti-template-condition>
             <qti-template-if>
@@ -186,13 +186,10 @@ describe("template processing", () => {
   it("honors exit-template rules during template processing", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-template" title="exit-template" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
         </qti-template-declaration>
-        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
-        <qti-item-body>
-          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
-        </qti-item-body>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-base-value base-type="integer">1</qti-base-value>
@@ -202,6 +199,9 @@ describe("template processing", () => {
             <qti-base-value base-type="integer">2</qti-base-value>
           </qti-set-template-value>
         </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
       </qti-assessment-item>
     `);
 
@@ -213,16 +213,13 @@ describe("template processing", () => {
   it("restarts template processing until template constraints are satisfied", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint" title="template-constraint" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="A" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
         </qti-template-declaration>
         <qti-template-declaration identifier="B" cardinality="single" base-type="integer">
           <qti-default-value><qti-value>0</qti-value></qti-default-value>
         </qti-template-declaration>
-        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
-        <qti-item-body>
-          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
-        </qti-item-body>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-random-integer min="1" max="3"/>
@@ -239,6 +236,9 @@ describe("template processing", () => {
             </qti-not>
           </qti-template-constraint>
         </qti-template-processing>
+        <qti-item-body>
+          <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
+        </qti-item-body>
       </qti-assessment-item>
     `);
 
@@ -251,9 +251,9 @@ describe("template processing", () => {
   it("does not retain generated correct responses from rejected template constraint passes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-correct-reset" title="template-constraint-correct-reset" time-dependent="false">
-        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-custom-operator definition="next-template-value"/>
@@ -300,11 +300,11 @@ describe("template processing", () => {
   it("does not retain generated defaults from rejected template constraint passes", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="template-constraint-default-reset" title="template-constraint-default-reset" time-dependent="false">
-        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="TRACE" cardinality="single" base-type="identifier"/>
         <qti-outcome-declaration identifier="DEFAULT" cardinality="single" base-type="integer"/>
+        <qti-template-declaration identifier="A" cardinality="single" base-type="integer"/>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-custom-operator definition="next-template-value"/>
@@ -368,7 +368,6 @@ describe("template processing", () => {
         <qti-template-declaration identifier="B" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="C" cardinality="single" base-type="integer"/>
         <qti-template-declaration identifier="D" cardinality="single" base-type="integer"/>
-        <qti-item-body/>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-random-integer/>
@@ -383,6 +382,7 @@ describe("template processing", () => {
             <qti-random-integer min="1" max="10" step="0"/>
           </qti-set-template-value>
         </qti-template-processing>
+        <qti-item-body/>
       </qti-assessment-item>
     `);
 

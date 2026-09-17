@@ -250,8 +250,8 @@ test("a fresh page restores every byte, full item models, images, styles, and re
       '<qti-stylesheet href="../styles/item.css?version=1#sheet" type="text/css"/><qti-item-body><p class="saved-evidence">Database restoration</p><img src="../images/square.svg?version=1#square" alt="Saved square"/>',
     )
     .replace(
-      "<qti-item-body>",
-      '<qti-template-declaration identifier="HIDDEN_METADATA" cardinality="single" base-type="string"><qti-default-value><qti-value>Preserve this invisible value.</qti-value></qti-default-value></qti-template-declaration><qti-item-body>',
+      "<qti-stylesheet",
+      '<qti-template-declaration identifier="HIDDEN_METADATA" cardinality="single" base-type="string"><qti-default-value><qti-value>Preserve this invisible value.</qti-value></qti-default-value></qti-template-declaration><qti-stylesheet',
     );
   const second = itemXml
     .replaceAll("saved-choice", "second-choice")

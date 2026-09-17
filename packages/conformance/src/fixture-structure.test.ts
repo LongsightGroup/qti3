@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs";
-import { parseQtiPackageXmlTree, type QtiPackageXmlNode } from "@longsightgroup/qti3-core";
+import {
+  parseQtiPackageXmlTree,
+  parseQtiXml,
+  validateAssessmentItem,
+  type QtiPackageXmlNode,
+} from "@longsightgroup/qti3-core";
 import { expect, it } from "vitest";
 import {
   canonicalFixtures,
@@ -34,22 +39,6 @@ it.each(["endAttempt-reference", "adaptive-feedback-reference"])(
   },
 );
 
-// QTI 3.0.1 AssessmentItemDType sequence; this check deliberately needs no runtime XSD engine.
-const itemChildOrder = [
-  "qti-context-declaration",
-  "qti-response-declaration",
-  "qti-outcome-declaration",
-  "qti-template-declaration",
-  "qti-template-processing",
-  "qti-assessment-stimulus-ref",
-  "qti-companion-materials-info",
-  "qti-stylesheet",
-  "qti-item-body",
-  "qti-catalog-info",
-  "qti-response-processing",
-  "qti-modal-feedback",
-];
-
 it.each([
   canonicalFixtures.find((fixture) => fixture.id === "template-content-reference"),
   basicItemPlayerFixtures.find((fixture) => fixture.id === "basic-mathml"),
@@ -73,13 +62,13 @@ function descendants(node: QtiPackageXmlNode): QtiPackageXmlNode[] {
 it.each([...canonicalFixtures, ...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures])(
   "generates $id in the complete item child order",
   (fixture) => {
-    const root = parseQtiPackageXmlTree(fixture.xml).root;
-    expect(root?.localName).toBe("qti-assessment-item");
-    const ranks =
-      root?.children.map((child) => {
-        expect(itemChildOrder).toContain(child.localName);
-        return itemChildOrder.indexOf(child.localName);
-      }) ?? [];
-    expect(ranks).toEqual(ranks.toSorted((left, right) => left - right));
+    const parsed = parseQtiXml(fixture.xml);
+    const document = parsed.document;
+    if (!document) throw new Error(`Could not parse fixture ${fixture.id}`);
+    expect(
+      validateAssessmentItem(document).diagnostics.filter((diagnostic) =>
+        diagnostic.code.startsWith("assessmentItem.child."),
+      ),
+    ).toEqual([]);
   },
 );
