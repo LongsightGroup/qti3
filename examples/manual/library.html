@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saved packages | qti3</title>
+    <meta
+      name="description"
+      content="Import QTI packages into this browser's database and reopen their questions and original source."
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light;
+        font:
+          1rem/1.55 system-ui,
+          sans-serif;
+        color: #202124;
+        background: #f7f7f7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      main {
+        max-inline-size: 80rem;
+        margin-inline: auto;
+        padding: 1.5rem;
+      }
+      h1 {
+        margin-block: 0.5rem;
+      }
+      a {
+        color: #165ea8;
+      }
+      .library {
+        display: grid;
+        grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr);
+        gap: 1.5rem;
+      }
+      .controls,
+      .question {
+        min-inline-size: 0;
+        padding: 1rem;
+        border: 1px solid #cfd3d7;
+        background: #fff;
+      }
+      label {
+        display: block;
+        margin-block: 1rem 0.25rem;
+        font-weight: 600;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        max-inline-size: 100%;
+      }
+      input,
+      select {
+        inline-size: 100%;
+      }
+      select,
+      button {
+        min-block-size: 2.75rem;
+        padding: 0.4rem;
+      }
+      button {
+        margin-block: 1rem;
+      }
+      :focus-visible {
+        outline: 3px solid #165ea8;
+        outline-offset: 3px;
+      }
+      #library-status {
+        min-block-size: 3rem;
+      }
+      qti-assessment-item-player {
+        display: block;
+      }
+      details {
+        margin-block-start: 1rem;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      pre {
+        overflow: auto;
+        max-block-size: 30rem;
+        padding: 0.75rem;
+        background: #f7f7f7;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      @media (max-width: 48rem) {
+        .library {
+          grid-template-columns: 1fr;
+        }
+        main {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="./">Return to the qti3 manual</a>
+      <h1>Saved packages</h1>
+      <p>
+        Import saves the complete package in this browser. Close this page and return to reopen it.
+      </p>
+      <div class="library">
+        <section class="controls" aria-label="Package library">
+          <label for="import-package">Import package</label>
+          <input
+            id="import-package"
+            type="file"
+            accept=".zip,application/zip"
+            aria-describedby="save-description"
+          />
+          <p id="save-description">Choose a QTI ZIP package to import and save locally.</p>
+          <label for="saved-packages">Saved package</label>
+          <select id="saved-packages">
+            <option value="">Select a saved package</option>
+          </select>
+          <label for="package-items">Question</label>
+          <select id="package-items" disabled>
+            <option value="">Select a question</option>
+          </select>
+          <button id="delete-package" type="button" disabled>Delete package</button>
+          <p id="library-status" role="status" aria-live="polite">Opening library…</p>
+          <details>
+            <summary>Import and player diagnostics</summary>
+            <pre id="library-diagnostics">No diagnostics.</pre>
+          </details>
+        </section>
+        <section class="question" aria-label="Selected question">
+          <h2>Question</h2>
+          <qti-assessment-item-player></qti-assessment-item-player>
+          <details>
+            <summary>Original question XML</summary>
+            <pre id="item-source">Select a saved package to inspect its source.</pre>
+          </details>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="./src/package-library/main.ts"></script>
+  </body>
+</html>

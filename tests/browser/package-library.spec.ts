@@ -145,3 +145,63 @@ test("discards provisional item events when the terminal core summary fails", as
   expect(result.ok).toBe(false);
   expect(result).not.toHaveProperty("items");
 });
+
+test("imports, commits, and immediately opens the saved record", async ({ page }) => {
+  const zip = createItemPackageZip({
+    resources: [qtiItemResource("choice", "item.xml")],
+    files: { "item.xml": itemXml },
+  });
+  await page.goto("/library.html");
+  await page
+    .getByLabel("Import package", { exact: true })
+    .setInputFiles({ name: "choice.zip", mimeType: "application/zip", buffer: zip });
+  await expect(page.getByRole("status")).toHaveText(
+    "Saved choice.zip. Reopened 1 question from the database.",
+  );
+  await expect(page.getByRole("radio", { name: "A. Two", exact: true })).toBeVisible();
+  const stored = await page.evaluate(async () => {
+    const modulePath = "/src/package-library/store.ts";
+    const { listPackages, readPackage } = await import(/* @vite-ignore */ modulePath);
+    const listed = await listPackages();
+    if (!listed.ok) return listed;
+    return readPackage(listed.value[0].id);
+  });
+  expect(stored.ok).toBe(true);
+  expect(stored.value.filename).toBe("choice.zip");
+  expect(stored.value.entries).toHaveLength(2);
+});
+
+test("a duplicate ID aborts the write and leaves the earlier record intact", async ({ page }) => {
+  await page.goto("/library.html");
+  const result = await page.evaluate(async () => {
+    const modulePath = "/src/package-library/store.ts";
+    const { savePackage, readPackage } = await import(/* @vite-ignore */ modulePath);
+    const record = {
+      id: "same-id",
+      title: "Original",
+      filename: "a.zip",
+      importedAt: "2026-09-17T12:00:00.000Z",
+      entries: [{ path: "original.xml", bytes: new Uint8Array([65]) }],
+    };
+    const first = await savePackage(record);
+    const duplicate = await savePackage({ ...record, title: "Replacement" });
+    const read = await readPackage(record.id);
+    return { first, duplicate, read };
+  });
+  expect(result.first.ok).toBe(true);
+  expect(result.duplicate).toMatchObject({ ok: false, code: "aborted" });
+  expect(result.read.value.title).toBe("Original");
+});
+
+test("a failed import reports diagnostics without adding a saved package", async ({ page }) => {
+  await page.goto("/library.html");
+  await page.getByLabel("Import package", { exact: true }).setInputFiles({
+    name: "broken.zip",
+    mimeType: "application/zip",
+    buffer: Buffer.from("broken"),
+  });
+  await expect(page.getByRole("status")).toContainText("Package import failed. Nothing was saved.");
+  await expect(page.locator("#saved-packages option")).toHaveCount(1);
+  await page.getByText("Import and player diagnostics", { exact: true }).click();
+  await expect(page.locator("#library-diagnostics")).toContainText("package.zip.invalid");
+});
