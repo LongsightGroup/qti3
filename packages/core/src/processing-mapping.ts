@@ -21,13 +21,11 @@ export function lookupOutcomeValue(
       lookupTable.defaultValue
     );
   }
-  const entry = [...lookupTable.entries]
-    .toSorted((left, right) => left.sourceValue - right.sourceValue)
-    .find(
-      (candidate) =>
-        numeric < candidate.sourceValue ||
-        (candidate.includeBoundary !== false && numeric === candidate.sourceValue),
-    );
+  const entry = lookupTable.entries.find(
+    (candidate) =>
+      numeric > candidate.sourceValue ||
+      (candidate.includeBoundary !== false && numeric === candidate.sourceValue),
+  );
   return entry?.targetValue ?? lookupTable.defaultValue;
 }
 

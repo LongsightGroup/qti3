@@ -133,7 +133,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   operatorProcessingEntry("qti-null"),
   mappingProcessingEntry("qti-match-table"),
   mappingProcessingEntry("qti-match-table-entry"),
-  mappingProcessingEntry("qti-interpolation-table"),
+  {
+    ...mappingProcessingEntry("qti-interpolation-table"),
+    notes:
+      "Selects the first authored entry whose source-value is below the input, including equality only when include-boundary permits it.",
+  },
   mappingProcessingEntry("qti-interpolation-table-entry"),
   {
     ...operatorProcessingEntry("qti-is-null"),

@@ -2,6 +2,36 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml } from "./index.js";
 
 describe("processing mapping", () => {
+  it("preserves interpolation entry order and exclusive boundaries", () => {
+    const parsed = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="lookup-order" title="Lookup order" time-dependent="false">
+        <qti-response-declaration identifier="R" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="GRADE" cardinality="single" base-type="identifier">
+          <qti-interpolation-table default-value="F">
+            <qti-interpolation-table-entry source-value="80" target-value="B" include-boundary="false"/>
+            <qti-interpolation-table-entry source-value="90" target-value="A"/>
+            <qti-interpolation-table-entry source-value="0" target-value="D"/>
+          </qti-interpolation-table>
+        </qti-outcome-declaration>
+        <qti-item-body><p>Authored order.</p></qti-item-body>
+        <qti-response-processing><qti-lookup-outcome-value identifier="GRADE"><qti-variable identifier="R"/></qti-lookup-outcome-value></qti-response-processing>
+      </qti-assessment-item>
+    `);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    const session = createItemSession(parsed.document);
+    for (const [input, expected] of [
+      [95, "B"],
+      [85, "B"],
+      [80, "D"],
+      [0, "D"],
+      [-1, "F"],
+    ] satisfies Array<[number, string]>) {
+      session.respond("R", input);
+      expect(session.score().outcomes.GRADE).toBe(expected);
+    }
+  });
+
   it("uses first-authored overlapping areas and counts each area once", () => {
     const parsed = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="overlap" title="Overlapping areas" time-dependent="false">
@@ -641,9 +671,9 @@ describe("processing mapping", () => {
         <qti-response-declaration identifier="CODE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="GRADE" cardinality="single" base-type="identifier">
           <qti-interpolation-table default-value="F">
-            <qti-interpolation-table-entry source-value="60" target-value="D"/>
-            <qti-interpolation-table-entry source-value="80" target-value="B"/>
             <qti-interpolation-table-entry source-value="100" target-value="A"/>
+            <qti-interpolation-table-entry source-value="80" target-value="B"/>
+            <qti-interpolation-table-entry source-value="60" target-value="D"/>
           </qti-interpolation-table>
         </qti-outcome-declaration>
         <qti-outcome-declaration identifier="LABEL" cardinality="single" base-type="string">
@@ -653,7 +683,7 @@ describe("processing mapping", () => {
           </qti-match-table>
         </qti-outcome-declaration>
         <qti-item-body>
-          <qti-slider-interaction response-identifier="RAW" lower-bound="0" upper-bound="100"/>
+          <qti-slider-interaction response-identifier="RAW" lower-bound="0" upper-bound="200"/>
           <qti-slider-interaction response-identifier="CODE" lower-bound="1" upper-bound="3"/>
         </qti-item-body>
         <qti-response-processing>
@@ -676,10 +706,14 @@ describe("processing mapping", () => {
     const session = createItemSession(result.document!);
     session.respond("RAW", 85);
     session.respond("CODE", 2);
-    expect(session.score().outcomes).toMatchObject({ GRADE: "A", LABEL: "second" });
+    expect(session.score().outcomes).toMatchObject({ GRADE: "B", LABEL: "second" });
     session.respond("RAW", 101);
     session.respond("CODE", 3);
-    expect(session.score().outcomes).toMatchObject({ GRADE: "F", LABEL: "unknown" });
+    expect(session.score().outcomes).toMatchObject({ GRADE: "A", LABEL: "unknown" });
+    session.respond("RAW", 60);
+    expect(session.score().outcomes.GRADE).toBe("D");
+    session.respond("RAW", 59);
+    expect(session.score().outcomes.GRADE).toBe("F");
   });
 
   it("evaluates inside point-shape processing expressions", () => {
