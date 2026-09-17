@@ -51,8 +51,12 @@ pnpm test:external:required
 The Basic IMPORT evidence runners read official package zips from the conformance
 tree. Item evidence filters manifest item resources and ignores convenience test
 resources; test evidence imports the official T4/T7 test-structure package.
-`QTI3_EXTERNAL_VALIDATOR_REPORT` may be supplied as supplemental evidence, but it is
-not required for import proof.
+`QTI3_EXTERNAL_VALIDATOR_REPORT` may attach a supplemental report, but it is not
+required for import proof. Attachments are labeled `unverified`: the runner does
+not parse an official validator verdict or verify its scope. A missing or empty
+attachment is `unavailable`. Setting `requireValidatorEvidence: true` fails with
+`certification.validator.unverified` until a verified report integration exists;
+independent import-row results remain available.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

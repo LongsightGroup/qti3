@@ -40,7 +40,7 @@ export interface QtiCertificationReportRow extends QtiBasicImportAcceptanceCrite
 
 export interface QtiValidatorEvidence {
   readonly source: string;
-  readonly ok: boolean;
+  readonly status: "unverified" | "unavailable";
   readonly size: number;
 }
 
@@ -55,6 +55,7 @@ export interface QtiBasicImportItemOnlyCertificationOptions {
   readonly qtiRoot: string;
   readonly conformanceSource?: string | undefined;
   readonly validatorReport?: string | undefined;
+  /** Fails closed: opaque report attachments cannot establish a verified verdict. */
   readonly requireValidatorEvidence?: boolean | undefined;
   readonly criteria?: readonly QtiBasicImportAcceptanceCriterion[] | undefined;
 }
@@ -71,6 +72,7 @@ export interface QtiBasicImportItemOnlyCertificationReport {
   readonly packages: readonly QtiPackageImportEvidence[];
   readonly rows: readonly QtiCertificationReportRow[];
   readonly validatorEvidence: QtiValidatorEvidence | undefined;
+  readonly diagnostics: readonly QtiDiagnostic[];
 }
 
 const qtiConformanceSource = "1EdTech/qti-conformance@b058156";
@@ -361,8 +363,8 @@ export async function runQti3BasicImportItemOnlyCertification(
     criteria.map((entry) => runCriterion(options.qtiRoot, packageIndex, entry)),
   );
   const validatorEvidence = await readValidatorEvidence(options.validatorReport);
-  const validatorFailed =
-    options.requireValidatorEvidence === true && validatorEvidence?.ok !== true;
+  // No official validator report format is parsed or scope-checked by this runner.
+  const validatorFailed = options.requireValidatorEvidence === true;
   const failed = rows.filter((row) => row.status === "failed").length + (validatorFailed ? 1 : 0);
 
   return {
@@ -377,6 +379,14 @@ export async function runQti3BasicImportItemOnlyCertification(
     packages: [...packageIndex.evidenceByPackage.values()],
     rows,
     validatorEvidence,
+    diagnostics: validatorFailed
+      ? [
+          diagnostic(
+            "certification.validator.unverified",
+            "Verified validator evidence was required, but report attachments are unverified; no validator verdict or scope has been checked.",
+          ),
+        ]
+      : [],
   };
 }
 
@@ -495,13 +505,13 @@ async function readValidatorEvidence(
     const report = await stat(validatorReport);
     return {
       source: validatorReport,
-      ok: report.isFile() && report.size > 0,
+      status: report.isFile() && report.size > 0 ? "unverified" : "unavailable",
       size: report.size,
     };
   } catch {
     return {
       source: validatorReport,
-      ok: false,
+      status: "unavailable",
       size: 0,
     };
   }

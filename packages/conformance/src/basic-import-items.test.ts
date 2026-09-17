@@ -20,7 +20,7 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
     );
   });
 
-  it("passes valid rows and expected invalid rows with validator evidence", async () => {
+  it("passes independent import rows while labeling a report attachment unverified", async () => {
     const root = await mkdtemp(join(tmpdir(), "qti-basic-import-"));
     try {
       await writeFixture(root, "items/choice.xml", validChoiceXml());
@@ -49,7 +49,6 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
       const report = await runQti3BasicImportItemOnlyCertification({
         qtiRoot: root,
         validatorReport,
-        requireValidatorEvidence: true,
         criteria,
       });
 
@@ -60,7 +59,8 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
         checked: 2,
         failed: 0,
         ok: true,
-        validatorEvidence: { ok: true },
+        validatorEvidence: { status: "unverified" },
+        diagnostics: [],
       });
       expect(report.rows.every((row) => row.status === "passed")).toBe(true);
     } finally {
@@ -90,6 +90,36 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
       expect(report.ok).toBe(false);
       expect(report.failed).toBe(1);
       expect(report.validatorEvidence).toBeUndefined();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it.each([
+    ["garbage", "FAILED: this is not a validator report.", "unverified"],
+    ["self-asserted success", '{"ok":true}', "unverified"],
+    ["failed verdict", '{"ok":false}', "unverified"],
+    ["empty file", "", "unavailable"],
+    ["absent file", undefined, "unavailable"],
+  ])("does not accept %s as verified validator evidence", async (_name, contents, status) => {
+    const root = await mkdtemp(join(tmpdir(), "qti-basic-import-"));
+    try {
+      const validatorReport = join(root, "report.json");
+      if (contents !== undefined) await writeFile(validatorReport, contents, "utf8");
+      const report = await runQti3BasicImportItemOnlyCertification({
+        qtiRoot: root,
+        validatorReport,
+        requireValidatorEvidence: true,
+        criteria: [],
+      });
+      expect(report).toMatchObject({
+        ok: false,
+        failed: 1,
+        checked: 0,
+        validatorEvidence: { source: validatorReport, status },
+        diagnostics: [expect.objectContaining({ code: "certification.validator.unverified" })],
+      });
+      expect(report.validatorEvidence).not.toHaveProperty("ok");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
