@@ -267,6 +267,8 @@ function applyTemplateProcessing(
 ): void {
   const { evaluation } = context;
   const rules = evaluation.document.item.templateProcessing?.rules ?? [];
+  // A retry or restored clone must derive defaults afresh from the authored declarations.
+  resetRecord(evaluation.defaultValues, {});
   let restarts = 0;
   for (let index = 0; index < rules.length; index += 1) {
     const rule = rules[index]!;
@@ -279,6 +281,7 @@ function applyTemplateProcessing(
         resetRecord(evaluation.responses, cloneValueRecord(baseResponses));
         resetRecord(context.responseDefaults, cloneValueRecord(baseResponseDefaults));
         resetRecord(evaluation.outcomes, cloneValueRecord(baseOutcomes));
+        resetRecord(evaluation.defaultValues, {});
         resetCorrectResponses(evaluation.document, evaluation.correctResponses);
         restarts += 1;
         if (restarts <= 100) index = -1;
@@ -355,6 +358,7 @@ function applyTemplateRule(
     const responseDeclaration = getResponseDeclaration(evaluation.document, rule.identifier);
     if (responseDeclaration) {
       const normalized = normalizeValueForCardinality(value, responseDeclaration.cardinality);
+      evaluation.defaultValues[rule.identifier] = cloneValue(normalized);
       if (normalized === null) {
         delete context.responseDefaults[rule.identifier];
       } else {
@@ -366,7 +370,9 @@ function applyTemplateRule(
       (declaration) => declaration.identifier === rule.identifier,
     );
     if (outcomeDeclaration) {
-      evaluation.outcomes[rule.identifier] = value;
+      const normalized = normalizeValueForCardinality(value, outcomeDeclaration.cardinality);
+      evaluation.defaultValues[rule.identifier] = cloneValue(normalized);
+      evaluation.outcomes[rule.identifier] = cloneValue(normalized);
     }
     return false;
   }

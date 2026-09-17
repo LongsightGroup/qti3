@@ -2,6 +2,54 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml } from "./index.js";
 
 describe("template processing", () => {
+  it.each(["9", "NULL"])(
+    "applies and resolves clone defaults consistently (%s)",
+    (defaultValue) => {
+      const expression =
+        defaultValue === "NULL"
+          ? "<qti-null/>"
+          : '<qti-base-value base-type="integer">9</qti-base-value>';
+      const parsed =
+        parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="clone-defaults" title="Clone defaults" time-dependent="false">
+      <qti-response-declaration identifier="R" cardinality="single" base-type="integer"><qti-default-value><qti-value>1</qti-value></qti-default-value></qti-response-declaration>
+      <qti-response-declaration identifier="OTHER" cardinality="single" base-type="string"/>
+      <qti-outcome-declaration identifier="VALUE" cardinality="single" base-type="integer"><qti-default-value><qti-value>1</qti-value></qti-default-value></qti-outcome-declaration>
+      <qti-outcome-declaration identifier="RESPONSE_DEFAULT" cardinality="single" base-type="integer"/>
+      <qti-outcome-declaration identifier="OUTCOME_DEFAULT" cardinality="single" base-type="integer"/>
+      <qti-template-declaration identifier="SEEN" cardinality="single" base-type="integer"/>
+      <qti-template-processing>
+        <qti-set-default-value identifier="R">${expression}</qti-set-default-value>
+        <qti-set-default-value identifier="VALUE">${expression}</qti-set-default-value>
+        <qti-set-template-value identifier="SEEN"><qti-default identifier="VALUE"/></qti-set-template-value>
+      </qti-template-processing>
+      <qti-item-body><p>Clone defaults.</p></qti-item-body>
+      <qti-response-processing>
+        <qti-set-outcome-value identifier="RESPONSE_DEFAULT"><qti-default identifier="R"/></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="OUTCOME_DEFAULT"><qti-default identifier="VALUE"/></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="VALUE"><qti-sum><qti-variable identifier="VALUE"/><qti-base-value base-type="integer">1</qti-base-value></qti-sum></qti-set-outcome-value>
+      </qti-response-processing>
+    </qti-assessment-item>`);
+      expect(parsed.ok).toBe(true);
+      if (!parsed.document) throw new Error("Expected parsed item");
+      const session = createItemSession(parsed.document);
+      const expected = defaultValue === "NULL" ? null : 9;
+      expect(session.serialize().templateValues?.SEEN).toBe(expected);
+      session.respond("OTHER", "start");
+      expect(session.serialize().responses.R ?? null).toBe(expected);
+      for (const current of [session, createItemSession(parsed.document, session.serialize())]) {
+        for (let run = 0; run < 2; run += 1) {
+          expect(current.score().outcomes).toMatchObject({
+            RESPONSE_DEFAULT: expected,
+            OUTCOME_DEFAULT: expected,
+            VALUE: expected === null ? null : 10,
+          });
+        }
+      }
+      expect(parsed.document.item.responseDeclarations[0]?.defaultValue).toBe(1);
+      expect(parsed.document.item.outcomeDeclarations[0]?.defaultValue).toBe(1);
+    },
+  );
+
   it("runs deterministic template processing before scoring", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="templated" title="templated" time-dependent="false">
@@ -256,6 +304,7 @@ describe("template processing", () => {
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="TRACE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="DEFAULT" cardinality="single" base-type="integer"/>
         <qti-template-processing>
           <qti-set-template-value identifier="A">
             <qti-custom-operator definition="next-template-value"/>
@@ -284,6 +333,10 @@ describe("template processing", () => {
         <qti-item-body>
           <qti-slider-interaction response-identifier="RESPONSE" lower-bound="0" upper-bound="10"/>
         </qti-item-body>
+        <qti-response-processing>
+          <qti-set-outcome-value identifier="DEFAULT"><qti-default identifier="RESPONSE"/></qti-set-outcome-value>
+          <qti-set-outcome-value identifier="TRACE"><qti-default identifier="TRACE"/></qti-set-outcome-value>
+        </qti-response-processing>
       </qti-assessment-item>
     `);
 
@@ -305,6 +358,7 @@ describe("template processing", () => {
       TRACE: null,
       completionStatus: "not_attempted",
     });
+    expect(session.score().outcomes).toMatchObject({ DEFAULT: null, TRACE: null });
   });
 
   it("validates random integer processing attributes", () => {

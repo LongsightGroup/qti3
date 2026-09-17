@@ -20,6 +20,7 @@ export interface EvaluationContext {
   outcomes: Record<string, QtiValue>;
   templateValues: Record<string, QtiValue>;
   correctResponses: Record<string, QtiValue>;
+  defaultValues: Record<string, QtiValue>;
   allowedUndeclaredResponseIdentifiers: ReadonlySet<string>;
   random: () => number;
   customOperators: QtiCustomOperatorRegistry;
@@ -53,6 +54,7 @@ export function createEvaluationContext(
     outcomes,
     templateValues,
     correctResponses,
+    defaultValues: {},
     allowedUndeclaredResponseIdentifiers,
     random,
     customOperators,

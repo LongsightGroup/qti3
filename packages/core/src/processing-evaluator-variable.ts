@@ -63,7 +63,9 @@ export function evaluateVariableExpression(
     case "correct":
       return context.correctResponses[expression.identifier] ?? null;
     case "default":
-      return defaultValueForIdentifier(context.document, expression.identifier);
+      return Object.hasOwn(context.defaultValues, expression.identifier)
+        ? (context.defaultValues[expression.identifier] ?? null)
+        : defaultValueForIdentifier(context.document, expression.identifier);
     case "variable":
       return (
         resolveVariableValue(

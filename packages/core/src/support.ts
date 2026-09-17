@@ -92,7 +92,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     "packages/fixtures/xml/random-integer-template-reference.xml",
     "packages/fixtures/xml/template-content-reference.xml",
   ]),
-  templateProcessingEntry("qti-set-default-value"),
+  {
+    ...templateProcessingEntry("qti-set-default-value"),
+    notes:
+      "Updates effective response/outcome defaults for the clone, including explicit NULL overrides; rejected template passes discard their overrides.",
+  },
   templateProcessingEntry("qti-set-correct-response", [
     "packages/fixtures/xml/template-processing-reference.xml",
     "packages/fixtures/xml/random-integer-template-reference.xml",
@@ -149,7 +153,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
   mappingProcessingEntry("qti-correct"),
-  mappingProcessingEntry("qti-default"),
+  {
+    ...mappingProcessingEntry("qti-default", [], [processingTemplateTest]),
+    notes:
+      "Reads the effective authored or template-overridden default, independently of the variable's current value.",
+  },
   {
     ...mappingProcessingEntry("qti-map-response"),
     notes:
