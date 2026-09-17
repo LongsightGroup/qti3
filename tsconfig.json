@@ -1,20 +1,53 @@
 {
   "files": [],
   "references": [
-    { "path": "./packages/core" },
-    { "path": "./packages/core/tsconfig.test.json" },
-    { "path": "./packages/writer" },
-    { "path": "./packages/transcoder" },
-    { "path": "./packages/migrator" },
-    { "path": "./packages/fixtures" },
-    { "path": "./packages/player" },
-    { "path": "./packages/player-preact" },
-    { "path": "./packages/player-react" },
-    { "path": "./packages/conformance" },
-    { "path": "./packages/pnp" },
-    { "path": "./packages/a11y" },
-    { "path": "./packages/cli" },
-    { "path": "./packages/cli/tsconfig.test.json" },
-    { "path": "./examples/manual/tsconfig.convert.json" }
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/core/tsconfig.test.json"
+    },
+    {
+      "path": "./packages/writer"
+    },
+    {
+      "path": "./packages/transcoder"
+    },
+    {
+      "path": "./packages/migrator"
+    },
+    {
+      "path": "./packages/fixtures"
+    },
+    {
+      "path": "./packages/player"
+    },
+    {
+      "path": "./packages/player-preact"
+    },
+    {
+      "path": "./packages/player-react"
+    },
+    {
+      "path": "./packages/conformance"
+    },
+    {
+      "path": "./packages/pnp"
+    },
+    {
+      "path": "./packages/a11y"
+    },
+    {
+      "path": "./packages/cli"
+    },
+    {
+      "path": "./packages/cli/tsconfig.test.json"
+    },
+    {
+      "path": "./examples/manual/tsconfig.convert.json"
+    },
+    {
+      "path": "./examples/manual/tsconfig.library.json"
+    }
   ]
 }

@@ -1,3 +1,4 @@
+import { readBrowserPackageZip } from "./package-library/browser-package.js";
 import {
   accessibilityProofMatrix,
   manualAssistiveTechnologyScripts,
@@ -117,11 +118,6 @@ interface LoadedFile {
   name: string;
   xml: string;
   source: string;
-}
-
-interface ZipEntry {
-  name: string;
-  bytes: Uint8Array;
 }
 
 interface PackageDebugState {
@@ -864,7 +860,10 @@ async function readPackageXmlFiles(fileList: FileList | null): Promise<LoadedFil
 }
 
 async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
-  const entries = await readZipEntries(await file.arrayBuffer());
+  const result = await readBrowserPackageZip(new Uint8Array(await file.arrayBuffer()));
+  if (!result.ok)
+    throw new Error(result.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
+  const entries = result.entries.map((entry) => ({ name: entry.path, bytes: entry.bytes.slice() }));
   packageAssetPaths = entries
     .filter((entry) => !entry.name.endsWith(".xml"))
     .map((entry) => entry.name)
@@ -883,44 +882,6 @@ async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
       source: entry.name,
       xml: new TextDecoder().decode(entry.bytes),
     }));
-}
-
-async function readZipEntries(buffer: ArrayBuffer): Promise<ZipEntry[]> {
-  const bytes = new Uint8Array(buffer);
-  const view = new DataView(buffer);
-  const eocdOffset = findEndOfCentralDirectory(view);
-  if (eocdOffset < 0) throw new Error("No ZIP central directory was found.");
-
-  const entryCount = view.getUint16(eocdOffset + 10, true);
-  let offset = view.getUint32(eocdOffset + 16, true);
-  const entries: ZipEntry[] = [];
-  const decoder = new TextDecoder();
-
-  for (let index = 0; index < entryCount; index += 1) {
-    if (view.getUint32(offset, true) !== 0x02014b50) break;
-    const method = view.getUint16(offset + 10, true);
-    const compressedSize = view.getUint32(offset + 20, true);
-    const nameLength = view.getUint16(offset + 28, true);
-    const extraLength = view.getUint16(offset + 30, true);
-    const commentLength = view.getUint16(offset + 32, true);
-    const localHeaderOffset = view.getUint32(offset + 42, true);
-    const rawName = bytes.slice(offset + 46, offset + 46 + nameLength);
-    const name = normalizePackagePath(decoder.decode(rawName), "ZIP entry");
-    offset += 46 + nameLength + extraLength + commentLength;
-    if (!name || name.endsWith("/")) continue;
-
-    const content = await zipEntryBytes(
-      bytes,
-      view,
-      localHeaderOffset,
-      compressedSize,
-      method,
-      name,
-    );
-    if (content) entries.push({ name, bytes: content });
-  }
-
-  return entries;
 }
 
 function clearAssetUrls(): void {
@@ -952,41 +913,6 @@ function isRelativeAssetUrl(url: string): boolean {
 
 function mimeTypeForPath(path: string): string {
   return detectPackageMediaType(path) ?? "application/octet-stream";
-}
-
-function findEndOfCentralDirectory(view: DataView): number {
-  const minimumOffset = Math.max(0, view.byteLength - 65557);
-  for (let offset = view.byteLength - 22; offset >= minimumOffset; offset -= 1) {
-    if (view.getUint32(offset, true) === 0x06054b50) return offset;
-  }
-  return -1;
-}
-
-async function zipEntryBytes(
-  bytes: Uint8Array,
-  view: DataView,
-  localHeaderOffset: number,
-  compressedSize: number,
-  method: number,
-  name: string,
-): Promise<Uint8Array | undefined> {
-  if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) {
-    throw new Error(`Invalid local header for ${name}.`);
-  }
-  const nameLength = view.getUint16(localHeaderOffset + 26, true);
-  const extraLength = view.getUint16(localHeaderOffset + 28, true);
-  const dataOffset = localHeaderOffset + 30 + nameLength + extraLength;
-  const compressed = bytes.slice(dataOffset, dataOffset + compressedSize);
-  if (method === 0) return compressed;
-  if (method !== 8) throw new Error(`Unsupported ZIP compression method ${method} for ${name}.`);
-  if (typeof DecompressionStream === "undefined") {
-    throw new Error("This browser cannot read deflated ZIP packages.");
-  }
-
-  const stream = new Blob([compressed])
-    .stream()
-    .pipeThrough(new DecompressionStream("deflate-raw"));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
 function errorMessage(error: unknown): string {

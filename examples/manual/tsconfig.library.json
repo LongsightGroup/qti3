@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src/package-library",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/qti3-library.tsbuildinfo"
+  },
+  "include": ["src/package-library/**/*.ts"],
+  "references": [
+    {
+      "path": "../../packages/core"
+    },
+    {
+      "path": "../../packages/player"
+    }
+  ]
+}
