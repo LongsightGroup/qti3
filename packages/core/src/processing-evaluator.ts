@@ -1,4 +1,4 @@
-import type { QtiDocument, QtiProcessingExpression, QtiValue } from "./types.js";
+import type { QtiDiagnostic, QtiDocument, QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { QtiCustomOperatorRegistry } from "./custom-operators.js";
 import { evaluateBooleanExpression } from "./processing-evaluator-boolean.js";
@@ -21,6 +21,8 @@ export interface EvaluationContext {
   templateValues: Record<string, QtiValue>;
   correctResponses: Record<string, QtiValue>;
   defaultValues: Record<string, QtiValue>;
+  diagnostics: QtiDiagnostic[];
+  builtInVariable(identifier: string): QtiValue | undefined;
   allowedUndeclaredResponseIdentifiers: ReadonlySet<string>;
   random: () => number;
   customOperators: QtiCustomOperatorRegistry;
@@ -31,6 +33,7 @@ export interface EvaluationContext {
 }
 
 export interface EvaluationOptions {
+  builtInVariable?: ((identifier: string) => QtiValue | undefined) | undefined;
   allowedUndeclaredResponseIdentifiers?: ReadonlySet<string> | readonly string[] | undefined;
 }
 
@@ -55,6 +58,13 @@ export function createEvaluationContext(
     templateValues,
     correctResponses,
     defaultValues: {},
+    diagnostics: [],
+    builtInVariable:
+      options.builtInVariable ??
+      ((identifier) =>
+        identifier === "completionStatus"
+          ? (outcomes.completionStatus ?? "not_attempted")
+          : undefined),
     allowedUndeclaredResponseIdentifiers,
     random,
     customOperators,

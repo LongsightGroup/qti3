@@ -94,7 +94,11 @@ describe("support registry helpers", () => {
     }
 
     const variable = processingSupport.find((entry) => entry.qtiName === "qti-variable");
-    expect(variable?.tests).toEqual([processingResponseTest]);
+    expect(variable?.tests).toEqual([
+      processingResponseTest,
+      "packages/core/src/session-builtins.test.ts",
+      "tests/browser/player-lifecycle.spec.ts",
+    ]);
   });
 
   it("declares processing evidence ownership at canonical support entries", () => {

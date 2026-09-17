@@ -121,7 +121,14 @@ export function validateProcessingReferences(
   const outcomes = new Set(item.outcomeDeclarations.map((declaration) => declaration.identifier));
   outcomes.add(COMPLETION_STATUS);
   const templates = new Set(item.templateDeclarations.map((declaration) => declaration.identifier));
-  const variables = new Set([...responses, ...outcomes, ...templates]);
+  const variables = new Set([
+    ...responses,
+    ...outcomes,
+    ...templates,
+    "numAttempts",
+    "QTI_CONTEXT",
+    ...(item.timeDependent ? ["duration"] : []),
+  ]);
 
   for (const rule of item.templateProcessing?.rules ?? []) {
     validateTemplateRule(rule, responses, outcomes, templates, variables, diagnostics);

@@ -65,6 +65,7 @@ export function materializeQtiItemSubmission(
     parsedItem: parsedResult.parsed,
     diagnosticPrefix: "itemSubmission",
     allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,
+    sessionEnvironment: input.sessionEnvironment,
     priorState: priorState.state,
     submission: {
       trustedResponses: input.trustedResponses,
@@ -98,6 +99,7 @@ function materializeAdaptiveSubmission(
     parsedItem,
     diagnosticPrefix: "itemSubmission",
     allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,
+    sessionEnvironment: input.sessionEnvironment,
     priorState: input.existingState,
     trustedResponses: input.trustedResponses,
     trustedInteractionStates: input.trustedInteractionStates,

@@ -184,6 +184,7 @@ export {
   type QtiCustomOperatorRegistry,
   type QtiItemSession,
   type QtiItemSessionOptions,
+  type QtiSessionEnvironment,
 } from "./session.js";
 export {
   deprecatedInteractionSupport,

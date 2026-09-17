@@ -729,8 +729,22 @@ export interface QtiValidationResult {
   diagnostics: QtiDiagnostic[];
 }
 
+export interface QtiSessionContext {
+  candidateIdentifier: string;
+  testIdentifier: string;
+  environmentIdentifier: string;
+}
+
+export interface QtiBuiltInVariables {
+  numAttempts: number;
+  duration: number | null;
+  attemptInProgress: boolean;
+  context: QtiSessionContext;
+}
+
 export interface QtiAttemptStateV1 {
   schema: "qti3.attempt-state.v1";
+  builtInVariables?: QtiBuiltInVariables | undefined;
   itemIdentifier: string;
   status: QtiAttemptStatus;
   responses: Record<string, QtiValue>;

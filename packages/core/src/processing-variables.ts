@@ -7,6 +7,7 @@ import type {
   QtiTemplateDeclaration,
   QtiValue,
 } from "./types.js";
+import { builtInVariableBaseType } from "./session-builtins.js";
 import { parseBaseType } from "./parser-values.js";
 
 export function getResponseDeclaration(
@@ -37,6 +38,7 @@ export function resolveOptionalVariableValue(
   outcomes: Record<string, QtiValue>,
   templateValues: Record<string, QtiValue>,
 ): QtiValue | undefined {
+  if (identifier === "completionStatus") return outcomes.completionStatus ?? "not_attempted";
   const declaration = resolveVariableDeclaration(document, identifier);
   if (!declaration) return undefined;
   if (declaration.kind === "response") return responses[identifier] ?? null;
@@ -77,7 +79,10 @@ export function expressionBaseType(
     expression.type === "correct" ||
     expression.type === "default"
   ) {
-    return resolveVariableDeclaration(document, expression.identifier)?.baseType;
+    return (
+      builtInVariableBaseType(expression.identifier) ??
+      resolveVariableDeclaration(document, expression.identifier)?.baseType
+    );
   }
   if (expression.type === "index") return expressionBaseType(expression.expression, document);
   if (expression.type === "delete") return expressionBaseType(expression.collection, document);

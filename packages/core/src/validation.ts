@@ -132,6 +132,18 @@ function validateDeclarationIdentifiers(
         source: declaration.source,
       });
     }
+    if (
+      ["numAttempts", "duration", "QTI_CONTEXT"].includes(declaration.identifier) ||
+      (declaration.identifier === COMPLETION_STATUS && declaration.kind !== "outcome")
+    ) {
+      diagnostics.push({
+        code: "declaration.builtIn",
+        severity: "error",
+        message: `${declaration.identifier} is a reserved built-in variable and must not be declared explicitly.`,
+        path: declaration.source?.path,
+        source: declaration.source,
+      });
+    }
     if (seen.has(declaration.identifier)) {
       diagnostics.push({
         code: "identifier.duplicate",

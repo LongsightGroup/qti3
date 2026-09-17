@@ -168,14 +168,23 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     notes:
       "Each point selects the first matching authored area; each selected area contributes at most once.",
   },
-  responseProcessingEntry("qti-variable", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/template-processing-reference.xml",
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-    "packages/fixtures/xml/template-content-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
+  {
+    ...responseProcessingEntry("qti-variable", [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/template-processing-reference.xml",
+      "packages/fixtures/xml/random-integer-template-reference.xml",
+      "packages/fixtures/xml/template-content-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ]),
+    notes:
+      "Resolves declared variables and implicit completionStatus, numAttempts, timed-item duration (float seconds), and QTI_CONTEXT; session environment is resolved before template processing.",
+    tests: [
+      processingResponseTest,
+      "packages/core/src/session-builtins.test.ts",
+      "tests/browser/player-lifecycle.spec.ts",
+    ],
+  },
   templateProcessingEntry(
     "qti-random-integer",
     ["packages/fixtures/xml/random-integer-template-reference.xml"],

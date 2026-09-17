@@ -66,7 +66,9 @@ export function evaluateVariableExpression(
       return Object.hasOwn(context.defaultValues, expression.identifier)
         ? (context.defaultValues[expression.identifier] ?? null)
         : defaultValueForIdentifier(context.document, expression.identifier);
-    case "variable":
+    case "variable": {
+      const builtIn = context.builtInVariable(expression.identifier);
+      if (builtIn !== undefined) return builtIn;
       return (
         resolveVariableValue(
           context.document,
@@ -78,6 +80,7 @@ export function evaluateVariableExpression(
         context.undeclaredResponseValue(expression.identifier) ??
         null
       );
+    }
     default:
       return assertNever(expression);
   }

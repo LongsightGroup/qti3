@@ -517,7 +517,9 @@ Before publishing, verify these requirements:
 Serialized attempt state uses `qti3.attempt-state.v1`. It captures responses, outcomes,
 generated template values, validation messages, lifecycle status, and QTI's built-in
 `completionStatus` outcome. PCI suspend/resume data is stored as opaque JSON under
-`interactionStates` keyed by response identifier.
+`interactionStates` keyed by response identifier. The optional `builtInVariables` record
+stores `numAttempts`, accumulated `duration` seconds (or NULL when unavailable), the
+open-attempt flag, and the three `QTI_CONTEXT` string fields.
 
 - Hosts can save, restore, and review attempts through this state contract.
 - Hosts can check restored JSON with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
@@ -526,6 +528,12 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 - Single integer/float outcomes without an authored default initialize to zero; other
   undeclared defaults remain NULL, and non-adaptive scoring resets to these effective defaults.
 - Adaptive items retain outcome values across response-processing runs.
+- An attempt starts on `beginAttempt()`, entering the interacting state, or the first response;
+  scoring ends it. Resume preserves its count, and the next attempt increments it.
+- The browser supplies a monotonic clock and excludes suspended/closed time from duration.
+  Core hosts provide `now` (milliseconds) or accumulated `duration` (seconds), plus optional
+  `context`, in session options before template processing. A timed expression without time
+  data returns NULL with a diagnostic. Non-timed items cannot reference `duration`.
 - For non-adaptive items, `endAttempt()` completes the item after a valid score run.
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
 - Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.

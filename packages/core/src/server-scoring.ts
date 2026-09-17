@@ -28,6 +28,7 @@ export function scoreQtiItemServerSide(input: QtiServerScoringInput): QtiServerS
     itemXml: input.itemXml,
     diagnosticPrefix: "serverScoring",
     allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,
+    sessionEnvironment: input.sessionEnvironment,
     submission: {
       trustedResponses: input.trustedResponses,
       trustedInteractionStates: input.trustedInteractionStates,

@@ -1093,7 +1093,17 @@ test("maps PNP through the manual into exact, keyboard-accessible catalog contro
     { catalogId: "directions", requested: true },
   ]);
   await expectNoAxeViolationsOnPlayer(page);
-  expect(await player.evaluate((element) => element.serialize())).toEqual(initialState);
+  const afterCatalogRequests = await player.evaluate((element) => element.serialize());
+  expect(afterCatalogRequests?.builtInVariables?.duration).toBeGreaterThanOrEqual(
+    initialState?.builtInVariables?.duration ?? 0,
+  );
+  expect(afterCatalogRequests).toEqual({
+    ...initialState,
+    builtInVariables: {
+      ...initialState?.builtInVariables,
+      duration: afterCatalogRequests?.builtInVariables?.duration,
+    },
+  });
 
   await page.locator("#pnp-xml").fill("<access-for-all-pnp/>");
   await page.locator("#apply-pnp").click();

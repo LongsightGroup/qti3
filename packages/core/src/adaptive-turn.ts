@@ -59,6 +59,7 @@ export function runTrustedAdaptiveItemTurn(
     parsedItem: input.parsedItem,
     diagnosticPrefix,
     allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,
+    sessionEnvironment: input.sessionEnvironment,
     priorState: priorStateResult.state,
     submission: {
       trustedResponses: input.trustedResponses,

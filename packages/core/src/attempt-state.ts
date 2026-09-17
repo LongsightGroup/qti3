@@ -200,6 +200,31 @@ function attemptStateErrors(value: unknown): string[] {
   if (!isQtiValueRecord(value.outcomes)) {
     errors.push("QTI attempt state outcomes must be a record of QTI values.");
   }
+  if (value.builtInVariables !== undefined) {
+    const builtIns = value.builtInVariables;
+    if (
+      !isRecord(builtIns) ||
+      typeof builtIns.numAttempts !== "number" ||
+      !Number.isSafeInteger(builtIns.numAttempts) ||
+      builtIns.numAttempts < 0 ||
+      typeof builtIns.attemptInProgress !== "boolean" ||
+      (builtIns.attemptInProgress && builtIns.numAttempts === 0) ||
+      !(
+        builtIns.duration === null ||
+        (typeof builtIns.duration === "number" &&
+          Number.isFinite(builtIns.duration) &&
+          builtIns.duration >= 0)
+      ) ||
+      !isRecord(builtIns.context) ||
+      !["candidateIdentifier", "testIdentifier", "environmentIdentifier"].every(
+        (key) => isRecord(builtIns.context) && typeof builtIns.context[key] === "string",
+      )
+    ) {
+      errors.push(
+        "QTI attempt state builtInVariables requires a non-negative integer attempt count, attempt flag, finite non-negative duration or null, and three string context fields.",
+      );
+    }
+  }
   if (value.templateValues !== undefined && !isQtiValueRecord(value.templateValues)) {
     errors.push("QTI attempt state templateValues must be a record of QTI values.");
   }

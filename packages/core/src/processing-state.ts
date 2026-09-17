@@ -1,5 +1,6 @@
 import type {
   QtiAttemptStateV1,
+  QtiBuiltInVariables,
   QtiAttemptStatus,
   QtiDiagnostic,
   QtiPortableCustomStateValue,
@@ -16,9 +17,13 @@ export function serialize(
   templateValues: Record<string, QtiValue>,
   interactionStates: Record<string, QtiPortableCustomStateValue>,
   validationMessages: QtiDiagnostic[],
+  builtInVariables?: QtiBuiltInVariables,
 ): QtiAttemptStateV1 {
   return {
     schema: ATTEMPT_STATE_SCHEMA,
+    ...(builtInVariables === undefined
+      ? {}
+      : { builtInVariables: { ...builtInVariables, context: { ...builtInVariables.context } } }),
     itemIdentifier,
     status,
     responses: cloneValueRecord(responses),

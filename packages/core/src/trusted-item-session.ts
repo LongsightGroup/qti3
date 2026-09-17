@@ -1,3 +1,4 @@
+import type { QtiSessionEnvironment } from "./session-builtins.js";
 import { parseQtiXml } from "./parser.js";
 import { itemExpectsAutomatedScore, itemHasExternalScore } from "./item-scoring-expectation.js";
 import { parseQtiResponseVariables } from "./response-validation.js";
@@ -31,6 +32,8 @@ export interface QtiTrustedResponseApplication {
 }
 
 export interface QtiTrustedItemParseOptions {
+  /** Trusted host environment; never take duration/context from candidate response fields. */
+  sessionEnvironment?: QtiSessionEnvironment | undefined;
   allowedUndeclaredResponseIdentifiers?: readonly string[] | undefined;
 }
 
@@ -48,7 +51,7 @@ export interface RunTrustedItemSessionInput extends QtiTrustedItemParseOptions {
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix;
   submission: QtiTrustedResponseApplication;
   priorState?: QtiAttemptStateV1 | null | undefined;
-  /** Applied before submission. Intended for server-side scoring, not adaptive turns. */
+  /** Applied before submission, except completed is applied after capture. For server scoring, not adaptive turns. */
   attemptStatus?: QtiAttemptStatus | undefined;
   scoring: QtiTrustedItemScoringPolicy;
   requireNumericScore: boolean;
@@ -156,12 +159,15 @@ export function runTrustedItemSession(
     input.diagnosticPrefix,
     input.allowedUndeclaredResponseIdentifiers,
     parsedResult.parsed.diagnostics,
+    input.sessionEnvironment,
   );
   if (!sessionResult.ok) {
     return emptyTrustedItemSessionFailure(sessionResult.diagnostics);
   }
 
-  if (input.attemptStatus) sessionResult.session.setStatus(input.attemptStatus);
+  if (input.attemptStatus && input.attemptStatus !== "completed") {
+    sessionResult.session.setStatus(input.attemptStatus);
+  }
 
   let submission = input.submission;
   if (input.submissionValidation === "strict") {
@@ -188,6 +194,9 @@ export function runTrustedItemSession(
   if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
     return emptyTrustedItemSessionFailure(diagnostics);
   }
+
+  // Capture the submitted attempt before closing it, so built-in counters reflect participation.
+  if (input.attemptStatus === "completed") sessionResult.session.setStatus("completed");
 
   const shouldScore = input.scoring === "always" || applicationResult.appliedSubmission;
   const externalScore = itemHasExternalScore(parsedResult.parsed.document.item);
@@ -277,11 +286,13 @@ function createTrustedItemSession(
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix,
   allowedUndeclaredResponseIdentifiers: readonly string[] | undefined,
   existingDiagnostics: QtiDiagnostic[] = [],
+  sessionEnvironment: QtiSessionEnvironment = {},
 ): { ok: true; session: QtiItemSession } | { ok: false; diagnostics: QtiDiagnostic[] } {
   try {
     return {
       ok: true,
       session: createItemSession(parsed.document, priorState ?? undefined, {
+        ...sessionEnvironment,
         allowedUndeclaredResponseIdentifiers,
       }),
     };

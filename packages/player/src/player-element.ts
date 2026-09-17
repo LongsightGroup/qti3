@@ -372,9 +372,13 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.emitDiagnostics([...result.diagnostics, ...playerDiagnostics]);
     if (!this.isCurrentLoad(generation)) return;
 
+    const sessionOptions: QtiItemSessionOptions = {
+      now: () => performance.now(),
+      ...options.sessionOptions,
+    };
     let nextSession: QtiItemSession;
     try {
-      nextSession = createItemSession(nextDocumentModel, options.state, options.sessionOptions);
+      nextSession = createItemSession(nextDocumentModel, options.state, sessionOptions);
     } catch (error) {
       this.transitionCurrentLoadToError(
         generation,
@@ -389,7 +393,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.loadedItem = {
       document: nextDocumentModel,
       session: nextSession,
-      sessionOptions: options.sessionOptions,
+      sessionOptions,
       resolveAsset: options.resolveAsset,
       stylesheets: stylesheetResolution.links,
       sessionControl: nextSessionControl,

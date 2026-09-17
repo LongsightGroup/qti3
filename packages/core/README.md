@@ -84,6 +84,31 @@ Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt e
 saved `templateValues` are authoritative; they are restored before generated correct
 responses are derived, so resuming does not depend on the original seed.
 
+### Built-in variables
+
+`qti-variable` resolves `completionStatus`, `numAttempts`, and the `QTI_CONTEXT` record
+without declarations. Context contains `candidateIdentifier`, `testIdentifier`, and
+`environmentIdentifier`; pass their string values in `createItemSession` options `context`
+before template processing runs. Unspecified fields are empty strings. Explicit declarations
+of these reserved identifiers are rejected.
+
+`beginAttempt()` starts an attempt without a response. Responding or entering the interacting
+state also starts one; repeated edits and suspension/resume keep its count. Each `score()`
+ends the current attempt, and the next starts a new count. Scoring an untouched non-adaptive
+item keeps zero attempts and `not_attempted` completion status.
+
+For time-dependent items, `duration` is accumulated **float seconds**. Supply either
+`duration` for a scoring operation or `now: () => performance.now()` for live delivery.
+The clock must return monotonic milliseconds; the engine excludes suspended and completed
+time and truncates expression readings to milliseconds while retaining clock precision in saved state. Missing or invalid time produces NULL and a typed
+diagnostic when duration is read. Non-timed expressions cannot read duration. Server scoring,
+adaptive turns, and submission materialization accept the same inputs in `sessionEnvironment`.
+These values come from the trusted host, not candidate response fields.
+
+Saved `builtInVariables` retains the count, open-attempt flag, accumulated duration, and context;
+restoring a timed session starts the supplied clock afresh from the saved duration. Keep this
+record when persisting `qti3.attempt-state.v1`; state validation checks its field types and ranges.
+
 ### Candidate-safe delivery XML
 
 High-stakes delivery systems can redact answer-bearing item XML before sending it to

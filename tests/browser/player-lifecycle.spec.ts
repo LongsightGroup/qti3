@@ -31,6 +31,50 @@ const CUSTOM_OPERATOR_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 test.describe("player lifecycle", () => {
+  test("keeps browser duration and attempt counts across suspension and restore", async ({
+    page,
+  }) => {
+    const fixture = interactionFixtures.find((entry) => entry.interactionType === "choice");
+    if (!fixture) throw new Error("Expected choice fixture.");
+    const xml = fixture.xml.replace('time-dependent="false"', 'time-dependent="true"');
+    await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
+    await page.goto("/");
+    await page.clock.pauseAt(new Date("2026-01-01T01:00:00Z"));
+    const player = page.locator("qti-assessment-item-player");
+    await player.evaluate(async (element, item) => {
+      await element.loadXml(item, { status: "interacting" });
+    }, xml);
+    await page.clock.runFor(1250);
+    const suspended = await player.evaluate((element) => {
+      element.suspend();
+      return element.serialize();
+    });
+    expect(suspended?.builtInVariables).toMatchObject({
+      numAttempts: 1,
+      duration: 1.25,
+      attemptInProgress: true,
+    });
+    await page.clock.runFor(10_000);
+    expect(
+      (await player.evaluate((element) => element.serialize()))?.builtInVariables?.duration,
+    ).toBe(1.25);
+    await player.evaluate(
+      async (element, input) => {
+        await element.loadXml(input.xml, { state: input.state, status: "interacting" });
+      },
+      { xml, state: suspended },
+    );
+    await page.clock.runFor(750);
+    const scored = await player.evaluate((element) =>
+      element.scoreAttempt({ validateResponses: false }),
+    );
+    expect(scored?.state.builtInVariables).toMatchObject({
+      numAttempts: 1,
+      duration: 2,
+      attemptInProgress: false,
+    });
+  });
+
   for (const interaction of ["text-entry", "extended-text"]) {
     test(`ignores old focused ${interaction} controls after restore and reset`, async ({
       page,

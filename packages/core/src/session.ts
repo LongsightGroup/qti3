@@ -43,6 +43,9 @@ import {
 } from "./processing-state.js";
 import { booleanValue, normalizeValueForCardinality, qtiMatchValues } from "./processing-values.js";
 
+import { createSessionBuiltIns, type QtiSessionEnvironment } from "./session-builtins.js";
+export type { QtiSessionEnvironment } from "./session-builtins.js";
+
 interface SessionProcessingContext {
   responseDefaults: Record<string, QtiValue>;
   evaluation: EvaluationContext;
@@ -58,7 +61,7 @@ interface ConditionalRules<Rule> {
   elseRules: Rule[];
 }
 
-export interface QtiItemSessionOptions {
+export interface QtiItemSessionOptions extends QtiSessionEnvironment {
   randomSeed?: string | number | undefined;
   customOperators?: QtiCustomOperatorRegistry | undefined;
   allowedUndeclaredResponseIdentifiers?: readonly string[] | undefined;
@@ -67,6 +70,8 @@ export interface QtiItemSessionOptions {
 export interface QtiItemSession {
   readonly item: QtiAssessmentItem;
   correctResponses(): Record<string, QtiValue>;
+  /** Starts an attempt without requiring a response; repeated calls and resume are idempotent. */
+  beginAttempt(): void;
   respond(identifier: string, value: QtiValue): void;
   setInteractionState(identifier: string, state: QtiPortableCustomStateValue): void;
   interactionState(identifier: string): QtiPortableCustomStateValue | undefined;
@@ -110,6 +115,12 @@ export function createItemSession(
   const interactionStates: Record<string, QtiPortableCustomStateValue> = {};
   const correctResponses: Record<string, QtiValue> = {};
   let status: QtiAttemptStatus = priorState?.status ?? "initialized";
+  const builtInDiagnostics: QtiDiagnostic[] = [];
+  const builtIns = createSessionBuiltIns(priorState?.builtInVariables, options, (diagnostic) => {
+    if (!builtInDiagnostics.some((existing) => existing.code === diagnostic.code))
+      builtInDiagnostics.push(diagnostic);
+  });
+  const captureTime = () => builtIns.captureTime(status !== "suspended" && status !== "completed");
   const random = seededRandom(options.randomSeed ?? document.item.identifier);
   const customOperators = options.customOperators ?? {};
   const allowedUndeclaredResponseIdentifiers = new Set(
@@ -149,7 +160,20 @@ export function createItemSession(
     correctResponses,
     random,
     customOperators,
-    { allowedUndeclaredResponseIdentifiers },
+    {
+      allowedUndeclaredResponseIdentifiers,
+      builtInVariable(identifier) {
+        if (identifier === "completionStatus")
+          return outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
+        if (identifier === "numAttempts") return builtIns.state.numAttempts;
+        if (identifier === "QTI_CONTEXT") return { ...builtIns.state.context };
+        if (identifier === "duration" && document.item.timeDependent) {
+          captureTime();
+          return builtIns.duration();
+        }
+        return undefined;
+      },
+    },
   );
   const processingContext: SessionProcessingContext = {
     responseDefaults,
@@ -174,6 +198,7 @@ export function createItemSession(
       baseOutcomes,
     );
   }
+  const templateDiagnostics = [...evaluation.diagnostics, ...builtInDiagnostics];
   const defaultOutcomes = cloneValueRecord(outcomes);
   Object.assign(responses, priorResponses);
   Object.assign(outcomes, priorOutcomes);
@@ -181,6 +206,7 @@ export function createItemSession(
 
   return {
     item: document.item,
+    beginAttempt: startAttempt,
     correctResponses() {
       return cloneValueRecord(correctResponses);
     },
@@ -202,10 +228,15 @@ export function createItemSession(
       return state === undefined ? undefined : clonePortableCustomState(state);
     },
     setStatus(nextStatus: QtiAttemptStatus) {
+      captureTime();
+      if (nextStatus === "interacting") startAttempt();
+      if (nextStatus === "completed") builtIns.state.attemptInProgress = false;
       status = nextStatus;
     },
     score() {
-      const diagnostics: QtiDiagnostic[] = [];
+      evaluation.diagnostics.length = 0;
+      builtInDiagnostics.length = 0;
+      captureTime();
       if (document.item.adaptive || status !== "initialized") {
         startAttempt();
       }
@@ -215,6 +246,12 @@ export function createItemSession(
         outcomes[COMPLETION_STATUS] = completionStatus;
       }
       applyResponseProcessing(processingContext);
+      builtIns.state.attemptInProgress = false;
+      const diagnostics = [
+        ...templateDiagnostics,
+        ...evaluation.diagnostics,
+        ...builtInDiagnostics,
+      ];
       if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
       validationMessages = diagnostics;
       const state = serialize(
@@ -225,10 +262,12 @@ export function createItemSession(
         templateValues,
         interactionStates,
         diagnostics,
+        builtIns.state,
       );
       return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
     },
     serialize() {
+      captureTime();
       return serialize(
         document.item.identifier,
         status,
@@ -237,11 +276,18 @@ export function createItemSession(
         templateValues,
         interactionStates,
         validationMessages,
+        builtIns.state,
       );
     },
   };
 
   function startAttempt(): void {
+    captureTime();
+    if (status === "completed") return;
+    if (!builtIns.state.attemptInProgress) {
+      builtIns.state.numAttempts += 1;
+      builtIns.state.attemptInProgress = true;
+    }
     for (const [identifier, value] of Object.entries(responseDefaults)) {
       if (responses[identifier] === undefined) responses[identifier] = cloneValue(value);
     }
