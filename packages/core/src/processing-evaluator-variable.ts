@@ -29,7 +29,7 @@ export function evaluateVariableExpression(
 ): QtiValue {
   switch (expression.type) {
     case "isNull":
-      return isNullResponse(context.responses[expression.identifier] ?? null);
+      return isNullResponse(context.evaluate(expression.expression));
     case "matchCorrect": {
       const declaration = getResponseDeclaration(context.document, expression.correctIdentifier);
       return declaration

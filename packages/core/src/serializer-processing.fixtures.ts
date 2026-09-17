@@ -30,7 +30,7 @@ export const expressionCoverage = {
   },
   null: { expression: { type: "null" }, xml: "    <qti-null/>" },
   isNull: {
-    expression: { type: "isNull", identifier: "RESPONSE" },
+    expression: { type: "isNull", expression: variableResponse },
     xml: [
       "    <qti-is-null>",
       '      <qti-variable identifier="RESPONSE"/>',

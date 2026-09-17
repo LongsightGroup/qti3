@@ -215,12 +215,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   }
 
   if (node.localName === "qti-is-null") {
-    const variable = childElements(node, "qti-variable")[0];
-    return {
-      type: "isNull",
-      identifier: variable?.attributes.identifier ?? "",
-      source: node.source,
-    };
+    const expression = parseFirstExpression(node);
+    return expression ? { type: "isNull", expression, source: node.source } : undefined;
   }
 
   if (node.localName === "qti-map-response") {

@@ -213,6 +213,15 @@ function diagnoseProcessingElements(
   if (!processingNode) return;
   for (const node of [processingNode, ...descendants(processingNode, () => true)]) {
     if (!node.localName.startsWith("qti-")) continue;
+    if (node.localName === "qti-is-null" && childElements(node).length !== 1) {
+      diagnostics.push({
+        code: "processing.isNull.arity",
+        severity: "error",
+        message: "qti-is-null requires exactly one expression.",
+        path: node.source.path,
+        source: node.source,
+      });
+    }
     if (
       processingNode.localName === "qti-response-processing" &&
       responseProcessingForbiddenNames.has(node.localName)

@@ -135,7 +135,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   mappingProcessingEntry("qti-match-table-entry"),
   mappingProcessingEntry("qti-interpolation-table"),
   mappingProcessingEntry("qti-interpolation-table-entry"),
-  operatorProcessingEntry("qti-is-null"),
+  {
+    ...operatorProcessingEntry("qti-is-null"),
+    notes:
+      "Accepts one arbitrary expression, evaluates it in the full variable context, and tests the result for NULL.",
+  },
   mappingProcessingEntry("qti-match", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
     "packages/fixtures/xml/advanced-processing-reference.xml",

@@ -147,7 +147,10 @@ describe("processing variable resolution", () => {
     const document = documentWithDeclarations({
       responses: [responseDeclaration("PAIRS", null, "ordered", "pair")],
     });
-    const expression = { type: "isNull", identifier: "PAIRS" } as const;
+    const expression = {
+      type: "isNull",
+      expression: { type: "variable", identifier: "PAIRS" },
+    } as const;
 
     expect(expressionBaseType(expression, document)).toBe("boolean");
     expect(expressionIsOrdered(expression, document)).toBe(false);

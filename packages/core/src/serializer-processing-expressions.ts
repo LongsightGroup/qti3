@@ -79,8 +79,6 @@ export function serializeExpression(
       return serializeBaseValue(expression, context, indent);
     case "null":
       return renderElement("qti-null", [], [], indent);
-    case "isNull":
-      return serializeIsNull(expression, context, indent);
     case "matchCorrect":
       return serializeMatchCorrect(expression, context, indent);
     case "randomInteger":
@@ -343,22 +341,6 @@ function baseValueText(
   if (expression.rawValue !== undefined) return expression.rawValue;
   if (!isSerializableBaseValue(expression.value)) return undefined;
   return qtiValueToString(expression.value);
-}
-
-function serializeIsNull(
-  expression: Extract<QtiProcessingExpression, { type: "isNull" }>,
-  context: SerializationContext,
-  indent: number,
-): string[] {
-  if (!requireIdentifier(expression.identifier, "qti-is-null", expression.source, context)) {
-    return [];
-  }
-  return renderElement(
-    "qti-is-null",
-    [],
-    renderElement("qti-variable", [["identifier", expression.identifier]], [], indent + 1),
-    indent,
-  );
 }
 
 function serializeMatchCorrect(

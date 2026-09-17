@@ -33,6 +33,7 @@ export function expressionChildren(expression: QtiProcessingExpression): QtiProc
     case "stringMatch":
     case "substring":
       return [expression.left, expression.right];
+    case "isNull":
     case "not":
     case "round":
     case "roundTo":
@@ -54,7 +55,6 @@ export function expressionChildren(expression: QtiProcessingExpression): QtiProc
     case "baseValue":
     case "correct":
     case "default":
-    case "isNull":
     case "mapResponse":
     case "mapResponsePoint":
     case "matchCorrect":

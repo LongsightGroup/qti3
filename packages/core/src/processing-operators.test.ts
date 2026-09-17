@@ -1,7 +1,58 @@
 import { describe, expect, it } from "vitest";
-import { createItemSession, parseQtiXml } from "./index.js";
+import { createItemSession, parseQtiXml, serializeResponseProcessing } from "./index.js";
 
 describe("processing operators", () => {
+  it.each([
+    ['<qti-variable identifier="VALUE"/>', false],
+    ['<qti-variable identifier="T"/>', false],
+    ['<qti-variable identifier="R"/>', true],
+    ['<qti-base-value base-type="integer">7</qti-base-value>', false],
+    ["<qti-null/>", true],
+    [
+      '<qti-sum><qti-base-value base-type="integer">1</qti-base-value><qti-base-value base-type="integer">2</qti-base-value></qti-sum>',
+      false,
+    ],
+  ])("evaluates is-null over %s", (expression, expected) => {
+    const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="isnull" title="NULL" time-dependent="false">
+      <qti-response-declaration identifier="R" cardinality="single" base-type="integer"/>
+      <qti-outcome-declaration identifier="VALUE" cardinality="single" base-type="integer"><qti-default-value><qti-value>7</qti-value></qti-default-value></qti-outcome-declaration>
+      <qti-outcome-declaration identifier="RESULT" cardinality="single" base-type="boolean"/>
+      <qti-template-declaration identifier="T" cardinality="single" base-type="integer"><qti-default-value><qti-value>3</qti-value></qti-default-value></qti-template-declaration>
+      <qti-item-body><p>NULL expressions.</p></qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="RESULT"><qti-is-null>${expression}</qti-is-null></qti-set-outcome-value></qti-response-processing>
+    </qti-assessment-item>`;
+    const parsed = parseQtiXml(xml);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document?.item.responseProcessing) throw new Error("Expected processing");
+    expect(createItemSession(parsed.document).score().outcomes.RESULT).toBe(expected);
+    const serialized = serializeResponseProcessing(parsed.document.item.responseProcessing);
+    expect(serialized.ok).toBe(true);
+    const reparsed = parseQtiXml(
+      xml.replace(
+        /<qti-response-processing>[\s\S]*<\/qti-response-processing>/,
+        serialized.xml ?? "",
+      ),
+    );
+    expect(reparsed.ok).toBe(true);
+    if (!reparsed.document) throw new Error("Expected round trip");
+    expect(createItemSession(reparsed.document).score().outcomes.RESULT).toBe(expected);
+  });
+
+  it.each([
+    ["", "processing.isNull.arity"],
+    ["<qti-null/><qti-null/>", "processing.isNull.arity"],
+    ['<qti-variable identifier="MISSING"/>', "processing.variable.reference"],
+  ])("diagnoses invalid is-null operands %s", (children, code) => {
+    const parsed =
+      parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-null" title="Invalid" time-dependent="false">
+      <qti-outcome-declaration identifier="RESULT" cardinality="single" base-type="boolean"/>
+      <qti-item-body><p>Invalid NULL.</p></qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="RESULT"><qti-is-null>${children}</qti-is-null></qti-set-outcome-value></qti-response-processing>
+    </qti-assessment-item>`);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.diagnostics).toContainEqual(expect.objectContaining({ code }));
+  });
+
   it("canonicalizes pair values through compound member expressions", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="compound-pair-member" title="compound-pair-member" time-dependent="false">

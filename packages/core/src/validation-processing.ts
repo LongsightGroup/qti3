@@ -325,7 +325,7 @@ function validateExpressionReferences(
 ): void {
   if (!expression) return;
 
-  if (expression.type === "variable" || expression.type === "isNull") {
+  if (expression.type === "variable") {
     validateProcessingIdentifier(
       expression.identifier,
       "processing.variable",

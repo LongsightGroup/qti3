@@ -593,7 +593,7 @@ export type QtiProcessingExpression = (
       baseType?: string | undefined;
     }
   | { type: "null" }
-  | { type: "isNull"; identifier: string }
+  | { type: "isNull"; expression: QtiProcessingExpression }
   | { type: "matchCorrect"; identifier: string; correctIdentifier: string }
   | { type: "match"; left: QtiProcessingExpression; right: QtiProcessingExpression }
   | { type: "correct"; identifier: string }
