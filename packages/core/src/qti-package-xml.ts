@@ -95,6 +95,12 @@ export function joinPackagePath(packagePath: string, localPath: string): string 
   return localPath.startsWith("/") ? `${packagePath}${localPath}` : `${packagePath}/${localPath}`;
 }
 
+/**
+ * Return a diagnostic with its local location prefixed by an item or archive path.
+ * Prefer path over source.path; update both to the same location without mutating the input.
+ * Empty locations and locations equal to packagePath resolve to packagePath itself.
+ * A leading slash in the local location is a separator, not an absolute filesystem path.
+ */
 export function scopeDiagnosticToPackagePath(
   packagePath: string,
   diagnostic: QtiDiagnostic,

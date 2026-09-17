@@ -64,6 +64,7 @@ export {
   parseQtiPackageFromEntries,
   readQtiPackageZipEntries,
   readQtiPackageZipEntriesAsync,
+  scopeDiagnosticToPackagePath,
   type QtiAssessmentSectionPackageModel,
   type QtiAssessmentTestItemRef,
   type QtiAssessmentTestPackageModel,

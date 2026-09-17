@@ -1,6 +1,7 @@
 import { inflateRawSync } from "node:zlib";
 import {
   parseQtiPackage,
+  scopeDiagnosticToPackagePath,
   unknownToDisplayString,
   type QtiDiagnostic,
   type QtiManifestResource,
@@ -53,22 +54,14 @@ export function primaryManifestResourceHref(
   return manifestResourceHrefs(manifestResources, resourceTypePrefix)[0];
 }
 
+/** Keep error diagnostics and scope their locations to the containing archive. */
 export function scopePackageDiagnostics(
   diagnostics: readonly QtiDiagnostic[],
   packagePath: string,
 ): QtiDiagnostic[] {
   return diagnostics
     .filter((item) => item.severity === "error")
-    .map((item) => ({
-      ...item,
-      path: item.path ? `${packagePath}/${item.path}` : packagePath,
-      source: item.source
-        ? {
-            ...item.source,
-            path: item.source.path ? `${packagePath}/${item.source.path}` : packagePath,
-          }
-        : item.source,
-    }));
+    .map((item) => scopeDiagnosticToPackagePath(packagePath, item));
 }
 
 export function collectImportableItemHrefs(
@@ -95,11 +88,10 @@ export function collectImportableItemHrefs(
     const itemDiagnostics = item.diagnostics.filter((entry) => entry.severity === "error");
     if (!item.document || itemDiagnostics.length > 0) {
       diagnostics.push(
-        ...itemDiagnostics.map((entry) => ({
-          ...entry,
-          path: `${packagePath}/${href}`,
-          source: entry.source ? { ...entry.source, path: `${packagePath}/${href}` } : entry.source,
-        })),
+        // Importability failures identify the item file rather than its individual XML nodes.
+        ...itemDiagnostics.map((entry) =>
+          scopeDiagnosticToPackagePath(packagePath, { ...entry, path: href }),
+        ),
       );
       continue;
     }

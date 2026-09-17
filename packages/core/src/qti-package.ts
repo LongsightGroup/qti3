@@ -31,6 +31,7 @@ export {
 };
 export { discoverQtiPackageContentAssets } from "./qti-package-assets.js";
 export { normalizePackagePath } from "./qti-package-paths.js";
+export { scopeDiagnosticToPackagePath } from "./qti-package-xml.js";
 export {
   QTI_ITEM_RESOURCE_TYPE,
   QTI_PACKAGE_MANIFEST_PATH,

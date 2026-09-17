@@ -25,6 +25,7 @@ import {
   certificationDiagnostic,
   manifestResourceHrefs,
   parseOfficialQtiPackage,
+  scopePackageDiagnostics,
 } from "./certification-package.js";
 
 export type QtiBasicImportExpectation =
@@ -935,12 +936,7 @@ function packageEvidenceDiagnostics(
   packagePath: string,
   itemResourceHrefs: readonly string[],
 ): QtiDiagnostic[] {
-  const diagnostics: QtiDiagnostic[] = parsed.diagnostics
-    .filter((item) => item.severity === "error")
-    .map((item) => ({
-      ...item,
-      path: item.path ? `${packagePath}/${item.path}` : packagePath,
-    }));
+  const diagnostics = scopePackageDiagnostics(parsed.diagnostics, packagePath);
 
   const itemsByHref = new Set(parsed.items.map((item) => item.href));
   for (const href of itemResourceHrefs) {

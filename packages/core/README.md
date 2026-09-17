@@ -45,6 +45,13 @@ do not distinguish duplicates, so the first object's metadata is retained. Use
 `diagnosticKey(diagnostic)` when grouping diagnostics across reports; treat its result as
 an opaque key. Newlines within fields cannot collide with field boundaries.
 
+`scopeDiagnosticToPackagePath(packagePath, diagnostic)` prefixes an item or archive
+path to the diagnostic's location and keeps `path` and `source.path` aligned. It
+uses `path`, falling back to `source.path` when absent, and preserves severity and
+source coordinates. For example, `items/a.xml` plus `/qti-assessment-item` becomes
+`items/a.xml/qti-assessment-item`. The function returns a copy without filtering
+diagnostics or changing the input.
+
 ### Text responses
 
 Text Entry supports single string, integer, and float values, plus numeric records. Extended Text

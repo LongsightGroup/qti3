@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Export `scopeDiagnosticToPackagePath()` from core and use it in conformance reports
+  to keep diagnostic paths and source locations aligned without duplicate separators.
+
 - Export `uniqueDiagnostics()` and `diagnosticKey()` from core for shared diagnostic
   identity in CLI and conformance reports, preserving distinct messages and paths containing newlines.
 

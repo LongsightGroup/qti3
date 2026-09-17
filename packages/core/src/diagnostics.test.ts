@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { diagnosticKey, uniqueDiagnostics, type QtiDiagnostic } from "./index.js";
+import {
+  diagnosticKey,
+  uniqueDiagnostics,
+  scopeDiagnosticToPackagePath,
+  type QtiDiagnostic,
+} from "./index.js";
 
 describe("diagnostic identity", () => {
   const first: QtiDiagnostic = {
@@ -57,5 +62,40 @@ describe("diagnostic identity", () => {
       multilineMessage,
       multilinePath,
     ]);
+  });
+});
+
+describe("package diagnostic locations", () => {
+  it.each([
+    { path: "items/a.xml", sourcePath: undefined, expected: "bank.zip/items/a.xml" },
+    { path: "/qti-assessment-item", sourcePath: "/old", expected: "bank.zip/qti-assessment-item" },
+    {
+      path: undefined,
+      sourcePath: "/qti-assessment-item",
+      expected: "bank.zip/qti-assessment-item",
+    },
+    { path: undefined, sourcePath: undefined, expected: "bank.zip" },
+    { path: "", sourcePath: "/old", expected: "bank.zip" },
+    { path: "bank.zip", sourcePath: "/old", expected: "bank.zip" },
+  ])("scopes $path with source $sourcePath to $expected", ({ path, sourcePath, expected }) => {
+    const original: QtiDiagnostic = {
+      code: "item.invalid",
+      severity: "warning",
+      message: "Inspect this item.",
+      path,
+      source:
+        sourcePath === undefined ? undefined : { line: 4, column: 2, offset: 20, path: sourcePath },
+    };
+    const snapshot = structuredClone(original);
+    const scoped = scopeDiagnosticToPackagePath("bank.zip", original);
+
+    expect(scoped).toEqual({
+      ...original,
+      path: expected,
+      source: original.source ? { ...original.source, path: expected } : undefined,
+    });
+    expect(scoped).not.toBe(original);
+    if (original.source) expect(scoped.source).not.toBe(original.source);
+    expect(original).toEqual(snapshot);
   });
 });
