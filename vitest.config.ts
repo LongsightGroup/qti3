@@ -13,6 +13,10 @@ export default defineConfig({
         replacement: fileURLToPath(new URL("./packages/fixtures/src/index.ts", import.meta.url)),
       },
       {
+        find: "@longsightgroup/qti3-writer",
+        replacement: fileURLToPath(new URL("./packages/writer/src/index.ts", import.meta.url)),
+      },
+      {
         find: "@longsightgroup/qti3-player",
         replacement: fileURLToPath(new URL("./packages/player/src/index.ts", import.meta.url)),
       },
