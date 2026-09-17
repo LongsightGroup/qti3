@@ -51,7 +51,7 @@
     "readiness:basic:item-player": "vitest run packages/conformance/src/conformance.test.ts packages/fixtures/src/fixtures.test.ts packages/cli/src/index.test.ts && playwright test --grep \"Basic item player readiness\" && pnpm build && node packages/cli/dist/index.js basic-item-player-report packages/fixtures/packages/basic-item-player",
     "verify": "pnpm format:check && pnpm typecheck && pnpm lint:raw && pnpm test && pnpm check:deps && pnpm build && pnpm check:maps && pnpm check:exports && pnpm check:transcoder-support",
     "release:check": "pnpm verify && pnpm check:transcoder-xsd && node scripts/assert-transcoder-support.mjs --release && pnpm test:browser && node packages/cli/dist/index.js assert-support && node packages/cli/dist/index.js run-fixtures",
-    "certification:check": "pnpm test:external:required && pnpm release:check && pnpm certification:evidence",
+    "certification:check": "pnpm test:external:required && QTI3_REQUIRE_EXTERNAL=1 pnpm release:check && pnpm certification:evidence",
     "certification:evidence": "node scripts/certification-evidence.mjs"
   },
   "devDependencies": {
