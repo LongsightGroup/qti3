@@ -102,13 +102,6 @@ export function serializeExpression(
         [],
         indent,
       );
-    case "random":
-      return renderElement(
-        "qti-random",
-        [],
-        expression.values.flatMap((value) => serializeExpression(value, context, indent + 1)),
-        indent,
-      );
     case "index":
       return renderExpressionContainer(
         "qti-index",

@@ -3,8 +3,6 @@ import { assertNever } from "./assert-never.js";
 
 export function expressionChildren(expression: QtiProcessingExpression): QtiProcessingExpression[] {
   switch (expression.type) {
-    case "random":
-      return expression.values;
     case "multiple":
     case "ordered":
     case "sum":
@@ -34,6 +32,7 @@ export function expressionChildren(expression: QtiProcessingExpression): QtiProc
     case "substring":
       return [expression.left, expression.right];
     case "isNull":
+    case "random":
     case "not":
     case "round":
     case "roundTo":

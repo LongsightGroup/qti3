@@ -18,6 +18,7 @@ export type IdentifierExpressionType = keyof typeof identifierExpressionTags;
 
 export const unaryExpressionTags = {
   isNull: "qti-is-null",
+  random: "qti-random",
   containerSize: "qti-container-size",
   round: "qti-round",
   truncate: "qti-truncate",

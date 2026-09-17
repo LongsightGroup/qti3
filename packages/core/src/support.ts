@@ -170,7 +170,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     [...processingBrowserEvidence["qti-random-integer"]],
   ),
   operatorProcessingEntry("qti-random-float"),
-  operatorProcessingEntry("qti-random"),
+  {
+    ...operatorProcessingEntry("qti-random"),
+    notes:
+      "Evaluates one multiple/ordered container expression, including variables, then selects a scalar member; NULL/empty containers return NULL and serialization retains the operand.",
+  },
   operatorProcessingEntry("qti-multiple", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),

@@ -105,11 +105,11 @@ export function evaluateProcessingExpression(
     }
     case "randomFloat":
       return expression.min + context.random() * (expression.max - expression.min);
-    case "random":
-      if (expression.values.length === 0) return null;
-      return context.evaluate(
-        expression.values[Math.floor(context.random() * expression.values.length)]!,
-      );
+    case "random": {
+      const values = context.evaluate(expression.expression);
+      if (!Array.isArray(values) || values.length === 0) return null;
+      return values[Math.floor(context.random() * values.length)] ?? null;
+    }
     case "isNull":
     case "matchCorrect":
     case "mapResponse":

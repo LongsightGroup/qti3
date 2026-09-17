@@ -81,16 +81,13 @@ export function expressionBaseType(
   }
   if (expression.type === "index") return expressionBaseType(expression.expression, document);
   if (expression.type === "delete") return expressionBaseType(expression.collection, document);
+  if (expression.type === "random") return expressionBaseType(expression.expression, document);
   if (
-    expression.type === "random" ||
     expression.type === "multiple" ||
     expression.type === "ordered" ||
     expression.type === "repeat"
   ) {
-    return commonExpressionBaseType(
-      expression.type === "random" ? expression.values : expression.expressions,
-      document,
-    );
+    return commonExpressionBaseType(expression.expressions, document);
   }
   return undefined;
 }

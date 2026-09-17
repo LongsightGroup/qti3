@@ -3,6 +3,62 @@ import { createItemSession, parseQtiXml, serializeResponseProcessing } from "./i
 
 describe("processing operators", () => {
   it.each([
+    '<qti-multiple><qti-base-value base-type="identifier">A</qti-base-value><qti-base-value base-type="identifier">B</qti-base-value></qti-multiple>',
+    '<qti-ordered><qti-base-value base-type="identifier">A</qti-base-value><qti-base-value base-type="identifier">B</qti-base-value></qti-ordered>',
+    '<qti-variable identifier="VALUES"/>',
+    "<qti-multiple/>",
+    "<qti-null/>",
+  ])("selects and round-trips random container members from %s", (operand) => {
+    const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="random-container" title="Random container" time-dependent="false">
+      <qti-outcome-declaration identifier="RESULT" cardinality="single" base-type="identifier"/>
+      <qti-template-declaration identifier="VALUES" cardinality="ordered" base-type="identifier"><qti-default-value><qti-value>A</qti-value><qti-value>B</qti-value></qti-default-value></qti-template-declaration>
+      <qti-item-body><p>Random container.</p></qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="RESULT"><qti-random>${operand}</qti-random></qti-set-outcome-value></qti-response-processing>
+    </qti-assessment-item>`;
+    const parsed = parseQtiXml(xml);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document?.item.responseProcessing) throw new Error("Expected processing");
+    const result = createItemSession(parsed.document, undefined, {
+      randomSeed: "selection",
+    }).score();
+    if (operand === "<qti-multiple/>" || operand === "<qti-null/>") {
+      expect(result.outcomes.RESULT).toBeNull();
+    } else {
+      expect(["A", "B"]).toContain(result.outcomes.RESULT);
+    }
+    const serialized = serializeResponseProcessing(parsed.document.item.responseProcessing);
+    expect(serialized.ok).toBe(true);
+    const reparsed = parseQtiXml(
+      xml.replace(
+        /<qti-response-processing>[\s\S]*<\/qti-response-processing>/,
+        serialized.xml ?? "",
+      ),
+    );
+    expect(reparsed.ok).toBe(true);
+    if (!reparsed.document) throw new Error("Expected round trip");
+    expect(
+      createItemSession(reparsed.document, undefined, { randomSeed: "selection" }).score().outcomes
+        .RESULT,
+    ).toEqual(result.outcomes.RESULT);
+  });
+
+  it.each(["", "<qti-multiple/><qti-ordered/>"])(
+    "rejects random without one operand: %s",
+    (children) => {
+      const parsed =
+        parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-random" title="Invalid" time-dependent="false">
+      <qti-outcome-declaration identifier="RESULT" cardinality="single" base-type="identifier"/>
+      <qti-item-body><p>Invalid random.</p></qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="RESULT"><qti-random>${children}</qti-random></qti-set-outcome-value></qti-response-processing>
+    </qti-assessment-item>`);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.diagnostics).toContainEqual(
+        expect.objectContaining({ code: "processing.random.arity" }),
+      );
+    },
+  );
+
+  it.each([
     ['<qti-variable identifier="VALUE"/>', false],
     ['<qti-variable identifier="T"/>', false],
     ['<qti-variable identifier="R"/>', true],

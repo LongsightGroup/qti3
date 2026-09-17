@@ -614,7 +614,7 @@ export type QtiProcessingExpression = (
       max: number;
       attributes: Record<string, string>;
     }
-  | { type: "random"; values: QtiProcessingExpression[] }
+  | { type: "random"; expression: QtiProcessingExpression }
   | { type: "multiple"; expressions: QtiProcessingExpression[] }
   | { type: "ordered"; expressions: QtiProcessingExpression[] }
   | { type: "index"; expression: QtiProcessingExpression; n: string }

@@ -277,14 +277,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   }
 
   if (node.localName === "qti-random") {
-    const multiple = childElements(node, "qti-multiple")[0];
-    return {
-      type: "random",
-      values: childElements(multiple ?? node)
-        .map(parseExpression)
-        .filter((expression): expression is QtiProcessingExpression => expression !== undefined),
-      source: node.source,
-    };
+    const expression = parseFirstExpression(node);
+    return expression ? { type: "random", expression, source: node.source } : undefined;
   }
 
   if (node.localName === "qti-multiple") {

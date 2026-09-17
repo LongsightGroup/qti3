@@ -88,11 +88,16 @@ export const expressionCoverage = {
     xml: '    <qti-random-float min="0" max="1"/>',
   },
   random: {
-    expression: { type: "random", values: [baseOne, baseTwo] },
+    expression: {
+      type: "random",
+      expression: { type: "multiple", expressions: [baseOne, baseTwo] },
+    },
     xml: [
       "    <qti-random>",
-      '      <qti-base-value base-type="integer">1</qti-base-value>',
-      '      <qti-base-value base-type="integer">2</qti-base-value>',
+      "      <qti-multiple>",
+      '        <qti-base-value base-type="integer">1</qti-base-value>',
+      '        <qti-base-value base-type="integer">2</qti-base-value>',
+      "      </qti-multiple>",
       "    </qti-random>",
     ].join("\n"),
   },

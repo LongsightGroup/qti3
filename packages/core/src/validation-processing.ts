@@ -688,12 +688,7 @@ function minimumExpressionElements(expression: QtiProcessingExpression): number 
     return minimumProducedElements(expression.expressions);
   }
   if (expression.type === "random") {
-    if (expression.values.length === 0) return 0;
-    let minimum = MAX_QTI_REPEAT_RESULT_ELEMENTS + 1;
-    for (const value of expression.values) {
-      minimum = Math.min(minimum, minimumExpressionElements(value));
-    }
-    return minimum;
+    return minimumExpressionElements(expression.expression) > 0 ? 1 : 0;
   }
   if (expression.type !== "repeat" || !/^\d+$/.test(expression.numberRepeats)) return 0;
   const perRepeat = minimumProducedElements(expression.expressions);

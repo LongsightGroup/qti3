@@ -222,6 +222,15 @@ function diagnoseProcessingElements(
         source: node.source,
       });
     }
+    if (node.localName === "qti-random" && childElements(node).length !== 1) {
+      diagnostics.push({
+        code: "processing.random.arity",
+        severity: "error",
+        message: "qti-random requires exactly one container expression.",
+        path: node.source.path,
+        source: node.source,
+      });
+    }
     if (
       processingNode.localName === "qti-response-processing" &&
       responseProcessingForbiddenNames.has(node.localName)
