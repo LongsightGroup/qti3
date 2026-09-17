@@ -36,7 +36,9 @@ See [the official conformance requirements, §§2.2 and 4](https://www.imsglobal
 The first implementation pass completed CERT-02, CERT-03, and CERT-05 for the
 selected item-only scope. CERT-04 tooling is implemented and has passed locally.
 CERT-01 still needs confirmation of the submission contract, and CERT-06 remains
-a draft until those questions and the clean-checkout rehearsal are complete.
+a draft until those external questions are resolved. Its clean-checkout rehearsal
+passed at `8ff1a34`: 2,241 unit tests, 532 browser tests, schema checks, all required
+official cases, and reproducible saved-report verification, with no skipped tests.
 CERT-07 has not started.
 
 - The acceptance crosswalk preserves all 69 physical worksheet rows, including
@@ -371,13 +373,12 @@ restricted content. Continue independent steps that do not depend on that decisi
 
 ## Remaining execution
 
-1. Rehearse the committed candidate from a clean checkout and freeze the private
-   checklist, reports, artifact manifest, and demonstration instructions.
-2. Restore access to the detailed member instructions and obtain confirmation of
+1. Restore access to the detailed member instructions and obtain confirmation of
    the applicable checklist, product boundary, and documented aliases/supplement.
-3. Provision the dedicated protected runner if ongoing CI evidence collection is
+2. Provision the dedicated protected runner if ongoing CI evidence collection is
    desired. Local reproducible evidence already works without that infrastructure.
-4. Have the maintainer approve the concrete dossier, then submit through the accepted
+3. Have the maintainer approve the private checklist, reports, artifact manifest,
+   and demonstration instructions, then submit through the accepted
    member process and address official review findings under CERT-07.
 
 An official approval date cannot be promised from the local test count.
