@@ -18,7 +18,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { lastStderr, lastStdout, runCli } from "./cli-harness.js";
 import { basicImportTestPackageEntries } from "./package-fixtures.js";
-import { createStoredZip } from "./zip-fixtures.js";
+import { createStoredZip } from "../../../tests/fixtures/package-zip.js";
 
 describe("@longsightgroup/qti3-cli support and certification", () => {
   it("writes standalone reference XML fixtures", async () => {

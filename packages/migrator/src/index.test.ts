@@ -8,7 +8,7 @@ import {
   migrateQtiToQti3,
   migrateQtiToQti3Package,
 } from "./index.js";
-import { createStoredZip } from "./test-helpers.js";
+import { createStoredZip } from "../../../tests/fixtures/package-zip.js";
 
 describe("@longsightgroup/qti3-migrator", () => {
   it("migrates a QTI 2.1 choice package to valid QTI 3 XML", async () => {

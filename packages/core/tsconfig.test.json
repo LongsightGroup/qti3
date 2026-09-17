@@ -1,11 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "../..",
     "lib": ["ES2023"],
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["src/**/*.test.ts", "src/**/*.fixtures.ts", "src/interaction-test-fixtures.ts"],
-  "references": [{ "path": "./tsconfig.json" }]
+  "include": [
+    "src/**/*.test.ts",
+    "src/**/*.fixtures.ts",
+    "src/interaction-test-fixtures.ts",
+    "../../tests/fixtures/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.json"
+    }
+  ]
 }

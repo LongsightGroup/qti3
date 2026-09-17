@@ -1,21 +1,9 @@
 import { DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS } from "@longsightgroup/qti3-core";
-import { strToU8, zipSync } from "fflate";
+import { createStoredZip, createDeflatedZip } from "../../../tests/fixtures/package-zip.js";
 import { describe, expect, it } from "vitest";
 
 import { selectPackageItemHrefs } from "./package-item-hrefs.js";
 import { buildMigrationEntry, parseMigratableManifest, readMigrationSource } from "./source.js";
-
-function createStoredZip(files: Record<string, string | Uint8Array>): Uint8Array {
-  return zipSync(
-    Object.fromEntries(
-      Object.entries(files).map(([path, data]) => [
-        path,
-        typeof data === "string" ? strToU8(data) : data,
-      ]),
-    ),
-    { level: 0 },
-  );
-}
 
 function firstEntryWithDeclaredSize(bytes: Uint8Array, uncompressedSize: number): Uint8Array {
   const altered = bytes.slice();
@@ -43,7 +31,7 @@ describe("selectPackageItemHrefs", () => {
   });
 
   it("stops migration inflation when output exceeds the declared budget", () => {
-    const compressed = zipSync({ "imsmanifest.xml": strToU8("A".repeat(10_000)) });
+    const compressed = createDeflatedZip({ "imsmanifest.xml": "A".repeat(10_000) });
     const underreported = firstEntryWithDeclaredSize(compressed, 1);
 
     expect(() =>
@@ -120,8 +108,8 @@ describe("selectPackageItemHrefs", () => {
   <item ident="choice12" title="Choice 12"><presentation><material><mattext>Pick.</mattext></material></presentation></item>
 </questestinterop>`;
     const entries = [
-      buildMigrationEntry("imsmanifest.xml", strToU8(manifest)),
-      buildMigrationEntry("assessment/quiz.xml", strToU8(quiz)),
+      buildMigrationEntry("imsmanifest.xml", Buffer.from(manifest)),
+      buildMigrationEntry("assessment/quiz.xml", Buffer.from(quiz)),
     ];
     const parsedManifest = parseMigratableManifest(manifest);
     const entriesByPath = new Map(entries.map((entry) => [entry.path, entry]));
@@ -141,8 +129,8 @@ describe("selectPackageItemHrefs", () => {
   </resources>
 </manifest>`;
     const entries = [
-      buildMigrationEntry("imsmanifest.xml", strToU8(manifest)),
-      buildMigrationEntry("items/choice.xml", strToU8(qti12Item("choice"))),
+      buildMigrationEntry("imsmanifest.xml", Buffer.from(manifest)),
+      buildMigrationEntry("items/choice.xml", Buffer.from(qti12Item("choice"))),
     ];
     const parsedManifest = parseMigratableManifest(manifest);
     const entriesByPath = new Map(entries.map((entry) => [entry.path, entry]));
@@ -163,10 +151,10 @@ describe("selectPackageItemHrefs", () => {
 </manifest>`;
     const assessment = `<questestinterop><item ident="choice" title="Choice"/></questestinterop>`;
     const entries = [
-      buildMigrationEntry("assessment.xml", strToU8(assessment)),
+      buildMigrationEntry("assessment.xml", Buffer.from(assessment)),
       buildMigrationEntry(
         "metadata.xml",
-        strToU8("<metadata><item>Not a QTI item.</item></metadata>"),
+        Buffer.from("<metadata><item>Not a QTI item.</item></metadata>"),
       ),
     ];
     const entriesByPath = new Map(entries.map((entry) => [entry.path, entry]));

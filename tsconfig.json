@@ -11,6 +11,7 @@
     { "path": "./packages/player-preact" },
     { "path": "./packages/player-react" },
     { "path": "./packages/conformance" },
+    { "path": "./packages/conformance/tsconfig.test.json" },
     { "path": "./packages/pnp" },
     { "path": "./packages/a11y" },
     { "path": "./packages/cli" },

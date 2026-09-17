@@ -6,7 +6,7 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["test/**/*.ts", "../../tests/fixtures/**/*.ts"],
+  "include": ["src/**/*.test.ts", "../../tests/fixtures/**/*.ts"],
   "references": [
     {
       "path": "./tsconfig.json"

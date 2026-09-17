@@ -1,3 +1,4 @@
+import { createDeflatedZip, createStoredZip } from "../../../tests/fixtures/package-zip.js";
 import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import {
@@ -6,12 +7,7 @@ import {
   parseQtiPackage,
   parseQtiPackageFromEntries,
 } from "./index.js";
-import {
-  choiceItemXml,
-  createDeflatedZip,
-  createStoredZip,
-  simpleChoiceItemXml,
-} from "./qti-package.fixtures.js";
+import { choiceItemXml, simpleChoiceItemXml } from "./qti-package.fixtures.js";
 
 describe("QTI package parser", () => {
   it("parses manifest item-resource packages with dependencies, assets, timing, and standards", () => {

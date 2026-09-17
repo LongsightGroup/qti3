@@ -5,7 +5,7 @@ import { interactionFixtures } from "@longsightgroup/qti3-fixtures";
 import { describe, expect, it } from "vitest";
 import { lastStderr, lastStdout, runCli, runCliJson } from "./cli-harness.js";
 import { basicFeatureIds } from "./package-fixtures.js";
-import { createDeflatedZip, createStoredZip } from "./zip-fixtures.js";
+import { createDeflatedZip, createStoredZip } from "../../../tests/fixtures/package-zip.js";
 
 describe("@longsightgroup/qti3-cli package handling", () => {
   it("reports a missing Basic item-player target without a stack trace", async () => {

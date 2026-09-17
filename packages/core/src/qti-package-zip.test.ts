@@ -1,3 +1,4 @@
+import { createDeflatedZip, createStoredZip } from "../../../tests/fixtures/package-zip.js";
 import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import {
@@ -6,7 +7,6 @@ import {
   type QtiDiagnostic,
   type QtiPackageParseOptions,
 } from "./index.js";
-import { createDeflatedZip, createStoredZip } from "./qti-package.fixtures.js";
 
 const boundedInflate: NonNullable<QtiPackageParseOptions["inflateRaw"]> = (bytes, context) =>
   inflateRawSync(bytes, { maxOutputLength: context.maxOutputLength });
