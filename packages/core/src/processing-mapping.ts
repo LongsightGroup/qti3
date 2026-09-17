@@ -1,5 +1,5 @@
 import type { QtiDocument, QtiResponseDeclaration, QtiValue } from "./types.js";
-import { parseQtiPair } from "./parser-values.js";
+import { parseQtiPair, parseXmlBoolean } from "./parser-values.js";
 import { qtiScalarToString, qtiValueToStringList } from "./value-format.js";
 import { isRecordValue, numericValue, valuesEqual } from "./processing-values.js";
 
@@ -135,23 +135,23 @@ function scoreMapping(
   mapping: NonNullable<QtiResponseDeclaration["mapping"]>,
   baseType: QtiResponseDeclaration["baseType"],
 ): number {
-  const values = new Map(
-    mapping.entries
-      .filter((entry) => entry.mapKey !== undefined)
-      .map((entry) => [mappingKey(entry.mapKey!, baseType), entry.mappedValue] as const),
-  );
+  const mappedValue = (value: string): number => {
+    const key = mappingKey(value, baseType);
+    const entry = mapping.entries.find((candidate) => {
+      if (candidate.mapKey === undefined) return false;
+      const candidateKey = mappingKey(candidate.mapKey, baseType);
+      const caseSensitive = parseXmlBoolean(candidate.attributes["case-sensitive"]) ?? false;
+      return baseType === "string" && !caseSensitive
+        ? candidateKey.toLowerCase() === key.toLowerCase()
+        : candidateKey === key;
+    });
+    return entry?.mappedValue ?? mapping.defaultValue;
+  };
   if (Array.isArray(response)) {
-    const score = response.reduce<number>(
-      (sum, value) =>
-        sum + (values.get(mappingKey(String(value), baseType)) ?? mapping.defaultValue),
-      0,
-    );
+    const score = response.reduce<number>((sum, value) => sum + mappedValue(String(value)), 0);
     return clampMappedScore(score, mapping.attributes);
   }
-  const score =
-    response === null || isRecordValue(response)
-      ? 0
-      : (values.get(mappingKey(String(response), baseType)) ?? mapping.defaultValue);
+  const score = response === null || isRecordValue(response) ? 0 : mappedValue(String(response));
   return clampMappedScore(score, mapping.attributes);
 }
 

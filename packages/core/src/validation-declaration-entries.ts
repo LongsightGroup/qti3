@@ -5,7 +5,7 @@ import {
   isNumericCsv,
   numericCsv,
 } from "./validation-geometry.js";
-import { isFiniteNumber, isInteger } from "./validation-primitives.js";
+import { isBooleanAttribute, isFiniteNumber, isInteger } from "./validation-primitives.js";
 
 interface DeclarationEntryAttributes {
   attributes: Record<string, string>;
@@ -18,6 +18,16 @@ export function validateMapEntryAttributes(
   entry: DeclarationEntryAttributes,
   diagnostics: QtiDiagnostic[],
 ): void {
+  const caseSensitive = entry.attributes["case-sensitive"];
+  if (caseSensitive !== undefined && !isBooleanAttribute(caseSensitive)) {
+    diagnostics.push({
+      code: "mapEntry.caseSensitive",
+      severity: "error",
+      message: `Response declaration ${declarationIdentifier} map entry requires a boolean case-sensitive value.`,
+      path: entry.source?.path,
+      source: entry.source,
+    });
+  }
   if (!entry.attributes["map-key"]) {
     diagnostics.push({
       code: "mapEntry.mapKey.required",

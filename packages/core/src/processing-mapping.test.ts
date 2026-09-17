@@ -2,6 +2,49 @@ import { describe, expect, it } from "vitest";
 import { createItemSession, parseQtiXml } from "./index.js";
 
 describe("processing mapping", () => {
+  it.each([
+    ["string", "", 1],
+    ["string", 'case-sensitive="false"', 1],
+    ["string", 'case-sensitive="0"', 1],
+    ["string", 'case-sensitive="true"', 0],
+    ["string", 'case-sensitive="1"', 0],
+    ["identifier", 'case-sensitive="false"', 0],
+  ])("honors map-entry case rules for %s %s", (baseType, attribute, score) => {
+    const parsed = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="case-map" title="Case mapping" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="${baseType}">
+          <qti-mapping default-value="0"><qti-map-entry map-key="London" mapped-value="1" ${attribute}/></qti-mapping>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><p>Case mapping.</p></qti-item-body>
+        <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-map-response identifier="RESPONSE"/></qti-set-outcome-value></qti-response-processing>
+      </qti-assessment-item>
+    `);
+    expect(parsed.diagnostics.filter((entry) => entry.severity === "error")).toEqual([]);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.document) throw new Error("Expected parsed item");
+    const session = createItemSession(parsed.document);
+    session.respond("RESPONSE", "LONDON");
+    expect(session.score().outcomes.SCORE).toBe(score);
+    session.respond("RESPONSE", "London");
+    expect(session.score().outcomes.SCORE).toBe(1);
+  });
+
+  it("rejects a non-boolean map-entry case-sensitive attribute", () => {
+    const parsed = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-case" title="Invalid case" time-dependent="false">
+        <qti-response-declaration identifier="R" cardinality="single" base-type="string">
+          <qti-mapping default-value="0"><qti-map-entry map-key="A" mapped-value="1" case-sensitive="yes"/></qti-mapping>
+        </qti-response-declaration>
+        <qti-item-body><p>Invalid mapping.</p></qti-item-body>
+      </qti-assessment-item>
+    `);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "mapEntry.caseSensitive" }),
+    );
+  });
+
   it("scores an inline response condition with map-response", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="mapped" title="mapped" time-dependent="false">

@@ -142,7 +142,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   ]),
   mappingProcessingEntry("qti-correct"),
   mappingProcessingEntry("qti-default"),
-  mappingProcessingEntry("qti-map-response"),
+  {
+    ...mappingProcessingEntry("qti-map-response"),
+    notes:
+      "String map entries honor case-sensitive (default false); other base types retain their QTI equality rules.",
+  },
   mappingProcessingEntry("qti-map-response-point"),
   responseProcessingEntry("qti-variable", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
