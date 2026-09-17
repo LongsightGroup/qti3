@@ -170,11 +170,21 @@ export interface QtiPackageContentAssetDiscovery {
   readonly diagnostics: readonly QtiDiagnostic[];
 }
 
+/** Root classification and XML syntax diagnostics for one package XML file, without its tree. */
+export interface QtiPackageXmlFileSummary {
+  readonly path: string;
+  readonly rootLocalName?: string | undefined;
+  readonly rootNamespaceUri?: string | undefined;
+  readonly diagnostics: readonly QtiDiagnostic[];
+}
+
 /** Parsed QTI package manifest/resource graph and item/test projection. */
 export interface QtiPackageParseResult {
   readonly ok: boolean;
   readonly title: string;
   readonly entries: readonly QtiPackageEntry[];
+  /** All .xml entries in inventory order, including files outside the selected resource graph. */
+  readonly xmlFiles: readonly QtiPackageXmlFileSummary[];
   readonly packageShape: QtiPackageShape;
   readonly items: readonly QtiPackageItem[];
   readonly assets: readonly QtiPackageAsset[];

@@ -402,6 +402,14 @@ property names in their own adapter layer.
 assessment-test ordering, item, asset, and diagnostic semantics. No ZIP rebuilding
 or stream-event collection is needed when the entries are already in memory.
 
+Both batch parsers return `xmlFiles`, an inventory of `QtiPackageXmlFileSummary`
+objects in entry order. Each summary contains its path, root local name, namespace,
+and XML syntax diagnostics, including unreferenced files. Callers can classify
+those files without parsing their XML again. Errors in unreferenced files remain
+in the inventory; they do not change the selected package graph or its `ok` result.
+No XML trees or source text are retained in this inventory. The streaming parser
+does not scan unreferenced files or return this inventory.
+
 The batch entry boundary rejects duplicate or noncanonical paths and enforces
 entry-count, per-entry, and total byte limits before parsing XML. Compression
 ratio limits apply only during ZIP extraction. Check `result.ok` before saving or

@@ -83,6 +83,7 @@ export {
   type QtiPackageItemSource,
   type QtiPackageParseOptions,
   type QtiPackageParseResult,
+  type QtiPackageXmlFileSummary,
   type QtiPackageResourceLimits,
   type QtiPackageShape,
   type QtiStandardAlignment,

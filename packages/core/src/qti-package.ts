@@ -11,7 +11,7 @@ import {
   parsePackageItems,
 } from "./qti-package-items.js";
 import type { QtiPackageParseResult } from "./qti-package-types.js";
-import { parseXmlFiles } from "./qti-package-xml.js";
+import { parseXmlFiles, pushXmlDiagnostics } from "./qti-package-xml.js";
 import {
   DEFAULT_QTI_PACKAGE_RESOURCE_LIMITS,
   decodeUtf8,
@@ -51,6 +51,7 @@ export type {
   QtiPackageItem,
   QtiPackageItemSource,
   QtiPackageParseResult,
+  QtiPackageXmlFileSummary,
   QtiPackageShape,
   QtiItemSessionControl,
   QtiStandardAlignment,
@@ -146,7 +147,7 @@ export function parseQtiPackageFromEntries(
   }
   if (diagnostics.length) {
     const { itemCount: _itemCount, ...summary } = failedPackageSummary(diagnostics);
-    return { ...summary, entries: [], items: [] };
+    return { ...summary, entries: [], items: [], xmlFiles: [] };
   }
   return parseQtiPackageEntries(entries, diagnostics);
 }
@@ -204,6 +205,16 @@ function parseQtiPackageEntries(
     ...summary,
     entries,
     items,
+    xmlFiles: [...xmlFilesByPath.values()].map((file) => {
+      const xmlDiagnostics: QtiDiagnostic[] = [];
+      pushXmlDiagnostics(file, xmlDiagnostics);
+      return {
+        path: file.path,
+        rootLocalName: file.root?.localName,
+        rootNamespaceUri: file.root?.uri,
+        diagnostics: xmlDiagnostics,
+      };
+    }),
   };
 }
 

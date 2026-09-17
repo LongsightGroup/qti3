@@ -660,6 +660,75 @@ describe("QTI package asset utilities", () => {
 });
 
 describe("batch import from extracted entries", () => {
+  it("reports all XML roots and syntax errors without changing selected items", () => {
+    const original = parseQtiPackage(
+      createStoredZip({
+        "imsmanifest.xml":
+          '<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg"><resources><resource identifier="item" type="imsqti_item_xmlv3p0" href="item.xml"/></resources></manifest>',
+        "item.xml": simpleChoiceItemXml(),
+        "unreferenced.XML": simpleChoiceItemXml(),
+        "unregistered.xml":
+          '<q:qti-assessment-test xmlns:q="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"/>',
+        "foreign.xml": '<qti-assessment-item xmlns="urn:foreign"/>',
+        "broken.xml": "<broken",
+        "media.svg": '<svg xmlns="http://www.w3.org/2000/svg"/>',
+      }),
+    );
+    expect(original.ok).toBe(true);
+    expect(original.items.map((item) => item.href)).toEqual(["item.xml"]);
+    expect(original.xmlFiles).toEqual([
+      expect.objectContaining({
+        path: "imsmanifest.xml",
+        rootLocalName: "manifest",
+        rootNamespaceUri: "http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1",
+        diagnostics: [],
+      }),
+      expect.objectContaining({
+        path: "item.xml",
+        rootLocalName: "qti-assessment-item",
+        rootNamespaceUri: "http://www.imsglobal.org/xsd/imsqtiasi_v3p0",
+        diagnostics: [],
+      }),
+      expect.objectContaining({
+        path: "unreferenced.XML",
+        rootLocalName: "qti-assessment-item",
+        diagnostics: [],
+      }),
+      expect.objectContaining({
+        path: "unregistered.xml",
+        rootLocalName: "qti-assessment-test",
+        rootNamespaceUri: "http://www.imsglobal.org/xsd/imsqtiasi_v3p0",
+        diagnostics: [],
+      }),
+      expect.objectContaining({
+        path: "foreign.xml",
+        rootLocalName: "qti-assessment-item",
+        rootNamespaceUri: "urn:foreign",
+        diagnostics: [],
+      }),
+      {
+        path: "broken.xml",
+        rootLocalName: undefined,
+        rootNamespaceUri: undefined,
+        diagnostics: [
+          expect.objectContaining({
+            code: "xml.parse",
+            severity: "error",
+            message: "Unterminated XML start tag.",
+            path: "broken.xml",
+          }),
+          expect.objectContaining({
+            code: "xml.parse",
+            severity: "error",
+            message: "XML document does not contain a root element.",
+            path: "broken.xml",
+          }),
+        ],
+      },
+    ]);
+    expect(parseQtiPackageFromEntries(original.entries)).toEqual(original);
+  });
+
   it.each(["../item.xml", "/item.xml", "items/../item.xml", "a\\b.xml", "a\0b.xml", ""])(
     "rejects unsafe or noncanonical inventory path %j before parsing XML",
     (path) => {
@@ -669,6 +738,7 @@ describe("batch import from extracted entries", () => {
       expect(result.ok).toBe(false);
       expect(result.items).toEqual([]);
       expect(result.entries).toEqual([]);
+      expect(result.xmlFiles).toEqual([]);
       expect(result.diagnostics.some((diagnostic) => diagnostic.severity === "error")).toBe(true);
     },
   );
@@ -679,6 +749,7 @@ describe("batch import from extracted entries", () => {
     expect(result.ok).toBe(false);
     expect(result.diagnostics[0]?.code).toBe("package.entry.duplicate");
     expect(result.items).toEqual([]);
+    expect(result.xmlFiles).toEqual([]);
   });
 
   it.each([
@@ -697,6 +768,7 @@ describe("batch import from extracted entries", () => {
     expect(result.ok).toBe(false);
     expect(result.diagnostics[0]?.code).toBe(code);
     expect(result.items).toEqual([]);
+    expect(result.xmlFiles).toEqual([]);
   });
 
   it("returns the same typed package failure for missing manifests", () => {

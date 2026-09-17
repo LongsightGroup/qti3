@@ -63,7 +63,7 @@ describe("incremental QTI package parsing", () => {
       else summary = event.summary;
     }
     expect(items).toEqual(expected.items);
-    const { items: expectedItems, entries: _entries, ...metadata } = expected;
+    const { items: expectedItems, entries: _entries, xmlFiles: _xmlFiles, ...metadata } = expected;
     expect(summary).toEqual({ ...metadata, itemCount: expectedItems.length });
   });
 
@@ -80,7 +80,7 @@ describe("incremental QTI package parsing", () => {
     const expected = parseQtiPackage(createStoredZip(entries));
     const events = await collectStream(parseQtiPackageStream(packageSource(entries), streamLimits));
     expect(events.filter((e) => e.kind === "item").map((e) => e.item)).toEqual(expected.items);
-    const { items, entries: _entries, ...metadata } = expected;
+    const { items, entries: _entries, xmlFiles: _xmlFiles, ...metadata } = expected;
     expect(events.at(-1)).toEqual({
       kind: "summary",
       summary: { ...metadata, itemCount: items.length },

@@ -2,25 +2,16 @@ import {
   decodeUtf8,
   diagnosticKey,
   uniqueDiagnostics,
-  parseQtiPackageXmlTree,
   parseQtiXml,
   parseQtiPackageFromEntries,
   isQtiItemResource,
   QTI_ASI_NAMESPACE,
   type QtiParseResult,
   type QtiDiagnostic,
-  type QtiPackageXmlNode,
 } from "@longsightgroup/qti3-core";
 import { detectBasicItemFeatures } from "./basic-item-features.js";
 import { PackageContentError } from "./package-content-error.js";
 import { readPackageEntries } from "./package-reader.js";
-
-interface PackageXmlFile {
-  path: string;
-  xml: string;
-  root: QtiPackageXmlNode | undefined;
-  errors: string[];
-}
 
 /** Package inspection policy selected by a CLI use case. */
 export type PackageInspectionMode = "inspect" | "validate" | "basic-item-player";
@@ -79,14 +70,7 @@ async function inspectPackage(
   const strict = mode !== "inspect";
   const entries = await readPackageEntries(file);
   const imported = parseQtiPackageFromEntries(entries);
-  // Root classification serves CLI discovery only; core owns the manifest and test graph.
-  const xmlFiles: PackageXmlFile[] = entries
-    .filter((entry) => entry.path.toLowerCase().endsWith(".xml"))
-    .map((entry) => {
-      const xml = decodeUtf8(entry.bytes);
-      const parsed = parseQtiPackageXmlTree(xml);
-      return { path: entry.path, xml, root: parsed.root, errors: parsed.errors };
-    });
+  const entriesByPath = new Map(entries.map((entry) => [entry.path, entry]));
   const selectedPaths = new Set(imported.items.map((item) => item.href));
   const itemDiagnosticKeys = new Set(
     imported.items.flatMap((item) => item.diagnostics.map(diagnosticKey)),
@@ -110,20 +94,13 @@ async function inspectPackage(
     }),
   );
   const assessmentTestFiles: string[] = [];
-  for (const xmlFile of xmlFiles) {
+  for (const xmlFile of imported.xmlFiles) {
     if (!selectedPaths.has(xmlFile.path)) {
-      for (const message of xmlFile.errors) {
-        packageDiagnostics.push({
-          code: "xml.parse",
-          severity: "error",
-          message,
-          path: xmlFile.path,
-        });
-      }
+      packageDiagnostics.push(...xmlFile.diagnostics);
     }
-    if (xmlFile.root?.uri !== QTI_ASI_NAMESPACE) continue;
-    if (xmlFile.root.localName === "qti-assessment-test") assessmentTestFiles.push(xmlFile.path);
-    if (xmlFile.root.localName !== "qti-assessment-item" || selectedPaths.has(xmlFile.path))
+    if (xmlFile.rootNamespaceUri !== QTI_ASI_NAMESPACE) continue;
+    if (xmlFile.rootLocalName === "qti-assessment-test") assessmentTestFiles.push(xmlFile.path);
+    if (xmlFile.rootLocalName !== "qti-assessment-item" || selectedPaths.has(xmlFile.path))
       continue;
     if (strict) {
       packageDiagnostics.push({
@@ -133,7 +110,10 @@ async function inspectPackage(
         message: `qti-assessment-item ${xmlFile.path} is not referenced by the package manifest or assessment test.`,
       });
     } else {
-      results.push(inspectionItem(xmlFile.path, "direct", xmlFile.xml, parseQtiXml(xmlFile.xml)));
+      const entry = entriesByPath.get(xmlFile.path);
+      if (!entry) throw new Error(`Core XML inventory references missing entry ${xmlFile.path}.`);
+      const xml = decodeUtf8(entry.bytes);
+      results.push(inspectionItem(xmlFile.path, "direct", xml, parseQtiXml(xml)));
     }
   }
   const discoveredReferences = imported.assessmentTest
@@ -166,7 +146,7 @@ async function inspectPackage(
     failed: results.filter((result) => !result.ok).length + packageErrors.length,
     packageErrors,
     packageDiagnostics: diagnostics,
-    xmlFiles: xmlFiles.map((entry) => entry.path),
+    xmlFiles: imported.xmlFiles.map((entry) => entry.path),
     assetFiles: entries
       .filter((entry) => !entry.path.toLowerCase().endsWith(".xml"))
       .map((entry) => entry.path),

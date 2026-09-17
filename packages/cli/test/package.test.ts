@@ -761,6 +761,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       expect(inspected.code).toBe(0);
       expect(inspected.report).toMatchObject({
         discoveredReferences: ["choice.xml"],
+        assessmentTestFiles: ["unregistered.xml"],
         results: [
           { file: "choice.xml", source: "manifest", ok: true },
           { file: "extra.xml", source: "direct", ok: true },
@@ -774,6 +775,45 @@ describe("@longsightgroup/qti3-cli package handling", () => {
           path: "extra.xml",
         }),
       );
+      const readiness = await runCliJson(["basic-item-player-report", file]);
+      expect(readiness.code).toBe(1);
+      expect(readiness.report.packages[0]?.packageDiagnostics).toContainEqual(
+        expect.objectContaining({ code: "package.inspection.assessmentTest.outOfScope" }),
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("uses inventory syntax errors and ignores foreign-namespace roots", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-xml-inventory-"));
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    if (!choice) throw new Error("Missing fixture");
+    const zip = createStoredZip({
+      "imsmanifest.xml":
+        '<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg"><resources><resource identifier="choice" type="imsqti_item_xmlv3p0" href="choice.xml"/></resources></manifest>',
+      "choice.xml": choice.xml,
+      "foreign-item.xml": '<qti-assessment-item xmlns="urn:foreign"/>',
+      "foreign-test.xml": '<qti-assessment-test xmlns="urn:foreign"/>',
+      "broken.XML": "<broken",
+    });
+    try {
+      const file = join(directory, "package.zip");
+      await writeFile(file, zip);
+      for (const command of ["inspect-package", "validate-package"]) {
+        const inspected = await runCliJson([command, file]);
+        expect(inspected.code).toBe(1);
+        expect(inspected.report).toMatchObject({
+          checked: 1,
+          failed: 2,
+          assessmentTestFiles: [],
+          results: [{ file: "choice.xml", source: "manifest", ok: true }],
+          packageDiagnostics: [
+            expect.objectContaining({ code: "xml.parse", path: "broken.XML" }),
+            expect.objectContaining({ code: "xml.parse", path: "broken.XML" }),
+          ],
+        });
+      }
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

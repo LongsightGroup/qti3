@@ -71,6 +71,10 @@ the package graph. Inspect mode additionally lists unreferenced item XML as
 `source: "direct"`; strict validation rejects those items, and Basic item-player
 readiness rejects assessment-test packages.
 
+Core's `xmlFiles` inventory supplies root classification and syntax diagnostics.
+The CLI parses a full item model only for additional unreferenced items selected
+in inspect mode; it reuses core's item models for registered items.
+
 Reports retain core package diagnostics in `packageDiagnostics` (code, severity,
 path, and source location when available). `packageErrors` projects their error
 messages for display; item-specific diagnostics remain under `results`. Missing

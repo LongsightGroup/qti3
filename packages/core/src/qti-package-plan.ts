@@ -31,7 +31,7 @@ import { QTI_PACKAGE_MANIFEST_NAMESPACE } from "./qti-namespaces.js";
 import type { QtiDiagnostic } from "./types.js";
 
 /** Package metadata without extracted bodies or retained item models. */
-export type QtiPackageSummary = Omit<QtiPackageParseResult, "items" | "entries"> & {
+export type QtiPackageSummary = Omit<QtiPackageParseResult, "items" | "entries" | "xmlFiles"> & {
   readonly itemCount: number;
 };
 
