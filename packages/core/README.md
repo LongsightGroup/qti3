@@ -38,6 +38,13 @@ console.log(result.outcomes);
 console.log(result.state);
 ```
 
+`uniqueDiagnostics(diagnostics)` accepts a readonly array and returns the first occurrence
+of each diagnostic in input order, without modifying the input. Identity uses `code`,
+`severity`, `message`, and `path`; absent and empty paths are equivalent. Source locations
+do not distinguish duplicates, so the first object's metadata is retained. Use
+`diagnosticKey(diagnostic)` when grouping diagnostics across reports; treat its result as
+an opaque key. Newlines within fields cannot collide with field boundaries.
+
 ### Text responses
 
 Text Entry supports single string, integer, and float values, plus numeric records. Extended Text

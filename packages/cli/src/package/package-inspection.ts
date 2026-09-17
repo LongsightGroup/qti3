@@ -1,5 +1,7 @@
 import {
   decodeUtf8,
+  diagnosticKey,
+  uniqueDiagnostics,
   parseQtiPackageXmlTree,
   parseQtiXml,
   parseQtiPackageFromEntries,
@@ -9,7 +11,6 @@ import {
   type QtiDiagnostic,
   type QtiPackageXmlNode,
 } from "@longsightgroup/qti3-core";
-import { diagnosticKey, uniqueDiagnostics } from "../diagnostics.js";
 import { detectBasicItemFeatures } from "./basic-item-features.js";
 import { PackageContentError } from "./package-content-error.js";
 import { readPackageEntries } from "./package-reader.js";

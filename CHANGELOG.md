@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Export `uniqueDiagnostics()` and `diagnosticKey()` from core for shared diagnostic
+  identity in CLI and conformance reports, preserving distinct messages and paths containing newlines.
+
 ## 0.10.6 - 2026-09-17
 
 ### Added

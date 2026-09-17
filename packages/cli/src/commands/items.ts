@@ -3,11 +3,11 @@ import { join } from "node:path";
 import {
   createItemSession,
   parseQtiXml,
+  uniqueDiagnostics,
   validateAssessmentItem,
   type QtiValue,
 } from "@longsightgroup/qti3-core";
 import { canonicalFixtures } from "@longsightgroup/qti3-fixtures";
-import { uniqueDiagnostics } from "../diagnostics.js";
 
 /** Parse every assessment item XML file beneath a directory. */
 export async function parseDirectory(root: string): Promise<{

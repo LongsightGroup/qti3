@@ -16,6 +16,7 @@ import { readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
 import {
   parseQtiXml,
+  uniqueDiagnostics,
   validateAssessmentItem,
   type QtiDiagnostic,
   type QtiPackageItem,
@@ -991,16 +992,4 @@ function failedRow(
 
 function diagnostic(code: string, message: string, cause?: unknown): QtiDiagnostic {
   return certificationDiagnostic(code, message, cause);
-}
-
-function uniqueDiagnostics(diagnostics: readonly QtiDiagnostic[]): QtiDiagnostic[] {
-  const seen = new Set<string>();
-  const unique: QtiDiagnostic[] = [];
-  for (const item of diagnostics) {
-    const key = `${item.code}\n${item.severity}\n${item.message}\n${item.path ?? ""}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(item);
-  }
-  return unique;
 }

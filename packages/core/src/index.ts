@@ -5,6 +5,7 @@ export {
   type QtiAdaptiveTurnResult,
 } from "./adaptive-turn.js";
 export { assertNever } from "./assert-never.js";
+export { diagnosticKey, uniqueDiagnostics } from "./diagnostics.js";
 export {
   createCatalogSupportResolution,
   type QtiCatalogSupportResolution,
