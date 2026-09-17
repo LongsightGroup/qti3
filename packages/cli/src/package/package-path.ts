@@ -9,5 +9,6 @@ export function parseCliPackagePath(path: string, context: string): string {
   throw new PackageContentError(
     diagnostics.find((diagnostic) => diagnostic.severity === "error")?.message ??
       `${context} ${path} is not a valid package-relative path.`,
+    diagnostics,
   );
 }

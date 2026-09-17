@@ -3,6 +3,7 @@ import { main } from "../src/index.js";
 
 interface CliPackageJsonReport {
   packageErrors?: unknown;
+  packageDiagnostics?: unknown;
   checked?: number;
   failed?: number;
   assessmentTestFiles?: unknown;
@@ -20,6 +21,7 @@ interface CliJsonReport {
   assetFiles?: unknown;
   basicFeatures?: unknown;
   packageErrors?: unknown;
+  packageDiagnostics?: unknown;
   missingPackageFeatures?: unknown;
   packages: CliPackageJsonReport[];
   results: CliResultJsonReport[];

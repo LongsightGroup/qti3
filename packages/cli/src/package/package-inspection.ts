@@ -2,15 +2,17 @@ import {
   decodeUtf8,
   parseQtiPackageXmlTree,
   parseQtiXml,
-  validateAssessmentItem,
+  parseQtiPackageFromEntries,
+  isQtiItemResource,
+  QTI_ASI_NAMESPACE,
+  type QtiParseResult,
   type QtiDiagnostic,
   type QtiPackageXmlNode,
 } from "@longsightgroup/qti3-core";
-import { uniqueDiagnostics } from "../diagnostics.js";
+import { diagnosticKey, uniqueDiagnostics } from "../diagnostics.js";
 import { detectBasicItemFeatures } from "./basic-item-features.js";
 import { PackageContentError } from "./package-content-error.js";
-import { parseCliPackagePath } from "./package-path.js";
-import { readPackageEntries, type PackageEntry } from "./package-reader.js";
+import { readPackageEntries } from "./package-reader.js";
 
 interface PackageXmlFile {
   path: string;
@@ -29,6 +31,7 @@ export interface PackageInspectionReport {
   checked: number;
   failed: number;
   packageErrors: string[];
+  packageDiagnostics: readonly QtiDiagnostic[];
   xmlFiles: string[];
   assetFiles: string[];
   discoveredReferences: string[];
@@ -58,6 +61,7 @@ export async function inspectPackageWithContentErrorReport(
       checked: 0,
       failed: 1,
       packageErrors: [cause.message],
+      packageDiagnostics: cause.diagnostics,
       xmlFiles: [],
       assetFiles: [],
       discoveredReferences: [],
@@ -72,209 +76,132 @@ async function inspectPackage(
   mode: PackageInspectionMode,
 ): Promise<PackageInspectionReport> {
   const strict = mode !== "inspect";
-  const itemOnly = mode === "basic-item-player";
   const entries = await readPackageEntries(file);
-  const xmlFiles = entries
-    .filter((entry) => entry.name.toLowerCase().endsWith(".xml"))
-    .map((entry) => parsePackageXml(entry));
+  const imported = parseQtiPackageFromEntries(entries);
+  // Root classification serves CLI discovery only; core owns the manifest and test graph.
+  const xmlFiles: PackageXmlFile[] = entries
+    .filter((entry) => entry.path.toLowerCase().endsWith(".xml"))
+    .map((entry) => {
+      const xml = decodeUtf8(entry.bytes);
+      const parsed = parseQtiPackageXmlTree(xml);
+      return { path: entry.path, xml, root: parsed.root, errors: parsed.errors };
+    });
   const byPath = new Map(xmlFiles.map((entry) => [entry.path, entry]));
-  const entryNames = new Set(entries.map((entry) => entry.name));
-  const itemSources = new Map<string, "assessment-test" | "manifest" | "direct">();
-  const discoveredReferences: string[] = [];
-  const directItemPaths: string[] = [];
+  const selectedPaths = new Set(imported.items.map((item) => item.href));
+  const itemDiagnosticKeys = new Set(
+    imported.items.flatMap((item) => item.diagnostics.map(diagnosticKey)),
+  );
+  const packageDiagnostics: QtiDiagnostic[] = imported.diagnostics
+    .filter((diagnostic) => !itemDiagnosticKeys.has(diagnosticKey(diagnostic)))
+    .map((diagnostic) =>
+      !strict &&
+      (diagnostic.code === "package.manifest.missing" ||
+        diagnostic.code === "package.shape.unsupported")
+        ? { ...diagnostic, severity: "warning" }
+        : diagnostic,
+    );
+  const results = imported.items.map((item) =>
+    inspectionItem(
+      item.href,
+      item.source,
+      item.xml,
+      {
+        ok:
+          item.document !== undefined &&
+          item.diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
+        document: item.document,
+        diagnostics: [...item.diagnostics],
+      },
+      strict ? byPath.get(item.href) : undefined,
+    ),
+  );
   const assessmentTestFiles: string[] = [];
-  const packageErrors = xmlFiles.flatMap((xmlFile) => {
-    return xmlFile.errors.map((error) => `${xmlFile.path}: ${error}`);
-  });
-  const manifestFiles = xmlFiles.filter((xmlFile) => xmlFile.root?.localName === "manifest");
-
-  if (strict) {
-    if (!manifestFiles.some((xmlFile) => xmlFile.path === "imsmanifest.xml")) {
-      packageErrors.push("strict package validation requires imsmanifest.xml.");
-    }
-    for (const manifestFile of manifestFiles) {
-      for (const ref of manifestFileReferences(manifestFile)) {
-        if (!entryNames.has(ref)) {
-          packageErrors.push(`manifest file reference ${ref} was not found.`);
-        }
-      }
-    }
-  }
-
   for (const xmlFile of xmlFiles) {
-    const rootName = xmlFile.root?.localName;
-    if (rootName === "qti-assessment-test") {
-      assessmentTestFiles.push(xmlFile.path);
-    }
-    const refs =
-      rootName === "qti-assessment-test" && !itemOnly
-        ? assessmentItemRefs(xmlFile)
-        : rootName === "manifest"
-          ? manifestItemResources(xmlFile)
-          : [];
-    for (const ref of refs) {
-      discoveredReferences.push(ref);
-      if (byPath.has(ref) && !itemSources.has(ref)) {
-        itemSources.set(ref, rootName === "manifest" ? "manifest" : "assessment-test");
-      } else if (!byPath.has(ref)) {
-        packageErrors.push(`package reference ${ref} was not found.`);
+    if (!selectedPaths.has(xmlFile.path)) {
+      for (const message of xmlFile.errors) {
+        packageDiagnostics.push({
+          code: "xml.parse",
+          severity: "error",
+          message,
+          path: xmlFile.path,
+        });
       }
     }
-    if (strict) {
-      for (const ref of packageDependencyReferences(xmlFile)) {
-        if (!entryNames.has(ref)) {
-          packageErrors.push(
-            `package dependency ${ref} referenced from ${xmlFile.path} was not found.`,
-          );
-        }
-      }
-    }
-    if (rootName === "qti-assessment-item") {
-      directItemPaths.push(xmlFile.path);
-    }
-  }
-
-  if (itemOnly && assessmentTestFiles.length > 0) {
-    packageErrors.push(
-      `assessment-test packages are out of scope for Basic item-player readiness: ${assessmentTestFiles.join(", ")}.`,
-    );
-  }
-
-  if (strict && discoveredReferences.length === 0) {
-    packageErrors.push(
-      "strict package validation requires manifest or assessment-test item references.",
-    );
-  }
-
-  for (const path of directItemPaths) {
-    if (itemSources.has(path)) continue;
-    if (strict) {
-      packageErrors.push(
-        `qti-assessment-item ${path} is not referenced by the package manifest or assessment test.`,
-      );
+    if (xmlFile.root?.uri !== QTI_ASI_NAMESPACE) continue;
+    if (xmlFile.root.localName === "qti-assessment-test") assessmentTestFiles.push(xmlFile.path);
+    if (xmlFile.root.localName !== "qti-assessment-item" || selectedPaths.has(xmlFile.path))
       continue;
+    if (strict) {
+      packageDiagnostics.push({
+        code: "package.inspection.item.unreferenced",
+        severity: "error",
+        path: xmlFile.path,
+        message: `qti-assessment-item ${xmlFile.path} is not referenced by the package manifest or assessment test.`,
+      });
+    } else {
+      results.push(inspectionItem(xmlFile.path, "direct", xmlFile.xml, parseQtiXml(xmlFile.xml)));
     }
-    itemSources.set(path, "direct");
   }
-
-  const results = [...itemSources.entries()].map(([path, source]) => {
-    const xmlFile = byPath.get(path);
-    if (!xmlFile) {
-      return {
-        file: path,
-        source,
-        ok: false,
-        diagnostics: [],
-        interactions: [],
-        basicFeatures: [],
-      };
-    }
-    const result = parseQtiXml(xmlFile.xml);
-    const validation = result.document
-      ? validateAssessmentItem(result.document)
-      : { diagnostics: [] };
-    const diagnostics = uniqueDiagnostics([
-      ...result.diagnostics,
-      ...validation.diagnostics,
-      ...(strict ? packageXmlDiagnostics(xmlFile) : []),
-    ]);
-    return {
-      file: path,
-      source,
-      ok: result.ok && diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
-      diagnostics,
-      interactions:
-        result.document?.item.interactions.map((interaction) => interaction.qtiName) ?? [],
-      basicFeatures: detectBasicItemFeatures(xmlFile.xml, result),
-    };
-  });
-
+  const discoveredReferences = imported.assessmentTest
+    ? imported.assessmentTest.itemRefs.map((reference) => reference.href)
+    : imported.manifestResources
+        .filter((resource) => isQtiItemResource(resource.type))
+        .flatMap((resource) => (resource.href ? [resource.href] : []));
+  if (strict && discoveredReferences.length === 0) {
+    packageDiagnostics.push({
+      code: "package.inspection.references.required",
+      severity: "error",
+      message: "strict package validation requires manifest or assessment-test item references.",
+    });
+  }
+  if (mode === "basic-item-player" && assessmentTestFiles.length > 0) {
+    packageDiagnostics.push({
+      code: "package.inspection.assessmentTest.outOfScope",
+      severity: "error",
+      message: `assessment-test packages are out of scope for Basic item-player readiness: ${assessmentTestFiles.join(", ")}.`,
+    });
+  }
+  const diagnostics = uniqueDiagnostics(packageDiagnostics);
+  const packageErrors = diagnostics
+    .filter((diagnostic) => diagnostic.severity === "error")
+    .map((diagnostic) => diagnostic.message);
   return {
     file,
     strict,
     checked: results.length,
     failed: results.filter((result) => !result.ok).length + packageErrors.length,
     packageErrors,
+    packageDiagnostics: diagnostics,
     xmlFiles: xmlFiles.map((entry) => entry.path),
     assetFiles: entries
-      .filter((entry) => !entry.name.toLowerCase().endsWith(".xml"))
-      .map((entry) => entry.name),
+      .filter((entry) => !entry.path.toLowerCase().endsWith(".xml"))
+      .map((entry) => entry.path),
     discoveredReferences,
     assessmentTestFiles,
     results,
   };
 }
 
-function parsePackageXml(entry: PackageEntry): PackageXmlFile {
-  const xml = decodeUtf8(entry.bytes);
-  const parsed = parseQtiPackageXmlTree(xml);
-  return { path: entry.name, xml, root: parsed.root, errors: parsed.errors };
-}
-
-function assessmentItemRefs(xmlFile: PackageXmlFile): string[] {
-  return packageDescendants(xmlFile.root, "qti-assessment-item-ref")
-    .map((node) => node.attributes.href ?? "")
-    .filter(Boolean)
-    .map((href) => resolvePackageHref(xmlFile.path, href));
-}
-
-function manifestItemResources(xmlFile: PackageXmlFile): string[] {
-  return packageDescendants(xmlFile.root, "resource")
-    .filter((node) => isQtiItemResource(node.attributes.type ?? ""))
-    .map((node) => resourceHref(node))
-    .filter(Boolean)
-    .map((href) => resolvePackageHref(xmlFile.path, href));
-}
-
-function manifestFileReferences(xmlFile: PackageXmlFile): string[] {
-  return packageDescendants(xmlFile.root, "file")
-    .map((node) => node.attributes.href ?? "")
-    .filter(Boolean)
-    .map((href) => resolvePackageHref(xmlFile.path, href));
-}
-
-function packageDependencyReferences(xmlFile: PackageXmlFile): string[] {
-  const refs: string[] = [];
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "qti-stylesheet", "href");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "qti-assessment-stimulus-ref", "href");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "img", "src");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "object", "data");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "audio", "src");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "video", "src");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "source", "src");
-  collectPackageRelativeAttributeRefs(refs, xmlFile, "track", "src");
-  collectPackageRelativeTextRefs(refs, xmlFile, "qti-file-href");
-  collectPackageRelativeTextRefs(refs, xmlFile, "qti-resource-icon");
-  return [...new Set(refs)];
-}
-
-function collectPackageRelativeAttributeRefs(
-  refs: string[],
-  xmlFile: PackageXmlFile,
-  localName: string,
-  attribute: string,
-): void {
-  for (const node of packageDescendants(xmlFile.root, localName)) {
-    const href = node.attributes[attribute];
-    if (isPackageRelativeHref(href)) refs.push(resolvePackageHref(xmlFile.path, href.trim()));
-  }
-}
-
-function collectPackageRelativeTextRefs(
-  refs: string[],
-  xmlFile: PackageXmlFile,
-  localName: string,
-): void {
-  for (const node of packageDescendants(xmlFile.root, localName)) {
-    const href = node.text.trim();
-    if (isPackageRelativeHref(href)) refs.push(resolvePackageHref(xmlFile.path, href));
-  }
-}
-
-function isPackageRelativeHref(href: string | undefined): href is string {
-  const trimmed = href?.trim() ?? "";
-  if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("//")) return false;
-  return !/^[a-z][a-z0-9+.-]*:/i.test(trimmed);
+function inspectionItem(
+  file: string,
+  source: PackageInspectionReport["results"][number]["source"],
+  xml: string,
+  parsed: QtiParseResult,
+  strictXml?: PackageXmlFile,
+): PackageInspectionReport["results"][number] {
+  const diagnostics = uniqueDiagnostics([
+    ...parsed.diagnostics,
+    ...(strictXml ? packageXmlDiagnostics(strictXml) : []),
+  ]);
+  return {
+    file,
+    source,
+    ok: parsed.ok && diagnostics.every((diagnostic) => diagnostic.severity !== "error"),
+    diagnostics,
+    interactions:
+      parsed.document?.item.interactions.map((interaction) => interaction.qtiName) ?? [],
+    basicFeatures: detectBasicItemFeatures(xml, parsed),
+  };
 }
 
 function assessmentItemChildOrder(localName: string): number | undefined {
@@ -337,40 +264,4 @@ function packageXmlDiagnostics(xmlFile: PackageXmlFile): QtiDiagnostic[] {
   }
 
   return diagnostics;
-}
-
-function isQtiItemResource(type: string): boolean {
-  return type.toLowerCase().startsWith("imsqti_item_xmlv3p0");
-}
-
-function resourceHref(resource: QtiPackageXmlNode): string {
-  const href = resource.attributes.href;
-  if (href) return href;
-  const file = packageDescendants(resource, "file").find((node) => {
-    return (node.attributes.href ?? "").toLowerCase().endsWith(".xml");
-  });
-  return file?.attributes.href ?? "";
-}
-
-function resolvePackageHref(from: string, href: string): string {
-  const path = href.split(/[?#]/, 1)[0] ?? "";
-  return resolveRelativePath(from, path);
-}
-
-function packageDescendants(
-  node: QtiPackageXmlNode | undefined,
-  localName: string,
-): QtiPackageXmlNode[] {
-  if (!node) return [];
-  const found: QtiPackageXmlNode[] = [];
-  for (const child of node.children) {
-    if (child.localName === localName) found.push(child);
-    found.push(...packageDescendants(child, localName));
-  }
-  return found;
-}
-
-function resolveRelativePath(from: string, href: string): string {
-  const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  return parseCliPackagePath(`${base}${href}`, "package reference");
 }

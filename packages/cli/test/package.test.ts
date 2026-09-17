@@ -1,3 +1,4 @@
+import { parseQtiPackage } from "@longsightgroup/qti3-core";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -57,6 +58,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
           "imsmanifest.xml": `<?xml version="1.0" encoding="UTF-8"?>
 <manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg">
   <resources>
+    <resource identifier="test" type="imsqti_test_xmlv3p0" href="assessment.xml"/>
+    <resource identifier="text" type="imsqti_item_xmlv3p0" href="items/text-entry.xml"/>
     <resource identifier="choice" type="imsqti_item_xmlv3p0p1">
       <file href="items/choice.xml"/>
     </resource>
@@ -66,6 +69,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
 <qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Package">
   <qti-test-part identifier="part-1" navigation-mode="nonlinear" submission-mode="individual">
     <qti-assessment-section identifier="section-1" visible="true">
+      <qti-assessment-item-ref identifier="choice-ref" href="items/choice.xml"/>
       <qti-assessment-item-ref identifier="text-ref" href="items/text-entry.xml"/>
     </qti-assessment-section>
   </qti-test-part>
@@ -86,7 +90,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       });
       expect(report.assetFiles).toEqual(["items/image.png"]);
       expect(report.results).toEqual([
-        expect.objectContaining({ file: "items/choice.xml", source: "manifest", ok: true }),
+        expect.objectContaining({ file: "items/choice.xml", source: "assessment-test", ok: true }),
         expect.objectContaining({
           file: "items/text-entry.xml",
           source: "assessment-test",
@@ -148,22 +152,23 @@ describe("@longsightgroup/qti3-cli package handling", () => {
     {
       name: "a POSIX absolute path",
       href: "/items/choice.xml",
-      error: "package reference /items/choice.xml must be a package-relative path.",
+      error: "manifest resource choice href /items/choice.xml must be a package-relative path.",
     },
     {
       name: "a Windows absolute path",
       href: "C:/items/choice.xml",
-      error: "package reference C:/items/choice.xml must be a package-relative path.",
+      error: "manifest resource choice href C:/items/choice.xml must be a package-relative path.",
     },
     {
       name: "a URI-like path",
       href: "https://example.com/choice.xml",
-      error: "package reference https://example.com/choice.xml must be a package-relative path.",
+      error:
+        "manifest resource choice href https://example.com/choice.xml must be a package-relative path.",
     },
     {
       name: "a package-root escape",
       href: "../items/choice.xml",
-      error: "package reference ../items/choice.xml escapes the package root.",
+      error: "manifest resource choice href ../items/choice.xml escapes the package root.",
     },
     { name: "dot segments", href: "items/./choice.xml", normalized: "items/choice.xml" },
     { name: "repeated separators", href: "items//choice.xml", normalized: "items/choice.xml" },
@@ -192,9 +197,10 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       if (error !== undefined) {
         expect(code).toBe(1);
         expect(report).toMatchObject({
-          checked: 0,
-          failed: 1,
-          packageErrors: [error],
+          checked: 1,
+          failed: 2,
+          packageErrors: [error, "Manifest resource choice is missing a primary XML href."],
+          results: [expect.objectContaining({ source: "direct", ok: true })],
         });
       } else {
         expect(code).toBe(0);
@@ -315,11 +321,12 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       expect(report).toMatchObject({
         strict: true,
         checked: 0,
-        failed: 3,
+        failed: 4,
         packageErrors: [
-          "strict package validation requires imsmanifest.xml.",
-          "strict package validation requires manifest or assessment-test item references.",
+          "QTI package does not contain imsmanifest.xml.",
+          "Manifest does not contain QTI item or assessment-test resources.",
           "qti-assessment-item items/choice.xml is not referenced by the package manifest or assessment test.",
+          "strict package validation requires manifest or assessment-test item references.",
         ],
       });
     } finally {
@@ -353,9 +360,13 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       expect(code).toBe(1);
 
       expect(report).toMatchObject({
-        checked: 0,
-        failed: 1,
-        packageErrors: ["package reference ../items/choice.xml escapes the package root."],
+        checked: 1,
+        failed: 3,
+        packageErrors: [
+          "manifest file href ../items/choice.xml escapes the package root.",
+          "manifest resource choice href ../items/choice.xml escapes the package root.",
+          "Manifest resource choice is missing a primary XML href.",
+        ],
       });
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -386,7 +397,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         checked: 0,
         failed: 1,
         discoveredReferences: ["items/missing.xml"],
-        packageErrors: ["package reference items/missing.xml was not found."],
+        packageErrors: ["Package item reference items/missing.xml was not found."],
       });
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -461,7 +472,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       expect(code).toBe(1);
       expect(report.ok).toBe(false);
       expect(requiredEntry(report.packages).packageErrors).toEqual(
-        expect.arrayContaining(["strict package validation requires imsmanifest.xml."]),
+        expect.arrayContaining(["QTI package does not contain imsmanifest.xml."]),
       );
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -492,7 +503,7 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         checked: 0,
         failed: 1,
         discoveredReferences: ["items/missing.xml"],
-        packageErrors: ["package reference items/missing.xml was not found."],
+        packageErrors: ["Package item reference items/missing.xml was not found."],
       });
     } finally {
       await rm(directory, { recursive: true, force: true });
@@ -537,8 +548,8 @@ describe("@longsightgroup/qti3-cli package handling", () => {
       expect(code).toBe(1);
       expect(report.packageErrors).toEqual(
         expect.arrayContaining([
-          "package dependency stimuli/missing.xml referenced from items/choice.xml was not found.",
-          "package dependency styles/missing.css referenced from items/choice.xml was not found.",
+          "Package asset stimuli/missing.xml referenced from items/choice.xml was not found.",
+          "Package asset styles/missing.css referenced from items/choice.xml was not found.",
         ]),
       );
     } finally {
@@ -699,6 +710,69 @@ describe("@longsightgroup/qti3-cli package handling", () => {
         expect.arrayContaining([
           "assessment-test packages are out of scope for Basic item-player readiness: assessment.xml.",
         ]),
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+  it.each(["namespace", "duplicate", "dependency"])(
+    "uses core graph diagnostics for invalid manifest %s",
+    async (kind) => {
+      const directory = await mkdtemp(join(tmpdir(), "qti3-core-graph-"));
+      const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+      if (!choice) throw new Error("Missing fixture");
+      const manifest = `<manifest xmlns="${kind === "namespace" ? "urn:wrong" : "http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1"}" identifier="pkg"><resources>
+      <resource identifier="choice" type="imsqti_item_xmlv3p0" href="item.xml">${kind === "dependency" ? '<dependency identifierref="missing"/>' : ""}</resource>
+      ${kind === "duplicate" ? '<resource identifier="choice" type="imsqti_item_xmlv3p0" href="item.xml"/>' : ""}
+    </resources></manifest>`;
+      const zip = createStoredZip({ "imsmanifest.xml": manifest, "item.xml": choice.xml });
+      const expected = parseQtiPackage(zip);
+      expect(expected.ok).toBe(false);
+      try {
+        const file = join(directory, "package.zip");
+        await writeFile(file, zip);
+        const { code, report } = await runCliJson(["validate-package", file]);
+        expect(code).toBe(1);
+        expect(report.packageDiagnostics).toEqual(
+          expect.arrayContaining(JSON.parse(JSON.stringify(expected.diagnostics))),
+        );
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it("does not let an unregistered assessment test change the manifest's item selection", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "qti3-unregistered-test-"));
+    const choice = interactionFixtures.find((fixture) => fixture.interactionType === "choice");
+    if (!choice) throw new Error("Missing fixture");
+    const zip = createStoredZip({
+      "imsmanifest.xml":
+        '<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg"><resources><resource identifier="choice" type="imsqti_item_xmlv3p0" href="choice.xml"/></resources></manifest>',
+      "choice.xml": choice.xml,
+      "extra.xml": choice.xml,
+      "unregistered.xml":
+        '<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"><qti-assessment-item-ref href="extra.xml"/></qti-assessment-test>',
+    });
+    try {
+      const file = join(directory, "package.zip");
+      await writeFile(file, zip);
+      const inspected = await runCliJson(["inspect-package", file]);
+      expect(inspected.code).toBe(0);
+      expect(inspected.report).toMatchObject({
+        discoveredReferences: ["choice.xml"],
+        results: [
+          { file: "choice.xml", source: "manifest", ok: true },
+          { file: "extra.xml", source: "direct", ok: true },
+        ],
+      });
+      const validated = await runCliJson(["validate-package", file]);
+      expect(validated.code).toBe(1);
+      expect(validated.report.packageDiagnostics).toContainEqual(
+        expect.objectContaining({
+          code: "package.inspection.item.unreferenced",
+          path: "extra.xml",
+        }),
       );
     } finally {
       await rm(directory, { recursive: true, force: true });

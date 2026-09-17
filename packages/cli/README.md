@@ -63,3 +63,16 @@ outcomes or template values to these commands without validating them at the hos
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3
+
+Package inspection and validation use core's `parseQtiPackageFromEntries` for ZIPs
+and expanded directories. Manifest resources and the registered assessment test
+control item selection and order. An unregistered test XML file does not change
+the package graph. Inspect mode additionally lists unreferenced item XML as
+`source: "direct"`; strict validation rejects those items, and Basic item-player
+readiness rejects assessment-test packages.
+
+Reports retain core package diagnostics in `packageDiagnostics` (code, severity,
+path, and source location when available). `packageErrors` projects their error
+messages for display; item-specific diagnostics remain under `results`. Missing
+manifests and unsupported package shapes are warnings only in inspect mode, which
+can inspect loose items. Invalid authored references still fail inspection.
