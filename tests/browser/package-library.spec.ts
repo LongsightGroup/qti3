@@ -39,24 +39,24 @@ for (const compression of ["stored", "deflated"] as const) {
     const actual = await page.evaluate(
       async (input) => {
         const modulePath = "/src/package-library/browser-package.ts";
-        const { readBrowserPackageZip, importPackageEntries } = await import(
-          /* @vite-ignore */ modulePath
-        );
-        const extracted = await readBrowserPackageZip(new Uint8Array(input));
+        const { readBrowserPackageZip } = await import(/* @vite-ignore */ modulePath);
+        const extracted = await readBrowserPackageZip(new Uint8Array(input.bytes));
         if (!extracted.ok) return extracted;
-        const imported = await importPackageEntries(extracted.entries);
+        const corePath = input.corePath;
+        const { parseQtiPackageFromEntries } = await import(/* @vite-ignore */ corePath);
+        const imported = parseQtiPackageFromEntries(extracted.entries);
         if (!imported.ok) return imported;
         return {
           ok: true,
           items: imported.items,
-          summary: imported.summary,
+          summary: imported,
           entries: imported.entries.map((entry: { path: string; bytes: Uint8Array }) => ({
             path: entry.path,
             bytes: [...entry.bytes],
           })),
         };
       },
-      [...zip],
+      { bytes: [...zip], corePath: `/@fs/${process.cwd()}/packages/core/src/index.ts` },
     );
     expect(actual.ok).toBe(true);
     expect(actual.items).toEqual(JSON.parse(JSON.stringify(core.items)));
@@ -140,25 +140,27 @@ test("cancels DEFLATE that expands beyond its declared size", async ({ page }) =
   expect(result.diagnostics[0].code).toBe("package.zip.entry.inflate");
 });
 
-test("discards provisional item events when the terminal core summary fails", async ({ page }) => {
+test("does not save a batch containing a valid item and a missing referenced item", async ({
+  page,
+}) => {
   const zip = createItemPackageZip({
     resources: [qtiItemResource("good", "good.xml"), qtiItemResource("missing", "missing.xml")],
     files: { "good.xml": itemXml },
   });
-  await page.goto("/");
-  const result = await page.evaluate(
-    async (bytes) => {
-      const modulePath = "/src/package-library/browser-package.ts";
-      const { readBrowserPackageZip, importPackageEntries } = await import(
-        /* @vite-ignore */ modulePath
-      );
-      const extracted = await readBrowserPackageZip(new Uint8Array(bytes));
-      return extracted.ok ? importPackageEntries(extracted.entries) : extracted;
-    },
-    [...zip],
-  );
-  expect(result.ok).toBe(false);
-  expect(result).not.toHaveProperty("items");
+  const core = parseQtiPackage(zip);
+  expect(core.ok).toBe(false);
+  expect(core.items).toHaveLength(1);
+  await page.goto("/library.html");
+  await page
+    .getByLabel("Import package", { exact: true })
+    .setInputFiles({ name: "partial.zip", mimeType: "application/zip", buffer: zip });
+  await expect(page.getByRole("status")).toContainText("Package import failed. Nothing was saved.");
+  await expect(page.locator("#saved-packages option")).toHaveCount(1);
+  await expect(page.getByRole("radio")).toHaveCount(0);
+  await page.getByText("Import and player diagnostics", { exact: true }).click();
+  for (const diagnostic of core.diagnostics.filter((entry) => entry.severity === "error")) {
+    await expect(page.locator("#library-diagnostics")).toContainText(diagnostic.code);
+  }
 });
 
 test("imports, commits, and immediately opens the saved record", async ({ page }) => {
@@ -284,28 +286,30 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   const reopened = await context.newPage();
   await reopened.goto("/library.html");
   await expect(reopened.getByRole("status")).toHaveText("Select a saved package to reopen it.");
-  const restored = await reopened.evaluate(async (packageId) => {
-    const storePath = "/src/package-library/store.ts";
-    const importPath = "/src/package-library/browser-package.ts";
-    const saved = await (await import(/* @vite-ignore */ storePath)).readPackage(packageId);
-    if (!saved.ok) return saved;
-    const imported = await (
-      await import(/* @vite-ignore */ importPath)
-    ).importPackageEntries(saved.value.entries);
-    return {
-      imported,
-      entries: saved.value.entries.map((entry: { path: string; bytes: Uint8Array }) => ({
-        path: entry.path,
-        bytes: [...entry.bytes],
-      })),
-    };
-  }, id);
+  const restored = await reopened.evaluate(
+    async ({ packageId, importPath }) => {
+      const storePath = "/src/package-library/store.ts";
+      const saved = await (await import(/* @vite-ignore */ storePath)).readPackage(packageId);
+      if (!saved.ok) return saved;
+      const imported = await (
+        await import(/* @vite-ignore */ importPath)
+      ).parseQtiPackageFromEntries(saved.value.entries);
+      return {
+        imported,
+        entries: saved.value.entries.map((entry: { path: string; bytes: Uint8Array }) => ({
+          path: entry.path,
+          bytes: [...entry.bytes],
+        })),
+      };
+    },
+    { packageId: id, importPath: `/@fs/${process.cwd()}/packages/core/src/index.ts` },
+  );
   expect(restored.entries).toEqual(
     original.entries.map((entry) => ({ path: entry.path, bytes: [...entry.bytes] })),
   );
   expect(restored.imported.items).toEqual(JSON.parse(JSON.stringify(original.items)));
-  expect(restored.imported.summary.manifestResources).toEqual(original.manifestResources);
-  expect(restored.imported.summary.assets).toEqual(original.assets);
+  expect(restored.imported.manifestResources).toEqual(original.manifestResources);
+  expect(restored.imported.assets).toEqual(original.assets);
   const contentRequests: string[] = [];
   reopened.on("request", (request) => {
     if (/^https?:/.test(request.url())) contentRequests.push(request.url());

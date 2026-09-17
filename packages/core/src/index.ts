@@ -59,6 +59,7 @@ export {
   QTI_ITEM_RESOURCE_TYPE,
   QTI_PACKAGE_MANIFEST_PATH,
   parseQtiPackage,
+  parseQtiPackageFromEntries,
   readQtiPackageZipEntries,
   readQtiPackageZipEntriesAsync,
   type QtiAssessmentSectionPackageModel,

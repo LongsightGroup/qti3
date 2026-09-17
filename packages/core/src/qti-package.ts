@@ -1,6 +1,10 @@
-import { pushPackageDiagnostic } from "./qti-package-paths.js";
+import { normalizePackagePath, pushPackageDiagnostic } from "./qti-package-paths.js";
 import { QTI_PACKAGE_MANIFEST_PATH } from "./qti-package-manifest.js";
-import { buildPackageSummary, inspectPackageManifest } from "./qti-package-plan.js";
+import {
+  buildPackageSummary,
+  failedPackageSummary,
+  inspectPackageManifest,
+} from "./qti-package-plan.js";
 import {
   itemReferencesForPackageShape,
   parseAssessmentTestPackageModel,
@@ -13,6 +17,7 @@ import {
   decodeUtf8,
   readQtiPackageZipEntries,
   readQtiPackageZipEntriesAsync,
+  resolveResourceLimits,
   type QtiPackageEntry,
   type QtiPackageParseOptions,
 } from "./qti-package-zip.js";
@@ -67,12 +72,82 @@ export function parseQtiPackage(
 ): QtiPackageParseResult {
   const diagnostics: QtiDiagnostic[] = [];
   const entries = readQtiPackageZipEntries(bytes, options, diagnostics);
-  return parseQtiPackageEntries(entries, options, diagnostics);
+  return parseQtiPackageEntries(entries, diagnostics);
+}
+
+/**
+ * Parse already extracted or restored entries with the same package semantics as ZIP input.
+ * Paths must be unique and canonical. Entry count and expanded byte limits apply;
+ * compression-ratio limits are irrelevant after extraction. Inspect ok before use.
+ */
+export function parseQtiPackageFromEntries(
+  entries: readonly QtiPackageEntry[],
+  options: Pick<QtiPackageParseOptions, "limits"> = {},
+): QtiPackageParseResult {
+  const diagnostics: QtiDiagnostic[] = [];
+  const limits = resolveResourceLimits(options.limits, diagnostics);
+  if (limits) {
+    if (entries.length > limits.maxEntries) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.entries.limit",
+        "error",
+        "Package contains more entries than allowed.",
+      );
+    } else {
+      let total = 0;
+      const paths = new Set<string>();
+      for (const entry of entries) {
+        const path = normalizePackagePath(entry.path, "entry", diagnostics);
+        if (path === undefined) break;
+        if (!path || path !== entry.path || path.includes("\\") || path.includes("\0")) {
+          pushPackageDiagnostic(
+            diagnostics,
+            "package.entry.path",
+            "error",
+            "Package entry paths must be canonical and package-relative.",
+            entry.path,
+          );
+          break;
+        }
+        if (paths.has(path)) {
+          pushPackageDiagnostic(
+            diagnostics,
+            "package.entry.duplicate",
+            "error",
+            `QTI package contains duplicate entry ${path}.`,
+            path,
+          );
+          break;
+        }
+        paths.add(path);
+        total += entry.bytes.byteLength;
+        if (
+          entry.bytes.byteLength > limits.maxEntryUncompressedBytes ||
+          !Number.isSafeInteger(total) ||
+          total > limits.maxTotalUncompressedBytes
+        ) {
+          pushPackageDiagnostic(
+            diagnostics,
+            "package.bytes.limit",
+            "error",
+            "Package entry or total size exceeds its configured budget.",
+            path,
+          );
+          break;
+        }
+      }
+    }
+  }
+  if (diagnostics.length) {
+    const { itemCount: _itemCount, ...summary } = failedPackageSummary(diagnostics);
+    return { ...summary, entries: [], items: [] };
+  }
+  return parseQtiPackageEntries(entries, diagnostics);
 }
 
 function parseQtiPackageEntries(
   entries: readonly QtiPackageEntry[],
-  options: QtiPackageParseOptions,
   diagnostics: QtiDiagnostic[],
 ): QtiPackageParseResult {
   const entriesByPath = indexEntries(entries, diagnostics);

@@ -418,6 +418,8 @@ pnpm dev
 ```
 
 Open `/library.html` to import a QTI ZIP into the reference app's IndexedDB database.
+ZIP extraction uses core's async reader with a bounded browser inflater; imports
+and database restores use `parseQtiPackageFromEntries` and its typed diagnostics.
 Import saves every original package file, including XML, metadata, stylesheets, and media.
 The page immediately reads the saved record back through the core importer. Close the page,
 reopen it, and choose **Saved package** and **Question** to inspect the questions, original

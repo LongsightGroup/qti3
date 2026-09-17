@@ -4,6 +4,7 @@ import {
   detectPackageMediaType,
   discoverQtiPackageContentAssets,
   parseQtiPackage,
+  parseQtiPackageFromEntries,
 } from "./index.js";
 import {
   choiceItemXml,
@@ -44,6 +45,7 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(parseQtiPackageFromEntries(result.entries)).toEqual(result);
     expect(result.entries.map((entry) => entry.path)).toEqual([
       "imsmanifest.xml",
       "items/choice.xml",
@@ -150,6 +152,7 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(parseQtiPackageFromEntries(result.entries)).toEqual(result);
     expect(result.title).toBe("Assessment Package");
     expect(result.packageShape).toBe("assessment-test-resource");
     expect(result.assessmentTest).toEqual(
@@ -249,6 +252,7 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(parseQtiPackageFromEntries(result.entries)).toEqual(result);
     expect(result.items).toEqual([
       expect.objectContaining({
         href: "items/choice.xml",
@@ -446,6 +450,7 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(parseQtiPackageFromEntries(result.entries)).toEqual(result);
     expect(result.packageShape).toBe("assessment-test-resource");
     expect(result.diagnostics).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ code: "package.shape.ambiguous" })]),
@@ -537,6 +542,7 @@ describe("QTI package parser", () => {
     );
 
     expect(result.ok).toBe(true);
+    expect(parseQtiPackageFromEntries(result.entries)).toEqual(result);
     expect(result.items[0]?.standards).toEqual([
       expect.objectContaining({
         identifier: "standard-1",
@@ -625,5 +631,52 @@ describe("QTI package asset utilities", () => {
     ["audio.m4a", "audio/mp4"],
   ])("detects importer media type for %s", (href, mediaType) => {
     expect(detectPackageMediaType(href)).toBe(mediaType);
+  });
+});
+
+describe("batch import from extracted entries", () => {
+  it.each(["../item.xml", "/item.xml", "items/../item.xml", "a\\b.xml", "a\0b.xml", ""])(
+    "rejects unsafe or noncanonical inventory path %j before parsing XML",
+    (path) => {
+      const result = parseQtiPackageFromEntries([
+        { path, bytes: Buffer.from(simpleChoiceItemXml()) },
+      ]);
+      expect(result.ok).toBe(false);
+      expect(result.items).toEqual([]);
+      expect(result.entries).toEqual([]);
+      expect(result.diagnostics.some((diagnostic) => diagnostic.severity === "error")).toBe(true);
+    },
+  );
+
+  it("rejects duplicate inventory entries", () => {
+    const entry = { path: "item.xml", bytes: Buffer.from(simpleChoiceItemXml()) };
+    const result = parseQtiPackageFromEntries([entry, entry]);
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics[0]?.code).toBe("package.entry.duplicate");
+    expect(result.items).toEqual([]);
+  });
+
+  it.each([
+    [{ maxEntries: 1 }, "package.entries.limit"],
+    [{ maxEntryUncompressedBytes: 2 }, "package.bytes.limit"],
+    [{ maxTotalUncompressedBytes: 5 }, "package.bytes.limit"],
+    [{ maxEntries: 0 }, "package.limit.invalid"],
+  ] as const)("enforces extracted inventory budgets %j", (limits, code) => {
+    const result = parseQtiPackageFromEntries(
+      [
+        { path: "a", bytes: Buffer.from("123") },
+        { path: "b", bytes: Buffer.from("456") },
+      ],
+      { limits },
+    );
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics[0]?.code).toBe(code);
+    expect(result.items).toEqual([]);
+  });
+
+  it("returns the same typed package failure for missing manifests", () => {
+    const original = parseQtiPackage(createStoredZip({ "item.xml": simpleChoiceItemXml() }));
+    expect(original.ok).toBe(false);
+    expect(parseQtiPackageFromEntries(original.entries)).toEqual(original);
   });
 });

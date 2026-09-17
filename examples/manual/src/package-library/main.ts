@@ -1,14 +1,15 @@
-import { detectPackageMediaType, type QtiDiagnostic } from "@longsightgroup/qti3-core";
+import {
+  detectPackageMediaType,
+  parseQtiPackageFromEntries,
+  type QtiPackageParseResult,
+  type QtiDiagnostic,
+} from "@longsightgroup/qti3-core";
 import {
   defineQtiAssessmentItemPlayer,
   QtiAssessmentItemPlayer,
   type QtiDiagnosticsEventDetail,
 } from "@longsightgroup/qti3-player";
-import {
-  importPackageEntries,
-  readBrowserPackageZip,
-  type ImportedPackage,
-} from "./browser-package.js";
+import { readBrowserPackageZip } from "./browser-package.js";
 import { deletePackage, listPackages, readPackage, savePackage } from "./store.js";
 
 defineQtiAssessmentItemPlayer();
@@ -20,7 +21,7 @@ const status = requireElement("#library-status", HTMLParagraphElement);
 const diagnostics = requireElement("#library-diagnostics", HTMLPreElement);
 const source = requireElement("#item-source", HTMLPreElement);
 let player = requireElement("qti-assessment-item-player", QtiAssessmentItemPlayer);
-let current: ImportedPackage | undefined;
+let current: QtiPackageParseResult | undefined;
 let assetUrls = new Map<string, string>();
 let messages: readonly QtiDiagnostic[] = [];
 let busy = false;
@@ -54,7 +55,7 @@ async function importFile(): Promise<void> {
     showImportFailure(extracted.diagnostics);
     return;
   }
-  const imported = await importPackageEntries(extracted.entries);
+  const imported = parseQtiPackageFromEntries(extracted.entries);
   if (!imported.ok) {
     showImportFailure(imported.diagnostics);
     return;
@@ -62,7 +63,7 @@ async function importFile(): Promise<void> {
   const id = crypto.randomUUID();
   const saved = await savePackage({
     id,
-    title: imported.summary.title || file.name,
+    title: imported.title || file.name,
     filename: file.name,
     importedAt: new Date().toISOString(),
     entries: imported.entries,
@@ -107,7 +108,7 @@ async function openPackage(id: string): Promise<boolean> {
     await refreshList();
     return false;
   }
-  const imported = await importPackageEntries(record.value.entries);
+  const imported = parseQtiPackageFromEntries(record.value.entries);
   if (!imported.ok) {
     showImportFailure(imported.diagnostics);
     return false;
@@ -136,7 +137,7 @@ async function openPackage(id: string): Promise<boolean> {
 async function renderItem(): Promise<void> {
   const item = current?.items[Number(items.value)];
   if (!current || !item) return;
-  messages = current.summary.diagnostics;
+  messages = current.diagnostics;
   showDiagnostics();
   source.textContent = item.xml;
   resetPlayer();

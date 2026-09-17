@@ -380,6 +380,30 @@ The registry models authoring-level fields such as `labels-style`, `choices-posi
 `media-player-controls`; downstream products should keep UI labels, editor layout, and draft
 property names in their own adapter layer.
 
+## Batch import from extracted entries
+
+`parseQtiPackageFromEntries(entries, { limits })` imports original or restored
+`{ path, bytes }` entries into the same `QtiPackageParseResult` returned by
+`parseQtiPackage`. It preserves all entry bytes and applies the same manifest,
+assessment-test ordering, item, asset, and diagnostic semantics. No ZIP rebuilding
+or stream-event collection is needed when the entries are already in memory.
+
+The batch entry boundary rejects duplicate or noncanonical paths and enforces
+entry-count, per-entry, and total byte limits before parsing XML. Compression
+ratio limits apply only during ZIP extraction. Check `result.ok` before saving or
+delivering items: parsing can return partial models with error diagnostics.
+
+```ts
+import { parseQtiPackageFromEntries } from "@longsightgroup/qti3-core";
+
+const result = parseQtiPackageFromEntries(savedEntries);
+if (result.ok) {
+  showPackage(result);
+} else {
+  showDiagnostics(result.diagnostics);
+}
+```
+
 ## Incremental package parsing
 
 `parseQtiPackageStream(source, limits)` reads an immutable package entry inventory
