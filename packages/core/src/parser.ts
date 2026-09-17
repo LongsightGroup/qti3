@@ -213,6 +213,18 @@ function diagnoseProcessingElements(
   if (!processingNode) return;
   for (const node of [processingNode, ...descendants(processingNode, () => true)]) {
     if (!node.localName.startsWith("qti-")) continue;
+    if (
+      node.localName === "qti-pattern-match" &&
+      (node.attributes.pattern === undefined || childElements(node).length !== 1)
+    ) {
+      diagnostics.push({
+        code: "processing.pattern.required",
+        severity: "error",
+        message: "qti-pattern-match requires a pattern attribute and exactly one expression.",
+        path: node.source.path,
+        source: node.source,
+      });
+    }
     if (node.localName === "qti-is-null" && childElements(node).length !== 1) {
       diagnostics.push({
         code: "processing.isNull.arity",

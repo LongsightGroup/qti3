@@ -258,7 +258,12 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   operatorProcessingEntry("qti-gte"),
   operatorProcessingEntry("qti-string-match"),
   operatorProcessingEntry("qti-substring"),
-  operatorProcessingEntry("qti-pattern-match"),
+  {
+    ...operatorProcessingEntry("qti-pattern-match"),
+    tests: [processingOperatorsTest, "packages/core/src/processing-pattern.test.ts"],
+    notes:
+      "XML Schema Appendix F whole-string matching, XML name escapes, Unicode categories/blocks and class subtraction; brace-enclosed pattern variables, NULL propagation and explicit syntax/resource diagnostics. No JavaScript-pattern fallback.",
+  },
   operatorProcessingEntry("qti-member"),
   operatorProcessingEntry("qti-delete"),
   operatorProcessingEntry("qti-duration-gte"),

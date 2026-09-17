@@ -646,7 +646,7 @@ describe("processing operators", () => {
             <qti-response-if>
               <qti-base-value base-type="boolean">true</qti-base-value>
               <qti-set-outcome-value identifier="PATTERN_OK">
-                <qti-pattern-match pattern="^Pres.*ton$">
+                <qti-pattern-match pattern="Pres.*ton">
                   <qti-base-value base-type="string">President Washington</qti-base-value>
                 </qti-pattern-match>
               </qti-set-outcome-value>

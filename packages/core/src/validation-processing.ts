@@ -7,6 +7,7 @@ import type {
   QtiSetOutcomeValue,
   QtiTemplateRule,
 } from "./types.js";
+import { parseXmlSchemaRegex, patternVariableIdentifier } from "./xml-schema-regex.js";
 import { expressionChildren } from "./processing-expression-children.js";
 import { MAX_QTI_REPEAT_RESULT_ELEMENTS } from "./processing-limits.js";
 import { MATH_OPERATOR_NAMES, STATS_OPERATOR_NAMES } from "./processing-operators.js";
@@ -434,6 +435,30 @@ function validateExpressionReferences(
         path: expression.source?.path,
         source: expression.source,
       });
+    }
+  }
+
+  if (expression.type === "patternMatch") {
+    const reference = patternVariableIdentifier(expression.pattern);
+    if (reference !== undefined) {
+      if (!variables.has(reference))
+        diagnostics.push({
+          code: "processing.variable.reference",
+          severity: "error",
+          message: `Pattern references missing variable ${reference}.`,
+          source: expression.source,
+          path: expression.source?.path,
+        });
+    } else {
+      const parsed = parseXmlSchemaRegex(expression.pattern);
+      if (!parsed.ok)
+        diagnostics.push({
+          code: `processing.pattern.${parsed.problem.code}`,
+          severity: "error",
+          message: parsed.problem.message,
+          source: expression.source,
+          path: expression.source?.path,
+        });
     }
   }
 

@@ -84,6 +84,28 @@ Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt e
 saved `templateValues` are authoritative; they are restored before generated correct
 responses are derived, so resuming does not depend on the original seed.
 
+### XML Schema patterns
+
+`qti-pattern-match` uses XML Schema 1.0 Appendix F syntax and matches the whole string.
+It supports XML name escapes (`\i`, `\c` and their complements), Unicode general categories,
+Unicode blocks (`\p{IsBasicLatin}`), character-class subtraction, groups, alternation,
+and quantifiers. `^` and `$` are literal characters. JavaScript-only constructs such as
+lookaround, backreferences, and lazy quantifiers are authoring errors.
+
+Use `pattern="{PATTERN}"` to read a string variable; `pattern="PATTERN"` matches that literal
+text. NULL operands or NULL pattern variables return NULL. Invalid runtime patterns return
+NULL with `processing.pattern.syntax`; no other dialect is used as a fallback.
+
+Name escapes use the XML 1.0 Second Edition character productions referenced by Appendix F.
+Unicode categories follow the JavaScript runtime's Unicode database; block ranges use
+Unicode 17.0.0 with the Appendix F legacy names. The bundled Unicode data and its permissive
+license are in `src/xml-schema-regex-data.ts`; no runtime dependency is added.
+
+Matching uses memoized position sets, with limits of 16,384 pattern code units, 64 nested
+groups/classes, 100,000 input code units, and 1,000,000 evaluation steps. Finite quantifier
+counts must be safe integers. Exceeding a limit returns `processing.pattern.limit`, never a
+partial boolean result. These limits are resource constraints, not a different regex dialect.
+
 ### Built-in variables
 
 `qti-variable` resolves `completionStatus`, `numAttempts`, and the `QTI_CONTEXT` record
