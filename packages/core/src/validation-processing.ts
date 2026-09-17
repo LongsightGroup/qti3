@@ -447,6 +447,7 @@ function validateExpressionReferences(
       "qti-equal-rounded",
       expression.roundingMode,
       expression.figures,
+      variables,
       diagnostics,
       expression.source,
     );
@@ -549,7 +550,8 @@ const statsOperatorNames = new Set<string>(STATS_OPERATOR_NAMES);
 function validateRounding(
   qtiName: string,
   roundingMode: string,
-  figures: number,
+  figures: number | string,
+  variables: ReadonlySet<string>,
   diagnostics: QtiDiagnostic[],
   source: QtiDiagnostic["source"],
 ): void {
@@ -563,7 +565,10 @@ function validateRounding(
     });
   }
   const validFigures =
-    Number.isInteger(figures) && (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0);
+    typeof figures === "string"
+      ? variables.has(figures)
+      : Number.isInteger(figures) &&
+        (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0);
   if (!validFigures) {
     diagnostics.push({
       code: "processing.roundingFigures",

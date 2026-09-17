@@ -53,11 +53,16 @@ export function evaluateComparisonExpression(
       );
     }
     case "equalRounded": {
+      const figures =
+        typeof expression.figures === "number"
+          ? expression.figures
+          : context.evaluate({ type: "variable", identifier: expression.figures });
       const validRounding =
-        Number.isInteger(expression.figures) &&
+        typeof figures === "number" &&
+        Number.isInteger(figures) &&
         (expression.roundingMode === "decimalPlaces"
-          ? expression.figures >= 0
-          : expression.roundingMode === "significantFigures" && expression.figures > 0);
+          ? figures >= 0
+          : expression.roundingMode === "significantFigures" && figures > 0);
       if (!validRounding) return null;
       const left = context.evaluate(expression.left);
       const right = context.evaluate(expression.right);
@@ -65,8 +70,8 @@ export function evaluateComparisonExpression(
       const leftNumber = numericValueOrNull(left);
       const rightNumber = numericValueOrNull(right);
       if (leftNumber === null || rightNumber === null) return null;
-      const roundedLeft = roundWithMode(leftNumber, expression.roundingMode, expression.figures);
-      const roundedRight = roundWithMode(rightNumber, expression.roundingMode, expression.figures);
+      const roundedLeft = roundWithMode(leftNumber, expression.roundingMode, figures);
+      const roundedRight = roundWithMode(rightNumber, expression.roundingMode, figures);
       return roundedLeft === null || roundedRight === null ? null : roundedLeft === roundedRight;
     }
     case "numericCompare": {

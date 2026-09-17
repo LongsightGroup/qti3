@@ -225,9 +225,15 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     notes:
       "Preserves and evaluates exact, absolute, and relative tolerance with asymmetric bounds, variable tolerances, and inclusive/exclusive boundaries.",
   },
-  operatorProcessingEntry("qti-equal-rounded", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
+  {
+    ...operatorProcessingEntry(
+      "qti-equal-rounded",
+      ["packages/fixtures/xml/advanced-processing-reference.xml"],
+      ["packages/core/src/processing-equality.test.ts"],
+    ),
+    notes:
+      "Defaults rounding-mode to significantFigures and resolves integer-or-variable-reference figures at evaluation time, preserving both through serialization.",
+  },
   mappingProcessingEntry("qti-field-value"),
   operatorProcessingEntry("qti-lt"),
   operatorProcessingEntry("qti-lte"),

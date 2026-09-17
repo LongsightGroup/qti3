@@ -652,7 +652,7 @@ export type QtiProcessingExpression = (
       left: QtiProcessingExpression;
       right: QtiProcessingExpression;
       roundingMode: string;
-      figures: number;
+      figures: number | string;
     }
   | {
       type: "numericCompare";

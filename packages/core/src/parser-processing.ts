@@ -1,4 +1,10 @@
-import { coerceValue, parseCoords, parseShape, parseXmlBoolean } from "./parser-values.js";
+import {
+  coerceValue,
+  parseCoords,
+  parseInteger,
+  parseShape,
+  parseXmlBoolean,
+} from "./parser-values.js";
 import { responseConditionsFromRules } from "./processing-rules.js";
 import type {
   QtiLookupOutcomeValue,
@@ -471,8 +477,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     const [left, right] = childElements(node)
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
-    const roundingMode = node.attributes["rounding-mode"] ?? "";
-    const figures = Number(node.attributes.figures ?? 0);
+    const roundingMode = node.attributes["rounding-mode"] ?? "significantFigures";
+    const figures = parseInteger(node.attributes.figures) ?? node.attributes.figures ?? "";
     if (left && right) {
       return { type: "equalRounded", left, right, roundingMode, figures, source: node.source };
     }
