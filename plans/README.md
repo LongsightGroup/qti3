@@ -10,7 +10,7 @@ Plan 039 was approved separately on 2026-09-17 against `ca5419b` and is in progr
 
 | Plan | Title                                                                  | Priority | Effort | Depends on        | Status      |
 | ---- | ---------------------------------------------------------------------- | -------- | ------ | ----------------- | ----------- |
-| 040  | [Persist reference-app imports](040-persist-reference-app-imports.md)  | P1       | S–M    | 039               | IN PROGRESS |
+| 040  | [Persist reference-app imports](040-persist-reference-app-imports.md)  | P1       | S–M    | 039               | DONE        |
 | 039  | [Achieve QTI 3 certification](039-achieve-qti3-certification.md)       | P1       | L      | Scope and access  | IN PROGRESS |
 | 002  | Give media a core play-count domain and one native playback path       | P1       | M      | —                 | DONE        |
 | 020  | Upgrade the vulnerable Vite toolchain and gate dev advisories          | P1       | S      | —                 | DONE        |

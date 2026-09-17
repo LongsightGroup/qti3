@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Status:** IN PROGRESS
+- **Status:** DONE
 - **Priority / effort / risk:** P1 / S–M / MED
 - **Planned at:** `bdd36aa`, 2026-09-17
 - **Related work:** Plan 039; this plan supplies the persistent reference application.
@@ -166,3 +166,26 @@ plan complete while either issue prevents the demonstration.
 
 References: [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API),
 [transaction completion](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction/complete_event).
+
+## Completion evidence
+
+Completed on 2026-09-17 with qti3 0.10.6. The browser import adapter was committed as
+`2520084`; the database-backed page was committed as `d31a90e`. Core and CLI APIs and
+runtime dependencies are unchanged.
+
+- Step 1: typecheck and 19 focused browser tests passed.
+- Step 2: typecheck, the Pages build, and 22 focused browser tests passed.
+- Final gate: `pnpm verify` passed with 159 test files and 2,241 tests; the required
+  external-fixture configuration was enabled, with no skips.
+- `pnpm test:browser` passed all 544 tests, including 12 synthetic package-library tests.
+  The new coverage verifies exact stored bytes and reopened models, responses and assets,
+  transaction rollback, invalid records, deletion, keyboard use, axe, 320px reflow, and
+  forced-colors focus. `pnpm pages:build` also passed.
+- Saved contents were independently compared with the original imports across a full
+  browser restart. The restored questions were rendered and inspected; private packages,
+  reports, and screenshots remain outside Git.
+
+The README documents browser profile/origin storage and the remaining stylesheet limitation:
+relative `url()` and `@import` dependencies inside saved CSS are not rewritten. This does not
+prevent the completed demonstration; packages requiring that behavior need separate handling.
+Nothing was published as part of this plan.

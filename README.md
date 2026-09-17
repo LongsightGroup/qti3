@@ -417,6 +417,27 @@ Start the browser harness with:
 pnpm dev
 ```
 
+Open `/library.html` to import a QTI ZIP into the reference app's IndexedDB database.
+Import saves every original package file, including XML, metadata, stylesheets, and media.
+The page immediately reads the saved record back through the core importer. Close the page,
+reopen it, and choose **Saved package** and **Question** to inspect the questions, original
+XML, and diagnostics without uploading again. **Delete package** removes that saved record.
+
+For a review, use a normal Chrome profile and a fixed local origin:
+
+```sh
+pnpm dev --port 5173 --strictPort
+```
+
+Open `http://127.0.0.1:5173/library.html` each time. Saved packages belong to that browser
+profile and origin; changing the hostname or port opens a different library. Clearing browser
+site data removes them, and browser storage may be evicted. This is a local reference library,
+not a backup. Imported content stays in that browser's database.
+
+The page resolves item assets and `qti-stylesheet` files from saved bytes. Relative `url()`
+or `@import` dependencies inside CSS are not rewritten; packages that rely on them need
+additional stylesheet handling before their visual presentation can be demonstrated.
+
 Open `/convert.html` on that dev server to create, migrate, and transcode individual items.
 The [conversion demo](examples/manual/CREATE_AND_CONVERT.md) keeps inputs in browser memory and
 shows diagnostics, output, and a preview. It does not bundle assets or convert whole packages.
