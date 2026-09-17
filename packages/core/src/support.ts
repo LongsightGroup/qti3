@@ -200,7 +200,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   operatorProcessingEntry("qti-any-n"),
   operatorProcessingEntry("qti-or"),
   operatorProcessingEntry("qti-not"),
-  operatorProcessingEntry("qti-equal"),
+  {
+    ...operatorProcessingEntry("qti-equal", [], ["packages/core/src/processing-equality.test.ts"]),
+    notes:
+      "Preserves and evaluates exact, absolute, and relative tolerance with asymmetric bounds, variable tolerances, and inclusive/exclusive boundaries.",
+  },
   operatorProcessingEntry("qti-equal-rounded", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),

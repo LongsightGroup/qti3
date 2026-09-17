@@ -1,4 +1,5 @@
 import type { QtiProcessingExpression, QtiValue } from "./types.js";
+import { equalWithTolerance } from "./processing-equality.js";
 import { assertNever } from "./assert-never.js";
 import type { EvaluationContext } from "./processing-evaluator.js";
 import {
@@ -47,15 +48,9 @@ export function evaluateComparisonExpression(
     case "equal": {
       const left = context.evaluate(expression.left);
       const right = context.evaluate(expression.right);
-      return left === null || right === null
-        ? null
-        : valuesEqual(
-            left,
-            right,
-            false,
-            expressionBaseType(expression.left, context.document) ??
-              expressionBaseType(expression.right, context.document),
-          );
+      return equalWithTolerance(expression, left, right, (identifier) =>
+        context.evaluate({ type: "variable", identifier }),
+      );
     }
     case "equalRounded": {
       const validRounding =

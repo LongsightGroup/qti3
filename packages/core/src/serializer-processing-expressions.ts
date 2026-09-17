@@ -143,6 +143,14 @@ export function serializeExpression(
       );
     case "not":
       return renderExpressionContainer("qti-not", [], [expression.expression], context, indent);
+    case "equal":
+      return renderExpressionContainer(
+        "qti-equal",
+        sortedBagAttributes(expression.attributes),
+        [expression.left, expression.right],
+        context,
+        indent,
+      );
     case "equalRounded":
       return renderExpressionContainer(
         "qti-equal-rounded",

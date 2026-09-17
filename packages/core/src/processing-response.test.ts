@@ -317,10 +317,10 @@ describe("response processing", () => {
               </qti-set-outcome-value>
             </qti-response-if>
             <qti-response-else-if>
-              <qti-equal>
+              <qti-match>
                 <qti-variable identifier="RESPONSE"/>
                 <qti-base-value base-type="identifier">B</qti-base-value>
-              </qti-equal>
+              </qti-match>
               <qti-set-outcome-value identifier="SCORE">
                 <qti-base-value base-type="float">0.5</qti-base-value>
               </qti-set-outcome-value>

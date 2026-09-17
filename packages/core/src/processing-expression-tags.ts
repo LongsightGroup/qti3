@@ -47,7 +47,6 @@ export const leftRightExpressionTags = {
   power: "qti-power",
   integerDivide: "qti-integer-divide",
   integerModulus: "qti-integer-modulus",
-  equal: "qti-equal",
 } as const;
 
 export type LeftRightExpressionType = keyof typeof leftRightExpressionTags;

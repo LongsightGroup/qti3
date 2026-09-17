@@ -473,7 +473,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
     const [left, right] = childElements(node)
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
-    if (left && right) return { type: "equal", left, right, source: node.source };
+    if (left && right)
+      return { type: "equal", left, right, attributes: node.attributes, source: node.source };
   }
 
   if (node.localName === "qti-equal-rounded") {

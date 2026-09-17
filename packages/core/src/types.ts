@@ -641,7 +641,12 @@ export type QtiProcessingExpression = (
   | { type: "anyN"; expressions: QtiProcessingExpression[]; min: string; max: string }
   | { type: "or"; expressions: QtiProcessingExpression[] }
   | { type: "not"; expression: QtiProcessingExpression }
-  | { type: "equal"; left: QtiProcessingExpression; right: QtiProcessingExpression }
+  | {
+      type: "equal";
+      left: QtiProcessingExpression;
+      right: QtiProcessingExpression;
+      attributes?: Record<string, string> | undefined;
+    }
   | {
       type: "equalRounded";
       left: QtiProcessingExpression;

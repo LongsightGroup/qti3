@@ -21,6 +21,7 @@ import {
   isInteger,
 } from "./validation-primitives.js";
 import { COMPLETION_STATUS } from "./attempt-state-constants.js";
+import { validateEqualTolerance } from "./processing-equality.js";
 
 export function validateResponseProcessingTemplate(
   item: QtiAssessmentItem,
@@ -449,6 +450,10 @@ function validateExpressionReferences(
       diagnostics,
       expression.source,
     );
+  }
+
+  if (expression.type === "equal") {
+    validateEqualTolerance(expression, variables, diagnostics);
   }
 
   if (expression.type === "anyN") {
