@@ -417,6 +417,11 @@ Start the browser harness with:
 pnpm dev
 ```
 
+The main harness also loads packages through core, using manifest resources and
+assessment-test ordering. ZIPs of loose XML files without `imsmanifest.xml` are
+rejected; use the XML input to inspect an individual item. Package errors retain
+their diagnostic codes, paths, and severities in the debug panel.
+
 Open `/library.html` to import a QTI ZIP into the reference app's IndexedDB database.
 ZIP extraction uses core's async reader with a bounded browser inflater; imports
 and database restores use `parseQtiPackageFromEntries` and its typed diagnostics.

@@ -12,7 +12,12 @@ import {
   resolveQti3Pnp,
   type QtiCatalogSupportSummary,
 } from "@longsightgroup/qti3-pnp";
-import { detectPackageMediaType } from "@longsightgroup/qti3-core";
+import {
+  detectPackageMediaType,
+  normalizePackagePath,
+  parseQtiPackageFromEntries,
+  type QtiDiagnostic,
+} from "@longsightgroup/qti3-core";
 import {
   defineQtiAssessmentItemPlayer,
   type QtiAssessmentItemPlayer,
@@ -128,7 +133,7 @@ interface PackageDebugState {
   loadableItems: string[];
   selectedItem?: string;
   selectedIndex?: number;
-  errors?: string[];
+  diagnostics?: readonly QtiDiagnostic[];
 }
 
 let loadedFiles: LoadedFile[] = [];
@@ -797,37 +802,68 @@ async function loadSelectedLocalFile(): Promise<void> {
 
 async function loadLocalFiles(fileList: FileList | null): Promise<void> {
   clearAssetUrls();
-  let files: LoadedFile[];
-  let loadableItems: LoadedFile[];
-  try {
-    files = await readPackageXmlFiles(fileList);
-    loadableItems = resolveLoadableItems(files);
-  } catch (error) {
-    const message = errorMessage(error);
+  packageAssetPaths = [];
+  const upload = fileList?.[0];
+  if (!upload || !upload.name.toLowerCase().endsWith(".zip")) {
     loadedFiles = [];
     localFiles.replaceChildren();
     selectedFileIndex = -1;
-    latestPackage = {
-      status: "error",
-      message: `Unable to read QTI package: ${message}`,
-      xmlFiles: [],
-      assetFiles: [],
-      loadableItems: [],
-      errors: [message],
-    };
-    showPackageStatus(latestPackage.message);
-    appendActionLog("package-error", latestPackage);
-    renderDebugPanels();
+    latestPackage = emptyPackageDebugState();
+    await loadSelectedLocalFile();
     return;
   }
-  loadedFiles = loadableItems;
+  let bytes: ArrayBuffer;
+  try {
+    bytes = await upload.arrayBuffer();
+  } catch {
+    showPackageFailure([
+      {
+        code: "package.file.read",
+        severity: "error",
+        message: "The selected file could not be read.",
+      },
+    ]);
+    return;
+  }
+  const extracted = await readBrowserPackageZip(new Uint8Array(bytes));
+  if (!extracted.ok) {
+    showPackageFailure(extracted.diagnostics);
+    return;
+  }
+  const imported = parseQtiPackageFromEntries(extracted.entries);
+  if (!imported.ok) {
+    showPackageFailure(imported.diagnostics);
+    return;
+  }
+  loadedFiles = imported.items.map((item) => ({
+    name: item.href,
+    source: item.href,
+    xml: item.xml,
+  }));
+  packageAssetPaths = imported.entries
+    .filter((entry) => !entry.path.toLowerCase().endsWith(".xml"))
+    .map((entry) => entry.path)
+    .toSorted();
+  for (const entry of imported.entries) {
+    assetUrls.set(
+      entry.path,
+      URL.createObjectURL(
+        new Blob([entry.bytes.slice()], {
+          type: detectPackageMediaType(entry.path) ?? "application/octet-stream",
+        }),
+      ),
+    );
+  }
   latestPackage = {
     status: loadedFiles.length > 0 ? "loaded" : "empty",
     message:
       loadedFiles.length > 0
         ? `Loaded ${loadedFiles.length} QTI item${loadedFiles.length === 1 ? "" : "s"}.`
         : "No loadable QTI item files were found in the package.",
-    xmlFiles: files.map((file) => file.source),
+    xmlFiles: imported.entries
+      .filter((entry) => entry.path.toLowerCase().endsWith(".xml"))
+      .map((entry) => entry.path),
+    diagnostics: imported.diagnostics,
     assetFiles: packageAssetPaths,
     loadableItems: loadedFiles.map((file) => file.source),
   };
@@ -850,38 +886,21 @@ function showPackageStatus(message: string): void {
   nextFile.disabled = true;
 }
 
-async function readPackageXmlFiles(fileList: FileList | null): Promise<LoadedFile[]> {
-  const [file] = [...(fileList ?? [])];
-  packageAssetPaths = [];
-  if (!file || !file.name.toLowerCase().endsWith(".zip")) return [];
-  return (await readZipXmlFiles(file)).toSorted((left, right) =>
-    left.name.localeCompare(right.name),
-  );
-}
-
-async function readZipXmlFiles(file: File): Promise<LoadedFile[]> {
-  const result = await readBrowserPackageZip(new Uint8Array(await file.arrayBuffer()));
-  if (!result.ok)
-    throw new Error(result.diagnostics.map((diagnostic) => diagnostic.message).join(" "));
-  const entries = result.entries.map((entry) => ({ name: entry.path, bytes: entry.bytes.slice() }));
-  packageAssetPaths = entries
-    .filter((entry) => !entry.name.endsWith(".xml"))
-    .map((entry) => entry.name)
-    .toSorted((left, right) => left.localeCompare(right));
-  for (const entry of entries) {
-    if (entry.name.endsWith(".xml")) continue;
-    assetUrls.set(
-      entry.name,
-      URL.createObjectURL(new Blob([entry.bytes], { type: mimeTypeForPath(entry.name) })),
-    );
-  }
-  return entries
-    .filter((entry) => entry.name.endsWith(".xml"))
-    .map((entry) => ({
-      name: entry.name,
-      source: entry.name,
-      xml: new TextDecoder().decode(entry.bytes),
-    }));
+function showPackageFailure(diagnostics: readonly QtiDiagnostic[]): void {
+  loadedFiles = [];
+  localFiles.replaceChildren();
+  selectedFileIndex = -1;
+  latestPackage = {
+    status: "error",
+    message: `Unable to read QTI package: ${diagnostics.map((diagnostic) => diagnostic.message).join(" ")}`,
+    xmlFiles: [],
+    assetFiles: [],
+    loadableItems: [],
+    diagnostics,
+  };
+  showPackageStatus(latestPackage.message);
+  appendActionLog("package-error", latestPackage);
+  renderDebugPanels();
 }
 
 function clearAssetUrls(): void {
@@ -892,9 +911,10 @@ function clearAssetUrls(): void {
 function resolveLoadedAsset(source: string, url: string): string {
   if (!isRelativeAssetUrl(url)) return url;
   try {
-    const path = resolveRelativePath(source, url);
-    const direct = normalizePackagePath(url, "asset reference");
-    return assetUrls.get(path) ?? assetUrls.get(direct) ?? url;
+    const base = source.includes("/") ? source.slice(0, source.lastIndexOf("/") + 1) : "";
+    const diagnostics: QtiDiagnostic[] = [];
+    const path = normalizePackagePath(`${base}${url}`, "asset reference", diagnostics);
+    return path ? (assetUrls.get(path) ?? url) : url;
   } catch {
     return url;
   }
@@ -909,116 +929,4 @@ function isRelativeAssetUrl(url: string): boolean {
     !url.startsWith("http://") &&
     !url.startsWith("https://")
   );
-}
-
-function mimeTypeForPath(path: string): string {
-  return detectPackageMediaType(path) ?? "application/octet-stream";
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
-function resolveLoadableItems(files: LoadedFile[]): LoadedFile[] {
-  const byPath = new Map(files.map((file) => [file.source, file]));
-  const itemPaths = new Set<string>();
-  const packageOrder: string[] = [];
-
-  for (const file of files) {
-    const root = xmlRootName(file.xml);
-    if (root === "qti-assessment-item") {
-      itemPaths.add(file.source);
-      continue;
-    }
-
-    const refs =
-      root === "qti-assessment-test"
-        ? assessmentItemRefs(file.xml, file.source)
-        : root === "manifest"
-          ? manifestItemResources(file.xml, file.source)
-          : [];
-    for (const ref of refs) {
-      if (byPath.has(ref) && !packageOrder.includes(ref)) {
-        packageOrder.push(ref);
-      } else if (!byPath.has(ref)) {
-        throw new Error(`Package item reference ${ref} was not found.`);
-      }
-    }
-  }
-
-  const orderedPaths =
-    packageOrder.length > 0
-      ? [...packageOrder, ...[...itemPaths].filter((path) => !packageOrder.includes(path))]
-      : [...itemPaths].toSorted((left, right) => left.localeCompare(right));
-  return orderedPaths.map((path) => byPath.get(path)).filter((file) => file !== undefined);
-}
-
-function xmlRootName(xml: string): string {
-  const parsed = new DOMParser().parseFromString(xml, "application/xml");
-  if (parsed.querySelector("parsererror")) return "";
-  return parsed.documentElement?.localName ?? "";
-}
-
-function assessmentItemRefs(xml: string, source: string): string[] {
-  const parsed = new DOMParser().parseFromString(xml, "application/xml");
-  const refs = elementsByLocalName(parsed, "qti-assessment-item-ref");
-  return refs
-    .map((element) => element.getAttribute("href") ?? "")
-    .filter(Boolean)
-    .map((href) => resolvePackageHref(source, href));
-}
-
-function manifestItemResources(xml: string, source: string): string[] {
-  const parsed = new DOMParser().parseFromString(xml, "application/xml");
-  const refs = elementsByLocalName(parsed, "resource")
-    .filter((element) => isQtiItemResource(element.getAttribute("type") ?? ""))
-    .map((element) => resourceHref(element))
-    .filter(Boolean);
-  return refs.map((href) => resolvePackageHref(source, href));
-}
-
-function isQtiItemResource(type: string): boolean {
-  return type.toLowerCase().startsWith("imsqti_item_xmlv3p0");
-}
-
-function resourceHref(resource: Element): string {
-  const href = resource.getAttribute("href");
-  if (href) return href;
-  const file = elementsByLocalName(resource, "file").find((element) => {
-    return (element.getAttribute("href") ?? "").toLowerCase().endsWith(".xml");
-  });
-  return file?.getAttribute("href") ?? "";
-}
-
-function resolvePackageHref(from: string, href: string): string {
-  const path = href.split(/[?#]/, 1)[0] ?? "";
-  return resolveRelativePath(from, path);
-}
-
-function elementsByLocalName(root: Document | Element, localName: string): Element[] {
-  return [...root.getElementsByTagName("*")].filter((element) => element.localName === localName);
-}
-
-function resolveRelativePath(from: string, href: string): string {
-  const base = from.includes("/") ? from.slice(0, from.lastIndexOf("/") + 1) : "";
-  return normalizePackagePath(`${base}${href}`, "package reference");
-}
-
-function normalizePackagePath(path: string, context: string): string {
-  if (path.startsWith("/") || /^[A-Za-z]:[\\/]/.test(path) || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
-    throw new Error(`${context} ${path} must be a package-relative path.`);
-  }
-  const parts: string[] = [];
-  for (const part of path.split("/")) {
-    if (!part || part === ".") continue;
-    if (part === "..") {
-      if (parts.length === 0) {
-        throw new Error(`${context} ${path} escapes the package root.`);
-      }
-      parts.pop();
-    } else {
-      parts.push(part);
-    }
-  }
-  return parts.join("/");
 }

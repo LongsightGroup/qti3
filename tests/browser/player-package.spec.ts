@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
+import { parseQtiPackage } from "../../packages/core/src/index.js";
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
 import {
   dragCenter,
@@ -212,12 +213,15 @@ test.describe("player package loading", () => {
 
     await expect(page.locator("#file-summary")).toContainText("No QTI package loaded");
 
-    const zip = createStoredZip({
-      "items/choice.xml": choice.xml,
-      "items/text-entry.xml": textEntry.xml,
+    const zip = createItemPackageZip({
+      resources: [
+        qtiItemResource("choice", "items/choice.xml"),
+        qtiItemResource("text", "items/text-entry.xml"),
+      ],
+      files: { "items/choice.xml": choice.xml, "items/text-entry.xml": textEntry.xml },
     });
     await page.locator("#file").setInputFiles({
-      name: "loose-items.zip",
+      name: "items.zip",
       mimeType: "application/zip",
       buffer: zip,
     });
@@ -252,8 +256,9 @@ test.describe("player package loading", () => {
     const zip = createItemPackageZip({
       resources: [
         qtiAssessmentTestResource("test-1", "assessment.xml"),
-        qtiItemResource("choice", "items/choice.xml"),
         qtiItemResource("text", "items/text-entry.xml"),
+        qtiItemResource("extra", "items/extra.xml"),
+        qtiItemResource("choice", "items/choice.xml"),
       ],
       files: {
         "assessment.xml": `<?xml version="1.0" encoding="UTF-8"?>
@@ -267,6 +272,8 @@ test.describe("player package loading", () => {
 </qti-assessment-test>`,
         "items/choice.xml": choice.xml,
         "items/text-entry.xml": textEntry.xml,
+        "items/extra.xml": textEntry.xml,
+        "items/orphan.xml": choice.xml,
       },
     });
 
@@ -328,7 +335,25 @@ test.describe("player package loading", () => {
     await expect(page.locator("#file-summary")).toContainText("No ZIP central directory");
     await expect(page.locator("#debug-package")).toContainText('"status": "error"');
     await expect(page.locator("#debug-package")).toContainText("No ZIP central directory");
+    await expect(page.locator("#debug-package")).toContainText(
+      "package.zip.centralDirectory.missing",
+    );
     await expect(page.locator("#debug-action-log")).toContainText("package-error");
+  });
+
+  test("rejects loose items and preserves core package diagnostics in the UI", async ({ page }) => {
+    const zip = createStoredZip({ "item.xml": stylesheetEvidenceXml() });
+    const expected = parseQtiPackage(zip);
+    expect(expected.ok).toBe(false);
+    await page.goto("/");
+    await page
+      .locator("#file")
+      .setInputFiles({ name: "loose.zip", mimeType: "application/zip", buffer: zip });
+    await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
+    await expect(page.locator("#debug-package")).toContainText("package.manifest.missing");
+    const debug = JSON.parse((await page.locator("#debug-package").textContent()) ?? "{}");
+    expect(debug.diagnostics).toEqual(JSON.parse(JSON.stringify(expected.diagnostics)));
+    await expect(page.locator("#local-files option")).toHaveCount(0);
   });
 
   test("rejects package zip entries that escape the package root", async ({ page }) => {
@@ -372,7 +397,7 @@ test.describe("player package loading", () => {
 
     await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
     await expect(page.locator("#file-summary")).toContainText(
-      "package reference ../items/choice.xml escapes the package root",
+      "../items/choice.xml escapes the package root",
     );
   });
 
@@ -396,9 +421,7 @@ test.describe("player package loading", () => {
     });
 
     await expect(page.locator("#file-summary")).toContainText("Unable to read QTI package");
-    await expect(page.locator("#file-summary")).toContainText(
-      "Package item reference items/missing.xml was not found",
-    );
+    await expect(page.locator("#file-summary")).toContainText("items/missing.xml");
   });
 
   test("discovers manifest item resources from nested file hrefs", async ({ page }) => {
