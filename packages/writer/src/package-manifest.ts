@@ -6,10 +6,15 @@ import { escapeXmlAttribute, escapeXmlText, xmlLines } from "./xml.js";
 export function renderPackageManifest(input: NormalizedPackage): string {
   return xmlLines([
     `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="${escapeXmlAttribute(input.identifier)}">`,
+    `<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:lom="http://ltsc.ieee.org/xsd/LOM" xsi:schemaLocation="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiv3p0p1_imscpv1p2_v1p0.xsd http://ltsc.ieee.org/xsd/LOM https://purl.imsglobal.org/spec/md/v1p3/schema/xsd/imsmd_loose_v1p3p2.xsd" identifier="${escapeXmlAttribute(input.identifier)}">`,
+    `  <metadata>`,
+    `    <schema>QTI Item Bank</schema>`,
+    `    <schemaversion>3.0.1</schemaversion>`,
     input.title
-      ? `  <metadata>\n    <title>${escapeXmlText(input.title)}</title>\n  </metadata>`
+      ? `    <lom:lom><lom:general><lom:title><lom:string>${escapeXmlText(input.title)}</lom:string></lom:title></lom:general></lom:lom>`
       : undefined,
+    `  </metadata>`,
+    `  <organizations/>`,
     `  <resources>`,
     ...input.items.map(renderManifestItemResource),
     `  </resources>`,

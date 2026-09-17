@@ -19,14 +19,28 @@ describe("qti3 package writer", () => {
 
     expect(result).toMatchObject({ ok: true });
     if (!result.ok) throw new Error("Expected package manifest to write.");
-    expect(result.xml).toContain(
-      '<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p1" identifier="pkg-1">',
-    );
-    expect(result.xml).toContain("<title>Example Package</title>");
+    expect(result.xml).toContain('identifier="pkg-1">');
+    expect(result.xml).toContain("<lom:title><lom:string>Example Package</lom:string></lom:title>");
+    expect(result.xml).toContain("<schema>QTI Item Bank</schema>");
+    expect(result.xml).toContain("<schemaversion>3.0.1</schemaversion>");
+    expect(result.xml).toContain("<organizations/>");
+    expect(result.xml).toContain("imsqtiv3p0p1_imscpv1p2_v1p0.xsd");
     expect(result.xml).toContain(
       '<resource identifier="choice-1" type="imsqti_item_xmlv3p0" href="items/choice.xml">',
     );
     expect(result.xml).toContain('<file href="items/assets/prompt.png"/>');
+  });
+
+  it("always writes required package metadata and escapes titles inside LOM", () => {
+    const withoutTitle = writeQti3PackageManifestResult({ ...packageInput(), title: undefined });
+    if (!withoutTitle.ok) throw new Error("Expected package manifest");
+    expect(withoutTitle.xml).toMatch(
+      /<metadata>[\s\S]*<schema>QTI Item Bank<\/schema>[\s\S]*<schemaversion>3.0.1<\/schemaversion>[\s\S]*<\/metadata>\s*<organizations\/>\s*<resources>/,
+    );
+    expect(withoutTitle.xml).not.toContain("<lom:lom>");
+    const withTitle = writeQti3PackageManifestResult({ ...packageInput(), title: "A & <B>" });
+    if (!withTitle.ok) throw new Error("Expected package manifest");
+    expect(withTitle.xml).toContain("<lom:string>A &amp; &lt;B&gt;</lom:string>");
   });
 
   it("writes package files with generated item XML and asset bytes", () => {
