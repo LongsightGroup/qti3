@@ -233,7 +233,12 @@ export function renderGapMatchResponse(
     update(interaction.responseCardinality === "single" ? (value[0] ?? null) : value);
   };
   const syncSources = () => {
-    syncGapMatchSourceBank(sourceRegion, sources, assignments, selectedSource?.identifier);
+    syncGapMatchSourceBank(
+      sourceRegion,
+      sources,
+      [...assignments.values()],
+      selectedSource?.identifier,
+    );
   };
   const assign = (gap: QtiChoice, sourceIdentifier: string | undefined) => {
     const source = sources.find((choice) => choice.identifier === sourceIdentifier);
@@ -435,7 +440,7 @@ function renderGraphicGapMatchResponse(
     syncGapMatchSourceBank(
       sourceRegion,
       sources,
-      new Map([...assignments.values()].flat().map((source, index) => [String(index), source])),
+      [...assignments.values()].flat(),
       selectedSource?.identifier,
     );
   };

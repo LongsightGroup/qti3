@@ -271,6 +271,11 @@ string shows the parse error view when the XML is invalid.
 Reset, restore, and item replacement create a new attempt session. Response events from controls
 belonging to the previous session are ignored, including pending changes from a focused text field.
 
+Graphic gap-match state must respect source/target `match-max` and `max-associations`.
+An invalid `restore(state)` emits `player.restoreState` through `qti-diagnostics` and keeps
+the current attempt and controls. Passing invalid state to `loadXml(xml, { state })` uses
+the load-error behavior above. Valid repeated pairs and incomplete responses are preserved.
+
 Restored `loadOptions.state` reload keys use JSON serialization: equivalent content with different
 object references does not reload, but key order follows construction order and in-place mutation
 without a reload key change is not detected.

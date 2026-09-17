@@ -9,27 +9,26 @@ export function sourceMatchMaximum(choice: QtiChoice): number | undefined {
   return choiceMatchMaximum(choice);
 }
 
-export function sourceUseCount(assignments: Map<string, QtiChoice>, source: QtiChoice): number {
-  return [...assignments.values()].filter((choice) => choice.identifier === source.identifier)
-    .length;
+export function sourceUseCount(placements: readonly QtiChoice[], source: QtiChoice): number {
+  return placements.filter((choice) => choice.identifier === source.identifier).length;
 }
 
 export function sourceUseLimitExceeded(
   assignments: Map<string, QtiChoice>,
   source: QtiChoice,
 ): boolean {
-  return choiceMatchLimitExceeded(source, sourceUseCount(assignments, source));
+  return choiceMatchLimitExceeded(source, sourceUseCount([...assignments.values()], source));
 }
 
 export function assignedLimitedSourceIds(
   sources: QtiChoice[],
-  assignments: Map<string, QtiChoice>,
+  placements: readonly QtiChoice[],
 ): Set<string> {
   return new Set(
     sources
       .filter((source) => {
         const maximum = sourceMatchMaximum(source);
-        return maximum !== undefined && sourceUseCount(assignments, source) >= maximum;
+        return maximum !== undefined && sourceUseCount(placements, source) >= maximum;
       })
       .map((source) => source.identifier),
   );
@@ -51,10 +50,10 @@ export function clearSingleUseSourceAssignments(
 export function syncGapMatchSourceBank(
   sourceRegion: HTMLElement,
   sources: QtiChoice[],
-  assignments: Map<string, QtiChoice>,
+  placements: readonly QtiChoice[],
   selectedSourceId: string | undefined,
 ): void {
-  const hiddenSourceIds = assignedLimitedSourceIds(sources, assignments);
+  const hiddenSourceIds = assignedLimitedSourceIds(sources, placements);
   for (const button of sourceRegion.querySelectorAll<HTMLButtonElement>("button")) {
     const sourceId = button.dataset.choiceIdentifier;
     const hidden = sourceId !== undefined && hiddenSourceIds.has(sourceId);

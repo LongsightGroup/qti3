@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/src/index.js";
 import { UNSUPPORTED_INTERACTION_ITEM } from "./fixtures/dom-behavior-items.js";
 import { sliderItem } from "./fixtures/slider-items.js";
+import { multipleGraphicGapItem } from "./player-graphic-gap-fixtures.js";
 import { loadFixture, pasteXml } from "./player-helpers.js";
 
 const SEEDED_TEMPLATE_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
@@ -384,6 +385,84 @@ test.describe("player lifecycle", () => {
     });
     expect(result.restoreEvents).toBe(0);
     expect(result.serializedAfterIncompatibleRestore?.itemIdentifier).toBe(choiceFixture.id);
+  });
+
+  for (const scenario of [
+    { name: "source match-max", pairs: ["A G1", "A G1", "A G2"], maximum: 3 },
+    { name: "target match-max", pairs: ["A G1", "A G1", "B G1"], maximum: 3 },
+    { name: "max-associations", pairs: ["A G1", "B G1", "A G2"], maximum: 2 },
+    { name: "unknown target", pairs: ["A UNKNOWN"], maximum: 3 },
+  ]) {
+    test(`rejects graphic gap restore exceeding ${scenario.name} and preserves the current attempt`, async ({
+      page,
+    }) => {
+      await page.goto("/");
+      await pasteXml(page, multipleGraphicGapItem(false, scenario.maximum));
+      const player = page.locator("qti-assessment-item-player");
+      await player.getByRole("button", { name: "Alpha", exact: true }).click();
+      await player.locator('[data-gap-identifier="G1"]').click();
+
+      const result = await player.evaluate((element, pairs) => {
+        const state = element.serialize();
+        if (!state) throw new Error("Expected loaded graphic gap state");
+        const diagnostics: Array<{ code: string; severity: string }> = [];
+        let restoreEvents = 0;
+        element.addEventListener("qti-diagnostics", (event) => {
+          const detail = (event as CustomEvent<{ diagnostics: typeof diagnostics }>).detail;
+          diagnostics.push(...detail.diagnostics);
+        });
+        element.addEventListener("qti-restore", () => {
+          restoreEvents += 1;
+        });
+        element.restore({ ...state, responses: { RESPONSE: pairs } });
+        return { diagnostics, restoreEvents, responses: element.serialize()?.responses };
+      }, scenario.pairs);
+
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({ code: "player.restoreState", severity: "error" }),
+      );
+      expect(result.restoreEvents).toBe(0);
+      expect(result.responses).toEqual({ RESPONSE: ["A G1"] });
+      await expect(player.locator('[data-gap-identifier="G1"]')).toHaveAccessibleName(
+        "First target, assigned Alpha",
+      );
+      await expect(player.locator(".qti3-pair-list li")).toHaveCount(1);
+      await player
+        .getByRole("button", { name: "Remove Alpha to First target", exact: true })
+        .press("Enter");
+      expect(await player.evaluate((element) => element.serialize()?.responses.RESPONSE)).toEqual(
+        [],
+      );
+    });
+  }
+
+  test("rejects invalid graphic gap state during loadXml before rendering placements", async ({
+    page,
+  }) => {
+    const xml = multipleGraphicGapItem();
+    await page.goto("/");
+    await pasteXml(page, xml);
+    const player = page.locator("qti-assessment-item-player");
+    const result = await player.evaluate(async (element, itemXml) => {
+      const state = element.serialize();
+      if (!state) throw new Error("Expected loaded graphic gap state");
+      const diagnostics: Array<{ code: string; severity: string }> = [];
+      element.addEventListener("qti-diagnostics", (event) => {
+        const detail = (event as CustomEvent<{ diagnostics: typeof diagnostics }>).detail;
+        diagnostics.push(...detail.diagnostics);
+      });
+      await element.loadXml(itemXml, {
+        state: { ...state, responses: { RESPONSE: ["A G1", "A G1", "A G2"] } },
+      });
+      return { diagnostics, state: element.serialize() };
+    }, xml);
+
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "player.restoreState", severity: "error" }),
+    );
+    expect(result.state).toBeUndefined();
+    await expect(player.getByRole("alert")).toContainText("Unable to restore QTI state.");
+    await expect(player.locator(".qti3-graphic-gap-hotspot")).toHaveCount(0);
   });
 
   test("rejects a restored response outside the authored slider domain", async ({ page }) => {

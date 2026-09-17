@@ -67,8 +67,10 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
     gapMatch: ["tests/browser/player-gap-match.spec.ts"],
     graphicAssociate: ["tests/browser/player-graphic.spec.ts"],
     graphicGapMatch: [
+      "packages/core/src/core-session-graphic-gap-state.test.ts",
       "tests/browser/player-graphic-gap-match.spec.ts",
       "tests/browser/player-graphic.spec.ts",
+      ...browserLifecycleTests,
     ],
     graphicOrder: [
       "packages/core/src/graphic-image-contracts.test.ts",

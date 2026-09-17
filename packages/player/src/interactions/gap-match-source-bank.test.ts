@@ -26,13 +26,9 @@ describe("gap-match-source-bank", () => {
 
   it("derives assigned source ids whose match-max limit is reached", () => {
     const sources = [gapSource("A", "1"), gapSource("B", "2"), gapSource("C", "1")];
-    const assignments = new Map([
-      ["G1", sources[0]!],
-      ["G2", sources[1]!],
-      ["G3", sources[1]!],
-    ]);
+    const placements = [sources[0]!, sources[1]!, sources[1]!];
 
-    expect(assignedLimitedSourceIds(sources, assignments)).toEqual(new Set(["A", "B"]));
+    expect(assignedLimitedSourceIds(sources, placements)).toEqual(new Set(["A", "B"]));
   });
 
   it("detects source usage beyond match-max", () => {

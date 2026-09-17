@@ -19,6 +19,7 @@ import { isQtiPortableCustomStateValue, isQtiValue, qtiValueToString } from "./v
 import { isRecordValue } from "./processing-values.js";
 import { parseQtiSliderDefinition, parseQtiSliderValue } from "./slider-definition.js";
 import { qtiScalarMatchesBaseType } from "./validation-primitives.js";
+import { validateQtiResponseVariables } from "./response-validation.js";
 
 export function isQtiAttemptStateV1(value: unknown): value is QtiAttemptStateV1 {
   return attemptStateErrors(value).length === 0;
@@ -72,6 +73,7 @@ export function assertCompatiblePriorState(
     assertRestoredValueMatchesDeclaration("response", declaration, priorState.responses);
   }
   assertRestoredSliderResponses(document, priorState.responses);
+  assertRestoredGraphicGapResponses(document, priorState.responses);
   for (const declaration of document.item.outcomeDeclarations) {
     assertRestoredValueMatchesDeclaration("outcome", declaration, priorState.outcomes);
   }
@@ -89,6 +91,32 @@ export function assertCompatiblePriorState(
     throw new Error(
       `Cannot restore unsupported completionStatus ${qtiValueToString(completionStatus)}.`,
     );
+  }
+}
+
+function assertRestoredGraphicGapResponses(
+  document: QtiDocument,
+  responses: Record<string, QtiValue>,
+): void {
+  const responseIdentifiers = document.item.interactions.flatMap((interaction) =>
+    interaction.type === "graphicGapMatch" && interaction.responseIdentifier
+      ? [interaction.responseIdentifier]
+      : [],
+  );
+  if (responseIdentifiers.length === 0) return;
+  // Restore may resume an incomplete attempt, but cannot invent placements outside
+  // the authored domain or silently discard pairs to fit the interaction limits.
+  const result = validateQtiResponseVariables({
+    item: document.item,
+    responses,
+    responseIdentifiers,
+    allowIncompleteResponses: true,
+  });
+  const failure = result.diagnostics.find((diagnostic) => diagnostic.severity === "error");
+  if (failure) {
+    // Preserve the existing session-constructor assertion contract; player and
+    // trusted delivery boundaries translate this failure into typed diagnostics.
+    throw new Error(`Cannot restore response ${failure.identifier}: ${failure.message}`);
   }
 }
 

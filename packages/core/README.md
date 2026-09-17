@@ -83,6 +83,9 @@ container, so the core conservatively returns `null` for that case.
 Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt exists,
 saved `templateValues` are authoritative; they are restored before generated correct
 responses are derived, so resuming does not depend on the original seed.
+Graphic gap-match restoration preserves repeated placements and incomplete responses,
+but rejects unknown source/target identifiers and responses exceeding `match-max` or
+`max-associations`. It does not trim or move saved pairs to make them fit.
 
 ### XML Schema patterns
 

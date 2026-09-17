@@ -134,11 +134,15 @@ export function responseValidationPolicy(
     authoredMinimum !== undefined ||
     (minimum !== undefined && minimum > 0);
   const maximum = maximumAllowedResponses(interaction);
+  const hasMatchMaximum = interaction?.choices.some(
+    (choice) => choiceMatchMaximum(choice) !== undefined,
+  );
   if (
     declaration.correctResponse === null &&
     interaction?.type !== "media" &&
     !validatesMinimum &&
-    maximum === undefined
+    maximum === undefined &&
+    !hasMatchMaximum
   ) {
     return { checkMinimum: false, checkMaximum: false, checkMatchMax: false };
   }
