@@ -1,7 +1,8 @@
 import type { QtiDocument, QtiResponseDeclaration, QtiValue } from "./types.js";
 import { parseQtiPair, parseXmlBoolean } from "./parser-values.js";
 import { qtiScalarToString, qtiValueToStringList } from "./value-format.js";
-import { isRecordValue, numericValue, valuesEqual } from "./processing-values.js";
+import { numericValue, valuesEqual } from "./processing-values.js";
+import { isRecordValue } from "./value-guards.js";
 
 export function lookupOutcomeValue(
   document: QtiDocument,

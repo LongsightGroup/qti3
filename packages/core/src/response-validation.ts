@@ -10,7 +10,8 @@ import type {
 } from "./types.js";
 import { isQtiTextResponseRecord, qtiTextResponseString } from "./text-response.js";
 import { assertNever } from "./assert-never.js";
-import { isNullResponse, isRecordValue, valueContainer } from "./processing-values.js";
+import { isNullResponse, valueContainer } from "./processing-values.js";
+import { isRecordValue } from "./value-guards.js";
 import { listNamedResponseInputs, type QtiNamedResponseInput } from "./response-input.js";
 import {
   matchMaxDiagnostics,

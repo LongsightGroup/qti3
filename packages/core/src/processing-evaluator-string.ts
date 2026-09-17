@@ -1,7 +1,8 @@
 import type { QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { EvaluationContext } from "./processing-evaluator.js";
-import { isRecordValue, stringMatch } from "./processing-values.js";
+import { stringMatch } from "./processing-values.js";
+import { isRecordValue } from "./value-guards.js";
 import { matchXmlSchemaRegex, patternVariableIdentifier } from "./xml-schema-regex.js";
 
 type StringExpression = Extract<

@@ -1,11 +1,11 @@
 import type {
   QtiBaseType,
   QtiCardinality,
-  QtiRecordValue,
   QtiResponseDeclaration,
   QtiScalarValue,
   QtiValue,
 } from "./types.js";
+import { isRecordValue } from "./value-guards.js";
 
 const QTI_BASE_TYPES = new Set<string>([
   "identifier",
@@ -126,8 +126,4 @@ export function parseCoords(value: string | undefined): number[] {
     .split(",")
     .map((part) => Number(part.trim()))
     .filter((part) => Number.isFinite(part));
-}
-
-function isRecordValue(value: QtiValue): value is QtiRecordValue {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

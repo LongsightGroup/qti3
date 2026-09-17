@@ -9,12 +9,8 @@ import {
   roundToSignificantFigures,
   statsOperatorValue,
 } from "./processing-operators.js";
-import {
-  isRecordValue,
-  numericValue,
-  numericValueOrNull,
-  valueContainer,
-} from "./processing-values.js";
+import { numericValue, numericValueOrNull, valueContainer } from "./processing-values.js";
+import { isRecordValue } from "./value-guards.js";
 
 type NumericExpression = Extract<
   QtiProcessingExpression,

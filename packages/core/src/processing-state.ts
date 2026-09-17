@@ -7,7 +7,7 @@ import type {
   QtiValue,
 } from "./types.js";
 import { ATTEMPT_STATE_SCHEMA } from "./attempt-state-constants.js";
-import { isRecordValue } from "./processing-values.js";
+import { isRecordValue } from "./value-guards.js";
 
 export function serialize(
   itemIdentifier: string,

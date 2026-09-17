@@ -16,7 +16,7 @@ import {
   COMPLETION_UNKNOWN,
 } from "./attempt-state-constants.js";
 import { isQtiPortableCustomStateValue, isQtiValue, qtiValueToString } from "./value-format.js";
-import { isRecordValue } from "./processing-values.js";
+import { isRecordValue } from "./value-guards.js";
 import { parseQtiSliderDefinition, parseQtiSliderValue } from "./slider-definition.js";
 import { qtiScalarMatchesBaseType } from "./validation-primitives.js";
 import { validateQtiResponseVariables } from "./response-validation.js";

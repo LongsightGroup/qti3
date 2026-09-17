@@ -1,12 +1,7 @@
 import { parseQtiPair } from "./parser-values.js";
-import type {
-  QtiBaseType,
-  QtiRecordValue,
-  QtiResponseDeclaration,
-  QtiScalarValue,
-  QtiValue,
-} from "./types.js";
+import type { QtiBaseType, QtiResponseDeclaration, QtiScalarValue, QtiValue } from "./types.js";
 import { qtiValueToString } from "./value-format.js";
+import { isRecordValue } from "./value-guards.js";
 
 export function isNullResponse(response: QtiValue): boolean {
   return response === null || response === "" || (Array.isArray(response) && response.length === 0);
@@ -100,10 +95,6 @@ export function valueContainer(value: QtiValue): QtiScalarValue[] {
   if (value === null) return [];
   if (isRecordValue(value)) return [];
   return Array.isArray(value) ? value : [value];
-}
-
-export function isRecordValue(value: QtiValue): value is QtiRecordValue {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function containsValues(
