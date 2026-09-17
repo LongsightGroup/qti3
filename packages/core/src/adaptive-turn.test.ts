@@ -18,6 +18,7 @@ describe("adaptive QTI item turns", () => {
     expect(result.candidateSafeXml).not.toMatch(/<qti-correct-response\b/);
     expect(result.candidateSafeXml).not.toMatch(/<qti-response-processing\b/);
     expect(result.candidateSafeXml).toContain("Start feedback.");
+    expect(result.candidateSafeXml).toContain("Hidden retry.");
     expect(result.candidateSafeXml).not.toContain("Try again.");
 
     const parsed = parseQtiXml(result.candidateSafeXml!);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { materializeAdaptiveCandidateView } from "./adaptive-turn-materializer.js";
+import type { QtiValue } from "./types.js";
 import {
   adaptiveChoiceItemXml,
   adaptiveTemplatePresentationItemXml,
@@ -19,7 +20,7 @@ describe("adaptive candidate materialization", () => {
     expect(result.xml).not.toMatch(/<qti-correct-response\b/);
     expect(result.xml).toContain("Start feedback.");
     expect(result.xml).not.toContain("Try again.");
-    expect(result.xml).not.toContain("Hidden retry.");
+    expect(result.xml).toContain("Hidden retry.");
   });
 
   it("preserves outcome-visible feedback for the active turn", () => {
@@ -35,6 +36,38 @@ describe("adaptive candidate materialization", () => {
     expect(result.xml).not.toContain("Start feedback.");
     expect(result.xml).not.toContain("Hidden retry.");
   });
+
+  for (const element of ["feedback-block", "feedback-inline", "modal-feedback"]) {
+    it.each<{ outcome: QtiValue; visible: boolean }>([
+      { outcome: "start", visible: true },
+      { outcome: "wrong-first", visible: false },
+      { outcome: ["start", "another"], visible: true },
+      { outcome: ["start", "wrong-first"], visible: false },
+      { outcome: null, visible: true },
+    ])(`materializes hide ${element} for $outcome`, ({ outcome, visible }) => {
+      const feedback = `<qti-${element} outcome-identifier="TRACE" identifier="wrong-first" show-hide="hide">Hidden retry.</qti-${element}>`;
+      const insertionPoint =
+        element === "modal-feedback" ? "<qti-response-processing>" : "</qti-item-body>";
+      const itemXml = adaptiveChoiceItemXml()
+        .replace(
+          '<qti-feedback-block outcome-identifier="TRACE" identifier="wrong-first" show-hide="hide">Hidden retry.</qti-feedback-block>',
+          "",
+        )
+        .replace(insertionPoint, `${feedback}${insertionPoint}`)
+        .replace(
+          'identifier="TRACE" cardinality="single"',
+          `identifier="TRACE" cardinality="${Array.isArray(outcome) ? "multiple" : "single"}"`,
+        );
+      const result = materializeAdaptiveCandidateView({
+        itemXml,
+        outcomes: { TRACE: outcome },
+      });
+
+      expect(result.ok).toBe(true);
+      expect(result.xml?.includes("Hidden retry.")).toBe(visible);
+      expect(result.xml).not.toMatch(/<qti-(response-processing|correct-response|default-value)\b/);
+    });
+  }
 
   it("fails closed for unsupported template-processing items", () => {
     const result = materializeAdaptiveCandidateView({

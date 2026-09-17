@@ -53,14 +53,15 @@ export function materializeAdaptiveCandidateView(
 }
 
 function shouldPreserveFeedback(node: XmlNode, outcomes: Record<string, QtiValue>): boolean {
-  if (node.attributes["show-hide"] === "hide") return false;
   const identifier = node.attributes.identifier;
   const outcomeIdentifier = node.attributes["outcome-identifier"];
   if (!identifier || !outcomeIdentifier) return false;
 
   const outcome = outcomes[outcomeIdentifier] ?? null;
-  if (Array.isArray(outcome)) return outcome.includes(identifier);
-  return qtiValueToString(outcome) === identifier;
+  const matches = Array.isArray(outcome)
+    ? outcome.includes(identifier)
+    : qtiValueToString(outcome) === identifier;
+  return node.attributes["show-hide"] === "hide" ? !matches : matches;
 }
 
 function isFeedbackElement(normalizedName: string): boolean {
