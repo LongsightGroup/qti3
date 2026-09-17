@@ -23,6 +23,11 @@ console.log(choice?.xml);
 console.log(choice?.attempts);
 ```
 
+Fixtures distinguish automatic scoring, external grading, and unscored interactions. The essay
+fixture declares human grading and returns no automatic score. Planning hints use a separate
+End Attempt response and leave scored answers unchanged. Expected attempts describe each fixture's
+response shape and scoring intent.
+
 ## XML Files
 
 The package also publishes standalone XML files under:

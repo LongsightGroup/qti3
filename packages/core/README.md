@@ -38,6 +38,21 @@ console.log(result.outcomes);
 console.log(result.state);
 ```
 
+### Text responses
+
+Text Entry supports single string, integer, and float values, plus numeric records. Extended Text
+also supports multiple and ordered collections; those collections require `max-strings`.
+
+Use `captureQtiTextResponse(interaction, text)` in a custom renderer to convert one input using the
+declared response type and authored `base`. Numeric records retain `stringValue`, `floatValue`,
+`integerValue`, `leftDigits`, `rightDigits`, `ndp`, `nsf`, and `exponent`. If numeric conversion or
+metadata cannot be represented safely, the record preserves the text and leaves numeric fields null.
+
+Use `formatQtiTextResponse(interaction, value)` to restore editable scalar text in the authored base.
+It preserves lexical text supplied by a numeric record or raw-text companion.
+`qtiTextResponseString(value)` extracts record text or converts a scalar to a string without applying
+an interaction's base. Declare `string-identifier` when a separate response should retain raw input.
+
 ### Randomized template items
 
 QTI template processing can generate deterministic item variants with expressions such
@@ -164,9 +179,9 @@ then runs response processing. It does not run candidate response-validation pol
 as required interactions, cardinality limits, or min/max response counts; delivery hosts
 should enforce that policy before accepting a submission or finalizing an attempt.
 
-For the same response-validation policy the browser player uses, call
-`validateQtiResponseVariables()` against a parsed assessment item before scoring or
-persisting a submission:
+To validate responses before scoring or persisting a submission, call
+`validateQtiResponseVariables()` against a parsed assessment item. Enable `requireScoredResponses`
+to match the player's default policy:
 
 ```ts
 import { parseQtiXml, validateQtiResponseVariables } from "@longsightgroup/qti3-core";
@@ -178,6 +193,7 @@ const validation = validateQtiResponseVariables({
   item: parsed.document.item,
   responses: { RESPONSE: "A" },
   allowedUndeclaredResponseIdentifiers: ["duration"],
+  requireScoredResponses: true,
 });
 
 if (!validation.ok) {
@@ -188,7 +204,9 @@ if (!validation.ok) {
 `validateQtiResponseVariables()` uses the same runtime diagnostic codes as the player
 (`response.required`, `response.maximum`, `response.matchMax`, and related codes). It
 checks cardinality shape, required responses, min/max choice and association bounds, and
-per-choice `match-max` limits. It does not render custom validation messages in the DOM
+per-choice `match-min` and `match-max` limits. Without `requireScoredResponses: true`, an answer key
+alone does not make an optional response required. Explicitly authored zero minimums remain
+optional under either policy. It does not render custom validation messages in the DOM
 or validate media play counts beyond what the item model exposes.
 
 Use `materializeQtiItemSubmission()` when a server needs the reusable QTI mechanics behind

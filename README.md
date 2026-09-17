@@ -75,16 +75,16 @@ The parser stores each interaction in the normalized `QtiInteraction` model and 
 response contract. The browser player selects a renderer from the response shape and interaction
 model.
 
-| Family                     | Interactions                                                             | Shared implementation                                       |
-| -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| Identifier choices         | Choice, Inline Choice, Hot Text, Hotspot                                 | Choice parsing, identifier response checks, choice metadata |
-| Ordered choices            | Order, Graphic Order                                                     | Ordered identifier contract and reorder behavior            |
-| Pairing and matching       | Associate, Match, Graphic Associate                                      | Source/target choices, token controls, selected pair chips  |
-| Gap assignment             | Gap Match, Graphic Gap Match                                             | Source choices assigned to text or graphic gaps             |
-| Graphic and coordinate UI  | Hotspot, Graphic Order, Graphic Associate, Select Point, Position Object | Responsive surfaces, object images, hotspot/point placement |
-| Text responses             | Text Entry, Extended Text                                                | String response contract and text-entry renderer            |
-| File responses             | Upload, Drawing                                                          | File response contract                                      |
-| Scalar and host-controlled | Slider, Media, End Attempt, Portable Custom                              | Small specialized renderers and host event bridges          |
+| Family                     | Interactions                                                             | Shared implementation                                                   |
+| -------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Identifier choices         | Choice, Inline Choice, Hot Text, Hotspot                                 | Choice parsing, identifier response checks, choice metadata             |
+| Ordered choices            | Order, Graphic Order                                                     | Ordered identifier contract and reorder behavior                        |
+| Pairing and matching       | Associate, Match, Graphic Associate                                      | Source/target choices, token controls, selected pair chips              |
+| Gap assignment             | Gap Match, Graphic Gap Match                                             | Source choices assigned to text or graphic gaps                         |
+| Graphic and coordinate UI  | Hotspot, Graphic Order, Graphic Associate, Select Point, Position Object | Responsive surfaces, object/img/picture assets, hotspot/point placement |
+| Text responses             | Text Entry, Extended Text                                                | String, numeric, and record capture; Extended Text collections          |
+| File responses             | Upload, Drawing                                                          | File response contract                                                  |
+| Scalar and host-controlled | Slider, Media, End Attempt, Portable Custom                              | Small specialized renderers and host event bridges                      |
 
 ## Question-type support
 
@@ -96,8 +96,9 @@ internally as the `QTI 3.0.1 ASI item profile`.
 
 In this README, "Supported" has a specific meaning. The interaction must parse into the
 typed model, validate against its response and element contract, render in the browser
-player, score in the core runtime, ship with a public reference fixture, pass fixture and
-conformance tests, include accessibility metadata, and run through browser rendering tests.
+player, and process responses with scores or external grading requirements. It must also ship with
+a public reference fixture, pass fixture and conformance tests, include accessibility metadata,
+and run through browser rendering tests.
 
 | Spec interaction  | QTI element                         | qti3 status             | Evidence                                                                          |
 | ----------------- | ----------------------------------- | ----------------------- | --------------------------------------------------------------------------------- |
@@ -208,6 +209,7 @@ await player.loadXml(xml, {
   },
   sessionControl: {
     validateResponses: true,
+    requireScoredResponses: true,
     showFeedback: false,
   },
 });
@@ -268,6 +270,18 @@ them or emit `player.stylesheet.unresolved` diagnostics.
 
 ## Interaction response contracts
 
+- Text Entry accepts a single `string`, `integer`, or `float` response, or a numeric `record`.
+  Extended Text also accepts `multiple` and `ordered` collections with authored `max-strings`.
+  Both interactions honor `base`; numeric records retain the original text and precision fields.
+  Use `string-identifier` to retain raw text alongside a numeric response. Restored scalar values
+  use the authored base; records and companion responses preserve the entered text.
+- Associate and Graphic Associate use unordered `pair` values; Match, Gap Match, and Graphic Gap
+  Match use `directedPair` values. Each accepts `single` or `multiple` cardinality. Graphic Gap Match
+  requires graphical hotspot targets; use Gap Match for inline text gaps.
+- Core response validation enforces authored minimums, QTI default maximums, and per-choice
+  `match-min`/`match-max` bounds. A correct response alone does not make an answer required.
+  The player defaults `sessionControl.requireScoredResponses` to `true`; set it to `false` to use
+  only QTI constraints. An explicitly authored zero minimum remains optional under either policy.
 - `qti-media-interaction` records play experiences as a `single` / `integer` response.
   The player supports the QTI shared vocabulary
   `data-qti-media-player-controls` tokens `none`, `default`, `play`, `rewind`, `captions`,
@@ -327,6 +341,11 @@ rows, hosts can set
 `--qti3-order-row-background-hover` on the player or an ancestor. Their defaults use
 system colors, so they work in light mode, dark mode, and forced-colors environments.
 
+For resolved Personal Needs and Preferences (PNP) data, use
+[`createPnpPlayerOptions()`](packages/pnp/README.md#default-player-integration) to apply keyword
+emphasis and exact catalog selections. The returned `hostRequired` data identifies remaining host
+work, including presenting catalog content when the player emits `qti-catalogrequest`.
+
 QTI shared vocabulary classes define portable item presentation preferences. Classes such as
 `qti-labels-none`, `qti-labels-decimal`, `qti-input-control-hidden`, and `qti-unselected-hidden`
 are parsed, validated, preserved, and implemented according to the support matrix. Host applications
@@ -372,8 +391,8 @@ pnpm release:check
 
 `pnpm release:check` runs formatting, typecheck, lint, unit and conformance tests,
 accessibility checks, dependency policy, build, source-map validation, package export
-checks, browser coverage, support metadata, and the built CLI fixture runner. It does
-not require official 1EdTech certification artifacts.
+checks, transcoder evidence and legacy XSD validation, browser coverage, support metadata, and the
+built CLI fixture runner. It does not require official 1EdTech certification artifacts.
 
 Run certification checks separately:
 
@@ -393,6 +412,10 @@ Start the browser harness with:
 ```sh
 pnpm dev
 ```
+
+Open `/convert.html` on that dev server to create, migrate, and transcode individual items.
+The [conversion demo](examples/manual/CREATE_AND_CONVERT.md) keeps inputs in browser memory and
+shows diagnostics, output, and a preview. It does not bundle assets or convert whole packages.
 
 Open the shared vocabulary gallery from the same Vite dev server:
 
@@ -498,11 +521,16 @@ generated template values, validation messages, lifecycle status, and QTI's buil
 
 - Hosts can save, restore, and review attempts through this state contract.
 - Hosts can check restored JSON with `isQtiAttemptStateV1()` or `assertQtiAttemptStateV1()`.
+- Reset and restore replace the active session; events from old controls cannot overwrite its responses.
 - Non-adaptive items reset authored outcomes before each scoring run.
 - Adaptive items retain outcome values across response-processing runs.
 - For non-adaptive items, `endAttempt()` completes the item after a valid score run.
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
 - Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.
+
+Items with `SCORE` marked `external-scored="human"` or `external-scored="externalMachine"` return
+`score: null`; submission materialization reports `manual-scoring-required`. Hosts obtain and store
+the external grade. An authored outcome default in saved state is not a completed grade.
 
 ## Randomized item instances
 
@@ -542,6 +570,11 @@ history, and accessibility proof scripts.
 The packages listed above publish under the `longsightgroup` npm organization. Releases publish
 from the `longsightgroup/qti3` repository after `pnpm release:check` passes. Package tarballs come
 from the same checked build output that CI verifies.
+
+The root and all 12 published packages use the same version. Release preparation updates their
+manifests and the [changelog](CHANGELOG.md), then runs `pnpm release:check`. Pushing a matching
+`v<version>` tag starts the [Publish workflow](.github/workflows/publish.yml), which reruns the checks,
+packs each package, and publishes the tarballs. The workflow can also be dispatched manually.
 
 ## Certification
 

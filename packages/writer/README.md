@@ -143,7 +143,7 @@ interactions the writer can currently write and validate:
 | Drawing           | `qti-drawing-interaction`           | Writes file responses with accessible canvas object metadata           |
 | End attempt       | `qti-end-attempt-interaction`       | Writes boolean end-attempt responses and button metadata               |
 | Graphic associate | `qti-graphic-associate-interaction` | Writes and validates object metadata, hotspots, and pair responses     |
-| Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot and inline-gap target modes               |
+| Graphic gap match | `qti-graphic-gap-match-interaction` | Writes and validates hotspot targets                                   |
 
 The writer test suite round-trips every supported builder through `@longsightgroup/qti3-core`
 parsing and `validateAssessmentItem()` with zero diagnostics.
@@ -174,8 +174,9 @@ elements. Each gap target can have at most one associated choice; repeated targe
 Extended text items write a single `qti-extended-text-interaction` after optional trusted `bodyHtml`.
 The writer supports prompt, rubric, expected length/lines, min/max strings, placeholder text,
 pattern-mask attributes, `format="plain"`, `format="preformatted"`, and `format="xhtml"`.
-`qti3-core` validates extended text response declarations as `cardinality="single"` and
-`base-type="string"`, so the writer reports diagnostics for other response shapes.
+The writer currently restricts Extended Text to `cardinality="single"` and `base-type="string"`
+and reports diagnostics for other response shapes. Core parsing and the player additionally support
+numeric values, records, and response collections.
 
 Upload items write a single `qti-upload-interaction` with a `cardinality="single"` /
 `base-type="file"` response declaration. Application constraints such as maximum file size, allowed file
@@ -212,10 +213,8 @@ graphic order items, an explicit `correctOrder` must include every hotspot by de
 correct orders are accepted only when `minChoices` or `maxChoices` explicitly configures subset
 ordering. Select point and position object write `map_response_point` scoring and require at least
 one area mapping target. When `maxChoices` is omitted, these point interactions emit
-`cardinality="single"`; set `maxChoices` above 1 for multi-point responses. For graphic gap match,
-trusted `bodyHtml` is interaction content so inline `qti-gap` targets can be parsed and validated by
-QTI engines.
+`cardinality="single"`; set `maxChoices` above 1 for multi-point responses.
 
-Graphic gap match supports two target modes. Hotspot targets are generated as
-`qti-associable-hotspot` elements on the graphic. Inline targets are declared in `targets` with
-`targetType: "inlineGap"` and must have matching trusted `bodyHtml` containing `qti-gap` elements.
+Graphic Gap Match requires hotspot targets, emitted as `qti-associable-hotspot` elements on the
+graphic. The writer diagnoses `targetType: "inlineGap"` as unsupported for this interaction.
+Use Gap Match for inline `qti-gap` targets in text.

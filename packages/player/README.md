@@ -73,7 +73,10 @@ keys you do not need to translate (missing keys fall back to English).
 ```ts
 import type { PlayerMessageCatalog } from "@longsightgroup/qti3-player";
 
-const sv = (await fetch("/locales/player/sv-SE.json")).json() as PlayerMessageCatalog;
+const sv: PlayerMessageCatalog = {
+  locale: "sv-SE",
+  strings: { remove: "Ta bort" },
+};
 
 player.languageOfInterface = "sv-SE";
 player.messageCatalog = sv;
@@ -173,6 +176,24 @@ Do not copy item `xml:lang` onto `<qti-assessment-item-player lang="...">` unles
 intentionally want the player element's `lang` attribute to influence
 `defaultPlayerLocale()`. Prefer `player.messageCatalog` for UI chrome.
 
+## Text response behavior
+
+Text Entry captures single string, integer, float, and numeric record responses. Extended Text also
+captures multiple and ordered collections as separate editable entries, with `min-strings` and
+`max-strings` validation. Text Entry uses plain text. Extended Text supports plain and preformatted
+text; XHTML capture requires a string response.
+
+Numeric inputs use the authored `base`, including after restore. A numeric record retains the
+entered text and precision fields; `string-identifier` retains raw text in a companion response.
+Unrepresentable record metadata leaves numeric fields null while preserving the entered text for
+save and restore. Clearing a required record input makes it unanswered.
+
+## Graphic assets
+
+Graphic interactions accept `object`, `img`, and `picture` assets, including Position Object stage
+backgrounds. The player preserves responsive image sources. Supply `resolveAsset` for
+package-relative image and source URLs, and provide authored alternative text for the image.
+
 ## Slider behavior
 
 The slider presentation is custom, but its only operable element is a native
@@ -246,6 +267,9 @@ event and the rendered alert when coordinating load-error UI.
 
 Framework adapters treat `xml={undefined}` as a clear and `xml=""` as a load attempt. An empty
 string shows the parse error view when the XML is invalid.
+
+Reset, restore, and item replacement create a new attempt session. Response events from controls
+belonging to the previous session are ignored, including pending changes from a focused text field.
 
 Restored `loadOptions.state` reload keys use JSON serialization: equivalent content with different
 object references does not reload, but key order follows construction order and in-place mutation

@@ -2,6 +2,53 @@
 
 ## Unreleased
 
+## 0.10.6 - 2026-09-17
+
+### Added
+
+- Add `createPnpPlayerOptions()` to map resolved personal needs and preferences to keyword
+  emphasis and exact catalog selections, with remaining requirements returned for host handling.
+- Add exact catalog selection by catalog ID, support, and entry language to core resolution and
+  player request policies.
+- Add a public manual page for creating QTI 3 items, migrating legacy items, and converting QTI 3
+  to explicit QTI 1.2, 2.1, and 2.2 profiles, with diagnostics and previews.
+- Export `captureQtiTextResponse()`, `formatQtiTextResponse()`, and `qtiTextResponseString()` from
+  `@longsightgroup/qti3-core` for text capture and restoration in custom renderers.
+
+### Changed
+
+- Make core response validation enforce QTI constraints without requiring an answer solely because
+  it has a correct response. Hosts can enable `requireScoredResponses`; the browser player enables
+  it by default. Explicitly authored zero minimums remain optional.
+- Align the root and all published package versions on `0.10.6`.
+
+### Fixed
+
+- Support numeric and record Text Entry responses and single, multiple, ordered, and record
+  Extended Text responses, including authored bases, raw-text companions, and string-count limits.
+- Restore numeric text in its authored base, reject empty required record responses, and preserve
+  original text with null numeric fields when record metadata exceeds safe integer bounds.
+- Accept single and multiple association responses, enforce unordered `pair` values for Associate
+  and Graphic Associate, and emit Associate choices as direct children.
+- Enforce QTI default response maxima and per-choice `match-min` constraints during final response
+  validation. Require hotspot targets for Graphic Gap Match and diagnose inline text gaps.
+- Parse and render graphic `img` and `picture` assets. QTI 2 exports use legacy `object` elements
+  and report a lossy conversion when responsive sources are omitted.
+- Lift legacy essay fallbacks out of nested inline containers while preserving surrounding text,
+  formatting, and unique IDs.
+- Keep release receipt verification synchronized with the expanded graphic and nested-fallback
+  schema variants.
+- Preserve external grading intent: human- and external-machine-scored items return `score: null`
+  and require host grading instead of treating an authored default as a completed grade.
+- Ignore response events from controls belonging to a replaced attempt session after restore,
+  reset, or item replacement.
+- Run the CLI when its entry point is reached through a symlink or a path containing spaces,
+  while keeping library imports inert.
+- Correct fixture and writer XML structure for End Attempt, Position Object, template declarations,
+  MathML, shared-vocabulary Text Entry, and instructional rubric blocks.
+- Correct the Match fixture's four-pair answer key, preserve human scoring for the essay fixture,
+  and keep planning hints separate from scored answers.
+
 ## 0.10.5 - 2026-09-10
 
 ### Added

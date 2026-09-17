@@ -43,6 +43,10 @@ QTI 2 graphic exports project `img` and `picture` assets to legacy `object` elem
 Position Object backgrounds. Responsive sources use the fallback image and emit
 `target.image.responsive_sources_omitted`, marking the conversion as lossy.
 
+When a vendor profile replaces an inline interaction with an essay fallback, the serializer lifts
+the fallback out of inline containers. Surrounding text and formatting remain in document order,
+and split wrappers retain each authored ID only once.
+
 Package transcoding preserves safe source paths, assessment-test section structure, item
 dependencies, and per-resource asset ownership. Generated reports use deterministic
 `assets/generated/<sha256>.json` paths.
