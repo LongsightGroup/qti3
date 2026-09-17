@@ -9,6 +9,7 @@ import { deprecatedInteractionSupport, interactionSupport } from "../packages/co
 import { qti3TrustedXmlFragment, writeQti3AssessmentItem } from "../packages/writer/dist/index.js";
 import { qtiTranscodeProfiles, transcodeQti3Item } from "../packages/transcoder/dist/index.js";
 import { serializeTargetAssessmentTest } from "../packages/transcoder/dist/package.js";
+import { transcoderXsdVariants } from "./transcoder-xsd-variants.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const schemaRoot = join(root, "packages", "conformance", "schemas", "legacy");
@@ -62,42 +63,16 @@ try {
         passedCases.push(`${profile}/${interaction.interactionType}`);
       }
     }
-    const variants = [["accessibility-choice", accessibilityVariantXml()]];
-    if (qtiTranscodeProfiles[profile].target !== "qti12") {
-      for (const interaction of [
-        "hotspot",
-        "graphicOrder",
-        "graphicAssociate",
-        "graphicGapMatch",
-        "positionObject",
-        "selectPoint",
-      ]) {
-        for (const form of ["img", "picture"]) {
-          variants.push([
-            `${interaction}-${form}`,
-            await graphicImageVariantXml(interaction, form),
-          ]);
-        }
-      }
-    }
-    if (qtiTranscodeProfiles[profile].target !== "qti12") {
-      variants.push([
-        "nested-end-attempt",
-        (await fixtureXml("endAttempt")).replace(
-          /<p>(<qti-end-attempt-interaction[^>]*\/>)<\/p>/,
-          '<div><p id="outer">Before <span id="inner" class="context">inside <strong id="emphasis">start $1 finish</strong> outside</span> after</p></div>',
-        ),
-      ]);
-    }
-    for (const [variant, xml] of variants) {
-      const variantCase = `${profile}/variant/${variant}`;
+    for (const variant of transcoderXsdVariants(qtiTranscodeProfiles[profile].target)) {
+      const xml = await variantXml(variant);
+      const variantCase = `${profile}/variant/${variant.id}`;
       const variantResult = transcodeQti3Item({ kind: "xml", xml }, { profile });
       if (!variantResult.ok) {
         failures.push(`${variantCase} failed conversion.`);
       } else {
         const variantInstance = join(
           temporaryRoot,
-          `${profile.replaceAll(/[^a-z0-9]/gi, "_")}-${variant}.xml`,
+          `${profile.replaceAll(/[^a-z0-9]/gi, "_")}-${variant.id}.xml`,
         );
         await writeFile(variantInstance, variantResult.xml, "utf8");
         const variantValidation = spawnSync(
@@ -232,6 +207,22 @@ async function fixtureXml(interactionType) {
     join(root, "packages", "fixtures", "xml", `${interactionType}-reference.xml`),
     "utf8",
   );
+}
+
+async function variantXml(variant) {
+  switch (variant.kind) {
+    case "accessibility":
+      return accessibilityVariantXml();
+    case "graphic-image":
+      return graphicImageVariantXml(variant.interaction, variant.form);
+    case "nested-end-attempt":
+      return (await fixtureXml("endAttempt")).replace(
+        /<p>(<qti-end-attempt-interaction[^>]*\/>)<\/p>/,
+        '<div><p id="outer">Before <span id="inner" class="context">inside <strong id="emphasis">start $1 finish</strong> outside</span> after</p></div>',
+      );
+    default:
+      throw new Error(`Unknown XSD variant ${variant.id}.`);
+  }
 }
 
 function accessibilityVariantXml() {

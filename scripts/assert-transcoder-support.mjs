@@ -13,6 +13,7 @@ import {
   requiresXsdEvidence,
 } from "../packages/transcoder/dist/index.js";
 import { runTranscoderEvidenceMatrix } from "../packages/transcoder/dist/evidence.js";
+import { transcoderXsdVariants } from "./transcoder-xsd-variants.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const lockPath = join(root, "packages", "transcoder", "evidence-lock.json");
@@ -98,7 +99,11 @@ if (process.argv.includes("--release")) {
     .map((entry) => entry.caseId)
     .toSorted();
   const expectedVariantCases = xsdProfiles
-    .map((profile) => `${profile}/variant/accessibility-choice`)
+    .flatMap((profile) =>
+      transcoderXsdVariants(qtiTranscodeProfiles[profile].target).map(
+        (variant) => `${profile}/variant/${variant.id}`,
+      ),
+    )
     .toSorted();
   if (
     !receipt ||
