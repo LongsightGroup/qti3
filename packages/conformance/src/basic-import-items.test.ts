@@ -53,6 +53,8 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
       });
 
       expect(report).toMatchObject({
+        runScope: "selection",
+        coverage: { complete: false },
         targetCapability: "IMPORT",
         targetLevel: "Basic",
         targetScope: "Item Only Packages",
@@ -114,10 +116,12 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
       });
       expect(report).toMatchObject({
         ok: false,
-        failed: 1,
+        failed: 2,
         checked: 0,
         validatorEvidence: { source: validatorReport, status },
-        diagnostics: [expect.objectContaining({ code: "certification.validator.unverified" })],
+        diagnostics: expect.arrayContaining([
+          expect.objectContaining({ code: "certification.validator.unverified" }),
+        ]),
       });
       expect(report.validatorEvidence).not.toHaveProperty("ok");
     } finally {

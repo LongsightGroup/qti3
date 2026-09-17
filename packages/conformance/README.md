@@ -51,6 +51,18 @@ pnpm test:external:required
 The Basic IMPORT evidence runners read official package zips from the conformance
 tree. Item evidence filters manifest item resources and ignores convenience test
 resources; test evidence imports the official T4/T7 test-structure package.
+
+Item reports distinguish `runScope: "full"` from a custom `"selection"` and include
+`coverage` for every physical row in the pinned IMPORT worksheet. The 69 worksheet
+rows have 66 distinct AC IDs: repeated IDs retain separate revision/sheet/row keys.
+Single-choice class aliases match the required class rather than assuming the
+workbook ID matches the fixture ID. Ambiguous choice rows require evidence for both
+cardinalities, with an interpretation note retained for submission review. No row
+is excluded. Supplemental rejection cases remain separate from checklist counts.
+Missing, duplicate, substituted, and unknown evidence cannot establish complete
+coverage; an empty selection fails. Passing a selection does not mean the full
+checklist passed, and complete execution does not imply all results passed.
+
 `QTI3_EXTERNAL_VALIDATOR_REPORT` may attach a supplemental report, but it is not
 required for import proof. Attachments are labeled `unverified`: the runner does
 not parse an official validator verdict or verify its scope. A missing or empty

@@ -39,3 +39,10 @@ export {
 } from "./basic-import-tests.js";
 
 export { runFixture, type QtiConformanceResult } from "./run-fixture.js";
+
+export {
+  basicImportItemChecklist,
+  basicImportItemChecklistSource,
+  type QtiImportChecklistRow,
+  type QtiImportChecklistCoverage,
+} from "./basic-import-item-checklist.js";

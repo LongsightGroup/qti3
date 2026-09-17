@@ -1,3 +1,7 @@
+import {
+  evaluateBasicImportItemChecklist,
+  type QtiImportChecklistCoverage,
+} from "./basic-import-item-checklist.js";
 import { readFile, stat } from "node:fs/promises";
 import { join, posix } from "node:path";
 import { parseQtiXml, validateAssessmentItem, type QtiDiagnostic } from "@longsightgroup/qti3-core";
@@ -61,6 +65,8 @@ export interface QtiBasicImportItemOnlyCertificationOptions {
 }
 
 export interface QtiBasicImportItemOnlyCertificationReport {
+  readonly runScope: "full" | "selection";
+  readonly coverage: QtiImportChecklistCoverage;
   readonly targetCapability: "IMPORT";
   readonly targetLevel: "Basic";
   readonly targetScope: "Item Only Packages";
@@ -362,12 +368,21 @@ export async function runQti3BasicImportItemOnlyCertification(
   const rows = await Promise.all(
     criteria.map((entry) => runCriterion(options.qtiRoot, packageIndex, entry)),
   );
+  const coverage = evaluateBasicImportItemChecklist(rows, basicImportItemOnlyCriteria);
+  const runScope = options.criteria === undefined ? "full" : "selection";
+  const coverageFailed = runScope === "full" && !coverage.complete;
+  const emptySelection = rows.length === 0;
   const validatorEvidence = await readValidatorEvidence(options.validatorReport);
   // No official validator report format is parsed or scope-checked by this runner.
   const validatorFailed = options.requireValidatorEvidence === true;
-  const failed = rows.filter((row) => row.status === "failed").length + (validatorFailed ? 1 : 0);
+  const failed =
+    rows.filter((row) => row.status === "failed").length +
+    (validatorFailed ? 1 : 0) +
+    (coverageFailed || emptySelection ? 1 : 0);
 
   return {
+    runScope,
+    coverage,
     targetCapability: "IMPORT",
     targetLevel: "Basic",
     targetScope: "Item Only Packages",
@@ -379,14 +394,25 @@ export async function runQti3BasicImportItemOnlyCertification(
     packages: [...packageIndex.evidenceByPackage.values()],
     rows,
     validatorEvidence,
-    diagnostics: validatorFailed
-      ? [
-          diagnostic(
-            "certification.validator.unverified",
-            "Verified validator evidence was required, but report attachments are unverified; no validator verdict or scope has been checked.",
-          ),
-        ]
-      : [],
+    diagnostics: [
+      ...(coverageFailed ? coverage.diagnostics : []),
+      ...(emptySelection
+        ? [
+            diagnostic(
+              "certification.selection.empty",
+              "An empty selection cannot establish import evidence.",
+            ),
+          ]
+        : []),
+      ...(validatorFailed
+        ? [
+            diagnostic(
+              "certification.validator.unverified",
+              "Verified validator evidence was required, but report attachments are unverified; no validator verdict or scope has been checked.",
+            ),
+          ]
+        : []),
+    ],
   };
 }
 
