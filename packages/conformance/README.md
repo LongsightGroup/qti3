@@ -58,7 +58,11 @@ rows have 66 distinct AC IDs: repeated IDs retain separate revision/sheet/row ke
 Single-choice class aliases match the required class rather than assuming the
 workbook ID matches the fixture ID. Ambiguous choice rows require evidence for both
 cardinalities, with an interpretation note retained for submission review. No row
-is excluded. Supplemental rejection cases remain separate from checklist counts.
+is excluded. Q20 expected-length evidence uses an explicitly labeled synthetic ZIP
+because the pinned official fixtures omit that attribute. Its acceptance as a
+checklist supplement must be confirmed at submission. The conformance package
+uses the workspace writer to build this probe; no third-party runtime dependency
+is added. Supplemental rejection cases remain separate from checklist counts.
 Missing, duplicate, substituted, and unknown evidence cannot establish complete
 coverage; an empty selection fails. Passing a selection does not mean the full
 checklist passed, and complete execution does not imply all results passed.

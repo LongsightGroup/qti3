@@ -117,6 +117,9 @@ importers:
       '@longsightgroup/qti3-fixtures':
         specifier: workspace:*
         version: link:../fixtures
+      '@longsightgroup/qti3-writer':
+        specifier: workspace:*
+        version: link:../writer
 
   packages/core: {}
 

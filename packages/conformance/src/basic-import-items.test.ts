@@ -129,6 +129,40 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
     }
   });
 
+  it("uses an explicitly synthetic ZIP to prove expected-length and pattern-mask together", async () => {
+    const root = await mkdtemp(join(tmpdir(), "qti-constraints-"));
+    try {
+      const criterion = basicImportItemOnlyCriteria.find((entry) => entry.acId === "Q20-L1-I2-S1");
+      if (!criterion) throw new Error("Missing synthetic supplement");
+      const report = await runQti3BasicImportItemOnlyCertification({
+        qtiRoot: root,
+        criteria: [criterion],
+      });
+      expect(report.ok).toBe(true);
+      expect(report.rows[0]).toMatchObject({
+        origin: "synthetic",
+        status: "passed",
+        observations: expect.arrayContaining([
+          expect.objectContaining({
+            field: "interactions[0].attributes.expected-length",
+            expected: "6",
+            actual: "6",
+            ok: true,
+          }),
+          expect.objectContaining({
+            field: "interactions[0].attributes.pattern-mask",
+            expected: "[0-9]{1,6}",
+            actual: "[0-9]{1,6}",
+            ok: true,
+          }),
+        ]),
+      });
+      expect(report.packages[0]?.itemResourceHrefs).toEqual(["text-entry-constraints.xml"]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("reports failed evidence rows without throwing", async () => {
     const root = await mkdtemp(join(tmpdir(), "qti-basic-import-"));
     try {

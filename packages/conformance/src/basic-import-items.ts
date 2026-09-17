@@ -1,3 +1,4 @@
+import { syntheticImportPackage, textConstraintPackagePath } from "./synthetic-import-package.js";
 import { verifyQtiValidatorEvidence, type QtiValidatorEvidence } from "./validator-evidence.js";
 export type { QtiValidatorEvidence } from "./validator-evidence.js";
 import { compareImportedItem, type QtiImportObservation } from "./item-import-preservation.js";
@@ -32,6 +33,7 @@ export type QtiBasicImportExpectation =
   | "stores-fixed-template";
 
 export interface QtiBasicImportAcceptanceCriterion {
+  readonly origin?: "synthetic" | undefined;
   readonly acId: string;
   readonly featureId: string;
   readonly label: string;
@@ -320,12 +322,22 @@ export const basicImportItemOnlyCriteria: readonly QtiBasicImportAcceptanceCrite
   criterion(
     "Q20-L1-I2",
     "Q-20",
-    "text entry pattern-mask message is retained",
+    "text entry pattern mask is retained",
     basicPackagePaths.q20,
     "Basic/Q20 - Text Entry Interaction/baseType-string/text-entry-sv-3.xml",
     "stores-interaction-data-attribute",
-    { requiredDataAttributes: ["data-patternmask-message"] },
+    { requiredDataAttributes: ["pattern-mask"] },
   ),
+  {
+    acId: "Q20-L1-I2-S1",
+    featureId: "Q-20",
+    label: "synthetic package preserves expected-length and pattern-mask",
+    origin: "synthetic",
+    packagePath: textConstraintPackagePath,
+    sourcePath: "qti3-synthetic/text-entry-constraints.xml",
+    expectation: "stores-interaction-data-attribute",
+    requiredDataAttributes: ["expected-length", "pattern-mask"],
+  },
   invalidCriterion(
     "Q20-L1-I11",
     "Q-20",
@@ -790,7 +802,9 @@ async function buildPackageImportIndex(
 
   for (const packagePath of uniquePackagePaths) {
     try {
-      const parsed = parseOfficialQtiPackage(await readFile(join(qtiRoot, packagePath)));
+      const parsed = parseOfficialQtiPackage(
+        syntheticImportPackage(packagePath) ?? (await readFile(join(qtiRoot, packagePath))),
+      );
       if (isUnreadablePackage(parsed)) {
         const failure = certificationDiagnostic(
           "certification.package.read",

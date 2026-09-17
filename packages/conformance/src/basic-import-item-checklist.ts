@@ -83,7 +83,13 @@ export const basicImportItemChecklist: readonly QtiImportChecklistRow[] = [
     ),
   ),
   row(57, "Q20-string", "Q20-L1-I1"),
-  row(58, "Q20-string", "Q20-L1-I2"),
+  row(
+    58,
+    "Q20-string",
+    "Q20-L1-I2",
+    ["Q20-L1-I2", "Q20-L1-I2-S1"],
+    "The official fixture supplies pattern-mask but no expected-length; an explicitly synthetic ZIP supplements expected-length evidence. Confirm this supplement at submission.",
+  ),
   ...[101, 102, 103, 104, 105, 112, 106, 107, 108, 109, 113, 114, 115, 116, 117, 118, 110, 111].map(
     (caseNumber, index) => row(59 + index, "Q20-string", `Q20-L1-I${caseNumber}`),
   ),
@@ -173,6 +179,7 @@ function row(
 
 function definitionKey(entry: QtiBasicImportAcceptanceCriterion): string {
   return JSON.stringify([
+    entry.origin,
     entry.acId,
     entry.featureId,
     entry.sourcePath,
