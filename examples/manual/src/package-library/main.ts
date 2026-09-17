@@ -9,6 +9,7 @@ import {
   QtiAssessmentItemPlayer,
   type QtiDiagnosticsEventDetail,
 } from "@longsightgroup/qti3-player";
+import { resolvePackageAssetUrl } from "./package-assets.js";
 import { readBrowserPackageZip } from "./browser-package.js";
 import { deletePackage, listPackages, readPackage, savePackage } from "./store.js";
 
@@ -157,21 +158,8 @@ async function renderItem(): Promise<void> {
 }
 
 function resolveAsset(itemPath: string, reference: string): string | undefined {
-  if (
-    reference.startsWith("#") ||
-    reference.startsWith("data:") ||
-    [...assetUrls.values()].includes(reference)
-  )
-    return reference;
-  try {
-    const url = new URL(reference, new URL(itemPath, "https://qti-package.invalid/"));
-    if (url.origin === "https://qti-package.invalid") {
-      const resolved = assetUrls.get(decodeURIComponent(url.pathname.slice(1)));
-      if (resolved) return resolved + url.hash;
-    }
-  } catch {
-    /* Diagnose an invalid reference through the same visible failure path. */
-  }
+  const resolved = resolvePackageAssetUrl(itemPath, reference, assetUrls);
+  if (resolved) return resolved;
   const message = `Package asset ${JSON.stringify(reference)} referenced by ${itemPath} is unavailable in the saved package.`;
   if (!messages.some((diagnostic) => diagnostic.message === message)) {
     messages = [

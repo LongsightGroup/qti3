@@ -1,3 +1,4 @@
+import { resolvePackageAssetUrl } from "./package-library/package-assets.js";
 import { readBrowserPackageZip } from "./package-library/browser-package.js";
 import {
   accessibilityProofMatrix,
@@ -14,7 +15,6 @@ import {
 } from "@longsightgroup/qti3-pnp";
 import {
   detectPackageMediaType,
-  normalizePackagePath,
   parseQtiPackageFromEntries,
   type QtiDiagnostic,
 } from "@longsightgroup/qti3-core";
@@ -785,11 +785,10 @@ async function loadSelectedLocalFile(): Promise<void> {
   previousFile.disabled = selectedFileIndex <= 0;
   nextFile.disabled = selectedFileIndex >= loadedFiles.length - 1;
   await player.loadXml(file.xml, {
-    resolveAsset: (url) => resolveLoadedAsset(file.source, url),
+    resolveAsset: (url) => resolveLoadedAsset(file.source, url) ?? "",
     resolveStylesheet: (stylesheet) => {
       const href = resolveLoadedAsset(file.source, stylesheet.href);
-      // Demo-only: unchanged href means the asset is outside the uploaded package.
-      if (href === stylesheet.href) return undefined;
+      if (!href) return undefined;
       return {
         href,
         type: stylesheet.type,
@@ -908,25 +907,21 @@ function clearAssetUrls(): void {
   assetUrls = new Map();
 }
 
-function resolveLoadedAsset(source: string, url: string): string {
-  if (!isRelativeAssetUrl(url)) return url;
-  try {
-    const base = source.includes("/") ? source.slice(0, source.lastIndexOf("/") + 1) : "";
-    const diagnostics: QtiDiagnostic[] = [];
-    const path = normalizePackagePath(`${base}${url}`, "asset reference", diagnostics);
-    return path ? (assetUrls.get(path) ?? url) : url;
-  } catch {
-    return url;
+function resolveLoadedAsset(source: string, url: string): string | undefined {
+  const resolved = resolvePackageAssetUrl(source, url, assetUrls);
+  if (resolved) return resolved;
+  const diagnostic: QtiDiagnostic = {
+    code: "package.asset.unresolved",
+    severity: "warning",
+    message: `Package asset ${JSON.stringify(url)} referenced by ${source} is unavailable in the uploaded package.`,
+    path: source,
+  };
+  if (!latestPackage.diagnostics?.some((entry) => entry.message === diagnostic.message)) {
+    latestPackage = {
+      ...latestPackage,
+      diagnostics: [...(latestPackage.diagnostics ?? []), diagnostic],
+    };
+    renderDebugPanels();
   }
-}
-
-function isRelativeAssetUrl(url: string): boolean {
-  return (
-    !url.startsWith("#") &&
-    !url.startsWith("/") &&
-    !url.startsWith("data:") &&
-    !url.startsWith("blob:") &&
-    !url.startsWith("http://") &&
-    !url.startsWith("https://")
-  );
+  return undefined;
 }

@@ -7,6 +7,16 @@
 - **Planned at:** `bdd36aa`, 2026-09-17
 - **Related work:** Plan 039; this plan supplies the persistent reference application.
 
+## Review follow-up
+
+The ownership review supersedes the original Step 1 adapter design and API scope
+below. ZIP validation now belongs to one core reader with synchronous and async
+entry points. `parseQtiPackageFromEntries` replaces the in-memory stream collector
+and supplies both reference pages with the same package models and diagnostics.
+The manual loader no longer interprets manifest/test XML with DOMParser. Both
+pages resolve package assets with core path and URL classification helpers.
+IndexedDB records and the save/reopen workflow remain unchanged.
+
 ## Outcome
 
 Add a small **Saved packages** page to the existing browser demo. A reviewer can import a

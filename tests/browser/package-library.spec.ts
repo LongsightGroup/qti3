@@ -247,7 +247,7 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   const illustrated = itemXml
     .replace(
       "<qti-item-body>",
-      '<qti-stylesheet href="../styles/item.css" type="text/css"/><qti-item-body><p class="saved-evidence">Database restoration</p><img src="../images/square.svg" alt="Saved square"/>',
+      '<qti-stylesheet href="../styles/item.css?version=1#sheet" type="text/css"/><qti-item-body><p class="saved-evidence">Database restoration</p><img src="../images/square.svg?version=1#square" alt="Saved square"/>',
     )
     .replace(
       "<qti-item-body>",
@@ -321,7 +321,7 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   );
   await expect(reopened.locator("#package-items option")).toHaveCount(2);
   const image = reopened.getByRole("img", { name: "Saved square" });
-  await expect(image).toHaveAttribute("src", /^blob:/);
+  await expect(image).toHaveAttribute("src", /^blob:.*#square$/);
   await expect
     .poll(() =>
       image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth),
@@ -488,3 +488,51 @@ test("keyboard import, reopen, source inspection and delete expose accessible st
   await expect(page.getByRole("status")).toHaveText("Package deleted from this browser.");
   await expect(input).toBeFocused();
 });
+
+for (const harness of [
+  {
+    url: "/",
+    input: "#file",
+    status: "#file-summary",
+    ready: "items/choice.xml",
+    diagnostics: "#debug-package",
+  },
+  {
+    url: "/library.html",
+    input: "#import-package",
+    status: "#library-status",
+    ready: "Reopened 1 question",
+    diagnostics: "#library-diagnostics",
+  },
+]) {
+  test(`${harness.url} resolves local styles and declines external styles without a network request`, async ({
+    page,
+  }) => {
+    const xml = itemXml.replace(
+      "<qti-item-body>",
+      '<qti-stylesheet href="../styles/local.css?version=1#sheet" type="text/css"/><qti-stylesheet href="HTTPS://external.invalid/private.css" type="text/css"/><qti-item-body>',
+    );
+    const zip = createItemPackageZip({
+      resources: [qtiItemResource("choice", "items/choice.xml", ["styles/local.css"])],
+      files: {
+        "items/choice.xml": xml,
+        "styles/local.css": ".qti3-prompt { border-left: 3px solid blue; }",
+      },
+    });
+    const externalRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("external.invalid")) externalRequests.push(request.url());
+    });
+    await page.route("**/external.invalid/**", (route) => route.abort());
+    await page.goto(harness.url);
+    await page
+      .locator(harness.input)
+      .setInputFiles({ name: "styles.zip", mimeType: "application/zip", buffer: zip });
+    await expect(page.locator(harness.status)).toContainText(harness.ready);
+    const styles = page.locator('qti-assessment-item-player link[rel="stylesheet"]');
+    await expect(styles).toHaveCount(1);
+    await expect(styles).toHaveAttribute("href", /^blob:.*#sheet$/);
+    await expect(page.locator(harness.diagnostics)).toContainText("asset.unresolved");
+    expect(externalRequests).toEqual([]);
+  });
+}
