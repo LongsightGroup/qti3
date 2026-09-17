@@ -49,6 +49,7 @@ qti3 run-fixtures
   runs the QTI 3 Basic IMPORT item-only evidence map against a checked-out 1EdTech
   conformance tree. The report reads the official package zips, filters manifest item
   resources, and ignores convenience test resources.
+- `certification check-import-report --qti-root <qti-conformance/qti3.0> --saved-report <report.json>`
 - `certification import-basic-tests --qti-root <qti-conformance/qti3.0>` runs the QTI 3
   Basic IMPORT test-structure evidence map against the official T4/T7 package.
 - `write-fixtures <directory>` writes the canonical fixture XML files.

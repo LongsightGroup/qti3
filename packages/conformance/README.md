@@ -70,6 +70,50 @@ checklist passed, and complete execution does not imply all results passed.
 `QTI3_EXTERNAL_VALIDATOR_REPORT` may attach supplemental content-validation evidence.
 IMPORT preservation evidence remains independent of content validation.
 
+## Reproducible certification evidence
+
+Item reports record the actual conformance commit, workbook SHA-256, package and XML
+hashes, source/imported asset hashes, qti3 commit/version, runtime code hash, and
+execution environment. `ok` describes executed checks. `automatedEvidenceReady`
+additionally requires a full run, complete passing coverage, the reviewed unchanged
+source inputs, and a clean identifiable candidate. It does not resolve human
+submission questions or claim certification.
+
+After building and committing the candidate, produce private evidence outside the
+repository:
+
+```sh
+QTI3_EXTERNAL_QTI_DIR=/path/to/qti-conformance/qti3.0 \
+QTI3_CERTIFICATION_OUTPUT_DIR=/private/evidence/candidate \
+pnpm certification:evidence
+```
+
+The command writes JSON evidence, a readable row crosswalk, and a fresh comparison
+result. If the output directory is omitted it creates a directory under the system
+temporary directory. Preserve that directory in the maintainer's private evidence
+storage. The full `pnpm certification:check` runs this after official fixture tests
+and the release gate. It fails if the candidate is dirty or its source identity does
+not match the reviewed checklist. Existing saved reports can be checked with:
+
+```sh
+qti3 certification check-import-report \
+  --qti-root /path/to/qti-conformance/qti3.0 \
+  --saved-report /private/evidence/candidate/basic-import-items.json
+```
+
+The checker reruns the importer and compares scope, coverage, values, diagnostics,
+and input/build identity. Changed or stale evidence fails. Collection time and
+machine location may differ. Official checklists and member reports remain external.
+
+`.github/workflows/certification.yml` provides a manual workflow for a dedicated
+self-hosted runner labeled `qti-certification`. Provision its protected environment
+with required reviewers, member-authorized fixture checkout, Node/browser support,
+and `QTI3_EXTERNAL_QTI_DIR` before dispatch. The runner owner must retain the private
+output directory. The workflow does not publish raw reports, assertion output, or
+member content as Actions artifacts. Public CI and release publishing keep their
+existing responsibilities. Adding this workflow does not provision a runner or
+change GitHub environment protection settings.
+
 ## Official validator reports
 
 The verifier supports the JSON downloaded from the member tool's **QTI 3.0.1

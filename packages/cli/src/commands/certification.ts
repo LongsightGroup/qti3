@@ -1,7 +1,9 @@
+import { readFile, stat } from "node:fs/promises";
 import {
   runQti3BasicImportItemOnlyCertification,
   runQti3BasicImportTestCertification,
   verifyQtiValidatorEvidence,
+  checkQti3BasicImportReport,
 } from "@longsightgroup/qti3-conformance";
 import { errorResult, jsonResult, type CliCommandResult } from "../cli-result.js";
 
@@ -11,7 +13,9 @@ const IMPORT_TESTS_USAGE =
   "Usage: qti3 certification import-basic-tests --qti-root <qti-conformance/qti3.0>";
 const VALIDATOR_USAGE =
   "Usage: qti3 certification verify-validator --validator-report <report.json> --validator-package <package.zip> --trusted-report-sha256 <download-digest>";
-const CERTIFICATION_USAGE = `${IMPORT_ITEMS_USAGE} | ${IMPORT_TESTS_USAGE} | ${VALIDATOR_USAGE}`;
+const CHECK_REPORT_USAGE =
+  "Usage: qti3 certification check-import-report --qti-root <qti-conformance/qti3.0> --saved-report <report.json>";
+const CERTIFICATION_USAGE = `${IMPORT_ITEMS_USAGE} | ${IMPORT_TESTS_USAGE} | ${VALIDATOR_USAGE} | ${CHECK_REPORT_USAGE}`;
 
 /** Run a QTI Basic IMPORT certification subcommand. */
 export async function runCertificationCommand(args: string[]): Promise<CliCommandResult> {
@@ -48,6 +52,29 @@ export async function runCertificationCommand(args: string[]): Promise<CliComman
     return jsonResult(evidence, evidence.status === "verified-pass" ? 0 : 1);
   }
 
+  if (profile === "check-import-report") {
+    const options = parseImportBasicItemsArgs(optionsArgs);
+    if (!options.ok || options.savedReport === undefined) return errorResult(CHECK_REPORT_USAGE);
+    let saved: unknown;
+    try {
+      const info = await stat(options.savedReport);
+      if (!info.isFile() || info.size > 8 * 1024 * 1024)
+        return errorResult("Saved report must be a regular JSON file no larger than 8 MiB.");
+      saved = JSON.parse(await readFile(options.savedReport, "utf8"));
+    } catch {
+      return errorResult("Unable to read a valid saved report.");
+    }
+    const current = await runQti3BasicImportItemOnlyCertification({
+      qtiRoot: options.qtiRoot,
+      validatorReport: options.validatorReport,
+      validatorPackage: options.validatorPackage,
+      trustedValidatorReportSha256: options.trustedReportSha256,
+      requireValidatorEvidence: options.requireValidatorEvidence,
+    });
+    const result = checkQti3BasicImportReport(saved, current);
+    return jsonResult(result, result.ok ? 0 : 1);
+  }
+
   if (profile === "import-basic-tests") {
     const options = parseImportBasicTestsArgs(optionsArgs);
     if (!options.ok) {
@@ -71,6 +98,7 @@ function parseImportBasicItemsArgs(
       readonly validatorPackage?: string | undefined;
       readonly trustedReportSha256?: string | undefined;
       readonly requireValidatorEvidence: boolean;
+      readonly savedReport?: string | undefined;
     }
   | { readonly ok: false; readonly message: string } {
   let qtiRoot: string | undefined;
@@ -78,10 +106,21 @@ function parseImportBasicItemsArgs(
   let validatorPackage: string | undefined;
   let trustedReportSha256: string | undefined;
   let requireValidatorEvidence = false;
+  let savedReport: string | undefined;
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     const value = args[index + 1];
+    if (
+      !validatorOnly &&
+      arg === "--saved-report" &&
+      value !== undefined &&
+      !value.startsWith("--")
+    ) {
+      savedReport = value;
+      index += 1;
+      continue;
+    }
     if (!validatorOnly && arg === "--require-validator-evidence") {
       requireValidatorEvidence = true;
       continue;
@@ -118,6 +157,7 @@ function parseImportBasicItemsArgs(
         validatorPackage,
         trustedReportSha256,
         requireValidatorEvidence,
+        savedReport,
       };
 }
 

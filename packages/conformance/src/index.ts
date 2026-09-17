@@ -51,3 +51,6 @@ export {
   verifyQtiValidatorEvidence,
   type QtiValidatorEvidenceOptions,
 } from "./validator-evidence.js";
+
+export { checkQti3BasicImportReport } from "./certification-report-check.js";
+export type { QtiCertificationIdentity } from "./certification-identity.js";

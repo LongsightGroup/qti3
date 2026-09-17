@@ -1,3 +1,8 @@
+import { createHash } from "node:crypto";
+import {
+  captureCertificationIdentity,
+  type QtiCertificationIdentity,
+} from "./certification-identity.js";
 import { comparePackageAssets, type QtiPackageAssetEvidence } from "./package-asset-evidence.js";
 import { syntheticImportPackage, textConstraintPackagePath } from "./synthetic-import-package.js";
 import { verifyQtiValidatorEvidence, type QtiValidatorEvidence } from "./validator-evidence.js";
@@ -50,12 +55,14 @@ export type QtiCertificationRowStatus = "passed" | "failed";
 
 export interface QtiCertificationReportRow extends QtiBasicImportAcceptanceCriterion {
   readonly observations?: readonly QtiImportObservation[] | undefined;
+  readonly inputSha256?: string | undefined;
   readonly status: QtiCertificationRowStatus;
   readonly diagnostics: readonly QtiDiagnostic[];
 }
 
 export interface QtiPackageImportEvidence {
   readonly packagePath: string;
+  readonly sha256?: string | undefined;
   readonly itemResourceHrefs: readonly string[];
   readonly ignoredResourceHrefs: readonly string[];
   readonly assets: readonly QtiPackageAssetEvidence[];
@@ -74,6 +81,9 @@ export interface QtiBasicImportItemOnlyCertificationOptions {
 }
 
 export interface QtiBasicImportItemOnlyCertificationReport {
+  readonly schemaVersion: 1;
+  readonly identity: QtiCertificationIdentity;
+  readonly automatedEvidenceReady: boolean;
   readonly runScope: "full" | "selection";
   readonly coverage: QtiImportChecklistCoverage;
   readonly targetCapability: "IMPORT";
@@ -89,8 +99,6 @@ export interface QtiBasicImportItemOnlyCertificationReport {
   readonly validatorEvidence: QtiValidatorEvidence | undefined;
   readonly diagnostics: readonly QtiDiagnostic[];
 }
-
-const qtiConformanceSource = "1EdTech/qti-conformance@b058156";
 
 const basicPackagePaths = {
   a1: "Basic/A1 - Alternate Text for Graphics/A1AlternativeGraphics.zip",
@@ -387,6 +395,16 @@ export async function runQti3BasicImportItemOnlyCertification(
   const rows = await Promise.all(
     criteria.map((entry) => runCriterion(options.qtiRoot, packageIndex, entry)),
   );
+  const sourcePaths = new Set(
+    criteria
+      .filter((entry) => entry.origin !== "synthetic")
+      .flatMap((entry) => [entry.sourcePath, ...(entry.packagePath ? [entry.packagePath] : [])]),
+  );
+  for (const evidence of packageIndex.evidenceByPackage.values()) {
+    for (const asset of evidence.assets)
+      sourcePaths.add(posix.join(posix.dirname(evidence.packagePath), asset.href));
+  }
+  const identity = await captureCertificationIdentity(options.qtiRoot, [...sourcePaths].toSorted());
   const coverage = evaluateBasicImportItemChecklist(rows, basicImportItemOnlyCriteria);
   const runScope = options.criteria === undefined ? "full" : "selection";
   const coverageFailed = runScope === "full" && !coverage.complete;
@@ -407,12 +425,22 @@ export async function runQti3BasicImportItemOnlyCertification(
     (coverageFailed || emptySelection ? 1 : 0);
 
   return {
+    schemaVersion: 1,
+    identity,
+    automatedEvidenceReady:
+      failed === 0 &&
+      runScope === "full" &&
+      coverage.complete &&
+      identity.source.matchesReviewedSource &&
+      identity.producer.clean &&
+      identity.producer.revision !== undefined &&
+      identity.producer.runtimeSha256 !== undefined,
     runScope,
     coverage,
     targetCapability: "IMPORT",
     targetLevel: "Basic",
     targetScope: "Item Only Packages",
-    conformanceSource: options.conformanceSource ?? qtiConformanceSource,
+    conformanceSource: `1EdTech/qti-conformance@${identity.source.revision ?? "unavailable"}`,
     qtiRoot: options.qtiRoot,
     checked: rows.length,
     failed,
@@ -509,6 +537,7 @@ function runXmlCriterion(
   xml: string,
   importedItem?: QtiPackageItem,
 ): QtiCertificationReportRow {
+  const inputSha256 = createHash("sha256").update(xml).digest("hex");
   const parseResult = importedItem ?? parseQtiXml(xml);
   const validationDiagnostics = parseResult.document
     ? validateAssessmentItem(parseResult.document).diagnostics
@@ -521,6 +550,7 @@ function runXmlCriterion(
     );
     return {
       ...criterionEntry,
+      inputSha256,
       status: passed ? "passed" : "failed",
       diagnostics: passed
         ? diagnostics
@@ -535,7 +565,7 @@ function runXmlCriterion(
   }
 
   if (!parseResult.document || diagnostics.some((item) => item.severity === "error")) {
-    return { ...criterionEntry, status: "failed", diagnostics };
+    return { ...criterionEntry, inputSha256, status: "failed", diagnostics };
   }
 
   const preservation = compareImportedItem(xml, parseResult.document);
@@ -550,6 +580,7 @@ function runXmlCriterion(
       evidenceDiagnostic === undefined && preservation.diagnostics.length === 0
         ? "passed"
         : "failed",
+    inputSha256,
     observations: preservation.observations,
     diagnostics: [
       ...diagnostics,
@@ -800,9 +831,10 @@ async function buildPackageImportIndex(
 
   for (const packagePath of uniquePackagePaths) {
     try {
-      const parsed = parseOfficialQtiPackage(
-        syntheticImportPackage(packagePath) ?? (await readFile(join(qtiRoot, packagePath))),
-      );
+      const bytes =
+        syntheticImportPackage(packagePath) ?? (await readFile(join(qtiRoot, packagePath)));
+      const sha256 = createHash("sha256").update(bytes).digest("hex");
+      const parsed = parseOfficialQtiPackage(bytes);
       if (isUnreadablePackage(parsed)) {
         const failure = certificationDiagnostic(
           "certification.package.read",
@@ -865,6 +897,7 @@ async function buildPackageImportIndex(
         packagePath,
         itemResourceHrefs,
         ignoredResourceHrefs,
+        sha256,
         assets: assetEvidence.assets,
         diagnostics: [...manifestDiagnostics, ...assetEvidence.diagnostics],
       });
