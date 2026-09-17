@@ -44,7 +44,8 @@ qti3 run-fixtures
 - `inspect-package <package.zip>` inspects a QTI package zip and item references.
 - `validate-package <package.zip>` performs strict package validation for conformance
   checks.
-- `certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <validator-report.json>]`
+- `certification import-basic-items --qti-root <qti-conformance/qti3.0> [--validator-report <report.json>] [--validator-package <package.zip>] [--trusted-report-sha256 <digest>] [--require-validator-evidence]`
+- `certification verify-validator --validator-report <report.json> --validator-package <package.zip> --trusted-report-sha256 <download-digest>`
   runs the QTI 3 Basic IMPORT item-only evidence map against a checked-out 1EdTech
   conformance tree. The report reads the official package zips, filters manifest item
   resources, and ignores convenience test resources.

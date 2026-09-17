@@ -46,3 +46,8 @@ export {
   type QtiImportChecklistRow,
   type QtiImportChecklistCoverage,
 } from "./basic-import-item-checklist.js";
+
+export {
+  verifyQtiValidatorEvidence,
+  type QtiValidatorEvidenceOptions,
+} from "./validator-evidence.js";

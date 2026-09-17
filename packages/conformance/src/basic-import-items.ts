@@ -1,9 +1,11 @@
+import { verifyQtiValidatorEvidence, type QtiValidatorEvidence } from "./validator-evidence.js";
+export type { QtiValidatorEvidence } from "./validator-evidence.js";
 import { compareImportedItem, type QtiImportObservation } from "./item-import-preservation.js";
 import {
   evaluateBasicImportItemChecklist,
   type QtiImportChecklistCoverage,
 } from "./basic-import-item-checklist.js";
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join, posix } from "node:path";
 import {
   parseQtiXml,
@@ -49,12 +51,6 @@ export interface QtiCertificationReportRow extends QtiBasicImportAcceptanceCrite
   readonly diagnostics: readonly QtiDiagnostic[];
 }
 
-export interface QtiValidatorEvidence {
-  readonly source: string;
-  readonly status: "unverified" | "unavailable";
-  readonly size: number;
-}
-
 export interface QtiPackageImportEvidence {
   readonly packagePath: string;
   readonly itemResourceHrefs: readonly string[];
@@ -66,7 +62,9 @@ export interface QtiBasicImportItemOnlyCertificationOptions {
   readonly qtiRoot: string;
   readonly conformanceSource?: string | undefined;
   readonly validatorReport?: string | undefined;
-  /** Fails closed: opaque report attachments cannot establish a verified verdict. */
+  readonly validatorPackage?: string | undefined;
+  readonly trustedValidatorReportSha256?: string | undefined;
+  /** Require a passing, artifact-bound report under the explicit operator trust policy. */
   readonly requireValidatorEvidence?: boolean | undefined;
   readonly criteria?: readonly QtiBasicImportAcceptanceCriterion[] | undefined;
 }
@@ -379,9 +377,16 @@ export async function runQti3BasicImportItemOnlyCertification(
   const runScope = options.criteria === undefined ? "full" : "selection";
   const coverageFailed = runScope === "full" && !coverage.complete;
   const emptySelection = rows.length === 0;
-  const validatorEvidence = await readValidatorEvidence(options.validatorReport);
-  // No official validator report format is parsed or scope-checked by this runner.
-  const validatorFailed = options.requireValidatorEvidence === true;
+  const validatorEvidence =
+    options.validatorReport === undefined
+      ? undefined
+      : await verifyQtiValidatorEvidence({
+          report: options.validatorReport,
+          package: options.validatorPackage,
+          trustedReportSha256: options.trustedValidatorReportSha256,
+        });
+  const validatorFailed =
+    options.requireValidatorEvidence === true && validatorEvidence?.status !== "verified-pass";
   const failed =
     rows.filter((row) => row.status === "failed").length +
     (validatorFailed ? 1 : 0) +
@@ -415,7 +420,7 @@ export async function runQti3BasicImportItemOnlyCertification(
         ? [
             diagnostic(
               "certification.validator.unverified",
-              "Verified validator evidence was required, but report attachments are unverified; no validator verdict or scope has been checked.",
+              "Required validator evidence did not establish a scoped passing result; inspect validatorEvidence.diagnostics.",
             ),
           ]
         : []),
@@ -542,26 +547,6 @@ function runXmlCriterion(
       ...(evidenceDiagnostic ? [evidenceDiagnostic] : []),
     ],
   };
-}
-
-async function readValidatorEvidence(
-  validatorReport: string | undefined,
-): Promise<QtiValidatorEvidence | undefined> {
-  if (validatorReport === undefined) return undefined;
-  try {
-    const report = await stat(validatorReport);
-    return {
-      source: validatorReport,
-      status: report.isFile() && report.size > 0 ? "unverified" : "unavailable",
-      size: report.size,
-    };
-  } catch {
-    return {
-      source: validatorReport,
-      status: "unavailable",
-      size: 0,
-    };
-  }
 }
 
 function evidenceDiagnosticFor(

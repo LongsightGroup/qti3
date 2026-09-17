@@ -63,12 +63,50 @@ Missing, duplicate, substituted, and unknown evidence cannot establish complete
 coverage; an empty selection fails. Passing a selection does not mean the full
 checklist passed, and complete execution does not imply all results passed.
 
-`QTI3_EXTERNAL_VALIDATOR_REPORT` may attach a supplemental report, but it is not
-required for import proof. Attachments are labeled `unverified`: the runner does
-not parse an official validator verdict or verify its scope. A missing or empty
-attachment is `unavailable`. Setting `requireValidatorEvidence: true` fails with
-`certification.validator.unverified` until a verified report integration exists;
-independent import-row results remain available.
+`QTI3_EXTERNAL_VALIDATOR_REPORT` may attach supplemental content-validation evidence.
+IMPORT preservation evidence remains independent of content validation.
+
+## Official validator reports
+
+The verifier supports the JSON downloaded from the member tool's **QTI 3.0.1
+Validator** (`Qti30Inspector`), observed on 2026-09-17. Its JSON specification version
+is `3.0`; it does not identify a Basic/Advanced application certification profile.
+Other inspectors, including SBAC, are rejected as different scopes. No certification
+claim follows from a passing content report.
+
+To collect verifiable evidence for one package:
+
+1. Compute the ZIP's SHA-256 **before uploading** it to the member validator.
+2. Set the optional report ID to `qti3-sha256-<package-sha256>` and upload those bytes.
+3. Download the JSON report directly from that result page. Record its SHA-256,
+   the package SHA-256, the tool URL, and collection time in a trusted external
+   evidence record. Keep the uploaded bytes alongside the report.
+4. Verify the report against those exact artifacts:
+
+```sh
+qti3 certification verify-validator \
+  --validator-report /private/evidence/report.json \
+  --validator-package /private/evidence/package.zip \
+  --trusted-report-sha256 <digest-recorded-at-download>
+```
+
+A passing result is `verified-pass` with trust `operator-attested-download`.
+The digest supplied by the operator is the trust input: parsing JSON, matching its
+report ID, or hashing a file after the fact does **not** authenticate 1EdTech origin.
+There is no supported signed-report verification or automated validator API in this
+integration. Do not treat an arbitrary file's freshly computed digest as provenance.
+
+Verification rejects failed or incomplete runs, inconsistent counters, warnings
+pending review, different inspectors/versions, different filenames, changed package
+bytes, and a missing or mismatched trusted report digest. A report covers exactly
+one explicitly supplied package; it cannot certify an importer or other packages.
+
+The item-import command accepts the same `--validator-report`, `--validator-package`,
+`--trusted-report-sha256` arguments plus `--require-validator-evidence`. Its API uses
+`validatorReport`, `validatorPackage`, `trustedValidatorReportSha256`, and
+`requireValidatorEvidence`. Required evidence can now pass, but cannot override a
+failed import case. Missing input is `unavailable`; a readable untrusted report is
+`unverified`; invalid or unsuccessful trusted evidence is `rejected`.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

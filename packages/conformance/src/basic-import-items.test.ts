@@ -61,7 +61,7 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
         checked: 2,
         failed: 0,
         ok: true,
-        validatorEvidence: { status: "unverified" },
+        validatorEvidence: { status: "rejected" },
         diagnostics: [],
       });
       expect(report.rows.every((row) => row.status === "passed")).toBe(true);
@@ -98,9 +98,9 @@ describe("QTI 3 Basic IMPORT item-only certification runner", () => {
   });
 
   it.each([
-    ["garbage", "FAILED: this is not a validator report.", "unverified"],
-    ["self-asserted success", '{"ok":true}', "unverified"],
-    ["failed verdict", '{"ok":false}', "unverified"],
+    ["garbage", "FAILED: this is not a validator report.", "rejected"],
+    ["self-asserted success", '{"ok":true}', "rejected"],
+    ["failed verdict", '{"ok":false}', "rejected"],
     ["empty file", "", "unavailable"],
     ["absent file", undefined, "unavailable"],
   ])("does not accept %s as verified validator evidence", async (_name, contents, status) => {

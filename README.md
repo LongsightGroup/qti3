@@ -589,4 +589,5 @@ packs each package, and publishes the tarballs. The workflow can also be dispatc
 ## Certification
 
 The project is not certified. `pnpm certification:check` requires official 1EdTech external
-content and validator evidence.
+content. Content-validator reports are checked separately against an exact package and
+an explicitly trusted download digest; see [validator evidence](packages/conformance/README.md#official-validator-reports).

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -118,6 +119,73 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
     const { code, output } = await runCli(["run-fixtures"]);
     expect(code).toBe(0);
     expect(JSON.parse(lastStdout(output))).toMatchObject({ checked: 31, failed: 0 });
+  });
+
+  it("verifies a scoped validator report and rejects a missing provenance argument", async () => {
+    const root = await mkdtemp(join(tmpdir(), "qti-validator-cli-"));
+    try {
+      const packagePath = join(root, "sample.zip");
+      const reportPath = join(root, "report.json");
+      const bytes = createStoredZip({ "synthetic.txt": "Synthetic validator scope fixture" });
+      const packageDigest = createHash("sha256").update(bytes).digest("hex");
+      const report = JSON.stringify({
+        id: `qti3-sha256-${packageDigest}`,
+        generated: "2026-09-17T17:00:02",
+        generator: "Qti30Inspector",
+        input: { name: "sample.zip", type: "ZIP" },
+        specification: { pid: "qti3.pid", shortName: "qti", version: "3.0" },
+        summary: {
+          outcome: "VALID",
+          fatals: 0,
+          errors: 0,
+          warnings: 0,
+          exceptions: 0,
+          notRun: 0,
+          totalRun: 12,
+          valid: 0,
+        },
+        valids: [],
+        fatals: [],
+        errors: [],
+        warnings: [],
+        exceptions: [],
+        notRun: [],
+      });
+      await writeFile(packagePath, bytes);
+      await writeFile(reportPath, report);
+      const args = [
+        "certification",
+        "verify-validator",
+        "--validator-report",
+        reportPath,
+        "--validator-package",
+        packagePath,
+      ];
+      expect((await runCli(args)).code).toBe(1);
+      const result = await runCli([
+        ...args,
+        "--trusted-report-sha256",
+        createHash("sha256").update(report).digest("hex"),
+      ]);
+      expect(result.code).toBe(0);
+      expect(JSON.parse(lastStdout(result.output))).toMatchObject({
+        status: "verified-pass",
+        trust: "operator-attested-download",
+      });
+      const required = await runCli([
+        "certification",
+        "import-basic-items",
+        "--qti-root",
+        root,
+        "--require-validator-evidence",
+      ]);
+      expect(required.code).toBe(1);
+      expect(JSON.parse(lastStdout(required.output)).diagnostics).toContainEqual(
+        expect.objectContaining({ code: "certification.validator.unverified" }),
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it("requires explicit inputs for Basic IMPORT item certification evidence", async () => {
