@@ -8,6 +8,7 @@ import type {
   QtiProcessingElementSupport,
   QtiSourceLocation,
 } from "./types.js";
+import { testExecutionSupport } from "./test-support.js";
 import {
   browserFeedbackTests,
   browserHarnessTests,
@@ -397,6 +398,7 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
 ];
 
 export const elementSupport: QtiElementSupport[] = [
+  ...testExecutionSupport,
   ...interactionSupport,
   ...deprecatedInteractionSupport,
   ...processingSupport,

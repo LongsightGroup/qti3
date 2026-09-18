@@ -184,3 +184,9 @@ export function writeQti3AssessmentItemResult(item: Qti3AuthoringItem): Qti3Writ
   if (diagnostics.length) return writerResult("", diagnostics);
   return writerResult(renderQti3AuthoringItem(item), []);
 }
+export { writeQti3AssessmentTest } from "./assessment-test.js";
+
+export {
+  writeQti3FixedAssessmentTest,
+  type QtiFixedTestDefinition,
+} from "./assessment-test-fixed.js";

@@ -392,3 +392,27 @@ export {
   formatQtiTextResponse,
   qtiTextResponseString,
 } from "./text-response.js";
+export type {
+  QtiExecutableTest,
+  QtiTestDefinition,
+  QtiTestSection,
+  QtiTestItemRef,
+  QtiTestBranch,
+  QtiTestResult,
+} from "./test-model.js";
+export { validateQtiTest } from "./test-validation.js";
+export { parseQtiTest } from "./test-parser.js";
+export { parseQtiTestExecution } from "./test-parser.js";
+export type { QtiTestExecution } from "./test-parser.js";
+export {
+  startQtiTest,
+  submitQtiTestAnswer,
+  snapshotQtiTestSession,
+  restoreQtiTestSession,
+} from "./test-session.js";
+export type { QtiTestSession, QtiTestSessionSnapshot } from "./test-session.js";
+export type { QtiTestSubmission } from "./test-processing.js";
+export { serializeProcessingExpression } from "./serializer-processing.js";
+export { testExecutionSupport } from "./test-support.js";
+export { inspectQtiBinaryChoice } from "./binary-choice.js";
+export type { QtiBinaryChoiceInspection } from "./binary-choice.js";

@@ -8,6 +8,7 @@
   },
   "include": ["src/**/*.test.ts", "../../tests/fixtures/**/*.ts"],
   "references": [
+    { "path": "../core/tsconfig.json" },
     {
       "path": "./tsconfig.json"
     }

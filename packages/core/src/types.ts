@@ -608,6 +608,7 @@ export type QtiProcessingExpression = (
   | { type: "mapResponse"; identifier: string }
   | { type: "mapResponsePoint"; identifier: string }
   | { type: "variable"; identifier: string }
+  | { type: "testVariables"; variableIdentifier: string; includeCategory?: string | undefined }
   | {
       type: "randomInteger";
       min: number;
@@ -770,6 +771,7 @@ export interface QtiScoreResult {
 export type QtiElementSupport =
   | QtiInteractionElementSupport
   | QtiProcessingElementSupport
+  | QtiTestElementSupport
   | QtiItemMetadataElementSupport;
 
 interface QtiElementSupportBase {
@@ -792,6 +794,11 @@ export interface QtiInteractionElementSupport extends QtiElementSupportBase {
 
 export interface QtiProcessingElementSupport extends QtiElementSupportBase {
   category: "processing";
+}
+
+/** Executable assessment-test support, separate from item processing/rendering. */
+export interface QtiTestElementSupport extends QtiElementSupportBase {
+  category: "test";
 }
 
 export interface QtiItemMetadataElementSupport extends QtiElementSupportBase {

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="staged_fixture" title="Synthetic staged assessment">
+<qti-outcome-declaration identifier="stage0_level0_score" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>
+<qti-outcome-declaration identifier="stage1_level0_score" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>
+<qti-outcome-declaration identifier="stage1_level1_score" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>
+<qti-outcome-declaration identifier="stage2_level0_score" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>
+<qti-outcome-declaration identifier="stage2_level1_score" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>
+<qti-outcome-declaration identifier="stage2_level2_score" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>
+<qti-test-part identifier="part1" navigation-mode="linear" submission-mode="individual">
+<qti-assessment-section identifier="stage0_level0" title="Group 1, level 0" visible="true"><qti-branch-rule target="stage1_level1"><qti-gte>
+  <qti-variable identifier="stage0_level0_score"/>
+  <qti-base-value base-type="integer">4</qti-base-value>
+</qti-gte></qti-branch-rule>
+<qti-branch-rule target="stage1_level0"><qti-lte>
+  <qti-variable identifier="stage0_level0_score"/>
+  <qti-base-value base-type="integer">1</qti-base-value>
+</qti-lte></qti-branch-rule>
+<qti-branch-rule target="stage1_level0"><qti-base-value base-type="boolean">true</qti-base-value></qti-branch-rule><qti-assessment-item-ref identifier="stage0_level0_item0" href="items/stage0_level0_0.xml" category="stage0_level0 level0"/>
+<qti-assessment-item-ref identifier="stage0_level0_item1" href="items/stage0_level0_1.xml" category="stage0_level0 level0"/>
+<qti-assessment-item-ref identifier="stage0_level0_item2" href="items/stage0_level0_2.xml" category="stage0_level0 level0"/>
+<qti-assessment-item-ref identifier="stage0_level0_item3" href="items/stage0_level0_3.xml" category="stage0_level0 level0"/>
+<qti-assessment-item-ref identifier="stage0_level0_item4" href="items/stage0_level0_4.xml" category="stage0_level0 level0"/></qti-assessment-section>
+<qti-assessment-section identifier="stage1_level0" title="Group 2, level 0" visible="true"><qti-branch-rule target="stage2_level1"><qti-gte>
+  <qti-variable identifier="stage1_level0_score"/>
+  <qti-base-value base-type="integer">4</qti-base-value>
+</qti-gte></qti-branch-rule>
+<qti-branch-rule target="stage2_level0"><qti-lte>
+  <qti-variable identifier="stage1_level0_score"/>
+  <qti-base-value base-type="integer">1</qti-base-value>
+</qti-lte></qti-branch-rule>
+<qti-branch-rule target="stage2_level0"><qti-base-value base-type="boolean">true</qti-base-value></qti-branch-rule><qti-assessment-item-ref identifier="stage1_level0_item0" href="items/stage1_level0_0.xml" category="stage1_level0 level0"/>
+<qti-assessment-item-ref identifier="stage1_level0_item1" href="items/stage1_level0_1.xml" category="stage1_level0 level0"/>
+<qti-assessment-item-ref identifier="stage1_level0_item2" href="items/stage1_level0_2.xml" category="stage1_level0 level0"/>
+<qti-assessment-item-ref identifier="stage1_level0_item3" href="items/stage1_level0_3.xml" category="stage1_level0 level0"/>
+<qti-assessment-item-ref identifier="stage1_level0_item4" href="items/stage1_level0_4.xml" category="stage1_level0 level0"/></qti-assessment-section>
+<qti-assessment-section identifier="stage1_level1" title="Group 2, level 1" visible="true"><qti-branch-rule target="stage2_level2"><qti-gte>
+  <qti-variable identifier="stage1_level1_score"/>
+  <qti-base-value base-type="integer">4</qti-base-value>
+</qti-gte></qti-branch-rule>
+<qti-branch-rule target="stage2_level0"><qti-lte>
+  <qti-variable identifier="stage1_level1_score"/>
+  <qti-base-value base-type="integer">1</qti-base-value>
+</qti-lte></qti-branch-rule>
+<qti-branch-rule target="stage2_level1"><qti-base-value base-type="boolean">true</qti-base-value></qti-branch-rule><qti-assessment-item-ref identifier="stage1_level1_item0" href="items/stage1_level1_0.xml" category="stage1_level1 level1"/>
+<qti-assessment-item-ref identifier="stage1_level1_item1" href="items/stage1_level1_1.xml" category="stage1_level1 level1"/>
+<qti-assessment-item-ref identifier="stage1_level1_item2" href="items/stage1_level1_2.xml" category="stage1_level1 level1"/>
+<qti-assessment-item-ref identifier="stage1_level1_item3" href="items/stage1_level1_3.xml" category="stage1_level1 level1"/>
+<qti-assessment-item-ref identifier="stage1_level1_item4" href="items/stage1_level1_4.xml" category="stage1_level1 level1"/></qti-assessment-section>
+<qti-assessment-section identifier="stage2_level0" title="Group 3, level 0" visible="true"><qti-branch-rule target="EXIT_TEST"><qti-base-value base-type="boolean">true</qti-base-value></qti-branch-rule><qti-assessment-item-ref identifier="stage2_level0_item0" href="items/stage2_level0_0.xml" category="stage2_level0 level0"/>
+<qti-assessment-item-ref identifier="stage2_level0_item1" href="items/stage2_level0_1.xml" category="stage2_level0 level0"/>
+<qti-assessment-item-ref identifier="stage2_level0_item2" href="items/stage2_level0_2.xml" category="stage2_level0 level0"/>
+<qti-assessment-item-ref identifier="stage2_level0_item3" href="items/stage2_level0_3.xml" category="stage2_level0 level0"/>
+<qti-assessment-item-ref identifier="stage2_level0_item4" href="items/stage2_level0_4.xml" category="stage2_level0 level0"/></qti-assessment-section>
+<qti-assessment-section identifier="stage2_level1" title="Group 3, level 1" visible="true"><qti-branch-rule target="EXIT_TEST"><qti-base-value base-type="boolean">true</qti-base-value></qti-branch-rule><qti-assessment-item-ref identifier="stage2_level1_item0" href="items/stage2_level1_0.xml" category="stage2_level1 level1"/>
+<qti-assessment-item-ref identifier="stage2_level1_item1" href="items/stage2_level1_1.xml" category="stage2_level1 level1"/>
+<qti-assessment-item-ref identifier="stage2_level1_item2" href="items/stage2_level1_2.xml" category="stage2_level1 level1"/>
+<qti-assessment-item-ref identifier="stage2_level1_item3" href="items/stage2_level1_3.xml" category="stage2_level1 level1"/>
+<qti-assessment-item-ref identifier="stage2_level1_item4" href="items/stage2_level1_4.xml" category="stage2_level1 level1"/></qti-assessment-section>
+<qti-assessment-section identifier="stage2_level2" title="Group 3, level 2" visible="true"><qti-branch-rule target="EXIT_TEST"><qti-base-value base-type="boolean">true</qti-base-value></qti-branch-rule><qti-assessment-item-ref identifier="stage2_level2_item0" href="items/stage2_level2_0.xml" category="stage2_level2 level2"/>
+<qti-assessment-item-ref identifier="stage2_level2_item1" href="items/stage2_level2_1.xml" category="stage2_level2 level2"/>
+<qti-assessment-item-ref identifier="stage2_level2_item2" href="items/stage2_level2_2.xml" category="stage2_level2 level2"/>
+<qti-assessment-item-ref identifier="stage2_level2_item3" href="items/stage2_level2_3.xml" category="stage2_level2 level2"/>
+<qti-assessment-item-ref identifier="stage2_level2_item4" href="items/stage2_level2_4.xml" category="stage2_level2 level2"/></qti-assessment-section>
+</qti-test-part>
+<qti-outcome-processing><qti-set-outcome-value identifier="stage0_level0_score"><qti-sum>
+  <qti-test-variables variable-identifier="SCORE" include-category="stage0_level0"/>
+</qti-sum></qti-set-outcome-value>
+<qti-set-outcome-value identifier="stage1_level0_score"><qti-sum>
+  <qti-test-variables variable-identifier="SCORE" include-category="stage1_level0"/>
+</qti-sum></qti-set-outcome-value>
+<qti-set-outcome-value identifier="stage1_level1_score"><qti-sum>
+  <qti-test-variables variable-identifier="SCORE" include-category="stage1_level1"/>
+</qti-sum></qti-set-outcome-value>
+<qti-set-outcome-value identifier="stage2_level0_score"><qti-sum>
+  <qti-test-variables variable-identifier="SCORE" include-category="stage2_level0"/>
+</qti-sum></qti-set-outcome-value>
+<qti-set-outcome-value identifier="stage2_level1_score"><qti-sum>
+  <qti-test-variables variable-identifier="SCORE" include-category="stage2_level1"/>
+</qti-sum></qti-set-outcome-value>
+<qti-set-outcome-value identifier="stage2_level2_score"><qti-sum>
+  <qti-test-variables variable-identifier="SCORE" include-category="stage2_level2"/>
+</qti-sum></qti-set-outcome-value></qti-outcome-processing>
+</qti-assessment-test>

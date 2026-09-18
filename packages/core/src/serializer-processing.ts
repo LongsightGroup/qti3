@@ -21,6 +21,17 @@ export interface QtiSerializeResponseProcessingResult {
   diagnostics: QtiDiagnostic[];
 }
 
+/** Serialize one expression for item or test processing through the shared serializer. */
+export function serializeProcessingExpression(
+  expression: import("./types.js").QtiProcessingExpression,
+): QtiSerializeResponseProcessingResult {
+  const context: SerializationContext = { diagnostics: [] };
+  const xml = serializeExpression(expression, context, 0).join("\n");
+  return context.diagnostics.some((d) => d.severity === "error")
+    ? { ok: false, diagnostics: context.diagnostics }
+    : { ok: true, xml, diagnostics: context.diagnostics };
+}
+
 export function serializeResponseProcessing(
   processing: QtiResponseProcessing,
 ): QtiSerializeResponseProcessingResult {

@@ -43,6 +43,7 @@
     "check:exports": "node scripts/check-package-exports.mjs",
     "check:transcoder-support": "node scripts/assert-transcoder-support.mjs",
     "check:transcoder-xsd": "node scripts/prepare-qti-xsd.mjs && node scripts/check-transcoder-xsd.mjs",
+    "check:test-xsd": "node scripts/check-test-xsd.mjs",
     "build": "node scripts/clean-package-dist.mjs && tsc -b",
     "pages:build": "vite build examples/manual --base /qti3/ --outDir ../../dist/pages --emptyOutDir",
     "dev": "vite --host 127.0.0.1 examples/manual",

@@ -1,0 +1,53 @@
+{
+  "main": "402009a85b07.xsd",
+  "sources": {
+    "https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd": {
+      "file": "402009a85b07.xsd",
+      "sha256": "bd82f6df3c7acec951fffc78548325a01e9e9bc91d5768d7415bdcbdc018341d"
+    },
+    "https://purl.imsglobal.org/spec/ssml/v1p1/schema/xsd/ssmlv1p1-core.xsd": {
+      "file": "4d9c8532e6fa.xsd",
+      "sha256": "f5e6d5ca575722c5ee1de50aefbe483bb8c88d2c46e65f4d7eecb713b8c1f485"
+    },
+    "https://purl.imsglobal.org/spec/ssml/v1p1/schema/xsd/synthesis-nonamespace.xsd": {
+      "file": "6e2562b36809.xsd",
+      "sha256": "10608b0b9ad809f78be41e84c655d210fcf27ccc84996ef97cd6dc80b00ace5c"
+    },
+    "https://purl.imsglobal.org/spec/w3/2001/schema/xsd/xml.xsd": {
+      "file": "3ea4cd0b857b.xsd",
+      "sha256": "4c637d0381d988dbf24b680becde6e1c8301b4c4ceef8bfa45a1ee130e77a682"
+    },
+    "http://www.w3.org/2001/xml.xsd": {
+      "file": "47812a16d9bc.xsd",
+      "sha256": "61960fb3131e38022caad5360e2f33a3382578ab3c80cd58bd74320ede61b20c"
+    },
+    "http://www.w3.org/2009/01/xml.xsd": {
+      "file": "6f2417824c46.xsd",
+      "sha256": "cc701736c42cc64126fad063bb95f94484b5de3b5f808a86ea098b0957aff829"
+    },
+    "https://purl.imsglobal.org/spec/mathml/v3p0/schema/xsd/mathml3.xsd": {
+      "file": "5ffda6c0ca8b.xsd",
+      "sha256": "af49edc2c29c4976d6a9d8860388c026b94ca75edfbd67bbaf67448da9990656"
+    },
+    "https://purl.imsglobal.org/spec/mathml/v3p0/schema/xsd/mathml3-common.xsd": {
+      "file": "0c26602a5f3c.xsd",
+      "sha256": "94007301de9c8ed29ffed4a5eba6ca6b1e2e7511eda8d2b39e01b97d7d7e5d06"
+    },
+    "https://purl.imsglobal.org/spec/mathml/v3p0/schema/xsd/mathml3-presentation.xsd": {
+      "file": "aba9e1a955bc.xsd",
+      "sha256": "74d605b09528b7c55a4ae803debc429c27a2afa6cd34607d28df79bcc7f3575b"
+    },
+    "https://purl.imsglobal.org/spec/mathml/v3p0/schema/xsd/mathml3-content.xsd": {
+      "file": "41096e57d497.xsd",
+      "sha256": "922b4082d00559df86b0389842b1d1ba9537db0050ab229d64ad313ddfb44098"
+    },
+    "https://purl.imsglobal.org/spec/mathml/v3p0/schema/xsd/mathml3-strict-content.xsd": {
+      "file": "23902b5926a4.xsd",
+      "sha256": "cd0da554afbe2d1570c4e548a29ee5eb0b25aea1d6455bacf664080cb5982640"
+    },
+    "https://purl.imsglobal.org/spec/w3/2001/schema/xsd/XInclude.xsd": {
+      "file": "cb0e3d566338.xsd",
+      "sha256": "b72e1d2a0ab90aca502b827ce12572bfb4ef787fee89b4dcc1ce474dd3c00df0"
+    }
+  }
+}

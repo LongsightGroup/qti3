@@ -48,7 +48,7 @@ export type { QtiSessionEnvironment } from "./session-builtins.js";
 
 interface SessionProcessingContext {
   responseDefaults: Record<string, QtiValue>;
-  evaluation: EvaluationContext;
+  evaluation: EvaluationContext<QtiDocument>;
 }
 
 interface ConditionalRules<Rule> {
