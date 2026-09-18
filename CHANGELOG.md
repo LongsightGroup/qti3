@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+## 0.12.0 - 2026-09-17
+
+### Added
+
+- Parse and validate finite QTI 3 tests with linear individual submission, fixed item
+  references, test outcome processing, forward section branches, and explicit test exit.
+  Unsupported routing, backward targets, unresolved references, and invalid expressions
+  return structured diagnostics.
+- Start, advance, snapshot, and restore a test session with the shared processing engine.
+  Restoration replays committed item scores against the pinned test definition.
+- Write supported fixed and branching assessment tests from typed models, including
+  existing fixed-test timing, instructions, and feedback.
+- Inspect whether an ordinary single-choice item produces an authoritative binary score.
+- Add synthetic 15- and 100-answer branching fixtures, every reachable score transition,
+  package round trips, and an official QTI 3 schema validation check.
+
+This release supplies finite test sequencing. It does not implement a CAT service,
+statistical ability estimation, or runtime random item selection.
+
 ## 0.11.0 - 2026-09-17
 
 ### Added
