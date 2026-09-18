@@ -62,7 +62,6 @@ export function expressionChildren(expression: QtiProcessingExpression): QtiProc
     case "randomFloat":
     case "randomInteger":
     case "variable":
-    case "testVariables":
       return [];
     default:
       return assertNever(expression);

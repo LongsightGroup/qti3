@@ -24,10 +24,6 @@ export type ExpressionCoverage = {
 };
 
 export const expressionCoverage = {
-  testVariables: {
-    expression: { type: "testVariables", variableIdentifier: "SCORE", includeCategory: "block1" },
-    xml: '    <qti-test-variables variable-identifier="SCORE" include-category="block1"/>',
-  },
   baseValue: {
     expression: baseOne,
     xml: '    <qti-base-value base-type="integer">1</qti-base-value>',

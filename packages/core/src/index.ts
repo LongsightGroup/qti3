@@ -399,6 +399,7 @@ export type {
   QtiTestItemRef,
   QtiTestBranch,
   QtiTestResult,
+  QtiTestOutcomeRule,
 } from "./test-model.js";
 export { validateQtiTest } from "./test-validation.js";
 export { parseQtiTest } from "./test-parser.js";
@@ -412,7 +413,11 @@ export {
 } from "./test-session.js";
 export type { QtiTestSession, QtiTestSessionSnapshot } from "./test-session.js";
 export type { QtiTestSubmission } from "./test-processing.js";
-export { serializeProcessingExpression } from "./serializer-processing.js";
+export type { QtiTestExpression, QtiTestBaseType } from "./test-expression.js";
+export { serializeTestExpression } from "./test-expression-serializer.js";
+export { isQtiIdentifier } from "./qti-identifier.js";
+export { isQtiPackageItemHref } from "./qti-package-paths.js";
+export { testFailure } from "./test-model.js";
 export { testExecutionSupport } from "./test-support.js";
 export { inspectQtiBinaryChoice } from "./binary-choice.js";
-export type { QtiBinaryChoiceInspection } from "./binary-choice.js";
+export type { QtiBinaryChoicePolicy } from "./binary-choice.js";

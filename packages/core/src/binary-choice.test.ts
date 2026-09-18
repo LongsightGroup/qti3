@@ -11,8 +11,7 @@ const item = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi
 it("establishes single-choice binary scoring for every available answer", () => {
   expect(inspectQtiBinaryChoice(item)).toEqual({
     ok: true,
-    responseIdentifier: "RESPONSE",
-    correctChoice: "A",
+    value: { responseIdentifier: "RESPONSE", correctChoice: "A" },
   });
 });
 

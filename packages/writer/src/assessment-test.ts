@@ -1,33 +1,45 @@
 import {
   validateQtiTest,
-  serializeProcessingExpression,
+  serializeTestExpression,
   type QtiTestDefinition,
   type QtiTestResult,
-  type QtiProcessingExpression,
   type QtiTestItemRef,
 } from "@longsightgroup/qti3-core";
 import { escapeXmlText, xmlAttributes } from "./xml.js";
 
 /** Write the supported finite QTI test profile, returning validation diagnostics on failure. */
-export function writeQti3AssessmentTest(test: QtiTestDefinition): QtiTestResult<string> {
-  const validated = validateQtiTest(test);
+export function writeQti3AssessmentTest(definition: QtiTestDefinition): QtiTestResult<string> {
+  const validated = validateQtiTest(definition);
   if (!validated.ok) return validated;
-  const expression = (value: QtiProcessingExpression): string => {
-    const result = serializeProcessingExpression(value);
-    if (!result.ok || result.xml === undefined)
-      throw new Error("Validated test expression could not be serialized.");
-    return result.xml;
-  };
+  const test = validated.value;
   const declarations = test.outcomeDeclarations.map(
     (d) =>
-      `<qti-outcome-declaration${xmlAttributes({ identifier: d.identifier, cardinality: d.cardinality, "base-type": d.baseType })}>${d.defaultValue === null ? "" : `<qti-default-value><qti-value>${scalarText(d.defaultValue)}</qti-value></qti-default-value>`}</qti-outcome-declaration>`,
+      `<qti-outcome-declaration${xmlAttributes({ identifier: d.identifier, cardinality: d.cardinality, "base-type": d.baseType })}>${d.defaultValue === null ? "" : `<qti-default-value><qti-value>${escapeXmlText(String(d.defaultValue))}</qti-value></qti-default-value>`}</qti-outcome-declaration>`,
   );
-  const sections = test.sections.map(
-    (s) =>
-      `<qti-assessment-section${xmlAttributes({ identifier: s.identifier, title: s.title, visible: true })}>${s.branches.map((b) => `<qti-branch-rule${xmlAttributes({ target: b.target })}>${expression(b.expression)}</qti-branch-rule>`).join("\n")}${s.items.map(writeTestItemRef).join("\n")}</qti-assessment-section>`,
-  );
-  const processing = test.outcomeProcessing.length
-    ? `<qti-outcome-processing>${test.outcomeProcessing.map((r) => `<qti-set-outcome-value${xmlAttributes({ identifier: r.identifier })}>${expression(r.expression)}</qti-set-outcome-value>`).join("\n")}</qti-outcome-processing>`
+  const sections: string[] = [];
+  for (const section of test.sections) {
+    const branches: string[] = [];
+    for (const branch of section.branches) {
+      const expression = serializeTestExpression(branch.expression);
+      if (!expression.ok) return expression;
+      branches.push(
+        `<qti-branch-rule${xmlAttributes({ target: branch.target })}>${expression.value}</qti-branch-rule>`,
+      );
+    }
+    sections.push(
+      `<qti-assessment-section${xmlAttributes({ identifier: section.identifier, title: section.title, visible: true })}>${branches.join("\n")}${section.items.map(writeTestItemRef).join("\n")}</qti-assessment-section>`,
+    );
+  }
+  const rules: string[] = [];
+  for (const rule of test.outcomeProcessing) {
+    const expression = serializeTestExpression(rule.expression);
+    if (!expression.ok) return expression;
+    rules.push(
+      `<qti-set-outcome-value${xmlAttributes({ identifier: rule.identifier })}>${expression.value}</qti-set-outcome-value>`,
+    );
+  }
+  const processing = rules.length
+    ? `<qti-outcome-processing>${rules.join("\n")}</qti-outcome-processing>`
     : "";
   return {
     ok: true,
@@ -39,12 +51,6 @@ export function writeQti3AssessmentTest(test: QtiTestDefinition): QtiTestResult<
       processing,
     ]),
   };
-}
-
-function scalarText(value: import("@longsightgroup/qti3-core").QtiValue): string {
-  if (value === null || typeof value === "object")
-    throw new Error("Validated test default must be scalar.");
-  return escapeXmlText(String(value));
 }
 
 export function writeTestItemRef(item: QtiTestItemRef): string {

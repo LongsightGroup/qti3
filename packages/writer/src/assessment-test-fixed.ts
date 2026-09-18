@@ -1,4 +1,10 @@
-import { type QtiTestItemRef, type QtiTestResult } from "@longsightgroup/qti3-core";
+import {
+  isQtiIdentifier,
+  isQtiPackageItemHref,
+  testFailure,
+  type QtiTestItemRef,
+  type QtiTestResult,
+} from "@longsightgroup/qti3-core";
 import type { Qti3TrustedXmlFragment } from "./types.js";
 import { xmlAttributes } from "./xml.js";
 import { testDocument, writeTestItemRef } from "./assessment-test.js";
@@ -34,10 +40,9 @@ export interface QtiFixedTestDefinition {
 /** Serializes fixed delivery options in schema order, including QTI 3 content-body wrappers. */
 export function writeQti3FixedAssessmentTest(test: QtiFixedTestDefinition): QtiTestResult<string> {
   const ids = new Set<string>();
-  const register = (id: string) =>
-    /^[A-Za-z_][A-Za-z0-9_.-]*$/.test(id) && !ids.has(id) && !!ids.add(id);
+  const register = (id: string) => isQtiIdentifier(id) && !ids.has(id) && !!ids.add(id);
   if (!register(test.identifier) || !test.parts.length)
-    return invalid(
+    return testFailure(
       "fixed_structure",
       "A fixed test needs a valid identifier and at least one part.",
     );
@@ -55,24 +60,17 @@ export function writeQti3FixedAssessmentTest(test: QtiFixedTestDefinition): QtiT
         limits.maxTime !== undefined &&
         limits.minTime > limits.maxTime)
     )
-      return invalid("fixed_part", "Invalid fixed test part or time limits.");
+      return testFailure("fixed_part", "Invalid fixed test part or time limits.");
     for (const section of part.sections) {
       if (!register(section.identifier))
-        return invalid("fixed_section", "Invalid or duplicate section identifier.");
+        return testFailure("fixed_section", "Invalid or duplicate section identifier.");
       for (const item of section.items)
-        if (
-          !register(item.identifier) ||
-          !item.href ||
-          /(?:^|\/)\.\.(?:\/|$)|^[a-z]+:|^[/\\]/i.test(item.href)
-        )
-          return invalid("fixed_reference", "Invalid fixed item reference.");
+        if (!register(item.identifier) || !isQtiPackageItemHref(item.href))
+          return testFailure("fixed_reference", "Invalid fixed item reference.");
     }
     for (const feedback of part.feedback)
-      if (
-        !register(feedback.identifier) ||
-        !/^[A-Za-z_][A-Za-z0-9_.-]*$/.test(feedback.outcomeIdentifier)
-      )
-        return invalid("fixed_feedback", "Invalid feedback identifier.");
+      if (!register(feedback.identifier) || !isQtiIdentifier(feedback.outcomeIdentifier))
+        return testFailure("fixed_feedback", "Invalid feedback identifier.");
   }
   return { ok: true, value: testDocument(test, test.parts.map(writePart)) };
 }
@@ -102,8 +100,4 @@ function writePart(part: QtiFixedTestDefinition["parts"][number]): string {
     ...feedback,
     "</qti-test-part>",
   ].join("\n");
-}
-
-function invalid(code: string, message: string): QtiTestResult<never> {
-  return { ok: false, diagnostics: [{ code: `test.${code}`, severity: "error", message }] };
 }

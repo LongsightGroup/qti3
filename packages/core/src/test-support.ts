@@ -1,3 +1,4 @@
+import { testExpressionSyntax } from "./test-expression.js";
 import type { QtiTestElementSupport } from "./types.js";
 
 /** Explicit scope and evidence for the finite forward-branching execution profile. */
@@ -22,9 +23,9 @@ export const testExecutionSupport: readonly QtiTestElementSupport[] = [
   tests: [
     "packages/core/src/test-session.test.ts",
     "packages/core/src/test-validation.test.ts",
+    "packages/core/src/test-language.test.ts",
     "packages/writer/src/assessment-test.test.ts",
     "packages/conformance/src/staged-assessment.test.ts",
   ],
-  notes:
-    "parseQtiTest / startQtiTest / submitQtiTestAnswer only: one linear, individually submitted part; flat fixed sections; forward section branches and EXIT_TEST; scalar test outcomes, SCORE aggregation by one category, sums and boolean/numeric branch expressions. Unsupported test features are rejected. Not item-player or general test-runner certification.",
+  notes: `parseQtiTest / startQtiTest / submitQtiTestAnswer only: one linear, individually submitted part; flat fixed sections; forward section branches and EXIT_TEST; scalar test outcomes, SCORE aggregation by one category, expressions: ${testExpressionSyntax.map((entry) => entry.name).join(", ")}. Unsupported test features are rejected. Not item-player or general test-runner certification.`,
 }));

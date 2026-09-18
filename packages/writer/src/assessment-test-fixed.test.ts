@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { writeQti3AssessmentTest } from "./assessment-test.js";
 import { writeQti3FixedAssessmentTest } from "./assessment-test-fixed.js";
 import { qti3TrustedXmlFragment } from "./types.js";
 import { parseQtiTestExecution } from "@longsightgroup/qti3-core";
@@ -41,4 +42,44 @@ it("writes fixed options and content in QTI 3 schema order without claiming sequ
   );
   expect(result.value).toContain("<qti-content-body><p>Read carefully.</p></qti-content-body>");
   expect(parseQtiTestExecution(result.value)).toEqual({ ok: true, value: { kind: "fixed" } });
+});
+
+it.each([
+  "",
+  "../item.xml",
+  "items/../item.xml",
+  "/item.xml",
+  "\\item.xml",
+  "items\\item.xml",
+  "https://example.com/item.xml",
+  "custom+qti:item.xml",
+  "./item.xml",
+  "items//item.xml",
+  "item.xml#fragment",
+])("applies the same package-local href policy to fixed and executable tests: %s", (href) => {
+  const item = { identifier: "ref", href, categories: [] };
+  const fixed = writeQti3FixedAssessmentTest({
+    identifier: "test",
+    title: "Test",
+    parts: [
+      {
+        identifier: "part",
+        title: "Part",
+        navigationMode: "linear",
+        submissionMode: "individual",
+        sections: [{ identifier: "section", title: "Section", items: [item] }],
+        feedback: [],
+      },
+    ],
+  });
+  const executable = writeQti3AssessmentTest({
+    identifier: "test",
+    title: "Test",
+    partIdentifier: "part",
+    outcomeDeclarations: [],
+    outcomeProcessing: [],
+    sections: [{ identifier: "section", title: "Section", items: [item], branches: [] }],
+  });
+  expect(fixed.ok).toBe(false);
+  expect(executable.ok).toBe(false);
 });

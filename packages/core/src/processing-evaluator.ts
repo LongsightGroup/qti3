@@ -1,5 +1,4 @@
-import type { QtiProcessingDocument } from "./processing-document.js";
-import type { QtiDiagnostic, QtiProcessingExpression, QtiValue } from "./types.js";
+import type { QtiDiagnostic, QtiDocument, QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { QtiCustomOperatorRegistry } from "./custom-operators.js";
 import { evaluateBooleanExpression } from "./processing-evaluator-boolean.js";
@@ -16,15 +15,14 @@ import { evaluateVariableExpression } from "./processing-evaluator-variable.js";
 import { numericValueOrNull } from "./processing-values.js";
 import { isRecordValue } from "./value-guards.js";
 
-export interface EvaluationContext<Document extends QtiProcessingDocument = QtiProcessingDocument> {
-  document: Document;
+export interface EvaluationContext {
+  document: QtiDocument;
   responses: Record<string, QtiValue>;
   outcomes: Record<string, QtiValue>;
   templateValues: Record<string, QtiValue>;
   correctResponses: Record<string, QtiValue>;
   defaultValues: Record<string, QtiValue>;
   diagnostics: QtiDiagnostic[];
-  testVariables(expression: Extract<QtiProcessingExpression, { type: "testVariables" }>): QtiValue;
   builtInVariable(identifier: string): QtiValue | undefined;
   allowedUndeclaredResponseIdentifiers: ReadonlySet<string>;
   random: () => number;
@@ -36,15 +34,12 @@ export interface EvaluationContext<Document extends QtiProcessingDocument = QtiP
 }
 
 export interface EvaluationOptions {
-  testVariables?:
-    | ((expression: Extract<QtiProcessingExpression, { type: "testVariables" }>) => QtiValue)
-    | undefined;
   builtInVariable?: ((identifier: string) => QtiValue | undefined) | undefined;
   allowedUndeclaredResponseIdentifiers?: ReadonlySet<string> | readonly string[] | undefined;
 }
 
-export function createEvaluationContext<Document extends QtiProcessingDocument>(
-  document: Document,
+export function createEvaluationContext(
+  document: QtiDocument,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
   templateValues: Record<string, QtiValue>,
@@ -52,14 +47,13 @@ export function createEvaluationContext<Document extends QtiProcessingDocument>(
   random: () => number,
   customOperators: QtiCustomOperatorRegistry,
   options: EvaluationOptions = {},
-): EvaluationContext<Document> {
+): EvaluationContext {
   const allowedUndeclaredResponseIdentifiers =
     options.allowedUndeclaredResponseIdentifiers instanceof Set
       ? options.allowedUndeclaredResponseIdentifiers
       : new Set(options.allowedUndeclaredResponseIdentifiers ?? []);
-  const context: EvaluationContext<Document> = {
+  const context: EvaluationContext = {
     document,
-    testVariables: options.testVariables ?? (() => null),
     responses,
     outcomes,
     templateValues,
@@ -113,8 +107,6 @@ export function evaluateProcessingExpression(
   context: EvaluationContext,
 ): QtiValue {
   switch (expression.type) {
-    case "testVariables":
-      return context.testVariables(expression);
     case "baseValue":
       return expression.value;
     case "null":

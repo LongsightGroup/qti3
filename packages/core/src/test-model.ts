@@ -1,14 +1,10 @@
-import type {
-  QtiDiagnostic,
-  QtiOutcomeDeclaration,
-  QtiProcessingExpression,
-  QtiSetOutcomeValue,
-} from "./types.js";
+import type { QtiDiagnostic, QtiOutcomeDeclaration } from "./types.js";
+import type { QtiTestBaseType, QtiTestExpression } from "./test-expression.js";
 
 /** An ordered branch evaluated after the section's final item submission. */
 export interface QtiTestBranch {
   readonly target: string;
-  readonly expression: QtiProcessingExpression;
+  readonly expression: QtiTestExpression;
 }
 
 /** A fixed item reference; categories participate in test-variable aggregation. */
@@ -33,13 +29,33 @@ export interface QtiTestDefinition {
   readonly partIdentifier: string;
   readonly sections: readonly QtiTestSection[];
   readonly outcomeDeclarations: readonly QtiOutcomeDeclaration[];
-  readonly outcomeProcessing: readonly QtiSetOutcomeValue[];
+  readonly outcomeProcessing: readonly QtiTestOutcomeRule[];
 }
+
+/** Sequential assignment of a test expression to a declared test outcome. */
+export interface QtiTestOutcomeRule {
+  readonly type: "setOutcomeValue";
+  readonly identifier: string;
+  readonly expression: QtiTestExpression;
+}
+
+type ExecutableSection = QtiTestSection & {
+  readonly items: readonly [QtiTestItemRef, ...QtiTestItemRef[]];
+};
+type ExecutableOutcome = Readonly<QtiOutcomeDeclaration> & {
+  readonly cardinality: "single";
+  readonly baseType: QtiTestBaseType;
+  readonly defaultValue: number | boolean | string | null;
+};
 
 declare const executableTest: unique symbol;
 
 /** A test checked for supported expressions, unique identifiers and forward routing. */
-export type QtiExecutableTest = QtiTestDefinition & { readonly [executableTest]: true };
+export type QtiExecutableTest = Omit<QtiTestDefinition, "sections" | "outcomeDeclarations"> & {
+  readonly [executableTest]: true;
+  readonly sections: readonly [ExecutableSection, ...ExecutableSection[]];
+  readonly outcomeDeclarations: readonly ExecutableOutcome[];
+};
 
 /** Typed failure channel shared by test construction, parsing and transitions. */
 export type QtiTestResult<T> =

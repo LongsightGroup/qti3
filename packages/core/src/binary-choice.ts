@@ -2,16 +2,17 @@ import { parseQtiXml } from "./parser.js";
 import { createItemSession } from "./session.js";
 import { collectQtiResponseProcessingExpressions } from "./processing-expression-collection.js";
 import { responseProcessingTemplateKind } from "./processing-templates.js";
-import type { QtiDiagnostic } from "./types.js";
+import type { QtiTestResult } from "./test-model.js";
 
-/** A deterministic, single-response item with exactly one 1-point answer and 0 otherwise. */
-export type QtiBinaryChoiceInspection =
-  | { readonly ok: true; readonly responseIdentifier: string; readonly correctChoice: string }
-  | { readonly ok: false; readonly diagnostics: readonly QtiDiagnostic[] };
+/** Item policy established by exhaustive scoring of every available choice. */
+export interface QtiBinaryChoicePolicy {
+  readonly responseIdentifier: string;
+  readonly correctChoice: string;
+}
 
-/** Inspect every possible choice; excludes templates, random scoring and session-dependent rules. */
-export function inspectQtiBinaryChoice(itemXml: string): QtiBinaryChoiceInspection {
-  const fail = (message: string): QtiBinaryChoiceInspection => ({
+/** Host scoring policy: inspect every choice and reject random or session-dependent scoring. */
+export function inspectQtiBinaryChoice(itemXml: string): QtiTestResult<QtiBinaryChoicePolicy> {
+  const fail = (message: string): QtiTestResult<never> => ({
     ok: false,
     diagnostics: [{ code: "item.binaryChoice", severity: "error", message }],
   });
@@ -40,13 +41,10 @@ export function inspectQtiBinaryChoice(itemXml: string): QtiBinaryChoiceInspecti
     return fail("Requires one non-adaptive single-choice interaction with one correct response.");
   }
   const processing = item.responseProcessing;
-  if (
-    processing.template &&
-    !["matchCorrect", "mapResponse"].includes(
-      responseProcessingTemplateKind(processing.template) ?? "",
-    )
-  ) {
-    return fail("Unsupported binary-choice scoring template.");
+  if (processing.template) {
+    const kind = responseProcessingTemplateKind(processing.template);
+    if (kind !== "matchCorrect" && kind !== "mapResponse")
+      return fail("Unsupported binary-choice scoring template.");
   }
   const variables = new Set([
     response.identifier,
@@ -90,6 +88,9 @@ export function inspectQtiBinaryChoice(itemXml: string): QtiBinaryChoiceInspecti
     correctCount += expected;
   }
   return correctCount === 1
-    ? { ok: true, responseIdentifier: response.identifier, correctChoice: response.correctResponse }
+    ? {
+        ok: true,
+        value: { responseIdentifier: response.identifier, correctChoice: response.correctResponse },
+      }
     : fail("Exactly one available choice must be correct.");
 }

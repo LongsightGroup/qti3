@@ -204,16 +204,7 @@ function parseFirstExpression(node: XmlNode): QtiProcessingExpression | undefine
   return undefined;
 }
 
-/** Decode a processing expression; its item/test owner validates scope and support. */
-export function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
-  if (node.localName === "qti-test-variables") {
-    return {
-      type: "testVariables",
-      variableIdentifier: node.attributes["variable-identifier"] ?? "",
-      includeCategory: node.attributes["include-category"],
-      source: node.source,
-    };
-  }
+function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   if (node.localName === "qti-base-value") {
     const rawValue = textContent(node);
     return {

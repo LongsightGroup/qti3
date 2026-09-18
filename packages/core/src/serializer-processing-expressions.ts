@@ -75,12 +75,6 @@ export function serializeExpression(
   }
 
   switch (expression.type) {
-    case "testVariables": {
-      const attrs: XmlAttribute[] = [["variable-identifier", expression.variableIdentifier]];
-      if (expression.includeCategory !== undefined)
-        attrs.push(["include-category", expression.includeCategory]);
-      return renderElement("qti-test-variables", attrs, [], indent);
-    }
     case "baseValue":
       return serializeBaseValue(expression, context, indent);
     case "null":

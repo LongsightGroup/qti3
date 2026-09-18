@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Separate the closed `QtiTestExpression` language from item processing, including parsing,
+  type checking, evaluation, and serialization. Preserve test routing and snapshot replay.
+- Replace `serializeProcessingExpression()` with `serializeTestExpression()` for test expressions.
+- Return binary-choice inspection data in the shared result `value` field, typed as
+  `QtiBinaryChoicePolicy`.
+
 ## 0.12.0 - 2026-09-17
 
 ### Added
@@ -10,7 +16,7 @@
   references, test outcome processing, forward section branches, and explicit test exit.
   Unsupported routing, backward targets, unresolved references, and invalid expressions
   return structured diagnostics.
-- Start, advance, snapshot, and restore a test session with the shared processing engine.
+- Start, advance, snapshot, and restore a test session with deterministic test outcome processing.
   Restoration replays committed item scores against the pinned test definition.
 - Write supported fixed and branching assessment tests from typed models, including
   existing fixed-test timing, instructions, and feedback.

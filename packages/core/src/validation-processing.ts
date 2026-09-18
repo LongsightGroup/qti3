@@ -333,16 +333,6 @@ function validateExpressionReferences(
 ): void {
   if (!expression) return;
 
-  if (expression.type === "testVariables") {
-    diagnostics.push({
-      code: "processing.testVariables.scope",
-      severity: "error",
-      message: "qti-test-variables is only valid in test outcome processing.",
-      source: expression.source,
-    });
-    return;
-  }
-
   if (expression.type === "variable") {
     validateProcessingIdentifier(
       expression.identifier,

@@ -1,4 +1,8 @@
-import { processTestOutcomes, type QtiTestSubmission } from "./test-processing.js";
+import {
+  evaluateTestExpression,
+  processTestOutcomes,
+  type QtiTestSubmission,
+} from "./test-processing.js";
 import {
   testFailure,
   type QtiExecutableTest,
@@ -29,8 +33,7 @@ export interface QtiTestSessionSnapshot {
 
 /** Start a validated test at its first item. */
 export function startQtiTest(test: QtiExecutableTest): QtiTestSession {
-  const first = test.sections[0]?.items[0];
-  if (!first) throw new Error("Executable test has no first item.");
+  const first = test.sections[0].items[0];
   return {
     status: "active",
     testIdentifier: test.identifier,
@@ -61,25 +64,48 @@ export function submitQtiTestAnswer(
     ...session.submissions,
     { itemRef: submission.itemRef, score: submission.score },
   ];
-  const context = processTestOutcomes(test, submissions);
-  const base = { testIdentifier: test.identifier, submissions, outcomes: context.outcomes };
-  let next: QtiTestItemRef | undefined =
-    section.items[section.items.findIndex((i) => i.identifier === submission.itemRef) + 1];
-  if (!next) {
-    const branch = section.branches.find((b) => context.evaluate(b.expression) === true);
-    if (branch?.target === "EXIT_TEST")
-      return { ok: true, value: { ...base, status: "completed" } };
-    const nextSection = branch
-      ? test.sections.find((s) => s.identifier === branch.target)
-      : test.sections[sectionIndex + 1];
-    next = nextSection?.items[0];
-  }
+  const { outcomes } = processTestOutcomes(test, submissions);
+  const base = { testIdentifier: test.identifier, submissions, outcomes };
+  const next = nextItemAfter(
+    test,
+    sectionIndex,
+    submission.itemRef,
+    (expression) =>
+      evaluateTestExpression(expression, {
+        outcomes,
+        submissions,
+        categories: new Map(
+          test.sections.flatMap((candidate) =>
+            candidate.items.map((item) => [item.identifier, item.categories] as const),
+          ),
+        ),
+      }) === true,
+  );
   return {
     ok: true,
     value: next
       ? { ...base, status: "active", currentItemRef: next.identifier }
       : { ...base, status: "completed" },
   };
+}
+
+function nextItemAfter(
+  test: QtiExecutableTest,
+  sectionIndex: number,
+  itemRef: string,
+  evaluate: (expression: import("./test-expression.js").QtiTestExpression) => boolean,
+): QtiTestItemRef | undefined {
+  const section = test.sections[sectionIndex];
+  if (!section) return undefined;
+  const nextItem =
+    section.items[section.items.findIndex((item) => item.identifier === itemRef) + 1];
+  if (nextItem) return nextItem;
+  const branch = section.branches.find((candidate) => evaluate(candidate.expression));
+  if (branch?.target === "EXIT_TEST") return undefined;
+  const nextSection = branch
+    ? test.sections.find((candidate) => candidate.identifier === branch.target)
+    : test.sections[sectionIndex + 1];
+  return nextSection?.items[0];
 }
 
 /** Project session state into its minimal persisted contract. */

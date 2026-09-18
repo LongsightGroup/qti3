@@ -54,3 +54,12 @@ export function normalizePackagePath(
   }
   return parts.join("/");
 }
+
+/** Whether an item href is a normalized package-local path, without URI routing or traversal. */
+export function isQtiPackageItemHref(href: string): boolean {
+  return (
+    href.length > 0 &&
+    !/^[a-z][a-z0-9+.-]*:|[\\?#\s]/i.test(href) &&
+    href.split("/").every((part) => part.length > 0 && part !== "." && part !== "..")
+  );
+}

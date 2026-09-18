@@ -608,7 +608,6 @@ export type QtiProcessingExpression = (
   | { type: "mapResponse"; identifier: string }
   | { type: "mapResponsePoint"; identifier: string }
   | { type: "variable"; identifier: string }
-  | { type: "testVariables"; variableIdentifier: string; includeCategory?: string | undefined }
   | {
       type: "randomInteger";
       min: number;

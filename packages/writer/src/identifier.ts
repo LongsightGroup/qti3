@@ -1,8 +1,6 @@
-const QTI_IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
+import { isQtiIdentifier } from "@longsightgroup/qti3-core";
 
-export function isQtiIdentifier(identifier: string): boolean {
-  return QTI_IDENTIFIER_PATTERN.test(identifier.trim());
-}
+export { isQtiIdentifier };
 
 export function assertQtiIdentifier(identifier: string, label: string): string {
   const trimmed = identifier.trim();

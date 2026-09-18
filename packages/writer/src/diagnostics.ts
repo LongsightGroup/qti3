@@ -29,7 +29,7 @@ export function validateQtiIdentifier(
   label: string,
   value: string,
 ): Qti3WriterDiagnostic | undefined {
-  if (isQtiIdentifier(value)) return undefined;
+  if (isQtiIdentifier(value.trim())) return undefined;
   return invalidIdentifierDiagnostic(path, label, value);
 }
 

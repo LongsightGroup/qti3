@@ -1,6 +1,6 @@
-import type { QtiProcessingDocument } from "./processing-document.js";
 import type {
   QtiBaseType,
+  QtiDocument,
   QtiOutcomeDeclaration,
   QtiProcessingExpression,
   QtiResponseDeclaration,
@@ -11,17 +11,16 @@ import { builtInVariableBaseType } from "./session-builtins.js";
 import { parseBaseType } from "./parser-values.js";
 
 export function getResponseDeclaration(
-  document: QtiProcessingDocument,
+  document: QtiDocument,
   identifier: string,
 ): QtiResponseDeclaration | undefined {
-  if ("test" in document) return undefined;
   return document.item.responseDeclarations.find(
     (declaration) => declaration.identifier === identifier,
   );
 }
 
 export function resolveVariableValue(
-  document: QtiProcessingDocument,
+  document: QtiDocument,
   identifier: string,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
@@ -33,7 +32,7 @@ export function resolveVariableValue(
 }
 
 export function resolveOptionalVariableValue(
-  document: QtiProcessingDocument,
+  document: QtiDocument,
   identifier: string,
   responses: Record<string, QtiValue>,
   outcomes: Record<string, QtiValue>,
@@ -47,16 +46,13 @@ export function resolveOptionalVariableValue(
   return templateValues[identifier] ?? null;
 }
 
-export function defaultValueForIdentifier(
-  document: QtiProcessingDocument,
-  identifier: string,
-): QtiValue {
+export function defaultValueForIdentifier(document: QtiDocument, identifier: string): QtiValue {
   return resolveVariableDeclaration(document, identifier)?.defaultValue ?? null;
 }
 
 export function expressionIsOrdered(
   expression: QtiProcessingExpression,
-  document: QtiProcessingDocument,
+  document: QtiDocument,
 ): boolean {
   if (expression.type === "ordered" || expression.type === "repeat") return true;
   if (expression.type === "delete") return expressionIsOrdered(expression.collection, document);
@@ -74,7 +70,7 @@ export function expressionIsOrdered(
 /** Resolve the declared atomic base type for an expression when it is statically knowable. */
 export function expressionBaseType(
   expression: QtiProcessingExpression,
-  document: QtiProcessingDocument,
+  document: QtiDocument,
 ): QtiBaseType | undefined {
   if (expression.type === "baseValue") return parseBaseType(expression.baseType);
   if (expression.type === "isNull") return "boolean";
@@ -103,7 +99,7 @@ export function expressionBaseType(
 
 function commonExpressionBaseType(
   expressions: QtiProcessingExpression[],
-  document: QtiProcessingDocument,
+  document: QtiDocument,
 ): QtiBaseType | undefined {
   const [first, ...rest] = expressions;
   if (!first) return undefined;
@@ -114,19 +110,14 @@ function commonExpressionBaseType(
     : undefined;
 }
 
-function variableCardinality(
-  document: QtiProcessingDocument,
-  identifier: string,
-): string | undefined {
+function variableCardinality(document: QtiDocument, identifier: string): string | undefined {
   return resolveVariableDeclaration(document, identifier)?.cardinality;
 }
 
 function resolveVariableDeclaration(
-  document: QtiProcessingDocument,
+  document: QtiDocument,
   identifier: string,
 ): QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration | undefined {
-  if ("test" in document)
-    return document.test.outcomeDeclarations.find((value) => value.identifier === identifier);
   return (
     document.item.responseDeclarations.find(
       (declaration) => declaration.identifier === identifier,
