@@ -70,6 +70,14 @@
       button {
         margin-block: 1rem;
       }
+      .attempt-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      #attempt-result {
+        font-weight: 600;
+      }
       :focus-visible {
         outline: 3px solid #165ea8;
         outline-offset: 3px;
@@ -131,7 +139,14 @@
             <option value="">Select a question</option>
           </select>
           <button id="delete-package" type="button" disabled>Delete package</button>
-          <p id="library-status" role="status" aria-live="polite">Opening library…</p>
+          <p
+            id="library-status"
+            role="status"
+            aria-label="Package library status"
+            aria-live="polite"
+          >
+            Opening library…
+          </p>
           <details>
             <summary>Import and player diagnostics</summary>
             <pre id="library-diagnostics">No diagnostics.</pre>
@@ -140,6 +155,24 @@
         <section class="question" aria-label="Selected question">
           <h2>Question</h2>
           <qti-assessment-item-player></qti-assessment-item-player>
+          <div class="attempt-actions">
+            <button id="submit-response" type="button" disabled>Submit response</button>
+            <button id="reset-attempt" type="button" disabled>Reset attempt</button>
+          </div>
+          <p
+            id="attempt-result"
+            role="status"
+            aria-label="Submission result"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            Select a question to begin.
+          </p>
+          <p>Responses and scores are cleared when you switch questions or close this page.</p>
+          <details id="attempt-details">
+            <summary>Response and outcome details</summary>
+            <pre id="attempt-values">No submission yet.</pre>
+          </details>
           <details>
             <summary>Original question XML</summary>
             <pre id="item-source">Select a saved package to inspect its source.</pre>

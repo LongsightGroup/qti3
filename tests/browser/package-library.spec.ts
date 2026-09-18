@@ -154,7 +154,9 @@ test("does not save a batch containing a valid item and a missing referenced ite
   await page
     .getByLabel("Import package", { exact: true })
     .setInputFiles({ name: "partial.zip", mimeType: "application/zip", buffer: zip });
-  await expect(page.getByRole("status")).toContainText("Package import failed. Nothing was saved.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Package import failed. Nothing was saved.",
+  );
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
   await expect(page.getByRole("radio")).toHaveCount(0);
   await page.getByText("Import and player diagnostics", { exact: true }).click();
@@ -172,7 +174,7 @@ test("imports, commits, and immediately opens the saved record", async ({ page }
   await page
     .getByLabel("Import package", { exact: true })
     .setInputFiles({ name: "choice.zip", mimeType: "application/zip", buffer: zip });
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(page.getByRole("status", { name: "Package library status" })).toHaveText(
     "Saved choice.zip. Reopened 1 question from the database.",
   );
   await expect(page.getByRole("radio", { name: "A. Two", exact: true })).toBeVisible();
@@ -221,7 +223,9 @@ test("a duplicate ID aborts the write and leaves the earlier package usable", as
   expect(result.read.value.title).toBe("Original");
   await page.reload();
   await page.getByLabel("Saved package", { exact: true }).selectOption("same-id");
-  await expect(page.getByRole("status")).toContainText("Opened a.zip from the database.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Opened a.zip from the database.",
+  );
   await expect(page.getByRole("radio", { name: "A. Two", exact: true })).toBeVisible();
 });
 
@@ -232,7 +236,9 @@ test("a failed import reports diagnostics without adding a saved package", async
     mimeType: "application/zip",
     buffer: Buffer.from("broken"),
   });
-  await expect(page.getByRole("status")).toContainText("Package import failed. Nothing was saved.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Package import failed. Nothing was saved.",
+  );
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
   await page.getByText("Import and player diagnostics", { exact: true }).click();
   await expect(page.locator("#library-diagnostics")).toContainText(
@@ -280,12 +286,16 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   await page
     .getByLabel("Import package", { exact: true })
     .setInputFiles({ name: "preservation.zip", mimeType: "application/zip", buffer: zip });
-  await expect(page.getByRole("status")).toContainText("Reopened 2 questions from the database.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Reopened 2 questions from the database.",
+  );
   const id = await page.getByLabel("Saved package", { exact: true }).inputValue();
   await page.close();
   const reopened = await context.newPage();
   await reopened.goto("/library.html");
-  await expect(reopened.getByRole("status")).toHaveText("Select a saved package to reopen it.");
+  await expect(reopened.getByRole("status", { name: "Package library status" })).toHaveText(
+    "Select a saved package to reopen it.",
+  );
   const restored = await reopened.evaluate(
     async ({ packageId, importPath }) => {
       const storePath = "/src/package-library/store.ts";
@@ -316,7 +326,7 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   });
   await reopened.route("**/*", (route) => route.abort());
   await reopened.getByLabel("Saved package", { exact: true }).selectOption(id);
-  await expect(reopened.getByRole("status")).toContainText(
+  await expect(reopened.getByRole("status", { name: "Package library status" })).toContainText(
     "Opened preservation.zip from the database. 2 questions.",
   );
   await expect(reopened.locator("#package-items option")).toHaveCount(2);
@@ -350,10 +360,12 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   expect(contentRequests).toEqual([]);
   await reopened.unrouteAll();
   await reopened.getByRole("button", { name: "Delete package", exact: true }).click();
-  await expect(reopened.getByRole("status")).toHaveText("Package deleted from this browser.");
+  await expect(reopened.getByRole("status", { name: "Package library status" })).toHaveText(
+    "Package deleted from this browser.",
+  );
   await expect(reopened.getByLabel("Import package", { exact: true })).toBeFocused();
   await reopened.reload();
-  await expect(reopened.getByRole("status")).toHaveText(
+  await expect(reopened.getByRole("status", { name: "Package library status" })).toHaveText(
     "No saved packages. Import a QTI ZIP to begin.",
   );
   await expect(reopened.locator("#saved-packages option")).toHaveCount(1);
@@ -377,7 +389,9 @@ test("missing saved assets are diagnosed without fetching the demo server", asyn
   await page
     .getByLabel("Import package", { exact: true })
     .setInputFiles({ name: "missing-asset.zip", mimeType: "application/zip", buffer: zip });
-  await expect(page.getByRole("status")).toContainText("Package import failed. Nothing was saved.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Package import failed. Nothing was saved.",
+  );
   await page.getByText("Import and player diagnostics", { exact: true }).click();
   await expect(page.locator("#library-diagnostics")).toContainText("missing.svg");
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
@@ -388,7 +402,9 @@ test("rejects invalid stored records and reports a real database-open failure", 
   page,
 }) => {
   await page.goto("/library.html");
-  await expect(page.getByRole("status")).toContainText("No saved packages");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "No saved packages",
+  );
   await page.evaluate(async () => {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open("qti3-saved-packages", 1);
@@ -421,7 +437,9 @@ test("rejects invalid stored records and reports a real database-open failure", 
   expect(result).toMatchObject({ ok: false, code: "invalid-record" });
   await page.reload();
   await page.getByLabel("Saved package", { exact: true }).selectOption("corrupt");
-  await expect(page.getByRole("status")).toContainText("saved package record is invalid");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "saved package record is invalid",
+  );
   await page.evaluate(async () => {
     await new Promise<void>((resolve, reject) => {
       const request = indexedDB.open("qti3-saved-packages", 2);
@@ -433,7 +451,7 @@ test("rejects invalid stored records and reports a real database-open failure", 
     });
   });
   await page.reload();
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(page.getByRole("status", { name: "Package library status" })).toHaveText(
     "Browser storage is unavailable. The package was not saved.",
   );
 });
@@ -453,15 +471,21 @@ test("keyboard import, reopen, source inspection and delete expose accessible st
   await (
     await chooser
   ).setFiles({ name: "keyboard.zip", mimeType: "application/zip", buffer: zip });
-  await expect(page.getByRole("status")).toContainText("Saved keyboard.zip.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Saved keyboard.zip.",
+  );
   await page.reload();
-  await expect(page.getByRole("status")).toHaveText("Select a saved package to reopen it.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toHaveText(
+    "Select a saved package to reopen it.",
+  );
   const saved = page.getByLabel("Saved package", { exact: true });
   await saved.focus();
   await expect(saved).toBeEnabled();
   await expect(saved).toBeFocused();
   await saved.press("s");
-  await expect(page.getByRole("status")).toContainText("Opened keyboard.zip from the database.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
+    "Opened keyboard.zip from the database.",
+  );
   const sourceSummary = page.getByText("Original question XML", { exact: true });
   await sourceSummary.focus();
   await sourceSummary.press("Enter");
@@ -485,7 +509,9 @@ test("keyboard import, reopen, source inspection and delete expose accessible st
     "none",
   );
   await deleteButton.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("Package deleted from this browser.");
+  await expect(page.getByRole("status", { name: "Package library status" })).toHaveText(
+    "Package deleted from this browser.",
+  );
   await expect(input).toBeFocused();
 });
 

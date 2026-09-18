@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add response submission and attempt reset to the saved-package library, with scores,
+  authored feedback, validation messages, and inspectable response and outcome details.
 - Separate the closed `QtiTestExpression` language from item processing, including parsing,
   type checking, evaluation, and serialization. Preserve test routing and snapshot replay.
 - Replace `serializeProcessingExpression()` with `serializeTestExpression()` for test expressions.

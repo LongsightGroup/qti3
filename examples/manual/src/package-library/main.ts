@@ -3,11 +3,14 @@ import {
   parseQtiPackageFromEntries,
   type QtiPackageParseResult,
   type QtiDiagnostic,
+  type QtiScoreResult,
 } from "@longsightgroup/qti3-core";
 import {
   defineQtiAssessmentItemPlayer,
   QtiAssessmentItemPlayer,
   type QtiDiagnosticsEventDetail,
+  type QtiScoreEventDetail,
+  type QtiValidationEventDetail,
 } from "@longsightgroup/qti3-player";
 import { resolvePackageAssetUrl } from "./package-assets.js";
 import { readBrowserPackageZip } from "./browser-package.js";
@@ -21,6 +24,11 @@ const deleteButton = requireElement("#delete-package", HTMLButtonElement);
 const status = requireElement("#library-status", HTMLParagraphElement);
 const diagnostics = requireElement("#library-diagnostics", HTMLPreElement);
 const source = requireElement("#item-source", HTMLPreElement);
+const submitButton = requireElement("#submit-response", HTMLButtonElement);
+const resetButton = requireElement("#reset-attempt", HTMLButtonElement);
+const attemptResult = requireElement("#attempt-result", HTMLParagraphElement);
+const attemptDetails = requireElement("#attempt-details", HTMLDetailsElement);
+const attemptValues = requireElement("#attempt-values", HTMLPreElement);
 let player = requireElement("qti-assessment-item-player", QtiAssessmentItemPlayer);
 let current: QtiPackageParseResult | undefined;
 let assetUrls = new Map<string, string>();
@@ -38,6 +46,12 @@ items.addEventListener("change", () => {
 });
 deleteButton.addEventListener("click", () => {
   void run(removeSelectedPackage, input);
+});
+submitButton.addEventListener("click", () => {
+  void run(() => player.scoreAttempt());
+});
+resetButton.addEventListener("click", () => {
+  void run(() => player.reset(), submitButton);
 });
 void run(async () => {
   if (await refreshList())
@@ -148,6 +162,24 @@ async function renderItem(): Promise<void> {
     messages = [...messages, ...detail.diagnostics];
     showDiagnostics();
   });
+  player.addEventListener("qti-score", (event) => {
+    // SAFETY: This listener receives the documented player score event.
+    const result = (event as CustomEvent<QtiScoreEventDetail>).detail;
+    showScore(result);
+  });
+  player.addEventListener("qti-validation", (event) => {
+    // SAFETY: This listener receives the documented player validation event.
+    const detail = (event as CustomEvent<QtiValidationEventDetail>).detail;
+    clearResult("Submission blocked. Review the validation messages in the question.");
+    attemptValues.textContent = JSON.stringify(detail, null, 2);
+  });
+  player.addEventListener("qti-responsechange", () => {
+    clearResult("Response changed. Submit response to see the updated score.");
+  });
+  player.addEventListener("qti-reset", () =>
+    clearResult("Attempt reset. Submit response to see your score."),
+  );
+  player.addEventListener("qti-statechange", updateControls);
   await player.loadXml(item.xml, {
     resolveAsset: (url) => resolveAsset(item.href, url) ?? "",
     resolveStylesheet: (stylesheet) => {
@@ -155,6 +187,53 @@ async function renderItem(): Promise<void> {
       return href ? { ...stylesheet, href } : undefined;
     },
   });
+  clearResult(
+    player.serialize()
+      ? "Submit response to see your score."
+      : "This question could not be loaded. Inspect the diagnostics for details.",
+  );
+}
+
+function showScore(result: QtiScoreResult): void {
+  attemptValues.textContent = JSON.stringify(
+    {
+      responses: result.state.responses,
+      outcomes: result.outcomes,
+      diagnostics: result.diagnostics,
+    },
+    null,
+    2,
+  );
+  if (result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+    attemptResult.textContent =
+      "Scoring failed. Inspect response and outcome details for diagnostics.";
+    return;
+  }
+  const item = current?.items[Number(items.value)]?.document?.item;
+  const processing = item?.responseProcessing;
+  if (!processing || (!processing.rules.length && !processing.template)) {
+    attemptResult.textContent = "Submitted. This question has no automatic response processing.";
+    return;
+  }
+  const score = result.outcomes.SCORE;
+  if (typeof score !== "number" || !Number.isFinite(score)) {
+    attemptResult.textContent =
+      "Submitted. No numeric SCORE was returned. See response and outcome details.";
+    return;
+  }
+  const maximum = item?.outcomeDeclarations.find(
+    (declaration) => declaration.identifier === "SCORE",
+  )?.attributes["normal-maximum"];
+  const hasMaximum =
+    maximum !== undefined && maximum.trim() !== "" && Number.isFinite(Number(maximum));
+  attemptResult.textContent = hasMaximum
+    ? `Score: ${score} / ${Number(maximum)} points.`
+    : `Score: ${score} ${score === 1 ? "point" : "points"}.`;
+}
+
+function clearResult(message: string): void {
+  attemptResult.textContent = message;
+  attemptValues.textContent = "No submission yet.";
 }
 
 function resolveAsset(itemPath: string, reference: string): string | undefined {
@@ -196,6 +275,8 @@ function resetPlayer(): void {
   const replacement = document.createElement("qti-assessment-item-player");
   player.replaceWith(replacement);
   player = requireElement("qti-assessment-item-player", QtiAssessmentItemPlayer);
+  clearResult("Select a question to begin.");
+  attemptDetails.open = false;
 }
 
 function releaseAssets(): void {
@@ -218,7 +299,7 @@ function showDiagnostics(): void {
     : "No diagnostics.";
 }
 
-async function run(action: () => Promise<unknown>, focusAfter?: HTMLElement): Promise<void> {
+async function run(action: () => unknown, focusAfter?: HTMLElement): Promise<void> {
   if (busy) return;
   busy = true;
   updateControls();
@@ -240,6 +321,10 @@ function updateControls(): void {
   packages.disabled = busy;
   items.disabled = busy || !current?.items.length;
   deleteButton.disabled = busy || !packages.value;
+  const state = player.serialize();
+  submitButton.disabled =
+    busy || !state || state.status === "completed" || state.status === "suspended";
+  resetButton.disabled = busy || !state;
 }
 
 function requireElement<T extends Element>(selector: string, constructor: new () => T): T {

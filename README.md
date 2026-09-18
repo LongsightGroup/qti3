@@ -438,6 +438,11 @@ Import saves every original package file, including XML, metadata, stylesheets, 
 The page immediately reads the saved record back through the core importer. Close the page,
 reopen it, and choose **Saved package** and **Question** to inspect the questions, original
 XML, and diagnostics without uploading again. **Delete package** removes that saved record.
+Choose **Submit response** to run the question's response processing and see its score,
+authored feedback, responses, and outcomes. **Reset attempt** clears the current response and
+score. Questions without automatic response processing are identified as unscored; the page
+does not infer correctness from a positive score. Attempts are cleared when you switch
+questions or close the page; only the imported package is stored.
 
 For a review, use a normal Chrome profile and a fixed local origin:
 
