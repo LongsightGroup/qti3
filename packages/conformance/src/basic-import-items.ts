@@ -484,25 +484,10 @@ async function runCriterion(
   const packageEntryPath = packageEntryPathForCriterion(criterionEntry);
   const itemKey = packageItemKey(criterionEntry.packagePath, packageEntryPath);
   const importedItem = packageIndex.itemsByPackageItem.get(itemKey);
-  let xml = importedItem?.xml;
+  const xml = importedItem?.xml;
 
   const packageFailure = packageIndex.packageReadFailures.get(criterionEntry.packagePath);
   if (packageFailure) return failedRow(criterionEntry, packageFailure);
-
-  if (xml === undefined && criterionEntry.expectation === "invalid-item") {
-    try {
-      xml = await readFile(join(qtiRoot, criterionEntry.sourcePath), "utf8");
-    } catch (cause: unknown) {
-      return failedRow(
-        criterionEntry,
-        diagnostic(
-          "certification.file.read",
-          `Unable to read known invalid fixture ${criterionEntry.sourcePath}.`,
-          cause,
-        ),
-      );
-    }
-  }
 
   if (xml === undefined) {
     return failedRow(

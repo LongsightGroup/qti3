@@ -186,7 +186,9 @@ inspection, validation, and item loading. The browser player renders one assessm
 
 Core's batch package parsers return an `xmlFiles` inventory with root names, namespaces, and
 syntax diagnostics, including unreferenced XML files. CLI inspection uses this inventory to avoid
-parsing those files again for discovery. See
+parsing those files again for discovery. Package imports validate every manifest-declared item,
+including items omitted from an assessment test. The `items` array preserves test order, followed
+by the remaining manifest items. See
 [batch package import](packages/core/README.md#batch-import-from-extracted-entries).
 
 The transcoder converts QTI 3 items and packages through versioned profiles. Standard QTI output
@@ -415,6 +417,8 @@ The full certification gate also writes and checks reproducible item evidence fo
 clean committed candidate. Set `QTI3_CERTIFICATION_OUTPUT_DIR` to private storage
 outside this repository, or retain the temporary output directory printed by the
 command. See [certification evidence](packages/conformance/README.md#reproducible-certification-evidence).
+With external inputs configured, browser checks also import the official Basic packages into
+the saved-package library. Browser reports and failure artifacts go to a system temporary directory.
 
 Public GitHub Actions runs synthetic tests, browser checks, and release validation.
 Keep official fixtures, certification logs, and reports in private storage. Any future
@@ -434,10 +438,16 @@ their diagnostic codes, paths, and severities in the debug panel.
 Open `/library.html` to import a QTI ZIP into the reference app's IndexedDB database.
 ZIP extraction uses core's async reader with a bounded browser inflater; imports
 and database restores use `parseQtiPackageFromEntries` and its typed diagnostics.
-Import saves every original package file, including XML, metadata, stylesheets, and media.
+An import with no errors saves every original package file, including XML, metadata, stylesheets,
+and media. If any manifest-declared item is invalid, the entire import is rejected before saving;
+the diagnostics panel opens and identifies the failing files. The official Basic single-choice,
+extended-text, and text-entry ZIPs contain deliberately invalid items and should produce this
+rejection, even though their convenience assessments omit those items.
 The page immediately reads the saved record back through the core importer. Close the page,
 reopen it, and choose **Saved package** and **Question** to inspect the questions, original
 XML, and diagnostics without uploading again. **Delete package** removes that saved record.
+Reopening validates the saved files again. A saved package that fails validation is not opened;
+its record remains available for deletion.
 Choose **Submit response** to run the question's response processing and see its score,
 authored feedback, responses, and outcomes. **Reset attempt** clears the current response and
 score. Questions without automatic response processing are identified as unscored; the page

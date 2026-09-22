@@ -23,6 +23,7 @@ const items = requireElement("#package-items", HTMLSelectElement);
 const deleteButton = requireElement("#delete-package", HTMLButtonElement);
 const status = requireElement("#library-status", HTMLParagraphElement);
 const diagnostics = requireElement("#library-diagnostics", HTMLPreElement);
+const diagnosticsPanel = requireElement("#library-diagnostics-panel", HTMLDetailsElement);
 const source = requireElement("#item-source", HTMLPreElement);
 const submitButton = requireElement("#submit-response", HTMLButtonElement);
 const resetButton = requireElement("#reset-attempt", HTMLButtonElement);
@@ -67,12 +68,12 @@ async function importFile(): Promise<void> {
   status.textContent = `Importing ${file.name}…`;
   const extracted = await readBrowserPackageZip(new Uint8Array(await file.arrayBuffer()));
   if (!extracted.ok) {
-    showImportFailure(extracted.diagnostics);
+    showPackageFailure("Package import failed. Nothing was saved.", extracted.diagnostics);
     return;
   }
   const imported = parseQtiPackageFromEntries(extracted.entries);
   if (!imported.ok) {
-    showImportFailure(imported.diagnostics);
+    showPackageFailure("Package import failed. Nothing was saved.", imported.diagnostics);
     return;
   }
   const id = crypto.randomUUID();
@@ -125,7 +126,7 @@ async function openPackage(id: string): Promise<boolean> {
   }
   const imported = parseQtiPackageFromEntries(record.value.entries);
   if (!imported.ok) {
-    showImportFailure(imported.diagnostics);
+    showPackageFailure("Saved package failed validation and was not opened.", imported.diagnostics);
     return false;
   }
   current = imported;
@@ -284,17 +285,20 @@ function releaseAssets(): void {
   assetUrls = new Map();
 }
 
-function showImportFailure(failures: readonly QtiDiagnostic[]): void {
+function showPackageFailure(message: string, failures: readonly QtiDiagnostic[]): void {
   messages = failures;
   showDiagnostics();
-  status.textContent =
-    "Package import failed. Nothing was saved. Inspect the diagnostics for details.";
+  status.textContent = `${message} Inspect the diagnostics for details.`;
+  diagnosticsPanel.open = true;
 }
 
 function showDiagnostics(): void {
   diagnostics.textContent = messages.length
     ? messages
-        .map((diagnostic) => `${diagnostic.severity}: ${diagnostic.code}: ${diagnostic.message}`)
+        .map(
+          (diagnostic) =>
+            `${diagnostic.severity}: ${diagnostic.code}${diagnostic.path ? ` (${diagnostic.path})` : ""}: ${diagnostic.message}`,
+        )
         .join("\n")
     : "No diagnostics.";
 }

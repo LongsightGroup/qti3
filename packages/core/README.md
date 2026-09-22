@@ -402,11 +402,16 @@ property names in their own adapter layer.
 assessment-test ordering, item, asset, and diagnostic semantics. No ZIP rebuilding
 or stream-event collection is needed when the entries are already in memory.
 
+Batch and streaming imports validate every manifest-declared item. Test-referenced items come
+first in test order, followed by the remaining manifest items in manifest order. Invalid items
+omitted from the test still contribute errors to the package result. This inventory does not
+change the assessment's authored `itemRefs` or test-session sequencing.
+
 Both batch parsers return `xmlFiles`, an inventory of `QtiPackageXmlFileSummary`
 objects in entry order. Each summary contains its path, root local name, namespace,
 and XML syntax diagnostics, including unreferenced files. Callers can classify
-those files without parsing their XML again. Errors in unreferenced files remain
-in the inventory; they do not change the selected package graph or its `ok` result.
+those files without parsing their XML again. Errors in XML files outside the manifest/test
+item graph remain in the inventory; they do not change the package's `ok` result.
 No XML trees or source text are retained in this inventory. The streaming parser
 does not scan unreferenced files or return this inventory.
 

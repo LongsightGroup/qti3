@@ -159,7 +159,7 @@ test("does not save a batch containing a valid item and a missing referenced ite
   );
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
   await expect(page.getByRole("radio")).toHaveCount(0);
-  await page.getByText("Import and player diagnostics", { exact: true }).click();
+  await expect(page.locator("#library-diagnostics")).toBeVisible();
   for (const diagnostic of core.diagnostics.filter((entry) => entry.severity === "error")) {
     await expect(page.locator("#library-diagnostics")).toContainText(diagnostic.code);
   }
@@ -240,7 +240,7 @@ test("a failed import reports diagnostics without adding a saved package", async
     "Package import failed. Nothing was saved.",
   );
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
-  await page.getByText("Import and player diagnostics", { exact: true }).click();
+  await expect(page.locator("#library-diagnostics")).toBeVisible();
   await expect(page.locator("#library-diagnostics")).toContainText(
     "package.zip.centralDirectory.missing",
   );
@@ -392,7 +392,7 @@ test("missing saved assets are diagnosed without fetching the demo server", asyn
   await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
     "Package import failed. Nothing was saved.",
   );
-  await page.getByText("Import and player diagnostics", { exact: true }).click();
+  await expect(page.locator("#library-diagnostics")).toBeVisible();
   await expect(page.locator("#library-diagnostics")).toContainText("missing.svg");
   await expect(page.locator("#saved-packages option")).toHaveCount(1);
   expect(missingRequests).toEqual([]);

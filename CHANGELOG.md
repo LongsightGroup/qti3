@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Validate every manifest-declared item, including items omitted from an assessment test.
+  The saved-package library rejects invalid packages and opens diagnostics with failing filenames.
+- Require certification rejection evidence to come from the packaged item; loose XML can no
+  longer substitute for a missing item in the ZIP. Exercise official Basic packages in the library
+  when external certification inputs are configured.
 - Add response submission and attempt reset to the saved-package library, with scores,
   authored feedback, validation messages, and inspectable response and outcome details.
 - Separate the closed `QtiTestExpression` language from item processing, including parsing,

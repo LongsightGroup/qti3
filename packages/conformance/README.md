@@ -49,8 +49,16 @@ pnpm test:external:required
 ```
 
 The Basic IMPORT evidence runners read official package zips from the conformance
-tree. Item evidence filters manifest item resources and ignores convenience test
-resources; test evidence imports the official T4/T7 test-structure package.
+tree through the shared core importer. Item evidence checks all manifest-declared items,
+including invalid items omitted from convenience assessments. Negative cases must diagnose
+the item inside the ZIP; a loose XML file cannot substitute for a missing packaged item.
+Test evidence imports the official T4/T7 test-structure package.
+
+With `QTI3_EXTERNAL_QTI_DIR` configured, browser tests also exercise these ZIPs through the
+saved-package library. Valid packages are saved and reopened. Packages containing deliberately
+invalid items are rejected before saving and show the failing filenames and diagnostic codes.
+Browser JSON reports, traces, and failure screenshots are written to system temporary storage
+outside the repository. Public CI runs synthetic regression packages instead.
 
 Item reports distinguish `runScope: "full"` from a custom `"selection"` and include
 `coverage` for every physical row in the pinned IMPORT worksheet. The 69 worksheet

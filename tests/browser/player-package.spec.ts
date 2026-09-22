@@ -248,7 +248,9 @@ test.describe("player package loading", () => {
     await expect(page.locator("#file-summary")).toContainText("1 of 2");
   });
 
-  test("resolves assessment-test package item references from a zip upload", async ({ page }) => {
+  test("keeps test order and includes remaining manifest items from a zip upload", async ({
+    page,
+  }) => {
     const choice = interactionFixtures.find((item) => item.interactionType === "choice");
     const textEntry = interactionFixtures.find((item) => item.interactionType === "textEntry");
     if (!choice || !textEntry) throw new Error("Missing package fixtures.");
@@ -284,14 +286,20 @@ test.describe("player package loading", () => {
       buffer: zip,
     });
 
-    await expect(page.locator("#file-summary")).toContainText("1 of 2");
+    await expect(page.locator("#file-summary")).toContainText("1 of 3");
     await expect(page.locator("#file-summary")).toContainText("items/choice.xml");
     await expect(page.locator("qti-assessment-item-player")).toContainText(
       "A civics item asks the student to choose the strongest evidence for a local-news claim.",
     );
     await page.locator("#next-file").click();
-    await expect(page.locator("#file-summary")).toContainText("2 of 2");
+    await expect(page.locator("#file-summary")).toContainText("2 of 3");
     await expect(page.locator("#file-summary")).toContainText("items/text-entry.xml");
+    await expect(page.locator("qti-assessment-item-player")).toContainText(
+      "A geography vocabulary item asks the student to type the name of a coastal feature.",
+    );
+    await page.locator("#next-file").click();
+    await expect(page.locator("#file-summary")).toContainText("3 of 3: items/extra.xml");
+    await expect(page.locator("#next-file")).toBeDisabled();
     await expect(page.locator("qti-assessment-item-player")).toContainText(
       "A geography vocabulary item asks the student to type the name of a coastal feature.",
     );

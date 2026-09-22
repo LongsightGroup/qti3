@@ -116,11 +116,14 @@ async function inspectPackage(
       results.push(inspectionItem(xmlFile.path, "direct", xml, parseQtiXml(xml)));
     }
   }
-  const discoveredReferences = imported.assessmentTest
-    ? imported.assessmentTest.itemRefs.map((reference) => reference.href)
-    : imported.manifestResources
+  const discoveredReferences = [
+    ...new Set([
+      ...(imported.assessmentTest?.itemRefs.map((reference) => reference.href) ?? []),
+      ...imported.manifestResources
         .filter((resource) => isQtiItemResource(resource.type))
-        .flatMap((resource) => (resource.href ? [resource.href] : []));
+        .flatMap((resource) => (resource.href ? [resource.href] : [])),
+    ]),
+  ];
   if (strict && discoveredReferences.length === 0) {
     packageDiagnostics.push({
       code: "package.inspection.references.required",

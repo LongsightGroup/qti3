@@ -287,25 +287,29 @@ export function itemReferencesForPackageShape(
   assessmentTest: QtiAssessmentTestPackageModel | undefined,
   diagnostics: QtiDiagnostic[],
 ): PackageItemReference[] {
-  if (packageShape === "assessment-test-resource") {
-    const itemResourcesByHref = new Map<string, QtiManifestResource>();
-    for (const resource of itemResources) {
-      if (resource.href === undefined) continue;
-      if (itemResourcesByHref.has(resource.href)) {
-        pushPackageDiagnostic(
-          diagnostics,
-          "package.manifest.itemResource.href.duplicate",
-          "error",
-          `Multiple manifest item resources point to ${resource.href}.`,
-          resource.href,
-        );
-        continue;
-      }
-      itemResourcesByHref.set(resource.href, resource);
+  if (packageShape === "unknown") return [];
+
+  const itemResourcesByHref = new Map<string, QtiManifestResource>();
+  for (const resource of itemResources) {
+    if (resource.href === undefined) continue;
+    if (itemResourcesByHref.has(resource.href)) {
+      pushPackageDiagnostic(
+        diagnostics,
+        "package.manifest.itemResource.href.duplicate",
+        "error",
+        `Multiple manifest item resources point to ${resource.href}.`,
+        resource.href,
+      );
+      continue;
     }
-    return (assessmentTest?.itemRefs ?? []).map((itemRef) => {
+    itemResourcesByHref.set(resource.href, resource);
+  }
+
+  const references: PackageItemReference[] = [];
+  if (packageShape === "assessment-test-resource") {
+    for (const itemRef of assessmentTest?.itemRefs ?? []) {
       const itemResource = itemResourcesByHref.get(itemRef.href);
-      return {
+      references.push({
         href: itemRef.href,
         source: "assessment-test",
         manifestResourceIdentifier: itemResource?.identifier,
@@ -314,28 +318,15 @@ export function itemReferencesForPackageShape(
           ...(assessmentTest?.standards ?? []),
           ...(itemResource?.standards ?? []),
         ]),
-      };
-    });
+      });
+    }
   }
 
-  if (packageShape !== "manifest-item-resources") return [];
-
-  const references: PackageItemReference[] = [];
-  const seen = new Set<string>();
-  for (const resource of itemResources) {
-    const href = resource.href;
-    if (!href) continue;
-    if (seen.has(href)) {
-      pushPackageDiagnostic(
-        diagnostics,
-        "package.manifest.itemResource.href.duplicate",
-        "error",
-        `Multiple manifest item resources point to ${href}.`,
-        href,
-      );
-      continue;
-    }
-    seen.add(href);
+  // A test supplies delivery order, not the inventory of content to validate.
+  // Retain that order, then include manifest items that the test does not reference.
+  const testHrefs = new Set(references.map((reference) => reference.href));
+  for (const [href, resource] of itemResourcesByHref) {
+    if (testHrefs.has(href)) continue;
     references.push({
       href,
       source: "manifest",

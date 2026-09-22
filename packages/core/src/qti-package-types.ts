@@ -186,6 +186,7 @@ export interface QtiPackageParseResult {
   /** All .xml entries in inventory order, including files outside the selected resource graph. */
   readonly xmlFiles: readonly QtiPackageXmlFileSummary[];
   readonly packageShape: QtiPackageShape;
+  /** Test-referenced items in test order, followed by remaining manifest items in manifest order. */
   readonly items: readonly QtiPackageItem[];
   readonly assets: readonly QtiPackageAsset[];
   readonly manifestResources: readonly QtiManifestResource[];

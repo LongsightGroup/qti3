@@ -1,4 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// Official inputs may appear in traces and failure screenshots. Keep those artifacts private.
+const privateOutput = process.env.QTI3_EXTERNAL_QTI_DIR
+  ? mkdtempSync(join(tmpdir(), "qti3-certification-browser-"))
+  : undefined;
 
 export default defineConfig({
   testDir: "tests/browser",
@@ -7,7 +15,12 @@ export default defineConfig({
   timeout: 30_000,
   workers: 4,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [["dot"], ["html", { open: "never" }]] : "list",
+  outputDir: privateOutput,
+  reporter: privateOutput
+    ? [["list"], ["json", { outputFile: join(privateOutput, "results.json") }]]
+    : process.env.CI
+      ? [["dot"], ["html", { open: "never" }]]
+      : "list",
   use: {
     baseURL: "http://127.0.0.1:4179",
     trace: "retain-on-failure",
