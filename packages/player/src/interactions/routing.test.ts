@@ -8,7 +8,7 @@ describe("interaction routing", () => {
     expect(
       usesChoiceSet(
         testInteraction({
-          type: "custom",
+          type: "hotspot",
           responseCardinality: "multiple",
           responseBaseType: "identifier",
         }),
@@ -21,16 +21,15 @@ describe("interaction routing", () => {
   it("usesOrderedResponse matches ordered cardinality and order type only", () => {
     expect(usesOrderedResponse(testInteraction({ type: "order" }))).toBe(true);
     expect(
-      usesOrderedResponse(testInteraction({ type: "custom", responseCardinality: "ordered" })),
+      usesOrderedResponse(
+        testInteraction({ type: "graphicOrder", responseCardinality: "ordered" }),
+      ),
     ).toBe(true);
     expect(usesOrderedResponse(testInteraction({ type: "graphicOrder" }))).toBe(false);
   });
 
   it("usesPairResponse matches pair base types and associate only", () => {
     expect(usesPairResponse(testInteraction({ type: "associate" }))).toBe(true);
-    expect(
-      usesPairResponse(testInteraction({ type: "custom", responseBaseType: "directedPair" })),
-    ).toBe(true);
     expect(usesPairResponse(testInteraction({ type: "match" }))).toBe(false);
     expect(
       usesPairResponse(testInteraction({ type: "match", responseBaseType: "directedPair" })),
@@ -38,4 +37,25 @@ describe("interaction routing", () => {
     expect(usesPairResponse(testInteraction({ type: "graphicAssociate" }))).toBe(false);
     expect(usesPairResponse(testInteraction({ type: "gapMatch" }))).toBe(false);
   });
+
+  it.each(["portableCustom", "custom"] as const)(
+    "excludes %s from built-in response-shape routing",
+    (type) => {
+      expect(
+        usesChoiceSet(
+          testInteraction({
+            type,
+            responseCardinality: "multiple",
+            responseBaseType: "identifier",
+          }),
+        ),
+      ).toBe(false);
+      expect(usesOrderedResponse(testInteraction({ type, responseCardinality: "ordered" }))).toBe(
+        false,
+      );
+      for (const responseBaseType of ["pair", "directedPair"] as const) {
+        expect(usesPairResponse(testInteraction({ type, responseBaseType }))).toBe(false);
+      }
+    },
+  );
 });
