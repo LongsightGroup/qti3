@@ -68,17 +68,26 @@ describe("interaction registry ordering", () => {
     ).toBe("gapMatch");
   });
 
-  it("routes associate and unknown directedPair interactions to pair", () => {
+  it("routes associate interactions to pair", () => {
     expect(matchInteractionRegistryEntry(testInteraction({ type: "associate" }))?.id).toBe("pair");
-    expect(
-      matchInteractionRegistryEntry(
-        testInteraction({
-          type: "customUnknown" as QtiInteraction["type"],
-          responseBaseType: "directedPair",
-        }),
-      )?.id,
-    ).toBe("pair");
   });
+
+  it.each([
+    ["multiple", "identifier", "choice"],
+    ["ordered", "identifier", "ordered"],
+    ["multiple", "directedPair", "pair"],
+  ] as const)(
+    "routes unknown %s/%s interactions to %s",
+    (responseCardinality, responseBaseType, rendererId) => {
+      // SAFETY: Exercise shape fallback with an unknown runtime type without a dedicated renderer.
+      const type = "customUnknown" as QtiInteraction["type"];
+      expect(
+        matchInteractionRegistryEntry(
+          testInteraction({ type, responseCardinality, responseBaseType }),
+        )?.id,
+      ).toBe(rendererId);
+    },
+  );
 
   const customResponseShapes: Array<
     [QtiInteraction["responseCardinality"], QtiInteraction["responseBaseType"]]

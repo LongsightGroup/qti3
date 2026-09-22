@@ -1,6 +1,10 @@
+import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { testInteraction } from "../interaction-test-fixtures.js";
 import { usesChoiceSet, usesOrderedResponse, usesPairResponse } from "./routing.js";
+
+// SAFETY: These tests deliberately exercise an unknown runtime type without a dedicated renderer.
+const unknownInteractionType = "customUnknown" as QtiInteraction["type"];
 
 describe("interaction routing", () => {
   it("usesChoiceSet matches choice and multi identifier interactions only", () => {
@@ -8,7 +12,7 @@ describe("interaction routing", () => {
     expect(
       usesChoiceSet(
         testInteraction({
-          type: "hotspot",
+          type: unknownInteractionType,
           responseCardinality: "multiple",
           responseBaseType: "identifier",
         }),
@@ -22,14 +26,24 @@ describe("interaction routing", () => {
     expect(usesOrderedResponse(testInteraction({ type: "order" }))).toBe(true);
     expect(
       usesOrderedResponse(
-        testInteraction({ type: "graphicOrder", responseCardinality: "ordered" }),
+        testInteraction({ type: unknownInteractionType, responseCardinality: "ordered" }),
       ),
     ).toBe(true);
     expect(usesOrderedResponse(testInteraction({ type: "graphicOrder" }))).toBe(false);
+    expect(
+      usesOrderedResponse(
+        testInteraction({ type: "extendedText", responseCardinality: "ordered" }),
+      ),
+    ).toBe(false);
   });
 
   it("usesPairResponse matches pair base types and associate only", () => {
     expect(usesPairResponse(testInteraction({ type: "associate" }))).toBe(true);
+    expect(
+      usesPairResponse(
+        testInteraction({ type: unknownInteractionType, responseBaseType: "directedPair" }),
+      ),
+    ).toBe(true);
     expect(usesPairResponse(testInteraction({ type: "match" }))).toBe(false);
     expect(
       usesPairResponse(testInteraction({ type: "match", responseBaseType: "directedPair" })),
