@@ -178,6 +178,9 @@ test("imports, commits, and immediately opens the saved record", async ({ page }
     "Saved choice.zip. Reopened 1 question from the database.",
   );
   await expect(page.getByRole("radio", { name: "A. Two", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Saved choice", exact: true }),
+  ).toBeVisible();
   const stored = await page.evaluate(async () => {
     const modulePath = "/src/package-library/store.ts";
     const { listPackages, readPackage } = await import(/* @vite-ignore */ modulePath);
@@ -330,6 +333,9 @@ test("a fresh page restores every byte, full item models, images, styles, and re
     "Opened preservation.zip from the database. 2 questions.",
   );
   await expect(reopened.locator("#package-items option")).toHaveCount(2);
+  await expect(
+    reopened.getByRole("heading", { level: 2, name: "Saved choice", exact: true }),
+  ).toBeVisible();
   const image = reopened.getByRole("img", { name: "Saved square" });
   await expect(image).toHaveAttribute("src", /^blob:.*#square$/);
   await expect
@@ -357,12 +363,18 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   await expect(reopened.locator("#item-source")).toHaveText(illustrated);
   await reopened.getByLabel("Question", { exact: true }).selectOption("1");
   await expect(reopened.locator("#item-source")).toHaveText(second);
+  await expect(
+    reopened.getByRole("heading", { level: 2, name: "Second choice", exact: true }),
+  ).toBeVisible();
   expect(contentRequests).toEqual([]);
   await reopened.unrouteAll();
   await reopened.getByRole("button", { name: "Delete package", exact: true }).click();
   await expect(reopened.getByRole("status", { name: "Package library status" })).toHaveText(
     "Package deleted from this browser.",
   );
+  await expect(
+    reopened.getByRole("heading", { level: 2, name: "Question", exact: true }),
+  ).toBeVisible();
   await expect(reopened.getByLabel("Import package", { exact: true })).toBeFocused();
   await reopened.reload();
   await expect(reopened.getByRole("status", { name: "Package library status" })).toHaveText(

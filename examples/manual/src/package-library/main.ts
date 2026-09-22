@@ -25,6 +25,7 @@ const status = requireElement("#library-status", HTMLParagraphElement);
 const diagnostics = requireElement("#library-diagnostics", HTMLPreElement);
 const diagnosticsPanel = requireElement("#library-diagnostics-panel", HTMLDetailsElement);
 const source = requireElement("#item-source", HTMLPreElement);
+const questionTitle = requireElement("#question-title", HTMLHeadingElement);
 const submitButton = requireElement("#submit-response", HTMLButtonElement);
 const resetButton = requireElement("#reset-attempt", HTMLButtonElement);
 const attemptResult = requireElement("#attempt-result", HTMLParagraphElement);
@@ -156,6 +157,7 @@ async function renderItem(): Promise<void> {
   messages = current.diagnostics;
   showDiagnostics();
   source.textContent = item.xml;
+  questionTitle.textContent = item.title ?? "Question";
   resetPlayer();
   player.addEventListener("qti-diagnostics", (event) => {
     // SAFETY: This listener receives the documented player diagnostics event.
@@ -264,6 +266,7 @@ async function removeSelectedPackage(): Promise<void> {
 
 function clearQuestion(): void {
   current = undefined;
+  questionTitle.textContent = "Question";
   resetPlayer();
   releaseAssets();
   items.replaceChildren(new Option("Select a question", ""));

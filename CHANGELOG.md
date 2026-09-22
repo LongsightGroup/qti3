@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Show the authored question title above the player in the saved-package library.
 - Validate every manifest-declared item, including items omitted from an assessment test.
   The saved-package library rejects invalid packages and opens diagnostics with failing filenames.
 - Require certification rejection evidence to come from the packaged item; loose XML can no

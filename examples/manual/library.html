@@ -78,6 +78,10 @@
       #attempt-result {
         font-weight: 600;
       }
+      #question-title {
+        margin-block: 0 1rem;
+        overflow-wrap: anywhere;
+      }
       :focus-visible {
         outline: 3px solid #165ea8;
         outline-offset: 3px;
@@ -153,7 +157,7 @@
           </details>
         </section>
         <section class="question" aria-label="Selected question">
-          <h2>Question</h2>
+          <h2 id="question-title">Question</h2>
           <qti-assessment-item-player></qti-assessment-item-player>
           <div class="attempt-actions">
             <button id="submit-response" type="button" disabled>Submit response</button>
