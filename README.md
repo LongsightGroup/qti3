@@ -438,16 +438,18 @@ their diagnostic codes, paths, and severities in the debug panel.
 Open `/library.html` to import a QTI ZIP into the reference app's IndexedDB database.
 ZIP extraction uses core's async reader with a bounded browser inflater; imports
 and database restores use `parseQtiPackageFromEntries` and its typed diagnostics.
-An import with no errors saves every original package file, including XML, metadata, stylesheets,
-and media. If any manifest-declared item is invalid, the entire import is rejected before saving;
-the diagnostics panel opens and identifies the failing files. The official Basic single-choice,
-extended-text, and text-entry ZIPs contain deliberately invalid items and should produce this
-rejection, even though their convenience assessments omit those items.
+The library saves every original package file, including XML, metadata, stylesheets, and media.
+If individual items are invalid, it opens only the valid questions and reports how many were
+rejected, with filenames and reasons in the diagnostics panel. The original invalid files are
+retained for inspection; the package remains flagged as containing errors. This allows the valid
+questions in the official Basic single-choice, extended-text, and text-entry ZIPs to be reviewed
+alongside diagnostics for their deliberately invalid items. ZIP, manifest, reference, and asset
+errors still block the whole import, as does a package with no valid questions.
 The page immediately reads the saved record back through the core importer. Close the page,
 reopen it, and choose **Saved package** and **Question** to inspect the questions, original
 XML, and diagnostics without uploading again. **Delete package** removes that saved record.
-Reopening validates the saved files again. A saved package that fails validation is not opened;
-its record remains available for deletion.
+Reopening validates the saved files again and applies the same item acceptance policy. A saved
+package with blocking errors is not opened; its record remains available for deletion.
 Choose **Submit response** to run the question's response processing and see its score,
 authored feedback, responses, and outcomes. **Reset attempt** clears the current response and
 score. Questions without automatic response processing are identified as unscored; the page

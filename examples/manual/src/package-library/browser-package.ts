@@ -6,7 +6,7 @@ import {
   type QtiPackageResourceLimits,
 } from "@longsightgroup/qti3-core";
 
-/** A failed browser extraction or core import; provisional content is never exposed. */
+/** A failed browser ZIP extraction; provisional content is never exposed. */
 export interface PackageFailure {
   readonly ok: false;
   readonly diagnostics: readonly QtiDiagnostic[];

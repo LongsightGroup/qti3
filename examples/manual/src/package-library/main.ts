@@ -1,7 +1,5 @@
 import {
   detectPackageMediaType,
-  parseQtiPackageFromEntries,
-  type QtiPackageParseResult,
   type QtiDiagnostic,
   type QtiScoreResult,
 } from "@longsightgroup/qti3-core";
@@ -14,6 +12,7 @@ import {
 } from "@longsightgroup/qti3-player";
 import { resolvePackageAssetUrl } from "./package-assets.js";
 import { readBrowserPackageZip } from "./browser-package.js";
+import { importLibraryItems, type LibraryPackage } from "./item-import.js";
 import { deletePackage, listPackages, readPackage, savePackage } from "./store.js";
 
 defineQtiAssessmentItemPlayer();
@@ -32,7 +31,7 @@ const attemptResult = requireElement("#attempt-result", HTMLParagraphElement);
 const attemptDetails = requireElement("#attempt-details", HTMLDetailsElement);
 const attemptValues = requireElement("#attempt-values", HTMLPreElement);
 let player = requireElement("qti-assessment-item-player", QtiAssessmentItemPlayer);
-let current: QtiPackageParseResult | undefined;
+let current: LibraryPackage | undefined;
 let assetUrls = new Map<string, string>();
 let messages: readonly QtiDiagnostic[] = [];
 let busy = false;
@@ -72,18 +71,18 @@ async function importFile(): Promise<void> {
     showPackageFailure("Package import failed. Nothing was saved.", extracted.diagnostics);
     return;
   }
-  const imported = parseQtiPackageFromEntries(extracted.entries);
-  if (!imported.ok) {
+  const imported = importLibraryItems(extracted.entries);
+  if (imported.kind === "blocked") {
     showPackageFailure("Package import failed. Nothing was saved.", imported.diagnostics);
     return;
   }
   const id = crypto.randomUUID();
   const saved = await savePackage({
     id,
-    title: imported.title || file.name,
+    title: imported.package.title || file.name,
     filename: file.name,
     importedAt: new Date().toISOString(),
-    entries: imported.entries,
+    entries: imported.package.entries,
   });
   if (!saved.ok) {
     status.textContent = saved.message;
@@ -91,7 +90,7 @@ async function importFile(): Promise<void> {
   }
   if (!(await refreshList(id))) return;
   if (await openPackage(id))
-    status.textContent = `Saved ${file.name}. Reopened ${questionCount(imported.items.length)} from the database.`;
+    status.textContent = `Saved ${file.name}. Reopened ${questionCount(imported.items.length)} from the database.${rejectionSummary(imported)}`;
 }
 
 async function refreshList(selected = ""): Promise<boolean> {
@@ -125,13 +124,13 @@ async function openPackage(id: string): Promise<boolean> {
     await refreshList();
     return false;
   }
-  const imported = parseQtiPackageFromEntries(record.value.entries);
-  if (!imported.ok) {
+  const imported = importLibraryItems(record.value.entries);
+  if (imported.kind === "blocked") {
     showPackageFailure("Saved package failed validation and was not opened.", imported.diagnostics);
     return false;
   }
   current = imported;
-  for (const entry of imported.entries)
+  for (const entry of imported.package.entries)
     assetUrls.set(
       entry.path,
       URL.createObjectURL(
@@ -147,14 +146,22 @@ async function openPackage(id: string): Promise<boolean> {
     ),
   );
   await renderItem();
-  status.textContent = `Opened ${record.value.filename} from the database. ${questionCount(imported.items.length)}.`;
+  diagnosticsPanel.open = imported.rejectedItems.length > 0;
+  status.textContent = `Opened ${record.value.filename} from the database. ${questionCount(imported.items.length)}.${rejectionSummary(imported)}`;
   return true;
+}
+
+function rejectionSummary(imported: LibraryPackage): string {
+  const count = imported.rejectedItems.length;
+  return count
+    ? ` Rejected ${questionCount(count)}. This package contains errors; see diagnostics for filenames and reasons.`
+    : "";
 }
 
 async function renderItem(): Promise<void> {
   const item = current?.items[Number(items.value)];
   if (!current || !item) return;
-  messages = current.diagnostics;
+  messages = current.package.diagnostics;
   showDiagnostics();
   source.textContent = item.xml;
   questionTitle.textContent = item.title ?? "Question";

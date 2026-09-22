@@ -4,7 +4,9 @@
 
 - Show the authored question title above the player in the saved-package library.
 - Validate every manifest-declared item, including items omitted from an assessment test.
-  The saved-package library rejects invalid packages and opens diagnostics with failing filenames.
+  The saved-package library saves and reopens valid questions from mixed packages, excludes
+  invalid questions, and reports rejection counts and failing filenames. Package structure errors
+  still block import; original files and validation diagnostics remain available after reopening.
 - Require certification rejection evidence to come from the packaged item; loose XML can no
   longer substitute for a missing item in the ZIP. Exercise official Basic packages in the library
   when external certification inputs are configured.
