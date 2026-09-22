@@ -494,7 +494,7 @@ function pciEntry(): QtiInteractionElementSupport {
   return {
     ...entry("qti-portable-custom-interaction", "portableCustom"),
     notes:
-      "Parses and validates PCI metadata, exposes a browser host contract, scores captured responses, and preserves opaque interaction state. Production module execution policy belongs to the host delivery runtime.",
+      "Parses and validates PCI metadata, exposes a browser host contract for every response cardinality and base type, scores captured responses, and preserves opaque interaction state. Production module execution policy belongs to the host delivery runtime.",
   };
 }
 

@@ -308,7 +308,8 @@ them or emit `player.stylesheet.unresolved` diagnostics.
   bindings, stylesheets, catalog info, opaque suspend/resume state, and response/state
   events. The player exposes a `qti3-portable-custom-host` element with small launch
   metadata and emits `qti-portable-custom-mount` with the full parsed definition so a
-  host-provided PCI runtime can attach the module. Production module loading, sandboxing,
+  host-provided PCI runtime can attach the module. The host accepts `single`, `multiple`,
+  `ordered`, and `record` responses for any base type. Production module loading, sandboxing,
   CSP, tenant allowlists, and audit policy remain host responsibilities.
 
 ## Styling

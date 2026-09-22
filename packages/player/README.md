@@ -234,8 +234,10 @@ For `qti-portable-custom-interaction`, the player renders a
 `dataset` attributes, and emits `qti-portable-custom-mount` with the full parsed
 definition. Host code can attach a PCI runtime and send response/state updates back with
 `qti3-portable-custom-response`.
-The host contract supports single, multiple, ordered, and record responses. Response cardinality
-and base type never route a PCI to a built-in renderer.
+
+The host accepts `single`, `multiple`, `ordered`, and `record` responses for any base type.
+The player selects that host from `qti-portable-custom-interaction`.
+
 Production sandboxing, CSP, origin policy, and audit logging belong to the host delivery
 system.
 

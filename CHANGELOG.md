@@ -2,7 +2,16 @@
 
 ## Unreleased
 
+## 0.12.1 - 2026-09-22
+
+### Added
+
 - Show the authored question title above the player in the saved-package library.
+- Add response submission and attempt reset to the saved-package library, with scores,
+  authored feedback, validation messages, and inspectable response and outcome details.
+
+### Changed
+
 - Validate every manifest-declared item, including items omitted from an assessment test.
   The saved-package library saves and reopens valid questions from mixed packages, excludes
   invalid questions, and reports rejection counts and failing filenames. Package structure errors
@@ -10,13 +19,17 @@
 - Require certification rejection evidence to come from the packaged item; loose XML can no
   longer substitute for a missing item in the ZIP. Exercise official Basic packages in the library
   when external certification inputs are configured.
-- Add response submission and attempt reset to the saved-package library, with scores,
-  authored feedback, validation messages, and inspectable response and outcome details.
 - Separate the closed `QtiTestExpression` language from item processing, including parsing,
   type checking, evaluation, and serialization. Preserve test routing and snapshot replay.
 - Replace `serializeProcessingExpression()` with `serializeTestExpression()` for test expressions.
 - Return binary-choice inspection data in the shared result `value` field, typed as
   `QtiBinaryChoicePolicy`.
+
+### Fixed
+
+- Keep `qti-portable-custom-interaction` on the PCI host for every response cardinality and
+  base type, including ordered, multiple, pair, and record responses. Deprecated
+  `qti-custom-interaction` remains unsupported.
 
 ## 0.12.0 - 2026-09-17
 
