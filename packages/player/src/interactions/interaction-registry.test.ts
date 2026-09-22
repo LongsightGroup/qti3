@@ -68,17 +68,64 @@ describe("interaction registry ordering", () => {
     ).toBe("gapMatch");
   });
 
-  it("routes associate and custom directedPair interactions to pair", () => {
+  it("routes associate interactions to pair", () => {
     expect(matchInteractionRegistryEntry(testInteraction({ type: "associate" }))?.id).toBe("pair");
-    expect(
-      matchInteractionRegistryEntry(
-        testInteraction({
-          type: "customUnknown" as QtiInteraction["type"],
-          responseBaseType: "directedPair",
-        }),
-      )?.id,
-    ).toBe("pair");
   });
+
+  it.each([
+    ["multiple", "identifier", "choice"],
+    ["ordered", "identifier", "ordered"],
+    ["multiple", "directedPair", "pair"],
+  ] as const)(
+    "routes unknown %s/%s interactions to %s",
+    (responseCardinality, responseBaseType, rendererId) => {
+      // SAFETY: Exercise shape fallback with an unknown runtime type without a dedicated renderer.
+      const type = "customUnknown" as QtiInteraction["type"];
+      expect(
+        matchInteractionRegistryEntry(
+          testInteraction({ type, responseCardinality, responseBaseType }),
+        )?.id,
+      ).toBe(rendererId);
+    },
+  );
+
+  const customResponseShapes: Array<
+    [QtiInteraction["responseCardinality"], QtiInteraction["responseBaseType"]]
+  > = [
+    ["single", "identifier"],
+    ["single", "string"],
+    ["ordered", "identifier"],
+    ["multiple", "identifier"],
+    ["multiple", "directedPair"],
+    ["single", "directedPair"],
+    ["single", "pair"],
+    ["multiple", "pair"],
+    ["ordered", "string"],
+    ["multiple", "string"],
+    ["record", undefined],
+  ];
+
+  it.each(customResponseShapes)(
+    "routes portable custom %s/%s responses to the PCI host",
+    (responseCardinality, responseBaseType) => {
+      expect(
+        matchInteractionRegistryEntry(
+          testInteraction({ type: "portableCustom", responseCardinality, responseBaseType }),
+        )?.id,
+      ).toBe("portableCustom");
+    },
+  );
+
+  it.each(customResponseShapes)(
+    "keeps deprecated custom %s/%s responses unsupported",
+    (responseCardinality, responseBaseType) => {
+      expect(
+        matchInteractionRegistryEntry(
+          testInteraction({ type: "custom", responseCardinality, responseBaseType }),
+        ),
+      ).toBeUndefined();
+    },
+  );
 
   it("requires an object for hotspot rendering", () => {
     expect(matchInteractionRegistryEntry(testInteraction({ type: "hotspot" }))).toBeUndefined();
