@@ -6,6 +6,8 @@ import { isEnforcedSharedVocabularyLevel } from "../../packages/core/src/shared-
 import { assertSvCase } from "./shared-vocabulary-matrix/assertions.js";
 import { findSharedVocabularyCoverageViolations } from "./shared-vocabulary-matrix/coverage-policy.js";
 import { loadSvMatrixItem } from "./shared-vocabulary-matrix/load.js";
+import { scorePlayerAttempt } from "./player-test-api.js";
+import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import {
   sharedVocabularyManifest,
   SV_MATRIX_FIXTURE_ROOT,
@@ -65,6 +67,37 @@ test.describe("shared vocabulary matrix", () => {
       await assertSvCase(page, entry.assertions);
     });
   }
+
+  test("width 5 renders at five character units and accepts a longer response", async ({
+    page,
+  }) => {
+    const entry = matrixEntries.find((item) => item.id === "interaction-input-width-five");
+    if (!entry) throw new Error("Missing width-5 matrix fixture");
+    await loadSvMatrixItem(page, entry);
+    const input = page.locator('[data-response-identifier="RESPONSE"] input');
+    const widths = await input.evaluate((element) => {
+      const style = getComputedStyle(element);
+      const reference = document.createElement("span");
+      reference.style.font = style.font;
+      reference.style.position = "absolute";
+      reference.style.inlineSize = "5ch";
+      document.body.append(reference);
+      const fiveCharacters = reference.getBoundingClientRect().width;
+      reference.remove();
+      return { actual: element.getBoundingClientRect().width, fiveCharacters };
+    });
+    expect(Math.abs(widths.actual - widths.fiveCharacters)).toBeLessThan(1);
+    await expect(input).not.toHaveAttribute("maxlength");
+    await input.focus();
+    await page.keyboard.type("planet");
+    await page.keyboard.press("Tab");
+    await expect(input).toHaveValue("planet");
+    const scored = await scorePlayerAttempt(page);
+    expect(scored?.diagnostics).toEqual([]);
+    expect(scored?.state.responses.RESPONSE).toBe("planet");
+    expect(scored?.outcomes.SCORE).toBe(1);
+    await expectNoAxeViolationsOnPlayer(page);
+  });
 
   test("gallery exposes every non-pass-through manifest entry", async ({ page }) => {
     await page.goto("/sv-gallery");

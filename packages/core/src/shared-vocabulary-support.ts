@@ -58,7 +58,10 @@ const mediaPlayerFixture =
 const interactionInputWidthFixtures = [
   "packages/fixtures/packages/sv-matrix/items/interaction-input-width-standalone.xml",
   "packages/fixtures/packages/sv-matrix/items/interaction-input-width-embedded.xml",
+  "packages/fixtures/packages/sv-matrix/items/interaction-input-width-five.xml",
 ];
+const inputWidthFiveNote =
+  "Width 5 is supported for certification compatibility; the published shared-vocabulary table omits it.";
 const orderMinMaxMessagesFixture =
   "packages/fixtures/packages/sv-matrix/items/order-min-max-messages.xml";
 
@@ -378,6 +381,7 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
         "packages/core/src/core.test.ts",
         ...sharedVocabularyMatrixTests,
       ],
+      notes: width === 5 ? inputWidthFiveNote : undefined,
     }),
   ),
   ...SHARED_VOCABULARY_INPUT_WIDTHS.map((width) =>
@@ -389,7 +393,7 @@ export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
         "packages/core/src/core.test.ts",
         ...browserBehaviorTests,
       ],
-      notes: "Supported on qti-gap targets when gap placement is authored.",
+      notes: `Supported on qti-gap targets when gap placement is authored.${width === 5 ? ` ${inputWidthFiveNote}` : ""}`,
     }),
   ),
   ...SHARED_VOCABULARY_EXTENDED_TEXT_HEIGHT_LINES.map((lines) =>

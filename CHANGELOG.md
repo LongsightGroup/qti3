@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Support `qti-input-width-5` for certification compatibility, without an unsupported-width
+  warning or a five-character response limit.
+
 ## 0.12.1 - 2026-09-22
 
 ### Added

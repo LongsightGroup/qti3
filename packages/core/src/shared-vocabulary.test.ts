@@ -64,10 +64,12 @@ describe("shared vocabulary", () => {
     expect(SHARED_VOCABULARY_INPUT_WIDTHS).toBe(SHARED_VOCABULARY_GAP_INPUT_WIDTHS);
     expect(inputWidthFromAttributes({ class: "qti-input-width-4 qti-input-width-20" })).toBe(4);
     expect(gapInputWidthFromAttributes).toBe(inputWidthFromAttributes);
-    expect(inputWidthFromAttributes({ class: "qti-input-width-5" })).toBe(undefined);
+    expect(inputWidthFromAttributes({ class: "qti-input-width-5" })).toBe(5);
+    expect(inputWidthFromAttributes({ class: "qti-input-width-7" })).toBe(undefined);
     expect(supportedGapInputWidthClassNames).toBe(supportedInputWidthClassNames);
     expect(supportedInputWidthClassNames(["qti-input-width-4", "qti-input-width-5"])).toEqual([
       "qti-input-width-4",
+      "qti-input-width-5",
     ]);
     expect(formatSupportedGapInputWidthClasses).toBe(formatSupportedInputWidthClasses);
     expect(isSupportedInputWidthClassName("qti-input-width-72")).toBe(true);

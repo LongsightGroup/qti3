@@ -65,6 +65,7 @@ describe("qti3-writer shared vocabulary matrix", () => {
         "hottext-unselected-hidden",
         "inline-choice-writing-orientation-vertical-rl",
         "interaction-input-width-embedded",
+        "interaction-input-width-five",
         "interaction-input-width-standalone",
         "japanese-vertical-haiku",
         "match-choices-bottom",

@@ -1,8 +1,11 @@
 import type { QtiInteraction } from "./types.js";
 
-/** Normative QTI 3 shared vocabulary input-width token values (1EdTech vocab). */
+/**
+ * Supported QTI 3 input widths. Includes width 5 for certification compatibility;
+ * the published 1EdTech shared-vocabulary table omits that value.
+ */
 export const SHARED_VOCABULARY_INPUT_WIDTHS = [
-  1, 2, 3, 4, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 72,
+  1, 2, 3, 4, 5, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 72,
 ] as const;
 
 export const SHARED_VOCABULARY_GAP_INPUT_WIDTHS = SHARED_VOCABULARY_INPUT_WIDTHS;

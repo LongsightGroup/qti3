@@ -369,6 +369,9 @@ node packages/cli/dist/index.js support-matrix
 See the 1EdTech
 [QTI 3 Standardized Shared Vocabulary and CSS Classes](https://www.imsglobal.org/node/218713)
 document for the normative shared vocabulary and example CSS.
+The supported input widths also include `qti-input-width-5` for compatibility with certification
+materials, although the published vocabulary table omits 5. As with the other input-width
+classes, it controls visual width without imposing a response-length limit.
 
 ## Platform
 

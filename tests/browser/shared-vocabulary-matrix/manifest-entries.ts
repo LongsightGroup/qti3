@@ -531,6 +531,19 @@ const interactionManifestEntries: SharedVocabularyManifestEntry[] = [
     ],
   ),
   entry(
+    "interaction-input-width-five",
+    "textEntry",
+    "qti-input-width-5",
+    "full",
+    [
+      `${player} [data-response-identifier="RESPONSE"] input`,
+      `${player} [data-response-identifier="CHOICE"] .qti3-inline-choice-control`,
+    ].flatMap((selector): SharedVocabularyAssertion[] => [
+      { type: "attribute", selector, name: "data-qti-input-width", value: "5" },
+      { type: "inline-style", selector, property: "--qti3-input-width", value: "5ch" },
+    ]),
+  ),
+  entry(
     "text-entry-pattern-mask-inline",
     "textEntry",
     ["pattern-mask", "data-patternmask-message"],

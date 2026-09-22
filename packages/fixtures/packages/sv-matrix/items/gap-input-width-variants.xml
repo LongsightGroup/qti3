@@ -11,6 +11,7 @@
         <qti-gap identifier="G2" class="qti-input-width-2"/>
         <qti-gap identifier="G3" class="qti-input-width-3"/>
         <qti-gap identifier="G4" class="qti-input-width-4"/>
+        <qti-gap identifier="G5" class="qti-input-width-5"/>
         <qti-gap identifier="G6" class="qti-input-width-6"/>
         <qti-gap identifier="G10" class="qti-input-width-10"/>
         <qti-gap identifier="G15" class="qti-input-width-15"/>

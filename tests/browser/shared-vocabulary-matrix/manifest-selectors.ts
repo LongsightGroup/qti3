@@ -49,5 +49,5 @@ export const hottextA = `${hottextRoot} .qti3-hottext-token[data-choice-identifi
 export const hottextB = `${hottextRoot} .qti3-hottext-token[data-choice-identifier="B"]`;
 export const hottextAVisibleText = `${hottextA} + .qti3-hottext-visible-text`;
 export const hottextBVisibleText = `${hottextB} + .qti3-hottext-visible-text`;
-export const inputWidths = [1, 2, 3, 4, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 72] as const;
+export const inputWidths = [1, 2, 3, 4, 5, 6, 10, 15, 20, 25, 30, 35, 40, 45, 50, 72] as const;
 export const itemBody = `${player} .qti3-item-body`;
