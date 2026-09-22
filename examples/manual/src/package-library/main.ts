@@ -24,6 +24,7 @@ const status = requireElement("#library-status", HTMLParagraphElement);
 const diagnostics = requireElement("#library-diagnostics", HTMLPreElement);
 const diagnosticsPanel = requireElement("#library-diagnostics-panel", HTMLDetailsElement);
 const source = requireElement("#item-source", HTMLPreElement);
+const model = requireElement("#item-model", HTMLPreElement);
 const questionTitle = requireElement("#question-title", HTMLHeadingElement);
 const submitButton = requireElement("#submit-response", HTMLButtonElement);
 const resetButton = requireElement("#reset-attempt", HTMLButtonElement);
@@ -160,10 +161,12 @@ function rejectionSummary(imported: LibraryPackage): string {
 
 async function renderItem(): Promise<void> {
   const item = current?.items[Number(items.value)];
-  if (!current || !item) return;
+  if (!current || !item?.document) return;
   messages = current.package.diagnostics;
   showDiagnostics();
   source.textContent = item.xml;
+  model.textContent = JSON.stringify(item.document.item, null, 2);
+  model.scrollTop = 0;
   questionTitle.textContent = item.title ?? "Question";
   resetPlayer();
   player.addEventListener("qti-diagnostics", (event) => {
@@ -278,6 +281,7 @@ function clearQuestion(): void {
   releaseAssets();
   items.replaceChildren(new Option("Select a question", ""));
   source.textContent = "Select a saved package to inspect its source.";
+  model.textContent = "Select a saved package to inspect its parsed item.";
   messages = [];
   showDiagnostics();
 }

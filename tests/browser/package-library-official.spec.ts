@@ -59,6 +59,9 @@ if (externalDir) {
       for (const [index, item] of accepted.entries()) {
         await page.getByLabel("Question", { exact: true }).selectOption(String(index));
         expect(await page.locator("#item-source").textContent()).toBe(item.xml);
+        expect(await page.locator("#item-model").textContent()).toBe(
+          JSON.stringify(item.document?.item, null, 2),
+        );
         await expect(page.locator("#question-title")).toHaveText(item.title ?? "Question");
         await expect(
           page.getByRole("button", { name: "Submit response", exact: true }),
