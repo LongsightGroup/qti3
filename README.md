@@ -312,6 +312,19 @@ them or emit `player.stylesheet.unresolved` diagnostics.
   `ordered`, and `record` responses for any base type. Production module loading, sandboxing,
   CSP, tenant allowlists, and audit policy remain host responsibilities.
 
+## Modal feedback
+
+Core parses `qti-modal-feedback` into structured content and flattened text. Forbidden
+interactions are diagnosed and left out of that content tree. `parseQtiModalFeedbackFragment()`
+parses a standalone fragment without an assessment item or variable declarations.
+
+The writer emits item-level feedback for every supported interaction. Choice items can map
+each selected choice to its own entry, including multiple-response selections. Set
+`showFeedback: true` when loading the player to display visible feedback, including titles and
+printed variables. The writer package README documents the authoring fields, content checks, and
+diagnostics. Reference examples are `rich-modal-feedback-reference` and
+`multiple-choice-modal-feedback-reference`.
+
 ## Styling
 
 The browser player ships structural styles for layout, focus visibility, forced-colors support,

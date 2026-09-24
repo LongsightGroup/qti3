@@ -2,11 +2,31 @@
 
 ## Unreleased
 
+## 0.12.2 - 2026-09-24
+
+### Added
+
+- Write item-level `qti-modal-feedback` for every supported interaction. Declare identifier
+  outcomes, show or hide entries, optional titles, and plain text or trusted XHTML. Choice items
+  can map each selected choice to its own feedback, including multiple-response selections.
+  Invalid configurations return typed diagnostics. The choice `feedback` helper and generic
+  `modalFeedback` field cannot be combined, and feedback outcome names must differ from response
+  identifiers.
+- Parse modal feedback as structured content and flattened text. `parseQtiModalFeedbackFragment()`
+  parses a standalone fragment. Forbidden interactions are diagnosed and left out of the content
+  tree. With `showFeedback` enabled, the player renders visible feedback, including titles and
+  printed variables. The manual includes `rich-modal-feedback-reference` and
+  `multiple-choice-modal-feedback-reference`.
+- Support `qti-input-width-5` for certification compatibility, without an unsupported-width
+  warning or a five-character response limit.
+
+### Changed
+
 - Show compact imported QTI tables in the saved-package library, including attributes,
   declarations, mappings, interactions, and processing. Omit parser bookkeeping and duplicate
   content trees while keeping the original XML available after saving and reopening.
-- Support `qti-input-width-5` for certification compatibility, without an unsupported-width
-  warning or a five-character response limit.
+- Write `max-choices="0"` for multiple-response choice items when `maxChoices` is omitted, so
+  selection stays unlimited. An explicit `maxChoices` value still takes precedence.
 
 ## 0.12.1 - 2026-09-22
 
