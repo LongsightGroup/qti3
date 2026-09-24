@@ -5,6 +5,9 @@ import {
   writeQti3AssessmentItem,
   writeQti3AssessmentItemResult,
   type Qti3OrderAuthoringItem,
+  type Qti3AuthoringItem,
+  type Qti3ChoiceAuthoringItem,
+  type Qti3ModalFeedbackEntry,
 } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
 
@@ -21,6 +24,144 @@ const orderItem: Qti3OrderAuthoringItem = {
 };
 
 describe("item-level modal feedback", () => {
+  it.each(["textEntry", "inlineChoice"] as const)(
+    "checks every %s response for outcome collisions",
+    (interactionType) => {
+      const identifiers = ["FIRST", "SECOND"];
+      const common = { identifier: "collision", title: "Collision" };
+      const item: Qti3AuthoringItem =
+        interactionType === "textEntry"
+          ? {
+              ...common,
+              interactionType,
+              bodyHtml: qti3TrustedXmlFragment(
+                identifiers
+                  .map((id) => `<qti-text-entry-interaction response-identifier="${id}"/>`)
+                  .join(" "),
+              ),
+              responses: identifiers.map((responseIdentifier) => ({
+                responseIdentifier,
+                answers: [{ value: "yes" }],
+              })),
+            }
+          : {
+              ...common,
+              interactionType,
+              bodyHtml: qti3TrustedXmlFragment(
+                identifiers
+                  .map((id) => `<qti-inline-choice-interaction response-identifier="${id}"/>`)
+                  .join(" "),
+              ),
+              slots: identifiers.map((responseIdentifier) => ({
+                responseIdentifier,
+                correctResponse: "A",
+                options: [
+                  { identifier: "A", text: "A" },
+                  { identifier: "B", text: "B" },
+                ],
+              })),
+            };
+      for (const identifier of [...identifiers, "EXPLANATION"]) {
+        const result = writeQti3AssessmentItemResult({
+          ...item,
+          modalFeedback: {
+            outcomes: [{ identifier, cardinality: "single" }],
+            entries: [{ outcomeIdentifier: identifier, identifier: "RIGHT", text: "Correct." }],
+          },
+        });
+        if (identifier === "EXPLANATION") {
+          expect(result.ok).toBe(true);
+          if (result.ok) expectValidParsedItem(result.xml);
+        } else {
+          expect(result.ok).toBe(false);
+          expect(result.diagnostics).toContainEqual(
+            expect.objectContaining({
+              code: "invalid_feedback_outcome",
+              path: "modalFeedback.outcomes.0.identifier",
+            }),
+          );
+        }
+      }
+    },
+  );
+
+  it.each(["choice", "item"] as const)(
+    "uses the same content contract for %s feedback",
+    (model) => {
+      const base: Qti3ChoiceAuthoringItem = {
+        interactionType: "choice",
+        identifier: "content",
+        title: "Content",
+        responseCardinality: "single",
+        choices: [
+          { identifier: "A", text: "A" },
+          { identifier: "B", text: "B" },
+        ],
+        correctResponse: ["A"],
+      };
+      const cases: readonly {
+        content: Pick<Qti3ModalFeedbackEntry, "text" | "contentHtml">;
+        expectedText?: string;
+      }[] = [
+        {
+          content: { text: "Visible explanation", contentHtml: qti3TrustedXmlFragment(" ") },
+          expectedText: "Visible explanation",
+        },
+        {
+          content: { text: " ", contentHtml: qti3TrustedXmlFragment("<p>Rich explanation</p>") },
+          expectedText: "Rich explanation",
+        },
+        {
+          content: {
+            contentHtml: qti3TrustedXmlFragment('<img src="diagram.png" alt="Diagram"/>'),
+          },
+          expectedText: "Diagram",
+        },
+        {
+          content: {
+            contentHtml: qti3TrustedXmlFragment('<qti-printed-variable identifier="SCORE"/>'),
+          },
+          expectedText: "",
+        },
+        { content: { contentHtml: qti3TrustedXmlFragment("<p></p>") } },
+        { content: { contentHtml: qti3TrustedXmlFragment("<p>Unclosed") } },
+        { content: { text: "Text", contentHtml: qti3TrustedXmlFragment("<p>HTML</p>") } },
+        {
+          content: {
+            contentHtml: qti3TrustedXmlFragment(
+              '<qti-text-entry-interaction response-identifier="RESPONSE"/>',
+            ),
+          },
+        },
+      ];
+      for (const { content, expectedText } of cases) {
+        const result = writeQti3AssessmentItemResult({
+          ...base,
+          ...(model === "choice"
+            ? {
+                feedback: { entries: [{ choiceIdentifier: "A", identifier: "RIGHT", ...content }] },
+              }
+            : {
+                modalFeedback: {
+                  outcomes: [{ identifier: "FEEDBACK", cardinality: "single" }],
+                  entries: [{ outcomeIdentifier: "FEEDBACK", identifier: "RIGHT", ...content }],
+                },
+              }),
+        });
+        if (expectedText === undefined) {
+          expect(result.ok).toBe(false);
+          expect(result.diagnostics).toContainEqual(
+            expect.objectContaining({ code: "invalid_feedback_content" }),
+          );
+        } else {
+          expect(result.ok).toBe(true);
+          if (result.ok)
+            expect(expectValidParsedItem(result.xml).modalFeedback[0]?.text).toBe(expectedText);
+        }
+      }
+    },
+  );
+
   it("authors response-driven rich feedback on a non-choice interaction", () => {
     const xml = writeQti3AssessmentItem({
       ...orderItem,

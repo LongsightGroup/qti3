@@ -1,4 +1,3 @@
-import { parseQtiXml } from "@longsightgroup/qti3-core";
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
@@ -20,6 +19,7 @@ import {
   choiceFeedbackProcessingXml,
   responseProcessingTemplateXml,
 } from "./response-processing.js";
+import { choiceModalFeedback, validateChoiceFeedback } from "./choice-feedback.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3ChoiceBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
@@ -84,52 +84,22 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
     optionalBodySection(input.bodyHtml),
   );
 
-  const feedback = input.feedback;
-  const feedbackOutcomeIdentifier =
-    feedback === undefined
-      ? undefined
-      : assertQtiIdentifier(
-          feedback.outcomeIdentifier ?? "FEEDBACK",
-          "Feedback outcome identifier",
-        );
-  const escapedFeedbackOutcomeIdentifier =
-    feedbackOutcomeIdentifier === undefined
-      ? undefined
-      : escapeXmlAttribute(feedbackOutcomeIdentifier);
-  const outcomeDeclarationsXml =
-    escapedFeedbackOutcomeIdentifier === undefined
-      ? undefined
-      : `  <qti-outcome-declaration identifier="${escapedFeedbackOutcomeIdentifier}" cardinality="${input.responseCardinality}" base-type="identifier"/>`;
-  const modalFeedbackXml =
-    feedback === undefined || escapedFeedbackOutcomeIdentifier === undefined
-      ? undefined
-      : feedback.entries
-          .map((entry) => {
-            const identifier = escapeXmlAttribute(
-              assertQtiIdentifier(entry.identifier, "Modal feedback identifier"),
-            );
-            const content = entry.contentHtml?.trim()
-              ? entry.contentHtml
-              : escapeXmlText(entry.text ?? "");
-            return `  <qti-modal-feedback outcome-identifier="${escapedFeedbackOutcomeIdentifier}" identifier="${identifier}" show-hide="show">${content}</qti-modal-feedback>`;
-          })
-          .join("\n");
-
   return assessmentItemShell({
     ...input,
     declarationsXml,
     bodyXml,
-    outcomeDeclarationsXml,
-    modalFeedbackXml,
+    modalFeedback: input.feedback
+      ? choiceModalFeedback(input.feedback, input.responseCardinality)
+      : input.modalFeedback,
     responseProcessingXml:
-      feedback === undefined || feedbackOutcomeIdentifier === undefined
+      input.feedback === undefined
         ? responseProcessingTemplateXml(scoring)
         : choiceFeedbackProcessingXml(
             responseIdentifier,
             input.responseCardinality,
             scoring,
-            feedbackOutcomeIdentifier,
-            feedback.entries,
+            input.feedback.outcomeIdentifier?.trim() ?? "FEEDBACK",
+            input.feedback.entries,
           ),
   });
 }
@@ -277,112 +247,6 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
       );
     }
   }
-  if (input.feedback !== undefined) {
-    if (input.modalFeedback !== undefined) {
-      diagnostics.push(
-        writerDiagnostic(
-          "conflicting_feedback_models",
-          "modalFeedback",
-          "Use either choice feedback or item-level modalFeedback on one item.",
-        ),
-      );
-    }
-    const feedback = input.feedback;
-    const outcomeIdentifier = feedback.outcomeIdentifier ?? "FEEDBACK";
-    if (feedback.entries.length === 0) {
-      diagnostics.push(
-        writerDiagnostic(
-          "missing_feedback_entries",
-          "feedback.entries",
-          "Modal feedback requires at least one entry.",
-        ),
-      );
-    }
-    const outcomeIdentifierDiagnostic = validateQtiIdentifier(
-      "feedback.outcomeIdentifier",
-      "Feedback outcome identifier",
-      outcomeIdentifier,
-    );
-    if (outcomeIdentifierDiagnostic) diagnostics.push(outcomeIdentifierDiagnostic);
-    const reservedOutcomeIdentifiers = new Set([
-      "SCORE",
-      responseIdentifier.trim(),
-      "completionStatus",
-      "numAttempts",
-      "duration",
-      "QTI_CONTEXT",
-    ]);
-    if (reservedOutcomeIdentifiers.has(outcomeIdentifier.trim())) {
-      diagnostics.push(
-        writerDiagnostic(
-          "invalid_feedback_outcome",
-          "feedback.outcomeIdentifier",
-          "Feedback outcome identifier conflicts with an existing or built-in variable.",
-          outcomeIdentifier,
-        ),
-      );
-    }
-    diagnostics.push(
-      ...duplicateDiagnostics(
-        feedback.entries.map((entry) => entry.choiceIdentifier),
-        "feedback.entries.choiceIdentifier",
-        "Feedback choice identifier",
-      ),
-      ...duplicateDiagnostics(
-        feedback.entries.map((entry) => entry.identifier),
-        "feedback.entries.identifier",
-        "Modal feedback identifier",
-      ),
-    );
-    for (const [index, entry] of feedback.entries.entries()) {
-      const choiceIdentifierDiagnostic = validateQtiIdentifier(
-        `feedback.entries.${index}.choiceIdentifier`,
-        "Feedback choice identifier",
-        entry.choiceIdentifier,
-      );
-      if (choiceIdentifierDiagnostic) diagnostics.push(choiceIdentifierDiagnostic);
-      else if (!choiceIdentifiers.has(entry.choiceIdentifier.trim())) {
-        diagnostics.push(
-          writerDiagnostic(
-            "unknown_choice_reference",
-            `feedback.entries.${index}.choiceIdentifier`,
-            `Modal feedback references unknown choice "${entry.choiceIdentifier}".`,
-            entry.choiceIdentifier,
-          ),
-        );
-      }
-      const feedbackIdentifierDiagnostic = validateQtiIdentifier(
-        `feedback.entries.${index}.identifier`,
-        "Modal feedback identifier",
-        entry.identifier,
-      );
-      if (feedbackIdentifierDiagnostic) diagnostics.push(feedbackIdentifierDiagnostic);
-      const hasText = Boolean(entry.text?.trim());
-      const hasContentHtml = Boolean(entry.contentHtml?.trim());
-      if (
-        hasText === hasContentHtml ||
-        (hasContentHtml && !hasText && !hasVisibleFeedbackText(entry.contentHtml))
-      ) {
-        diagnostics.push(
-          writerDiagnostic(
-            "invalid_feedback_content",
-            `feedback.entries.${index}`,
-            "Modal feedback requires exactly one content source with visible text; contentHtml must be valid XML.",
-          ),
-        );
-      }
-    }
-  }
+  diagnostics.push(...validateChoiceFeedback(input));
   return diagnostics;
-}
-
-function hasVisibleFeedbackText(contentHtml: string | undefined): boolean {
-  if (contentHtml === undefined) return false;
-  const parsed =
-    parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-probe" title="Feedback" time-dependent="false">
-    <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
-    <qti-item-body/>
-    <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="PROBE" show-hide="show">${contentHtml}</qti-modal-feedback>
-  </qti-assessment-item>`);
-  return parsed.ok && Boolean(parsed.document?.item.modalFeedback[0]?.text.trim());
 }

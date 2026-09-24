@@ -42,7 +42,10 @@ export function isPositiveInteger(value: number): boolean {
   return Number.isFinite(value) && Number.isInteger(value) && value > 0;
 }
 
-export function validateItemBase(input: Qti3AuthoringItemBase): Qti3WriterDiagnostic[] {
+export function validateItemBase(
+  input: Qti3AuthoringItemBase,
+  responseIdentifiers: readonly string[] = [input.responseIdentifier ?? "RESPONSE"],
+): Qti3WriterDiagnostic[] {
   const diagnostics: Qti3WriterDiagnostic[] = [];
   const identifierDiagnostic = validateQtiIdentifier(
     "identifier",
@@ -61,9 +64,7 @@ export function validateItemBase(input: Qti3AuthoringItemBase): Qti3WriterDiagno
     );
   }
   if (input.modalFeedback !== undefined) {
-    diagnostics.push(
-      ...validateModalFeedback(input.modalFeedback, input.responseIdentifier ?? "RESPONSE"),
-    );
+    diagnostics.push(...validateModalFeedback(input.modalFeedback, responseIdentifiers));
   }
   return diagnostics;
 }

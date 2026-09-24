@@ -123,7 +123,10 @@ function normalizeScore(score?: number): number {
 export function validateQti3TextEntryItem(
   input: Qti3TextEntryBuilderInput,
 ): Qti3WriterDiagnostic[] {
-  const diagnostics = validateItemBase(input);
+  const diagnostics = validateItemBase(
+    input,
+    input.responses.map((response) => response.responseIdentifier),
+  );
   if (!input.responses.length) {
     diagnostics.push(
       writerDiagnostic(

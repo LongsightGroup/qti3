@@ -1,6 +1,11 @@
-import { parseQtiXml } from "@longsightgroup/qti3-core";
+import { parseQtiXml, type QtiContentNode } from "@longsightgroup/qti3-core";
 import { isQtiIdentifier } from "./identifier.js";
-import type { Qti3ModalFeedback, Qti3WriterDiagnostic } from "./types.js";
+import {
+  Qti3WriterError,
+  type Qti3ModalFeedback,
+  type Qti3ModalFeedbackEntry,
+  type Qti3WriterDiagnostic,
+} from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 const reservedOutcomeIdentifiers = new Set([
@@ -16,10 +21,11 @@ const feedbackVisibilityValues: ReadonlySet<string> = new Set(["show", "hide"]);
 /** Validate item-level modal feedback independently of interaction type. */
 export function validateModalFeedback(
   feedback: Qti3ModalFeedback,
-  responseIdentifier: string | undefined,
+  responseIdentifiers: readonly string[],
 ): Qti3WriterDiagnostic[] {
   const diagnostics: Qti3WriterDiagnostic[] = [];
   const outcomes = new Set<string>();
+  const responses = new Set(responseIdentifiers.map((identifier) => identifier.trim()));
   if (feedback.outcomes.length === 0) {
     diagnostics.push({
       code: "missing_feedback_outcomes",
@@ -45,7 +51,7 @@ export function validateModalFeedback(
       });
     }
     outcomes.add(identifier);
-    if (reservedOutcomeIdentifiers.has(identifier) || identifier === responseIdentifier?.trim()) {
+    if (reservedOutcomeIdentifiers.has(identifier) || responses.has(identifier)) {
       diagnostics.push({
         code: "invalid_feedback_outcome",
         path: `${path}.identifier`,
@@ -120,34 +126,9 @@ export function validateModalFeedback(
         message: "Modal feedback showHide must be show or hide.",
       });
     }
-    const hasText = Boolean(entry.text?.trim());
-    const hasContent = Boolean(entry.contentHtml?.trim());
-    if (hasText === hasContent) {
-      diagnostics.push({
-        code: "invalid_feedback_content",
-        path,
-        message: "Modal feedback requires exactly one text or contentHtml source.",
-      });
-    }
-    if (hasContent) {
-      const probe =
-        parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-probe" title="Feedback" time-dependent="false">
-        <qti-outcome-declaration identifier="PROBE" cardinality="single" base-type="identifier"/>
-        <qti-item-body/>
-        <qti-modal-feedback outcome-identifier="PROBE" identifier="ENTRY" show-hide="show">${entry.contentHtml}</qti-modal-feedback>
-      </qti-assessment-item>`);
-      if (
-        probe.diagnostics.some(
-          (diagnostic) =>
-            diagnostic.code === "xml.parse" || diagnostic.code === "feedback.interaction.forbidden",
-        )
-      ) {
-        diagnostics.push({
-          code: "invalid_feedback_content",
-          path: `${path}.contentHtml`,
-          message: "Modal feedback content must be valid QTI XML without interactions.",
-        });
-      }
+    const content = parseFeedbackContent(entry);
+    if (!content.ok) {
+      diagnostics.push({ code: "invalid_feedback_content", path, message: content.message });
     }
   }
   return diagnostics;
@@ -175,8 +156,55 @@ export function modalFeedbackEntriesXml(feedback: Qti3ModalFeedback): string {
   return feedback.entries
     .map((entry) => {
       const title = entry.title === undefined ? "" : ` title="${escapeXmlAttribute(entry.title)}"`;
-      const content = entry.contentHtml ?? escapeXmlText(entry.text ?? "");
-      return `  <qti-modal-feedback outcome-identifier="${escapeXmlAttribute(entry.outcomeIdentifier.trim())}" identifier="${escapeXmlAttribute(entry.identifier.trim())}" show-hide="${entry.showHide ?? "show"}"${title}>${content}</qti-modal-feedback>`;
+      const content = parseFeedbackContent(entry);
+      if (!content.ok) {
+        throw new Qti3WriterError([
+          {
+            code: "invalid_feedback_content",
+            path: "modalFeedback.entries",
+            message: content.message,
+          },
+        ]);
+      }
+      return `  <qti-modal-feedback outcome-identifier="${escapeXmlAttribute(entry.outcomeIdentifier.trim())}" identifier="${escapeXmlAttribute(entry.identifier.trim())}" show-hide="${entry.showHide ?? "show"}"${title}>${content.xml}</qti-modal-feedback>`;
     })
     .join("\n");
+}
+
+/** Resolve the content source once per operation; validation and serialization share this boundary. */
+function parseFeedbackContent(
+  entry: Pick<Qti3ModalFeedbackEntry, "text" | "contentHtml">,
+): { readonly ok: true; readonly xml: string } | { readonly ok: false; readonly message: string } {
+  const hasText = Boolean(entry.text?.trim());
+  const html = entry.contentHtml?.trim();
+  const invalid = {
+    ok: false,
+    message:
+      "Modal feedback requires exactly one content source with visible text; contentHtml must be valid XML.",
+  } as const;
+  if (hasText === Boolean(html)) return invalid;
+  if (!html) return { ok: true, xml: escapeXmlText(entry.text ?? "") };
+  const probe =
+    parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-probe" title="Feedback" time-dependent="false">
+    <qti-outcome-declaration identifier="PROBE" cardinality="single" base-type="identifier"/>
+    <qti-item-body/>
+    <qti-modal-feedback outcome-identifier="PROBE" identifier="ENTRY" show-hide="show">${html}</qti-modal-feedback>
+  </qti-assessment-item>`);
+  if (
+    probe.diagnostics.some(
+      (diagnostic) =>
+        diagnostic.code === "xml.parse" || diagnostic.code === "feedback.interaction.forbidden",
+    )
+  )
+    return invalid;
+  const parsed = probe.document?.item.modalFeedback[0];
+  if (!parsed || (!parsed.text.trim() && !hasPrintedVariable(parsed.content ?? []))) return invalid;
+  return { ok: true, xml: html };
+}
+
+function hasPrintedVariable(nodes: readonly QtiContentNode[]): boolean {
+  return nodes.some(
+    (node) =>
+      node.kind === "printedVariable" || ("children" in node && hasPrintedVariable(node.children)),
+  );
 }

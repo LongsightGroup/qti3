@@ -130,7 +130,10 @@ function optionXml(option: Qti3InlineChoiceOption): string {
 export function validateQti3InlineChoiceItem(
   input: Qti3InlineChoiceBuilderInput,
 ): Qti3WriterDiagnostic[] {
-  const diagnostics = validateItemBase(input);
+  const diagnostics = validateItemBase(
+    input,
+    input.slots.map((response) => response.responseIdentifier),
+  );
   if (!input.bodyHtml.trim()) {
     diagnostics.push(
       writerDiagnostic(
