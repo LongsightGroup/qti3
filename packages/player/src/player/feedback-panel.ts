@@ -18,8 +18,6 @@ export function syncFeedbackPanel(
       const element = document.createElement("div");
       element.dataset.feedbackIdentifier = entry.identifier;
       if (entry.title) {
-        element.setAttribute("role", "group");
-        element.setAttribute("aria-label", entry.title);
         const label = document.createElement("p");
         label.className = "qti3-feedback-title";
         label.textContent = entry.title;

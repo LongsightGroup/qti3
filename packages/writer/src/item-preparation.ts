@@ -1,3 +1,4 @@
+import { authoringResponseIdentifiers } from "./interaction-responses.js";
 import { choiceModalFeedback, validateChoiceFeedback } from "./choice-feedback.js";
 import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
 import { assessmentItemShell, type AssessmentItemShellInput } from "./shell.js";
@@ -10,12 +11,7 @@ import {
 } from "./types.js";
 
 export function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
-  const responses =
-    item.interactionType === "textEntry"
-      ? item.responses.map((response) => response.responseIdentifier)
-      : item.interactionType === "inlineChoice"
-        ? item.slots.map((slot) => slot.responseIdentifier)
-        : [item.responseIdentifier ?? "RESPONSE"];
+  const responses = authoringResponseIdentifiers(item);
   if (item.interactionType === "choice" && item.feedback) {
     const prepared = prepareModalFeedback(
       choiceModalFeedback(
@@ -27,8 +23,9 @@ export function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
       responses,
       {
         root: "feedback",
+        // Generated outcome metadata has no separate field in the choice authoring model.
         outcome: (_index, field) =>
-          field === "identifier" ? "feedback.outcomeIdentifier" : "responseCardinality",
+          field === "identifier" ? "feedback.outcomeIdentifier" : "feedback",
         entry: (index) => `feedback.entries.${index}`,
       },
     );

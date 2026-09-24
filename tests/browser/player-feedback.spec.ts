@@ -74,7 +74,7 @@ test.describe("player feedback", () => {
     await page.locator("#debug-score").click();
 
     const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
-    await expect(feedback.getByRole("group", { name: "Answer explanation" })).toBeVisible();
+    await expect(feedback.locator("[role=group], [aria-label]")).toHaveCount(0);
     await expect(feedback.locator(".qti3-feedback-title")).toHaveText("Answer explanation");
     await expect(feedback.locator("strong")).toHaveText("answer");
     await expect(feedback).toContainText("Correct answer.");
@@ -231,12 +231,12 @@ test("loads the rich modal feedback reference from the fixture selector", async 
   await page.getByRole("radio", { name: "A. The Sun", exact: true }).check();
   await page.locator("#debug-score").click();
   const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
-  await expect(feedback.getByRole("group", { name: "Why the Sun shines" })).toBeVisible();
+  await expect(feedback.getByText("Why the Sun shines", { exact: true })).toBeVisible();
   await expect(feedback.locator("strong")).toHaveText("its own light");
   await expect(feedback.locator(".qti3-printed-variable")).toHaveText("1");
   await page.getByRole("radio", { name: "B. The Moon", exact: true }).check();
   await page.locator("#debug-score").click();
-  await expect(feedback.getByRole("group", { name: "Try again" })).toBeVisible();
+  await expect(feedback.getByText("Try again", { exact: true })).toBeVisible();
   await expect(feedback).not.toContainText("Why the Sun shines");
 });
 
