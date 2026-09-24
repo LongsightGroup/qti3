@@ -1,3 +1,4 @@
+import { parseQtiXml } from "@longsightgroup/qti3-core";
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
@@ -353,7 +354,10 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
       if (feedbackIdentifierDiagnostic) diagnostics.push(feedbackIdentifierDiagnostic);
       const hasText = Boolean(entry.text?.trim());
       const hasContentHtml = Boolean(entry.contentHtml?.trim());
-      if (hasText === hasContentHtml) {
+      if (
+        hasText === hasContentHtml ||
+        (hasContentHtml && !hasText && !hasVisibleFeedbackText(entry.contentHtml))
+      ) {
         diagnostics.push(
           writerDiagnostic(
             "invalid_feedback_content",
@@ -365,4 +369,15 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
     }
   }
   return diagnostics;
+}
+
+function hasVisibleFeedbackText(contentHtml: string | undefined): boolean {
+  if (contentHtml === undefined) return false;
+  const parsed =
+    parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-probe" title="Feedback" time-dependent="false">
+    <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+    <qti-item-body/>
+    <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="PROBE" show-hide="show">${contentHtml}</qti-modal-feedback>
+  </qti-assessment-item>`);
+  return parsed.ok && Boolean(parsed.document?.item.modalFeedback[0]?.text.trim());
 }

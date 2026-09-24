@@ -102,6 +102,70 @@ describe("qti3-writer validation", () => {
         path: "feedback.entries.0",
       },
       {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment("<p></p>"),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment("<p>  </p>"),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment("<p>Unclosed"),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment('<img src="diagram.png"/>'),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
         item: { ...base, feedback: { entries: [] } },
         code: "missing_feedback_entries",
         path: "feedback.entries",
@@ -116,6 +180,16 @@ describe("qti3-writer validation", () => {
       const result = writeQti3AssessmentItemResult(item);
       expect(result.ok).toBe(false);
       expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path }));
+    }
+    for (const contentHtml of [
+      qti3TrustedXmlFragment("<p>Visible feedback.</p>"),
+      qti3TrustedXmlFragment('<img alt="Diagram" src="diagram.png"/>'),
+    ]) {
+      const result = writeQti3AssessmentItemResult({
+        ...base,
+        feedback: { entries: [{ choiceIdentifier: "A", identifier: "WRONG", contentHtml }] },
+      });
+      expect(result.ok).toBe(true);
     }
   });
 

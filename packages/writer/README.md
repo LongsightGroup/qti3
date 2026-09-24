@@ -65,10 +65,11 @@ if (!result.ok) {
 ```
 
 Feedback currently requires a single-response choice item. Unsupported feedback configurations
-return typed diagnostics. Each entry needs exactly one nonblank `text` or `contentHtml` value;
-`contentHtml` is a caller-supplied trusted XML fragment. When rebuilding from parsed QTI, preserve
-rich feedback XHTML separately because `QtiModalFeedback` exposes flattened text only. The current
-player displays that flattened text even when the output XML contains rich XHTML.
+return typed diagnostics. Each entry needs exactly one `text` or `contentHtml` value with visible
+text; accessible image `alt` text counts. `contentHtml` is a caller-supplied trusted XML fragment.
+When rebuilding from parsed QTI, preserve rich feedback XHTML separately because
+`QtiModalFeedback` exposes flattened text only. The current player displays that flattened text
+even when the output XML contains rich XHTML.
 
 The stable application-facing API is `writeQti3AssessmentItemResult(item)`. It returns typed
 diagnostics and should be used by production authoring systems. Use
