@@ -362,7 +362,7 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
           writerDiagnostic(
             "invalid_feedback_content",
             `feedback.entries.${index}`,
-            "Modal feedback requires exactly one nonblank text or contentHtml source.",
+            "Modal feedback requires exactly one content source with visible text; contentHtml must be valid XML.",
           ),
         );
       }

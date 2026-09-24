@@ -33,6 +33,7 @@ describe("qti3-writer validation", () => {
       readonly item: Qti3ChoiceAuthoringItem;
       readonly code: string;
       readonly path: string;
+      readonly message?: string;
     }[] = [
       {
         item: { ...base, feedback: { entries: [{ ...entry, choiceIdentifier: "C" }] } },
@@ -116,6 +117,8 @@ describe("qti3-writer validation", () => {
         },
         code: "invalid_feedback_content",
         path: "feedback.entries.0",
+        message:
+          "Modal feedback requires exactly one content source with visible text; contentHtml must be valid XML.",
       },
       {
         item: {
@@ -176,10 +179,13 @@ describe("qti3-writer validation", () => {
         path: "responseCardinality",
       },
     ];
-    for (const { item, code, path } of cases) {
+    for (const { item, code, path, message } of cases) {
       const result = writeQti3AssessmentItemResult(item);
       expect(result.ok).toBe(false);
       expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path }));
+      if (message !== undefined) {
+        expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path, message }));
+      }
     }
     for (const contentHtml of [
       qti3TrustedXmlFragment("<p>Visible feedback.</p>"),
