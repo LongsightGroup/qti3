@@ -1,3 +1,4 @@
+export { parseQtiModalFeedbackFragment } from "./parser-content.js";
 export {
   processQtiAdaptiveItemTurn,
   type QtiAdaptiveTurnInput,

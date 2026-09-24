@@ -2,7 +2,12 @@ import type { Qti3AuthoringItemBase } from "./types.js";
 import { assertQtiIdentifier } from "./identifier.js";
 import { escapeXmlAttribute, xmlLines } from "./xml.js";
 
-export interface AssessmentItemShellInput extends Qti3AuthoringItemBase {
+export interface AssessmentItemShellInput extends Pick<
+  Qti3AuthoringItemBase,
+  "identifier" | "title" | "lang"
+> {
+  readonly outcomeDeclarationsXml: string;
+  readonly modalFeedbackXml: string;
   readonly declarationsXml: string;
   readonly bodyXml: string;
   readonly responseProcessingXml: string;
@@ -33,11 +38,13 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     `  identifier="${identifier}" title="${title}" time-dependent="false" xml:lang="${lang}">`,
     input.declarationsXml,
     outcomeDeclarationXml,
+    input.outcomeDeclarationsXml,
     input.companionMaterialsXml,
     `  <qti-item-body>`,
     input.bodyXml,
     `  </qti-item-body>`,
     input.responseProcessingXml,
+    input.modalFeedbackXml,
     `</qti-assessment-item>`,
   ]);
 }

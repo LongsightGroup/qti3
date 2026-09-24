@@ -52,6 +52,14 @@ source coordinates. For example, `items/a.xml` plus `/qti-assessment-item` becom
 `items/a.xml/qti-assessment-item`. The function returns a copy without filtering
 diagnostics or changing the input.
 
+### Modal feedback content
+
+`QtiModalFeedback.content` contains the parsed feedback tree; `text` is its flattened text projection.
+The parser reports forbidden interactions and excludes them from this tree, even when it returns a
+document alongside errors. `parseQtiModalFeedbackFragment(xml)` parses standalone feedback content
+without an assessment item or variable declarations and returns `content`, `text`, and `diagnostics`.
+Its XML diagnostics refer to the fragment inside a `qti-content-body` wrapper.
+
 ### Text responses
 
 Text Entry supports single string, integer, and float values, plus numeric records. Extended Text

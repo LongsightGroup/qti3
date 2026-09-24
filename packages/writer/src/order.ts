@@ -2,7 +2,6 @@ import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -16,17 +15,34 @@ import {
   wrapInteractionBody,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3OrderBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3OrderItem(input: Qti3OrderBuilderInput): string {
-  const diagnostics = validateQti3OrderItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3OrderItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "order" },
+    validateQti3OrderItemStructure,
+    renderQti3OrderItem,
+  );
 }
 
-export function renderQti3OrderItem(input: Qti3OrderBuilderInput): string {
+export function validateQti3OrderItem(input: Qti3OrderBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "order" },
+    validateQti3OrderItemStructure,
+  );
+}
+
+export function renderQti3OrderItem(
+  input: Qti3OrderBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -81,15 +97,20 @@ ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-va
     optionalBodySection(input.bodyHtml),
   );
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3OrderItem(input: Qti3OrderBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3OrderItemStructure(
+  input: Qti3OrderBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

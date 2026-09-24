@@ -6,7 +6,7 @@ import {
 } from "@longsightgroup/qti3-core";
 
 import { validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
-import { renderQti3AuthoringItem, validateQti3AuthoringItem } from "./interactions.js";
+import { writeQti3AuthoringItemResult } from "./interactions.js";
 import type {
   Qti3PackageAuthoringInput,
   Qti3PackageAsset,
@@ -196,11 +196,11 @@ function packageItemXml(item: Qti3PackageItem): {
 } {
   if (item.kind === "xml") return { xml: item.xml, diagnostics: [] };
 
-  const itemDiagnostics = validateQti3AuthoringItem(item.item);
-  if (itemDiagnostics.length) {
+  const result = writeQti3AuthoringItemResult(item.item);
+  if (!result.ok) {
     return {
       xml: "",
-      diagnostics: itemDiagnostics.map((diagnostic) =>
+      diagnostics: result.diagnostics.map((diagnostic) =>
         writerDiagnostic(
           diagnostic.code,
           `items.${normalizePackagePathForDiagnostic(item.path)}.${diagnostic.path}`,
@@ -210,7 +210,7 @@ function packageItemXml(item: Qti3PackageItem): {
       ),
     };
   }
-  return { xml: renderQti3AuthoringItem(item.item), diagnostics: [] };
+  return { xml: result.xml, diagnostics: [] };
 }
 
 function validateItemIdentifier(

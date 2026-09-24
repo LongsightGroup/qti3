@@ -1,7 +1,6 @@
 import {
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -19,7 +18,12 @@ import {
   validatePairReferences,
 } from "./pair-declaration.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3GapMatchBuilderInput,
   Qti3GapMatchChoice,
@@ -28,12 +32,24 @@ import type {
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3GapMatchItem(input: Qti3GapMatchBuilderInput): string {
-  const diagnostics = validateQti3GapMatchItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3GapMatchItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "gapMatch" },
+    validateQti3GapMatchItemStructure,
+    renderQti3GapMatchItem,
+  );
 }
 
-export function renderQti3GapMatchItem(input: Qti3GapMatchBuilderInput): string {
+export function validateQti3GapMatchItem(input: Qti3GapMatchBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "gapMatch" },
+    validateQti3GapMatchItemStructure,
+  );
+}
+
+export function renderQti3GapMatchItem(
+  input: Qti3GapMatchBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Gap match response identifier",
@@ -77,12 +93,15 @@ ${optionalPromptSection(input.promptHtml)}${choicesXml}
 ${bodyFragment}
     </qti-gap-match-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "map_response"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "map_response"),
+    },
+    feedback,
+  );
 }
 
 function gapChoiceXml(choice: Qti3GapMatchChoice): string {
@@ -103,7 +122,9 @@ function gapChoiceXml(choice: Qti3GapMatchChoice): string {
       </qti-gap-img>`;
 }
 
-export function validateQti3GapMatchItem(input: Qti3GapMatchBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3GapMatchItemStructure(
+  input: Qti3GapMatchBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

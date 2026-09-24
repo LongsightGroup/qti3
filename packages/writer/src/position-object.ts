@@ -1,7 +1,6 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -28,17 +27,36 @@ import {
   mapResponsePointProcessingXml,
   responseProcessingTemplateXml,
 } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3PositionObjectBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3PositionObjectItem(input: Qti3PositionObjectBuilderInput): string {
-  const diagnostics = validateQti3PositionObjectItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3PositionObjectItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "positionObject" },
+    validateQti3PositionObjectItemStructure,
+    renderQti3PositionObjectItem,
+  );
 }
 
-export function renderQti3PositionObjectItem(input: Qti3PositionObjectBuilderInput): string {
+export function validateQti3PositionObjectItem(
+  input: Qti3PositionObjectBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "positionObject" },
+    validateQti3PositionObjectItemStructure,
+  );
+}
+
+export function renderQti3PositionObjectItem(
+  input: Qti3PositionObjectBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Position object response identifier",
@@ -76,18 +94,21 @@ export function renderQti3PositionObjectItem(input: Qti3PositionObjectBuilderInp
       </qti-position-object-interaction>
     </qti-position-object-stage>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml:
-      responseIdentifier === "RESPONSE"
-        ? responseProcessingTemplateXml("map_response_point")
-        : mapResponsePointProcessingXml(responseIdentifier),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml:
+        responseIdentifier === "RESPONSE"
+          ? responseProcessingTemplateXml("map_response_point")
+          : mapResponsePointProcessingXml(responseIdentifier),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3PositionObjectItem(
+export function validateQti3PositionObjectItemStructure(
   input: Qti3PositionObjectBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

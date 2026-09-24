@@ -606,8 +606,8 @@ function validateCatalogHtmlContent(nodes: QtiContentNode[], diagnostics: QtiDia
 }
 
 function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnostic[]): void {
-  const outcomeIdentifiers = new Set(
-    item.outcomeDeclarations.map((declaration) => declaration.identifier),
+  const outcomes = new Map(
+    item.outcomeDeclarations.map((declaration) => [declaration.identifier, declaration]),
   );
   const seen = new Set<string>();
   for (const feedback of item.modalFeedback) {
@@ -623,11 +623,23 @@ function validateModalFeedback(item: QtiAssessmentItem, diagnostics: QtiDiagnost
       });
     }
     seen.add(key);
-    if (!outcomeIdentifiers.has(feedback.outcomeIdentifier)) {
+    const outcome = outcomes.get(feedback.outcomeIdentifier);
+    if (!outcome) {
       diagnostics.push({
         code: "feedback.outcomeIdentifier.reference",
         severity: "error",
         message: `qti-modal-feedback ${feedback.identifier} references missing outcome declaration ${feedback.outcomeIdentifier}.`,
+        path: feedback.source?.path,
+        source: feedback.source,
+      });
+    } else if (
+      outcome.baseType !== "identifier" ||
+      (outcome.cardinality !== "single" && outcome.cardinality !== "multiple")
+    ) {
+      diagnostics.push({
+        code: "feedback.outcomeIdentifier.type",
+        severity: "error",
+        message: `qti-modal-feedback ${feedback.identifier} requires an identifier outcome with single or multiple cardinality.`,
         path: feedback.source?.path,
         source: feedback.source,
       });

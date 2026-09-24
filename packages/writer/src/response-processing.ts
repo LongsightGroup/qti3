@@ -1,9 +1,10 @@
 import type {
+  Qti3ChoiceFeedbackEntry,
   Qti3PointResponseProcessingTemplate,
   Qti3ResponseProcessingTemplate,
   Qti3TrustedXmlFragment,
 } from "./types.js";
-import { indentXml, escapeXmlAttribute } from "./xml.js";
+import { indentXml, escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 const RESPONSE_PROCESSING_TEMPLATE_URIS = {
   match_correct: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct",
@@ -32,19 +33,15 @@ export function mapResponsePointProcessingXml(responseIdentifier: string): strin
   </qti-response-processing>`;
 }
 
-export function mapResponseProcessingXml(responseIdentifier: string): string {
-  const identifier = escapeXmlAttribute(responseIdentifier);
-  return `  <qti-response-processing>
-    <qti-set-outcome-value identifier="SCORE">
-      <qti-map-response identifier="${identifier}"/>
-    </qti-set-outcome-value>
-  </qti-response-processing>`;
+function mapResponseRulesXml(responseIdentifier: string): string {
+  return `    <qti-set-outcome-value identifier="SCORE">
+      <qti-map-response identifier="${escapeXmlAttribute(responseIdentifier)}"/>
+    </qti-set-outcome-value>`;
 }
 
-export function matchCorrectProcessingXml(responseIdentifier: string): string {
+function matchCorrectRulesXml(responseIdentifier: string): string {
   const identifier = escapeXmlAttribute(responseIdentifier);
-  return `  <qti-response-processing>
-    <qti-response-condition>
+  return `    <qti-response-condition>
       <qti-response-if>
         <qti-match>
           <qti-variable identifier="${identifier}"/>
@@ -54,7 +51,73 @@ export function matchCorrectProcessingXml(responseIdentifier: string): string {
           <qti-base-value base-type="float">1</qti-base-value>
         </qti-set-outcome-value>
       </qti-response-if>
-    </qti-response-condition>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-base-value base-type="float">0</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-else>
+    </qti-response-condition>`;
+}
+
+export function mapResponseProcessingXml(responseIdentifier: string): string {
+  return `  <qti-response-processing>\n${mapResponseRulesXml(responseIdentifier)}\n  </qti-response-processing>`;
+}
+
+export function matchCorrectProcessingXml(responseIdentifier: string): string {
+  return `  <qti-response-processing>\n${matchCorrectRulesXml(responseIdentifier)}\n  </qti-response-processing>`;
+}
+
+/** Scores a choice response and selects feedback for each selected choice. */
+export function choiceFeedbackProcessingXml(
+  responseIdentifier: string,
+  responseCardinality: "single" | "multiple",
+  scoring: Qti3ResponseProcessingTemplate,
+  outcomeIdentifier: string,
+  entries: readonly Qti3ChoiceFeedbackEntry[],
+): string {
+  const response = escapeXmlAttribute(responseIdentifier);
+  const outcome = escapeXmlAttribute(outcomeIdentifier);
+  const scoreXml =
+    scoring === "map_response"
+      ? mapResponseRulesXml(responseIdentifier)
+      : matchCorrectRulesXml(responseIdentifier);
+  const feedbackConditions = entries
+    .map((entry) => {
+      const choice = escapeXmlText(entry.choiceIdentifier.trim());
+      const identifier = escapeXmlText(entry.identifier.trim());
+      const condition =
+        responseCardinality === "multiple"
+          ? `<qti-member>
+          <qti-base-value base-type="identifier">${choice}</qti-base-value>
+          <qti-variable identifier="${response}"/>
+        </qti-member>`
+          : `<qti-match>
+          <qti-variable identifier="${response}"/>
+          <qti-base-value base-type="identifier">${choice}</qti-base-value>
+        </qti-match>`;
+      const value =
+        responseCardinality === "multiple"
+          ? `<qti-multiple>
+            <qti-variable identifier="${outcome}"/>
+            <qti-base-value base-type="identifier">${identifier}</qti-base-value>
+          </qti-multiple>`
+          : `<qti-base-value base-type="identifier">${identifier}</qti-base-value>`;
+      return `    <qti-response-condition>
+      <qti-response-if>
+        ${condition}
+        <qti-set-outcome-value identifier="${outcome}">
+          ${value}
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>`;
+    })
+    .join("\n");
+  return `  <qti-response-processing>
+${scoreXml}
+    <qti-set-outcome-value identifier="${outcome}">
+      <qti-null/>
+    </qti-set-outcome-value>
+${feedbackConditions}
   </qti-response-processing>`;
 }
 
@@ -158,4 +221,15 @@ function uniqueIdentifiers(values: readonly string[]): string[] {
     identifiers.push(identifier);
   }
   return identifiers;
+}
+
+/** Standard choice scoring uses templates for RESPONSE and equivalent inline rules for custom identifiers. */
+export function choiceResponseProcessingXml(
+  responseIdentifier: string,
+  scoring: Qti3ResponseProcessingTemplate,
+): string {
+  if (responseIdentifier === "RESPONSE") return responseProcessingTemplateXml(scoring);
+  return scoring === "map_response"
+    ? mapResponseProcessingXml(responseIdentifier)
+    : matchCorrectProcessingXml(responseIdentifier);
 }

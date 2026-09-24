@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0
+    https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd"
+  identifier="multiple-choice-modal-feedback-reference" title="Multiple-choice feedback for each selected answer" time-dependent="false" xml:lang="en-US">
+  <qti-response-declaration identifier="LIGHT_SOURCES" cardinality="multiple" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+      <qti-value>B</qti-value>
+    </qti-correct-response>
+
+  <qti-mapping default-value="0">
+    <qti-map-entry map-key="A" mapped-value="1"/>
+    <qti-map-entry map-key="B" mapped-value="1"/>
+    <qti-map-entry map-key="C" mapped-value="0"/>
+  </qti-mapping>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="multiple" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="LIGHT_SOURCES" shuffle="false" max-choices="0">
+      <qti-prompt>Select the objects that produce their own visible light.</qti-prompt>
+      <qti-simple-choice identifier="A">The Sun</qti-simple-choice>
+      <qti-simple-choice identifier="B">A lit candle</qti-simple-choice>
+      <qti-simple-choice identifier="C">The Moon</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing>
+      <qti-set-outcome-value identifier="SCORE">
+        <qti-map-response identifier="LIGHT_SOURCES"/>
+      </qti-set-outcome-value>
+      <qti-set-outcome-value identifier="FEEDBACK">
+        <qti-null/>
+      </qti-set-outcome-value>
+      <qti-response-condition>
+        <qti-response-if>
+          <qti-member>
+            <qti-base-value base-type="identifier">A</qti-base-value>
+            <qti-variable identifier="LIGHT_SOURCES"/>
+          </qti-member>
+          <qti-set-outcome-value identifier="FEEDBACK">
+            <qti-multiple>
+              <qti-variable identifier="FEEDBACK"/>
+              <qti-base-value base-type="identifier">SUN</qti-base-value>
+            </qti-multiple>
+          </qti-set-outcome-value>
+        </qti-response-if>
+      </qti-response-condition>
+      <qti-response-condition>
+        <qti-response-if>
+          <qti-member>
+            <qti-base-value base-type="identifier">B</qti-base-value>
+            <qti-variable identifier="LIGHT_SOURCES"/>
+          </qti-member>
+          <qti-set-outcome-value identifier="FEEDBACK">
+            <qti-multiple>
+              <qti-variable identifier="FEEDBACK"/>
+              <qti-base-value base-type="identifier">CANDLE</qti-base-value>
+            </qti-multiple>
+          </qti-set-outcome-value>
+        </qti-response-if>
+      </qti-response-condition>
+      <qti-response-condition>
+        <qti-response-if>
+          <qti-member>
+            <qti-base-value base-type="identifier">C</qti-base-value>
+            <qti-variable identifier="LIGHT_SOURCES"/>
+          </qti-member>
+          <qti-set-outcome-value identifier="FEEDBACK">
+            <qti-multiple>
+              <qti-variable identifier="FEEDBACK"/>
+              <qti-base-value base-type="identifier">MOON</qti-base-value>
+            </qti-multiple>
+          </qti-set-outcome-value>
+        </qti-response-if>
+      </qti-response-condition>
+    </qti-response-processing>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="SUN" show-hide="show">The Sun produces light through nuclear fusion.</qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="CANDLE" show-hide="show">A burning candle produces light through combustion.</qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="MOON" show-hide="show">The Moon reflects sunlight; it does not produce its own visible light.</qti-modal-feedback>
+</qti-assessment-item>

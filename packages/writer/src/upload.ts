@@ -1,6 +1,5 @@
 import {
   isPositiveInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -13,17 +12,34 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3UploadBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3UploadItem(input: Qti3UploadBuilderInput): string {
-  const diagnostics = validateQti3UploadItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3UploadItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "upload" },
+    validateQti3UploadItemStructure,
+    renderQti3UploadItem,
+  );
 }
 
-export function renderQti3UploadItem(input: Qti3UploadBuilderInput): string {
+export function validateQti3UploadItem(input: Qti3UploadBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "upload" },
+    validateQti3UploadItemStructure,
+  );
+}
+
+export function renderQti3UploadItem(
+  input: Qti3UploadBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Upload response identifier",
@@ -47,16 +63,21 @@ export function renderQti3UploadItem(input: Qti3UploadBuilderInput): string {
   const bodyXml = `${optionalBodySection(input.bodyHtml)}    <qti-upload-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}    </qti-upload-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: correctResponse ? responseProcessingTemplateXml("match_correct") : "",
-    scoreDefaultZero: Boolean(correctResponse),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: correctResponse ? responseProcessingTemplateXml("match_correct") : "",
+      scoreDefaultZero: Boolean(correctResponse),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3UploadItem(input: Qti3UploadBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3UploadItemStructure(
+  input: Qti3UploadBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

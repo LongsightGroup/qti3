@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createItemSession, parseQtiXml, visibleModalFeedback } from "@longsightgroup/qti3-core";
 
 import {
   buildQti3ChoiceItem,
@@ -9,6 +10,208 @@ import {
 import { expectValidParsedItem } from "./test-helpers.js";
 
 describe("qti3-writer choice", () => {
+  it.each(["match_correct", "map_response"] as const)(
+    "shows feedback for every selected choice with multiple cardinality and %s scoring",
+    (scoring) => {
+      const xml = buildQti3ChoiceItem({
+        identifier: `multiple-feedback-${scoring}`,
+        title: "Multiple choice feedback",
+        responseIdentifier: "ANSWERS",
+        responseCardinality: "multiple",
+        choices: [
+          { identifier: "A", text: "A" },
+          { identifier: "B", text: "B" },
+          { identifier: "C", text: "C" },
+          { identifier: "D", text: "D" },
+        ],
+        correctResponse: ["A", "B"],
+        scoring,
+        feedback: {
+          outcomeIdentifier: "EXPLANATION",
+          entries: [
+            { choiceIdentifier: "A", identifier: "A_HINT", text: "A is right." },
+            { choiceIdentifier: "B", identifier: "B_HINT", text: "B is right." },
+            { choiceIdentifier: "C", identifier: "C_HINT", text: "C is wrong." },
+          ],
+        },
+      });
+      const item = expectValidParsedItem(xml);
+      const parsed = parseQtiXml(xml);
+      if (!parsed.document) throw new Error("Expected a parsed item document.");
+      expect(item.outcomeDeclarations).toContainEqual(
+        expect.objectContaining({
+          identifier: "EXPLANATION",
+          cardinality: "multiple",
+          baseType: "identifier",
+        }),
+      );
+      expect(xml).toContain('<qti-variable identifier="ANSWERS"/>');
+      expect(xml).toContain('max-choices="0"');
+      expect(xml).toContain("<qti-member>");
+      expect(xml).toContain("<qti-multiple>");
+      const processingXml = xml.slice(xml.indexOf("<qti-response-processing>"));
+      if (scoring === "map_response") {
+        expect(processingXml).toContain('<qti-map-response identifier="ANSWERS"/>');
+        expect(processingXml).not.toContain("<qti-correct");
+      } else {
+        expect(processingXml).toContain('<qti-correct identifier="ANSWERS"/>');
+        expect(processingXml).not.toContain("<qti-map-response");
+      }
+
+      for (const [response, score, identifiers] of [
+        [[], 0, []],
+        [["A"], scoring === "match_correct" ? 0 : 1, ["A_HINT"]],
+        [["A", "B"], scoring === "match_correct" ? 1 : 2, ["A_HINT", "B_HINT"]],
+        [["A", "C"], scoring === "match_correct" ? 0 : 1, ["A_HINT", "C_HINT"]],
+        [["D"], 0, []],
+      ] as const) {
+        const session = createItemSession(parsed.document);
+        session.respond("ANSWERS", [...response]);
+        const scored = session.score();
+        expect(scored.outcomes.SCORE).toBe(score);
+        expect(scored.outcomes.EXPLANATION).toEqual(identifiers.length ? identifiers : null);
+        expect(
+          visibleModalFeedback(item, scored.outcomes).map((entry) => entry.identifier),
+        ).toEqual(identifiers);
+      }
+    },
+  );
+
+  it.each(["match_correct", "map_response"] as const)(
+    "writes and scores mapped modal feedback with %s",
+    (scoring) => {
+      const xml = buildQti3ChoiceItem({
+        identifier: `feedback-${scoring}`,
+        title: "Choice feedback",
+        responseCardinality: "single",
+        choices: [
+          { identifier: "A", text: "A" },
+          { identifier: "B", text: "B" },
+          { identifier: "C", text: "C" },
+        ],
+        correctResponse: ["B"],
+        scoring,
+        feedback: {
+          entries: [
+            {
+              choiceIdentifier: " B ",
+              identifier: "RIGHT",
+              contentHtml: qti3TrustedXmlFragment("<p>Correct <strong>answer</strong>.</p>"),
+            },
+            { choiceIdentifier: "A", identifier: "A", text: "Less < more." },
+          ],
+        },
+      });
+      const item = expectValidParsedItem(xml);
+      const parsed = parseQtiXml(xml);
+      expect(parsed.document).toBeDefined();
+      if (!parsed.document) throw new Error("Expected a parsed item document.");
+
+      expect(item.outcomeDeclarations).toContainEqual(
+        expect.objectContaining({
+          identifier: "FEEDBACK",
+          cardinality: "single",
+          baseType: "identifier",
+        }),
+      );
+      expect(item.modalFeedback).toMatchObject([
+        {
+          identifier: "RIGHT",
+          outcomeIdentifier: "FEEDBACK",
+          showHide: "show",
+          text: "Correct answer.",
+        },
+        { identifier: "A", outcomeIdentifier: "FEEDBACK", showHide: "show", text: "Less < more." },
+      ]);
+      expect(xml).not.toContain("rptemplates/");
+      expect(xml).toContain("<qti-null/>");
+      expect(xml).toContain("<p>Correct <strong>answer</strong>.</p>");
+      expect(xml).toContain("Less &lt; more.");
+      expect(xml).toContain("<qti-response-processing>");
+      const processingXml = xml.slice(xml.indexOf("<qti-response-processing>"));
+      if (scoring === "map_response") {
+        expect(processingXml).toContain("<qti-map-response");
+        expect(processingXml).not.toContain("<qti-correct");
+        expect(item.responseDeclarations[0]?.mapping?.entries).toHaveLength(3);
+      } else {
+        expect(processingXml).toContain("<qti-correct");
+        expect(processingXml).not.toContain("<qti-map-response");
+      }
+
+      for (const [response, score, feedbackIdentifier] of [
+        ["B", 1, "RIGHT"],
+        ["A", 0, "A"],
+      ] as const) {
+        const session = createItemSession(parsed.document);
+        session.respond("RESPONSE", response);
+        const scored = session.score();
+        expect(scored.outcomes.SCORE).toBe(score);
+        expect(scored.outcomes.FEEDBACK).toBe(feedbackIdentifier);
+        expect(visibleModalFeedback(item, scored.outcomes)).toMatchObject([
+          { identifier: feedbackIdentifier },
+        ]);
+      }
+      for (const response of [undefined, "C"] as const) {
+        const session = createItemSession(parsed.document);
+        if (response !== undefined) session.respond("RESPONSE", response);
+        const scored = session.score();
+        expect(scored.outcomes.FEEDBACK).toBeNull();
+        expect(visibleModalFeedback(item, scored.outcomes)).toEqual([]);
+      }
+    },
+  );
+
+  it.each(["match_correct", "map_response"] as const)(
+    "uses a custom response identifier for feedback and %s scoring",
+    (scoring) => {
+      const xml = buildQti3ChoiceItem({
+        identifier: `feedback-answer-${scoring}`,
+        title: "Custom response feedback",
+        responseIdentifier: "ANSWER",
+        responseCardinality: "single",
+        choices: [
+          { identifier: "A", text: "A" },
+          { identifier: "B", text: "B" },
+        ],
+        correctResponse: ["B"],
+        scoring,
+        feedback: {
+          outcomeIdentifier: "EXPLANATION",
+          entries: [
+            { choiceIdentifier: "B", identifier: "RIGHT", text: "Right." },
+            { choiceIdentifier: "A", identifier: "WRONG", text: "Try again." },
+          ],
+        },
+      });
+      const item = expectValidParsedItem(xml);
+      const parsed = parseQtiXml(xml);
+      if (!parsed.document) throw new Error("Expected a parsed item document.");
+      for (const [answer, score, feedbackIdentifier] of [
+        ["B", 1, "RIGHT"],
+        ["A", 0, "WRONG"],
+      ] as const) {
+        const session = createItemSession(parsed.document);
+        session.respond("ANSWER", answer);
+        const scored = session.score();
+        expect(scored.outcomes).toMatchObject({ SCORE: score, EXPLANATION: feedbackIdentifier });
+        expect(visibleModalFeedback(item, scored.outcomes)).toMatchObject([
+          { identifier: feedbackIdentifier },
+        ]);
+      }
+      expect(xml).toContain('<qti-variable identifier="ANSWER"/>');
+      expect(xml).not.toContain('<qti-variable identifier="RESPONSE"/>');
+      expect(xml).toContain("<qti-response-processing>");
+      const processingXml = xml.slice(xml.indexOf("<qti-response-processing>"));
+      if (scoring === "map_response") {
+        expect(processingXml).toContain('<qti-map-response identifier="ANSWER"/>');
+        expect(processingXml).not.toContain("<qti-correct");
+      } else {
+        expect(processingXml).toContain('<qti-correct identifier="ANSWER"/>');
+        expect(processingXml).not.toContain("<qti-map-response");
+      }
+    },
+  );
+
   it("writes single choice items with escaped text, shared vocabulary, and map_response scoring", () => {
     const xml = buildQti3ChoiceItem({
       identifier: "choice-1",
@@ -92,6 +295,7 @@ describe("qti3-writer choice", () => {
       "min-choices": "1",
       "max-choices": "0",
     });
+    expect(parsed.responseProcessing?.template).toContain("rptemplates/match_correct");
   });
 
   it("normalizes choice identifiers and response references before serialization", () => {

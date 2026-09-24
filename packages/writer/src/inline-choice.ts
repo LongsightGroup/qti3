@@ -1,7 +1,6 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -11,7 +10,12 @@ import {
   sumMappedResponsesProcessingXml,
 } from "./response-processing.js";
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3InlineChoiceBuilderInput,
   Qti3InlineChoiceOption,
@@ -21,12 +25,26 @@ import type {
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3InlineChoiceItem(input: Qti3InlineChoiceBuilderInput): string {
-  const diagnostics = validateQti3InlineChoiceItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3InlineChoiceItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "inlineChoice" },
+    validateQti3InlineChoiceItemStructure,
+    renderQti3InlineChoiceItem,
+  );
 }
 
-export function renderQti3InlineChoiceItem(input: Qti3InlineChoiceBuilderInput): string {
+export function validateQti3InlineChoiceItem(
+  input: Qti3InlineChoiceBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "inlineChoice" },
+    validateQti3InlineChoiceItemStructure,
+  );
+}
+
+export function renderQti3InlineChoiceItem(
+  input: Qti3InlineChoiceBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const scoring = input.scoring ?? "all_or_nothing";
   const declarationsXml = input.slots
     .map((slot) => responseDeclarationXml(slot, scoring))
@@ -40,19 +58,22 @@ export function renderQti3InlineChoiceItem(input: Qti3InlineChoiceBuilderInput):
     .split("\n")
     .join("\n    ")}`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml:
-      scoring === "map_response"
-        ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
-        : allOrNothingCorrectProcessingXml(
-            input.slots.map((slot) => slot.responseIdentifier),
-            input.slots.length,
-          ),
-    scoreDefaultZero: true,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml:
+        scoring === "map_response"
+          ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
+          : allOrNothingCorrectProcessingXml(
+              input.slots.map((slot) => slot.responseIdentifier),
+              input.slots.length,
+            ),
+      scoreDefaultZero: true,
+    },
+    feedback,
+  );
 }
 
 function responseDeclarationXml(
@@ -127,7 +148,7 @@ function optionXml(option: Qti3InlineChoiceOption): string {
   return `      <qti-inline-choice identifier="${identifier}"${fixed}>${body}</qti-inline-choice>`;
 }
 
-export function validateQti3InlineChoiceItem(
+export function validateQti3InlineChoiceItemStructure(
   input: Qti3InlineChoiceBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

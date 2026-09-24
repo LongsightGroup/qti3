@@ -1,7 +1,120 @@
 import { expect, test } from "@playwright/test";
+import { buildQti3ChoiceItem, qti3TrustedXmlFragment } from "../../packages/writer/src/index.js";
 import { pasteXml } from "./player-helpers.js";
 
 test.describe("player feedback", () => {
+  test("does not render item interactions from forbidden feedback content", async ({ page }) => {
+    const valid = buildQti3ChoiceItem({
+      identifier: "forbidden-feedback",
+      title: "Forbidden feedback",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+      ],
+      correctResponse: ["A"],
+      feedback: {
+        entries: [{ choiceIdentifier: "A", identifier: "RIGHT", text: "Safe feedback" }],
+      },
+    });
+    const xml = valid.replace(
+      ">Safe feedback</qti-modal-feedback>",
+      '>Safe feedback<qti-choice-interaction response-identifier="RESPONSE"><qti-simple-choice identifier="X">Forbidden</qti-simple-choice></qti-choice-interaction></qti-modal-feedback>',
+    );
+    await page.goto("/");
+    await pasteXml(page, xml);
+    await page.getByRole("radio", { name: "A. Alpha" }).check();
+    await page.locator("#debug-score").click();
+    const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback).toContainText("Safe feedback");
+    await expect(feedback.getByRole("radio")).toHaveCount(0);
+    await expect(page.locator("qti-assessment-item-player").getByRole("radio")).toHaveCount(2);
+  });
+
+  test("renders rich item-level modal feedback with safe QTI content", async ({ page }) => {
+    const xml = buildQti3ChoiceItem({
+      identifier: "rich-modal-feedback",
+      title: "Rich modal feedback",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+      ],
+      correctResponse: ["A"],
+      modalFeedback: {
+        outcomes: [{ identifier: "FEEDBACK", cardinality: "single" }],
+        entries: [
+          {
+            outcomeIdentifier: "FEEDBACK",
+            identifier: "RIGHT",
+            title: "Answer explanation",
+            contentHtml: qti3TrustedXmlFragment(
+              '<qti-content-body><p>Correct <strong>answer</strong>. Score: <qti-printed-variable identifier="SCORE"/></p></qti-content-body>',
+            ),
+          },
+          { outcomeIdentifier: "FEEDBACK", identifier: "WRONG", text: "Try again." },
+        ],
+        responseProcessingXml: qti3TrustedXmlFragment(`
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>
+              <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">RIGHT</qti-base-value></qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">WRONG</qti-base-value></qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>`),
+      },
+    });
+    await page.goto("/");
+    await pasteXml(page, xml);
+    await page.getByRole("radio", { name: "A. Alpha" }).check();
+    await page.locator("#debug-score").click();
+
+    const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback.locator("[role=group], [aria-label]")).toHaveCount(0);
+    await expect(feedback.locator(".qti3-feedback-title")).toHaveText("Answer explanation");
+    await expect(feedback.locator("strong")).toHaveText("answer");
+    await expect(feedback).toContainText("Correct answer.");
+    await expect(feedback.locator(".qti3-printed-variable")).toHaveText("1");
+    await expect(feedback).not.toContainText("Try again.");
+  });
+
+  test("shows every selected choice's modal feedback from writer XML", async ({ page }) => {
+    const xml = buildQti3ChoiceItem({
+      identifier: "multiple-choice-feedback",
+      title: "Multiple choice feedback",
+      responseCardinality: "multiple",
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+        { identifier: "C", text: "Gamma" },
+      ],
+      correctResponse: ["A", "B"],
+      feedback: {
+        entries: [
+          { choiceIdentifier: "A", identifier: "A_HINT", text: "Alpha feedback." },
+          { choiceIdentifier: "B", identifier: "B_HINT", text: "Beta feedback." },
+          { choiceIdentifier: "C", identifier: "C_HINT", text: "Gamma feedback." },
+        ],
+      },
+    });
+
+    await page.goto("/");
+    await pasteXml(page, xml);
+    await page.getByRole("checkbox", { name: "A. Alpha" }).check();
+    await page.getByRole("checkbox", { name: "B. Beta" }).check();
+    await page.locator("#debug-score").click();
+
+    const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback).toContainText("Alpha feedback.");
+    await expect(feedback).toContainText("Beta feedback.");
+    await expect(feedback).not.toContainText("Gamma feedback.");
+    await expect(feedback).toHaveAttribute("aria-live", "polite");
+  });
+
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">
@@ -109,4 +222,39 @@ test.describe("player feedback", () => {
       "Body feedback is now visible.",
     );
   });
+});
+
+test("loads the rich modal feedback reference from the fixture selector", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#fixture").selectOption("rich-modal-feedback-reference");
+  await page.locator("#load-fixture").click();
+  await page.getByRole("radio", { name: "A. The Sun", exact: true }).check();
+  await page.locator("#debug-score").click();
+  const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+  await expect(feedback.getByText("Why the Sun shines", { exact: true })).toBeVisible();
+  await expect(feedback.locator("strong")).toHaveText("its own light");
+  await expect(feedback.locator(".qti3-printed-variable")).toHaveText("1");
+  await page.getByRole("radio", { name: "B. The Moon", exact: true }).check();
+  await page.locator("#debug-score").click();
+  await expect(feedback.getByText("Try again", { exact: true })).toBeVisible();
+  await expect(feedback).not.toContainText("Why the Sun shines");
+});
+
+test("loads multiple-choice modal feedback and updates selected explanations", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#fixture").selectOption("multiple-choice-modal-feedback-reference");
+  await page.locator("#load-fixture").click();
+  await page.getByRole("checkbox", { name: "A. The Sun", exact: true }).check();
+  await page.getByRole("checkbox", { name: "B. A lit candle", exact: true }).check();
+  await page.locator("#debug-score").click();
+  const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+  await expect(feedback).toContainText("nuclear fusion");
+  await expect(feedback).toContainText("combustion");
+  await expect(feedback).not.toContainText("reflects sunlight");
+  await page.getByRole("checkbox", { name: "B. A lit candle", exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "C. The Moon", exact: true }).check();
+  await page.locator("#debug-score").click();
+  await expect(feedback).toContainText("nuclear fusion");
+  await expect(feedback).toContainText("reflects sunlight");
+  await expect(feedback).not.toContainText("combustion");
 });

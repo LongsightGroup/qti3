@@ -3,7 +3,6 @@ import {
   dedupeNonemptyTrimmed,
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -21,17 +20,36 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3GraphicOrderBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3GraphicOrderItem(input: Qti3GraphicOrderBuilderInput): string {
-  const diagnostics = validateQti3GraphicOrderItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3GraphicOrderItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "graphicOrder" },
+    validateQti3GraphicOrderItemStructure,
+    renderQti3GraphicOrderItem,
+  );
 }
 
-export function renderQti3GraphicOrderItem(input: Qti3GraphicOrderBuilderInput): string {
+export function validateQti3GraphicOrderItem(
+  input: Qti3GraphicOrderBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "graphicOrder" },
+    validateQti3GraphicOrderItemStructure,
+  );
+}
+
+export function renderQti3GraphicOrderItem(
+  input: Qti3GraphicOrderBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic order response identifier",
@@ -81,15 +99,18 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(rende
 ${hotspotsXml}
     </qti-graphic-order-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3GraphicOrderItem(
+export function validateQti3GraphicOrderItemStructure(
   input: Qti3GraphicOrderBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

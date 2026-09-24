@@ -19,7 +19,7 @@ import {
   type ParsedCompanionMaterialChildQtiName,
   pushCompanionMaterialParseWarning,
 } from "./companion-materials.js";
-import { visibleTextContent } from "./content-text.js";
+import { flatTextFromContent, visibleTextContent } from "./content-text.js";
 import { parseXmlBoolean } from "./parser-values.js";
 import { childElements, descendants, textContent, type XmlNode } from "./xml.js";
 
@@ -70,13 +70,15 @@ export function parseCatalogReferences(
   }));
 }
 
-export function parseModalFeedback(node: XmlNode): QtiModalFeedback {
+export function parseModalFeedback(node: XmlNode, content: QtiContentNode[]): QtiModalFeedback {
   const showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
   return {
     identifier: node.attributes.identifier ?? "",
     outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
     showHide,
-    text: visibleTextContent(node),
+    title: node.attributes.title,
+    text: flatTextFromContent(content),
+    content,
     source: node.source,
   };
 }

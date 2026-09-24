@@ -11,6 +11,7 @@ import { createBasicRichInlineChoiceFixture } from "./basic-rich-inline-choice.f
 import { catalogFixtures } from "./catalog.fixture.js";
 import { createEndAttemptFixture } from "./end-attempt.fixture.js";
 import { basicCorrectAttempt, type QtiFixtureAttempt } from "./fixture-attempts.js";
+import { modalFeedbackFixtures } from "./modal-feedback.fixture.js";
 import { createRandomIntegerTemplateFixture } from "./random-integer-template.fixture.js";
 import {
   createBasicTemplateProcessingFixture,
@@ -55,6 +56,7 @@ export const processingFixtures: QtiFixture[] = [
   createRandomIntegerTemplateFixture(),
   createTemplateContentFixture(),
   createAdvancedProcessingFixture(),
+  ...modalFeedbackFixtures,
 ];
 
 export const adaptiveFixtures: QtiFixture[] = [createAdaptiveFeedbackFixture()];

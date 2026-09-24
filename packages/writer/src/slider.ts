@@ -1,10 +1,5 @@
 import { assertQtiIdentifier } from "./identifier.js";
-import {
-  throwIfDiagnostics,
-  validateItemBase,
-  validateQtiIdentifier,
-  writerDiagnostic,
-} from "./diagnostics.js";
+import { validateItemBase, validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
 import {
   interactionAttributeList,
   optionalBodySection,
@@ -18,7 +13,12 @@ import {
   matchCorrectProcessingXml,
   responseProcessingTemplateXml,
 } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3SliderBaseType,
   Qti3SliderBuilderInput,
@@ -28,12 +28,24 @@ import type {
 import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3SliderItem(input: Qti3SliderBuilderInput): string {
-  const diagnostics = validateQti3SliderItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3SliderItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "slider" },
+    validateQti3SliderItemStructure,
+    renderQti3SliderItem,
+  );
 }
 
-export function renderQti3SliderItem(input: Qti3SliderBuilderInput): string {
+export function validateQti3SliderItem(input: Qti3SliderBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "slider" },
+    validateQti3SliderItemStructure,
+  );
+}
+
+export function renderQti3SliderItem(
+  input: Qti3SliderBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Slider response identifier",
@@ -68,15 +80,20 @@ ${sliderMappingXml(input, scoring)}  </qti-response-declaration>`;
     optionalBodySection(input.bodyHtml),
   );
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: sliderResponseProcessingXml(scoring, responseIdentifier),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: sliderResponseProcessingXml(scoring, responseIdentifier),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3SliderItem(input: Qti3SliderBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3SliderItemStructure(
+  input: Qti3SliderBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

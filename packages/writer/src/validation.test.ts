@@ -9,11 +9,190 @@ import {
   writeQti3AssessmentItemResult,
   Qti3WriterError,
   type Qti3AuthoringItem,
+  type Qti3ChoiceAuthoringItem,
 } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
 import { expectValidParsedItemAllowingDiagnostics } from "./test-helpers.js";
 
 describe("qti3-writer validation", () => {
+  it("reports choice feedback input errors through the stable result API", () => {
+    const base: Qti3ChoiceAuthoringItem = {
+      interactionType: "choice",
+      identifier: "feedback-validation",
+      title: "Feedback validation",
+      responseIdentifier: "ANSWER",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "A" },
+        { identifier: "B", text: "B" },
+      ],
+      correctResponse: ["B"],
+    };
+    const entry = { choiceIdentifier: "A", identifier: "WRONG", text: "Try again." };
+    const cases: readonly {
+      readonly item: Qti3ChoiceAuthoringItem;
+      readonly code: string;
+      readonly path: string;
+      readonly message?: string;
+    }[] = [
+      {
+        item: { ...base, feedback: { entries: [{ ...entry, choiceIdentifier: "C" }] } },
+        code: "unknown_choice_reference",
+        path: "feedback.entries.0.choiceIdentifier",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [entry, { ...entry, choiceIdentifier: " A ", identifier: "OTHER" }],
+          },
+        },
+        code: "duplicate_identifier",
+        path: "feedback.entries.1.choiceIdentifier",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [entry, { ...entry, choiceIdentifier: "B", identifier: " WRONG " }],
+          },
+        },
+        code: "duplicate_identifier",
+        path: "feedback.entries.1.identifier",
+      },
+      {
+        item: { ...base, feedback: { outcomeIdentifier: "bad name", entries: [entry] } },
+        code: "invalid_identifier",
+        path: "feedback.outcomeIdentifier",
+      },
+      ...["SCORE", "ANSWER", "completionStatus", "numAttempts", "duration", "QTI_CONTEXT"].map(
+        (outcomeIdentifier) => ({
+          item: { ...base, feedback: { outcomeIdentifier, entries: [entry] } },
+          code: "invalid_feedback_outcome",
+          path: "feedback.outcomeIdentifier",
+        }),
+      ),
+      {
+        item: { ...base, feedback: { entries: [{ ...entry, choiceIdentifier: "bad choice" }] } },
+        code: "invalid_identifier",
+        path: "feedback.entries.0.choiceIdentifier",
+      },
+      {
+        item: { ...base, feedback: { entries: [{ ...entry, identifier: "bad name" }] } },
+        code: "invalid_identifier",
+        path: "feedback.entries.0.identifier",
+      },
+      {
+        item: { ...base, feedback: { entries: [{ ...entry, text: " " }] } },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: { ...base, feedback: { entries: [{ choiceIdentifier: "A", identifier: "WRONG" }] } },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [{ ...entry, contentHtml: qti3TrustedXmlFragment("<p>Wrong</p>") }],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment("<p></p>"),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+        message: "Modal feedback requires exactly one nonblank text or XML content source.",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment("<p>  </p>"),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment("<p>Unclosed"),
+              },
+            ],
+          },
+        },
+        code: "xml.parse",
+        path: "feedback.entries.0.contentHtml",
+      },
+      {
+        item: {
+          ...base,
+          feedback: {
+            entries: [
+              {
+                choiceIdentifier: "A",
+                identifier: "WRONG",
+                contentHtml: qti3TrustedXmlFragment('<img src="diagram.png"/>'),
+              },
+            ],
+          },
+        },
+        code: "invalid_feedback_content",
+        path: "feedback.entries.0",
+      },
+      {
+        item: { ...base, feedback: { entries: [] } },
+        code: "missing_feedback_entries",
+        path: "feedback.entries",
+      },
+    ];
+    for (const { item, code, path, message } of cases) {
+      const result = writeQti3AssessmentItemResult(item);
+      expect(result.ok).toBe(false);
+      expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path }));
+      if (message !== undefined) {
+        expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path, message }));
+      }
+    }
+    for (const contentHtml of [
+      qti3TrustedXmlFragment("<p>Visible feedback.</p>"),
+      qti3TrustedXmlFragment('<img alt="Diagram" src="diagram.png"/>'),
+    ]) {
+      const result = writeQti3AssessmentItemResult({
+        ...base,
+        feedback: { entries: [{ choiceIdentifier: "A", identifier: "WRONG", contentHtml }] },
+      });
+      expect(result.ok).toBe(true);
+    }
+  });
+
   it("reports diagnostics for each supported interaction validator", () => {
     const invalidItems: Array<{
       readonly item: Qti3AuthoringItem;

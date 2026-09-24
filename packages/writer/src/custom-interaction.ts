@@ -7,7 +7,6 @@ import {
 } from "./custom-interaction-common.js";
 import {
   duplicateDiagnostics,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -18,19 +17,38 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { trustedResponseProcessingXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3CustomInteractionBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { indentXml, xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 const RESERVED_ATTRS = new Set(["response-identifier", "class", "definition"]);
 
 export function buildQti3CustomInteractionItem(input: Qti3CustomInteractionBuilderInput): string {
-  const diagnostics = validateQti3CustomInteractionItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3CustomInteractionItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "custom" },
+    validateQti3CustomInteractionItemStructure,
+    renderQti3CustomInteractionItem,
+  );
 }
 
-export function renderQti3CustomInteractionItem(input: Qti3CustomInteractionBuilderInput): string {
+export function validateQti3CustomInteractionItem(
+  input: Qti3CustomInteractionBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "custom" },
+    validateQti3CustomInteractionItemStructure,
+  );
+}
+
+export function renderQti3CustomInteractionItem(
+  input: Qti3CustomInteractionBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Custom interaction response identifier",
@@ -46,16 +64,19 @@ export function renderQti3CustomInteractionItem(input: Qti3CustomInteractionBuil
 ${promptSection}${markup}
     </qti-custom-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
-    scoreDefaultZero: true,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
+      scoreDefaultZero: true,
+    },
+    feedback,
+  );
 }
 
-export function validateQti3CustomInteractionItem(
+export function validateQti3CustomInteractionItemStructure(
   input: Qti3CustomInteractionBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

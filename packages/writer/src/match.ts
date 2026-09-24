@@ -1,7 +1,6 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -16,7 +15,12 @@ import {
   wrapInteractionBody,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3MatchBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import {
   pairResponseDeclarationXml,
@@ -26,12 +30,24 @@ import {
 import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3MatchItem(input: Qti3MatchBuilderInput): string {
-  const diagnostics = validateQti3MatchItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3MatchItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "match" },
+    validateQti3MatchItemStructure,
+    renderQti3MatchItem,
+  );
 }
 
-export function renderQti3MatchItem(input: Qti3MatchBuilderInput): string {
+export function validateQti3MatchItem(input: Qti3MatchBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "match" },
+    validateQti3MatchItemStructure,
+  );
+}
+
+export function renderQti3MatchItem(
+  input: Qti3MatchBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -83,15 +99,20 @@ ${input.targets
       </qti-simple-match-set>`,
     optionalBodySection(input.bodyHtml),
   );
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3MatchItem(input: Qti3MatchBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3MatchItemStructure(
+  input: Qti3MatchBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
