@@ -19,7 +19,7 @@ import {
   type ParsedCompanionMaterialChildQtiName,
   pushCompanionMaterialParseWarning,
 } from "./companion-materials.js";
-import { visibleTextContent } from "./content-text.js";
+import { flatTextFromContent, visibleTextContent } from "./content-text.js";
 import { parseXmlBoolean } from "./parser-values.js";
 import { childElements, descendants, textContent, type XmlNode } from "./xml.js";
 
@@ -77,7 +77,7 @@ export function parseModalFeedback(node: XmlNode, content: QtiContentNode[]): Qt
     outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
     showHide,
     title: node.attributes.title,
-    text: visibleTextContent(node),
+    text: flatTextFromContent(content),
     content,
     source: node.source,
   };

@@ -4,7 +4,6 @@ import {
   duplicateDiagnostics,
   isNonNegativeInteger,
   isPositiveInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -22,17 +21,34 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3HotspotBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3HotspotItem(input: Qti3HotspotBuilderInput): string {
-  const diagnostics = validateQti3HotspotItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3HotspotItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "hotspot" },
+    validateQti3HotspotItemStructure,
+    renderQti3HotspotItem,
+  );
 }
 
-export function renderQti3HotspotItem(input: Qti3HotspotBuilderInput): string {
+export function validateQti3HotspotItem(input: Qti3HotspotBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "hotspot" },
+    validateQti3HotspotItemStructure,
+  );
+}
+
+export function renderQti3HotspotItem(
+  input: Qti3HotspotBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Hotspot response identifier",
@@ -86,12 +102,15 @@ ${correctXml}  </qti-response-declaration>`;
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objectAttrs)}/>
 ${choicesXml}
     </qti-hotspot-interaction>`;
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    },
+    feedback,
+  );
 }
 
 function normalizeBound(value: number | undefined, min: number): number | null {
@@ -103,7 +122,9 @@ function normalizeBound(value: number | undefined, min: number): number | null {
   return integer;
 }
 
-export function validateQti3HotspotItem(input: Qti3HotspotBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3HotspotItemStructure(
+  input: Qti3HotspotBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

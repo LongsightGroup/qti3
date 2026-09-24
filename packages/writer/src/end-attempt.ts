@@ -1,10 +1,5 @@
 import { assertQtiIdentifier } from "./identifier.js";
-import {
-  throwIfDiagnostics,
-  validateItemBase,
-  validateQtiIdentifier,
-  writerDiagnostic,
-} from "./diagnostics.js";
+import { validateItemBase, validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
 import {
   interactionAttributeList,
   optionalBodySection,
@@ -12,17 +7,36 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { trustedResponseProcessingXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3EndAttemptBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): string {
-  const diagnostics = validateQti3EndAttemptItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3EndAttemptItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "endAttempt" },
+    validateQti3EndAttemptItemStructure,
+    renderQti3EndAttemptItem,
+  );
 }
 
-export function renderQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): string {
+export function validateQti3EndAttemptItem(
+  input: Qti3EndAttemptBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "endAttempt" },
+    validateQti3EndAttemptItemStructure,
+  );
+}
+
+export function renderQti3EndAttemptItem(
+  input: Qti3EndAttemptBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "End attempt response identifier",
@@ -42,16 +56,19 @@ export function renderQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): str
   const promptXml = input.promptHtml?.trim() ? `    <p>${input.promptHtml}</p>\n` : "";
   const bodyXml = `${promptXml}${optionalBodySection(input.bodyHtml)}    <p><qti-end-attempt-interaction ${interactionAttrs}/></p>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: trustedResponseProcessingXml(undefined),
-    scoreDefaultZero: true,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: trustedResponseProcessingXml(undefined),
+      scoreDefaultZero: true,
+    },
+    feedback,
+  );
 }
 
-export function validateQti3EndAttemptItem(
+export function validateQti3EndAttemptItemStructure(
   input: Qti3EndAttemptBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

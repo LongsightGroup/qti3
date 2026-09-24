@@ -1,11 +1,11 @@
-import { parseQtiXml, type QtiContentNode } from "@longsightgroup/qti3-core";
+import { parseQtiModalFeedbackFragment, type QtiContentNode } from "@longsightgroup/qti3-core";
 import { isQtiIdentifier } from "./identifier.js";
 import {
-  Qti3WriterError,
   type Qti3ModalFeedback,
   type Qti3ModalFeedbackEntry,
   type Qti3WriterDiagnostic,
 } from "./types.js";
+import { trustedResponseProcessingXml } from "./response-processing.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 const reservedOutcomeIdentifiers = new Set([
@@ -18,35 +18,54 @@ const reservedOutcomeIdentifiers = new Set([
 const feedbackCardinalities: ReadonlySet<string> = new Set(["single", "multiple"]);
 const feedbackVisibilityValues: ReadonlySet<string> = new Set(["show", "hide"]);
 
-/** Validate item-level modal feedback independently of interaction type. */
-export function validateModalFeedback(
+export interface FeedbackPaths {
+  readonly root: string;
+  readonly outcome: (index: number, field: string) => string;
+  readonly entry: (index: number) => string;
+}
+
+export interface PreparedFeedback {
+  readonly diagnostics: Qti3WriterDiagnostic[];
+  readonly outcomeDeclarationsXml: string;
+  readonly modalFeedbackXml: string;
+  readonly responseProcessingXml: string | undefined;
+}
+
+/** Validate and serialize once, retaining source paths supplied by the authoring adapter. */
+export function prepareModalFeedback(
   feedback: Qti3ModalFeedback,
   responseIdentifiers: readonly string[],
-): Qti3WriterDiagnostic[] {
+  paths: FeedbackPaths = {
+    root: "modalFeedback",
+    outcome: (index, field) => `modalFeedback.outcomes.${index}.${field}`,
+    entry: (index) => `modalFeedback.entries.${index}`,
+  },
+): PreparedFeedback {
   const diagnostics: Qti3WriterDiagnostic[] = [];
+  const contentXml: string[] = [];
   const outcomes = new Set<string>();
   const responses = new Set(responseIdentifiers.map((identifier) => identifier.trim()));
   if (feedback.outcomes.length === 0) {
     diagnostics.push({
       code: "missing_feedback_outcomes",
-      path: "modalFeedback.outcomes",
+      path: `${paths.root}.outcomes`,
       message: "Modal feedback requires at least one identifier outcome.",
     });
   }
   for (const [index, outcome] of feedback.outcomes.entries()) {
     const identifier = outcome.identifier.trim();
-    const path = `modalFeedback.outcomes.${index}`;
+    const path = (field: string) => paths.outcome(index, field);
     if (!isQtiIdentifier(identifier)) {
       diagnostics.push({
         code: "invalid_identifier",
-        path: `${path}.identifier`,
+        path: path("identifier"),
         message: "Feedback outcome identifier must be a valid QTI identifier.",
       });
     }
     if (outcomes.has(identifier)) {
       diagnostics.push({
         code: "duplicate_identifier",
-        path: `${path}.identifier`,
+        path: path("identifier"),
         message: `Duplicate feedback outcome ${identifier}.`,
       });
     }
@@ -54,14 +73,14 @@ export function validateModalFeedback(
     if (reservedOutcomeIdentifiers.has(identifier) || responses.has(identifier)) {
       diagnostics.push({
         code: "invalid_feedback_outcome",
-        path: `${path}.identifier`,
+        path: path("identifier"),
         message: "Feedback outcome identifier conflicts with an existing or built-in variable.",
       });
     }
     if (!feedbackCardinalities.has(outcome.cardinality)) {
       diagnostics.push({
         code: "invalid_feedback_cardinality",
-        path: `${path}.cardinality`,
+        path: path("cardinality"),
         message: "Feedback outcome cardinality must be single or multiple.",
       });
     }
@@ -69,7 +88,7 @@ export function validateModalFeedback(
     if (outcome.cardinality === "single" && defaults.length > 1) {
       diagnostics.push({
         code: "invalid_feedback_default",
-        path: `${path}.defaultValues`,
+        path: path("defaultValues"),
         message: "A single feedback outcome can have at most one default value.",
       });
     }
@@ -77,7 +96,7 @@ export function validateModalFeedback(
       if (!isQtiIdentifier(value.trim())) {
         diagnostics.push({
           code: "invalid_identifier",
-          path: `${path}.defaultValues.${valueIndex}`,
+          path: `${path("defaultValues")}.${valueIndex}`,
           message: "Feedback default value must be a valid QTI identifier.",
         });
       }
@@ -88,12 +107,12 @@ export function validateModalFeedback(
   if (feedback.entries.length === 0) {
     diagnostics.push({
       code: "missing_feedback_entries",
-      path: "modalFeedback.entries",
+      path: `${paths.root}.entries`,
       message: "Modal feedback requires at least one entry.",
     });
   }
   for (const [index, entry] of feedback.entries.entries()) {
-    const path = `modalFeedback.entries.${index}`;
+    const path = paths.entry(index);
     const outcome = entry.outcomeIdentifier.trim();
     const identifier = entry.identifier.trim();
     if (!outcomes.has(outcome)) {
@@ -126,16 +145,23 @@ export function validateModalFeedback(
         message: "Modal feedback showHide must be show or hide.",
       });
     }
-    const content = parseFeedbackContent(entry);
-    if (!content.ok) {
-      diagnostics.push({ code: "invalid_feedback_content", path, message: content.message });
-    }
+    const content = parseFeedbackContent(entry, path);
+    diagnostics.push(...content.diagnostics);
+    contentXml.push(content.xml);
   }
-  return diagnostics;
+  return {
+    diagnostics,
+    outcomeDeclarationsXml: diagnostics.length ? "" : modalFeedbackOutcomeXml(feedback),
+    modalFeedbackXml: diagnostics.length ? "" : modalFeedbackEntriesXml(feedback, contentXml),
+    responseProcessingXml:
+      feedback.responseProcessingXml === undefined
+        ? undefined
+        : trustedResponseProcessingXml(feedback.responseProcessingXml),
+  };
 }
 
 /** Render declared identifier outcomes for item-level feedback. */
-export function modalFeedbackOutcomeXml(feedback: Qti3ModalFeedback): string {
+function modalFeedbackOutcomeXml(feedback: Qti3ModalFeedback): string {
   return feedback.outcomes
     .map((outcome) => {
       const identifier = escapeXmlAttribute(outcome.identifier.trim());
@@ -152,54 +178,50 @@ ${defaults.map((value) => `      <qti-value>${escapeXmlText(value.trim())}</qti-
 }
 
 /** Render item-level feedback, retaining caller-supplied trusted QTI content. */
-export function modalFeedbackEntriesXml(feedback: Qti3ModalFeedback): string {
+function modalFeedbackEntriesXml(
+  feedback: Qti3ModalFeedback,
+  contentXml: readonly string[],
+): string {
   return feedback.entries
-    .map((entry) => {
+    .map((entry, index) => {
       const title = entry.title === undefined ? "" : ` title="${escapeXmlAttribute(entry.title)}"`;
-      const content = parseFeedbackContent(entry);
-      if (!content.ok) {
-        throw new Qti3WriterError([
-          {
-            code: "invalid_feedback_content",
-            path: "modalFeedback.entries",
-            message: content.message,
-          },
-        ]);
-      }
-      return `  <qti-modal-feedback outcome-identifier="${escapeXmlAttribute(entry.outcomeIdentifier.trim())}" identifier="${escapeXmlAttribute(entry.identifier.trim())}" show-hide="${entry.showHide ?? "show"}"${title}>${content.xml}</qti-modal-feedback>`;
+      return `  <qti-modal-feedback outcome-identifier="${escapeXmlAttribute(entry.outcomeIdentifier.trim())}" identifier="${escapeXmlAttribute(entry.identifier.trim())}" show-hide="${entry.showHide ?? "show"}"${title}>${contentXml[index]}</qti-modal-feedback>`;
     })
     .join("\n");
 }
 
-/** Resolve the content source once per operation; validation and serialization share this boundary. */
 function parseFeedbackContent(
   entry: Pick<Qti3ModalFeedbackEntry, "text" | "contentHtml">,
-): { readonly ok: true; readonly xml: string } | { readonly ok: false; readonly message: string } {
+  path: string,
+): { xml: string; diagnostics: Qti3WriterDiagnostic[] } {
   const hasText = Boolean(entry.text?.trim());
   const html = entry.contentHtml?.trim();
-  const invalid = {
-    ok: false,
-    message:
-      "Modal feedback requires exactly one content source with visible text; contentHtml must be valid XML.",
-  } as const;
-  if (hasText === Boolean(html)) return invalid;
-  if (!html) return { ok: true, xml: escapeXmlText(entry.text ?? "") };
-  const probe =
-    parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-probe" title="Feedback" time-dependent="false">
-    <qti-outcome-declaration identifier="PROBE" cardinality="single" base-type="identifier"/>
-    <qti-item-body/>
-    <qti-modal-feedback outcome-identifier="PROBE" identifier="ENTRY" show-hide="show">${html}</qti-modal-feedback>
-  </qti-assessment-item>`);
-  if (
-    probe.diagnostics.some(
-      (diagnostic) =>
-        diagnostic.code === "xml.parse" || diagnostic.code === "feedback.interaction.forbidden",
-    )
-  )
-    return invalid;
-  const parsed = probe.document?.item.modalFeedback[0];
-  if (!parsed || (!parsed.text.trim() && !hasPrintedVariable(parsed.content ?? []))) return invalid;
-  return { ok: true, xml: html };
+  const empty = {
+    xml: "",
+    diagnostics: [
+      {
+        code: "invalid_feedback_content",
+        path,
+        message: "Modal feedback requires exactly one nonblank text or XML content source.",
+      },
+    ],
+  };
+  if (hasText === Boolean(html)) return empty;
+  if (!html) return { xml: escapeXmlText(entry.text ?? ""), diagnostics: [] };
+  const parsed = parseQtiModalFeedbackFragment(html);
+  if (parsed.diagnostics.length) {
+    return {
+      xml: "",
+      diagnostics: parsed.diagnostics.map((diagnostic) => ({
+        code: diagnostic.code,
+        path: `${path}.contentHtml`,
+        message: diagnostic.message,
+        value: diagnostic.source,
+      })),
+    };
+  }
+  if (!parsed.text.trim() && !hasPrintedVariable(parsed.content)) return empty;
+  return { xml: html, diagnostics: [] };
 }
 
 function hasPrintedVariable(nodes: readonly QtiContentNode[]): boolean {

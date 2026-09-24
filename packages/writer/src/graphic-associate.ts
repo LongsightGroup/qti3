@@ -1,7 +1,6 @@
 import {
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -25,17 +24,36 @@ import {
   validatePairReferences,
 } from "./pair-declaration.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3GraphicAssociateBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3GraphicAssociateItem(input: Qti3GraphicAssociateBuilderInput): string {
-  const diagnostics = validateQti3GraphicAssociateItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3GraphicAssociateItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "graphicAssociate" },
+    validateQti3GraphicAssociateItemStructure,
+    renderQti3GraphicAssociateItem,
+  );
 }
 
-export function renderQti3GraphicAssociateItem(input: Qti3GraphicAssociateBuilderInput): string {
+export function validateQti3GraphicAssociateItem(
+  input: Qti3GraphicAssociateBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "graphicAssociate" },
+    validateQti3GraphicAssociateItemStructure,
+  );
+}
+
+export function renderQti3GraphicAssociateItem(
+  input: Qti3GraphicAssociateBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic associate response identifier",
@@ -90,15 +108,18 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objec
 ${hotspotsXml}
     </qti-graphic-associate-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(scoring),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml(scoring),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3GraphicAssociateItem(
+export function validateQti3GraphicAssociateItemStructure(
   input: Qti3GraphicAssociateBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

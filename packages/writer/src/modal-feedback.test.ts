@@ -102,6 +102,7 @@ describe("item-level modal feedback", () => {
       const cases: readonly {
         content: Pick<Qti3ModalFeedbackEntry, "text" | "contentHtml">;
         expectedText?: string;
+        expectedCode?: string;
       }[] = [
         {
           content: { text: "Visible explanation", contentHtml: qti3TrustedXmlFragment(" ") },
@@ -124,7 +125,10 @@ describe("item-level modal feedback", () => {
           expectedText: "",
         },
         { content: { contentHtml: qti3TrustedXmlFragment("<p></p>") } },
-        { content: { contentHtml: qti3TrustedXmlFragment("<p>Unclosed") } },
+        {
+          content: { contentHtml: qti3TrustedXmlFragment("<p>Unclosed") },
+          expectedCode: "xml.parse",
+        },
         { content: { text: "Text", contentHtml: qti3TrustedXmlFragment("<p>HTML</p>") } },
         {
           content: {
@@ -132,9 +136,10 @@ describe("item-level modal feedback", () => {
               '<qti-text-entry-interaction response-identifier="RESPONSE"/>',
             ),
           },
+          expectedCode: "feedback.interaction.forbidden",
         },
       ];
-      for (const { content, expectedText } of cases) {
+      for (const { content, expectedText, expectedCode = "invalid_feedback_content" } of cases) {
         const result = writeQti3AssessmentItemResult({
           ...base,
           ...(model === "choice"
@@ -151,7 +156,7 @@ describe("item-level modal feedback", () => {
         if (expectedText === undefined) {
           expect(result.ok).toBe(false);
           expect(result.diagnostics).toContainEqual(
-            expect.objectContaining({ code: "invalid_feedback_content" }),
+            expect.objectContaining({ code: expectedCode }),
           );
         } else {
           expect(result.ok).toBe(true);
@@ -247,7 +252,7 @@ describe("item-level modal feedback", () => {
       expect.objectContaining({ code: "unknown_feedback_outcome" }),
     );
     expect(result.diagnostics).toContainEqual(
-      expect.objectContaining({ code: "invalid_feedback_content" }),
+      expect.objectContaining({ code: "feedback.interaction.forbidden" }),
     );
   });
 

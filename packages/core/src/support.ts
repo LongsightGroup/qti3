@@ -332,12 +332,13 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     fixtures: ["packages/fixtures/src/index.ts"],
     tests: [
       processingResponseTest,
+      "packages/core/src/parser-modal-feedback.test.ts",
       "packages/core/src/parser-item-metadata.test.ts",
       "packages/core/src/adaptive-turn-materializer.test.ts",
       ...browserFeedbackTests,
     ],
     notes:
-      "Parsed by parser-item-metadata.ts and validated by validateModalFeedback. Response processing supplies the scalar/container outcome used for show/hide visibility, including inverse hide conditions, in both player rendering and adaptive candidate XML materialization.",
+      "Parsed with structured content and titles; forbidden interactions are diagnosed and excluded from the content tree. Validated by validateModalFeedback. Response processing supplies the scalar/container outcome used for show/hide visibility, including inverse hide conditions, in both player rendering and adaptive candidate XML materialization.",
   },
   {
     qtiName: "qti-companion-materials-info",

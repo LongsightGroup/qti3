@@ -1,38 +1,55 @@
+import { validatePreparedItem, writePreparedItem } from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import { assertNever } from "@longsightgroup/qti3-core";
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
-import { renderQti3AssociateItem, validateQti3AssociateItem } from "./associate.js";
-import { renderQti3ChoiceItem, validateQti3ChoiceItem } from "./choice.js";
+import { renderQti3AssociateItem, validateQti3AssociateItemStructure } from "./associate.js";
+import { renderQti3ChoiceItem, validateQti3ChoiceItemStructure } from "./choice.js";
 import {
   renderQti3CustomInteractionItem,
-  validateQti3CustomInteractionItem,
+  validateQti3CustomInteractionItemStructure,
 } from "./custom-interaction.js";
-import { renderQti3DrawingItem, validateQti3DrawingItem } from "./drawing.js";
-import { renderQti3EndAttemptItem, validateQti3EndAttemptItem } from "./end-attempt.js";
-import { renderQti3ExtendedTextItem, validateQti3ExtendedTextItem } from "./extended-text.js";
-import { renderQti3GapMatchItem, validateQti3GapMatchItem } from "./gap-match.js";
+import { renderQti3DrawingItem, validateQti3DrawingItemStructure } from "./drawing.js";
+import { renderQti3EndAttemptItem, validateQti3EndAttemptItemStructure } from "./end-attempt.js";
+import {
+  renderQti3ExtendedTextItem,
+  validateQti3ExtendedTextItemStructure,
+} from "./extended-text.js";
+import { renderQti3GapMatchItem, validateQti3GapMatchItemStructure } from "./gap-match.js";
 import {
   renderQti3GraphicAssociateItem,
-  validateQti3GraphicAssociateItem,
+  validateQti3GraphicAssociateItemStructure,
 } from "./graphic-associate.js";
 import {
   renderQti3GraphicGapMatchItem,
-  validateQti3GraphicGapMatchItem,
+  validateQti3GraphicGapMatchItemStructure,
 } from "./graphic-gap-match.js";
-import { renderQti3GraphicOrderItem, validateQti3GraphicOrderItem } from "./graphic-order.js";
-import { renderQti3HotspotItem, validateQti3HotspotItem } from "./hotspot.js";
-import { renderQti3HottextItem, validateQti3HottextItem } from "./hottext.js";
-import { renderQti3InlineChoiceItem, validateQti3InlineChoiceItem } from "./inline-choice.js";
-import { renderQti3MatchItem, validateQti3MatchItem } from "./match.js";
-import { renderQti3MediaItem, validateQti3MediaItem } from "./media.js";
-import { renderQti3OrderItem, validateQti3OrderItem } from "./order.js";
-import { renderQti3PositionObjectItem, validateQti3PositionObjectItem } from "./position-object.js";
-import { renderQti3PortableCustomItem, validateQti3PortableCustomItem } from "./portable-custom.js";
-import { renderQti3SelectPointItem, validateQti3SelectPointItem } from "./select-point.js";
-import { renderQti3SliderItem, validateQti3SliderItem } from "./slider.js";
-import { renderQti3TextEntryItem, validateQti3TextEntryItem } from "./text-entry.js";
+import {
+  renderQti3GraphicOrderItem,
+  validateQti3GraphicOrderItemStructure,
+} from "./graphic-order.js";
+import { renderQti3HotspotItem, validateQti3HotspotItemStructure } from "./hotspot.js";
+import { renderQti3HottextItem, validateQti3HottextItemStructure } from "./hottext.js";
+import {
+  renderQti3InlineChoiceItem,
+  validateQti3InlineChoiceItemStructure,
+} from "./inline-choice.js";
+import { renderQti3MatchItem, validateQti3MatchItemStructure } from "./match.js";
+import { renderQti3MediaItem, validateQti3MediaItemStructure } from "./media.js";
+import { renderQti3OrderItem, validateQti3OrderItemStructure } from "./order.js";
+import {
+  renderQti3PositionObjectItem,
+  validateQti3PositionObjectItemStructure,
+} from "./position-object.js";
+import {
+  renderQti3PortableCustomItem,
+  validateQti3PortableCustomItemStructure,
+} from "./portable-custom.js";
+import { renderQti3SelectPointItem, validateQti3SelectPointItemStructure } from "./select-point.js";
+import { renderQti3SliderItem, validateQti3SliderItemStructure } from "./slider.js";
+import { renderQti3TextEntryItem, validateQti3TextEntryItemStructure } from "./text-entry.js";
 import type { Qti3AuthoringItem, Qti3WriterDiagnostic } from "./types.js";
-import { renderQti3UploadItem, validateQti3UploadItem } from "./upload.js";
+import { renderQti3UploadItem, validateQti3UploadItemStructure } from "./upload.js";
 
 type Qti3WriterInteractionType = Qti3AuthoringItem["interactionType"];
 
@@ -196,103 +213,103 @@ export const qti3WriterInteractions: Record<
   },
 };
 
-export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
+function validateAuthoringStructure(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
   switch (item.interactionType) {
     case "choice":
-      return validateQti3ChoiceItem(item);
+      return validateQti3ChoiceItemStructure(item);
     case "order":
-      return validateQti3OrderItem(item);
+      return validateQti3OrderItemStructure(item);
     case "inlineChoice":
-      return validateQti3InlineChoiceItem(item);
+      return validateQti3InlineChoiceItemStructure(item);
     case "hottext":
-      return validateQti3HottextItem(item);
+      return validateQti3HottextItemStructure(item);
     case "gapMatch":
-      return validateQti3GapMatchItem(item);
+      return validateQti3GapMatchItemStructure(item);
     case "extendedText":
-      return validateQti3ExtendedTextItem(item);
+      return validateQti3ExtendedTextItemStructure(item);
     case "upload":
-      return validateQti3UploadItem(item);
+      return validateQti3UploadItemStructure(item);
     case "media":
-      return validateQti3MediaItem(item);
+      return validateQti3MediaItemStructure(item);
     case "associate":
-      return validateQti3AssociateItem(item);
+      return validateQti3AssociateItemStructure(item);
     case "textEntry":
-      return validateQti3TextEntryItem(item);
+      return validateQti3TextEntryItemStructure(item);
     case "match":
-      return validateQti3MatchItem(item);
+      return validateQti3MatchItemStructure(item);
     case "hotspot":
-      return validateQti3HotspotItem(item);
+      return validateQti3HotspotItemStructure(item);
     case "graphicOrder":
-      return validateQti3GraphicOrderItem(item);
+      return validateQti3GraphicOrderItemStructure(item);
     case "selectPoint":
-      return validateQti3SelectPointItem(item);
+      return validateQti3SelectPointItemStructure(item);
     case "positionObject":
-      return validateQti3PositionObjectItem(item);
+      return validateQti3PositionObjectItemStructure(item);
     case "slider":
-      return validateQti3SliderItem(item);
+      return validateQti3SliderItemStructure(item);
     case "custom":
-      return validateQti3CustomInteractionItem(item);
+      return validateQti3CustomInteractionItemStructure(item);
     case "portableCustom":
-      return validateQti3PortableCustomItem(item);
+      return validateQti3PortableCustomItemStructure(item);
     case "drawing":
-      return validateQti3DrawingItem(item);
+      return validateQti3DrawingItemStructure(item);
     case "endAttempt":
-      return validateQti3EndAttemptItem(item);
+      return validateQti3EndAttemptItemStructure(item);
     case "graphicAssociate":
-      return validateQti3GraphicAssociateItem(item);
+      return validateQti3GraphicAssociateItemStructure(item);
     case "graphicGapMatch":
-      return validateQti3GraphicGapMatchItem(item);
+      return validateQti3GraphicGapMatchItemStructure(item);
     default:
       return assertNever(item);
   }
 }
 
-export function renderQti3AuthoringItem(item: Qti3AuthoringItem): string {
+function renderQti3AuthoringItem(item: Qti3AuthoringItem, feedback: PreparedFeedback): string {
   switch (item.interactionType) {
     case "choice":
-      return renderQti3ChoiceItem(item);
+      return renderQti3ChoiceItem(item, feedback);
     case "order":
-      return renderQti3OrderItem(item);
+      return renderQti3OrderItem(item, feedback);
     case "inlineChoice":
-      return renderQti3InlineChoiceItem(item);
+      return renderQti3InlineChoiceItem(item, feedback);
     case "hottext":
-      return renderQti3HottextItem(item);
+      return renderQti3HottextItem(item, feedback);
     case "gapMatch":
-      return renderQti3GapMatchItem(item);
+      return renderQti3GapMatchItem(item, feedback);
     case "extendedText":
-      return renderQti3ExtendedTextItem(item);
+      return renderQti3ExtendedTextItem(item, feedback);
     case "upload":
-      return renderQti3UploadItem(item);
+      return renderQti3UploadItem(item, feedback);
     case "media":
-      return renderQti3MediaItem(item);
+      return renderQti3MediaItem(item, feedback);
     case "associate":
-      return renderQti3AssociateItem(item);
+      return renderQti3AssociateItem(item, feedback);
     case "textEntry":
-      return renderQti3TextEntryItem(item);
+      return renderQti3TextEntryItem(item, feedback);
     case "match":
-      return renderQti3MatchItem(item);
+      return renderQti3MatchItem(item, feedback);
     case "hotspot":
-      return renderQti3HotspotItem(item);
+      return renderQti3HotspotItem(item, feedback);
     case "graphicOrder":
-      return renderQti3GraphicOrderItem(item);
+      return renderQti3GraphicOrderItem(item, feedback);
     case "selectPoint":
-      return renderQti3SelectPointItem(item);
+      return renderQti3SelectPointItem(item, feedback);
     case "positionObject":
-      return renderQti3PositionObjectItem(item);
+      return renderQti3PositionObjectItem(item, feedback);
     case "slider":
-      return renderQti3SliderItem(item);
+      return renderQti3SliderItem(item, feedback);
     case "custom":
-      return renderQti3CustomInteractionItem(item);
+      return renderQti3CustomInteractionItem(item, feedback);
     case "portableCustom":
-      return renderQti3PortableCustomItem(item);
+      return renderQti3PortableCustomItem(item, feedback);
     case "drawing":
-      return renderQti3DrawingItem(item);
+      return renderQti3DrawingItem(item, feedback);
     case "endAttempt":
-      return renderQti3EndAttemptItem(item);
+      return renderQti3EndAttemptItem(item, feedback);
     case "graphicAssociate":
-      return renderQti3GraphicAssociateItem(item);
+      return renderQti3GraphicAssociateItem(item, feedback);
     case "graphicGapMatch":
-      return renderQti3GraphicGapMatchItem(item);
+      return renderQti3GraphicGapMatchItem(item, feedback);
     default:
       return assertNever(item);
   }
@@ -317,3 +334,11 @@ export const qti3WriterInteractionSupport: readonly Qti3WriterInteractionSupport
   tests: interaction.tests,
   notes: interaction.notes,
 }));
+
+export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(item, validateAuthoringStructure);
+}
+
+export function writeQti3AuthoringItemResult(item: Qti3AuthoringItem) {
+  return writePreparedItem(item, validateAuthoringStructure, renderQti3AuthoringItem);
+}

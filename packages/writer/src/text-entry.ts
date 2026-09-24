@@ -1,12 +1,16 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
 } from "./diagnostics.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3TextEntryAnswer,
   Qti3TextEntryBuilderInput,
@@ -16,12 +20,26 @@ import type {
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3TextEntryItem(input: Qti3TextEntryBuilderInput): string {
-  const diagnostics = validateQti3TextEntryItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3TextEntryItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "textEntry" },
+    validateQti3TextEntryItemStructure,
+    renderQti3TextEntryItem,
+  );
 }
 
-export function renderQti3TextEntryItem(input: Qti3TextEntryBuilderInput): string {
+export function validateQti3TextEntryItem(
+  input: Qti3TextEntryBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "textEntry" },
+    validateQti3TextEntryItemStructure,
+  );
+}
+
+export function renderQti3TextEntryItem(
+  input: Qti3TextEntryBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const declarationsXml = input.responses.map(buildResponseDeclaration).join("\n");
   const prompt = input.promptHtml?.trim()
     ? `    <div class="qti-inline-prompt">${input.promptHtml}</div>\n`
@@ -30,13 +48,16 @@ export function renderQti3TextEntryItem(input: Qti3TextEntryBuilderInput): strin
     .split("\n")
     .map((line) => `    ${line}`)
     .join("\n");
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml: `${prompt}${body}`,
-    responseProcessingXml: buildResponseProcessing(input.responses),
-    scoreDefaultZero: true,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml: `${prompt}${body}`,
+      responseProcessingXml: buildResponseProcessing(input.responses),
+      scoreDefaultZero: true,
+    },
+    feedback,
+  );
 }
 
 function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
@@ -120,13 +141,10 @@ function normalizeScore(score?: number): number {
   return score;
 }
 
-export function validateQti3TextEntryItem(
+export function validateQti3TextEntryItemStructure(
   input: Qti3TextEntryBuilderInput,
 ): Qti3WriterDiagnostic[] {
-  const diagnostics = validateItemBase(
-    input,
-    input.responses.map((response) => response.responseIdentifier),
-  );
+  const diagnostics = validateItemBase(input);
   if (!input.responses.length) {
     diagnostics.push(
       writerDiagnostic(

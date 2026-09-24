@@ -4,7 +4,6 @@ import {
   duplicateDiagnostics,
   isNonNegativeInteger,
   isPositiveInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -15,17 +14,34 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3HottextBuilderInput, Qti3HottextChoice, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3HottextItem(input: Qti3HottextBuilderInput): string {
-  const diagnostics = validateQti3HottextItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3HottextItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "hottext" },
+    validateQti3HottextItemStructure,
+    renderQti3HottextItem,
+  );
 }
 
-export function renderQti3HottextItem(input: Qti3HottextBuilderInput): string {
+export function validateQti3HottextItem(input: Qti3HottextBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "hottext" },
+    validateQti3HottextItemStructure,
+  );
+}
+
+export function renderQti3HottextItem(
+  input: Qti3HottextBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Hottext response identifier",
@@ -71,12 +87,15 @@ ${correctXml}  </qti-response-declaration>`;
   const bodyXml = `    <qti-hottext-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}${bodyContent}
     </qti-hottext-interaction>`;
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    },
+    feedback,
+  );
 }
 
 function choiceXml(choice: Qti3HottextChoice): string {
@@ -87,7 +106,9 @@ function choiceXml(choice: Qti3HottextChoice): string {
   return `<qti-hottext identifier="${identifier}">${body}</qti-hottext>`;
 }
 
-export function validateQti3HottextItem(input: Qti3HottextBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3HottextItemStructure(
+  input: Qti3HottextBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

@@ -3,6 +3,34 @@ import { buildQti3ChoiceItem, qti3TrustedXmlFragment } from "../../packages/writ
 import { pasteXml } from "./player-helpers.js";
 
 test.describe("player feedback", () => {
+  test("does not render item interactions from forbidden feedback content", async ({ page }) => {
+    const valid = buildQti3ChoiceItem({
+      identifier: "forbidden-feedback",
+      title: "Forbidden feedback",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+      ],
+      correctResponse: ["A"],
+      feedback: {
+        entries: [{ choiceIdentifier: "A", identifier: "RIGHT", text: "Safe feedback" }],
+      },
+    });
+    const xml = valid.replace(
+      ">Safe feedback</qti-modal-feedback>",
+      '>Safe feedback<qti-choice-interaction response-identifier="RESPONSE"><qti-simple-choice identifier="X">Forbidden</qti-simple-choice></qti-choice-interaction></qti-modal-feedback>',
+    );
+    await page.goto("/");
+    await pasteXml(page, xml);
+    await page.getByRole("radio", { name: "A. Alpha" }).check();
+    await page.locator("#debug-score").click();
+    const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback).toContainText("Safe feedback");
+    await expect(feedback.getByRole("radio")).toHaveCount(0);
+    await expect(page.locator("qti-assessment-item-player").getByRole("radio")).toHaveCount(2);
+  });
+
   test("renders rich item-level modal feedback with safe QTI content", async ({ page }) => {
     const xml = buildQti3ChoiceItem({
       identifier: "rich-modal-feedback",
@@ -19,6 +47,7 @@ test.describe("player feedback", () => {
           {
             outcomeIdentifier: "FEEDBACK",
             identifier: "RIGHT",
+            title: "Answer explanation",
             contentHtml: qti3TrustedXmlFragment(
               '<qti-content-body><p>Correct <strong>answer</strong>. Score: <qti-printed-variable identifier="SCORE"/></p></qti-content-body>',
             ),
@@ -45,6 +74,8 @@ test.describe("player feedback", () => {
     await page.locator("#debug-score").click();
 
     const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback.getByRole("group", { name: "Answer explanation" })).toBeVisible();
+    await expect(feedback.locator(".qti3-feedback-title")).toHaveText("Answer explanation");
     await expect(feedback.locator("strong")).toHaveText("answer");
     await expect(feedback).toContainText("Correct answer.");
     await expect(feedback.locator(".qti3-printed-variable")).toHaveText("1");

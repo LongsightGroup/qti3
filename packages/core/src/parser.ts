@@ -1,4 +1,5 @@
-import { appendContentTextNode, flatTextFromContent, visibleTextContent } from "./content-text.js";
+import { parseContent, parseModalFeedbackContent } from "./parser-content.js";
+import { flatTextFromContent, visibleTextContent } from "./content-text.js";
 import {
   parseOutcomeDeclaration,
   parseResponseDeclaration,
@@ -157,21 +158,9 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
       ),
     );
   }
-  const modalFeedback = childElements(node, "qti-modal-feedback").map((feedbackNode) => {
-    for (const interaction of descendants(feedbackNode, isInteractionElement)) {
-      diagnostics.push({
-        code: "feedback.interaction.forbidden",
-        severity: "error",
-        message: "qti-modal-feedback must not contain interactions.",
-        path: interaction.source.path,
-        source: interaction.source,
-      });
-    }
-    return parseModalFeedback(
-      feedbackNode,
-      parseContentChildren(feedbackNode, diagnostics, responseDeclarationMap, []),
-    );
-  });
+  const modalFeedback = childElements(node, "qti-modal-feedback").map((feedbackNode) =>
+    parseModalFeedback(feedbackNode, parseModalFeedbackContent(feedbackNode, diagnostics)),
+  );
   const catalogInfoNode = firstChildElement(
     node,
     "qti-catalog-info",
@@ -311,67 +300,16 @@ function parseContentChildren(
   responseDeclarationMap: Map<string, QtiResponseDeclaration>,
   interactions: QtiInteraction[],
 ): QtiContentNode[] {
-  const content: QtiContentNode[] = [];
-  for (const entry of node.content) {
-    if (typeof entry === "string") {
-      appendContentTextNode(content, entry, node.source);
-      continue;
-    }
-    const parsed = parseContentNode(entry, diagnostics, responseDeclarationMap, interactions);
-    if (parsed) content.push(parsed);
-  }
-  return content;
-}
-
-function parseContentNode(
-  node: XmlNode,
-  diagnostics: QtiDiagnostic[],
-  responseDeclarationMap: Map<string, QtiResponseDeclaration>,
-  interactions: QtiInteraction[],
-): QtiContentNode | undefined {
-  if (isInteractionElement(node)) {
-    const interaction = parseInteraction(node, diagnostics, responseDeclarationMap);
-    const interactionIndex = interactions.push(interaction) - 1;
+  return parseContent(node, (interactionNode) => {
+    const interaction = parseInteraction(interactionNode, diagnostics, responseDeclarationMap);
     return {
       kind: "interaction",
-      interactionIndex,
-      qtiName: node.localName,
+      interactionIndex: interactions.push(interaction) - 1,
+      qtiName: interactionNode.localName,
       responseIdentifier: interaction.responseIdentifier,
-      source: node.source,
+      source: interactionNode.source,
     };
-  }
-
-  if (isQtiElement(node, "qti-printed-variable")) {
-    return {
-      kind: "printedVariable",
-      identifier: node.attributes.identifier ?? "",
-      format: node.attributes.format,
-      attributes: node.attributes,
-      source: node.source,
-    };
-  }
-
-  if (isQtiElement(node, "qti-feedback-block") || isQtiElement(node, "qti-feedback-inline")) {
-    return {
-      kind: "feedback",
-      feedbackType: node.localName === "qti-feedback-block" ? "block" : "inline",
-      identifier: node.attributes.identifier ?? "",
-      outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
-      showHide: node.attributes["show-hide"] === "hide" ? "hide" : "show",
-      attributes: node.attributes,
-      children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
-      source: node.source,
-    };
-  }
-
-  return {
-    kind: "element",
-    qtiName: node.localName,
-    namespaceUri: node.uri,
-    attributes: node.attributes,
-    children: parseContentChildren(node, diagnostics, responseDeclarationMap, interactions),
-    source: node.source,
-  };
+  });
 }
 
 function parseInteraction(

@@ -1,10 +1,13 @@
 import type { Qti3AuthoringItemBase } from "./types.js";
 import { assertQtiIdentifier } from "./identifier.js";
-import { modalFeedbackEntriesXml, modalFeedbackOutcomeXml } from "./modal-feedback.js";
-import { trustedResponseProcessingXml } from "./response-processing.js";
 import { escapeXmlAttribute, xmlLines } from "./xml.js";
 
-export interface AssessmentItemShellInput extends Qti3AuthoringItemBase {
+export interface AssessmentItemShellInput extends Pick<
+  Qti3AuthoringItemBase,
+  "identifier" | "title" | "lang"
+> {
+  readonly outcomeDeclarationsXml: string;
+  readonly modalFeedbackXml: string;
   readonly declarationsXml: string;
   readonly bodyXml: string;
   readonly responseProcessingXml: string;
@@ -25,7 +28,6 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     </qti-default-value>
   </qti-outcome-declaration>`
     : `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>`;
-  const itemLevelFeedback = input.modalFeedback;
   return xmlLines([
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<qti-assessment-item`,
@@ -36,15 +38,13 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     `  identifier="${identifier}" title="${title}" time-dependent="false" xml:lang="${lang}">`,
     input.declarationsXml,
     outcomeDeclarationXml,
-    itemLevelFeedback && modalFeedbackOutcomeXml(itemLevelFeedback),
+    input.outcomeDeclarationsXml,
     input.companionMaterialsXml,
     `  <qti-item-body>`,
     input.bodyXml,
     `  </qti-item-body>`,
-    itemLevelFeedback?.responseProcessingXml
-      ? trustedResponseProcessingXml(itemLevelFeedback.responseProcessingXml)
-      : input.responseProcessingXml,
-    itemLevelFeedback && modalFeedbackEntriesXml(itemLevelFeedback),
+    input.responseProcessingXml,
+    input.modalFeedbackXml,
     `</qti-assessment-item>`,
   ]);
 }

@@ -500,7 +500,7 @@ export interface QtiModalFeedback {
   title?: string | undefined;
   text: string;
   /** Parsed QTI content retained for safe rich rendering. */
-  content?: QtiContentNode[] | undefined;
+  content: QtiContentNode[];
   source?: QtiSourceLocation | undefined;
 }
 

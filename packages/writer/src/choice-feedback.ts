@@ -1,5 +1,6 @@
-import { duplicateDiagnostics, validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
-import { validateModalFeedback } from "./modal-feedback.js";
+import { validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
+import { choiceFeedbackProcessingXml } from "./response-processing.js";
+import { qti3TrustedXmlFragment } from "./types.js";
 import type {
   Qti3ChoiceBuilderInput,
   Qti3ChoiceFeedback,
@@ -11,9 +12,20 @@ import type {
 export function choiceModalFeedback(
   feedback: Qti3ChoiceFeedback,
   cardinality: "single" | "multiple",
+  responseIdentifier: string,
+  scoring: "match_correct" | "map_response",
 ): Qti3ModalFeedback {
   const outcomeIdentifier = feedback.outcomeIdentifier ?? "FEEDBACK";
   return {
+    responseProcessingXml: qti3TrustedXmlFragment(
+      choiceFeedbackProcessingXml(
+        responseIdentifier.trim(),
+        cardinality,
+        scoring,
+        outcomeIdentifier.trim(),
+        feedback.entries,
+      ),
+    ),
     outcomes: [{ identifier: outcomeIdentifier, cardinality }],
     entries: feedback.entries.map((entry) => ({
       outcomeIdentifier,
@@ -27,37 +39,21 @@ export function choiceModalFeedback(
 export function validateChoiceFeedback(input: Qti3ChoiceBuilderInput): Qti3WriterDiagnostic[] {
   const feedback = input.feedback;
   if (!feedback) return [];
-  const diagnostics = validateModalFeedback(
-    choiceModalFeedback(feedback, input.responseCardinality),
-    [input.responseIdentifier ?? "RESPONSE"],
-  ).map((diagnostic) => ({
-    ...diagnostic,
-    path:
-      diagnostic.path === "modalFeedback.outcomes.0.identifier"
-        ? "feedback.outcomeIdentifier"
-        : diagnostic.code === "duplicate_identifier"
-          ? "feedback.entries.identifier"
-          : diagnostic.path.replace(/^modalFeedback/, "feedback"),
-  }));
-  if (input.modalFeedback) {
-    diagnostics.push(
-      writerDiagnostic(
-        "conflicting_feedback_models",
-        "modalFeedback",
-        "Use either choice feedback or item-level modalFeedback on one item.",
-      ),
-    );
-  }
-  diagnostics.push(
-    ...duplicateDiagnostics(
-      feedback.entries.map((entry) => entry.choiceIdentifier),
-      "feedback.entries.choiceIdentifier",
-      "Feedback choice identifier",
-    ),
-  );
+  const diagnostics: Qti3WriterDiagnostic[] = [];
+  const seen = new Set<string>();
   const choices = new Set(input.choices.map((choice) => choice.identifier.trim()));
   for (const [index, entry] of feedback.entries.entries()) {
     const path = `feedback.entries.${index}.choiceIdentifier`;
+    const choice = entry.choiceIdentifier.trim();
+    if (seen.has(choice))
+      diagnostics.push(
+        writerDiagnostic(
+          "duplicate_identifier",
+          path,
+          `Duplicate feedback choice identifier "${choice}".`,
+        ),
+      );
+    seen.add(choice);
     const invalid = validateQtiIdentifier(
       path,
       "Feedback choice identifier",

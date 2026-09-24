@@ -17,8 +17,15 @@ export function syncFeedbackPanel(
     ...visibleFeedback.map((entry) => {
       const element = document.createElement("div");
       element.dataset.feedbackIdentifier = entry.identifier;
-      if (entry.content) element.append(...renderContentNodes(entry.content, contentContext));
-      else element.textContent = entry.text;
+      if (entry.title) {
+        element.setAttribute("role", "group");
+        element.setAttribute("aria-label", entry.title);
+        const label = document.createElement("p");
+        label.className = "qti3-feedback-title";
+        label.textContent = entry.title;
+        element.append(label);
+      }
+      element.append(...renderContentNodes(entry.content, contentContext));
       return element;
     }),
   );

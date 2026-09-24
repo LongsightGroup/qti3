@@ -1,7 +1,6 @@
 import {
   isNonNegativeInteger,
   isPositiveInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -14,19 +13,36 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3MediaBuilderInput, Qti3MediaSource, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 const MEDIA_KINDS = new Set(["audio", "video", "object"]);
 
 export function buildQti3MediaItem(input: Qti3MediaBuilderInput): string {
-  const diagnostics = validateQti3MediaItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3MediaItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "media" },
+    validateQti3MediaItemStructure,
+    renderQti3MediaItem,
+  );
 }
 
-export function renderQti3MediaItem(input: Qti3MediaBuilderInput): string {
+export function validateQti3MediaItem(input: Qti3MediaBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "media" },
+    validateQti3MediaItemStructure,
+  );
+}
+
+export function renderQti3MediaItem(
+  input: Qti3MediaBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Media response identifier",
@@ -58,16 +74,21 @@ export function renderQti3MediaItem(input: Qti3MediaBuilderInput): string {
 ${optionalPromptSection(input.promptHtml)}${mediaElementXml(input)}
     </qti-media-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: "",
-    companionMaterialsXml,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: "",
+      companionMaterialsXml,
+    },
+    feedback,
+  );
 }
 
-export function validateQti3MediaItem(input: Qti3MediaBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3MediaItemStructure(
+  input: Qti3MediaBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

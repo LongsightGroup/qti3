@@ -1,7 +1,6 @@
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -28,17 +27,36 @@ import {
   validatePointAreaTargets,
   validatePointValues,
 } from "./point-area.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3SelectPointBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3SelectPointItem(input: Qti3SelectPointBuilderInput): string {
-  const diagnostics = validateQti3SelectPointItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3SelectPointItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "selectPoint" },
+    validateQti3SelectPointItemStructure,
+    renderQti3SelectPointItem,
+  );
 }
 
-export function renderQti3SelectPointItem(input: Qti3SelectPointBuilderInput): string {
+export function validateQti3SelectPointItem(
+  input: Qti3SelectPointBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "selectPoint" },
+    validateQti3SelectPointItemStructure,
+  );
+}
+
+export function renderQti3SelectPointItem(
+  input: Qti3SelectPointBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Select point response identifier",
@@ -69,18 +87,21 @@ export function renderQti3SelectPointItem(input: Qti3SelectPointBuilderInput): s
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.object))}/>
     </qti-select-point-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml:
-      responseIdentifier === "RESPONSE"
-        ? responseProcessingTemplateXml("map_response_point")
-        : mapResponsePointProcessingXml(responseIdentifier),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml:
+        responseIdentifier === "RESPONSE"
+          ? responseProcessingTemplateXml("map_response_point")
+          : mapResponsePointProcessingXml(responseIdentifier),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3SelectPointItem(
+export function validateQti3SelectPointItemStructure(
   input: Qti3SelectPointBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

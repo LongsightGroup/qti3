@@ -1,7 +1,6 @@
 import {
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -24,7 +23,12 @@ import {
   validatePairReferences,
 } from "./pair-declaration.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3GraphicGapChoice,
   Qti3GraphicGapMatchBuilderInput,
@@ -33,12 +37,26 @@ import type {
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
 export function buildQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderInput): string {
-  const diagnostics = validateQti3GraphicGapMatchItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3GraphicGapMatchItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "graphicGapMatch" },
+    validateQti3GraphicGapMatchItemStructure,
+    renderQti3GraphicGapMatchItem,
+  );
 }
 
-export function renderQti3GraphicGapMatchItem(input: Qti3GraphicGapMatchBuilderInput): string {
+export function validateQti3GraphicGapMatchItem(
+  input: Qti3GraphicGapMatchBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "graphicGapMatch" },
+    validateQti3GraphicGapMatchItemStructure,
+  );
+}
+
+export function renderQti3GraphicGapMatchItem(
+  input: Qti3GraphicGapMatchBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic gap match response identifier",
@@ -104,15 +122,18 @@ ${choicesXml}
 ${targetsXml}
     </qti-graphic-gap-match-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3GraphicGapMatchItem(
+export function validateQti3GraphicGapMatchItemStructure(
   input: Qti3GraphicGapMatchBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

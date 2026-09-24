@@ -1,5 +1,5 @@
 import { assertQtiIdentifier } from "./identifier.js";
-import { throwIfDiagnostics, validateItemBase, validateQtiIdentifier } from "./diagnostics.js";
+import { validateItemBase, validateQtiIdentifier } from "./diagnostics.js";
 import {
   optionalLongDescriptionBlock,
   renderGraphicObjectAttributes,
@@ -12,17 +12,34 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { trustedResponseProcessingXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3DrawingBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3DrawingItem(input: Qti3DrawingBuilderInput): string {
-  const diagnostics = validateQti3DrawingItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3DrawingItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "drawing" },
+    validateQti3DrawingItemStructure,
+    renderQti3DrawingItem,
+  );
 }
 
-export function renderQti3DrawingItem(input: Qti3DrawingBuilderInput): string {
+export function validateQti3DrawingItem(input: Qti3DrawingBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "drawing" },
+    validateQti3DrawingItemStructure,
+  );
+}
+
+export function renderQti3DrawingItem(
+  input: Qti3DrawingBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Drawing response identifier",
@@ -44,16 +61,21 @@ export function renderQti3DrawingItem(input: Qti3DrawingBuilderInput): string {
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.object))}/>
     </qti-drawing-interaction>`;
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: trustedResponseProcessingXml(undefined),
-    scoreDefaultZero: true,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: trustedResponseProcessingXml(undefined),
+      scoreDefaultZero: true,
+    },
+    feedback,
+  );
 }
 
-export function validateQti3DrawingItem(input: Qti3DrawingBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3DrawingItemStructure(
+  input: Qti3DrawingBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(

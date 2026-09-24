@@ -77,10 +77,17 @@ when processing must assign feedback outcomes; these rules replace that interact
 scoring rules, so include any required `SCORE` assignment. The choice-specific `feedback` helper
 and generic `modalFeedback` field cannot be used together. Both paths use the same content checks:
 blank markup is rejected, and a blank optional HTML field does not replace nonblank text. Feedback
-outcome names must differ from every response identifier declared by the item.
+outcome names must differ from every response identifier declared by the item. Malformed XML and
+forbidden interactions retain their parser diagnostic codes and messages, with paths to the authored
+feedback entry. Custom and portable-custom items cannot provide both their own `responseProcessingXml`
+and `modalFeedback.responseProcessingXml`; that conflict returns a diagnostic.
+
+Multiple-response choice items default to `max-choices="0"` (unlimited), whether feedback is present or
+absent. An explicit `maxChoices` value takes precedence.
 
 The core parser retains both flattened text and structured feedback content. The player renders
-supported rich content, including printed variables, through its content renderer. Parsing and
+supported rich content, including printed variables, through its content renderer. Feedback titles
+are displayed and label their feedback groups. Parsing and
 rewriting an arbitrary source item is not a byte-for-byte XML round trip.
 
 The stable application-facing API is `writeQti3AssessmentItemResult(item)`. It returns typed

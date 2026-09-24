@@ -175,19 +175,18 @@ export type {
 } from "./types.js";
 export { qti3TrustedXmlFragment, Qti3WriterError } from "./types.js";
 
-import { throwIfDiagnostics, writerResult } from "./diagnostics.js";
-import { renderQti3AuthoringItem, validateQti3AuthoringItem } from "./interactions.js";
+import { Qti3WriterError } from "./types.js";
+import { writeQti3AuthoringItemResult } from "./interactions.js";
 import type { Qti3AuthoringItem, Qti3WriterResult } from "./types.js";
 
 export function writeQti3AssessmentItem(item: Qti3AuthoringItem): string {
-  throwIfDiagnostics(validateQti3AuthoringItem(item));
-  return renderQti3AuthoringItem(item);
+  const result = writeQti3AuthoringItemResult(item);
+  if (!result.ok) throw new Qti3WriterError(result.diagnostics);
+  return result.xml;
 }
 
 export function writeQti3AssessmentItemResult(item: Qti3AuthoringItem): Qti3WriterResult {
-  const diagnostics = validateQti3AuthoringItem(item);
-  if (diagnostics.length) return writerResult("", diagnostics);
-  return writerResult(renderQti3AuthoringItem(item), []);
+  return writeQti3AuthoringItemResult(item);
 }
 export { writeQti3AssessmentTest } from "./assessment-test.js";
 

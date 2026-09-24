@@ -48,7 +48,7 @@ describe("qti3-writer validation", () => {
           },
         },
         code: "duplicate_identifier",
-        path: "feedback.entries.choiceIdentifier",
+        path: "feedback.entries.1.choiceIdentifier",
       },
       {
         item: {
@@ -58,7 +58,7 @@ describe("qti3-writer validation", () => {
           },
         },
         code: "duplicate_identifier",
-        path: "feedback.entries.identifier",
+        path: "feedback.entries.1.identifier",
       },
       {
         item: { ...base, feedback: { outcomeIdentifier: "bad name", entries: [entry] } },
@@ -117,8 +117,7 @@ describe("qti3-writer validation", () => {
         },
         code: "invalid_feedback_content",
         path: "feedback.entries.0",
-        message:
-          "Modal feedback requires exactly one content source with visible text; contentHtml must be valid XML.",
+        message: "Modal feedback requires exactly one nonblank text or XML content source.",
       },
       {
         item: {
@@ -149,8 +148,8 @@ describe("qti3-writer validation", () => {
             ],
           },
         },
-        code: "invalid_feedback_content",
-        path: "feedback.entries.0",
+        code: "xml.parse",
+        path: "feedback.entries.0.contentHtml",
       },
       {
         item: {

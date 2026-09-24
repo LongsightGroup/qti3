@@ -6,7 +6,6 @@ import {
 } from "./custom-interaction-common.js";
 import {
   duplicateDiagnostics,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -17,7 +16,12 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import { trustedResponseProcessingXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3PortableCustomBuilderInput,
   Qti3PortableCustomInteractionModules,
@@ -26,12 +30,26 @@ import type {
 import { indentXml, xmlAttributeList, escapeXmlAttribute, xmlLines } from "./xml.js";
 
 export function buildQti3PortableCustomItem(input: Qti3PortableCustomBuilderInput): string {
-  const diagnostics = validateQti3PortableCustomItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3PortableCustomItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "portableCustom" },
+    validateQti3PortableCustomItemStructure,
+    renderQti3PortableCustomItem,
+  );
 }
 
-export function renderQti3PortableCustomItem(input: Qti3PortableCustomBuilderInput): string {
+export function validateQti3PortableCustomItem(
+  input: Qti3PortableCustomBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "portableCustom" },
+    validateQti3PortableCustomItemStructure,
+  );
+}
+
+export function renderQti3PortableCustomItem(
+  input: Qti3PortableCustomBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Portable custom response identifier",
@@ -51,16 +69,19 @@ export function renderQti3PortableCustomItem(input: Qti3PortableCustomBuilderInp
     `    </qti-portable-custom-interaction>`,
   ]);
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
-    scoreDefaultZero: true,
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
+      scoreDefaultZero: true,
+    },
+    feedback,
+  );
 }
 
-export function validateQti3PortableCustomItem(
+export function validateQti3PortableCustomItemStructure(
   input: Qti3PortableCustomBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

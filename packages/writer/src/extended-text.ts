@@ -1,6 +1,5 @@
 import {
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -12,19 +11,38 @@ import {
   optionalPromptSection,
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3ExtendedTextBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { indentXml, escapeXmlAttribute } from "./xml.js";
 
 const FORMAT_VALUES = new Set(["plain", "preformatted", "xhtml"]);
 
 export function buildQti3ExtendedTextItem(input: Qti3ExtendedTextBuilderInput): string {
-  const diagnostics = validateQti3ExtendedTextItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3ExtendedTextItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "extendedText" },
+    validateQti3ExtendedTextItemStructure,
+    renderQti3ExtendedTextItem,
+  );
 }
 
-export function renderQti3ExtendedTextItem(input: Qti3ExtendedTextBuilderInput): string {
+export function validateQti3ExtendedTextItem(
+  input: Qti3ExtendedTextBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "extendedText" },
+    validateQti3ExtendedTextItemStructure,
+  );
+}
+
+export function renderQti3ExtendedTextItem(
+  input: Qti3ExtendedTextBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Extended text response identifier",
@@ -71,17 +89,20 @@ ${indentXml(input.rubricHtml, 8)}
     </qti-rubric-block>`
     : "";
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml: [optionalBodySection(input.bodyHtml).trimEnd(), interactionXml, rubricBlock]
-      .filter(Boolean)
-      .join("\n"),
-    responseProcessingXml: "",
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml: [optionalBodySection(input.bodyHtml).trimEnd(), interactionXml, rubricBlock]
+        .filter(Boolean)
+        .join("\n"),
+      responseProcessingXml: "",
+    },
+    feedback,
+  );
 }
 
-export function validateQti3ExtendedTextItem(
+export function validateQti3ExtendedTextItemStructure(
   input: Qti3ExtendedTextBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);

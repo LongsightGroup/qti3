@@ -2,7 +2,6 @@ import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -15,22 +14,35 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
+import { choiceResponseProcessingXml } from "./response-processing.js";
 import {
-  choiceFeedbackProcessingXml,
-  responseProcessingTemplateXml,
-} from "./response-processing.js";
-import { choiceModalFeedback, validateChoiceFeedback } from "./choice-feedback.js";
-import { assessmentItemShell } from "./shell.js";
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3ChoiceBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3ChoiceItem(input: Qti3ChoiceBuilderInput): string {
-  const diagnostics = validateQti3ChoiceItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3ChoiceItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "choice" },
+    validateQti3ChoiceItemStructure,
+    renderQti3ChoiceItem,
+  );
 }
 
-export function renderQti3ChoiceItem(input: Qti3ChoiceBuilderInput): string {
+export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "choice" },
+    validateQti3ChoiceItemStructure,
+  );
+}
+
+export function renderQti3ChoiceItem(
+  input: Qti3ChoiceBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -50,6 +62,7 @@ ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-va
     </qti-correct-response>
 ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration>`;
 
+  const maxChoices = choiceSelectionLimit(input.responseCardinality, input.maxChoices);
   const interactionAttrs = interactionAttributeList({
     responseIdentifier: escapedResponseIdentifier,
     sharedVocabulary: input.sharedVocabulary,
@@ -58,11 +71,7 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
     extraAttributes: [
       booleanAttribute("shuffle", input.shuffle ?? false),
       input.minChoices !== undefined ? `min-choices="${String(input.minChoices)}"` : "",
-      input.maxChoices !== undefined
-        ? `max-choices="${String(input.maxChoices)}"`
-        : input.responseCardinality === "multiple"
-          ? 'max-choices="0"'
-          : "",
+      maxChoices === undefined ? "" : `max-choices="${String(maxChoices)}"`,
     ],
   });
   const choicesXml = choices
@@ -84,24 +93,15 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
     optionalBodySection(input.bodyHtml),
   );
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    modalFeedback: input.feedback
-      ? choiceModalFeedback(input.feedback, input.responseCardinality)
-      : input.modalFeedback,
-    responseProcessingXml:
-      input.feedback === undefined
-        ? responseProcessingTemplateXml(scoring)
-        : choiceFeedbackProcessingXml(
-            responseIdentifier,
-            input.responseCardinality,
-            scoring,
-            input.feedback.outcomeIdentifier?.trim() ?? "FEEDBACK",
-            input.feedback.entries,
-          ),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: choiceResponseProcessingXml(responseIdentifier, scoring),
+    },
+    feedback,
+  );
 }
 
 function choiceMappingXml(
@@ -127,7 +127,9 @@ ${choices
 `;
 }
 
-export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3WriterDiagnostic[] {
+export function validateQti3ChoiceItemStructure(
+  input: Qti3ChoiceBuilderInput,
+): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
@@ -247,6 +249,13 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
       );
     }
   }
-  diagnostics.push(...validateChoiceFeedback(input));
   return diagnostics;
+}
+
+/** QTI defaults to one selection; multiple responses default to unlimited unless explicitly capped. */
+function choiceSelectionLimit(
+  cardinality: "single" | "multiple",
+  maximum: number | undefined,
+): number | undefined {
+  return maximum ?? (cardinality === "multiple" ? 0 : undefined);
 }

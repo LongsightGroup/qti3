@@ -1,7 +1,6 @@
 import {
   duplicateDiagnostics,
   isNonNegativeInteger,
-  throwIfDiagnostics,
   validateItemBase,
   validateQtiIdentifier,
   writerDiagnostic,
@@ -17,7 +16,12 @@ import {
   wrapInteractionBody,
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
-import { assessmentItemShell } from "./shell.js";
+import {
+  buildPreparedItem,
+  validatePreparedItem,
+  composeAssessmentItem,
+} from "./item-preparation.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3AssociateBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import {
   pairResponseDeclarationXml,
@@ -27,12 +31,26 @@ import {
 import { escapeXmlAttribute } from "./xml.js";
 
 export function buildQti3AssociateItem(input: Qti3AssociateBuilderInput): string {
-  const diagnostics = validateQti3AssociateItem(input);
-  throwIfDiagnostics(diagnostics);
-  return renderQti3AssociateItem(input);
+  return buildPreparedItem(
+    { ...input, interactionType: "associate" },
+    validateQti3AssociateItemStructure,
+    renderQti3AssociateItem,
+  );
 }
 
-export function renderQti3AssociateItem(input: Qti3AssociateBuilderInput): string {
+export function validateQti3AssociateItem(
+  input: Qti3AssociateBuilderInput,
+): Qti3WriterDiagnostic[] {
+  return validatePreparedItem(
+    { ...input, interactionType: "associate" },
+    validateQti3AssociateItemStructure,
+  );
+}
+
+export function renderQti3AssociateItem(
+  input: Qti3AssociateBuilderInput,
+  feedback: PreparedFeedback,
+): string {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -76,15 +94,18 @@ export function renderQti3AssociateItem(input: Qti3AssociateBuilderInput): strin
     optionalBodySection(input.bodyHtml),
   );
 
-  return assessmentItemShell({
-    ...input,
-    declarationsXml,
-    bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(scoring),
-  });
+  return composeAssessmentItem(
+    {
+      ...input,
+      declarationsXml,
+      bodyXml,
+      responseProcessingXml: responseProcessingTemplateXml(scoring),
+    },
+    feedback,
+  );
 }
 
-export function validateQti3AssociateItem(
+export function validateQti3AssociateItemStructure(
   input: Qti3AssociateBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
