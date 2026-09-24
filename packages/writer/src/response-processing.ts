@@ -59,9 +59,10 @@ export function matchCorrectProcessingXml(responseIdentifier: string): string {
   </qti-response-processing>`;
 }
 
-/** Scores a single choice and selects its mapped modal feedback. */
+/** Scores a choice response and selects feedback for each selected choice. */
 export function choiceFeedbackProcessingXml(
   responseIdentifier: string,
+  responseCardinality: "single" | "multiple",
   scoring: Qti3ResponseProcessingTemplate,
   outcomeIdentifier: string,
   entries: readonly Qti3ChoiceFeedbackEntry[],
@@ -90,19 +91,35 @@ export function choiceFeedbackProcessingXml(
       </qti-response-else>
     </qti-response-condition>`;
   const feedbackConditions = entries
-    .map(
-      (entry) => `    <qti-response-condition>
-      <qti-response-if>
-        <qti-match>
+    .map((entry) => {
+      const choice = escapeXmlText(entry.choiceIdentifier.trim());
+      const identifier = escapeXmlText(entry.identifier.trim());
+      const condition =
+        responseCardinality === "multiple"
+          ? `<qti-member>
+          <qti-base-value base-type="identifier">${choice}</qti-base-value>
           <qti-variable identifier="${response}"/>
-          <qti-base-value base-type="identifier">${escapeXmlText(entry.choiceIdentifier.trim())}</qti-base-value>
-        </qti-match>
+        </qti-member>`
+          : `<qti-match>
+          <qti-variable identifier="${response}"/>
+          <qti-base-value base-type="identifier">${choice}</qti-base-value>
+        </qti-match>`;
+      const value =
+        responseCardinality === "multiple"
+          ? `<qti-multiple>
+            <qti-variable identifier="${outcome}"/>
+            <qti-base-value base-type="identifier">${identifier}</qti-base-value>
+          </qti-multiple>`
+          : `<qti-base-value base-type="identifier">${identifier}</qti-base-value>`;
+      return `    <qti-response-condition>
+      <qti-response-if>
+        ${condition}
         <qti-set-outcome-value identifier="${outcome}">
-          <qti-base-value base-type="identifier">${escapeXmlText(entry.identifier.trim())}</qti-base-value>
+          ${value}
         </qti-set-outcome-value>
       </qti-response-if>
-    </qti-response-condition>`,
-    )
+    </qti-response-condition>`;
+    })
     .join("\n");
   return `  <qti-response-processing>
 ${scoreXml}

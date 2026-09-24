@@ -102,7 +102,7 @@ export interface Qti3ChoiceFeedbackEntry {
   readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
 }
 
-/** Modal feedback authored for a single-response choice item. */
+/** Modal feedback authored for a choice item. Each selected choice can show its entry. */
 export interface Qti3ChoiceFeedback {
   /** Defaults to "FEEDBACK" when omitted. */
   readonly outcomeIdentifier?: string | undefined;

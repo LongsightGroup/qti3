@@ -64,8 +64,9 @@ if (!result.ok) {
 }
 ```
 
-Feedback currently requires a single-response choice item. Unsupported feedback configurations
-return typed diagnostics. Each entry needs exactly one `text` or `contentHtml` value with visible
+Feedback works with single- and multiple-response choice items. For multiple-response items,
+each selected choice with an entry displays its feedback, and unselected choices display none.
+Invalid feedback configurations return typed diagnostics. Each entry needs exactly one `text` or `contentHtml` value with visible
 text; accessible image `alt` text counts. `contentHtml` is a caller-supplied trusted XML fragment.
 When rebuilding from parsed QTI, preserve rich feedback XHTML separately because
 `QtiModalFeedback` exposes flattened text only. The current player displays that flattened text

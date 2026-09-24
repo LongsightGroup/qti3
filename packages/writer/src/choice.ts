@@ -58,7 +58,11 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
     extraAttributes: [
       booleanAttribute("shuffle", input.shuffle ?? false),
       input.minChoices !== undefined ? `min-choices="${String(input.minChoices)}"` : "",
-      input.maxChoices !== undefined ? `max-choices="${String(input.maxChoices)}"` : "",
+      input.maxChoices !== undefined
+        ? `max-choices="${String(input.maxChoices)}"`
+        : input.responseCardinality === "multiple"
+          ? 'max-choices="0"'
+          : "",
     ],
   });
   const choicesXml = choices
@@ -95,7 +99,7 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
   const outcomeDeclarationsXml =
     escapedFeedbackOutcomeIdentifier === undefined
       ? undefined
-      : `  <qti-outcome-declaration identifier="${escapedFeedbackOutcomeIdentifier}" cardinality="single" base-type="identifier"/>`;
+      : `  <qti-outcome-declaration identifier="${escapedFeedbackOutcomeIdentifier}" cardinality="${input.responseCardinality}" base-type="identifier"/>`;
   const modalFeedbackXml =
     feedback === undefined || escapedFeedbackOutcomeIdentifier === undefined
       ? undefined
@@ -122,6 +126,7 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
         ? responseProcessingTemplateXml(scoring)
         : choiceFeedbackProcessingXml(
             responseIdentifier,
+            input.responseCardinality,
             scoring,
             feedbackOutcomeIdentifier,
             feedback.entries,
@@ -275,15 +280,6 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
   if (input.feedback !== undefined) {
     const feedback = input.feedback;
     const outcomeIdentifier = feedback.outcomeIdentifier ?? "FEEDBACK";
-    if (input.responseCardinality !== "single") {
-      diagnostics.push(
-        writerDiagnostic(
-          "feedback_requires_single",
-          "responseCardinality",
-          "Modal feedback requires single-response choice items.",
-        ),
-      );
-    }
     if (feedback.entries.length === 0) {
       diagnostics.push(
         writerDiagnostic(

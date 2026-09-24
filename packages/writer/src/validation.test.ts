@@ -173,11 +173,6 @@ describe("qti3-writer validation", () => {
         code: "missing_feedback_entries",
         path: "feedback.entries",
       },
-      {
-        item: { ...base, responseCardinality: "multiple", feedback: { entries: [entry] } },
-        code: "feedback_requires_single",
-        path: "responseCardinality",
-      },
     ];
     for (const { item, code, path, message } of cases) {
       const result = writeQti3AssessmentItemResult(item);

@@ -1,7 +1,41 @@
 import { expect, test } from "@playwright/test";
+import { buildQti3ChoiceItem } from "../../packages/writer/src/index.js";
 import { pasteXml } from "./player-helpers.js";
 
 test.describe("player feedback", () => {
+  test("shows every selected choice's modal feedback from writer XML", async ({ page }) => {
+    const xml = buildQti3ChoiceItem({
+      identifier: "multiple-choice-feedback",
+      title: "Multiple choice feedback",
+      responseCardinality: "multiple",
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+        { identifier: "C", text: "Gamma" },
+      ],
+      correctResponse: ["A", "B"],
+      feedback: {
+        entries: [
+          { choiceIdentifier: "A", identifier: "A_HINT", text: "Alpha feedback." },
+          { choiceIdentifier: "B", identifier: "B_HINT", text: "Beta feedback." },
+          { choiceIdentifier: "C", identifier: "C_HINT", text: "Gamma feedback." },
+        ],
+      },
+    });
+
+    await page.goto("/");
+    await pasteXml(page, xml);
+    await page.getByRole("checkbox", { name: "A. Alpha" }).check();
+    await page.getByRole("checkbox", { name: "B. Beta" }).check();
+    await page.locator("#debug-score").click();
+
+    const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback).toContainText("Alpha feedback.");
+    await expect(feedback).toContainText("Beta feedback.");
+    await expect(feedback).not.toContainText("Gamma feedback.");
+    await expect(feedback).toHaveAttribute("aria-live", "polite");
+  });
+
   test("renders outcome-gated modal feedback after scoring", async ({ page }) => {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="feedback" time-dependent="false">
