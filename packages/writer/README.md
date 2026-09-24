@@ -37,7 +37,7 @@ if (!result.ok) {
 console.log(result.xml);
 ```
 
-Single-choice items can map each selected choice to modal feedback, including a feedback identifier
+Choice items can map each selected choice to modal feedback, including a feedback identifier
 different from the choice identifier:
 
 ```ts
