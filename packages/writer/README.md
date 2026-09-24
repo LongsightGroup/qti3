@@ -37,6 +37,39 @@ if (!result.ok) {
 console.log(result.xml);
 ```
 
+Single-choice items can map each selected choice to modal feedback, including a feedback identifier
+different from the choice identifier:
+
+```ts
+const result = writeQti3AssessmentItemResult({
+  interactionType: "choice",
+  identifier: "item-feedback",
+  title: "Choice feedback",
+  responseCardinality: "single",
+  choices: [
+    { identifier: "A", text: "Alpha" },
+    { identifier: "B", text: "Beta" },
+  ],
+  correctResponse: ["B"],
+  feedback: {
+    entries: [
+      { choiceIdentifier: "B", identifier: "RIGHT", text: "Correct." },
+      { choiceIdentifier: "A", identifier: "A", text: "Try again." },
+    ],
+  },
+});
+
+if (!result.ok) {
+  console.error(result.diagnostics);
+}
+```
+
+Feedback currently requires a single-response choice item. Unsupported feedback configurations
+return typed diagnostics. Each entry needs exactly one nonblank `text` or `contentHtml` value;
+`contentHtml` is a caller-supplied trusted XML fragment. When rebuilding from parsed QTI, preserve
+rich feedback XHTML separately because `QtiModalFeedback` exposes flattened text only. The current
+player displays that flattened text even when the output XML contains rich XHTML.
+
 The stable application-facing API is `writeQti3AssessmentItemResult(item)`. It returns typed
 diagnostics and should be used by production authoring systems. Use
 `validateQti3AuthoringItem(item)` when a UI or import pipeline needs diagnostics before writing XML.

@@ -65,6 +65,8 @@ export type {
   Qti3AssociatePair,
   Qti3ChoiceAuthoringItem,
   Qti3ChoiceBuilderInput,
+  Qti3ChoiceFeedback,
+  Qti3ChoiceFeedbackEntry,
   Qti3CustomInteractionAttribute,
   Qti3CustomInteractionAuthoringItem,
   Qti3CustomInteractionBaseType,

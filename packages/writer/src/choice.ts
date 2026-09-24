@@ -15,7 +15,10 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import {
+  choiceFeedbackProcessingXml,
+  responseProcessingTemplateXml,
+} from "./response-processing.js";
 import { assessmentItemShell } from "./shell.js";
 import type { Qti3ChoiceBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
@@ -76,11 +79,52 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
     optionalBodySection(input.bodyHtml),
   );
 
+  const feedback = input.feedback;
+  const feedbackOutcomeIdentifier =
+    feedback === undefined
+      ? undefined
+      : assertQtiIdentifier(
+          feedback.outcomeIdentifier ?? "FEEDBACK",
+          "Feedback outcome identifier",
+        );
+  const escapedFeedbackOutcomeIdentifier =
+    feedbackOutcomeIdentifier === undefined
+      ? undefined
+      : escapeXmlAttribute(feedbackOutcomeIdentifier);
+  const outcomeDeclarationsXml =
+    escapedFeedbackOutcomeIdentifier === undefined
+      ? undefined
+      : `  <qti-outcome-declaration identifier="${escapedFeedbackOutcomeIdentifier}" cardinality="single" base-type="identifier"/>`;
+  const modalFeedbackXml =
+    feedback === undefined || escapedFeedbackOutcomeIdentifier === undefined
+      ? undefined
+      : feedback.entries
+          .map((entry) => {
+            const identifier = escapeXmlAttribute(
+              assertQtiIdentifier(entry.identifier, "Modal feedback identifier"),
+            );
+            const content = entry.contentHtml?.trim()
+              ? entry.contentHtml
+              : escapeXmlText(entry.text ?? "");
+            return `  <qti-modal-feedback outcome-identifier="${escapedFeedbackOutcomeIdentifier}" identifier="${identifier}" show-hide="show">${content}</qti-modal-feedback>`;
+          })
+          .join("\n");
+
   return assessmentItemShell({
     ...input,
     declarationsXml,
     bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(scoring),
+    outcomeDeclarationsXml,
+    modalFeedbackXml,
+    responseProcessingXml:
+      feedback === undefined || feedbackOutcomeIdentifier === undefined
+        ? responseProcessingTemplateXml(scoring)
+        : choiceFeedbackProcessingXml(
+            responseIdentifier,
+            scoring,
+            feedbackOutcomeIdentifier,
+            feedback.entries,
+          ),
   });
 }
 
@@ -225,6 +269,99 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
           identifier,
         ),
       );
+    }
+  }
+  if (input.feedback !== undefined) {
+    const feedback = input.feedback;
+    const outcomeIdentifier = feedback.outcomeIdentifier ?? "FEEDBACK";
+    if (input.responseCardinality !== "single") {
+      diagnostics.push(
+        writerDiagnostic(
+          "feedback_requires_single",
+          "responseCardinality",
+          "Modal feedback requires single-response choice items.",
+        ),
+      );
+    }
+    if (feedback.entries.length === 0) {
+      diagnostics.push(
+        writerDiagnostic(
+          "missing_feedback_entries",
+          "feedback.entries",
+          "Modal feedback requires at least one entry.",
+        ),
+      );
+    }
+    const outcomeIdentifierDiagnostic = validateQtiIdentifier(
+      "feedback.outcomeIdentifier",
+      "Feedback outcome identifier",
+      outcomeIdentifier,
+    );
+    if (outcomeIdentifierDiagnostic) diagnostics.push(outcomeIdentifierDiagnostic);
+    const reservedOutcomeIdentifiers = new Set([
+      "SCORE",
+      responseIdentifier.trim(),
+      "completionStatus",
+      "numAttempts",
+      "duration",
+      "QTI_CONTEXT",
+    ]);
+    if (reservedOutcomeIdentifiers.has(outcomeIdentifier.trim())) {
+      diagnostics.push(
+        writerDiagnostic(
+          "invalid_feedback_outcome",
+          "feedback.outcomeIdentifier",
+          "Feedback outcome identifier conflicts with an existing or built-in variable.",
+          outcomeIdentifier,
+        ),
+      );
+    }
+    diagnostics.push(
+      ...duplicateDiagnostics(
+        feedback.entries.map((entry) => entry.choiceIdentifier),
+        "feedback.entries.choiceIdentifier",
+        "Feedback choice identifier",
+      ),
+      ...duplicateDiagnostics(
+        feedback.entries.map((entry) => entry.identifier),
+        "feedback.entries.identifier",
+        "Modal feedback identifier",
+      ),
+    );
+    for (const [index, entry] of feedback.entries.entries()) {
+      const choiceIdentifierDiagnostic = validateQtiIdentifier(
+        `feedback.entries.${index}.choiceIdentifier`,
+        "Feedback choice identifier",
+        entry.choiceIdentifier,
+      );
+      if (choiceIdentifierDiagnostic) diagnostics.push(choiceIdentifierDiagnostic);
+      else if (!choiceIdentifiers.has(entry.choiceIdentifier.trim())) {
+        diagnostics.push(
+          writerDiagnostic(
+            "unknown_choice_reference",
+            `feedback.entries.${index}.choiceIdentifier`,
+            `Modal feedback references unknown choice "${entry.choiceIdentifier}".`,
+            entry.choiceIdentifier,
+          ),
+        );
+      }
+      const feedbackIdentifierDiagnostic = validateQtiIdentifier(
+        `feedback.entries.${index}.identifier`,
+        "Modal feedback identifier",
+        entry.identifier,
+      );
+      if (feedbackIdentifierDiagnostic) diagnostics.push(feedbackIdentifierDiagnostic);
+      const hasText = Boolean(entry.text?.trim());
+      const hasContentHtml = Boolean(entry.contentHtml?.trim());
+      if (hasText === hasContentHtml) {
+        diagnostics.push(
+          writerDiagnostic(
+            "invalid_feedback_content",
+            `feedback.entries.${index}`,
+            "Modal feedback requires exactly one nonblank text or contentHtml source.",
+          ),
+        );
+      }
     }
   }
   return diagnostics;

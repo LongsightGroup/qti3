@@ -94,6 +94,21 @@ export interface Qti3AuthoringChoice {
   readonly fixed?: boolean | undefined;
 }
 
+/** Maps one selected choice to one modal feedback identifier. */
+export interface Qti3ChoiceFeedbackEntry {
+  readonly choiceIdentifier: string;
+  readonly identifier: string;
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+}
+
+/** Modal feedback authored for a single-response choice item. */
+export interface Qti3ChoiceFeedback {
+  /** Defaults to "FEEDBACK" when omitted. */
+  readonly outcomeIdentifier?: string | undefined;
+  readonly entries: readonly Qti3ChoiceFeedbackEntry[];
+}
+
 export interface Qti3ChoiceAuthoringItem extends Qti3AuthoringItemBase {
   readonly interactionType: "choice";
   readonly responseCardinality: "single" | "multiple";
@@ -103,6 +118,7 @@ export interface Qti3ChoiceAuthoringItem extends Qti3AuthoringItemBase {
   readonly minChoices?: number | undefined;
   readonly maxChoices?: number | undefined;
   readonly scoring?: Qti3ResponseProcessingTemplate | undefined;
+  readonly feedback?: Qti3ChoiceFeedback | undefined;
   readonly choiceVisibility?: "visible" | "hide" | undefined;
   readonly classNames?: readonly string[] | undefined;
 }

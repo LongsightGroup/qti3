@@ -1,9 +1,10 @@
 import type {
+  Qti3ChoiceFeedbackEntry,
   Qti3PointResponseProcessingTemplate,
   Qti3ResponseProcessingTemplate,
   Qti3TrustedXmlFragment,
 } from "./types.js";
-import { indentXml, escapeXmlAttribute } from "./xml.js";
+import { indentXml, escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 const RESPONSE_PROCESSING_TEMPLATE_URIS = {
   match_correct: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct",
@@ -55,6 +56,60 @@ export function matchCorrectProcessingXml(responseIdentifier: string): string {
         </qti-set-outcome-value>
       </qti-response-if>
     </qti-response-condition>
+  </qti-response-processing>`;
+}
+
+/** Scores a single choice and selects its mapped modal feedback. */
+export function choiceFeedbackProcessingXml(
+  responseIdentifier: string,
+  scoring: Qti3ResponseProcessingTemplate,
+  outcomeIdentifier: string,
+  entries: readonly Qti3ChoiceFeedbackEntry[],
+): string {
+  const response = escapeXmlAttribute(responseIdentifier);
+  const outcome = escapeXmlAttribute(outcomeIdentifier);
+  const scoreXml =
+    scoring === "map_response"
+      ? `    <qti-set-outcome-value identifier="SCORE">
+      <qti-map-response identifier="${response}"/>
+    </qti-set-outcome-value>`
+      : `    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="${response}"/>
+          <qti-correct identifier="${response}"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-base-value base-type="float">1</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-if>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-base-value base-type="float">0</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-else>
+    </qti-response-condition>`;
+  const feedbackConditions = entries
+    .map(
+      (entry) => `    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="${response}"/>
+          <qti-base-value base-type="identifier">${escapeXmlText(entry.choiceIdentifier.trim())}</qti-base-value>
+        </qti-match>
+        <qti-set-outcome-value identifier="${outcome}">
+          <qti-base-value base-type="identifier">${escapeXmlText(entry.identifier.trim())}</qti-base-value>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>`,
+    )
+    .join("\n");
+  return `  <qti-response-processing>
+${scoreXml}
+    <qti-set-outcome-value identifier="${outcome}">
+      <qti-null/>
+    </qti-set-outcome-value>
+${feedbackConditions}
   </qti-response-processing>`;
 }
 

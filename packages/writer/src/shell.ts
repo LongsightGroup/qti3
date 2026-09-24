@@ -6,6 +6,8 @@ export interface AssessmentItemShellInput extends Qti3AuthoringItemBase {
   readonly declarationsXml: string;
   readonly bodyXml: string;
   readonly responseProcessingXml: string;
+  readonly outcomeDeclarationsXml?: string | undefined;
+  readonly modalFeedbackXml?: string | undefined;
   readonly companionMaterialsXml?: string | undefined;
   readonly scoreDefaultZero?: boolean | undefined;
 }
@@ -33,11 +35,13 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     `  identifier="${identifier}" title="${title}" time-dependent="false" xml:lang="${lang}">`,
     input.declarationsXml,
     outcomeDeclarationXml,
+    input.outcomeDeclarationsXml,
     input.companionMaterialsXml,
     `  <qti-item-body>`,
     input.bodyXml,
     `  </qti-item-body>`,
     input.responseProcessingXml,
+    input.modalFeedbackXml,
     `</qti-assessment-item>`,
   ]);
 }
