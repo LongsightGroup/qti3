@@ -118,7 +118,10 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
   it("runs the canonical conformance fixture suite", async () => {
     const { code, output } = await runCli(["run-fixtures"]);
     expect(code).toBe(0);
-    expect(JSON.parse(lastStdout(output))).toMatchObject({ checked: 31, failed: 0 });
+    expect(JSON.parse(lastStdout(output))).toMatchObject({
+      checked: canonicalFixtures.length,
+      failed: 0,
+    });
   });
 
   it("verifies a scoped validator report and rejects a missing provenance argument", async () => {

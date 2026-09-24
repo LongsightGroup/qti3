@@ -9,6 +9,7 @@ import {
   interactionFixtures,
   processingFixtures,
 } from "./index.js";
+import { modalFeedbackFixtures } from "./modal-feedback.fixture.js";
 import {
   formatRandomIntegerTemplatePrompt,
   RANDOM_INTEGER_TEMPLATE_REFERENCE_ID,
@@ -31,6 +32,8 @@ describe("@longsightgroup/qti3-fixtures", () => {
       "random-integer-template-reference",
       "template-content-reference",
       "advanced-processing-reference",
+      "rich-modal-feedback-reference",
+      "multiple-choice-modal-feedback-reference",
     ]);
     expect(adaptiveFixtures.map((fixture) => fixture.id)).toEqual(["adaptive-feedback-reference"]);
     expect(catalogFixtures.map((fixture) => fixture.id)).toEqual([
@@ -118,50 +121,51 @@ describe("@longsightgroup/qti3-fixtures", () => {
     expect(fixture?.xml).not.toContain('orientation="vertical"');
   });
 
-  it.each([...basicItemPlayerFixtures, ...basicItemPlayerToleranceFixtures])(
-    "parses, validates, scores, and serializes Basic item-player fixture $id",
-    (fixture) => {
-      const parsed = parseQtiXml(fixture.xml);
-      expect(parsed.ok).toBe(true);
-      expect(parsed.document).toBeDefined();
-      if (!parsed.document) return;
+  it.each([
+    ...basicItemPlayerFixtures,
+    ...basicItemPlayerToleranceFixtures,
+    ...modalFeedbackFixtures,
+  ])("parses, validates, scores, and serializes fixture $id", (fixture) => {
+    const parsed = parseQtiXml(fixture.xml);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.document).toBeDefined();
+    if (!parsed.document) return;
 
-      const validation = validateAssessmentItem(parsed.document);
-      expect(
-        validation.diagnostics.filter((diagnostic) => diagnostic.severity === "error"),
-      ).toEqual([]);
+    const validation = validateAssessmentItem(parsed.document);
+    expect(validation.diagnostics.filter((diagnostic) => diagnostic.severity === "error")).toEqual(
+      [],
+    );
 
-      for (const attempt of fixture.attempts) {
-        const session = createItemSession(
-          parsed.document,
-          undefined,
-          attempt.randomSeed === undefined ? {} : { randomSeed: attempt.randomSeed },
-        );
-        for (const [identifier, value] of Object.entries(attempt.responses)) {
-          session.respond(identifier, value);
-        }
-
-        const scored = session.score();
-        expect(scored.diagnostics.filter((diagnostic) => diagnostic.severity === "error")).toEqual(
-          [],
-        );
-        for (const [identifier, expected] of Object.entries(attempt.expectedOutcomes)) {
-          expect(scored.outcomes[identifier]).toEqual(expected);
-        }
-        const state = scored.state;
-        expect(state.schema).toBe("qti3.attempt-state.v1");
-        expect(state.itemIdentifier).toBe(fixture.id);
-        for (const [identifier, expected] of Object.entries(attempt.expectedResponses ?? {})) {
-          expect(state.responses[identifier]).toEqual(expected);
-        }
-        for (const [identifier, expected] of Object.entries(
-          attempt.expectedState?.templateValues ?? {},
-        )) {
-          expect(state.templateValues?.[identifier]).toEqual(expected);
-        }
+    for (const attempt of fixture.attempts) {
+      const session = createItemSession(
+        parsed.document,
+        undefined,
+        attempt.randomSeed === undefined ? {} : { randomSeed: attempt.randomSeed },
+      );
+      for (const [identifier, value] of Object.entries(attempt.responses)) {
+        session.respond(identifier, value);
       }
-    },
-  );
+
+      const scored = session.score();
+      expect(scored.diagnostics.filter((diagnostic) => diagnostic.severity === "error")).toEqual(
+        [],
+      );
+      for (const [identifier, expected] of Object.entries(attempt.expectedOutcomes)) {
+        expect(scored.outcomes[identifier]).toEqual(expected);
+      }
+      const state = scored.state;
+      expect(state.schema).toBe("qti3.attempt-state.v1");
+      expect(state.itemIdentifier).toBe(fixture.id);
+      for (const [identifier, expected] of Object.entries(attempt.expectedResponses ?? {})) {
+        expect(state.responses[identifier]).toEqual(expected);
+      }
+      for (const [identifier, expected] of Object.entries(
+        attempt.expectedState?.templateValues ?? {},
+      )) {
+        expect(state.templateValues?.[identifier]).toEqual(expected);
+      }
+    }
+  });
 
   it("restores the random-integer template fixture from serialized template values", () => {
     const fixture = processingFixtures.find(

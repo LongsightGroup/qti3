@@ -41,3 +41,18 @@ conformance tests that need real files instead of in-memory fixture objects.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3
+
+## Modal feedback examples
+
+Both examples appear under **Processing** in the reference app's fixture selector.
+Select an answer, then score the item to display its feedback.
+
+- `rich-modal-feedback-reference`: choose **The Sun** to see a titled explanation,
+  bold text, and the current score through a printed variable. Choose **The Moon**
+  for the incorrect-answer explanation.
+- `multiple-choice-modal-feedback-reference`: select any combination of **The Sun**,
+  **A lit candle**, and **The Moon**. Each selected answer displays its own explanation.
+  The Sun and candle each earn one point; the Moon earns zero. This example uses
+  `map_response` scoring and the custom response identifier `LIGHT_SOURCES`.
+
+Their standalone XML files are published in `xml/` alongside the other reference items.

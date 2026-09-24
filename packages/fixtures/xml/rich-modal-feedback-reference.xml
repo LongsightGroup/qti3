@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0
+    https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd"
+  identifier="rich-modal-feedback-reference" title="Rich modal feedback with an explanation title" time-dependent="false" xml:lang="en-US">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>A</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" shuffle="false">
+      <qti-prompt>Which object produces its own visible light?</qti-prompt>
+      <qti-simple-choice identifier="A">The Sun</qti-simple-choice>
+      <qti-simple-choice identifier="B">The Moon</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-response-processing>
+  <qti-response-condition><qti-response-if><qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value><qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">RIGHT</qti-base-value></qti-set-outcome-value></qti-response-if><qti-response-else><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value><qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">WRONG</qti-base-value></qti-set-outcome-value></qti-response-else></qti-response-condition>
+  </qti-response-processing>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="RIGHT" show-hide="show" title="Why the Sun shines"><qti-content-body><p>The Sun produces <strong>its own light</strong>. The Moon reflects sunlight.</p><p>Your score: <qti-printed-variable identifier="SCORE"/>.</p></qti-content-body></qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="WRONG" show-hide="show" title="Try again">The Moon reflects light. Look for the object that produces light.</qti-modal-feedback>
+</qti-assessment-item>

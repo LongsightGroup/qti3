@@ -223,3 +223,38 @@ test.describe("player feedback", () => {
     );
   });
 });
+
+test("loads the rich modal feedback reference from the fixture selector", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#fixture").selectOption("rich-modal-feedback-reference");
+  await page.locator("#load-fixture").click();
+  await page.getByRole("radio", { name: "A. The Sun", exact: true }).check();
+  await page.locator("#debug-score").click();
+  const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+  await expect(feedback.getByRole("group", { name: "Why the Sun shines" })).toBeVisible();
+  await expect(feedback.locator("strong")).toHaveText("its own light");
+  await expect(feedback.locator(".qti3-printed-variable")).toHaveText("1");
+  await page.getByRole("radio", { name: "B. The Moon", exact: true }).check();
+  await page.locator("#debug-score").click();
+  await expect(feedback.getByRole("group", { name: "Try again" })).toBeVisible();
+  await expect(feedback).not.toContainText("Why the Sun shines");
+});
+
+test("loads multiple-choice modal feedback and updates selected explanations", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("#fixture").selectOption("multiple-choice-modal-feedback-reference");
+  await page.locator("#load-fixture").click();
+  await page.getByRole("checkbox", { name: "A. The Sun", exact: true }).check();
+  await page.getByRole("checkbox", { name: "B. A lit candle", exact: true }).check();
+  await page.locator("#debug-score").click();
+  const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+  await expect(feedback).toContainText("nuclear fusion");
+  await expect(feedback).toContainText("combustion");
+  await expect(feedback).not.toContainText("reflects sunlight");
+  await page.getByRole("checkbox", { name: "B. A lit candle", exact: true }).uncheck();
+  await page.getByRole("checkbox", { name: "C. The Moon", exact: true }).check();
+  await page.locator("#debug-score").click();
+  await expect(feedback).toContainText("nuclear fusion");
+  await expect(feedback).toContainText("reflects sunlight");
+  await expect(feedback).not.toContainText("combustion");
+});
