@@ -13,6 +13,7 @@ import {
 import { resolvePackageAssetUrl } from "./package-assets.js";
 import { readBrowserPackageZip } from "./browser-package.js";
 import { importLibraryItems, type LibraryPackage } from "./item-import.js";
+import { renderItemSummary } from "./item-summary.js";
 import { deletePackage, listPackages, readPackage, savePackage } from "./store.js";
 
 defineQtiAssessmentItemPlayer();
@@ -24,7 +25,7 @@ const status = requireElement("#library-status", HTMLParagraphElement);
 const diagnostics = requireElement("#library-diagnostics", HTMLPreElement);
 const diagnosticsPanel = requireElement("#library-diagnostics-panel", HTMLDetailsElement);
 const source = requireElement("#item-source", HTMLPreElement);
-const model = requireElement("#item-model", HTMLPreElement);
+const itemSummary = requireElement("#item-summary", HTMLElement);
 const questionTitle = requireElement("#question-title", HTMLHeadingElement);
 const submitButton = requireElement("#submit-response", HTMLButtonElement);
 const resetButton = requireElement("#reset-attempt", HTMLButtonElement);
@@ -165,8 +166,7 @@ async function renderItem(): Promise<void> {
   messages = current.package.diagnostics;
   showDiagnostics();
   source.textContent = item.xml;
-  model.textContent = JSON.stringify(item.document.item, null, 2);
-  model.scrollTop = 0;
+  renderItemSummary(itemSummary, item.document.item, item.assetHrefs);
   questionTitle.textContent = item.title ?? "Question";
   resetPlayer();
   player.addEventListener("qti-diagnostics", (event) => {
@@ -281,7 +281,7 @@ function clearQuestion(): void {
   releaseAssets();
   items.replaceChildren(new Option("Select a question", ""));
   source.textContent = "Select a saved package to inspect its source.";
-  model.textContent = "Select a saved package to inspect its parsed item.";
+  itemSummary.textContent = "Select a saved package to inspect its imported QTI.";
   messages = [];
   showDiagnostics();
 }

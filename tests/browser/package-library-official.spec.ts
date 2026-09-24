@@ -56,12 +56,30 @@ if (externalDir) {
         await expect(status).toContainText(`Rejected ${invalidItems.length} question`);
         await expect(page.locator("#library-diagnostics")).toBeVisible();
       }
+      await page.getByText("Imported QTI", { exact: true }).click();
       for (const [index, item] of accepted.entries()) {
         await page.getByLabel("Question", { exact: true }).selectOption(String(index));
         expect(await page.locator("#item-source").textContent()).toBe(item.xml);
-        expect(await page.locator("#item-model").textContent()).toBe(
-          JSON.stringify(item.document?.item, null, 2),
-        );
+        const summary = page.getByRole("region", { name: "Imported QTI data" });
+        await expect(
+          summary
+            .getByRole("table", { name: "Item", exact: true })
+            .getByRole("row")
+            .filter({ has: page.getByRole("cell", { name: "identifier", exact: true }) })
+            .getByRole("cell")
+            .nth(1),
+        ).toHaveText(item.document?.item.identifier ?? "");
+        for (const [interactionIndex, interaction] of (
+          item.document?.item.interactions ?? []
+        ).entries()) {
+          const imported = summary.getByRole("table", {
+            name: `Interaction ${interactionIndex + 1}`,
+            exact: true,
+          });
+          await expect(imported).toContainText(interaction.qtiName);
+          if (interaction.attributes.class)
+            await expect(imported).toContainText(interaction.attributes.class);
+        }
         await expect(page.locator("#question-title")).toHaveText(item.title ?? "Question");
         await expect(
           page.getByRole("button", { name: "Submit response", exact: true }),

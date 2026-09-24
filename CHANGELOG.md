@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Show the parsed item as JSON in the saved-package library so imported attributes, declarations,
-  and processing rules can be inspected alongside the original XML after saving and reopening.
+- Show compact imported QTI tables in the saved-package library, including attributes,
+  declarations, mappings, interactions, and processing. Omit parser bookkeeping and duplicate
+  content trees while keeping the original XML available after saving and reopening.
 - Support `qti-input-width-5` for certification compatibility, without an unsupported-width
   warning or a five-character response limit.
 

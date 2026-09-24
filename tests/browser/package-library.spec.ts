@@ -292,33 +292,31 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
     "Reopened 2 questions from the database.",
   );
-  await page.getByText("Parsed item (JSON)", { exact: true }).click();
-  const importedModel = await page.getByRole("region", { name: "Parsed item (JSON)" }).innerText();
-  expect(JSON.parse(importedModel)).toMatchObject({
-    identifier: "saved-choice",
-    title: "Saved choice",
-    timeDependent: false,
-    attributes: { "time-dependent": "false" },
-    responseDeclarations: [
-      {
-        identifier: "RESPONSE",
-        cardinality: "single",
-        baseType: "identifier",
-        correctResponse: "A",
-      },
-    ],
-    outcomeDeclarations: [{ identifier: "SCORE", baseType: "float", defaultValue: 0 }],
-    templateDeclarations: [
-      { identifier: "HIDDEN_METADATA", defaultValue: "Preserve this invisible value." },
-    ],
-    interactions: [{ responseIdentifier: "RESPONSE", attributes: { "max-choices": "1" } }],
-    responseProcessing: {
-      template: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct",
-    },
-  });
-  expect(JSON.parse(importedModel)).toEqual(
-    JSON.parse(JSON.stringify(original.items[0]?.document?.item)),
-  );
+  await page.getByText("Imported QTI", { exact: true }).click();
+  const importedDetails = page.getByRole("region", { name: "Imported QTI data" });
+  await expect(
+    importedDetails.getByRole("table", { name: "Responses", exact: true }).getByRole("cell"),
+  ).toHaveText(["RESPONSE", "single / identifier", "NULL", '"A"']);
+  await expect(
+    importedDetails.getByRole("table", { name: "Outcomes", exact: true }).getByRole("cell"),
+  ).toHaveText(["SCORE", "single / float", "0"]);
+  await expect(
+    importedDetails.getByRole("table", { name: "Template declarations", exact: true }),
+  ).toContainText("Preserve this invisible value.");
+  await expect(
+    importedDetails
+      .getByRole("table", { name: "Item", exact: true })
+      .getByRole("row")
+      .filter({ hasText: "time-dependent" }),
+  ).toHaveText("time-dependentfalse");
+  await expect(
+    importedDetails.getByRole("table", { name: "Interaction 1", exact: true }),
+  ).toContainText("max-choices");
+  await expect(
+    importedDetails.getByRole("table", { name: "Response processing", exact: true }),
+  ).toContainText("https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct");
+  const importedSummary = await importedDetails.innerText();
+  expect(importedSummary).not.toMatch(/registryStatus|sourceChildren|bodyText|"offset"/);
   const id = await page.getByLabel("Saved package", { exact: true }).inputValue();
   await page.close();
   const reopened = await context.newPage();
@@ -360,9 +358,9 @@ test("a fresh page restores every byte, full item models, images, styles, and re
     "Opened preservation.zip from the database. 2 questions.",
   );
   await expect(reopened.locator("#package-items option")).toHaveCount(2);
-  await reopened.getByText("Parsed item (JSON)", { exact: true }).click();
-  const displayedModel = reopened.getByRole("region", { name: "Parsed item (JSON)" });
-  expect(await displayedModel.innerText()).toBe(importedModel);
+  await reopened.getByText("Imported QTI", { exact: true }).click();
+  const displayedSummary = reopened.getByRole("region", { name: "Imported QTI data" });
+  expect(await displayedSummary.innerText()).toBe(importedSummary);
   await expect(
     reopened.getByRole("heading", { level: 2, name: "Saved choice", exact: true }),
   ).toBeVisible();
@@ -393,9 +391,15 @@ test("a fresh page restores every byte, full item models, images, styles, and re
   await expect(reopened.locator("#item-source")).toHaveText(illustrated);
   await reopened.getByLabel("Question", { exact: true }).selectOption("1");
   await expect(reopened.locator("#item-source")).toHaveText(second);
-  expect(JSON.parse(await displayedModel.innerText())).toEqual(
-    JSON.parse(JSON.stringify(original.items[1]?.document?.item)),
+  await expect(displayedSummary.getByRole("table", { name: "Item", exact: true })).toContainText(
+    "second-choice",
   );
+  await expect(
+    displayedSummary.getByRole("table", { name: "Template declarations", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    displayedSummary.getByRole("table", { name: "Stylesheets", exact: true }),
+  ).toHaveCount(0);
   await expect(
     reopened.getByRole("heading", { level: 2, name: "Second choice", exact: true }),
   ).toBeVisible();
@@ -409,7 +413,7 @@ test("a fresh page restores every byte, full item models, images, styles, and re
     reopened.getByRole("heading", { level: 2, name: "Question", exact: true }),
   ).toBeVisible();
   await expect(reopened.getByLabel("Import package", { exact: true })).toBeFocused();
-  await expect(displayedModel).toHaveText("Select a saved package to inspect its parsed item.");
+  await expect(displayedSummary).toHaveText("Select a saved package to inspect its imported QTI.");
   await reopened.reload();
   await expect(reopened.getByRole("status", { name: "Package library status" })).toHaveText(
     "No saved packages. Import a QTI ZIP to begin.",
@@ -532,15 +536,12 @@ test("keyboard import, reopen, model and source inspection and delete expose acc
   await expect(page.getByRole("status", { name: "Package library status" })).toContainText(
     "Opened keyboard.zip from the database.",
   );
-  const modelSummary = page.getByText("Parsed item (JSON)", { exact: true });
+  const modelSummary = page.getByText("Imported QTI", { exact: true });
   await modelSummary.focus();
   await modelSummary.press("Enter");
-  const model = page.getByRole("region", { name: "Parsed item (JSON)" });
-  await expect(model).toBeVisible();
-  await modelSummary.press("Tab");
-  await expect(model).toBeFocused();
-  await model.press("End");
-  await expect.poll(() => model.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const summary = page.getByRole("region", { name: "Imported QTI data" });
+  await expect(summary.getByRole("table", { name: "Responses", exact: true })).toBeVisible();
+  await expect(page.getByText("Parsed item (JSON)", { exact: true })).toHaveCount(0);
   const sourceSummary = page.getByText("Original question XML", { exact: true });
   await sourceSummary.focus();
   await sourceSummary.press("Enter");

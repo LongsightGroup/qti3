@@ -451,10 +451,12 @@ alongside diagnostics for their deliberately invalid items. ZIP, manifest, refer
 errors still block the whole import, as does a package with no valid questions.
 The page immediately reads the saved record back through the core importer. Close the page,
 reopen it, and choose **Saved package** and **Question** to inspect the questions, original
-XML, parsed item objects, and diagnostics without uploading again. **Parsed item (JSON)** shows
-the actual item model returned by the importer, including attributes, declarations, correct
-responses, mappings, interactions, and processing rules. Compare it with **Original question XML**
-to inspect preserved values. The database stores the original files; the importer rebuilds the
+XML, imported QTI data, and diagnostics without uploading again. **Imported QTI** presents compact
+tables of item attributes, declarations, correct responses, mappings, interactions, and processing.
+Optional features appear when present, and custom response rules can be expanded as QTI XML.
+The view omits parser bookkeeping and duplicate content trees; there is no full JSON dump.
+Compare it with **Original question XML** to inspect preserved values. NULL declaration values
+remain distinct from runtime scores. The database stores the original files; the importer rebuilds the
 model from those files each time the package is opened. **Delete package** removes that saved record.
 Reopening validates the saved files again and applies the same item acceptance policy. A saved
 package with blocking errors is not opened; its record remains available for deletion.

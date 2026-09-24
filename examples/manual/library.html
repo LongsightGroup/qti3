@@ -107,6 +107,29 @@
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
+      #item-summary {
+        overflow-wrap: anywhere;
+      }
+      #item-summary table {
+        inline-size: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin-block: 1.25rem;
+        font-size: 0.875rem;
+      }
+      #item-summary caption {
+        text-align: start;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-block-end: 0.25rem;
+      }
+      #item-summary th,
+      #item-summary td {
+        padding: 0.35rem;
+        border-block-end: 1px solid #cfd3d7;
+        text-align: start;
+        vertical-align: top;
+      }
       @media (max-width: 48rem) {
         .library {
           grid-template-columns: 1fr;
@@ -178,14 +201,14 @@
             <pre id="attempt-values">No submission yet.</pre>
           </details>
           <details>
-            <summary id="item-model-label">Parsed item (JSON)</summary>
+            <summary>Imported QTI</summary>
             <p>
-              Parsed from the saved package, with attributes, declarations, interactions, and
-              processing rules. Reopening the package rebuilds this object from the stored files.
+              Parsed from the saved package. NULL means no value; responses and scores from the
+              current attempt are shown above.
             </p>
-            <pre id="item-model" tabindex="0" role="region" aria-labelledby="item-model-label">
-Select a saved package to inspect its parsed item.</pre
-            >
+            <section id="item-summary" aria-label="Imported QTI data">
+              Select a saved package to inspect its imported QTI.
+            </section>
           </details>
           <details>
             <summary>Original question XML</summary>
