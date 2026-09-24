@@ -157,7 +157,21 @@ function parseAssessmentItem(node: XmlNode, diagnostics: QtiDiagnostic[]): QtiAs
       ),
     );
   }
-  const modalFeedback = childElements(node, "qti-modal-feedback").map(parseModalFeedback);
+  const modalFeedback = childElements(node, "qti-modal-feedback").map((feedbackNode) => {
+    for (const interaction of descendants(feedbackNode, isInteractionElement)) {
+      diagnostics.push({
+        code: "feedback.interaction.forbidden",
+        severity: "error",
+        message: "qti-modal-feedback must not contain interactions.",
+        path: interaction.source.path,
+        source: interaction.source,
+      });
+    }
+    return parseModalFeedback(
+      feedbackNode,
+      parseContentChildren(feedbackNode, diagnostics, responseDeclarationMap, []),
+    );
+  });
   const catalogInfoNode = firstChildElement(
     node,
     "qti-catalog-info",

@@ -497,7 +497,10 @@ export interface QtiModalFeedback {
   identifier: string;
   outcomeIdentifier: string;
   showHide: "show" | "hide";
+  title?: string | undefined;
   text: string;
+  /** Parsed QTI content retained for safe rich rendering. */
+  content?: QtiContentNode[] | undefined;
   source?: QtiSourceLocation | undefined;
 }
 

@@ -441,6 +441,27 @@ describe("response processing", () => {
     );
   });
 
+  it("rejects modal feedback with an incompatible controlling outcome or interaction content", () => {
+    const result = parseQtiXml(`
+      <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-type" title="feedback-type" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="string"/>
+        <qti-item-body><p>Question.</p></qti-item-body>
+        <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="shown" show-hide="show">
+          <qti-choice-interaction response-identifier="RESPONSE"><qti-simple-choice identifier="A">A</qti-simple-choice></qti-choice-interaction>
+        </qti-modal-feedback>
+      </qti-assessment-item>
+    `);
+
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "feedback.outcomeIdentifier.type" }),
+    );
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "feedback.interaction.forbidden" }),
+    );
+  });
+
   it("honors response-processing fragments and exit-response rules", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="exit-response" title="exit-response" time-dependent="false">

@@ -888,6 +888,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       this.querySelector<HTMLElement>(".qti3-feedback"),
       loadedItem.document.item,
       outcomes,
+      this.contentContext(),
     );
   }
 }

@@ -1,8 +1,56 @@
 import { expect, test } from "@playwright/test";
-import { buildQti3ChoiceItem } from "../../packages/writer/src/index.js";
+import { buildQti3ChoiceItem, qti3TrustedXmlFragment } from "../../packages/writer/src/index.js";
 import { pasteXml } from "./player-helpers.js";
 
 test.describe("player feedback", () => {
+  test("renders rich item-level modal feedback with safe QTI content", async ({ page }) => {
+    const xml = buildQti3ChoiceItem({
+      identifier: "rich-modal-feedback",
+      title: "Rich modal feedback",
+      responseCardinality: "single",
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+      ],
+      correctResponse: ["A"],
+      modalFeedback: {
+        outcomes: [{ identifier: "FEEDBACK", cardinality: "single" }],
+        entries: [
+          {
+            outcomeIdentifier: "FEEDBACK",
+            identifier: "RIGHT",
+            contentHtml: qti3TrustedXmlFragment(
+              '<qti-content-body><p>Correct <strong>answer</strong>. Score: <qti-printed-variable identifier="SCORE"/></p></qti-content-body>',
+            ),
+          },
+          { outcomeIdentifier: "FEEDBACK", identifier: "WRONG", text: "Try again." },
+        ],
+        responseProcessingXml: qti3TrustedXmlFragment(`
+          <qti-response-condition>
+            <qti-response-if>
+              <qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>
+              <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">RIGHT</qti-base-value></qti-set-outcome-value>
+            </qti-response-if>
+            <qti-response-else>
+              <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
+              <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">WRONG</qti-base-value></qti-set-outcome-value>
+            </qti-response-else>
+          </qti-response-condition>`),
+      },
+    });
+    await page.goto("/");
+    await pasteXml(page, xml);
+    await page.getByRole("radio", { name: "A. Alpha" }).check();
+    await page.locator("#debug-score").click();
+
+    const feedback = page.locator("qti-assessment-item-player .qti3-feedback");
+    await expect(feedback.locator("strong")).toHaveText("answer");
+    await expect(feedback).toContainText("Correct answer.");
+    await expect(feedback.locator(".qti3-printed-variable")).toHaveText("1");
+    await expect(feedback).not.toContainText("Try again.");
+  });
+
   test("shows every selected choice's modal feedback from writer XML", async ({ page }) => {
     const xml = buildQti3ChoiceItem({
       identifier: "multiple-choice-feedback",

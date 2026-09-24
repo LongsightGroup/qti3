@@ -278,6 +278,15 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
     }
   }
   if (input.feedback !== undefined) {
+    if (input.modalFeedback !== undefined) {
+      diagnostics.push(
+        writerDiagnostic(
+          "conflicting_feedback_models",
+          "modalFeedback",
+          "Use either choice feedback or item-level modalFeedback on one item.",
+        ),
+      );
+    }
     const feedback = input.feedback;
     const outcomeIdentifier = feedback.outcomeIdentifier ?? "FEEDBACK";
     if (feedback.entries.length === 0) {

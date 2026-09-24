@@ -85,6 +85,30 @@ export interface Qti3AuthoringItemBase {
   /** Interaction-specific writers default this to "RESPONSE" when omitted. */
   readonly responseIdentifier?: string | undefined;
   readonly sharedVocabulary?: QtiSharedVocabularyState | undefined;
+  /** Item-level QTI modal feedback, available with every interaction type. */
+  readonly modalFeedback?: Qti3ModalFeedback | undefined;
+}
+
+export interface Qti3ModalFeedbackOutcome {
+  readonly identifier: string;
+  readonly cardinality: "single" | "multiple";
+  readonly defaultValues?: readonly string[] | undefined;
+}
+
+export interface Qti3ModalFeedbackEntry {
+  readonly outcomeIdentifier: string;
+  readonly identifier: string;
+  readonly showHide?: "show" | "hide" | undefined;
+  readonly title?: string | undefined;
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+}
+
+export interface Qti3ModalFeedback {
+  readonly outcomes: readonly Qti3ModalFeedbackOutcome[];
+  readonly entries: readonly Qti3ModalFeedbackEntry[];
+  /** Trusted QTI response processing rules that replace the interaction's default scoring rules. */
+  readonly responseProcessingXml?: Qti3TrustedXmlFragment | undefined;
 }
 
 export interface Qti3AuthoringChoice {

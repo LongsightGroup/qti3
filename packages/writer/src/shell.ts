@@ -1,5 +1,7 @@
 import type { Qti3AuthoringItemBase } from "./types.js";
 import { assertQtiIdentifier } from "./identifier.js";
+import { modalFeedbackEntriesXml, modalFeedbackOutcomeXml } from "./modal-feedback.js";
+import { trustedResponseProcessingXml } from "./response-processing.js";
 import { escapeXmlAttribute, xmlLines } from "./xml.js";
 
 export interface AssessmentItemShellInput extends Qti3AuthoringItemBase {
@@ -25,6 +27,7 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     </qti-default-value>
   </qti-outcome-declaration>`
     : `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>`;
+  const itemLevelFeedback = input.modalFeedback;
   return xmlLines([
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<qti-assessment-item`,
@@ -36,12 +39,16 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     input.declarationsXml,
     outcomeDeclarationXml,
     input.outcomeDeclarationsXml,
+    itemLevelFeedback && modalFeedbackOutcomeXml(itemLevelFeedback),
     input.companionMaterialsXml,
     `  <qti-item-body>`,
     input.bodyXml,
     `  </qti-item-body>`,
-    input.responseProcessingXml,
+    itemLevelFeedback?.responseProcessingXml
+      ? trustedResponseProcessingXml(itemLevelFeedback.responseProcessingXml)
+      : input.responseProcessingXml,
     input.modalFeedbackXml,
+    itemLevelFeedback && modalFeedbackEntriesXml(itemLevelFeedback),
     `</qti-assessment-item>`,
   ]);
 }

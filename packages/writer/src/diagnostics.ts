@@ -1,4 +1,5 @@
 import { isQtiIdentifier } from "./identifier.js";
+import { validateModalFeedback } from "./modal-feedback.js";
 import type { Qti3AuthoringItemBase, Qti3WriterDiagnostic, Qti3WriterResult } from "./types.js";
 import { Qti3WriterError } from "./types.js";
 
@@ -57,6 +58,11 @@ export function validateItemBase(input: Qti3AuthoringItemBase): Qti3WriterDiagno
   if (input.lang !== undefined && !input.lang.trim()) {
     diagnostics.push(
       writerDiagnostic("missing_lang", "lang", "Language must not be empty when provided."),
+    );
+  }
+  if (input.modalFeedback !== undefined) {
+    diagnostics.push(
+      ...validateModalFeedback(input.modalFeedback, input.responseIdentifier ?? "RESPONSE"),
     );
   }
   return diagnostics;

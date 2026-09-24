@@ -70,13 +70,15 @@ export function parseCatalogReferences(
   }));
 }
 
-export function parseModalFeedback(node: XmlNode): QtiModalFeedback {
+export function parseModalFeedback(node: XmlNode, content: QtiContentNode[]): QtiModalFeedback {
   const showHide = node.attributes["show-hide"] === "hide" ? "hide" : "show";
   return {
     identifier: node.attributes.identifier ?? "",
     outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
     showHide,
+    title: node.attributes.title,
     text: visibleTextContent(node),
+    content,
     source: node.source,
   };
 }

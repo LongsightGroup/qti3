@@ -68,9 +68,18 @@ Feedback works with single- and multiple-response choice items. For multiple-res
 each selected choice with an entry displays its feedback, and unselected choices display none.
 Invalid feedback configurations return typed diagnostics. Each entry needs exactly one `text` or `contentHtml` value with visible
 text; accessible image `alt` text counts. `contentHtml` is a caller-supplied trusted XML fragment.
-When rebuilding from parsed QTI, preserve rich feedback XHTML separately because
-`QtiModalFeedback` exposes flattened text only. The current player displays that flattened text
-even when the output XML contains rich XHTML.
+
+For any supported interaction, use `modalFeedback` to author item-level QTI feedback. Declare one
+or more identifier outcomes with `single` or `multiple` cardinality, then add entries referencing
+those outcomes. Entries can use `showHide: "show"` (the default) or `"hide"`, an optional title, and
+either plain text or a trusted XHTML/QTI fragment. Set `responseProcessingXml` to trusted QTI rules
+when processing must assign feedback outcomes; these rules replace that interaction's default
+scoring rules, so include any required `SCORE` assignment. The choice-specific `feedback` helper
+and generic `modalFeedback` field cannot be used together.
+
+The core parser retains both flattened text and structured feedback content. The player renders
+supported rich content, including printed variables, through its content renderer. Parsing and
+rewriting an arbitrary source item is not a byte-for-byte XML round trip.
 
 The stable application-facing API is `writeQti3AssessmentItemResult(item)`. It returns typed
 diagnostics and should be used by production authoring systems. Use
