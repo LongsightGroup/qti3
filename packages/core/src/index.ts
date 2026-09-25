@@ -304,6 +304,8 @@ export type {
   QtiAssessmentItem,
   QtiAttemptStatus,
   QtiAttemptStateV1,
+  QtiTemplateProcessingStateV1,
+  QtiPresentationStateV1,
   QtiCatalog,
   QtiCatalogCard,
   QtiCatalogCardEntry,
@@ -431,7 +433,8 @@ export {
 export {
   prepareQtiPresentation,
   isQtiPresentationStateV1,
-  type QtiPresentationStateV1,
   type QtiPresentationResult,
   type QtiPresentationInput,
 } from "./presentation.js";
+
+export { SHUFFLE_INTERACTION_TYPES } from "./presentation-definition.js";

@@ -1,3 +1,4 @@
+import { SHUFFLE_INTERACTION_TYPES } from "./presentation-definition.js";
 import type { QtiInteractionType } from "./types.js";
 
 export const coreIntegrationTest = "packages/core/src/core.test.ts";
@@ -43,7 +44,7 @@ export const interactionExtraFixtures: Partial<Record<QtiInteractionType, readon
   textEntry: ["packages/fixtures/packages/sv-matrix/items/text-entry-pattern-mask-inline.xml"],
 };
 
-export function browserTestsFor(interactionType: QtiInteractionType): string[] {
+function allInteractionTests(interactionType: QtiInteractionType): string[] {
   const base = [
     "packages/fixtures/src/fixtures.test.ts",
     "packages/conformance/src/conformance.test.ts",
@@ -64,10 +65,7 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
       "tests/browser/player-dom-behavior.spec.ts",
       "tests/browser/player-extended-text-xhtml.spec.ts",
     ],
-    gapMatch: [
-      "tests/browser/player-gap-match.spec.ts",
-      "packages/core/src/gap-target-validation.test.ts",
-    ],
+    gapMatch: ["tests/browser/player-gap-match.spec.ts"],
     graphicAssociate: ["tests/browser/player-graphic.spec.ts"],
     graphicGapMatch: [
       "packages/core/src/core-session-graphic-gap-state.test.ts",
@@ -101,12 +99,7 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
     upload: ["tests/browser/player-dom-behavior.spec.ts"],
   };
   const visibilityEvidence = [
-    "choice",
-    "order",
-    "inlineChoice",
-    "associate",
-    "match",
-    "gapMatch",
+    ...SHUFFLE_INTERACTION_TYPES,
     "hotspot",
     "hottext",
     "graphicOrder",
@@ -121,20 +114,16 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
   return [...base, ...(extras[interactionType] ?? []), ...visibilityEvidence];
 }
 
-const shuffleInteractions = new Set<QtiInteractionType>([
-  "choice",
-  "order",
-  "inlineChoice",
-  "associate",
-  "match",
-  "gapMatch",
-]);
+/** Browser evidence contains only executable Playwright suites. */
+export function browserTestsFor(interactionType: QtiInteractionType): string[] {
+  return allInteractionTests(interactionType).filter((path) => path.startsWith("tests/browser/"));
+}
 
 export function interactionSupportFixtures(interactionType: QtiInteractionType): string[] {
   return [
     `packages/fixtures/xml/${interactionType}-reference.xml`,
     ...(interactionExtraFixtures[interactionType] ?? []),
-    ...(shuffleInteractions.has(interactionType)
+    ...(SHUFFLE_INTERACTION_TYPES.includes(interactionType)
       ? [`packages/fixtures/xml/shuffle/${interactionType}.xml`]
       : []),
   ];
@@ -142,14 +131,15 @@ export function interactionSupportFixtures(interactionType: QtiInteractionType):
 
 export function interactionSupportTests(interactionType: QtiInteractionType): string[] {
   if (interactionType === "extendedText" || interactionType === "textEntry") {
-    return [...browserTestsFor(interactionType), "packages/core/src/pattern-mask.test.ts"];
+    return [...allInteractionTests(interactionType), "packages/core/src/pattern-mask.test.ts"];
   }
   if (interactionType === "media") {
-    return [...browserTestsFor(interactionType), "packages/core/src/media-definition.test.ts"];
+    return [...allInteractionTests(interactionType), "packages/core/src/media-definition.test.ts"];
   }
   return [
-    ...browserTestsFor(interactionType),
-    ...(shuffleInteractions.has(interactionType)
+    ...allInteractionTests(interactionType),
+    ...(interactionType === "gapMatch" ? ["packages/core/src/gap-target-validation.test.ts"] : []),
+    ...(SHUFFLE_INTERACTION_TYPES.includes(interactionType)
       ? [
           "packages/core/src/presentation.test.ts",
           "packages/writer/src/shuffle.test.ts",

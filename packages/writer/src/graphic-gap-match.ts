@@ -24,6 +24,7 @@ import {
 } from "./pair-declaration.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -120,14 +121,11 @@ ${choicesXml}
 ${targetsXml}
     </qti-graphic-gap-match-interaction>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
-  };
+  });
 }
 
 export function validateQti3GraphicGapMatchItemStructure(

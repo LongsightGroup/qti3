@@ -18,6 +18,7 @@ import {
 } from "./interaction-shell.js";
 import { trustedResponseProcessingXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -62,15 +63,12 @@ export function renderQti3CustomInteractionItem(
 ${promptSection}${markup}
     </qti-custom-interaction>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
     scoreDefaultZero: true,
-  };
+  });
 }
 
 export function validateQti3CustomInteractionItemStructure(

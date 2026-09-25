@@ -166,15 +166,14 @@ export function mapTextEntryItem(context: Qti2Context): Qti3AuthoringItem | unde
       attr(declaration, "cardinality") !== "single" ||
       !["string", "integer", "float"].includes(attr(declaration, "baseType") ?? "")
     ) {
-      context.blocked = [
-        ...(context.blocked ?? []),
+      (context.blocked ??= []).push(
         diagnostic(
           "qti2_text_entry_response_type_unsupported",
           "error",
           "Text-entry migration requires a single string, integer, or float response declaration.",
           { path: context.path, sourceFormat: context.sourceFormat },
         ),
-      ];
+      );
     }
     return {
       responseIdentifier,
@@ -320,15 +319,14 @@ function textEntryAnswers(
         score === undefined ||
         (caseSensitive !== null && !["true", "false", "1", "0"].includes(caseSensitive))
       ) {
-        context.blocked = [
-          ...(context.blocked ?? []),
+        (context.blocked ??= []).push(
           diagnostic(
             "qti2_text_entry_mapping_invalid",
             "error",
             "Text-entry mapping entries require a map key, finite score, and valid caseSensitive value.",
             { path: context.path, sourceFormat: context.sourceFormat },
           ),
-        ];
+        );
         continue;
       }
       answers.push({

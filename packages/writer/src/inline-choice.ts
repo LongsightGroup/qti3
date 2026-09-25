@@ -11,6 +11,7 @@ import {
 } from "./response-processing.js";
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -56,10 +57,7 @@ export function renderQti3InlineChoiceItem(
     .split("\n")
     .join("\n    ")}`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml:
@@ -70,7 +68,7 @@ export function renderQti3InlineChoiceItem(
             input.slots.length,
           ),
     scoreDefaultZero: true,
-  };
+  });
 }
 
 function responseDeclarationXml(

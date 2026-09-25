@@ -1,4 +1,3 @@
-import type { QtiPresentationStateV1 } from "./presentation.js";
 export type QtiSupportStatus =
   | "unsupported"
   | "deprecated"
@@ -753,19 +752,22 @@ export interface QtiBuiltInVariables {
   context: QtiSessionContext;
 }
 
+/** Resolved presentation orders, independent of responses and processing RNG state. */
+export interface QtiPresentationStateV1 {
+  readonly schema: "qti3.presentation.v1";
+  readonly orders: Readonly<Record<string, readonly string[]>>;
+}
+
+/** Versioned inputs needed to replay the original template-generated clone. */
+export interface QtiTemplateProcessingStateV1 {
+  readonly schema: "qti3.template-processing.v1";
+  readonly seed: string | number;
+  readonly environment: Pick<QtiBuiltInVariables, "numAttempts" | "duration" | "context">;
+}
+
 export interface QtiAttemptStateV1 {
   /** Replay metadata for the generated clone; does not contain generated answer keys. */
-  templateProcessing?:
-    | {
-        schema: "qti3.template-processing.v1";
-        seed: string | number;
-        environment: {
-          numAttempts: number;
-          duration: number | null;
-          context: QtiSessionContext;
-        };
-      }
-    | undefined;
+  templateProcessing?: QtiTemplateProcessingStateV1 | undefined;
   /** Saved choice permutations; separate from candidate responses. */
   presentation?: QtiPresentationStateV1 | undefined;
   schema: "qti3.attempt-state.v1";

@@ -6,6 +6,7 @@ import {
   writerDiagnostic,
 } from "./diagnostics.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -44,15 +45,12 @@ export function renderQti3TextEntryItem(input: Qti3TextEntryBuilderInput): Rende
     .split("\n")
     .map((line) => `    ${line}`)
     .join("\n");
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml: `${prompt}${body}`,
     responseProcessingXml: buildResponseProcessing(input.responses),
     scoreDefaultZero: true,
-  };
+  });
 }
 
 function buildResponseDeclaration(response: Qti3TextEntryResponse): string {

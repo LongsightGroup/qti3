@@ -25,6 +25,7 @@ import {
 } from "./pair-declaration.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -106,14 +107,11 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objec
 ${hotspotsXml}
     </qti-graphic-associate-interaction>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml(scoring),
-  };
+  });
 }
 
 export function validateQti3GraphicAssociateItemStructure(

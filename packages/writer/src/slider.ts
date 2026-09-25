@@ -14,6 +14,7 @@ import {
   responseProcessingTemplateXml,
 } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -76,14 +77,11 @@ ${sliderMappingXml(input, scoring)}  </qti-response-declaration>`;
     optionalBodySection(input.bodyHtml),
   );
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: sliderResponseProcessingXml(scoring, responseIdentifier),
-  };
+  });
 }
 
 export function validateQti3SliderItemStructure(

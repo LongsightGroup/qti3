@@ -1175,3 +1175,34 @@ test.describe("player lifecycle", () => {
     );
   });
 });
+
+test("rejects null and missing restored state without replacing the current attempt", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await loadFixture(page, "choice");
+  const result = await page.evaluate(async () => {
+    await customElements.whenDefined("qti-assessment-item-player");
+    const player = document.querySelector("qti-assessment-item-player");
+    if (!player) throw new Error("Expected player");
+    const before = player.serialize();
+    const diagnostics: string[] = [];
+    let restored = 0;
+    player.addEventListener("qti-diagnostics", (event) => {
+      const detail = (event as CustomEvent<{ diagnostics: { code: string }[] }>).detail;
+      diagnostics.push(...detail.diagnostics.map((entry) => entry.code));
+    });
+    player.addEventListener("qti-restore", () => {
+      restored++;
+    });
+    // Exercise the JavaScript boundary, which is not protected by TypeScript callers.
+    Reflect.apply(player.restore.bind(player), undefined, [null]);
+    Reflect.apply(player.restore.bind(player), undefined, []);
+    return { before, after: player.serialize(), diagnostics, restored };
+  });
+  expect(result.before).not.toBeNull();
+  expect(result.after?.responses).toEqual(result.before?.responses);
+  expect(result.after?.itemIdentifier).toEqual(result.before?.itemIdentifier);
+  expect(result.diagnostics).toEqual(["player.restoreState", "player.restoreState"]);
+  expect(result.restored).toBe(0);
+});

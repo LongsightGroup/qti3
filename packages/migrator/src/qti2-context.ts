@@ -18,7 +18,7 @@ export interface Qti2Context {
   readonly path: string;
   readonly options: ResolvedQtiMigrationOptions;
   readonly diagnostics: QtiMigrationDiagnostic[];
-  blocked?: readonly QtiMigrationDiagnostic[] | undefined;
+  blocked?: QtiMigrationDiagnostic[] | undefined;
 }
 
 export type Qti2ItemMapper = (context: Qti2Context) => Qti3AuthoringItem | undefined;

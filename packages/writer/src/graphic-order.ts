@@ -21,6 +21,7 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -97,14 +98,11 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(rende
 ${hotspotsXml}
     </qti-graphic-order-interaction>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  };
+  });
 }
 
 export function validateQti3GraphicOrderItemStructure(

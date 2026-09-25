@@ -15,6 +15,7 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -83,14 +84,11 @@ ${correctXml}  </qti-response-declaration>`;
   const bodyXml = `    <qti-hottext-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}${bodyContent}
     </qti-hottext-interaction>`;
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  };
+  });
 }
 
 function choiceXml(choice: Qti3HottextChoice): string {

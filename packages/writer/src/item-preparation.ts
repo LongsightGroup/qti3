@@ -13,6 +13,14 @@ export type RenderedItemSections = Omit<
   "outcomeDeclarationsXml" | "modalFeedbackXml"
 >;
 
+/** Attach item identity to the sections owned by an interaction renderer. */
+export function itemSections(
+  item: Pick<Qti3AuthoringItem, "identifier" | "title" | "lang">,
+  sections: Omit<RenderedItemSections, "identifier" | "title" | "lang">,
+): RenderedItemSections {
+  return { identifier: item.identifier, title: item.title, lang: item.lang, ...sections };
+}
+
 function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
   const responses = authoringResponseIdentifiers(item);
   const prepared = item.modalFeedback
