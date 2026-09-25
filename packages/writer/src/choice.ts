@@ -18,7 +18,6 @@ import {
 import { choiceResponseProcessingXml } from "./response-processing.js";
 import {
   buildPreparedItem,
-  writePreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
 } from "./item-preparation.js";
@@ -257,13 +256,4 @@ function choiceSelectionLimit(
   maximum: number | undefined,
 ): number | undefined {
   return maximum ?? (cardinality === "multiple" ? 0 : undefined);
-}
-
-export function writeQti3ChoiceItemResult(input: Qti3ChoiceBuilderInput) {
-  return writePreparedItem(
-    { ...input, interactionType: "choice" },
-    validateQti3ChoiceItemStructure,
-    renderQti3ChoiceItem,
-    prepareChoiceFeedback(input),
-  );
 }

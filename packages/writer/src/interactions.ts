@@ -1,15 +1,12 @@
 import { validatePreparedItem, writePreparedItem } from "./item-preparation.js";
 import type { RenderedItemSections } from "./item-preparation.js";
+import { prepareChoiceFeedback } from "./choice-feedback.js";
+import type { PreparedFeedback } from "./modal-feedback.js";
 import { assertNever } from "@longsightgroup/qti3-core";
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
 import { renderQti3AssociateItem, validateQti3AssociateItemStructure } from "./associate.js";
-import {
-  renderQti3ChoiceItem,
-  validateQti3ChoiceItemStructure,
-  validateQti3ChoiceItem,
-  writeQti3ChoiceItemResult,
-} from "./choice.js";
+import { renderQti3ChoiceItem, validateQti3ChoiceItemStructure } from "./choice.js";
 import {
   renderQti3CustomInteractionItem,
   validateQti3CustomInteractionItemStructure,
@@ -340,12 +337,19 @@ export const qti3WriterInteractionSupport: readonly Qti3WriterInteractionSupport
   notes: interaction.notes,
 }));
 
+function authoringFeedback(item: Qti3AuthoringItem): PreparedFeedback | undefined {
+  return item.interactionType === "choice" ? prepareChoiceFeedback(item) : undefined;
+}
+
 export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
-  if (item.interactionType === "choice") return validateQti3ChoiceItem(item);
-  return validatePreparedItem(item, validateAuthoringStructure);
+  return validatePreparedItem(item, validateAuthoringStructure, authoringFeedback(item));
 }
 
 export function writeQti3AuthoringItemResult(item: Qti3AuthoringItem) {
-  if (item.interactionType === "choice") return writeQti3ChoiceItemResult(item);
-  return writePreparedItem(item, validateAuthoringStructure, renderQti3AuthoringItem);
+  return writePreparedItem(
+    item,
+    validateAuthoringStructure,
+    renderQti3AuthoringItem,
+    authoringFeedback(item),
+  );
 }
