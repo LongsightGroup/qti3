@@ -11,7 +11,7 @@ import {
   TEMPLATE_PROCESSING_CORRECT_RESPONSE,
   TEMPLATE_PROCESSING_RESPONSE_PROMPT,
 } from "../../packages/fixtures/src/template-processing.fixture.js";
-import { expectDebugTemplateValues, selectFixtureById } from "./player-helpers.js";
+import { expectDebugTemplateValues, selectFixtureById, pasteXml } from "./player-helpers.js";
 import {
   playerLocator,
   resetThenRestorePlayerState,
@@ -43,6 +43,35 @@ const choiceScoringCases = [
 ] as const;
 
 test.describe("processing fixtures", () => {
+  test("preserves a directly randomized answer key through player restore", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="direct-random-restore" title="Direct random restore" time-dependent="false">
+      <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+      <qti-template-processing>
+        <qti-set-default-value identifier="RESPONSE"><qti-random-integer min="1" max="1000000"/></qti-set-default-value>
+        <qti-set-correct-response identifier="RESPONSE"><qti-default identifier="RESPONSE"/></qti-set-correct-response>
+      </qti-template-processing>
+      <qti-item-body><p>Keep the generated answer: <qti-text-entry-interaction response-identifier="RESPONSE"/></p></qti-item-body>
+      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+    </qti-assessment-item>`,
+    );
+    const input = playerLocator(page).getByRole("textbox");
+    const answer = await input.inputValue();
+    expect(Number(answer)).toBeGreaterThan(0);
+    await input.fill(answer);
+    const scored = await scorePlayerAttempt(page);
+    expect(scored?.outcomes.SCORE).toBe(1);
+    const state = await serializePlayer(page);
+    if (!state) throw new Error("Expected saved attempt");
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await resetThenRestorePlayerState(page, state);
+      await expect(input).toHaveValue(answer);
+      expect((await scorePlayerAttempt(page))?.outcomes.SCORE).toBe(1);
+    }
+  });
   test("loads template-processing reference from the picker", async ({ page }) => {
     await page.goto("/");
 

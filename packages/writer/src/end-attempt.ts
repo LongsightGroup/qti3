@@ -8,6 +8,7 @@ import {
 } from "./interaction-shell.js";
 import { trustedResponseProcessingXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -52,15 +53,12 @@ export function renderQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): Ren
   const promptXml = input.promptHtml?.trim() ? `    <p>${input.promptHtml}</p>\n` : "";
   const bodyXml = `${promptXml}${optionalBodySection(input.bodyHtml)}    <p><qti-end-attempt-interaction ${interactionAttrs}/></p>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: trustedResponseProcessingXml(undefined),
     scoreDefaultZero: true,
-  };
+  });
 }
 
 export function validateQti3EndAttemptItemStructure(

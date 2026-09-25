@@ -7,6 +7,7 @@ import { stylesheetLinkElement } from "./stylesheet-delivery.js";
 
 export function renderPlayerShell(options: {
   documentModel: QtiDocument;
+  interactions: readonly QtiInteraction[];
   contentContext: PlayerContentContext;
   renderStandaloneInteraction: (interaction: QtiInteraction) => HTMLElement;
   keywordEmphasisEnabled?: boolean | undefined;
@@ -14,6 +15,7 @@ export function renderPlayerShell(options: {
 }): HTMLElement {
   const {
     documentModel,
+    interactions,
     contentContext,
     renderStandaloneInteraction,
     keywordEmphasisEnabled,
@@ -44,7 +46,7 @@ export function renderPlayerShell(options: {
     body.append(...renderContentNodes(documentModel.item.body, contentContext));
     root.append(body);
   } else {
-    for (const interaction of documentModel.item.interactions) {
+    for (const interaction of interactions) {
       root.append(renderStandaloneInteraction(interaction));
     }
   }

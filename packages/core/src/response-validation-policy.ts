@@ -134,9 +134,9 @@ export function responseValidationPolicy(
     authoredMinimum !== undefined ||
     (minimum !== undefined && minimum > 0);
   const maximum = maximumAllowedResponses(interaction);
-  const hasMatchMaximum = interaction?.choices.some(
-    (choice) => choiceMatchMaximum(choice) !== undefined,
-  );
+  const hasMatchMaximum =
+    interaction?.type === "gapMatch" ||
+    interaction?.choices.some((choice) => choiceMatchMaximum(choice) !== undefined);
   if (
     declaration.correctResponse === null &&
     interaction?.type !== "media" &&
@@ -248,7 +248,9 @@ export function matchMaxDiagnostics(
 
   const diagnostics: QtiDiagnostic[] = [];
   for (const choice of interaction.choices) {
-    const maximum = choiceMatchMaximum(choice);
+    // Ordinary gaps have one slot even though qti-gap has no match-max attribute.
+    const maximum =
+      interaction.type === "gapMatch" && choice.role === "gap" ? 1 : choiceMatchMaximum(choice);
     if (maximum === undefined) continue;
     const count = counts.get(choice.identifier) ?? 0;
     if (count <= maximum) continue;

@@ -37,6 +37,9 @@ export function assertCompatiblePriorState(
 ): void {
   if (!priorState) return;
   assertQtiAttemptStateV1(priorState);
+  if (document.item.templateProcessing?.rules.length && !priorState.templateProcessing) {
+    throw new Error("Cannot restore a generated clone without template generation metadata.");
+  }
   if (priorState.itemIdentifier !== document.item.identifier) {
     throw new Error(
       `Cannot restore state for ${priorState.itemIdentifier} into ${document.item.identifier}.`,
@@ -74,7 +77,7 @@ export function assertCompatiblePriorState(
     assertRestoredValueMatchesDeclaration("response", declaration, priorState.responses);
   }
   assertRestoredSliderResponses(document, priorState.responses);
-  assertRestoredGraphicGapResponses(document, priorState.responses);
+  assertRestoredGapResponses(document, priorState.responses);
   for (const declaration of document.item.outcomeDeclarations) {
     assertRestoredValueMatchesDeclaration("outcome", declaration, priorState.outcomes);
   }
@@ -95,12 +98,13 @@ export function assertCompatiblePriorState(
   }
 }
 
-function assertRestoredGraphicGapResponses(
+function assertRestoredGapResponses(
   document: QtiDocument,
   responses: Record<string, QtiValue>,
 ): void {
   const responseIdentifiers = document.item.interactions.flatMap((interaction) =>
-    interaction.type === "graphicGapMatch" && interaction.responseIdentifier
+    (interaction.type === "graphicGapMatch" || interaction.type === "gapMatch") &&
+    interaction.responseIdentifier
       ? [interaction.responseIdentifier]
       : [],
   );
@@ -217,6 +221,20 @@ function attemptStateErrors(value: unknown): string[] {
   }
 
   const errors: string[] = [];
+  if (value.templateProcessing !== undefined) {
+    const generation = value.templateProcessing;
+    if (
+      !isRecord(generation) ||
+      generation.schema !== "qti3.template-processing.v1" ||
+      !(
+        typeof generation.seed === "string" ||
+        (typeof generation.seed === "number" && Number.isFinite(generation.seed))
+      ) ||
+      !isTemplateGenerationEnvironment(generation.environment)
+    ) {
+      errors.push("Invalid QTI template generation metadata.");
+    }
+  }
   if (value.presentation !== undefined && !isQtiPresentationStateV1(value.presentation)) {
     errors.push("Invalid QTI presentation state.");
   }
@@ -275,6 +293,30 @@ function attemptStateErrors(value: unknown): string[] {
 function isQtiValueRecord(value: unknown): value is Record<string, QtiValue> {
   if (!isRecord(value)) return false;
   return Object.values(value).every(isQtiValue);
+}
+
+function isTemplateGenerationEnvironment(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  if (
+    typeof value.numAttempts !== "number" ||
+    !Number.isSafeInteger(value.numAttempts) ||
+    value.numAttempts < 0
+  )
+    return false;
+  if (
+    !(
+      value.duration === null ||
+      (typeof value.duration === "number" && Number.isFinite(value.duration) && value.duration >= 0)
+    )
+  )
+    return false;
+  const context = value.context;
+  return (
+    isRecord(context) &&
+    ["candidateIdentifier", "testIdentifier", "environmentIdentifier"].every(
+      (key) => typeof context[key] === "string",
+    )
+  );
 }
 
 function isPortableCustomStateRecord(

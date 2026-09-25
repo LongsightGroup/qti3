@@ -71,9 +71,21 @@ export function bodyWithTextEntryPlaceholders(
   const replacements = new Map<XmlElement, string>();
   for (const [index, interaction] of interactions.entries()) {
     const responseIdentifier = responseIdentifierFor(interaction, `RESPONSE_${index + 1}`);
+    const attributes = [
+      "base",
+      "stringIdentifier",
+      "expectedLength",
+      "patternMask",
+      "placeholderText",
+    ].flatMap((name) => {
+      const value = attr(interaction, name);
+      if (value === null) return [];
+      const qti3Name = name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+      return [`${qti3Name}="${escapeXmlAttribute(value)}"`];
+    });
     replacements.set(
       interaction,
-      `<qti-text-entry-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"/>`,
+      `<qti-text-entry-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"${attributes.length ? ` ${attributes.join(" ")}` : ""}/>`,
     );
   }
   return trusted(serializeChildrenReplacing(body, replacements));

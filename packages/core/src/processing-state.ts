@@ -1,8 +1,6 @@
-import { cloneQtiPresentationState, type QtiPresentationStateV1 } from "./presentation.js";
+import { cloneQtiPresentationState } from "./presentation.js";
 import type {
   QtiAttemptStateV1,
-  QtiBuiltInVariables,
-  QtiAttemptStatus,
   QtiDiagnostic,
   QtiPortableCustomStateValue,
   QtiValue,
@@ -10,19 +8,35 @@ import type {
 import { ATTEMPT_STATE_SCHEMA } from "./attempt-state-constants.js";
 import { isRecordValue } from "./value-guards.js";
 
-export function serialize(
-  itemIdentifier: string,
-  status: QtiAttemptStatus,
-  responses: Record<string, QtiValue>,
-  outcomes: Record<string, QtiValue>,
-  templateValues: Record<string, QtiValue>,
-  interactionStates: Record<string, QtiPortableCustomStateValue>,
-  validationMessages: QtiDiagnostic[],
-  builtInVariables?: QtiBuiltInVariables,
-  presentation?: QtiPresentationStateV1,
-): QtiAttemptStateV1 {
+/** Snapshot session state without retaining mutable records owned by the session. */
+export function serialize(state: Omit<QtiAttemptStateV1, "schema">): QtiAttemptStateV1 {
+  const {
+    itemIdentifier,
+    status,
+    responses,
+    outcomes,
+    templateValues = {},
+    interactionStates = {},
+    validationMessages,
+    builtInVariables,
+    presentation,
+    templateProcessing,
+  } = state;
   return {
     schema: ATTEMPT_STATE_SCHEMA,
+    ...(templateProcessing === undefined
+      ? {}
+      : {
+          templateProcessing: {
+            schema: templateProcessing.schema,
+            seed: templateProcessing.seed,
+            environment: {
+              numAttempts: templateProcessing.environment.numAttempts,
+              duration: templateProcessing.environment.duration,
+              context: { ...templateProcessing.environment.context },
+            },
+          },
+        }),
     ...(presentation === undefined
       ? {}
       : { presentation: cloneQtiPresentationState(presentation) }),

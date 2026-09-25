@@ -17,6 +17,7 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -90,14 +91,11 @@ export function renderQti3AssociateItem(input: Qti3AssociateBuilderInput): Rende
     optionalBodySection(input.bodyHtml),
   );
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml(scoring),
-  };
+  });
 }
 
 export function validateQti3AssociateItemStructure(

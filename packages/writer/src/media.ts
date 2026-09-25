@@ -14,6 +14,7 @@ import {
 } from "./interaction-shell.js";
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -70,15 +71,12 @@ export function renderQti3MediaItem(input: Qti3MediaBuilderInput): RenderedItemS
 ${optionalPromptSection(input.promptHtml)}${mediaElementXml(input)}
     </qti-media-interaction>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: "",
     companionMaterialsXml,
-  };
+  });
 }
 
 export function validateQti3MediaItemStructure(

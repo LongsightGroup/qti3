@@ -617,7 +617,7 @@ open-attempt flag, and the three `QTI_CONTEXT` string fields.
   data returns NULL with a diagnostic. Non-timed items cannot reference `duration`.
 - For non-adaptive items, `endAttempt()` completes the item after a valid score run.
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
-- Templated items restore saved template values before deriving generated correct responses, so resume does not require the original random seed.
+- Templated items save versioned generation metadata and replay template processing once on restore, preserving generated correct responses and defaults without requiring the host to resupply the seed.
 
 Items with `SCORE` marked `external-scored="human"` or `external-scored="externalMachine"` return
 `score: null`; submission materialization reports `manual-scoring-required`. Hosts obtain and store
@@ -633,8 +633,11 @@ a generated equation, storing the generated values in `templateValues`, and scor
 generated numeric answer.
 
 Hosts should create a variant once, persist the full `qti3.attempt-state.v1` value, and
-restore from that state on resume. A `randomSeed` is useful for deterministic initial
-generation, but saved `templateValues` are the authority after an attempt exists. Static
+restore from that state on resume. A `randomSeed` controls initial generation; the saved
+`templateProcessing` seed and generation-time environment take precedence on restore.
+Replay requires the same item and deterministic custom operators. States for templated items without
+generation metadata are rejected rather than silently generating another clone. See
+[template clone restoration](docs/template-clone-restoration.md) for the state contract. Static
 candidate-safe XML redaction remains conservative for template-processing items.
 Server-materialized adaptive delivery can render safe template-derived presentation
 values from authoritative session state while stripping generated answer keys, template

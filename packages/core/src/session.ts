@@ -1,9 +1,11 @@
+import { identifierIsVisible } from "./identifier-visibility.js";
 import {
   prepareQtiPresentation,
   cloneQtiPresentationState,
   type QtiPresentationResult,
 } from "./presentation.js";
 import type {
+  QtiBuiltInVariables,
   QtiAssessmentItem,
   QtiAttemptStatus,
   QtiAttemptStateV1,
@@ -18,7 +20,6 @@ import type {
   QtiTemplateRule,
   QtiValue,
 } from "./types.js";
-import { qtiValueToString } from "./value-format.js";
 import type { QtiCustomOperatorRegistry } from "./custom-operators.js";
 export type {
   QtiCustomOperatorContext,
@@ -67,6 +68,7 @@ interface ConditionalRules<Rule> {
 }
 
 export interface QtiItemSessionOptions extends QtiSessionEnvironment {
+  /** Initial generation seed. Saved template-processing metadata takes precedence on restore. */
   randomSeed?: string | number | undefined;
   /** Independent seed for fresh shuffled presentations. The browser player supplies a fresh default. */
   presentationSeed?: string | number | undefined;
@@ -96,12 +98,11 @@ export function visibleModalFeedback(
   outcomes: Record<string, QtiValue>,
 ): QtiModalFeedback[] {
   return item.modalFeedback.filter((feedback) => {
-    const outcome = outcomes[feedback.outcomeIdentifier];
-    const outcomeValue: QtiValue = outcome === undefined ? null : outcome;
-    const matches = Array.isArray(outcomeValue)
-      ? outcomeValue.includes(feedback.identifier)
-      : qtiValueToString(outcomeValue) === feedback.identifier;
-    return feedback.showHide === "hide" ? !matches : matches;
+    return identifierIsVisible(
+      feedback.identifier,
+      outcomes[feedback.outcomeIdentifier] ?? null,
+      feedback.showHide,
+    );
   });
 }
 
@@ -114,7 +115,6 @@ export function createItemSession(
 
   const priorResponses = cloneValueRecord(priorState?.responses ?? {});
   const priorOutcomes = cloneValueRecord(priorState?.outcomes ?? {});
-  const priorTemplateValues = cloneValueRecord(priorState?.templateValues ?? {});
   const priorInteractionStates = clonePortableCustomStateRecord(
     priorState?.interactionStates ?? {},
   );
@@ -127,12 +127,35 @@ export function createItemSession(
   const correctResponses: Record<string, QtiValue> = {};
   let status: QtiAttemptStatus = priorState?.status ?? "initialized";
   const builtInDiagnostics: QtiDiagnostic[] = [];
-  const builtIns = createSessionBuiltIns(priorState?.builtInVariables, options, (diagnostic) => {
+  const reportBuiltInDiagnostic = (diagnostic: QtiDiagnostic) => {
     if (!builtInDiagnostics.some((existing) => existing.code === diagnostic.code))
       builtInDiagnostics.push(diagnostic);
-  });
+  };
+  const builtIns = createSessionBuiltIns(
+    priorState?.builtInVariables,
+    options,
+    reportBuiltInDiagnostic,
+  );
   const captureTime = () => builtIns.captureTime(status !== "suspended" && status !== "completed");
-  const random = seededRandom(options.randomSeed ?? document.item.identifier);
+  const randomSeed =
+    priorState?.templateProcessing?.seed ?? options.randomSeed ?? document.item.identifier;
+  if (typeof randomSeed === "number" && !Number.isFinite(randomSeed)) {
+    throw new Error("Template generation seed must be a string or finite number.");
+  }
+  const random = seededRandom(randomSeed);
+  const generationInput = priorState?.templateProcessing?.environment ?? builtIns.state;
+  const templateProcessing: QtiAttemptStateV1["templateProcessing"] =
+    document.item.templateProcessing?.rules.length || priorState?.templateProcessing
+      ? {
+          schema: "qti3.template-processing.v1",
+          seed: randomSeed,
+          environment: {
+            numAttempts: generationInput.numAttempts,
+            duration: generationInput.duration,
+            context: { ...generationInput.context },
+          },
+        }
+      : undefined;
   const customOperators = options.customOperators ?? {};
   const allowedUndeclaredResponseIdentifiers = new Set(
     options.allowedUndeclaredResponseIdentifiers ?? [],
@@ -163,53 +186,48 @@ export function createItemSession(
   const baseResponses = cloneValueRecord(responses);
   const baseResponseDefaults = cloneValueRecord(responseDefaults);
   const baseOutcomes = cloneValueRecord(outcomes);
-  const evaluation = createEvaluationContext(
-    document,
-    responses,
-    outcomes,
-    templateValues,
-    correctResponses,
-    random,
-    customOperators,
-    {
-      allowedUndeclaredResponseIdentifiers,
-      builtInVariable(identifier) {
-        if (identifier === "completionStatus")
-          return outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
-        if (identifier === "numAttempts") return builtIns.state.numAttempts;
-        if (identifier === "QTI_CONTEXT") return { ...builtIns.state.context };
-        if (identifier === "duration" && document.item.timeDependent) {
-          captureTime();
-          return builtIns.duration();
-        }
-        return undefined;
-      },
-    },
+  const evaluateWith = (builtInVariable: EvaluationContext["builtInVariable"]) =>
+    createEvaluationContext(
+      document,
+      responses,
+      outcomes,
+      templateValues,
+      correctResponses,
+      random,
+      customOperators,
+      { allowedUndeclaredResponseIdentifiers, builtInVariable },
+    );
+  const frozenBuiltIns =
+    templateProcessing && priorState
+      ? createSessionBuiltIns(
+          { ...templateProcessing.environment, attemptInProgress: false },
+          {},
+          reportBuiltInDiagnostic,
+        )
+      : builtIns;
+  const templateEvaluation = evaluateWith(
+    sessionVariableLookup(frozenBuiltIns.state, outcomes, document.item.timeDependent, () =>
+      frozenBuiltIns.duration(),
+    ),
   );
-  const processingContext: SessionProcessingContext = {
-    responseDefaults,
-    evaluation,
-  };
-
   applyTemplateProcessing(
-    processingContext,
-    new Set(),
+    { responseDefaults, evaluation: templateEvaluation },
     baseResponses,
     baseResponseDefaults,
     baseOutcomes,
   );
-  if (priorState) {
-    Object.assign(templateValues, priorTemplateValues);
-    resetCorrectResponses(document, correctResponses);
-    applyTemplateProcessing(
-      processingContext,
-      new Set(Object.keys(priorTemplateValues)),
-      baseResponses,
-      baseResponseDefaults,
-      baseOutcomes,
-    );
+  if (!document.item.templateProcessing?.rules.length) {
+    Object.assign(templateValues, cloneValueRecord(priorState?.templateValues ?? {}));
   }
-  const templateDiagnostics = [...evaluation.diagnostics, ...builtInDiagnostics];
+  const templateDiagnostics = [...templateEvaluation.diagnostics, ...builtInDiagnostics];
+  const evaluation = evaluateWith(
+    sessionVariableLookup(builtIns.state, outcomes, document.item.timeDependent, () => {
+      captureTime();
+      return builtIns.duration();
+    }),
+  );
+  Object.assign(evaluation.defaultValues, cloneValueRecord(templateEvaluation.defaultValues));
+  const processingContext: SessionProcessingContext = { responseDefaults, evaluation };
   const defaultOutcomes = cloneValueRecord(outcomes);
   Object.assign(responses, priorResponses);
   Object.assign(outcomes, priorOutcomes);
@@ -296,32 +314,34 @@ export function createItemSession(
       ];
       if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
       validationMessages = diagnostics;
-      const state = serialize(
-        document.item.identifier,
+      const state = serialize({
+        itemIdentifier: document.item.identifier,
         status,
         responses,
         outcomes,
         templateValues,
         interactionStates,
-        diagnostics,
-        builtIns.state,
-        presentationState,
-      );
+        validationMessages: diagnostics,
+        builtInVariables: builtIns.state,
+        presentation: presentationState,
+        templateProcessing,
+      });
       return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
     },
     serialize() {
       captureTime();
-      return serialize(
-        document.item.identifier,
+      return serialize({
+        itemIdentifier: document.item.identifier,
         status,
         responses,
         outcomes,
         templateValues,
         interactionStates,
-        validationMessages,
-        builtIns.state,
-        presentationState,
-      );
+        validationMessages: validationMessages,
+        builtInVariables: builtIns.state,
+        presentation: presentationState,
+        templateProcessing,
+      });
     },
   };
 
@@ -351,7 +371,6 @@ function resetRecord<T>(target: Record<string, T>, source: Record<string, T>): v
 
 function applyTemplateProcessing(
   context: SessionProcessingContext,
-  preservedTemplateIdentifiers = new Set<string>(),
   baseResponses: Record<string, QtiValue> = cloneValueRecord(context.evaluation.responses),
   baseResponseDefaults: Record<string, QtiValue> = cloneValueRecord(context.responseDefaults),
   baseOutcomes: Record<string, QtiValue> = cloneValueRecord(context.evaluation.outcomes),
@@ -363,7 +382,7 @@ function applyTemplateProcessing(
   let restarts = 0;
   for (let index = 0; index < rules.length; index += 1) {
     const rule = rules[index]!;
-    const shouldExit = applyTemplateRule(context, rule, preservedTemplateIdentifiers);
+    const shouldExit = applyTemplateRule(context, rule);
     if (shouldExit) return;
     if (rule.type === "templateConstraint") {
       const satisfied = evaluateProcessingBoolean(context, rule.expression);
@@ -420,11 +439,7 @@ function resolveConditionalRules<Rule>(
   return condition.elseRules;
 }
 
-function applyTemplateRule(
-  context: SessionProcessingContext,
-  rule: QtiTemplateRule,
-  preservedTemplateIdentifiers: Set<string>,
-): boolean {
+function applyTemplateRule(context: SessionProcessingContext, rule: QtiTemplateRule): boolean {
   const { evaluation } = context;
   if (rule.type === "exitTemplate") return true;
   if (rule.type === "templateConstraint") return false;
@@ -432,7 +447,7 @@ function applyTemplateRule(
   if (rule.type === "templateCondition") {
     const branch = resolveConditionalRules(context, rule);
     for (const branchRule of branch) {
-      const shouldExit = applyTemplateRule(context, branchRule, preservedTemplateIdentifiers);
+      const shouldExit = applyTemplateRule(context, branchRule);
       if (shouldExit) return true;
     }
     return false;
@@ -440,7 +455,6 @@ function applyTemplateRule(
 
   const value = evaluation.evaluate(rule.expression);
   if (rule.type === "setTemplateValue") {
-    if (preservedTemplateIdentifiers.has(rule.identifier)) return false;
     evaluation.templateValues[rule.identifier] = value;
     return false;
   }
@@ -549,4 +563,21 @@ function applyResponseCondition(
   condition: QtiResponseCondition,
 ): boolean {
   return applyResponseRules(context, resolveConditionalRules(context, condition));
+}
+
+/** Bind processing to either the generation snapshot or the live session environment. */
+function sessionVariableLookup(
+  environment: QtiBuiltInVariables,
+  outcomes: Record<string, QtiValue>,
+  timeDependent: boolean | undefined,
+  duration: () => QtiValue,
+): EvaluationContext["builtInVariable"] {
+  return (identifier) => {
+    if (identifier === "completionStatus")
+      return outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
+    if (identifier === "numAttempts") return environment.numAttempts;
+    if (identifier === "QTI_CONTEXT") return { ...environment.context };
+    if (identifier === "duration" && timeDependent) return duration();
+    return undefined;
+  };
 }

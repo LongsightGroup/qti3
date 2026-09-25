@@ -63,6 +63,30 @@ writer emits shared asset paths once when the referenced bytes are identical acr
 
 Defaults are strict: source repair is disabled and unsupported interactions are reported as diagnostics instead of silently converted.
 
+QTI 2.x migration checks response defaults, mappings, and area mappings against the emitted item.
+Mappings that the authoring model cannot reproduce, including weighted choice/pair mappings or
+unsupported mapping defaults and bounds, return `qti2_response_mapping_not_preserved` instead of
+silently changing scores. Response defaults are not yet supported by the authoring model; their
+loss returns `qti2_response_default_not_preserved`. These errors suppress the migrated XML and
+authoring item, unless the caller explicitly requests a review stub. Safe source repair does not
+permit dropping these semantics.
+
+Text-entry migration preserves string, integer, and float types; input constraints; explicit mapping
+weights and case sensitivity; and the correct response independently of its mapping weight.
+Match-correct text answers remain case-sensitive. Other response types and unrepresentable mapping
+defaults or bounds return diagnostics. `defaultValue` is never interpreted as `correctResponse`.
+
 QTI assessment-test structure preservation is not implemented yet. When a legacy package contains an
 assessment-test resource, migration returns a flat review part and reports
 `assessment_test_structure_not_migrated`.
+
+QTI 1.2 choice and associate migration preserves `render_choice shuffle` and converts
+`response_label rshuffle="No"` to fixed choices. Canvas matching preserves compatible target-list
+shuffle settings and keeps source positions fixed. Conflicting shuffle or fixed settings across
+lists return `qti12_canvas_match_shuffle_conflict`, because QTI 3 uses one shared target set.
+A fixed label is never used to infer an answer key; missing keys follow the explicit repair policy.
+
+An explicit `shuffle` attribute on legacy graphic gap match returns
+`qti2_graphic_gap_shuffle_unsupported`, including false values, rather than silently discarding it.
+QTI 3 graphic gap match does not define this attribute. Ordinary graphic gap match without this
+attribute continues to migrate.

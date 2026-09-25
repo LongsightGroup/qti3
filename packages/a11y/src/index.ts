@@ -1,3 +1,4 @@
+import { SHUFFLE_INTERACTION_TYPES } from "@longsightgroup/qti3-core";
 import { interactionSupport, type QtiInteractionType } from "@longsightgroup/qti3-core";
 
 export interface InteractionA11yContract {
@@ -465,11 +466,7 @@ function automatedProofFor(contract: InteractionA11yContract): string[] {
     "operable fixture controls use standard tab order in Playwright",
     "response serialization and fixture scoring coverage",
   ];
-  if (
-    ["choice", "order", "inlineChoice", "associate", "match", "gapMatch"].includes(
-      contract.interactionType,
-    )
-  ) {
+  if (SHUFFLE_INTERACTION_TYPES.includes(contract.interactionType)) {
     proof.push(
       "tests/browser/player-shuffle.spec.ts: shuffled DOM order, keyboard response, focus, axe, scoring and saved presentation restoration",
     );

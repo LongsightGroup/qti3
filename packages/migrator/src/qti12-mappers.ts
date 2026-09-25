@@ -6,6 +6,7 @@ import {
   type Qti3MatchChoice,
 } from "@longsightgroup/qti3-writer";
 
+import { diagnostic } from "./diagnostics.js";
 import { materialHtml } from "./qti12-body.js";
 import {
   directTextOf,
@@ -39,6 +40,29 @@ export function mapQti12CanvasMatch(
   options: ResolvedQtiMigrationOptions,
   path: string,
 ): Qti12MapperResult {
+  const shuffle = choiceShuffle(responses[0]);
+  const targetPolicies = new Map<string, boolean>();
+  const conflicting = responses.some((response) => {
+    if (choiceShuffle(response) !== shuffle) return true;
+    return responseChoices(response, "TARGET").some((choice) => {
+      const previous = targetPolicies.get(choice.identifier);
+      const fixed = choice.fixed === true;
+      if (previous !== undefined && previous !== fixed) return true;
+      targetPolicies.set(choice.identifier, fixed);
+      return false;
+    });
+  });
+  if (conflicting)
+    return {
+      diagnostics: [
+        diagnostic(
+          "qti12_canvas_match_shuffle_conflict",
+          "error",
+          "Canvas matching lists have incompatible shuffle or fixed settings that a shared QTI 3 target set cannot preserve.",
+          { path, sourceFormat: "qti12" },
+        ),
+      ],
+    };
   const sources: Qti3MatchChoice[] = responses.map((response, index) => {
     const responseIdentifier = normalizeIdentifier(attr(response, "ident"), `SOURCE_${index + 1}`);
     const material = findDescendantByLocalName(response, "material");
@@ -47,6 +71,7 @@ export function mapQti12CanvasMatch(
       contentHtml: qti3TrustedXmlFragment(material ? materialHtml(material) : responseIdentifier),
       text: textOf(material) || responseIdentifier,
       matchMax: 1,
+      fixed: true,
     };
   });
   const targets = canvasMatchTargets(responses);
@@ -76,7 +101,7 @@ export function mapQti12CanvasMatch(
       sources,
       targets,
       correctResponse,
-      shuffle: false,
+      shuffle,
     },
     diagnostics: repairDiagnostics(repair),
   };
@@ -120,6 +145,7 @@ export function mapQti12Choice(
       responseIdentifier,
       responseCardinality: isMultiple ? "multiple" : "single",
       choices,
+      shuffle: choiceShuffle(response),
       correctResponse: correctResponse.length
         ? correctResponse
         : choices.slice(0, 1).map((choice) => choice.identifier),
@@ -167,6 +193,7 @@ export function mapQti12Associate(
       bodyHtml,
       responseIdentifier,
       choices,
+      shuffle: choiceShuffle(response),
       correctResponse: pairs.length
         ? pairs
         : choices.length >= 2
@@ -331,10 +358,16 @@ function canvasMatchTargets(responses: readonly XmlElement[]): Qti3MatchChoice[]
         contentHtml: qti3TrustedXmlFragment(materialHtml(label)),
         text: textOf(label) || identifier,
         matchMax: 1,
+        fixed: attr(label, "rshuffle")?.toLowerCase() === "no",
       });
     }
   }
   return targets;
+}
+
+function choiceShuffle(response: XmlElement | undefined): boolean {
+  const renderer = response ? findDescendantByLocalName(response, "render_choice") : null;
+  return attr(renderer, "shuffle")?.toLowerCase() === "yes";
 }
 
 function responseChoices(response: XmlElement, prefix: string): Qti3AuthoringChoice[] {
@@ -342,6 +375,7 @@ function responseChoices(response: XmlElement, prefix: string): Qti3AuthoringCho
     identifier: normalizeIdentifier(attr(label, "ident"), `${prefix}_${index + 1}`),
     contentHtml: qti3TrustedXmlFragment(materialHtml(label)),
     text: textOf(label) || undefined,
+    fixed: attr(label, "rshuffle")?.toLowerCase() === "no",
   }));
 }
 

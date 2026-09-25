@@ -7,6 +7,7 @@ import {
 
 import { diagnostic, hasErrors } from "./diagnostics.js";
 import { uniqueSiblingItemHref } from "./item-hrefs.js";
+import { validateQti2ResponseFidelity } from "./qti2-response-fidelity.js";
 import type { QtiMigrationDiagnostic, QtiMigrationItemResult } from "./types.js";
 import type { ResolvedQtiMigrationOptions } from "./types.js";
 
@@ -15,6 +16,9 @@ export interface PendingMigrationItem {
   readonly title: string;
   readonly authoringItem?: Qti3AuthoringItem | undefined;
   readonly diagnostics: readonly QtiMigrationDiagnostic[];
+  readonly qti2Source?:
+    | { readonly xml: string; readonly sourceFormat: "qti21" | "qti22" }
+    | undefined;
 }
 
 export function finalizeItemResults(
@@ -48,21 +52,31 @@ export function finalizeItemResult(
     const writer = writeQti3AssessmentItemResult(pending.authoringItem);
     if (writer.ok) {
       diagnostics.push(...validateWrittenXml(writer.xml));
-      return {
-        identifier: pending.identifier,
-        title: pending.title,
-        href,
-        authoringItem: pending.authoringItem,
-        xml: writer.xml,
-        diagnostics,
-      };
-    }
-    diagnostics.push({
-      code: "writer_diagnostics",
-      severity: "error",
-      message: "QTI 3 writer rejected migrated authoring item.",
-      writerDiagnostics: writer.diagnostics,
-    });
+      if (pending.qti2Source)
+        diagnostics.push(
+          ...validateQti2ResponseFidelity(
+            pending.qti2Source.xml,
+            writer.xml,
+            href,
+            pending.qti2Source.sourceFormat,
+          ),
+        );
+      if (!hasErrors(diagnostics))
+        return {
+          identifier: pending.identifier,
+          title: pending.title,
+          href,
+          authoringItem: pending.authoringItem,
+          xml: writer.xml,
+          diagnostics,
+        };
+    } else
+      diagnostics.push({
+        code: "writer_diagnostics",
+        severity: "error",
+        message: "QTI 3 writer rejected migrated authoring item.",
+        writerDiagnostics: writer.diagnostics,
+      });
   }
 
   if (options.unsupportedPolicy === "stub") {
@@ -89,7 +103,10 @@ export function finalizeItemResult(
     identifier: pending.identifier,
     title: pending.title,
     href,
-    authoringItem: options.unsupportedPolicy === "skip" ? undefined : pending.authoringItem,
+    authoringItem:
+      options.unsupportedPolicy === "skip" || hasErrors(diagnostics)
+        ? undefined
+        : pending.authoringItem,
     diagnostics,
   };
 }

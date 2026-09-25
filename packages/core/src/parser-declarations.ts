@@ -36,10 +36,9 @@ export function parseResponseDeclaration(
     identifier: node.attributes.identifier ?? "",
     cardinality,
     baseType,
-    defaultValue: parseVariableValue(
-      childElements(node, "qti-default-value")[0],
-      baseType,
-      diagnostics,
+    defaultValue: normalizeValueForCardinality(
+      parseVariableValue(childElements(node, "qti-default-value")[0], baseType, diagnostics),
+      cardinality,
     ),
     correctResponse: normalizeValueForCardinality(
       parseVariableValue(childElements(node, "qti-correct-response")[0], baseType, diagnostics),
@@ -65,15 +64,15 @@ export function parseOutcomeDeclaration(
   diagnostics: QtiDiagnostic[],
 ): QtiOutcomeDeclaration {
   const baseType = parseBaseType(node.attributes["base-type"]);
+  const cardinality = parseCardinality(node.attributes.cardinality);
   return {
     kind: "outcome",
     identifier: node.attributes.identifier ?? "",
-    cardinality: parseCardinality(node.attributes.cardinality),
+    cardinality,
     baseType,
-    defaultValue: parseVariableValue(
-      childElements(node, "qti-default-value")[0],
-      baseType,
-      diagnostics,
+    defaultValue: normalizeValueForCardinality(
+      parseVariableValue(childElements(node, "qti-default-value")[0], baseType, diagnostics),
+      cardinality,
     ),
     lookupTable: parseLookupTable(node, baseType, diagnostics),
     attributes: node.attributes,
@@ -86,15 +85,15 @@ export function parseTemplateDeclaration(
   diagnostics: QtiDiagnostic[],
 ): QtiTemplateDeclaration {
   const baseType = parseBaseType(node.attributes["base-type"]);
+  const cardinality = parseCardinality(node.attributes.cardinality);
   return {
     kind: "template",
     identifier: node.attributes.identifier ?? "",
-    cardinality: parseCardinality(node.attributes.cardinality),
+    cardinality,
     baseType,
-    defaultValue: parseVariableValue(
-      childElements(node, "qti-default-value")[0],
-      baseType,
-      diagnostics,
+    defaultValue: normalizeValueForCardinality(
+      parseVariableValue(childElements(node, "qti-default-value")[0], baseType, diagnostics),
+      cardinality,
     ),
     attributes: node.attributes,
     source: node.source,

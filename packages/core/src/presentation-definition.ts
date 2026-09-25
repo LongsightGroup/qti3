@@ -1,5 +1,5 @@
 import { parseXmlBoolean } from "./parser-values.js";
-import type { QtiChoice, QtiDiagnostic, QtiInteraction } from "./types.js";
+import type { QtiChoice, QtiDiagnostic, QtiInteraction, QtiInteractionType } from "./types.js";
 
 /** One independently shuffled set of authored choices. */
 export interface QtiPresentationGroupDefinition {
@@ -13,7 +13,16 @@ export type QtiPresentationDefinitionResult =
   | { readonly ok: true; readonly groups: readonly QtiPresentationGroupDefinition[] }
   | { readonly ok: false; readonly diagnostics: readonly QtiDiagnostic[] };
 
-const shuffleTypes = new Set(["choice", "order", "inlineChoice", "associate", "match", "gapMatch"]);
+/** Interactions whose QTI contract supports shuffle. */
+export const SHUFFLE_INTERACTION_TYPES: readonly QtiInteractionType[] = [
+  "choice",
+  "order",
+  "inlineChoice",
+  "associate",
+  "match",
+  "gapMatch",
+];
+
 const fixedChoiceNames = new Set([
   "qti-simple-choice",
   "qti-inline-choice",
@@ -25,39 +34,51 @@ export function parseQtiPresentationDefinition(
   interaction: QtiInteraction,
 ): QtiPresentationDefinitionResult {
   const diagnostics: QtiDiagnostic[] = [];
-  const check = (
+  const rejectAttribute = (
     attributes: Record<string, string>,
     attribute: string,
-    supported: boolean,
+    source = interaction.source,
+  ): void => {
+    if (attributes[attribute] === undefined) return;
+    diagnostics.push({
+      code: "interaction.presentation.unsupportedAttribute",
+      severity: "error",
+      message: `${attribute} is not supported on this QTI element.`,
+      source,
+      path: source?.path,
+    });
+  };
+  const booleanAttribute = (
+    attributes: Record<string, string>,
+    attribute: string,
     source = interaction.source,
   ): boolean => {
     const raw = attributes[attribute];
     if (raw === undefined) return false;
     const value = parseXmlBoolean(raw);
-    if (!supported || value === undefined) {
+    if (value === undefined)
       diagnostics.push({
-        code: supported
-          ? "interaction.booleanAttribute"
-          : "interaction.presentation.unsupportedAttribute",
+        code: "interaction.booleanAttribute",
         severity: "error",
-        message: supported
-          ? `Invalid boolean ${attribute}: ${raw}.`
-          : `${attribute} is not supported on this QTI element.`,
+        message: `Invalid boolean ${attribute}: ${raw}.`,
         source,
         path: source?.path,
       });
-    }
     return value === true;
   };
-  const shuffle = check(interaction.attributes, "shuffle", shuffleTypes.has(interaction.type));
-  check(interaction.attributes, "qti-fixed", false);
-  check(interaction.attributes, "fixed", false);
+  const supportsShuffle = SHUFFLE_INTERACTION_TYPES.includes(interaction.type);
+  if (!supportsShuffle) rejectAttribute(interaction.attributes, "shuffle");
+  const shuffle = supportsShuffle && booleanAttribute(interaction.attributes, "shuffle");
+  rejectAttribute(interaction.attributes, "qti-fixed");
+  rejectAttribute(interaction.attributes, "fixed");
   const fixedIdentifiers = new Set<string>();
   for (const choice of interaction.choices) {
-    if (check(choice.attributes, "fixed", fixedChoiceNames.has(choice.qtiName), choice.source))
-      fixedIdentifiers.add(choice.identifier);
-    check(choice.attributes, "qti-fixed", false, choice.source);
-    check(choice.attributes, "shuffle", false, choice.source);
+    if (fixedChoiceNames.has(choice.qtiName)) {
+      if (booleanAttribute(choice.attributes, "fixed", choice.source))
+        fixedIdentifiers.add(choice.identifier);
+    } else rejectAttribute(choice.attributes, "fixed", choice.source);
+    rejectAttribute(choice.attributes, "qti-fixed", choice.source);
+    rejectAttribute(choice.attributes, "shuffle", choice.source);
   }
   if (diagnostics.length > 0) return { ok: false, diagnostics };
   if (!shuffle) return { ok: true, groups: [] };

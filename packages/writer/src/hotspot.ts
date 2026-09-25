@@ -22,6 +22,7 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -98,14 +99,11 @@ ${correctXml}  </qti-response-declaration>`;
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objectAttrs)}/>
 ${choicesXml}
     </qti-hotspot-interaction>`;
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  };
+  });
 }
 
 function normalizeBound(value: number | undefined, min: number): number | null {

@@ -86,7 +86,7 @@ describe("basic QTI 2 interaction mapping", () => {
       responses: [
         {
           responseIdentifier: "WORD",
-          answers: [{ value: "estuary", score: 1, caseSensitive: false }],
+          answers: [{ value: "estuary", score: 1, caseSensitive: true }],
         },
       ],
     });

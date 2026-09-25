@@ -16,6 +16,7 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -93,14 +94,11 @@ ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-va
     optionalBodySection(input.bodyHtml),
   );
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-  };
+  });
 }
 
 export function validateQti3OrderItemStructure(

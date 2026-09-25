@@ -4,6 +4,7 @@ import type {
   Qti3HottextChoice,
   Qti3InlineChoiceSlot,
   Qti3TextEntryResponse,
+  Qti3TextEntryAnswer,
 } from "@longsightgroup/qti3-writer";
 
 import {
@@ -15,6 +16,7 @@ import {
   trusted,
 } from "./qti2-body.js";
 import { associableChoices, gapChoice, simpleChoices } from "./qti2-choices.js";
+import { diagnostic } from "./diagnostics.js";
 import {
   type Qti2Context,
   responseIdentifierFor,
@@ -159,9 +161,25 @@ export function mapTextEntryItem(context: Qti2Context): Qti3AuthoringItem | unde
   const interactions = findAllDescendantsByLocalName(context.body, "textentryinteraction");
   const responses = interactions.map((entry, index): Qti3TextEntryResponse => {
     const responseIdentifier = responseIdentifierFor(entry, `RESPONSE_${index + 1}`);
+    const declaration = context.responseDeclMap.get(responseIdentifier);
+    if (
+      attr(declaration, "cardinality") !== "single" ||
+      !["string", "integer", "float"].includes(attr(declaration, "baseType") ?? "")
+    ) {
+      (context.blocked ??= []).push(
+        diagnostic(
+          "qti2_text_entry_response_type_unsupported",
+          "error",
+          "Text-entry migration requires a single string, integer, or float response declaration.",
+          { path: context.path, sourceFormat: context.sourceFormat },
+        ),
+      );
+    }
     return {
       responseIdentifier,
-      answers: textEntryAnswers(context.responseDeclMap.get(responseIdentifier), context),
+      baseType: baseType(attr(declaration, "baseType")),
+      correctResponse: responseValues(declaration)[0],
+      answers: textEntryAnswers(declaration, context),
     };
   });
   if (context.blocked) return undefined;
@@ -275,7 +293,10 @@ export function mapGapMatch(interaction: XmlElement, context: Qti2Context): Qti3
   };
 }
 
-function textEntryAnswers(declaration: XmlElement | undefined, context: Qti2Context) {
+function textEntryAnswers(
+  declaration: XmlElement | undefined,
+  context: Qti2Context,
+): Qti3TextEntryAnswer[] {
   const correctValues = responseValues(declaration);
   const repair = applyRepairPolicy({
     needed: !correctValues.length,
@@ -287,5 +308,34 @@ function textEntryAnswers(declaration: XmlElement | undefined, context: Qti2Cont
   });
   if (blockMigrationOnRepair(context, repair)) return [];
   if (!correctValues.length) return [{ value: "", score: 1, caseSensitive: false }];
-  return correctValues.map((value) => ({ value, score: 1, caseSensitive: false }));
+  if (hasMapping(declaration)) {
+    const answers: Qti3TextEntryAnswer[] = [];
+    for (const entry of findAllDescendantsByLocalName(declaration, "mapentry")) {
+      const value = attr(entry, "mapKey");
+      const score = toNumber(attr(entry, "mappedValue"));
+      const caseSensitive = attr(entry, "caseSensitive");
+      if (
+        value === null ||
+        score === undefined ||
+        (caseSensitive !== null && !["true", "false", "1", "0"].includes(caseSensitive))
+      ) {
+        (context.blocked ??= []).push(
+          diagnostic(
+            "qti2_text_entry_mapping_invalid",
+            "error",
+            "Text-entry mapping entries require a map key, finite score, and valid caseSensitive value.",
+            { path: context.path, sourceFormat: context.sourceFormat },
+          ),
+        );
+        continue;
+      }
+      answers.push({
+        value,
+        score,
+        caseSensitive: caseSensitive === "true" || caseSensitive === "1",
+      });
+    }
+    return answers;
+  }
+  return correctValues.map((value) => ({ value, score: 1, caseSensitive: true }));
 }

@@ -5,6 +5,11 @@ Style-neutral web component player for QTI 3 assessment items.
 This package renders one QTI item at a time, captures responses, validates responses,
 scores attempts through `@longsightgroup/qti3-core`, and emits host-readable state events.
 
+The player presents the candidate view. A `qti-rubric-block` is rendered only when its
+space-separated `view` list includes `candidate`. Scorer, author, and other audience-only
+rubrics are omitted from the rendered DOM, including links and controls. This rendering
+rule does not redact the source XML; hosts control which source content they deliver.
+
 ## Install
 
 ```sh

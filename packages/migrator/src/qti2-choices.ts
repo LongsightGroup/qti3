@@ -5,7 +5,6 @@ import {
   type Qti3AssociateChoice,
   type Qti3AuthoringChoice,
   type Qti3GapMatchChoice,
-  type Qti3GraphicGapChoice,
   type Qti3MatchChoice,
 } from "@longsightgroup/qti3-writer";
 import { normalizeIdentifier } from "./text.js";
@@ -71,47 +70,18 @@ export function gapChoice(
   };
 }
 
-export function graphicGapChoice(
-  choice: XmlElement,
-  index: number,
-  context: Qti2Context,
-): Qti3GraphicGapChoice {
-  rejectGapFixed(choice, context);
-  if (localName(choice) === "gapimg") {
-    const object = findDescendantByLocalName(choice, "object");
-    return {
-      identifier: normalizeIdentifier(attr(choice, "identifier"), `G${index + 1}`),
-      kind: "image",
-      object: {
-        data: attr(object, "data") ?? "",
-        alt: attr(object, "alt") ?? attr(object, "label") ?? "Image",
-        type: attr(object, "type") ?? undefined,
-      },
-      matchMax: toNumber(attr(choice, "matchMax")),
-    };
-  }
-  return {
-    identifier: normalizeIdentifier(attr(choice, "identifier"), `G${index + 1}`),
-    kind: "text",
-    contentHtml: trusted(serializeChildren(choice)),
-    text: textOf(choice) || undefined,
-    matchMax: toNumber(attr(choice, "matchMax")),
-  };
-}
-
 function trusted(html: string): ReturnType<typeof qti3TrustedXmlFragment> {
   return qti3TrustedXmlFragment(html.trim() || "<p></p>");
 }
 
 function rejectGapFixed(choice: XmlElement, context: Qti2Context): void {
   if (attr(choice, "fixed") === null) return;
-  context.blocked = [
-    ...(context.blocked ?? []),
+  (context.blocked ??= []).push(
     diagnostic(
       "qti2_gap_fixed_unsupported",
       "error",
       "QTI 3 gap choices do not define fixed; migration cannot preserve this attribute.",
       { path: context.path, sourceFormat: context.sourceFormat },
     ),
-  ];
+  );
 }

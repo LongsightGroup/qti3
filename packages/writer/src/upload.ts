@@ -13,6 +13,7 @@ import {
 } from "./interaction-shell.js";
 import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -59,15 +60,12 @@ export function renderQti3UploadItem(input: Qti3UploadBuilderInput): RenderedIte
   const bodyXml = `${optionalBodySection(input.bodyHtml)}    <qti-upload-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}    </qti-upload-interaction>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml: correctResponse ? responseProcessingTemplateXml("match_correct") : "",
     scoreDefaultZero: Boolean(correctResponse),
-  };
+  });
 }
 
 export function validateQti3UploadItemStructure(

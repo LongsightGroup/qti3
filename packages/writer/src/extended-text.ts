@@ -12,6 +12,7 @@ import {
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -87,16 +88,13 @@ ${indentXml(input.rubricHtml, 8)}
     </qti-rubric-block>`
     : "";
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml: [optionalBodySection(input.bodyHtml).trimEnd(), interactionXml, rubricBlock]
       .filter(Boolean)
       .join("\n"),
     responseProcessingXml: "",
-  };
+  });
 }
 
 export function validateQti3ExtendedTextItemStructure(

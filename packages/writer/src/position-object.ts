@@ -28,6 +28,7 @@ import {
   responseProcessingTemplateXml,
 } from "./response-processing.js";
 import {
+  itemSections,
   buildPreparedItem,
   validatePreparedItem,
   type RenderedItemSections,
@@ -92,17 +93,14 @@ export function renderQti3PositionObjectItem(
       </qti-position-object-interaction>
     </qti-position-object-stage>`;
 
-  return {
-    identifier: input.identifier,
-    title: input.title,
-    lang: input.lang,
+  return itemSections(input, {
     declarationsXml,
     bodyXml,
     responseProcessingXml:
       responseIdentifier === "RESPONSE"
         ? responseProcessingTemplateXml("map_response_point")
         : mapResponsePointProcessingXml(responseIdentifier),
-  };
+  });
 }
 
 export function validateQti3PositionObjectItemStructure(

@@ -10,6 +10,31 @@ import { pasteXml } from "./player-helpers.js";
 import { getTextToSpeechTraversal, playerLocator } from "./player-test-api.js";
 
 test.describe("player body content", () => {
+  for (const view of ["scorer", "author tutor", "", undefined]) {
+    test(`omits rubric content outside candidate view (${view ?? "missing"})`, async ({ page }) => {
+      const viewAttribute = view === undefined ? "" : `view="${view}"`;
+      const xml = mathBodyItemXml.replace(
+        "<qti-item-body>",
+        `<qti-item-body>
+        <qti-rubric-block ${viewAttribute} use="scoring"><qti-content-body>
+          <p id="scorer-guidance">SCORER ONLY: answer is 1.</p>
+          <a href="#answer" id="scorer-link">Scoring key</a>
+        </qti-content-body></qti-rubric-block>
+        <qti-rubric-block view="candidate scorer" use="instructions"><qti-content-body>
+          <p id="candidate-guidance">Candidate instructions.</p>
+        </qti-content-body></qti-rubric-block>`,
+      );
+      await page.goto("/");
+      await pasteXml(page, xml);
+      const player = playerLocator(page);
+      await expect(player.locator("#scorer-guidance, #scorer-link")).toHaveCount(0);
+      await expect(player).not.toContainText("SCORER ONLY");
+      await expect(player.locator("#candidate-guidance")).toBeVisible();
+      await expect(player.getByRole("radio")).toHaveCount(2);
+      await page.locator("#debug-reset").click();
+      await expect(player.locator("#scorer-guidance, #scorer-link")).toHaveCount(0);
+    });
+  }
   test("preserves safe HTML and MathML body content", async ({ page }) => {
     await page.goto("/");
     await pasteXml(page, mathBodyItemXml);

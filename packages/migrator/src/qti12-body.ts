@@ -68,19 +68,5 @@ export function correctEntries(item: XmlElement): Map<string, string[]> {
       out.set(responseIdentifier, values);
     }
   }
-  for (const response of [
-    ...findAllDescendantsByLocalName(item, "response_lid"),
-    ...findAllDescendantsByLocalName(item, "response_xy"),
-  ]) {
-    const responseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
-    if (out.has(responseIdentifier)) continue;
-    const renderer =
-      findDescendantByLocalName(response, "render_choice") ??
-      findDescendantByLocalName(response, "render_hotspot") ??
-      response;
-    const labels = findAllDescendantsByLocalName(renderer, "response_label");
-    const correct = labels.find((label) => attr(label, "rshuffle") === "No");
-    if (correct) out.set(responseIdentifier, [attr(correct, "ident") ?? ""]);
-  }
   return out;
 }

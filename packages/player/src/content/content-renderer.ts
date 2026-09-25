@@ -67,6 +67,15 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
     return [element];
   }
   if (node.kind === "feedback") return renderFeedbackContent(node, context);
+  // This player is a candidate delivery surface. Omit other audiences' content
+  // entirely so scoring guidance cannot enter focus, speech, or find-in-page.
+  if (
+    isQtiContentNamespace(node.namespaceUri) &&
+    node.qtiName === "qti-rubric-block" &&
+    !node.attributes.view?.split(/\s+/).includes("candidate")
+  ) {
+    return [];
+  }
   if (
     isQtiContentNamespace(node.namespaceUri) &&
     (node.qtiName === "qti-template-block" || node.qtiName === "qti-template-inline")

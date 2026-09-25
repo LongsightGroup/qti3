@@ -381,7 +381,7 @@ export type Qti3AssociateBuilderInput = Omit<Qti3AssociateAuthoringItem, "intera
 export interface Qti3TextEntryAnswer {
   readonly value: string;
   readonly score?: number | undefined;
-  /** Defaults to QTI/core behavior: case-sensitive unless explicitly set to false. */
+  /** Defaults to QTI mapping behavior: case-insensitive unless explicitly set to true. */
   readonly caseSensitive?: boolean | undefined;
 }
 
@@ -389,6 +389,8 @@ export interface Qti3TextEntryResponse {
   readonly responseIdentifier: string;
   readonly baseType?: Qti3TextEntryBaseType | undefined;
   readonly answers?: readonly Qti3TextEntryAnswer[] | undefined;
+  /** Explicit answer key, independent of mapping weights; otherwise derived from full-credit answers. */
+  readonly correctResponse?: string | undefined;
 }
 
 export interface Qti3TextEntryAuthoringItem extends Qti3AuthoringItemBase {
@@ -405,6 +407,7 @@ export interface Qti3MatchChoice {
   readonly text?: string | undefined;
   readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
   readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
 }
 
 export interface Qti3MatchPair {

@@ -9,7 +9,7 @@ import {
 } from "./index.js";
 import type { QtiDocument } from "./types.js";
 
-const types = ["choice", "order", "inlineChoice", "associate", "match", "gapMatch"];
+import { SHUFFLE_INTERACTION_TYPES as types } from "./presentation-definition.js";
 function xml(type = "order"): string {
   return readFileSync(new URL(`../../fixtures/xml/shuffle/${type}.xml`, import.meta.url), "utf8");
 }
@@ -237,5 +237,23 @@ describe("attempt presentation", () => {
         expect.objectContaining({ code: "interaction.presentation.unsupportedAttribute" }),
       ]),
     );
+  });
+});
+
+it("reports an invalid seed once for an item with multiple shuffle groups", () => {
+  const result = prepareQtiPresentation(
+    document(xml("match")).item,
+    {},
+    { kind: "new", seed: Infinity },
+  );
+  expect(result).toEqual({
+    ok: false,
+    diagnostics: [
+      {
+        code: "presentation.order.invalid",
+        severity: "error",
+        message: "presentationSeed must be finite.",
+      },
+    ],
   });
 });
