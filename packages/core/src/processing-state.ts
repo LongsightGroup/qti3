@@ -20,9 +20,23 @@ export function serialize(
   validationMessages: QtiDiagnostic[],
   builtInVariables?: QtiBuiltInVariables,
   presentation?: QtiPresentationStateV1,
+  templateProcessing?: QtiAttemptStateV1["templateProcessing"],
 ): QtiAttemptStateV1 {
   return {
     schema: ATTEMPT_STATE_SCHEMA,
+    ...(templateProcessing === undefined
+      ? {}
+      : {
+          templateProcessing: {
+            schema: templateProcessing.schema,
+            seed: templateProcessing.seed,
+            environment: {
+              numAttempts: templateProcessing.environment.numAttempts,
+              duration: templateProcessing.environment.duration,
+              context: { ...templateProcessing.environment.context },
+            },
+          },
+        }),
     ...(presentation === undefined
       ? {}
       : { presentation: cloneQtiPresentationState(presentation) }),

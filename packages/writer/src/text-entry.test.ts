@@ -9,6 +9,71 @@ import {
 import { expectValidParsedItem } from "./test-helpers.js";
 
 describe("qti3-writer text entry", () => {
+  it.each([
+    { baseType: "string" as const, correctResponse: " " },
+    { baseType: "integer" as const, correctResponse: "1.5" },
+    { baseType: "integer" as const, correctResponse: "0x10" },
+    { baseType: "float" as const, correctResponse: "Infinity" },
+  ])("reports invalid explicit answer keys through writer diagnostics", (response) => {
+    const result = writeQti3AssessmentItemResult({
+      interactionType: "textEntry",
+      identifier: "invalid-key",
+      title: "Synthetic invalid key",
+      bodyHtml: qti3TrustedXmlFragment(
+        '<p><qti-text-entry-interaction response-identifier="RESPONSE"/></p>',
+      ),
+      responses: [{ responseIdentifier: "RESPONSE", ...response }],
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      diagnostics: [
+        expect.objectContaining({
+          code: "invalid_text_entry_correct_response",
+          path: "responses.0.correctResponse",
+        }),
+      ],
+    });
+  });
+  it("preserves an explicit answer key independently of mapping weights", () => {
+    const xml = buildQti3TextEntryItem({
+      identifier: "explicit-key",
+      title: "Synthetic explicit answer key",
+      bodyHtml: qti3TrustedXmlFragment(
+        '<p><qti-text-entry-interaction response-identifier="RESPONSE"/></p>',
+      ),
+      responses: [
+        {
+          responseIdentifier: "RESPONSE",
+          correctResponse: "Paris",
+          answers: [
+            { value: "Paris", score: 0.5 },
+            { value: "paris", score: 0.25 },
+          ],
+        },
+      ],
+    });
+    expect(expectValidParsedItem(xml).responseDeclarations[0]).toMatchObject({
+      correctResponse: "Paris",
+      mapping: {
+        entries: [
+          { mapKey: "Paris", mappedValue: 0.5 },
+          { mapKey: "paris", mappedValue: 0.25 },
+        ],
+      },
+    });
+  });
+
+  it("writes an explicit answer key without requiring mapping entries", () => {
+    const xml = buildQti3TextEntryItem({
+      identifier: "unscored-key",
+      title: "Synthetic unscored answer key",
+      bodyHtml: qti3TrustedXmlFragment(
+        '<p><qti-text-entry-interaction response-identifier="RESPONSE"/></p>',
+      ),
+      responses: [{ responseIdentifier: "RESPONSE", correctResponse: "Paris" }],
+    });
+    expect(expectValidParsedItem(xml).responseDeclarations[0]?.correctResponse).toBe("Paris");
+  });
   it("writes text entry items with declarations, mapping, and additive response processing", () => {
     const xml = buildQti3TextEntryItem({
       identifier: "text-entry-1",

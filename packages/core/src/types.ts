@@ -754,6 +754,18 @@ export interface QtiBuiltInVariables {
 }
 
 export interface QtiAttemptStateV1 {
+  /** Replay metadata for the generated clone; does not contain generated answer keys. */
+  templateProcessing?:
+    | {
+        schema: "qti3.template-processing.v1";
+        seed: string | number;
+        environment: {
+          numAttempts: number;
+          duration: number | null;
+          context: QtiSessionContext;
+        };
+      }
+    | undefined;
   /** Saved choice permutations; separate from candidate responses. */
   presentation?: QtiPresentationStateV1 | undefined;
   schema: "qti3.attempt-state.v1";

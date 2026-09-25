@@ -120,7 +120,16 @@ export function prepareQtiPresentation(
       diagnostics.push(...definition.diagnostics);
       return interaction;
     }
-    let projectedChoices = [...interaction.choices];
+    let projectedChoices = interaction.choices.filter((choice) =>
+      visibleChoice(choice, templateValues),
+    );
+    const visibleIdentifiers = new Set(projectedChoices.map((choice) => choice.identifier));
+    // Hidden hottext retains its passage text, but cannot be selected.
+    const hottextSegments = interaction.hottextSegments?.map((segment) =>
+      segment.kind === "hottext" && !visibleIdentifiers.has(segment.identifier)
+        ? { kind: "text" as const, text: segment.text }
+        : segment,
+    );
     for (const group of definition.groups) {
       const key = `${interactionIndex}:${interaction.type}:${interaction.responseIdentifier ?? ""}:${group.name}`;
       const choices = group.choices.filter((choice) => visibleChoice(choice, templateValues));
@@ -179,7 +188,7 @@ export function prepareQtiPresentation(
         return next ? [next] : [];
       });
     }
-    return { ...interaction, choices: projectedChoices };
+    return { ...interaction, choices: projectedChoices, hottextSegments };
   });
   if (restored && Object.keys(restored.orders).some((key) => !Object.hasOwn(orders, key))) {
     diagnostics.push({

@@ -26,6 +26,7 @@ export function migrateItemXml(
       title: result.authoringItem?.title ?? itemTitleFromXmlSafe(xml),
       authoringItem: result.authoringItem,
       diagnostics: result.diagnostics,
+      qti2Source: { xml, sourceFormat },
     },
   ];
 }

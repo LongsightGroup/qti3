@@ -64,7 +64,10 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
       "tests/browser/player-dom-behavior.spec.ts",
       "tests/browser/player-extended-text-xhtml.spec.ts",
     ],
-    gapMatch: ["tests/browser/player-gap-match.spec.ts"],
+    gapMatch: [
+      "tests/browser/player-gap-match.spec.ts",
+      "packages/core/src/gap-target-validation.test.ts",
+    ],
     graphicAssociate: ["tests/browser/player-graphic.spec.ts"],
     graphicGapMatch: [
       "packages/core/src/core-session-graphic-gap-state.test.ts",
@@ -97,7 +100,25 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
     ],
     upload: ["tests/browser/player-dom-behavior.spec.ts"],
   };
-  return [...base, ...(extras[interactionType] ?? [])];
+  const visibilityEvidence = [
+    "choice",
+    "order",
+    "inlineChoice",
+    "associate",
+    "match",
+    "gapMatch",
+    "hotspot",
+    "hottext",
+    "graphicOrder",
+    "graphicAssociate",
+    "graphicGapMatch",
+  ].includes(interactionType)
+    ? [
+        "packages/core/src/presentation-visibility.test.ts",
+        "tests/browser/player-template-choice-visibility.spec.ts",
+      ]
+    : [];
+  return [...base, ...(extras[interactionType] ?? []), ...visibilityEvidence];
 }
 
 const shuffleInteractions = new Set<QtiInteractionType>([

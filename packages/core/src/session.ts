@@ -67,6 +67,7 @@ interface ConditionalRules<Rule> {
 }
 
 export interface QtiItemSessionOptions extends QtiSessionEnvironment {
+  /** Initial generation seed. Saved template-processing metadata takes precedence on restore. */
   randomSeed?: string | number | undefined;
   /** Independent seed for fresh shuffled presentations. The browser player supplies a fresh default. */
   presentationSeed?: string | number | undefined;
@@ -114,7 +115,6 @@ export function createItemSession(
 
   const priorResponses = cloneValueRecord(priorState?.responses ?? {});
   const priorOutcomes = cloneValueRecord(priorState?.outcomes ?? {});
-  const priorTemplateValues = cloneValueRecord(priorState?.templateValues ?? {});
   const priorInteractionStates = clonePortableCustomStateRecord(
     priorState?.interactionStates ?? {},
   );
@@ -132,7 +132,26 @@ export function createItemSession(
       builtInDiagnostics.push(diagnostic);
   });
   const captureTime = () => builtIns.captureTime(status !== "suspended" && status !== "completed");
-  const random = seededRandom(options.randomSeed ?? document.item.identifier);
+  const randomSeed =
+    priorState?.templateProcessing?.seed ?? options.randomSeed ?? document.item.identifier;
+  if (typeof randomSeed === "number" && !Number.isFinite(randomSeed)) {
+    throw new Error("Template generation seed must be a string or finite number.");
+  }
+  const random = seededRandom(randomSeed);
+  const generationInput = priorState?.templateProcessing?.environment ?? builtIns.state;
+  const templateProcessing: QtiAttemptStateV1["templateProcessing"] =
+    document.item.templateProcessing?.rules.length || priorState?.templateProcessing
+      ? {
+          schema: "qti3.template-processing.v1",
+          seed: randomSeed,
+          environment: {
+            numAttempts: generationInput.numAttempts,
+            duration: generationInput.duration,
+            context: { ...generationInput.context },
+          },
+        }
+      : undefined;
+  let generatingTemplate = true;
   const customOperators = options.customOperators ?? {};
   const allowedUndeclaredResponseIdentifiers = new Set(
     options.allowedUndeclaredResponseIdentifiers ?? [],
@@ -174,11 +193,31 @@ export function createItemSession(
     {
       allowedUndeclaredResponseIdentifiers,
       builtInVariable(identifier) {
+        const generation = generatingTemplate ? templateProcessing?.environment : undefined;
         if (identifier === "completionStatus")
           return outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
-        if (identifier === "numAttempts") return builtIns.state.numAttempts;
-        if (identifier === "QTI_CONTEXT") return { ...builtIns.state.context };
+        if (identifier === "numAttempts")
+          return generation?.numAttempts ?? builtIns.state.numAttempts;
+        if (identifier === "QTI_CONTEXT")
+          return { ...(generation?.context ?? builtIns.state.context) };
         if (identifier === "duration" && document.item.timeDependent) {
+          if (generation) {
+            if (generation.duration !== null) return Math.floor(generation.duration * 1000) / 1000;
+            if (!priorState) return builtIns.duration();
+            if (
+              !builtInDiagnostics.some(
+                (diagnostic) => diagnostic.code === "session.duration.unavailable",
+              )
+            ) {
+              builtInDiagnostics.push({
+                code: "session.duration.unavailable",
+                severity: "error",
+                message:
+                  "Template generation duration was unavailable in the saved generation environment.",
+              });
+            }
+            return null;
+          }
           captureTime();
           return builtIns.duration();
         }
@@ -191,23 +230,10 @@ export function createItemSession(
     evaluation,
   };
 
-  applyTemplateProcessing(
-    processingContext,
-    new Set(),
-    baseResponses,
-    baseResponseDefaults,
-    baseOutcomes,
-  );
-  if (priorState) {
-    Object.assign(templateValues, priorTemplateValues);
-    resetCorrectResponses(document, correctResponses);
-    applyTemplateProcessing(
-      processingContext,
-      new Set(Object.keys(priorTemplateValues)),
-      baseResponses,
-      baseResponseDefaults,
-      baseOutcomes,
-    );
+  applyTemplateProcessing(processingContext, baseResponses, baseResponseDefaults, baseOutcomes);
+  generatingTemplate = false;
+  if (!document.item.templateProcessing?.rules.length) {
+    Object.assign(templateValues, cloneValueRecord(priorState?.templateValues ?? {}));
   }
   const templateDiagnostics = [...evaluation.diagnostics, ...builtInDiagnostics];
   const defaultOutcomes = cloneValueRecord(outcomes);
@@ -306,6 +332,7 @@ export function createItemSession(
         diagnostics,
         builtIns.state,
         presentationState,
+        templateProcessing,
       );
       return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
     },
@@ -321,6 +348,7 @@ export function createItemSession(
         validationMessages,
         builtIns.state,
         presentationState,
+        templateProcessing,
       );
     },
   };
@@ -351,7 +379,6 @@ function resetRecord<T>(target: Record<string, T>, source: Record<string, T>): v
 
 function applyTemplateProcessing(
   context: SessionProcessingContext,
-  preservedTemplateIdentifiers = new Set<string>(),
   baseResponses: Record<string, QtiValue> = cloneValueRecord(context.evaluation.responses),
   baseResponseDefaults: Record<string, QtiValue> = cloneValueRecord(context.responseDefaults),
   baseOutcomes: Record<string, QtiValue> = cloneValueRecord(context.evaluation.outcomes),
@@ -363,7 +390,7 @@ function applyTemplateProcessing(
   let restarts = 0;
   for (let index = 0; index < rules.length; index += 1) {
     const rule = rules[index]!;
-    const shouldExit = applyTemplateRule(context, rule, preservedTemplateIdentifiers);
+    const shouldExit = applyTemplateRule(context, rule);
     if (shouldExit) return;
     if (rule.type === "templateConstraint") {
       const satisfied = evaluateProcessingBoolean(context, rule.expression);
@@ -420,11 +447,7 @@ function resolveConditionalRules<Rule>(
   return condition.elseRules;
 }
 
-function applyTemplateRule(
-  context: SessionProcessingContext,
-  rule: QtiTemplateRule,
-  preservedTemplateIdentifiers: Set<string>,
-): boolean {
+function applyTemplateRule(context: SessionProcessingContext, rule: QtiTemplateRule): boolean {
   const { evaluation } = context;
   if (rule.type === "exitTemplate") return true;
   if (rule.type === "templateConstraint") return false;
@@ -432,7 +455,7 @@ function applyTemplateRule(
   if (rule.type === "templateCondition") {
     const branch = resolveConditionalRules(context, rule);
     for (const branchRule of branch) {
-      const shouldExit = applyTemplateRule(context, branchRule, preservedTemplateIdentifiers);
+      const shouldExit = applyTemplateRule(context, branchRule);
       if (shouldExit) return true;
     }
     return false;
@@ -440,7 +463,6 @@ function applyTemplateRule(
 
   const value = evaluation.evaluate(rule.expression);
   if (rule.type === "setTemplateValue") {
-    if (preservedTemplateIdentifiers.has(rule.identifier)) return false;
     evaluation.templateValues[rule.identifier] = value;
     return false;
   }

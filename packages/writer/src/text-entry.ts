@@ -64,14 +64,14 @@ function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
   const parts = [
     `  <qti-response-declaration identifier="${responseIdentifier}" cardinality="single" base-type="${baseType}">`,
   ];
+  const correctAnswers = answers.filter((answer) => normalizeScore(answer.score) >= 1);
+  const correctResponse = response.correctResponse ?? correctAnswers[0]?.value;
+  if (correctResponse !== undefined) {
+    parts.push("    <qti-correct-response>");
+    parts.push(`      <qti-value>${escapeXmlText(correctResponse.trim())}</qti-value>`);
+    parts.push("    </qti-correct-response>");
+  }
   if (answers.length) {
-    const correctAnswers = answers.filter((answer) => normalizeScore(answer.score) >= 1);
-    const firstCorrectAnswer = correctAnswers[0];
-    if (firstCorrectAnswer) {
-      parts.push("    <qti-correct-response>");
-      parts.push(`      <qti-value>${escapeXmlText(firstCorrectAnswer.value.trim())}</qti-value>`);
-      parts.push("    </qti-correct-response>");
-    }
     parts.push('    <qti-mapping default-value="0">');
     for (const answer of answers) parts.push(mapEntryXml(answer));
     parts.push("    </qti-mapping>");
@@ -164,6 +164,26 @@ export function validateQti3TextEntryItemStructure(
       response.responseIdentifier,
     );
     if (identifierDiagnostic) diagnostics.push(identifierDiagnostic);
+    if (response.correctResponse !== undefined) {
+      const value = response.correctResponse.trim();
+      const number = Number(value);
+      const invalid =
+        !value ||
+        (response.baseType === "integer" &&
+          (!/^[+-]?\d+$/.test(value) || !Number.isInteger(number))) ||
+        (response.baseType === "float" &&
+          (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value) ||
+            !Number.isFinite(number)));
+      if (invalid)
+        diagnostics.push(
+          writerDiagnostic(
+            "invalid_text_entry_correct_response",
+            `responses.${index}.correctResponse`,
+            "Text entry correctResponse must be nonempty and match its declared baseType.",
+            response.correctResponse,
+          ),
+        );
+    }
     for (const [answerIndex, answer] of (response.answers ?? []).entries()) {
       if (answer.score !== undefined && !Number.isFinite(answer.score)) {
         diagnostics.push(

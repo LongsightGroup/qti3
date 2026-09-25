@@ -63,6 +63,19 @@ writer emits shared asset paths once when the referenced bytes are identical acr
 
 Defaults are strict: source repair is disabled and unsupported interactions are reported as diagnostics instead of silently converted.
 
+QTI 2.x migration checks response defaults, mappings, and area mappings against the emitted item.
+Mappings that the authoring model cannot reproduce, including weighted choice/pair mappings or
+unsupported mapping defaults and bounds, return `qti2_response_mapping_not_preserved` instead of
+silently changing scores. Response defaults are not yet supported by the authoring model; their
+loss returns `qti2_response_default_not_preserved`. These errors suppress the migrated XML and
+authoring item, unless the caller explicitly requests a review stub. Safe source repair does not
+permit dropping these semantics.
+
+Text-entry migration preserves string, integer, and float types; input constraints; explicit mapping
+weights and case sensitivity; and the correct response independently of its mapping weight.
+Match-correct text answers remain case-sensitive. Other response types and unrepresentable mapping
+defaults or bounds return diagnostics. `defaultValue` is never interpreted as `correctResponse`.
+
 QTI assessment-test structure preservation is not implemented yet. When a legacy package contains an
 assessment-test resource, migration returns a flat review part and reports
 `assessment_test_structure_not_migrated`.

@@ -9,8 +9,7 @@ import {
 export function responseValues(declaration: XmlElement | undefined): string[] {
   if (!declaration) return [];
   const correct = findDescendantByLocalName(declaration, "correctresponse");
-  const source = correct ?? declaration;
-  return findAllDescendantsByLocalName(source, "value")
+  return findAllDescendantsByLocalName(correct, "value")
     .map((value) => textOf(value))
     .filter(Boolean);
 }
