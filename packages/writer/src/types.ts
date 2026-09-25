@@ -407,6 +407,7 @@ export interface Qti3MatchChoice {
   readonly text?: string | undefined;
   readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
   readonly matchMax?: number | undefined;
+  readonly fixed?: boolean | undefined;
 }
 
 export interface Qti3MatchPair {

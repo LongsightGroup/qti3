@@ -4,6 +4,7 @@ import type {
   Qti3GraphicGapTarget,
 } from "@longsightgroup/qti3-writer";
 
+import { diagnostic } from "./diagnostics.js";
 import { interactionPresentation, trusted } from "./qti2-body.js";
 import { graphicGapChoice } from "./qti2-choices.js";
 import { graphicObject, hotspotShape } from "./qti2-graphic.js";
@@ -119,6 +120,17 @@ export function mapGraphicGapMatch(
   interaction: XmlElement,
   context: Qti2Context,
 ): Qti3AuthoringItem {
+  if (attr(interaction, "shuffle") !== null) {
+    context.blocked = [
+      ...(context.blocked ?? []),
+      diagnostic(
+        "qti2_graphic_gap_shuffle_unsupported",
+        "error",
+        "QTI 3 graphic gap match does not define shuffle; migration cannot preserve this attribute.",
+        { path: context.path, sourceFormat: context.sourceFormat },
+      ),
+    ];
+  }
   const responseIdentifier = responseIdentifierFor(interaction);
   const object = findDescendantByLocalName(interaction, "object");
   const choices = findAllDescendantsByAnyLocalName(interaction, ["gaptext", "gapimg"]).map(
