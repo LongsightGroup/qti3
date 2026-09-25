@@ -325,6 +325,28 @@ printed variables. The writer package README documents the authoring fields, con
 diagnostics. Reference examples are `rich-modal-feedback-reference` and
 `multiple-choice-modal-feedback-reference`.
 
+## Interaction shuffling
+
+The player shuffles choice, order, inline choice, associate, match, and gap match when
+`shuffle` is `true` or `1`. A missing attribute, `false`, or `0` keeps authored order.
+`fixed="true"` holds an eligible choice at its initial index while the other choices move
+around it. Graphic coordinates and passage gaps stay in authored positions. Choices hidden by
+template rules leave the set before the remaining choices are ordered.
+
+Attempt state stores the resolved order in `presentation` (`qti3.presentation.v1`). Set
+`sessionOptions.presentationSeed` to reproduce a fresh presentation. That seed is separate
+from processing `randomSeed`. Restore uses the saved order. A shuffled item with a missing or
+incompatible order fails restore and keeps the previous session. Scoring reads the response.
+[Interaction shuffling](docs/interaction-shuffling.md) covers keyboard behavior, fixed choices,
+and headless `session.presentation()`.
+
+## Candidate view
+
+The player renders a `qti-rubric-block` when its space-separated `view` list includes
+`candidate`. Scorer, author, and other audience-only rubrics stay out of the rendered DOM,
+including their links and controls. This rule does not change the source XML. Hosts decide
+which source they deliver.
+
 ## Styling
 
 The browser player ships structural styles for layout, focus visibility, forced-colors support,
@@ -618,6 +640,7 @@ open-attempt flag, and the three `QTI_CONTEXT` string fields.
 - For non-adaptive items, `endAttempt()` completes the item after a valid score run.
 - For adaptive items, `endAttempt()` runs response processing and leaves the item open unless processing sets `completionStatus` to `"completed"`.
 - Templated items save versioned generation metadata and replay template processing once on restore, preserving generated correct responses and defaults without requiring the host to resupply the seed.
+- Shuffled items save resolved orders in `presentation`. Restore requires those orders. A new `presentationSeed` applies on a fresh load or reset; a saved order is the authority after restore.
 
 Items with `SCORE` marked `external-scored="human"` or `external-scored="externalMachine"` return
 `score: null`; submission materialization reports `manual-scoring-required`. Hosts obtain and store
@@ -673,6 +696,10 @@ packs each package, and publishes the tarballs. The workflow can also be dispatc
 Hosts upgrading from `0.10.x` should review the
 [0.11.0 compatibility notes](CHANGELOG.md#0110---2026-09-17) for changes to numeric defaults,
 mapping scores, comparisons, and interpolation tables.
+
+Hosts upgrading to `0.12.3` should review the
+[0.12.3 compatibility notes](CHANGELOG.md#0123---2026-09-25) for shuffled presentation state,
+template-clone restoration, NULL responses, and typed mapping keys.
 
 ## Certification
 

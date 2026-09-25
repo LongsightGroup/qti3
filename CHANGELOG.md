@@ -2,6 +2,76 @@
 
 ## Unreleased
 
+## 0.12.3 - 2026-09-25
+
+### Added
+
+- Shuffle choice, order, inline choice, associate, match, and gap match for the life of an
+  attempt. Missing `shuffle`, `false`, and `0` keep authored order. `true` and `1` shuffle.
+  `fixed="true"` keeps an eligible choice at its initial index. Graphic coordinates and passage
+  gaps stay in authored positions. Template-hidden choices leave the set before the remaining
+  choices are ordered.
+- Save the resolved order in attempt state as `presentation` (`qti3.presentation.v1`).
+  `sessionOptions.presentationSeed` reproduces a fresh presentation and is independent of
+  processing `randomSeed`. Restore requires that saved order. Incompatible identifiers return
+  typed diagnostics and leave the previous session in place. Headless hosts read
+  `session.presentation()` before rendering. Scoring uses the response, separate from display
+  order. See [interaction shuffling](docs/interaction-shuffling.md).
+
+### Changed
+
+- Restore a templated item by replaying template processing once from saved
+  `templateProcessing` metadata (`qti3.template-processing.v1`). Replay uses the original seed
+  and the built-in environment from generation time, including when the host later supplies a
+  different `randomSeed`. The same item and deterministic custom operators are required.
+- Treat empty strings and empty containers as NULL for every expression result, including
+  intermediate values. The standard `map_response` and `map_response_point` templates score an
+  unanswered response as 0 and skip mapping bounds. A direct `qti-map-response` of NULL starts
+  at 0 and then applies authored bounds. Numeric, Boolean, pair, and directedPair map keys
+  match by typed value, so integer `01` matches `1` and an unordered pair matches in either
+  order. String keys follow each entry's `case-sensitive` setting. A space-only string stays a
+  string.
+- Keep multiple and ordered declaration defaults as containers, including empty containers,
+  through processing and restore.
+- Preserve significant whitespace in string text-entry correct responses and mapping keys.
+  Integer and float values are trimmed before they are written.
+- Reject QTI 2 response mappings, defaults, and response-processing programs the writer cannot
+  reproduce. That includes weighted choice mappings, changed inline rules, and unknown or
+  altered templates. Reject QTI 1.2 scoring beyond one positive conjunction that sets `SCORE`
+  to 1 with a zero default, including Canvas matching that adds points per pair. These
+  diagnostics withhold migrated XML unless the caller requests a review stub. Safe repair keeps
+  the rejection.
+- Preserve QTI 1.2 `shuffle`, and convert `rshuffle="No"` to fixed choices. Canvas matching can
+  keep one shared target shuffle with fixed sources. Conflicting list settings return
+  `qti12_canvas_match_shuffle_conflict`. An explicit `shuffle` on graphic gap match, including
+  a false value, returns `qti2_graphic_gap_shuffle_unsupported`.
+
+### Fixed
+
+- Allow one placement in each ordinary gap. `qti-gap` has no `match-max`, so `match-max="0"` on
+  a gap-match source does not open a second slot in the same gap. A graphic gap target with
+  `match-max="0"` accepts repeated placements.
+- Render MathML in the MathML namespace, including `ci`, `cn`, `annotation`, and
+  `annotation-xml`. When `math-variable` is `true` or `1`, replace an `mi` template identifier
+  with `mn` and a `ci` identifier with `cn`, using the template number as the token text.
+  `false` and `0` leave the identifier tokens unchanged.
+- Render a `qti-rubric-block` when its `view` list includes `candidate`. Scorer, author, and
+  other audience-only rubrics stay out of the rendered DOM, including their links and controls.
+  The source XML is left unchanged.
+
+### Compatibility
+
+- Shuffled items saved before 0.12.3 have no `presentation` orders, so restore fails closed.
+  Items that do not shuffle load as before.
+- Templated attempt states without `templateProcessing` metadata are rejected. Generate the
+  variant again and save the new state. See
+  [template clone restoration](docs/template-clone-restoration.md).
+- Empty strings and empty containers now evaluate as NULL. A standard mapping template scores
+  them 0 even when mapping bounds would have applied to that unanswered value. Integer, float,
+  Boolean, and unordered pair map keys match equivalent values, including different lexical
+  forms. Directed pairs stay ordered.
+- Written string text-entry answers keep their surrounding whitespace.
+
 ## 0.12.2 - 2026-09-24
 
 ### Added

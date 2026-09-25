@@ -102,9 +102,11 @@ at least one child; [`qti-stats-operator`](https://www.imsglobal.org/sites/defau
 requires exactly one. The information model does not specify statistics for an empty numeric
 container, so the core conservatively returns `null` for that case.
 
-Persist the returned `qti3.attempt-state.v1` state for resume. Once an attempt exists,
-saved `templateValues` are authoritative; they are restored before generated correct
-responses are derived, so resuming does not depend on the original seed.
+Persist the returned `qti3.attempt-state.v1` state for resume. A `randomSeed` controls
+initial generation. Restore replays template processing once from the saved
+`templateProcessing` seed and generation-time environment, including when the host supplies
+a different `randomSeed`. A templated item without that metadata is rejected. See
+[template clone restoration](../../docs/template-clone-restoration.md).
 Graphic gap-match restoration preserves repeated placements and incomplete responses,
 but rejects unknown source/target identifiers and responses exceeding `match-max` or
 `max-associations`. It does not trim or move saved pairs to make them fit.
