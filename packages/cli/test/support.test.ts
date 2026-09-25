@@ -337,7 +337,10 @@ describe("@longsightgroup/qti3-cli support and certification", () => {
       validate: true,
       render: true,
       process: true,
-      fixtures: ["packages/fixtures/xml/choice-reference.xml"],
+      fixtures: [
+        "packages/fixtures/xml/choice-reference.xml",
+        "packages/fixtures/xml/shuffle/choice.xml",
+      ],
     });
     expect(choice?.tests).toContain("tests/browser/player-interaction-sweep.spec.ts");
     expect(choice?.tests).toContain("tests/browser/player-choice.spec.ts");

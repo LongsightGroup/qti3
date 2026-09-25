@@ -1,43 +1,20 @@
 import { authoringResponseIdentifiers } from "./interaction-responses.js";
-import { choiceModalFeedback, validateChoiceFeedback } from "./choice-feedback.js";
 import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
 import { assessmentItemShell, type AssessmentItemShellInput } from "./shell.js";
 import {
   Qti3WriterError,
   type Qti3AuthoringItem,
-  type Qti3AuthoringItemBase,
   type Qti3WriterDiagnostic,
   type Qti3WriterResult,
 } from "./types.js";
 
-export function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
+export type RenderedItemSections = Omit<
+  AssessmentItemShellInput,
+  "outcomeDeclarationsXml" | "modalFeedbackXml"
+>;
+
+function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
   const responses = authoringResponseIdentifiers(item);
-  if (item.interactionType === "choice" && item.feedback) {
-    const prepared = prepareModalFeedback(
-      choiceModalFeedback(
-        item.feedback,
-        item.responseCardinality,
-        item.responseIdentifier ?? "RESPONSE",
-        item.scoring ?? "match_correct",
-      ),
-      responses,
-      {
-        root: "feedback",
-        // Generated outcome metadata has no separate field in the choice authoring model.
-        outcome: (_index, field) =>
-          field === "identifier" ? "feedback.outcomeIdentifier" : "feedback",
-        entry: (index) => `feedback.entries.${index}`,
-      },
-    );
-    prepared.diagnostics.push(...validateChoiceFeedback(item));
-    if (item.modalFeedback)
-      prepared.diagnostics.push({
-        code: "conflicting_feedback_models",
-        path: "modalFeedback",
-        message: "Use either choice feedback or item-level modalFeedback on one item.",
-      });
-    return prepared;
-  }
   const prepared = item.modalFeedback
     ? prepareModalFeedback(item.modalFeedback, responses)
     : ({
@@ -63,38 +40,36 @@ export function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
 export function validatePreparedItem<T extends Qti3AuthoringItem>(
   item: T,
   validate: (input: T) => Qti3WriterDiagnostic[],
+  feedback: PreparedFeedback = prepareItemFeedback(item),
 ): Qti3WriterDiagnostic[] {
-  return [...validate(item), ...prepareItemFeedback(item).diagnostics];
+  return [...validate(item), ...feedback.diagnostics];
 }
 
 export function writePreparedItem<T extends Qti3AuthoringItem>(
   item: T,
   validate: (input: T) => Qti3WriterDiagnostic[],
-  render: (input: T, feedback: PreparedFeedback) => string,
+  render: (input: T) => RenderedItemSections,
+  feedback: PreparedFeedback = prepareItemFeedback(item),
 ): Qti3WriterResult {
-  const feedback = prepareItemFeedback(item);
   const diagnostics = [...validate(item), ...feedback.diagnostics];
   return diagnostics.length
     ? { ok: false, diagnostics }
-    : { ok: true, xml: render(item, feedback), diagnostics: [] };
+    : { ok: true, xml: assembleItem(render(item), feedback), diagnostics: [] };
 }
 
 export function buildPreparedItem<T extends Qti3AuthoringItem>(
   item: T,
   validate: (input: T) => Qti3WriterDiagnostic[],
-  render: (input: T, feedback: PreparedFeedback) => string,
+  render: (input: T) => RenderedItemSections,
+  feedback: PreparedFeedback = prepareItemFeedback(item),
 ): string {
-  const result = writePreparedItem(item, validate, render);
+  const result = writePreparedItem(item, validate, render, feedback);
   if (!result.ok) throw new Qti3WriterError(result.diagnostics);
   return result.xml;
 }
 
 /** Resolve authoring policy before handing final XML sections to the assembler. */
-export function composeAssessmentItem(
-  input: Omit<AssessmentItemShellInput, "outcomeDeclarationsXml" | "modalFeedbackXml"> &
-    Qti3AuthoringItemBase,
-  feedback: PreparedFeedback,
-): string {
+function assembleItem(input: RenderedItemSections, feedback: PreparedFeedback): string {
   return assessmentItemShell({
     ...input,
     outcomeDeclarationsXml: feedback.outcomeDeclarationsXml,

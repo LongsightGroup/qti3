@@ -16,9 +16,8 @@ import {
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3SliderBaseType,
   Qti3SliderBuilderInput,
@@ -42,10 +41,7 @@ export function validateQti3SliderItem(input: Qti3SliderBuilderInput): Qti3Write
   );
 }
 
-export function renderQti3SliderItem(
-  input: Qti3SliderBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3SliderItem(input: Qti3SliderBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Slider response identifier",
@@ -80,15 +76,14 @@ ${sliderMappingXml(input, scoring)}  </qti-response-declaration>`;
     optionalBodySection(input.bodyHtml),
   );
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: sliderResponseProcessingXml(scoring, responseIdentifier),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: sliderResponseProcessingXml(scoring, responseIdentifier),
+  };
 }
 
 export function validateQti3SliderItemStructure(

@@ -15,9 +15,8 @@ import { trustedResponseProcessingXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3DrawingBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
@@ -36,10 +35,7 @@ export function validateQti3DrawingItem(input: Qti3DrawingBuilderInput): Qti3Wri
   );
 }
 
-export function renderQti3DrawingItem(
-  input: Qti3DrawingBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3DrawingItem(input: Qti3DrawingBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Drawing response identifier",
@@ -61,16 +57,15 @@ export function renderQti3DrawingItem(
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.object))}/>
     </qti-drawing-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: trustedResponseProcessingXml(undefined),
-      scoreDefaultZero: true,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: trustedResponseProcessingXml(undefined),
+    scoreDefaultZero: true,
+  };
 }
 
 export function validateQti3DrawingItemStructure(

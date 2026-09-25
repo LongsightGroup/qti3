@@ -502,3 +502,13 @@ The browser player enables that host policy by default for compatibility; set
 `scoreAttempt({ requireScoredResponses: false })`, to use only QTI constraints.
 An explicitly authored zero minimum remains optional under either policy; nonzero
 minimums remain enforced even when the host policy is disabled.
+
+## Choice shuffling
+
+The player supports attempt-scoped shuffling for choice, order, inline choice, associate,
+match and gap match. Saved attempt state includes the resolved presentation order.
+Use `sessionOptions.presentationSeed` in the player (or `presentationSeed` in core
+session options) for reproducible presentation; this is independent of processing
+`randomSeed`. Core hosts inspect `session.presentation()` before rendering.
+See [interaction shuffling](../../docs/interaction-shuffling.md) for fixed choices,
+restore diagnostics, defaults, accessibility and the versioned state contract.

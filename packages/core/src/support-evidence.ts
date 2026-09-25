@@ -100,10 +100,22 @@ export function browserTestsFor(interactionType: QtiInteractionType): string[] {
   return [...base, ...(extras[interactionType] ?? [])];
 }
 
+const shuffleInteractions = new Set<QtiInteractionType>([
+  "choice",
+  "order",
+  "inlineChoice",
+  "associate",
+  "match",
+  "gapMatch",
+]);
+
 export function interactionSupportFixtures(interactionType: QtiInteractionType): string[] {
   return [
     `packages/fixtures/xml/${interactionType}-reference.xml`,
     ...(interactionExtraFixtures[interactionType] ?? []),
+    ...(shuffleInteractions.has(interactionType)
+      ? [`packages/fixtures/xml/shuffle/${interactionType}.xml`]
+      : []),
   ];
 }
 
@@ -114,5 +126,14 @@ export function interactionSupportTests(interactionType: QtiInteractionType): st
   if (interactionType === "media") {
     return [...browserTestsFor(interactionType), "packages/core/src/media-definition.test.ts"];
   }
-  return browserTestsFor(interactionType);
+  return [
+    ...browserTestsFor(interactionType),
+    ...(shuffleInteractions.has(interactionType)
+      ? [
+          "packages/core/src/presentation.test.ts",
+          "packages/writer/src/shuffle.test.ts",
+          "tests/browser/player-shuffle.spec.ts",
+        ]
+      : []),
+  ];
 }

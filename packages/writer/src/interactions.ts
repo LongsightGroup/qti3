@@ -1,4 +1,6 @@
 import { validatePreparedItem, writePreparedItem } from "./item-preparation.js";
+import type { RenderedItemSections } from "./item-preparation.js";
+import { prepareChoiceFeedback } from "./choice-feedback.js";
 import type { PreparedFeedback } from "./modal-feedback.js";
 import { assertNever } from "@longsightgroup/qti3-core";
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
@@ -264,52 +266,52 @@ function validateAuthoringStructure(item: Qti3AuthoringItem): Qti3WriterDiagnost
   }
 }
 
-function renderQti3AuthoringItem(item: Qti3AuthoringItem, feedback: PreparedFeedback): string {
+function renderQti3AuthoringItem(item: Qti3AuthoringItem): RenderedItemSections {
   switch (item.interactionType) {
     case "choice":
-      return renderQti3ChoiceItem(item, feedback);
+      return renderQti3ChoiceItem(item);
     case "order":
-      return renderQti3OrderItem(item, feedback);
+      return renderQti3OrderItem(item);
     case "inlineChoice":
-      return renderQti3InlineChoiceItem(item, feedback);
+      return renderQti3InlineChoiceItem(item);
     case "hottext":
-      return renderQti3HottextItem(item, feedback);
+      return renderQti3HottextItem(item);
     case "gapMatch":
-      return renderQti3GapMatchItem(item, feedback);
+      return renderQti3GapMatchItem(item);
     case "extendedText":
-      return renderQti3ExtendedTextItem(item, feedback);
+      return renderQti3ExtendedTextItem(item);
     case "upload":
-      return renderQti3UploadItem(item, feedback);
+      return renderQti3UploadItem(item);
     case "media":
-      return renderQti3MediaItem(item, feedback);
+      return renderQti3MediaItem(item);
     case "associate":
-      return renderQti3AssociateItem(item, feedback);
+      return renderQti3AssociateItem(item);
     case "textEntry":
-      return renderQti3TextEntryItem(item, feedback);
+      return renderQti3TextEntryItem(item);
     case "match":
-      return renderQti3MatchItem(item, feedback);
+      return renderQti3MatchItem(item);
     case "hotspot":
-      return renderQti3HotspotItem(item, feedback);
+      return renderQti3HotspotItem(item);
     case "graphicOrder":
-      return renderQti3GraphicOrderItem(item, feedback);
+      return renderQti3GraphicOrderItem(item);
     case "selectPoint":
-      return renderQti3SelectPointItem(item, feedback);
+      return renderQti3SelectPointItem(item);
     case "positionObject":
-      return renderQti3PositionObjectItem(item, feedback);
+      return renderQti3PositionObjectItem(item);
     case "slider":
-      return renderQti3SliderItem(item, feedback);
+      return renderQti3SliderItem(item);
     case "custom":
-      return renderQti3CustomInteractionItem(item, feedback);
+      return renderQti3CustomInteractionItem(item);
     case "portableCustom":
-      return renderQti3PortableCustomItem(item, feedback);
+      return renderQti3PortableCustomItem(item);
     case "drawing":
-      return renderQti3DrawingItem(item, feedback);
+      return renderQti3DrawingItem(item);
     case "endAttempt":
-      return renderQti3EndAttemptItem(item, feedback);
+      return renderQti3EndAttemptItem(item);
     case "graphicAssociate":
-      return renderQti3GraphicAssociateItem(item, feedback);
+      return renderQti3GraphicAssociateItem(item);
     case "graphicGapMatch":
-      return renderQti3GraphicGapMatchItem(item, feedback);
+      return renderQti3GraphicGapMatchItem(item);
     default:
       return assertNever(item);
   }
@@ -335,10 +337,19 @@ export const qti3WriterInteractionSupport: readonly Qti3WriterInteractionSupport
   notes: interaction.notes,
 }));
 
+function authoringFeedback(item: Qti3AuthoringItem): PreparedFeedback | undefined {
+  return item.interactionType === "choice" ? prepareChoiceFeedback(item) : undefined;
+}
+
 export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
-  return validatePreparedItem(item, validateAuthoringStructure);
+  return validatePreparedItem(item, validateAuthoringStructure, authoringFeedback(item));
 }
 
 export function writeQti3AuthoringItemResult(item: Qti3AuthoringItem) {
-  return writePreparedItem(item, validateAuthoringStructure, renderQti3AuthoringItem);
+  return writePreparedItem(
+    item,
+    validateAuthoringStructure,
+    renderQti3AuthoringItem,
+    authoringFeedback(item),
+  );
 }

@@ -30,9 +30,8 @@ import {
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3SelectPointBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
@@ -55,8 +54,7 @@ export function validateQti3SelectPointItem(
 
 export function renderQti3SelectPointItem(
   input: Qti3SelectPointBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Select point response identifier",
@@ -87,18 +85,17 @@ export function renderQti3SelectPointItem(
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(renderGraphicObjectAttributes(input.object))}/>
     </qti-select-point-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml:
-        responseIdentifier === "RESPONSE"
-          ? responseProcessingTemplateXml("map_response_point")
-          : mapResponsePointProcessingXml(responseIdentifier),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml:
+      responseIdentifier === "RESPONSE"
+        ? responseProcessingTemplateXml("map_response_point")
+        : mapResponsePointProcessingXml(responseIdentifier),
+  };
 }
 
 export function validateQti3SelectPointItemStructure(

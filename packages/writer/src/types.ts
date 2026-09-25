@@ -243,7 +243,6 @@ export interface Qti3GapTextChoice {
   readonly text?: string | undefined;
   readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
   readonly matchMax?: number | undefined;
-  readonly fixed?: boolean | undefined;
 }
 
 export interface Qti3GapImageChoice {
@@ -251,7 +250,6 @@ export interface Qti3GapImageChoice {
   readonly kind: "image";
   readonly object: Qti3GraphicObject;
   readonly matchMax?: number | undefined;
-  readonly fixed?: boolean | undefined;
 }
 
 export type Qti3GapMatchChoice = Qti3GapTextChoice | Qti3GapImageChoice;
@@ -697,7 +695,6 @@ export interface Qti3GraphicGapTextChoice {
   readonly text?: string | undefined;
   readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
   readonly matchMax?: number | undefined;
-  readonly fixed?: boolean | undefined;
 }
 
 export interface Qti3GraphicGapImageChoice {
@@ -705,7 +702,6 @@ export interface Qti3GraphicGapImageChoice {
   readonly kind: "image";
   readonly object: Qti3GraphicObject;
   readonly matchMax?: number | undefined;
-  readonly fixed?: boolean | undefined;
 }
 
 export type Qti3GraphicGapChoice = Qti3GraphicGapTextChoice | Qti3GraphicGapImageChoice;

@@ -1,3 +1,4 @@
+import { mapGapMatch } from "./qti2-interactions-basic.js";
 import { describe, expect, it } from "vitest";
 import { mapChoice, mapMatch, mapTextEntryItem } from "./qti2-interactions-basic.js";
 import type { Qti2Context } from "./qti2-context.js";
@@ -11,6 +12,16 @@ import {
 } from "./xml.js";
 
 describe("basic QTI 2 interaction mapping", () => {
+  it("blocks legacy gap fixed attributes instead of silently dropping them", () => {
+    const context = qti2Context(
+      `<responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value></correctResponse></responseDeclaration><itemBody><gapMatchInteraction responseIdentifier="RESPONSE"><gapText identifier="A" matchMax="1" fixed="true">Alpha</gapText><p><gap identifier="G1"/></p></gapMatchInteraction></itemBody>`,
+    );
+    mapGapMatch(interaction(context, "gapmatchinteraction"), context);
+    expect(context.blocked).toEqual([
+      expect.objectContaining({ code: "qti2_gap_fixed_unsupported", severity: "error" }),
+    ]);
+  });
+
   it("maps a single-cardinality choice and its scoring disposition", () => {
     const context = qti2Context(`
       <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">

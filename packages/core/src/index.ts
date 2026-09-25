@@ -422,3 +422,16 @@ export { testFailure } from "./test-model.js";
 export { testExecutionSupport } from "./test-support.js";
 export { inspectQtiBinaryChoice } from "./binary-choice.js";
 export type { QtiBinaryChoicePolicy } from "./binary-choice.js";
+
+export {
+  parseQtiPresentationDefinition,
+  type QtiPresentationDefinitionResult,
+  type QtiPresentationGroupDefinition,
+} from "./presentation-definition.js";
+export {
+  prepareQtiPresentation,
+  isQtiPresentationStateV1,
+  type QtiPresentationStateV1,
+  type QtiPresentationResult,
+  type QtiPresentationInput,
+} from "./presentation.js";

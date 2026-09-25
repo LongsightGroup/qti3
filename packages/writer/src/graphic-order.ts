@@ -23,9 +23,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3GraphicOrderBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
@@ -48,8 +47,7 @@ export function validateQti3GraphicOrderItem(
 
 export function renderQti3GraphicOrderItem(
   input: Qti3GraphicOrderBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic order response identifier",
@@ -99,15 +97,14 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(rende
 ${hotspotsXml}
     </qti-graphic-order-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+  };
 }
 
 export function validateQti3GraphicOrderItemStructure(

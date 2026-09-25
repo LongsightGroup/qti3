@@ -26,9 +26,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3GraphicGapChoice,
   Qti3GraphicGapMatchBuilderInput,
@@ -55,8 +54,7 @@ export function validateQti3GraphicGapMatchItem(
 
 export function renderQti3GraphicGapMatchItem(
   input: Qti3GraphicGapMatchBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic gap match response identifier",
@@ -122,15 +120,14 @@ ${choicesXml}
 ${targetsXml}
     </qti-graphic-gap-match-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
+  };
 }
 
 export function validateQti3GraphicGapMatchItemStructure(
@@ -170,11 +167,7 @@ function graphicGapChoiceXml(choice: Qti3GraphicGapChoice): string {
   const identifier = escapeXmlAttribute(
     assertQtiIdentifier(choice.identifier, "Graphic gap choice identifier"),
   );
-  const attrs = [
-    `identifier="${identifier}"`,
-    `match-max="${String(choice.matchMax ?? 1)}"`,
-    choice.fixed ? `fixed="true"` : "",
-  ];
+  const attrs = [`identifier="${identifier}"`, `match-max="${String(choice.matchMax ?? 1)}"`];
   if (choice.kind === "text") {
     const body = choice.contentHtml?.trim() ? choice.contentHtml : escapeXmlText(choice.text ?? "");
     return `      <qti-gap-text ${xmlAttributeList(attrs)}>${body}</qti-gap-text>`;
@@ -206,6 +199,15 @@ function validateChoices(
   );
   for (const [index, choice] of input.choices.entries()) {
     const path = `choices.${index}`;
+    if ("fixed" in choice) {
+      diagnostics.push(
+        writerDiagnostic(
+          "unsupported_gap_choice_fixed",
+          `${path}.fixed`,
+          "QTI 3 gap choices do not define fixed; remove this attribute.",
+        ),
+      );
+    }
     const identifierDiagnostic = validateQtiIdentifier(
       `${path}.identifier`,
       "Graphic gap choice identifier",

@@ -465,6 +465,15 @@ function automatedProofFor(contract: InteractionA11yContract): string[] {
     "operable fixture controls use standard tab order in Playwright",
     "response serialization and fixture scoring coverage",
   ];
+  if (
+    ["choice", "order", "inlineChoice", "associate", "match", "gapMatch"].includes(
+      contract.interactionType,
+    )
+  ) {
+    proof.push(
+      "tests/browser/player-shuffle.spec.ts: shuffled DOM order, keyboard response, focus, axe, scoring and saved presentation restoration",
+    );
+  }
   if (contract.requiresValidationMessageAssociation) {
     proof.push("validation message association contract");
   }

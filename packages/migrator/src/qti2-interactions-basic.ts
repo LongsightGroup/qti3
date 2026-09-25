@@ -253,7 +253,7 @@ export function mapGapMatch(interaction: XmlElement, context: Qti2Context): Qti3
   const choices: Qti3GapMatchChoice[] = findAllDescendantsByAnyLocalName(interaction, [
     "gaptext",
     "gapimg",
-  ]).map((choice, index) => gapChoice(choice, index));
+  ]).map((choice, index) => gapChoice(choice, index, context));
   const targets = findAllDescendantsByLocalName(interaction, "gap").map((gap, index) => ({
     identifier: normalizeIdentifier(attr(gap, "identifier"), `GAP_${index + 1}`),
   }));

@@ -18,9 +18,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3MatchBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import {
   pairResponseDeclarationXml,
@@ -44,10 +43,7 @@ export function validateQti3MatchItem(input: Qti3MatchBuilderInput): Qti3WriterD
   );
 }
 
-export function renderQti3MatchItem(
-  input: Qti3MatchBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3MatchItem(input: Qti3MatchBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -99,15 +95,14 @@ ${input.targets
       </qti-simple-match-set>`,
     optionalBodySection(input.bodyHtml),
   );
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+  };
 }
 
 export function validateQti3MatchItemStructure(

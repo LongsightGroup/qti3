@@ -13,9 +13,8 @@ import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3InlineChoiceBuilderInput,
   Qti3InlineChoiceOption,
@@ -43,8 +42,7 @@ export function validateQti3InlineChoiceItem(
 
 export function renderQti3InlineChoiceItem(
   input: Qti3InlineChoiceBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const scoring = input.scoring ?? "all_or_nothing";
   const declarationsXml = input.slots
     .map((slot) => responseDeclarationXml(slot, scoring))
@@ -58,22 +56,21 @@ export function renderQti3InlineChoiceItem(
     .split("\n")
     .join("\n    ")}`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml:
-        scoring === "map_response"
-          ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
-          : allOrNothingCorrectProcessingXml(
-              input.slots.map((slot) => slot.responseIdentifier),
-              input.slots.length,
-            ),
-      scoreDefaultZero: true,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml:
+      scoring === "map_response"
+        ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
+        : allOrNothingCorrectProcessingXml(
+            input.slots.map((slot) => slot.responseIdentifier),
+            input.slots.length,
+          ),
+    scoreDefaultZero: true,
+  };
 }
 
 function responseDeclarationXml(

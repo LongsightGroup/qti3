@@ -1,3 +1,4 @@
+import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
 import { validateQtiIdentifier, writerDiagnostic } from "./diagnostics.js";
 import { choiceFeedbackProcessingXml } from "./response-processing.js";
 import { qti3TrustedXmlFragment } from "./types.js";
@@ -72,4 +73,35 @@ export function validateChoiceFeedback(input: Qti3ChoiceBuilderInput): Qti3Write
     }
   }
   return diagnostics;
+}
+
+/** Prepare the choice convenience model with diagnostics in its authoring paths. */
+export function prepareChoiceFeedback(item: Qti3ChoiceBuilderInput): PreparedFeedback | undefined {
+  if (item.feedback) {
+    const prepared = prepareModalFeedback(
+      choiceModalFeedback(
+        item.feedback,
+        item.responseCardinality,
+        item.responseIdentifier ?? "RESPONSE",
+        item.scoring ?? "match_correct",
+      ),
+      [item.responseIdentifier ?? "RESPONSE"],
+      {
+        root: "feedback",
+        // Generated outcome metadata has no separate field in the choice authoring model.
+        outcome: (_index, field) =>
+          field === "identifier" ? "feedback.outcomeIdentifier" : "feedback",
+        entry: (index) => `feedback.entries.${index}`,
+      },
+    );
+    prepared.diagnostics.push(...validateChoiceFeedback(item));
+    if (item.modalFeedback)
+      prepared.diagnostics.push({
+        code: "conflicting_feedback_models",
+        path: "modalFeedback",
+        message: "Use either choice feedback or item-level modalFeedback on one item.",
+      });
+    return prepared;
+  }
+  return undefined;
 }

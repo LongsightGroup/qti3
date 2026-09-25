@@ -1,3 +1,4 @@
+import type { QtiPresentationStateV1 } from "./presentation.js";
 export type QtiSupportStatus =
   | "unsupported"
   | "deprecated"
@@ -753,6 +754,8 @@ export interface QtiBuiltInVariables {
 }
 
 export interface QtiAttemptStateV1 {
+  /** Saved choice permutations; separate from candidate responses. */
+  presentation?: QtiPresentationStateV1 | undefined;
   schema: "qti3.attempt-state.v1";
   builtInVariables?: QtiBuiltInVariables | undefined;
   itemIdentifier: string;

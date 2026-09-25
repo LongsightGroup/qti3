@@ -1,8 +1,36 @@
+import { interactionNameToType } from "./support.js";
 import { describe, expect, it } from "vitest";
 import { parseQtiModalFeedbackFragment } from "./parser-content.js";
 import { parseQtiXml } from "./parser.js";
 
 describe("modal feedback content parsing", () => {
+  it.each([...interactionNameToType.keys(), "qti-future-interaction"])(
+    "excludes %s from feedback but recognizes it in item content",
+    (name) => {
+      const fragment = `<${name} response-identifier="RESPONSE"/>`;
+      const feedback = parseQtiModalFeedbackFragment(fragment);
+      expect(feedback.content).toEqual([]);
+      expect(feedback.diagnostics).toMatchObject([{ code: "feedback.interaction.forbidden" }]);
+      const parsed =
+        parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="test" title="Test" time-dependent="false">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier"/>
+        <qti-item-body>${fragment}</qti-item-body>
+      </qti-assessment-item>`);
+      expect(parsed.document?.item.interactions).toHaveLength(1);
+      expect(parsed.document?.item.body).toMatchObject([{ kind: "interaction" }]);
+    },
+  );
+
+  it("preserves foreign elements whose names resemble interactions", () => {
+    const result = parseQtiModalFeedbackFragment(
+      '<qti-choice-interaction xmlns="https://example.invalid/content">Foreign content</qti-choice-interaction>',
+    );
+    expect(result.diagnostics).toEqual([]);
+    expect(result.content).toMatchObject([
+      { kind: "element", namespaceUri: "https://example.invalid/content" },
+    ]);
+  });
+
   it("omits forbidden interactions instead of indexing the item's real interactions", () => {
     const result =
       parseQtiXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback" title="Feedback" time-dependent="false">

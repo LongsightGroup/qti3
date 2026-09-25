@@ -121,6 +121,7 @@ function observeResolvedAssets(
 interface LoadedPlayerItem {
   readonly document: QtiDocument;
   session: QtiItemSession;
+  presentationInteractions: readonly QtiInteraction[];
   readonly sessionOptions: QtiItemSessionOptions | undefined;
   readonly resolveAsset: QtiPlayerResolveAsset | undefined;
   readonly stylesheets: QtiResolvedStylesheet[];
@@ -378,12 +379,25 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     };
     let nextSession: QtiItemSession;
     try {
-      nextSession = createItemSession(nextDocumentModel, options.state, sessionOptions);
+      nextSession = createItemSession(nextDocumentModel, options.state, {
+        ...sessionOptions,
+        presentationSeed:
+          sessionOptions.presentationSeed ?? crypto.getRandomValues(new Uint32Array(4)).join("-"),
+      });
     } catch (error) {
       this.transitionCurrentLoadToError(
         generation,
         [playerErrorDiagnostic("player.restoreState", error)],
         "Unable to restore QTI state.",
+      );
+      return;
+    }
+    const presentation = nextSession.presentation();
+    if (!presentation.ok) {
+      this.transitionCurrentLoadToError(
+        generation,
+        [...presentation.diagnostics],
+        "Unable to prepare QTI presentation.",
       );
       return;
     }
@@ -393,6 +407,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.loadedItem = {
       document: nextDocumentModel,
       session: nextSession,
+      presentationInteractions: presentation.interactions,
       sessionOptions,
       resolveAsset: options.resolveAsset,
       stylesheets: stylesheetResolution.links,
@@ -442,11 +457,19 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   reset(): void {
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
-    loadedItem.session = createItemSession(
-      loadedItem.document,
-      undefined,
-      loadedItem.sessionOptions,
-    );
+    const nextSession = createItemSession(loadedItem.document, undefined, {
+      ...loadedItem.sessionOptions,
+      presentationSeed:
+        loadedItem.sessionOptions?.presentationSeed ??
+        crypto.getRandomValues(new Uint32Array(4)).join("-"),
+    });
+    const presentation = nextSession.presentation();
+    if (!presentation.ok) {
+      this.emitDiagnostics([...presentation.diagnostics]);
+      return;
+    }
+    loadedItem.session = nextSession;
+    loadedItem.presentationInteractions = presentation.interactions;
     loadedItem.validationMessages = [];
     this.render();
     this.updateAttemptAvailability();
@@ -473,7 +496,14 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
           `Cannot restore state for ${state.itemIdentifier} into ${loadedItem.document.item.identifier}.`,
         );
       }
-      loadedItem.session = createItemSession(loadedItem.document, state, loadedItem.sessionOptions);
+      const nextSession = createItemSession(loadedItem.document, state, loadedItem.sessionOptions);
+      const presentation = nextSession.presentation();
+      if (!presentation.ok) {
+        this.emitDiagnostics([...presentation.diagnostics]);
+        return;
+      }
+      loadedItem.session = nextSession;
+      loadedItem.presentationInteractions = presentation.interactions;
     } catch (error) {
       this.emitDiagnostics([playerErrorDiagnostic("player.restoreState", error)]);
       return;
@@ -656,7 +686,14 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     this.replaceChildren(root);
   }
 
-  private renderInteraction(interaction: QtiInteraction): HTMLElement {
+  private presentedInteraction(interaction: QtiInteraction): QtiInteraction {
+    const loaded = this.loadedItem;
+    const index = loaded?.document.item.interactions.indexOf(interaction) ?? -1;
+    return loaded?.presentationInteractions[index] ?? interaction;
+  }
+
+  private renderInteraction(authoredInteraction: QtiInteraction): HTMLElement {
+    const interaction = this.presentedInteraction(authoredInteraction);
     const responseIdentifier = interaction.responseIdentifier;
     return renderBlockInteractionSection({
       interaction,
@@ -714,9 +751,10 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   private contentContext(): PlayerContentContext {
     const sessionState = () => this.loadedItem?.session.serialize();
     return {
-      interactionAt: (index) => this.loadedItem?.document.item.interactions[index],
+      interactionAt: (index) => this.loadedItem?.presentationInteractions[index],
       renderBlockInteraction: (interaction) => this.renderInteraction(interaction),
-      renderEmbeddedInteraction: (embeddedInteraction) => {
+      renderEmbeddedInteraction: (authoredInteraction) => {
+        const embeddedInteraction = this.presentedInteraction(authoredInteraction);
         const responseIdentifier = embeddedInteraction.responseIdentifier;
         return renderEmbeddedInteractionSection({
           interaction: embeddedInteraction,
@@ -804,7 +842,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   private currentResponseValue(identifier: string): QtiValue {
-    return this.loadedItem?.session.serialize().responses[identifier] ?? null;
+    return this.loadedItem?.session.presentationResponse(identifier) ?? null;
   }
 
   private currentInteractionState(identifier: string): QtiPortableCustomStateValue | undefined {

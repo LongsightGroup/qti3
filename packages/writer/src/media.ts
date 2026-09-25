@@ -16,9 +16,8 @@ import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3MediaBuilderInput, Qti3MediaSource, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
@@ -39,10 +38,7 @@ export function validateQti3MediaItem(input: Qti3MediaBuilderInput): Qti3WriterD
   );
 }
 
-export function renderQti3MediaItem(
-  input: Qti3MediaBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3MediaItem(input: Qti3MediaBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Media response identifier",
@@ -74,16 +70,15 @@ export function renderQti3MediaItem(
 ${optionalPromptSection(input.promptHtml)}${mediaElementXml(input)}
     </qti-media-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: "",
-      companionMaterialsXml,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: "",
+    companionMaterialsXml,
+  };
 }
 
 export function validateQti3MediaItemStructure(

@@ -18,9 +18,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3OrderBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
@@ -39,10 +38,7 @@ export function validateQti3OrderItem(input: Qti3OrderBuilderInput): Qti3WriterD
   );
 }
 
-export function renderQti3OrderItem(
-  input: Qti3OrderBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3OrderItem(input: Qti3OrderBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -97,15 +93,14 @@ ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-va
     optionalBodySection(input.bodyHtml),
   );
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+  };
 }
 
 export function validateQti3OrderItemStructure(

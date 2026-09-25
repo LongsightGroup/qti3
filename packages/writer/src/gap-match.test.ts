@@ -10,6 +10,22 @@ import {
 import { expectValidParsedItem } from "./test-helpers.js";
 
 describe("qti3-writer gap match", () => {
+  it("diagnoses the removed non-standard fixed gap-choice option", () => {
+    const choice = { identifier: "A", kind: "text" as const, text: "Alpha", fixed: true };
+    expect(
+      validateQti3GapMatchItem({
+        identifier: "fixed-gap",
+        title: "Fixed gap",
+        bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="G1"/></p>'),
+        choices: [choice],
+        targets: [{ identifier: "G1" }],
+        correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "G1" }],
+      }),
+    ).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "unsupported_gap_choice_fixed" })]),
+    );
+  });
+
   it("writes gap match items with choices, body gaps, mappings, bounds, and vocabulary", () => {
     const xml = buildQti3GapMatchItem({
       identifier: "gap-match-1",
@@ -19,7 +35,7 @@ describe("qti3-writer gap match", () => {
         '<div><p><qti-gap identifier="G1" class="qti-input-width-10"/> then <qti-gap identifier="G2"/>.</p></div>',
       ),
       choices: [
-        { identifier: "A", kind: "text", text: "Alpha", matchMax: 1, fixed: true },
+        { identifier: "A", kind: "text", text: "Alpha", matchMax: 1 },
         { identifier: "B", kind: "text", contentHtml: qti3TrustedXmlFragment("<em>Beta</em>") },
       ],
       targets: [{ identifier: "G1" }, { identifier: "G2" }],
@@ -69,7 +85,6 @@ describe("qti3-writer gap match", () => {
     expect(interaction.choices.slice(0, 2).map((choice) => choice.text)).toEqual(["Alpha", "Beta"]);
     expect(interaction.choices[0]?.attributes).toMatchObject({
       "match-max": "1",
-      fixed: "true",
     });
     expect(interaction.gapMatchSegments).toEqual(
       expect.arrayContaining([

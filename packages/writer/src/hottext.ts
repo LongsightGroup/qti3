@@ -17,9 +17,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3HottextBuilderInput, Qti3HottextChoice, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
@@ -38,10 +37,7 @@ export function validateQti3HottextItem(input: Qti3HottextBuilderInput): Qti3Wri
   );
 }
 
-export function renderQti3HottextItem(
-  input: Qti3HottextBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3HottextItem(input: Qti3HottextBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Hottext response identifier",
@@ -87,15 +83,14 @@ ${correctXml}  </qti-response-declaration>`;
   const bodyXml = `    <qti-hottext-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}${bodyContent}
     </qti-hottext-interaction>`;
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+  };
 }
 
 function choiceXml(choice: Qti3HottextChoice): string {
