@@ -85,3 +85,5 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 - Split other focused browser suites into `tests/browser/player-validation.spec.ts`, `tests/browser/player-lifecycle.spec.ts`, `tests/browser/player-portable-custom.spec.ts`, `tests/browser/player-package.spec.ts`, `tests/browser/player-keyboard-a11y.spec.ts`, and `tests/browser/player-graphic.spec.ts` when adding related coverage.
 - Prefer pure-function tests with plain data or minimal typed stubs when a helper only reads simple fields such as `dataset`.
 - When moving behavior from Vitest to Playwright, preserve the assertion intent: visible DOM state, accessibility attributes, and serialized player state should still be covered.
+
+- Conformance regressions must follow [spec regression testing](docs/spec-regression-testing.md): independent expected results, validated positive fixtures, and migration grade preservation or explicit rejection.

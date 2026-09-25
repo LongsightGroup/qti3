@@ -1,5 +1,6 @@
 import {
   qtiValueToString,
+  parseXmlBoolean,
   type QtiAttemptStateV1,
   type QtiContentNode,
   type QtiDocument,
@@ -57,13 +58,18 @@ export function isTemplateContentVisible(
   return element.dataset.showHide === "hide" ? !hasIdentifier : hasIdentifier;
 }
 
+export interface MathTemplateToken {
+  readonly localName: "mn" | "cn";
+  readonly text: string;
+}
+
 export function mathTemplateValue(
   node: Extract<QtiContentNode, { kind: "element" }>,
   documentModel: QtiDocument | undefined,
   templateValue: QtiValue,
-): string | undefined {
+): MathTemplateToken | undefined {
   if (
-    (node.qtiName !== "mi" && node.qtiName !== "mo") ||
+    (node.qtiName !== "mi" && node.qtiName !== "ci") ||
     contentElementName(node.qtiName, node.namespaceUri) === undefined
   ) {
     return undefined;
@@ -72,8 +78,9 @@ export function mathTemplateValue(
   if (!identifier) return undefined;
   const declaration = documentModel?.item.templateDeclarations.find(
     (template) =>
-      template.identifier === identifier && template.attributes["math-variable"] === "true",
+      template.identifier === identifier &&
+      parseXmlBoolean(template.attributes["math-variable"]) === true,
   );
   if (!declaration) return undefined;
-  return qtiValueToString(templateValue);
+  return { localName: node.qtiName === "ci" ? "cn" : "mn", text: qtiValueToString(templateValue) };
 }

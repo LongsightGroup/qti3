@@ -12,7 +12,7 @@ import { evaluateGeometryExpression } from "./processing-evaluator-geometry.js";
 import { evaluateNumericExpression } from "./processing-evaluator-numeric.js";
 import { evaluateStringExpression } from "./processing-evaluator-string.js";
 import { evaluateVariableExpression } from "./processing-evaluator-variable.js";
-import { numericValueOrNull } from "./processing-values.js";
+import { isNullResponse, numericValueOrNull } from "./processing-values.js";
 import { isRecordValue } from "./value-guards.js";
 
 export interface EvaluationContext {
@@ -103,6 +103,15 @@ export function createEvaluationContext(
 }
 
 export function evaluateProcessingExpression(
+  expression: QtiProcessingExpression,
+  context: EvaluationContext,
+): QtiValue {
+  // QTI 3 §2.2.2: empty strings and containers are NULL, including intermediate results.
+  const value = evaluateExpressionValue(expression, context);
+  return isNullResponse(value) ? null : value;
+}
+
+function evaluateExpressionValue(
   expression: QtiProcessingExpression,
   context: EvaluationContext,
 ): QtiValue {

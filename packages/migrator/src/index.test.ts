@@ -583,10 +583,10 @@ function unsupportedQti21Item(): string {
 function qti12Items(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <questestinterop>
-  <item ident="choice12" title="Choice 12"><presentation><material><mattext>Pick.</mattext></material><response_lid ident="RESPONSE" rcardinality="Single"><render_choice><response_label ident="A"><material><mattext>A</mattext></material></response_label><response_label ident="B"><material><mattext>B</mattext></material></response_label></render_choice></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">B</varequal></conditionvar></respcondition></resprocessing></item>
-  <item ident="text12" title="Text 12"><presentation><material><mattext>Type.</mattext></material><response_str ident="RESPONSE"><render_fib/></response_str></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">answer</varequal></conditionvar></respcondition></resprocessing></item>
+  <item ident="choice12" title="Choice 12"><presentation><material><mattext>Pick.</mattext></material><response_lid ident="RESPONSE" rcardinality="Single"><render_choice><response_label ident="A"><material><mattext>A</mattext></material></response_label><response_label ident="B"><material><mattext>B</mattext></material></response_label></render_choice></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">B</varequal></conditionvar><setvar varname="SCORE" action="Set">1</setvar></respcondition></resprocessing></item>
+  <item ident="text12" title="Text 12"><presentation><material><mattext>Type.</mattext></material><response_str ident="RESPONSE"><render_fib/></response_str></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">answer</varequal></conditionvar><setvar varname="SCORE" action="Set">1</setvar></respcondition></resprocessing></item>
   <item ident="essay12" title="Essay question"><presentation><material><mattext>Write.</mattext></material></presentation></item>
-  <item ident="hotspot12" title="Hotspot 12"><presentation><material><mattext>Click.</mattext></material><response_lid ident="RESPONSE"><render_hotspot><response_label ident="H1" rarea="Rectangle" coords="0,0,10,10"/></render_hotspot></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">H1</varequal></conditionvar></respcondition></resprocessing></item>
+  <item ident="hotspot12" title="Hotspot 12"><presentation><material><mattext>Click.</mattext></material><response_lid ident="RESPONSE"><render_hotspot><response_label ident="H1" rarea="Rectangle" coords="0,0,10,10"/></render_hotspot></response_lid></presentation><resprocessing><respcondition><conditionvar><varequal respident="RESPONSE">H1</varequal></conditionvar><setvar varname="SCORE" action="Set">1</setvar></respcondition></resprocessing></item>
 </questestinterop>`;
 }
 
@@ -648,8 +648,7 @@ function canvasQti12MatchingItem(): string {
           </response_lid>
         </presentation>
         <resprocessing>
-          <respcondition><conditionvar><varequal respident="response_source_a">target_a</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
-          <respcondition><conditionvar><varequal respident="response_source_b">target_b</varequal></conditionvar><setvar varname="SCORE" action="Add">50</setvar></respcondition>
+          <respcondition><conditionvar><and><varequal respident="response_source_a">target_a</varequal><varequal respident="response_source_b">target_b</varequal></and></conditionvar><setvar varname="SCORE" action="Set">1</setvar></respcondition>
         </resprocessing>
       </item>
     </section>

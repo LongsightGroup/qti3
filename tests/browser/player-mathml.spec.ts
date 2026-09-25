@@ -212,9 +212,46 @@ test.describe("player MathML rendering", () => {
     await page.locator("#load-fixture").click();
 
     const math = page.locator("qti-assessment-item-player math");
-    await expect(math.locator("mi").first()).toHaveText("3");
+    await expect(math.locator("mn").first()).toHaveText("3");
     expect(await math.evaluate((element) => element.namespaceURI)).toBe(
       "http://www.w3.org/1998/Math/MathML",
     );
   });
 });
+
+// QTI 3 §2.3.3: mi -> mn and ci -> cn; XML Boolean accepts both true and 1.
+for (const enabled of ["true", "1", "false", "0"]) {
+  test(`substitutes MathML token types with math-variable=${enabled}`, async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(
+      page,
+      `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="math-substitution" title="Math substitution" time-dependent="false">
+      <qti-template-declaration identifier="A" cardinality="single" base-type="integer" math-variable="${enabled}"><qti-default-value><qti-value>3</qti-value></qti-default-value></qti-template-declaration>
+      <qti-item-body><p><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>A</mi><mo>A</mo><ci>A</ci><mi>B</mi></math></p></qti-item-body>
+      </qti-assessment-item>`,
+    );
+    const math = page.locator("qti-assessment-item-player math");
+    const tokens = await math.evaluate((element) =>
+      Array.from(element.children, (child) => ({
+        name: child.localName,
+        text: child.textContent,
+        namespace: child.namespaceURI,
+      })),
+    );
+    const active = enabled === "true" || enabled === "1";
+    expect(tokens).toEqual([
+      {
+        name: active ? "mn" : "mi",
+        text: active ? "3" : "A",
+        namespace: "http://www.w3.org/1998/Math/MathML",
+      },
+      { name: "mo", text: "A", namespace: "http://www.w3.org/1998/Math/MathML" },
+      {
+        name: active ? "cn" : "ci",
+        text: active ? "3" : "A",
+        namespace: "http://www.w3.org/1998/Math/MathML",
+      },
+      { name: "mi", text: "B", namespace: "http://www.w3.org/1998/Math/MathML" },
+    ]);
+  });
+}

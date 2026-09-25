@@ -1,11 +1,16 @@
 import type { QtiAssessmentItem, QtiInteractionType } from "@longsightgroup/qti3-core";
-import { parseQtiXml } from "@longsightgroup/qti3-core";
+import { parseQtiXml, assertNever } from "@longsightgroup/qti3-core";
 import { createHash } from "node:crypto";
 
 import { transcodeQti3Item } from "./item.js";
 import { qtiTranscodeProfiles, requiresReverseMigrationEvidence } from "./profiles.js";
 import type { QtiTranscodeItemResult, QtiTranscodeProfileId } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
+
+export type ReverseMigrationResult =
+  | { readonly status: "preserved" }
+  | { readonly status: "unsupported"; readonly code: string }
+  | { readonly status: "failed"; readonly message: string };
 
 export interface TranscoderEvidenceCase {
   readonly caseId: string;
@@ -96,6 +101,7 @@ export function validateTranscoderEvidenceCase(
 export function observeTranscoderEvidenceCase(
   evidenceCase: TranscoderEvidenceCase,
   result: Extract<QtiTranscodeItemResult, { ok: true }>,
+  executedReverseEvidence: readonly string[],
 ): TranscoderEvidenceObservation {
   return {
     caseId: evidenceCase.caseId,
@@ -115,9 +121,7 @@ export function observeTranscoderEvidenceCase(
       "source-semantic",
       "target-semantic",
       "golden-fixture",
-      ...(requiresReverseMigrationEvidence(qtiTranscodeProfiles[evidenceCase.profile])
-        ? ["reverse-migration"]
-        : []),
+      ...executedReverseEvidence,
       "behavior",
       "visible-content",
       "assets",
@@ -131,10 +135,7 @@ export function runTranscoderEvidenceMatrix(input: {
   readonly profiles?: readonly QtiTranscodeProfileId[];
   readonly interactions: readonly QtiInteractionType[];
   readonly fixtureXml: (interaction: QtiInteractionType) => string;
-  readonly reverseMigration?: (
-    xml: string,
-    fidelity: string,
-  ) => { readonly ok: boolean; readonly message?: string | undefined };
+  readonly reverseMigration?: (xml: string, fidelity: string) => ReverseMigrationResult;
 }): TranscoderEvidenceRunResult {
   const profiles =
     input.profiles ?? Object.values(qtiTranscodeProfiles).map((profile) => profile.id);
@@ -153,16 +154,35 @@ export function runTranscoderEvidenceMatrix(input: {
     }
     failures.push(...validateTranscoderEvidenceCase(evidenceCase, run.result, run.source));
     if (run.result.ok) {
-      observations.push(observeTranscoderEvidenceCase(evidenceCase, run.result));
-      const reverse = requiresReverseMigrationEvidence(qtiTranscodeProfiles[evidenceCase.profile])
+      const requiresReverse = requiresReverseMigrationEvidence(
+        qtiTranscodeProfiles[evidenceCase.profile],
+      );
+      const reverse = requiresReverse
         ? input.reverseMigration?.(run.result.xml, run.result.report.fidelity)
         : undefined;
-      if (reverse && !reverse.ok) {
+      const reverseEvidence: string[] = [];
+      if (requiresReverse && !reverse) {
         failures.push({
           caseId: evidenceCase.caseId,
-          message: reverse.message ?? "reverse migration failed.",
+          message: "reverse migration evidence was not executed.",
         });
       }
+      if (reverse) {
+        switch (reverse.status) {
+          case "preserved":
+            reverseEvidence.push("reverse-migration");
+            break;
+          case "unsupported":
+            reverseEvidence.push(`reverse-migration-unsupported:${reverse.code}`);
+            break;
+          case "failed":
+            failures.push({ caseId: evidenceCase.caseId, message: reverse.message });
+            break;
+          default:
+            assertNever(reverse);
+        }
+      }
+      observations.push(observeTranscoderEvidenceCase(evidenceCase, run.result, reverseEvidence));
     } else {
       failures.push({
         caseId: evidenceCase.caseId,

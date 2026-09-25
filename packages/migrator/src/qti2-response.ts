@@ -1,5 +1,6 @@
 import { normalizeIdentifier } from "./text.js";
 import {
+  attr,
   findAllDescendantsByLocalName,
   findDescendantByLocalName,
   textOf,
@@ -10,7 +11,9 @@ export function responseValues(declaration: XmlElement | undefined): string[] {
   if (!declaration) return [];
   const correct = findDescendantByLocalName(declaration, "correctresponse");
   return findAllDescendantsByLocalName(correct, "value")
-    .map((value) => textOf(value))
+    .map((value) =>
+      attr(declaration, "baseType") === "string" ? (value.textContent ?? "") : textOf(value),
+    )
     .filter(Boolean);
 }
 

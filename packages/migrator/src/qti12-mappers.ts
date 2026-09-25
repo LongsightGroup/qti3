@@ -210,6 +210,7 @@ export function mapQti12TextEntry(
   response: XmlElement,
   presentation: XmlElement | null,
   correct: ReadonlyMap<string, string[]>,
+  caseSensitive: ReadonlyMap<string, boolean>,
   options: ResolvedQtiMigrationOptions,
   path: string,
 ): Qti12MapperResult {
@@ -254,8 +255,12 @@ export function mapQti12TextEntry(
         {
           responseIdentifier,
           answers: values.length
-            ? values.map((value) => ({ value, score: 1, caseSensitive: false }))
-            : [{ value: "", score: 1, caseSensitive: false }],
+            ? values.map((value) => ({
+                value,
+                score: 1,
+                caseSensitive: caseSensitive.get(source) ?? true,
+              }))
+            : [{ value: "", score: 1, caseSensitive: caseSensitive.get(source) ?? true }],
         },
       ],
     },

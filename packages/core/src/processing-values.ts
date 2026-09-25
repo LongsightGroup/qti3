@@ -48,7 +48,7 @@ export function qtiMatchValues(
   ordered = false,
   baseType?: QtiBaseType,
 ): boolean | null {
-  if (actual === null || expected === null) return null;
+  if (isNullResponse(actual) || isNullResponse(expected)) return null;
   return valuesEqual(actual, expected, ordered, baseType);
 }
 
@@ -187,7 +187,7 @@ export function stringMatch(
   caseSensitive: boolean,
   substring: boolean,
 ): boolean | null {
-  if (left === null || right === null) return null;
+  if (isNullResponse(left) || isNullResponse(right)) return null;
   let actual = qtiValueToString(left);
   let expected = qtiValueToString(right);
   if (!caseSensitive) {

@@ -1,7 +1,7 @@
 import type { QtiDocument, QtiResponseDeclaration, QtiValue } from "./types.js";
-import { parseQtiPair, parseXmlBoolean } from "./parser-values.js";
+import { coerceValue, parseXmlBoolean } from "./parser-values.js";
 import { qtiScalarToString, qtiValueToStringList } from "./value-format.js";
-import { numericValue, valuesEqual } from "./processing-values.js";
+import { isNullResponse, numericValue, valuesEqual } from "./processing-values.js";
 import { isRecordValue } from "./value-guards.js";
 
 export function lookupOutcomeValue(
@@ -14,7 +14,7 @@ export function lookupOutcomeValue(
   );
   const lookupTable = declaration?.lookupTable;
   if (!lookupTable) return null;
-  if (value === null) return lookupTable.defaultValue;
+  if (isNullResponse(value)) return lookupTable.defaultValue;
   const numeric = numericValue(value);
   if (lookupTable.type === "match") {
     return (
@@ -47,13 +47,24 @@ export function mapOrMatchResponse(
     : 0;
 }
 
+/** Standard mapping templates bypass mapping bounds for unanswered responses. */
+export function scoreStandardMapTemplate(
+  declaration: QtiResponseDeclaration | undefined,
+  response: QtiValue,
+  correctResponse: QtiValue,
+): number {
+  return !declaration || isNullResponse(response)
+    ? 0
+    : mapOrMatchResponse(declaration, response, correctResponse);
+}
+
 export function scoreAreaMapping(
   response: QtiValue,
   areaMapping: NonNullable<QtiResponseDeclaration["areaMapping"]>,
 ): number {
   const points = Array.isArray(response)
     ? response.map(qtiScalarToString)
-    : response === null
+    : isNullResponse(response)
       ? []
       : qtiValueToStringList(response);
   const matchedAreaIndexes = new Set<number>();
@@ -138,14 +149,17 @@ function scoreMapping(
   baseType: QtiResponseDeclaration["baseType"],
 ): number {
   const mappedValue = (value: string): number => {
-    const key = mappingKey(value, baseType);
+    const key = coerceValue(value, baseType);
     const entry = mapping.entries.find((candidate) => {
       if (candidate.mapKey === undefined) return false;
-      const candidateKey = mappingKey(candidate.mapKey, baseType);
+      const candidateKey = coerceValue(candidate.mapKey, baseType);
       const caseSensitive = parseXmlBoolean(candidate.attributes["case-sensitive"]) ?? false;
-      return baseType === "string" && !caseSensitive
+      return baseType === "string" &&
+        !caseSensitive &&
+        typeof candidateKey === "string" &&
+        typeof key === "string"
         ? candidateKey.toLowerCase() === key.toLowerCase()
-        : candidateKey === key;
+        : valuesEqual(candidateKey, key, false, baseType);
     });
     return entry?.mappedValue ?? mapping.defaultValue;
   };
@@ -157,14 +171,9 @@ function scoreMapping(
     const score = distinct.reduce<number>((sum, value) => sum + mappedValue(String(value)), 0);
     return clampMappedScore(score, mapping.attributes);
   }
-  const score = response === null || isRecordValue(response) ? 0 : mappedValue(String(response));
+  const score =
+    isNullResponse(response) || isRecordValue(response) ? 0 : mappedValue(String(response));
   return clampMappedScore(score, mapping.attributes);
-}
-
-function mappingKey(value: string, baseType: QtiResponseDeclaration["baseType"]): string {
-  return baseType === "pair" || baseType === "directedPair"
-    ? (parseQtiPair(value, baseType) ?? value)
-    : value;
 }
 
 function clampMappedScore(score: number, attributes: Record<string, string>): number {

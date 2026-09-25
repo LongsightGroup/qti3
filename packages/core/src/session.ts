@@ -29,7 +29,7 @@ export type {
 import { createEvaluationContext, type EvaluationContext } from "./processing-evaluator.js";
 import { seededRandom } from "./processing-random.js";
 import { getResponseDeclaration } from "./processing-variables.js";
-import { lookupOutcomeValue, mapOrMatchResponse } from "./processing-mapping.js";
+import { lookupOutcomeValue, scoreStandardMapTemplate } from "./processing-mapping.js";
 import { responseProcessingTemplateKind } from "./processing-templates.js";
 import { assertCompatiblePriorState } from "./attempt-state.js";
 export { assertQtiAttemptStateV1, isQtiAttemptStateV1 } from "./attempt-state.js";
@@ -507,13 +507,11 @@ function applyResponseProcessing(context: SessionProcessingContext): void {
   }
   if (templateKind === "mapResponse" || templateKind === "mapResponsePoint") {
     const declaration = getResponseDeclaration(evaluation.document, "RESPONSE");
-    evaluation.outcomes.SCORE = declaration
-      ? mapOrMatchResponse(
-          declaration,
-          evaluation.responses.RESPONSE ?? null,
-          evaluation.correctResponses.RESPONSE ?? null,
-        )
-      : 0;
+    evaluation.outcomes.SCORE = scoreStandardMapTemplate(
+      declaration,
+      evaluation.responses.RESPONSE ?? null,
+      evaluation.correctResponses.RESPONSE ?? null,
+    );
     return;
   }
 

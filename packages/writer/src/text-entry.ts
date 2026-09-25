@@ -58,7 +58,7 @@ function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
     assertQtiIdentifier(response.responseIdentifier, "Text entry response identifier"),
   );
   const baseType = response.baseType ?? "string";
-  const answers = (response.answers ?? []).filter((answer) => answer.value.trim().length > 0);
+  const answers = (response.answers ?? []).filter((answer) => answer.value.length > 0);
   const parts = [
     `  <qti-response-declaration identifier="${responseIdentifier}" cardinality="single" base-type="${baseType}">`,
   ];
@@ -66,7 +66,7 @@ function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
   const correctResponse = response.correctResponse ?? correctAnswers[0]?.value;
   if (correctResponse !== undefined) {
     parts.push("    <qti-correct-response>");
-    parts.push(`      <qti-value>${escapeXmlText(correctResponse.trim())}</qti-value>`);
+    parts.push(`      <qti-value>${escapeXmlText(correctResponse)}</qti-value>`);
     parts.push("    </qti-correct-response>");
   }
   if (answers.length) {
@@ -80,7 +80,7 @@ function buildResponseDeclaration(response: Qti3TextEntryResponse): string {
 
 function mapEntryXml(answer: Qti3TextEntryAnswer): string {
   const attrs = [
-    `map-key="${escapeXmlAttribute(answer.value.trim())}"`,
+    `map-key="${escapeXmlAttribute(answer.value)}"`,
     `mapped-value="${String(normalizeScore(answer.score))}"`,
   ];
   if (answer.caseSensitive === false) attrs.push('case-sensitive="false"');
@@ -90,7 +90,7 @@ function mapEntryXml(answer: Qti3TextEntryAnswer): string {
 
 function buildResponseProcessing(responses: readonly Qti3TextEntryResponse[]): string {
   const scoredResponses = responses.filter((response) =>
-    response.answers?.some((answer) => answer.value.trim().length > 0),
+    response.answers?.some((answer) => answer.value.length > 0),
   );
   if (!scoredResponses.length) {
     return `  <qti-response-processing>
@@ -163,7 +163,10 @@ export function validateQti3TextEntryItemStructure(
     );
     if (identifierDiagnostic) diagnostics.push(identifierDiagnostic);
     if (response.correctResponse !== undefined) {
-      const value = response.correctResponse.trim();
+      const value =
+        response.baseType === "integer" || response.baseType === "float"
+          ? response.correctResponse.trim()
+          : response.correctResponse;
       const number = Number(value);
       const invalid =
         !value ||

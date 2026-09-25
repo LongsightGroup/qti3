@@ -2,7 +2,8 @@ import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 
 import { assertNever } from "@longsightgroup/qti3-core";
 
-import { correctEntries, presentationBodyHtml } from "./qti12-body.js";
+import { prepareQti12Scoring } from "./qti12-scoring.js";
+import { presentationBodyHtml } from "./qti12-body.js";
 import {
   classifyQti12Item,
   essayAuthoringItem,
@@ -68,8 +69,10 @@ function migrateQti12ItemElement(
   const title = attr(item, "title")?.trim() || `Item ${index + 1}`;
   const presentation = findDescendantByLocalName(item, "presentation");
   const bodyHtml = presentationBodyHtml(presentation);
-  const correct = correctEntries(item);
   const classification = classifyQti12Item(item);
+  const scoring = prepareQti12Scoring(item, path, classification.kind);
+  if (!scoring.ok) return { diagnostics: scoring.diagnostics };
+  const correct = scoring.correct;
 
   switch (classification.kind) {
     case "essay":
@@ -122,6 +125,7 @@ function migrateQti12ItemElement(
         classification.fibResponse,
         presentation,
         correct,
+        scoring.caseSensitive,
         options,
         path,
       );

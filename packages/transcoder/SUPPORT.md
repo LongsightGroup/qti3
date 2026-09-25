@@ -10,6 +10,12 @@ Registry cases exercise individual interactions. The End Attempt case uses a sta
 finish control because the public planning-hint item is composite; composite QTI 2.x
 reverse migration is explicitly unsupported and covered by regression tests.
 
+Forward fidelity and reverse-import support are distinct. A
+`reverse-migration-unsupported:<diagnostic>` entry records a verified refusal to import
+an unpreserved scoring program; it does not claim a successful round trip. Unexpected
+reverse errors still fail the check. All executed evidence, including these refusals,
+is checked against the committed evidence lock.
+
 - [`blackboard-question-banks@1`](./support/blackboard-question-banks@1.md)
 - [`brightspace-course-import@1`](./support/brightspace-course-import@1.md)
 - [`canvas-classic-quizzes@1`](./support/canvas-classic-quizzes@1.md)

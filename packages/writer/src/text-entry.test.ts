@@ -10,7 +10,7 @@ import { expectValidParsedItem } from "./test-helpers.js";
 
 describe("qti3-writer text entry", () => {
   it.each([
-    { baseType: "string" as const, correctResponse: " " },
+    { baseType: "string" as const, correctResponse: "" },
     { baseType: "integer" as const, correctResponse: "1.5" },
     { baseType: "integer" as const, correctResponse: "0x10" },
     { baseType: "float" as const, correctResponse: "Infinity" },

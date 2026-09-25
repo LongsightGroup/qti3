@@ -90,3 +90,17 @@ An explicit `shuffle` attribute on legacy graphic gap match returns
 `qti2_graphic_gap_shuffle_unsupported`, including false values, rather than silently discarding it.
 QTI 3 graphic gap match does not define this attribute. Ordinary graphic gap match without this
 attribute continues to migrate.
+
+Authored QTI 2 response processing is accepted when its canonical standard template or its
+inline expression tree is preserved by the writer. Changed inline rules (which override a
+coexisting template), unknown templates, and changed template semantics return `qti2_response_processing_not_preserved`. The migrator
+does not replace a supplied scoring program with an inferred answer-key program.
+
+QTI 1.2 scoring currently accepts a single positive conjunction that sets `SCORE` to 1 (or adds 1 once),
+with a zero default, over the supported single-response forms. Negation, alternative scoring
+conditions, weighted/additive scores, and unpreserved defaults return
+`qti12_response_processing_unsupported`, including under `repairPolicy: "safe"`.
+For example, Canvas matching conditions that add 50 points per pair are rejected;
+they cannot be represented by the writer's all-or-nothing matching model.
+
+String correct responses and text-entry mapping keys preserve significant whitespace.

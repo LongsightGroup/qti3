@@ -6,13 +6,57 @@ import {
   type QtiInteractionType,
 } from "@longsightgroup/qti3-core";
 import { qti3TrustedXmlFragment, writeQti3AssessmentItem } from "@longsightgroup/qti3-writer";
-import { transcodeQti3Item, transcodeQti3Package } from "@longsightgroup/qti3-transcoder";
+import {
+  transcodeQti3Item,
+  transcodeQti3Package,
+  type QtiTranscodeProfileId,
+} from "@longsightgroup/qti3-transcoder";
 import { describe, expect, it } from "vitest";
 
 import { migrateQtiItemToQti3, migrateQtiToQti3 } from "./index.js";
 import { assessmentPackageZip } from "./test-helpers.js";
 
 const interactions = [...interactionSupport, ...deprecatedInteractionSupport];
+
+const qti2RefusedTypes = new Set<QtiInteractionType>([
+  "drawing",
+  "inlineChoice",
+  "media",
+  "portableCustom",
+  "textEntry",
+  "upload",
+]);
+const qti12PreservedTypes = new Set<QtiInteractionType>([
+  "choice",
+  "hotspot",
+  "hottext",
+  "positionObject",
+  "selectPoint",
+  "slider",
+  "textEntry",
+]);
+const qti2Preserved = interactions.filter((entry) => !qti2RefusedTypes.has(entry.interactionType));
+const qti2Refused = interactions.filter((entry) => qti2RefusedTypes.has(entry.interactionType));
+const qti12Preserved = interactions.filter((entry) =>
+  qti12PreservedTypes.has(entry.interactionType),
+);
+const qti12Refused = interactions.filter(
+  (entry) => !qti12PreservedTypes.has(entry.interactionType),
+);
+
+function reverseFixture(profile: QtiTranscodeProfileId, interaction: QtiInteractionType) {
+  const result = transcodeQti3Item(
+    { kind: "xml", xml: fixtureXml(interaction), sourcePath: `${interaction}.xml` },
+    { profile },
+  );
+  expect(result.ok).toBe(true);
+  if (!result.ok) throw new Error("Expected transcoded fixture");
+  const reverse = migrateQtiItemToQti3(
+    { filename: "item.xml", xml: result.xml },
+    { repairPolicy: "safe" },
+  );
+  return { result, reverse };
+}
 
 describe("qti3 transcoder reverse-migration evidence", () => {
   for (const profile of ["qti21-standard@1", "qti22-standard@1"] as const) {
@@ -34,64 +78,57 @@ describe("qti3 transcoder reverse-migration evidence", () => {
         expect.objectContaining({ code: "qti2_composite_interactions_unsupported" }),
       );
     });
-    for (const interaction of interactions) {
-      it(`${profile} preserves ${interaction.interactionType} through reverse migration`, () => {
-        const result = transcodeQti3Item(
-          {
-            kind: "xml",
-            xml: fixtureXml(interaction.interactionType),
-            sourcePath: `${interaction.interactionType}.xml`,
-          },
-          { profile },
-        );
-        expect(result.ok).toBe(true);
-        if (!result.ok) return;
-
-        const reverse = migrateQtiItemToQti3(
-          { filename: "item.xml", xml: result.xml },
-          { repairPolicy: "safe" },
-        );
-        const expectedInteraction =
-          interaction.interactionType === "portableCustom"
-            ? "custom"
-            : interaction.interactionType === "graphicGapMatch" &&
-                result.report.mappings[0]?.emittedInteraction === "gapMatchInteraction"
-              ? "gapMatch"
-              : interaction.interactionType;
-        expect(reverse.authoringItem?.interactionType).toBe(expectedInteraction);
-        if (interaction.interactionType === "graphicGapMatch") {
-          expect(reverse.authoringItem?.bodyHtml).toContain('qti-gap identifier="G1"');
-          expect(reverse.authoringItem?.bodyHtml).toContain('qti-gap identifier="G2"');
-        }
-        expect(reverse.diagnostics.some((entry) => entry.severity === "error")).toBe(false);
-      });
-    }
-  }
-
-  for (const interaction of interactions) {
-    it(`qti12-standard@1 preserves a usable ${interaction.interactionType} task`, () => {
-      const result = transcodeQti3Item(
-        {
-          kind: "xml",
-          xml: fixtureXml(interaction.interactionType),
-          sourcePath: `${interaction.interactionType}.xml`,
-        },
-        { profile: "qti12-standard@1" },
-      );
-      expect(result.ok).toBe(true);
-      if (!result.ok) return;
-
-      const reverse = migrateQtiItemToQti3(
-        { filename: "item.xml", xml: result.xml },
-        { repairPolicy: "safe" },
-      );
-      expect(reverse.authoringItem).toBeDefined();
+    it.each(qti2Preserved)(`${profile} preserves $interactionType`, (interaction) => {
+      const { result, reverse } = reverseFixture(profile, interaction.interactionType);
+      const expectedInteraction =
+        interaction.interactionType === "graphicGapMatch" &&
+        result.report.mappings[0]?.emittedInteraction === "gapMatchInteraction"
+          ? "gapMatch"
+          : interaction.interactionType;
+      expect(reverse.authoringItem?.interactionType).toBe(expectedInteraction);
+      if (interaction.interactionType === "graphicGapMatch") {
+        expect(reverse.authoringItem?.bodyHtml).toContain('qti-gap identifier="G1"');
+        expect(reverse.authoringItem?.bodyHtml).toContain('qti-gap identifier="G2"');
+      }
       expect(reverse.diagnostics.some((entry) => entry.severity === "error")).toBe(false);
-      expect(result.report.diagnosticCodes).toEqual(result.diagnostics.map((entry) => entry.code));
     });
+    it.each(qti2Refused)(
+      `${profile} refuses unpreserved $interactionType scoring`,
+      (interaction) => {
+        const { reverse } = reverseFixture(profile, interaction.interactionType);
+        expect(reverse.xml).toBeUndefined();
+        expect(reverse.authoringItem).toBeUndefined();
+        expect(reverse.diagnostics).toContainEqual(
+          expect.objectContaining({
+            code: "qti2_response_processing_not_preserved",
+            severity: "error",
+          }),
+        );
+      },
+    );
   }
+  it.each(qti12Preserved)("qti12-standard@1 preserves $interactionType", (interaction) => {
+    const { result, reverse } = reverseFixture("qti12-standard@1", interaction.interactionType);
+    expect(reverse.authoringItem).toBeDefined();
+    expect(reverse.diagnostics.some((entry) => entry.severity === "error")).toBe(false);
+    expect(result.report.diagnosticCodes).toEqual(result.diagnostics.map((entry) => entry.code));
+  });
+  it.each(qti12Refused)(
+    "qti12-standard@1 refuses unpreserved $interactionType scoring",
+    (interaction) => {
+      const { reverse } = reverseFixture("qti12-standard@1", interaction.interactionType);
+      expect(reverse.xml).toBeUndefined();
+      expect(reverse.authoringItem).toBeUndefined();
+      expect(reverse.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code: "qti12_response_processing_unsupported",
+          severity: "error",
+        }),
+      );
+    },
+  );
 
-  it("does not promote Canvas hotspot coordinates into an accessible label", () => {
+  it("rejects Canvas hotspot spatial scoring that the answer-key model cannot preserve", () => {
     const result = transcodeQti3Item(
       { kind: "xml", xml: fixtureXml("hotspot"), sourcePath: "hotspot.xml" },
       { profile: "canvas-classic-quizzes@1" },
@@ -103,55 +140,47 @@ describe("qti3 transcoder reverse-migration evidence", () => {
       { filename: "hotspot.xml", xml: result.xml },
       { repairPolicy: "none" },
     );
-    expect(reverse.diagnostics).toEqual([]);
-    expect(reverse.authoringItem?.interactionType).toBe("hotspot");
-    if (reverse.authoringItem?.interactionType !== "hotspot") return;
-    expect(reverse.authoringItem.choices[0]).toMatchObject({
-      coords: "184,52,296,124",
-      hotspotLabel: undefined,
-    });
+    expect(reverse.xml).toBeUndefined();
+    expect(reverse.authoringItem).toBeUndefined();
+    expect(reverse.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "qti12_response_processing_unsupported", severity: "error" }),
+    );
   });
 
-  it.each(["qti12-standard@1", "qti21-standard@1"] as const)(
-    "%s assessment package preserves exactly its three referenced items",
-    async (profile) => {
-      const transcoded = await transcodeQti3Package(
-        { kind: "zip", bytes: assessmentPackageZip() },
-        { profile },
-      );
-      expect(transcoded.ok).toBe(true);
-      if (!transcoded.ok) return;
-
-      const reverse = await migrateQtiToQti3(
-        { filename: `${profile}.zip`, bytes: transcoded.zip },
-        { repairPolicy: "safe" },
-      );
-
-      expect(reverse.items.map((item) => item.authoringItem?.interactionType)).toEqual(
-        profile === "qti12-standard@1"
-          ? ["choice", "choice", "textEntry"]
-          : ["choice", "order", "slider"],
-      );
-      expect(reverse.items.map((item) => item.identifier)).toEqual([
-        "choice_reference",
-        "order_reference",
-        "slider_reference",
-      ]);
-      expect(reverse.items.some((item) => item.identifier === "ITEM_1")).toBe(false);
-      expect(reverse.items.flatMap((item) => item.diagnostics)).toEqual([]);
-      if (profile === "qti21-standard@1") {
-        const slider = reverse.items[2]?.authoringItem;
-        expect(slider).toMatchObject({
-          interactionType: "slider",
-          baseType: "integer",
-          correctResponse: 2024,
-          lowerBound: 2010,
-          upperBound: 2030,
-          step: 1,
-        });
-      }
-    },
-  );
+  it("QTI 2.1 assessment package preserves its three referenced items", async () => {
+    const reverse = await reverseAssessmentPackage("qti21-standard@1");
+    expect(reverse.items.map((item) => item.authoringItem?.interactionType)).toEqual([
+      "choice",
+      "order",
+      "slider",
+    ]);
+    expect(reverse.items.map((item) => item.identifier)).toEqual([
+      "choice_reference",
+      "order_reference",
+      "slider_reference",
+    ]);
+    expect(reverse.items.some((item) => item.identifier === "ITEM_1")).toBe(false);
+    expect(reverse.items.flatMap((item) => item.diagnostics)).toEqual([]);
+    const slider = reverse.items[2]?.authoringItem;
+    expect(slider).toMatchObject({
+      interactionType: "slider",
+      baseType: "integer",
+      correctResponse: 2024,
+      lowerBound: 2010,
+      upperBound: 2030,
+      step: 1,
+    });
+  });
+  it("QTI 1.2 assessment package refuses the unpreserved order program", async () => {
+    const reverse = await reverseAssessmentPackage("qti12-standard@1");
+    expect(reverse.items).toHaveLength(3);
+    expect(reverse.items[0]?.authoringItem?.interactionType).toBe("choice");
+    expect(reverse.items[1]?.xml).toBeUndefined();
+    expect(reverse.items[1]?.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "qti12_response_processing_unsupported" }),
+    );
+    expect(reverse.items[2]?.authoringItem?.interactionType).toBe("textEntry");
+  });
 
   it("migrates a mapped QTI 2.1 slider identically standalone and from a package", async () => {
     const mappedSlider = fixtureXml("slider")
@@ -220,4 +249,17 @@ function fixtureXml(interactionType: QtiInteractionType): string {
     });
   }
   return readFileSync(`packages/fixtures/xml/${interactionType}-reference.xml`, "utf8");
+}
+
+async function reverseAssessmentPackage(profile: QtiTranscodeProfileId) {
+  const transcoded = await transcodeQti3Package(
+    { kind: "zip", bytes: assessmentPackageZip() },
+    { profile },
+  );
+  expect(transcoded.ok).toBe(true);
+  if (!transcoded.ok) throw new Error("Expected transcoded package");
+  return migrateQtiToQti3(
+    { filename: `${profile}.zip`, bytes: transcoded.zip },
+    { repairPolicy: "safe" },
+  );
 }

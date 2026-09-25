@@ -30,7 +30,7 @@
 - Scoring policy: unscored
 - Fallback: —
 - Golden SHA-256: `ef1a0742566200586e1dc44881eabd93186234630de0622136da277f253ac838`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti21-standard@1/endAttempt`
 
@@ -102,7 +102,7 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `aa76286fbe81c98ff219ca64e2bc0e322362a43af07436b66da731994816145c`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti21-standard@1/match`
 
@@ -118,7 +118,7 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `7bd199f55d2be04c492d5906c3a8a46a88a330266ece361fbe0e6d155dab68ab`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti21-standard@1/order`
 
@@ -134,7 +134,7 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `0caa32f75d3042a61b996999c1c2037f19a6603826ca41384020bf8deb8b1be2`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti21-standard@1/positionObject`
 
@@ -166,7 +166,7 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `d7aad8a4ab5c5e6532ab6986e1f869d042a4299c894b8a359e2fbe8e3e3ac3e4`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti21-standard@1/upload`
 
@@ -174,4 +174,4 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `d3720e84ee215b89ad5597e1b94202e42174d3a37ec153fe875d87120afbd3c9`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility

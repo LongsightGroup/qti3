@@ -1,3 +1,4 @@
+import type { MathTemplateToken } from "../player/content-state.js";
 import type {
   QtiContentNode,
   QtiInteraction,
@@ -19,7 +20,9 @@ export interface PlayerContentContext {
   renderBlockInteraction(interaction: QtiInteraction): HTMLElement;
   renderEmbeddedInteraction(interaction: QtiInteraction): HTMLElement;
   currentVariableValue(identifier: string): QtiValue;
-  mathTemplateValue(node: Extract<QtiContentNode, { kind: "element" }>): string | undefined;
+  mathTemplateValue(
+    node: Extract<QtiContentNode, { kind: "element" }>,
+  ): MathTemplateToken | undefined;
   isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean;
   isTemplateContentVisible(element: HTMLElement): boolean;
   /** Reports exact parsed-source provenance for each concrete element this renderer creates. */
@@ -104,13 +107,15 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
   if (unsafeContentElements.has(node.qtiName)) return [];
   const elementName = contentElementName(node.qtiName, node.namespaceUri);
   if (!elementName) return renderContentNodes(node.children, context);
-  const element = createContentElement(elementName);
-  copySafeAttributes(element, node.attributes);
   const mathTemplateValue = context.mathTemplateValue(node);
+  // QTI 3 §2.3.3 substitutes numeric tokens, not just identifier text.
+  const renderedName = mathTemplateValue?.localName ?? elementName;
+  const element = createContentElement(renderedName);
+  copySafeAttributes(element, node.attributes);
   if (mathTemplateValue === undefined) {
     element.append(...renderContentNodes(node.children, context));
   } else {
-    element.textContent = mathTemplateValue;
+    element.textContent = mathTemplateValue.text;
   }
   context.observeRenderedElement(node.source, element);
   return [element];

@@ -102,7 +102,7 @@
 - Scoring policy: automatic
 - Fallback: text-entry
 - Golden SHA-256: `01bca2b6b15829a9824aa647dcee1ede50f69fad59220b647ce049a4639bcfbb`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/match`
 
@@ -166,7 +166,7 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `d7aad8a4ab5c5e6532ab6986e1f869d042a4299c894b8a359e2fbe8e3e3ac3e4`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `brightspace-course-import@1/upload`
 

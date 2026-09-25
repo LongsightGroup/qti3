@@ -72,7 +72,7 @@ export function parseQtiPair(
 export function parseInteger(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
   const normalized = value.trim();
-  if (!/^-?\d+$/.test(normalized)) return undefined;
+  if (!/^[+-]?\d+$/.test(normalized)) return undefined;
   const parsed = Number(normalized);
   return Number.isInteger(parsed) ? parsed : undefined;
 }

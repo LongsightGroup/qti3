@@ -79,6 +79,8 @@ const htmlContentElements = new Set([
 export const unsafeContentElements = new Set(["script", "style"]);
 
 const mathMlElements = new Set([
+  "ci",
+  "cn",
   "math",
   "annotation",
   "annotation-xml",

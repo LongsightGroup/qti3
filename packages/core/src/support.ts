@@ -145,14 +145,22 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   },
   mappingProcessingEntry("qti-interpolation-table-entry"),
   {
-    ...operatorProcessingEntry("qti-is-null"),
+    ...operatorProcessingEntry(
+      "qti-is-null",
+      [],
+      ["packages/core/src/scoring-spec-contracts.test.ts"],
+    ),
     notes:
       "Accepts one arbitrary expression, evaluates it in the full variable context, and tests the result for NULL.",
   },
-  mappingProcessingEntry("qti-match", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
+  mappingProcessingEntry(
+    "qti-match",
+    [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+    ],
+    ["packages/core/src/scoring-spec-contracts.test.ts"],
+  ),
   mappingProcessingEntry("qti-correct"),
   {
     ...mappingProcessingEntry("qti-default", [], [processingTemplateTest]),
@@ -160,12 +168,20 @@ export const processingSupport: QtiProcessingElementSupport[] = [
       "Reads the effective authored or template-overridden default, independently of the variable's current value.",
   },
   {
-    ...mappingProcessingEntry("qti-map-response"),
+    ...mappingProcessingEntry(
+      "qti-map-response",
+      [],
+      ["packages/core/src/scoring-spec-contracts.test.ts"],
+    ),
     notes:
-      "String map entries honor case-sensitive (default false); mapping counts each distinct response value once using QTI base-type equality, then applies bounds.",
+      "Numeric and Boolean map keys use typed equality. String map entries honor case-sensitive (default false); mapping counts each distinct response value once using QTI base-type equality, then applies bounds.",
   },
   {
-    ...mappingProcessingEntry("qti-map-response-point"),
+    ...mappingProcessingEntry(
+      "qti-map-response-point",
+      [],
+      ["packages/core/src/scoring-spec-contracts.test.ts"],
+    ),
     notes:
       "Each point selects the first matching authored area; each selected area contributes at most once.",
   },

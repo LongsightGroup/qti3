@@ -35,14 +35,28 @@ const { observations, failures: caseFailures } = runTranscoderEvidenceMatrix({
       { kind: "xml", xml, filename: "item.xml" },
       {
         repairPolicy: fidelity === "lossy" ? "safe" : "none",
-        unsupportedPolicy: "stub",
+        unsupportedPolicy: "diagnostic",
       },
     );
-    return {
-      ok:
-        Boolean(reverse.xml) &&
-        !reverse.diagnostics.some((diagnostic) => diagnostic.severity === "error"),
-    };
+    const errors = reverse.diagnostics.filter((diagnostic) => diagnostic.severity === "error");
+    const unsupportedCode = errors[0]?.code;
+    if (
+      !reverse.xml &&
+      !reverse.authoringItem &&
+      ["qti12_response_processing_unsupported", "qti2_response_processing_not_preserved"].includes(
+        unsupportedCode,
+      ) &&
+      errors.every((diagnostic) => diagnostic.code === unsupportedCode)
+    )
+      return { status: "unsupported", code: unsupportedCode };
+    return reverse.xml && errors.length === 0
+      ? { status: "preserved" }
+      : {
+          status: "failed",
+          message:
+            errors.map((entry) => entry.message).join("; ") ||
+            "Reverse migration produced no item.",
+        };
   },
 });
 
@@ -143,6 +157,12 @@ Per-profile executable evidence:
 Registry cases exercise individual interactions. The End Attempt case uses a standalone
 finish control because the public planning-hint item is composite; composite QTI 2.x
 reverse migration is explicitly unsupported and covered by regression tests.
+
+Forward fidelity and reverse-import support are distinct. A
+\`reverse-migration-unsupported:<diagnostic>\` entry records a verified refusal to import
+an unpreserved scoring program; it does not claim a successful round trip. Unexpected
+reverse errors still fail the check. All executed evidence, including these refusals,
+is checked against the committed evidence lock.
 
 ${links}
 `;
