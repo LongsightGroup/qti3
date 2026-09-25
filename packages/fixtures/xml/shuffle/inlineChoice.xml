@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic fixture. SPDX-License-Identifier: MIT -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="inlineChoice-shuffle" title="inlineChoice-shuffle" time-dependent="false" xml:lang="en">
+  <qti-response-declaration identifier="RESPONSE_DECLARATION" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>A</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="RESPONSE_OUTCOME" cardinality="single" base-type="identifier">
+    <qti-correct-response><qti-value>B</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>Read the sentence from a school-news article and choose the words that make the account accurate.</p>
+    <p>After a three-week pilot, the cafeteria team reported that the reusable tray program <qti-inline-choice-interaction shuffle="true" response-identifier="RESPONSE_DECLARATION"><qti-inline-choice identifier="A">reduced lunchroom waste</qti-inline-choice><qti-inline-choice identifier="B" fixed="true">increased disposable packaging</qti-inline-choice><qti-inline-choice identifier="C">left trash levels unchanged</qti-inline-choice><qti-inline-choice identifier="D">stopped food donations</qti-inline-choice></qti-inline-choice-interaction>, and the strongest evidence was the <qti-inline-choice-interaction shuffle="true" response-identifier="RESPONSE_OUTCOME"><qti-inline-choice identifier="A">number of students who bought lunch</qti-inline-choice><qti-inline-choice identifier="B" fixed="true">drop in bags collected after lunch</qti-inline-choice><qti-inline-choice identifier="C">color of the new trays</qti-inline-choice><qti-inline-choice identifier="D">menu posted on Monday</qti-inline-choice></qti-inline-choice-interaction>.</p>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE_DECLARATION"/>
+          <qti-correct identifier="RESPONSE_DECLARATION"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+    <qti-response-condition>
+      <qti-response-if>
+        <qti-match>
+          <qti-variable identifier="RESPONSE_OUTCOME"/>
+          <qti-correct identifier="RESPONSE_OUTCOME"/>
+        </qti-match>
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-sum>
+            <qti-variable identifier="SCORE"/>
+            <qti-base-value base-type="float">1</qti-base-value>
+          </qti-sum>
+        </qti-set-outcome-value>
+      </qti-response-if>
+    </qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>

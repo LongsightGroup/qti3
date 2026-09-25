@@ -1,3 +1,4 @@
+import { cloneQtiPresentationState, type QtiPresentationStateV1 } from "./presentation.js";
 import type {
   QtiAttemptStateV1,
   QtiBuiltInVariables,
@@ -18,9 +19,13 @@ export function serialize(
   interactionStates: Record<string, QtiPortableCustomStateValue>,
   validationMessages: QtiDiagnostic[],
   builtInVariables?: QtiBuiltInVariables,
+  presentation?: QtiPresentationStateV1,
 ): QtiAttemptStateV1 {
   return {
     schema: ATTEMPT_STATE_SCHEMA,
+    ...(presentation === undefined
+      ? {}
+      : { presentation: cloneQtiPresentationState(presentation) }),
     ...(builtInVariables === undefined
       ? {}
       : { builtInVariables: { ...builtInVariables, context: { ...builtInVariables.context } } }),

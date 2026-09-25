@@ -25,7 +25,7 @@ describe("qti3-writer graphic gap match", () => {
         longDescription: "Timeline with two highlighted regions.",
       },
       choices: [
-        { identifier: "A", kind: "text", text: "Planning", matchMax: 1, fixed: true },
+        { identifier: "A", kind: "text", text: "Planning", matchMax: 1 },
         {
           identifier: "B",
           kind: "image",

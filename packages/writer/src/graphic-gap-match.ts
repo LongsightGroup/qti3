@@ -170,11 +170,7 @@ function graphicGapChoiceXml(choice: Qti3GraphicGapChoice): string {
   const identifier = escapeXmlAttribute(
     assertQtiIdentifier(choice.identifier, "Graphic gap choice identifier"),
   );
-  const attrs = [
-    `identifier="${identifier}"`,
-    `match-max="${String(choice.matchMax ?? 1)}"`,
-    choice.fixed ? `fixed="true"` : "",
-  ];
+  const attrs = [`identifier="${identifier}"`, `match-max="${String(choice.matchMax ?? 1)}"`];
   if (choice.kind === "text") {
     const body = choice.contentHtml?.trim() ? choice.contentHtml : escapeXmlText(choice.text ?? "");
     return `      <qti-gap-text ${xmlAttributeList(attrs)}>${body}</qti-gap-text>`;
@@ -206,6 +202,15 @@ function validateChoices(
   );
   for (const [index, choice] of input.choices.entries()) {
     const path = `choices.${index}`;
+    if ("fixed" in choice) {
+      diagnostics.push(
+        writerDiagnostic(
+          "unsupported_gap_choice_fixed",
+          `${path}.fixed`,
+          "QTI 3 gap choices do not define fixed; remove this attribute.",
+        ),
+      );
+    }
     const identifierDiagnostic = validateQtiIdentifier(
       `${path}.identifier`,
       "Graphic gap choice identifier",

@@ -1,3 +1,5 @@
+import { diagnostic } from "./diagnostics.js";
+import type { Qti2Context } from "./qti2-context.js";
 import {
   qti3TrustedXmlFragment,
   type Qti3AssociateChoice,
@@ -41,7 +43,12 @@ export function associableChoices(
   }));
 }
 
-export function gapChoice(choice: XmlElement, index: number): Qti3GapMatchChoice {
+export function gapChoice(
+  choice: XmlElement,
+  index: number,
+  context: Qti2Context,
+): Qti3GapMatchChoice {
+  rejectGapFixed(choice, context);
   if (localName(choice) === "gapimg") {
     const object = findDescendantByLocalName(choice, "object");
     return {
@@ -53,7 +60,6 @@ export function gapChoice(choice: XmlElement, index: number): Qti3GapMatchChoice
         type: attr(object, "type") ?? undefined,
       },
       matchMax: toNumber(attr(choice, "matchMax")),
-      fixed: attr(choice, "fixed") === "true",
     };
   }
   return {
@@ -62,11 +68,15 @@ export function gapChoice(choice: XmlElement, index: number): Qti3GapMatchChoice
     contentHtml: trusted(serializeChildren(choice)),
     text: textOf(choice) || undefined,
     matchMax: toNumber(attr(choice, "matchMax")),
-    fixed: attr(choice, "fixed") === "true",
   };
 }
 
-export function graphicGapChoice(choice: XmlElement, index: number): Qti3GraphicGapChoice {
+export function graphicGapChoice(
+  choice: XmlElement,
+  index: number,
+  context: Qti2Context,
+): Qti3GraphicGapChoice {
+  rejectGapFixed(choice, context);
   if (localName(choice) === "gapimg") {
     const object = findDescendantByLocalName(choice, "object");
     return {
@@ -78,7 +88,6 @@ export function graphicGapChoice(choice: XmlElement, index: number): Qti3Graphic
         type: attr(object, "type") ?? undefined,
       },
       matchMax: toNumber(attr(choice, "matchMax")),
-      fixed: attr(choice, "fixed") === "true",
     };
   }
   return {
@@ -87,10 +96,22 @@ export function graphicGapChoice(choice: XmlElement, index: number): Qti3Graphic
     contentHtml: trusted(serializeChildren(choice)),
     text: textOf(choice) || undefined,
     matchMax: toNumber(attr(choice, "matchMax")),
-    fixed: attr(choice, "fixed") === "true",
   };
 }
 
 function trusted(html: string): ReturnType<typeof qti3TrustedXmlFragment> {
   return qti3TrustedXmlFragment(html.trim() || "<p></p>");
+}
+
+function rejectGapFixed(choice: XmlElement, context: Qti2Context): void {
+  if (attr(choice, "fixed") === null) return;
+  context.blocked = [
+    ...(context.blocked ?? []),
+    diagnostic(
+      "qti2_gap_fixed_unsupported",
+      "error",
+      "QTI 3 gap choices do not define fixed; migration cannot preserve this attribute.",
+      { path: context.path, sourceFormat: context.sourceFormat },
+    ),
+  ];
 }

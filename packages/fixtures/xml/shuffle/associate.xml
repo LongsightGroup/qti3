@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic fixture. SPDX-License-Identifier: MIT -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="associate-shuffle" title="associate-shuffle" time-dependent="false" xml:lang="en">
+
+      <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+        <qti-correct-response><qti-value>A B</qti-value></qti-correct-response>
+      </qti-response-declaration>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>0</qti-value></qti-default-value>
+  </qti-outcome-declaration>
+  <qti-item-body>
+    <p>A media-literacy item asks the student to connect a source detail with the reason it is useful.</p>
+    <qti-associate-interaction shuffle="true" response-identifier="RESPONSE"><qti-prompt>Choose the two details that belong together in a source-evaluation note.</qti-prompt><qti-simple-associable-choice identifier="A" match-max="1">Interview with the park ranger who led the restoration project</qti-simple-associable-choice><qti-simple-associable-choice identifier="B" fixed="true" match-max="1">Firsthand source for project timeline</qti-simple-associable-choice><qti-simple-associable-choice identifier="C" match-max="1">Anonymous comment on a neighborhood forum</qti-simple-associable-choice><qti-simple-associable-choice identifier="D" match-max="1">Decorative map border</qti-simple-associable-choice><qti-simple-associable-choice identifier="E" match-max="1">Weather forecast for next month</qti-simple-associable-choice></qti-associate-interaction>
+  </qti-item-body>
+  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+</qti-assessment-item>

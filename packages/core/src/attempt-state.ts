@@ -1,3 +1,4 @@
+import { isQtiPresentationStateV1 } from "./presentation.js";
 import type {
   QtiAttemptStateV1,
   QtiAttemptStatus,
@@ -216,6 +217,9 @@ function attemptStateErrors(value: unknown): string[] {
   }
 
   const errors: string[] = [];
+  if (value.presentation !== undefined && !isQtiPresentationStateV1(value.presentation)) {
+    errors.push("Invalid QTI presentation state.");
+  }
   if (typeof value.itemIdentifier !== "string" || value.itemIdentifier.length === 0) {
     errors.push("QTI attempt state itemIdentifier must be a non-empty string.");
   }

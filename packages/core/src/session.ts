@@ -1,3 +1,8 @@
+import {
+  prepareQtiPresentation,
+  cloneQtiPresentationState,
+  type QtiPresentationResult,
+} from "./presentation.js";
 import type {
   QtiAssessmentItem,
   QtiAttemptStatus,
@@ -63,13 +68,19 @@ interface ConditionalRules<Rule> {
 
 export interface QtiItemSessionOptions extends QtiSessionEnvironment {
   randomSeed?: string | number | undefined;
+  /** Independent seed for fresh shuffled presentations. The browser player supplies a fresh default. */
+  presentationSeed?: string | number | undefined;
   customOperators?: QtiCustomOperatorRegistry | undefined;
   allowedUndeclaredResponseIdentifiers?: readonly string[] | undefined;
 }
 
 export interface QtiItemSession {
   readonly item: QtiAssessmentItem;
+  /** Returns prepared presentation or typed authoring/restore failures; scoring remains DOM-free. */
+  presentation(): QtiPresentationResult;
   correctResponses(): Record<string, QtiValue>;
+  /** Reads an existing response or effective default without beginning an attempt. */
+  presentationResponse(identifier: string): QtiValue;
   /** Starts an attempt without requiring a response; repeated calls and resume are idempotent. */
   beginAttempt(): void;
   respond(identifier: string, value: QtiValue): void;
@@ -204,8 +215,39 @@ export function createItemSession(
   Object.assign(outcomes, priorOutcomes);
   Object.assign(interactionStates, priorInteractionStates);
 
+  const presentation = prepareQtiPresentation(
+    document.item,
+    templateValues,
+    priorState
+      ? { kind: "restore", state: priorState.presentation }
+      : { kind: "new", seed: options.presentationSeed },
+  );
+  const presentationState =
+    presentation.ok && Object.keys(presentation.state.orders).length > 0
+      ? presentation.state
+      : undefined;
+
   return {
     item: document.item,
+    presentation() {
+      return presentation.ok
+        ? {
+            ok: true,
+            state: cloneQtiPresentationState(presentation.state),
+            interactions: presentation.interactions.map((interaction) => ({
+              ...interaction,
+              choices: [...interaction.choices],
+            })),
+          }
+        : { ok: false, diagnostics: cloneDiagnostics([...presentation.diagnostics]) };
+    },
+    presentationResponse(identifier) {
+      return cloneValue(
+        Object.hasOwn(responses, identifier)
+          ? (responses[identifier] ?? null)
+          : (responseDefaults[identifier] ?? null),
+      );
+    },
     beginAttempt: startAttempt,
     correctResponses() {
       return cloneValueRecord(correctResponses);
@@ -263,6 +305,7 @@ export function createItemSession(
         interactionStates,
         diagnostics,
         builtIns.state,
+        presentationState,
       );
       return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
     },
@@ -277,6 +320,7 @@ export function createItemSession(
         interactionStates,
         validationMessages,
         builtIns.state,
+        presentationState,
       );
     },
   };

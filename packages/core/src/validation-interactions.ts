@@ -1,3 +1,4 @@
+import { parseQtiPresentationDefinition } from "./presentation-definition.js";
 import type {
   QtiAssessmentItem,
   QtiBaseType,
@@ -29,6 +30,8 @@ export function validateInteractions(item: QtiAssessmentItem, diagnostics: QtiDi
   );
   const responseIdentifiers = new Set(responseDeclarations.keys());
   for (const interaction of item.interactions) {
+    const presentation = parseQtiPresentationDefinition(interaction);
+    if (!presentation.ok) diagnostics.push(...presentation.diagnostics);
     validateInteractionResponseReference(interaction, responseIdentifiers, diagnostics);
     validateInteractionResponseShape(interaction, diagnostics);
     validateInteractionSharedVocabulary(interaction, diagnostics);

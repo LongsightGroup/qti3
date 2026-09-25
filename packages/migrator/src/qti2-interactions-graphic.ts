@@ -122,7 +122,7 @@ export function mapGraphicGapMatch(
   const responseIdentifier = responseIdentifierFor(interaction);
   const object = findDescendantByLocalName(interaction, "object");
   const choices = findAllDescendantsByAnyLocalName(interaction, ["gaptext", "gapimg"]).map(
-    (choice, index): Qti3GraphicGapChoice => graphicGapChoice(choice, index),
+    (choice, index): Qti3GraphicGapChoice => graphicGapChoice(choice, index, context),
   );
   const hotspotTargets: Qti3GraphicGapTarget[] = findAllDescendantsByLocalName(
     interaction,
