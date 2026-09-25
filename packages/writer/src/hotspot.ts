@@ -24,9 +24,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3HotspotBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText, xmlAttributeList } from "./xml.js";
 
@@ -45,10 +44,7 @@ export function validateQti3HotspotItem(input: Qti3HotspotBuilderInput): Qti3Wri
   );
 }
 
-export function renderQti3HotspotItem(
-  input: Qti3HotspotBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3HotspotItem(input: Qti3HotspotBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Hotspot response identifier",
@@ -102,15 +98,14 @@ ${correctXml}  </qti-response-declaration>`;
 ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objectAttrs)}/>
 ${choicesXml}
     </qti-hotspot-interaction>`;
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml("match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+  };
 }
 
 function normalizeBound(value: number | undefined, min: number): number | null {

@@ -15,9 +15,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3UploadBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
@@ -36,10 +35,7 @@ export function validateQti3UploadItem(input: Qti3UploadBuilderInput): Qti3Write
   );
 }
 
-export function renderQti3UploadItem(
-  input: Qti3UploadBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3UploadItem(input: Qti3UploadBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Upload response identifier",
@@ -63,16 +59,15 @@ export function renderQti3UploadItem(
   const bodyXml = `${optionalBodySection(input.bodyHtml)}    <qti-upload-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}    </qti-upload-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: correctResponse ? responseProcessingTemplateXml("match_correct") : "",
-      scoreDefaultZero: Boolean(correctResponse),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: correctResponse ? responseProcessingTemplateXml("match_correct") : "",
+    scoreDefaultZero: Boolean(correctResponse),
+  };
 }
 
 export function validateQti3UploadItemStructure(

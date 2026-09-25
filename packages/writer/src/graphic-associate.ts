@@ -27,9 +27,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3GraphicAssociateBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
@@ -52,8 +51,7 @@ export function validateQti3GraphicAssociateItem(
 
 export function renderQti3GraphicAssociateItem(
   input: Qti3GraphicAssociateBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic associate response identifier",
@@ -108,15 +106,14 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(objec
 ${hotspotsXml}
     </qti-graphic-associate-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml(scoring),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml(scoring),
+  };
 }
 
 export function validateQti3GraphicAssociateItemStructure(

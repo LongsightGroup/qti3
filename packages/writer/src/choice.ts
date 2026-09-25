@@ -1,3 +1,4 @@
+import { prepareChoiceFeedback } from "./choice-feedback.js";
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
@@ -17,10 +18,10 @@ import {
 import { choiceResponseProcessingXml } from "./response-processing.js";
 import {
   buildPreparedItem,
+  writePreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3ChoiceBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
@@ -29,6 +30,7 @@ export function buildQti3ChoiceItem(input: Qti3ChoiceBuilderInput): string {
     { ...input, interactionType: "choice" },
     validateQti3ChoiceItemStructure,
     renderQti3ChoiceItem,
+    prepareChoiceFeedback(input),
   );
 }
 
@@ -36,13 +38,11 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
   return validatePreparedItem(
     { ...input, interactionType: "choice" },
     validateQti3ChoiceItemStructure,
+    prepareChoiceFeedback(input),
   );
 }
 
-export function renderQti3ChoiceItem(
-  input: Qti3ChoiceBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3ChoiceItem(input: Qti3ChoiceBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -93,15 +93,14 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
     optionalBodySection(input.bodyHtml),
   );
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: choiceResponseProcessingXml(responseIdentifier, scoring),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: choiceResponseProcessingXml(responseIdentifier, scoring),
+  };
 }
 
 function choiceMappingXml(
@@ -258,4 +257,13 @@ function choiceSelectionLimit(
   maximum: number | undefined,
 ): number | undefined {
   return maximum ?? (cardinality === "multiple" ? 0 : undefined);
+}
+
+export function writeQti3ChoiceItemResult(input: Qti3ChoiceBuilderInput) {
+  return writePreparedItem(
+    { ...input, interactionType: "choice" },
+    validateQti3ChoiceItemStructure,
+    renderQti3ChoiceItem,
+    prepareChoiceFeedback(input),
+  );
 }

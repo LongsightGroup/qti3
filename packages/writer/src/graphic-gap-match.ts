@@ -26,9 +26,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3GraphicGapChoice,
   Qti3GraphicGapMatchBuilderInput,
@@ -55,8 +54,7 @@ export function validateQti3GraphicGapMatchItem(
 
 export function renderQti3GraphicGapMatchItem(
   input: Qti3GraphicGapMatchBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Graphic gap match response identifier",
@@ -122,15 +120,14 @@ ${choicesXml}
 ${targetsXml}
     </qti-graphic-gap-match-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
+  };
 }
 
 export function validateQti3GraphicGapMatchItemStructure(

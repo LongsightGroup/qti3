@@ -20,9 +20,8 @@ import { trustedResponseProcessingXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3CustomInteractionBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { indentXml, xmlAttributeList, escapeXmlAttribute } from "./xml.js";
 
@@ -47,8 +46,7 @@ export function validateQti3CustomInteractionItem(
 
 export function renderQti3CustomInteractionItem(
   input: Qti3CustomInteractionBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Custom interaction response identifier",
@@ -64,16 +62,15 @@ export function renderQti3CustomInteractionItem(
 ${promptSection}${markup}
     </qti-custom-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
-      scoreDefaultZero: true,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
+    scoreDefaultZero: true,
+  };
 }
 
 export function validateQti3CustomInteractionItemStructure(

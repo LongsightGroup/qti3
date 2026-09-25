@@ -19,9 +19,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3AssociateBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import {
   pairResponseDeclarationXml,
@@ -47,10 +46,7 @@ export function validateQti3AssociateItem(
   );
 }
 
-export function renderQti3AssociateItem(
-  input: Qti3AssociateBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3AssociateItem(input: Qti3AssociateBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Response identifier",
@@ -94,15 +90,14 @@ export function renderQti3AssociateItem(
     optionalBodySection(input.bodyHtml),
   );
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml(scoring),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml(scoring),
+  };
 }
 
 export function validateQti3AssociateItemStructure(

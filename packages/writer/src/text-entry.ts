@@ -8,9 +8,8 @@ import {
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3TextEntryAnswer,
   Qti3TextEntryBuilderInput,
@@ -36,10 +35,7 @@ export function validateQti3TextEntryItem(
   );
 }
 
-export function renderQti3TextEntryItem(
-  input: Qti3TextEntryBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3TextEntryItem(input: Qti3TextEntryBuilderInput): RenderedItemSections {
   const declarationsXml = input.responses.map(buildResponseDeclaration).join("\n");
   const prompt = input.promptHtml?.trim()
     ? `    <div class="qti-inline-prompt">${input.promptHtml}</div>\n`
@@ -48,16 +44,15 @@ export function renderQti3TextEntryItem(
     .split("\n")
     .map((line) => `    ${line}`)
     .join("\n");
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml: `${prompt}${body}`,
-      responseProcessingXml: buildResponseProcessing(input.responses),
-      scoreDefaultZero: true,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml: `${prompt}${body}`,
+    responseProcessingXml: buildResponseProcessing(input.responses),
+    scoreDefaultZero: true,
+  };
 }
 
 function buildResponseDeclaration(response: Qti3TextEntryResponse): string {

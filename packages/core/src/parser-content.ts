@@ -1,3 +1,4 @@
+import { isInteractionElement } from "./interaction-element.js";
 import { appendContentTextNode, flatTextFromContent } from "./content-text.js";
 import { QTI_ASI_NAMESPACE } from "./qti-namespaces.js";
 import type { QtiContentNode, QtiDiagnostic } from "./types.js";
@@ -63,8 +64,7 @@ function parseContentNode(
   node: XmlNode,
   interaction: (node: XmlNode) => QtiContentNode | undefined,
 ): QtiContentNode | undefined {
-  if (node.uri === QTI_ASI_NAMESPACE && /^qti-.+-interaction$/.test(node.localName))
-    return interaction(node);
+  if (isInteractionElement(node)) return interaction(node);
 
   if (isQtiElement(node, "qti-printed-variable")) {
     return {

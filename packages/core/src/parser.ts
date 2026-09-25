@@ -1,3 +1,4 @@
+import { isInteractionElement } from "./interaction-element.js";
 import { parseContent, parseModalFeedbackContent } from "./parser-content.js";
 import { flatTextFromContent, visibleTextContent } from "./content-text.js";
 import {
@@ -277,13 +278,6 @@ function diagnoseProcessingElements(
       source: node.source,
     });
   }
-}
-
-function isInteractionElement(node: XmlNode): boolean {
-  return (
-    node.uri === QTI_ASI_NAMESPACE &&
-    (interactionNameToType.has(node.localName) || /^qti-.+-interaction$/.test(node.localName))
-  );
 }
 
 function isQtiElement(node: XmlNode, localName?: string): boolean {

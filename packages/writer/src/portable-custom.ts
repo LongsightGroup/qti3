@@ -19,9 +19,8 @@ import { trustedResponseProcessingXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3PortableCustomBuilderInput,
   Qti3PortableCustomInteractionModules,
@@ -48,8 +47,7 @@ export function validateQti3PortableCustomItem(
 
 export function renderQti3PortableCustomItem(
   input: Qti3PortableCustomBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Portable custom response identifier",
@@ -69,16 +67,15 @@ export function renderQti3PortableCustomItem(
     `    </qti-portable-custom-interaction>`,
   ]);
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
-      scoreDefaultZero: true,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: trustedResponseProcessingXml(input.responseProcessingXml),
+    scoreDefaultZero: true,
+  };
 }
 
 export function validateQti3PortableCustomItemStructure(

@@ -14,9 +14,8 @@ import {
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3ExtendedTextBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { indentXml, escapeXmlAttribute } from "./xml.js";
 
@@ -41,8 +40,7 @@ export function validateQti3ExtendedTextItem(
 
 export function renderQti3ExtendedTextItem(
   input: Qti3ExtendedTextBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Extended text response identifier",
@@ -89,17 +87,16 @@ ${indentXml(input.rubricHtml, 8)}
     </qti-rubric-block>`
     : "";
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml: [optionalBodySection(input.bodyHtml).trimEnd(), interactionXml, rubricBlock]
-        .filter(Boolean)
-        .join("\n"),
-      responseProcessingXml: "",
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml: [optionalBodySection(input.bodyHtml).trimEnd(), interactionXml, rubricBlock]
+      .filter(Boolean)
+      .join("\n"),
+    responseProcessingXml: "",
+  };
 }
 
 export function validateQti3ExtendedTextItemStructure(

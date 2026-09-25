@@ -10,9 +10,8 @@ import { trustedResponseProcessingXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type { Qti3EndAttemptBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import { escapeXmlAttribute } from "./xml.js";
 
@@ -33,10 +32,7 @@ export function validateQti3EndAttemptItem(
   );
 }
 
-export function renderQti3EndAttemptItem(
-  input: Qti3EndAttemptBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3EndAttemptItem(input: Qti3EndAttemptBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "End attempt response identifier",
@@ -56,16 +52,15 @@ export function renderQti3EndAttemptItem(
   const promptXml = input.promptHtml?.trim() ? `    <p>${input.promptHtml}</p>\n` : "";
   const bodyXml = `${promptXml}${optionalBodySection(input.bodyHtml)}    <p><qti-end-attempt-interaction ${interactionAttrs}/></p>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: trustedResponseProcessingXml(undefined),
-      scoreDefaultZero: true,
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: trustedResponseProcessingXml(undefined),
+    scoreDefaultZero: true,
+  };
 }
 
 export function validateQti3EndAttemptItemStructure(

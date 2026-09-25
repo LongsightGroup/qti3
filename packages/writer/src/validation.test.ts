@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   qti3WriterInteractionSupport,
+  validateQti3ChoiceItem,
+  buildQti3ChoiceItem,
   qti3TrustedXmlFragment,
   validateQti3AuthoringItem,
   writeQti3AssessmentItem,
@@ -172,10 +174,25 @@ describe("qti3-writer validation", () => {
         code: "missing_feedback_entries",
         path: "feedback.entries",
       },
+      {
+        item: {
+          ...base,
+          feedback: { entries: [entry] },
+          modalFeedback: {
+            outcomes: [{ identifier: "EXPLANATION", cardinality: "single" }],
+            entries: [{ outcomeIdentifier: "EXPLANATION", identifier: "RIGHT", text: "Correct." }],
+          },
+        },
+        code: "conflicting_feedback_models",
+        path: "modalFeedback",
+      },
     ];
     for (const { item, code, path, message } of cases) {
       const result = writeQti3AssessmentItemResult(item);
       expect(result.ok).toBe(false);
+      expect(validateQti3ChoiceItem(item)).toEqual(result.diagnostics);
+      expect(validateQti3AuthoringItem(item)).toEqual(result.diagnostics);
+      expect(() => buildQti3ChoiceItem(item)).toThrow(Qti3WriterError);
       expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path }));
       if (message !== undefined) {
         expect(result.diagnostics).toContainEqual(expect.objectContaining({ code, path, message }));

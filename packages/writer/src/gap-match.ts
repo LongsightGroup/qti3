@@ -21,9 +21,8 @@ import { responseProcessingTemplateXml } from "./response-processing.js";
 import {
   buildPreparedItem,
   validatePreparedItem,
-  composeAssessmentItem,
+  type RenderedItemSections,
 } from "./item-preparation.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import type {
   Qti3GapMatchBuilderInput,
   Qti3GapMatchChoice,
@@ -46,10 +45,7 @@ export function validateQti3GapMatchItem(input: Qti3GapMatchBuilderInput): Qti3W
   );
 }
 
-export function renderQti3GapMatchItem(
-  input: Qti3GapMatchBuilderInput,
-  feedback: PreparedFeedback,
-): string {
+export function renderQti3GapMatchItem(input: Qti3GapMatchBuilderInput): RenderedItemSections {
   const responseIdentifier = assertQtiIdentifier(
     resolveResponseIdentifier(input.responseIdentifier),
     "Gap match response identifier",
@@ -93,15 +89,14 @@ ${optionalPromptSection(input.promptHtml)}${choicesXml}
 ${bodyFragment}
     </qti-gap-match-interaction>`;
 
-  return composeAssessmentItem(
-    {
-      ...input,
-      declarationsXml,
-      bodyXml,
-      responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "map_response"),
-    },
-    feedback,
-  );
+  return {
+    identifier: input.identifier,
+    title: input.title,
+    lang: input.lang,
+    declarationsXml,
+    bodyXml,
+    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "map_response"),
+  };
 }
 
 function gapChoiceXml(choice: Qti3GapMatchChoice): string {
