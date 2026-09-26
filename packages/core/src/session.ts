@@ -89,7 +89,8 @@ export interface QtiItemSession {
   setInteractionState(identifier: string, state: QtiPortableCustomStateValue): void;
   interactionState(identifier: string): QtiPortableCustomStateValue | undefined;
   setStatus(status: QtiAttemptStatus): void;
-  score(): QtiScoreResult;
+  /** Only the end-attempt interaction that triggered this invocation is true; host scoring resets all. */
+  score(options?: { endAttemptResponseIdentifier?: string | undefined }): QtiScoreResult;
   serialize(): QtiAttemptStateV1;
 }
 
@@ -167,9 +168,17 @@ export function createItemSession(
       .filter((identifier): identifier is string => Boolean(identifier)),
   );
 
+  const endAttemptIdentifiers = document.item.interactions
+    .filter((interaction) => interaction.type === "endAttempt")
+    .flatMap((interaction) =>
+      interaction.responseIdentifier ? [interaction.responseIdentifier] : [],
+    );
+
   for (const declaration of document.item.responseDeclarations) {
     correctResponses[declaration.identifier] = cloneValue(declaration.correctResponse);
-    if (declaration.defaultValue !== null) {
+    if (endAttemptIdentifiers.includes(declaration.identifier)) {
+      responseDefaults[declaration.identifier] = false;
+    } else if (declaration.defaultValue !== null) {
       responseDefaults[declaration.identifier] = cloneValue(declaration.defaultValue);
     }
   }
@@ -293,17 +302,36 @@ export function createItemSession(
       if (nextStatus === "completed") builtIns.state.attemptInProgress = false;
       status = nextStatus;
     },
-    score() {
+    score(scoreOptions = {}) {
+      const trigger = scoreOptions.endAttemptResponseIdentifier;
+      if (trigger !== undefined && !endAttemptIdentifiers.includes(trigger)) {
+        const diagnostics: QtiDiagnostic[] = [
+          {
+            code: "session.endAttempt.identifier",
+            severity: "error",
+            message: `No end-attempt interaction declares response identifier ${trigger}.`,
+          },
+        ];
+        const state = snapshot();
+        return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
+      }
       evaluation.diagnostics.length = 0;
       builtInDiagnostics.length = 0;
       captureTime();
-      if (document.item.adaptive || status !== "initialized") {
+      if (
+        document.item.adaptive ||
+        status !== "initialized" ||
+        scoreOptions.endAttemptResponseIdentifier !== undefined
+      ) {
         startAttempt();
       }
       const completionStatus = outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
       if (!document.item.adaptive) {
         resetRecord(outcomes, cloneValueRecord(defaultOutcomes));
         outcomes[COMPLETION_STATUS] = completionStatus;
+      }
+      for (const identifier of endAttemptIdentifiers) {
+        responses[identifier] = identifier === scoreOptions.endAttemptResponseIdentifier;
       }
       applyResponseProcessing(processingContext);
       builtIns.state.attemptInProgress = false;
@@ -314,36 +342,29 @@ export function createItemSession(
       ];
       if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
       validationMessages = diagnostics;
-      const state = serialize({
-        itemIdentifier: document.item.identifier,
-        status,
-        responses,
-        outcomes,
-        templateValues,
-        interactionStates,
-        validationMessages: diagnostics,
-        builtInVariables: builtIns.state,
-        presentation: presentationState,
-        templateProcessing,
-      });
+      const state = snapshot();
       return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
     },
     serialize() {
       captureTime();
-      return serialize({
-        itemIdentifier: document.item.identifier,
-        status,
-        responses,
-        outcomes,
-        templateValues,
-        interactionStates,
-        validationMessages: validationMessages,
-        builtInVariables: builtIns.state,
-        presentation: presentationState,
-        templateProcessing,
-      });
+      return snapshot();
     },
   };
+
+  function snapshot(): QtiAttemptStateV1 {
+    return serialize({
+      itemIdentifier: document.item.identifier,
+      status,
+      responses,
+      outcomes,
+      templateValues,
+      interactionStates,
+      validationMessages: validationMessages,
+      builtInVariables: builtIns.state,
+      presentation: presentationState,
+      templateProcessing,
+    });
+  }
 
   function startAttempt(): void {
     captureTime();

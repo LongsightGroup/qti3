@@ -30,6 +30,15 @@ Unsupported source programs must remain rejected when safe repair is enabled. Wh
 support, retain rejection coverage for the formerly accepted source; do not simply rewrite it
 into a supported example.
 
+For authoring, exercise each affected interaction with both `RESPONSE` and a custom response
+identifier. Validate emitted XML, then score explicit correct, incorrect, and unanswered responses.
+For migration, compare all authored outcomes and response constraints. Keep absent, empty, and
+explicit processing separate. XML Boolean `1`/`0` must behave like `true`/`false`.
+For lifecycle changes, test sequences and restoration: a hint followed by another button or host
+submission must use the current trigger, not a response retained from the previous invocation.
+Operator reference tests must use the standard `{identifier}` XML spelling and include missing,
+wrong-type, and wrong-cardinality declarations.
+
 For browser substitutions, assert element names, namespaces, and unaffected content as well as
 text. Text-only assertions cannot distinguish a MathML identifier from a numeric token.
 

@@ -69,6 +69,7 @@ export function materializeQtiItemSubmission(
     priorState: priorState.state,
     submission: {
       trustedResponses: input.trustedResponses,
+      endAttemptResponseIdentifier: input.endAttemptResponseIdentifier,
       trustedInteractionStates: input.trustedInteractionStates,
     },
     scoring: "always",
@@ -102,6 +103,7 @@ function materializeAdaptiveSubmission(
     sessionEnvironment: input.sessionEnvironment,
     priorState: input.existingState,
     trustedResponses: input.trustedResponses,
+    endAttemptResponseIdentifier: input.endAttemptResponseIdentifier,
     trustedInteractionStates: input.trustedInteractionStates,
     submissionValidation: "strict",
     allowIncompleteResponses: input.allowIncompleteResponses,

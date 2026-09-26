@@ -4,6 +4,7 @@ export const legacySamples = {
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
     <correctResponse><value>B</value></correctResponse>
   </responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody>
     <choiceInteraction responseIdentifier="RESPONSE" maxChoices="1">
       <prompt>Which planet is known as the red planet?</prompt>

@@ -23,10 +23,7 @@ import {
   validatePointAreaTargets,
   validatePointValues,
 } from "./point-area.js";
-import {
-  mapResponsePointProcessingXml,
-  responseProcessingTemplateXml,
-} from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -96,10 +93,7 @@ export function renderQti3PositionObjectItem(
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml:
-      responseIdentifier === "RESPONSE"
-        ? responseProcessingTemplateXml("map_response_point")
-        : mapResponsePointProcessingXml(responseIdentifier),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, "map_response_point"),
   });
 }
 

@@ -210,16 +210,7 @@ export function parseXmlSchemaRegex(pattern: string): XmlRegexParseResult {
     : { ok: false, problem: { code: "syntax", message: "Invalid pattern." } };
 }
 
-/** QTI StringOrVariableRef uses braces, so bare identifiers remain literal patterns. */
-export function patternVariableIdentifier(pattern: string): string | undefined {
-  if (!pattern.startsWith("{") || !pattern.endsWith("}")) return undefined;
-  const identifier = pattern.slice(1, -1);
-  const initial = `[${xmlNameInitial}]`;
-  const rest = `[${xmlNameCharacters}]`;
-  return !identifier.includes(":") && new RegExp(`^${initial}${rest}*$`, "u").test(identifier)
-    ? identifier
-    : undefined;
-}
+export { parseVariableReference as patternVariableIdentifier } from "./variable-reference.js";
 
 export function isXmlRegexCharacter(value: string): boolean {
   const point = value.codePointAt(0) ?? 0;

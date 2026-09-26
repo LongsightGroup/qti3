@@ -78,7 +78,11 @@ describe("qti3 transcoder reverse-migration evidence", () => {
         expect.objectContaining({ code: "qti2_composite_interactions_unsupported" }),
       );
     });
-    it.each(qti2Preserved)(`${profile} preserves $interactionType`, (interaction) => {
+    const losesOutcomeMetadata = profile === "qti22-standard@1";
+    const preserved = qti2Preserved.filter(
+      (entry) => !losesOutcomeMetadata || entry.interactionType !== "extendedText",
+    );
+    it.each(preserved)(`${profile} preserves $interactionType`, (interaction) => {
       const { result, reverse } = reverseFixture(profile, interaction.interactionType);
       const expectedInteraction =
         interaction.interactionType === "graphicGapMatch" &&
@@ -107,6 +111,14 @@ describe("qti3 transcoder reverse-migration evidence", () => {
       },
     );
   }
+  it("qti22-standard@1 refuses lost human-scoring outcome metadata", () => {
+    const { reverse } = reverseFixture("qti22-standard@1", "extendedText");
+    expect(reverse.xml).toBeUndefined();
+    expect(reverse.authoringItem).toBeUndefined();
+    expect(reverse.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "qti2_outcomes_not_preserved", severity: "error" }),
+    );
+  });
   it.each(qti12Preserved)("qti12-standard@1 preserves $interactionType", (interaction) => {
     const { result, reverse } = reverseFixture("qti12-standard@1", interaction.interactionType);
     expect(reverse.authoringItem).toBeDefined();

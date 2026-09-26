@@ -1,4 +1,4 @@
-import { parseQtiPair } from "./parser-values.js";
+import { parseQtiPair, parseQtiPoint } from "./parser-values.js";
 import type { QtiBaseType, QtiResponseDeclaration, QtiScalarValue, QtiValue } from "./types.js";
 import { qtiValueToString } from "./value-format.js";
 import { isRecordValue } from "./value-guards.js";
@@ -61,6 +61,10 @@ function scalarValuesEqual(actual: QtiValue, expected: QtiValue, baseType?: QtiB
     const normalizedActual = parseQtiPair(actual, baseType);
     return normalizedActual !== undefined && normalizedActual === parseQtiPair(expected, baseType);
   }
+  if (baseType === "point" && typeof actual === "string" && typeof expected === "string") {
+    const point = parseQtiPoint(actual);
+    return point !== undefined && point === parseQtiPoint(expected);
+  }
   if (typeof actual === "boolean" && typeof expected === "string") {
     return String(actual) === expected;
   }
@@ -118,15 +122,16 @@ function compareScalarValues(
   right: QtiScalarValue,
   baseType?: QtiBaseType,
 ): number {
-  const leftKey =
-    (baseType === "pair" || baseType === "directedPair") && typeof left === "string"
-      ? (parseQtiPair(left, baseType) ?? left)
-      : String(left);
-  const rightKey =
-    (baseType === "pair" || baseType === "directedPair") && typeof right === "string"
-      ? (parseQtiPair(right, baseType) ?? right)
-      : String(right);
-  return leftKey.localeCompare(rightKey);
+  return scalarComparisonKey(left, baseType).localeCompare(scalarComparisonKey(right, baseType));
+}
+
+function scalarComparisonKey(value: QtiScalarValue, baseType?: QtiBaseType): string {
+  if (typeof value === "string") {
+    if (baseType === "pair" || baseType === "directedPair")
+      return parseQtiPair(value, baseType) ?? value;
+    if (baseType === "point") return parseQtiPoint(value) ?? value;
+  }
+  return String(value);
 }
 
 export function numericValue(value: QtiValue): number {

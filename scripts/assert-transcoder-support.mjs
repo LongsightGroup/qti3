@@ -43,9 +43,12 @@ const { observations, failures: caseFailures } = runTranscoderEvidenceMatrix({
     if (
       !reverse.xml &&
       !reverse.authoringItem &&
-      ["qti12_response_processing_unsupported", "qti2_response_processing_not_preserved"].includes(
-        unsupportedCode,
-      ) &&
+      [
+        "qti12_response_processing_unsupported",
+        "qti2_response_processing_not_preserved",
+        "qti2_outcomes_not_preserved",
+        "qti2_match_min_not_preserved",
+      ].includes(unsupportedCode) &&
       errors.every((diagnostic) => diagnostic.code === unsupportedCode)
     )
       return { status: "unsupported", code: unsupportedCode };

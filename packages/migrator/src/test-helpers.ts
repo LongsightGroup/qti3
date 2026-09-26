@@ -67,3 +67,12 @@ import { readFileSync } from "node:fs";
 
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 import { qti3TrustedXmlFragment, writeQti3AssessmentItem } from "@longsightgroup/qti3-writer";
+
+// Explicit QTI 2 source program: initialize SCORE, then add this response's mapping.
+// Used with independently authored mappings and expected grades, never generated from writer output.
+export const qti2SingleTextScoring = `<responseProcessing>
+  <setOutcomeValue identifier="SCORE"><baseValue baseType="float">0</baseValue></setOutcomeValue>
+  <responseCondition><responseIf><not><isNull><variable identifier="RESPONSE"/></isNull></not>
+    <setOutcomeValue identifier="SCORE"><sum><variable identifier="SCORE"/><mapResponse identifier="RESPONSE"/></sum></setOutcomeValue>
+  </responseIf></responseCondition>
+</responseProcessing>`;

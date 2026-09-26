@@ -20,9 +20,9 @@ describe("numeric equality", () => {
     ['figures="2"', true],
     ['figures="2" rounding-mode="significantFigures"', true],
     ['figures="2" rounding-mode="decimalPlaces"', false],
-    ['figures="FIGURES"', true],
-    ['figures="FIGURES" rounding-mode="decimalPlaces"', false],
-    ['figures="UNSET"', null],
+    ['figures="{FIGURES}"', true],
+    ['figures="{FIGURES}" rounding-mode="decimalPlaces"', false],
+    ['figures="{UNSET}"', null],
   ])("evaluates and serializes rounded equality %s", (attributes, expected) => {
     const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rounded" title="Rounded equality" time-dependent="false">
       <qti-outcome-declaration identifier="RESULT" cardinality="single" base-type="boolean"/>
@@ -39,8 +39,8 @@ describe("numeric equality", () => {
     expect(createItemSession(parsed.document).score().outcomes.RESULT).toBe(expected);
     const serialized = serializeResponseProcessing(parsed.document.item.responseProcessing);
     expect(serialized.ok).toBe(true);
-    if (attributes.includes('figures="FIGURES"'))
-      expect(serialized.xml).toContain('figures="FIGURES"');
+    if (attributes.includes('figures="{FIGURES}"'))
+      expect(serialized.xml).toContain('figures="{FIGURES}"');
     const reparsed = parseQtiXml(
       xml.replace(
         /<qti-response-processing>[\s\S]*<\/qti-response-processing>/,
@@ -52,7 +52,7 @@ describe("numeric equality", () => {
     expect(createItemSession(reparsed.document).score().outcomes.RESULT).toBe(expected);
   });
 
-  it.each(['figures="0"', 'figures="-1"', 'figures="1.5"', 'figures="MISSING"'])(
+  it.each(['figures="0"', 'figures="-1"', 'figures="1.5"', 'figures="{MISSING}"'])(
     "rejects invalid rounded-equality figures %s",
     (attributes) => {
       const parsed = parseQtiXml(item(attributes).replaceAll("qti-equal", "qti-equal-rounded"));
@@ -79,7 +79,7 @@ describe("numeric equality", () => {
       false,
     ],
     ['tolerance-mode="relative" tolerance="10 20"', "200", "179", false],
-    ['tolerance-mode="absolute" tolerance="T"', "100", "110", true],
+    ['tolerance-mode="absolute" tolerance="{T}"', "100", "110", true],
     ['tolerance-mode="absolute" tolerance="0"', "100", "100", true],
     ['tolerance-mode="absolute" tolerance="1"', "NULL", "100", null],
   ])("evaluates and round-trips %s (%s, %s)", (attributes, left, right, expected) => {
@@ -119,7 +119,7 @@ describe("numeric equality", () => {
     'tolerance-mode="absolute"',
     'tolerance-mode="relative" tolerance="-1"',
     'tolerance-mode="absolute" tolerance="1 2 3"',
-    'tolerance-mode="absolute" tolerance="MISSING"',
+    'tolerance-mode="absolute" tolerance="{MISSING}"',
     'include-lower-bound="yes"',
     'include-upper-bound="yes"',
   ])("diagnoses invalid equality attributes %s", (attributes) => {

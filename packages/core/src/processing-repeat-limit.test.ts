@@ -29,14 +29,14 @@ describe("qti-repeat processing limit", () => {
   });
 
   it("allows a variable count whose child expansion reaches the exact cap", () => {
-    const result = parseQtiXml(repeatItem("COUNT", 2, MAX_QTI_REPEAT_RESULT_ELEMENTS / 2));
+    const result = parseQtiXml(repeatItem("{COUNT}", 2, MAX_QTI_REPEAT_RESULT_ELEMENTS / 2));
 
     expect(result.ok).toBe(true);
     expect(repeatedOutcome(result.document)).toHaveLength(MAX_QTI_REPEAT_RESULT_ELEMENTS);
   });
 
   it("rejects a variable count above the cap without prolonged expansion", () => {
-    const result = parseQtiXml(repeatItem("COUNT", 1, MAX_QTI_REPEAT_RESULT_ELEMENTS + 1));
+    const result = parseQtiXml(repeatItem("{COUNT}", 1, MAX_QTI_REPEAT_RESULT_ELEMENTS + 1));
     expect(result.ok).toBe(true);
 
     const startedAt = performance.now();
@@ -45,7 +45,7 @@ describe("qti-repeat processing limit", () => {
   });
 
   it("rejects variable count times child expansion above the cap", () => {
-    const result = parseQtiXml(repeatItem("COUNT", 2, MAX_QTI_REPEAT_RESULT_ELEMENTS / 2 + 1));
+    const result = parseQtiXml(repeatItem("{COUNT}", 2, MAX_QTI_REPEAT_RESULT_ELEMENTS / 2 + 1));
     expect(result.ok).toBe(true);
 
     expect(repeatedOutcome(result.document)).toBeNull();

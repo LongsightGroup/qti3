@@ -15,7 +15,7 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
-import { choiceResponseProcessingXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -96,7 +96,7 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: choiceResponseProcessingXml(responseIdentifier, scoring),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, scoring),
   });
 }
 

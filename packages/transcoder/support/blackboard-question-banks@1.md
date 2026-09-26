@@ -14,7 +14,7 @@
 - Scoring policy: unscored
 - Fallback: —
 - Golden SHA-256: `5252c638292be7ba1e0e17c333b1b7df7507d0a951944adc4287c01aac7191bf`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/custom`
 
@@ -102,7 +102,7 @@
 - Scoring policy: unscored
 - Fallback: text-entry
 - Golden SHA-256: `12a78dfe4b82600f6ac7c9da9859b45a76567d69f24b5a247e0cd8c49933bdd9`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/match`
 
@@ -166,7 +166,7 @@
 - Scoring policy: unscored
 - Fallback: —
 - Golden SHA-256: `b67f8c79764b9acf41dc784fb1363df59c79bb2589d08d0be45812d09e2510db`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_response_processing_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `blackboard-question-banks@1/upload`
 

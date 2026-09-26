@@ -31,6 +31,7 @@ export function scoreQtiItemServerSide(input: QtiServerScoringInput): QtiServerS
     sessionEnvironment: input.sessionEnvironment,
     submission: {
       trustedResponses: input.trustedResponses,
+      endAttemptResponseIdentifier: input.endAttemptResponseIdentifier,
       trustedInteractionStates: input.trustedInteractionStates,
     },
     attemptStatus: input.status,

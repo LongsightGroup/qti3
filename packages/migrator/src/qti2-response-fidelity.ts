@@ -29,7 +29,9 @@ export function validateQti2ResponseFidelity(
   const diagnostics: QtiMigrationDiagnostic[] = [];
   const processing = findDescendantByLocalName(source, "responseprocessing");
   const writtenProcessing = findDescendantByLocalName(target, "qti-response-processing");
-  if (processing && !preservesProcessing(processing, writtenProcessing)) {
+  if (
+    processing ? !preservesProcessing(processing, writtenProcessing) : writtenProcessing !== null
+  ) {
     diagnostics.push(
       diagnostic(
         "qti2_response_processing_not_preserved",
@@ -38,6 +40,39 @@ export function validateQti2ResponseFidelity(
         { path, sourceFormat },
       ),
     );
+  }
+  const sourceOutcomes = findAllDescendantsByLocalName(source, "outcomedeclaration");
+  const targetOutcomes = findAllDescendantsByLocalName(target, "qti-outcome-declaration");
+  const byIdentifier = (left: XmlElement, right: XmlElement) =>
+    (attr(left, "identifier") ?? "").localeCompare(attr(right, "identifier") ?? "");
+  if (
+    !equalQtiNodes(
+      sourceOutcomes.toSorted(byIdentifier).map(outcomeNode),
+      targetOutcomes.toSorted(byIdentifier).map(outcomeNode),
+    )
+  ) {
+    diagnostics.push(
+      diagnostic(
+        "qti2_outcomes_not_preserved",
+        "error",
+        "Authored QTI 2 outcome declarations, types, defaults, or metadata cannot be reproduced by the QTI 3 authoring model.",
+        { path, sourceFormat },
+      ),
+    );
+  }
+  for (const name of ["simpleassociablechoice", "gaptext", "gapimg", "associablehotspot"]) {
+    for (const choice of findAllDescendantsByLocalName(source, name)) {
+      const minimum = attr(choice, "matchMin");
+      if (minimum === null || Number(minimum) === 0) continue;
+      diagnostics.push(
+        diagnostic(
+          "qti2_match_min_not_preserved",
+          "error",
+          `Choice "${attr(choice, "identifier") ?? ""}" has a minimum association constraint that the authoring model cannot preserve.`,
+          { path, sourceFormat },
+        ),
+      );
+    }
   }
   for (const declaration of findAllDescendantsByLocalName(source, "responsedeclaration")) {
     const identifier = normalizeIdentifier(attr(declaration, "identifier"));
@@ -76,6 +111,33 @@ export function validateQti2ResponseFidelity(
     }
   }
   return diagnostics;
+}
+
+// Numeric single outcomes have implicit zero defaults (QTI 2.1 §5.2).
+// Retain all other metadata and children in the conservative comparison.
+function outcomeNode(node: XmlElement): CanonicalQtiNode {
+  const projected = canonicalNode(node);
+  const numericSingle =
+    attr(node, "cardinality") === "single" &&
+    ["integer", "float"].includes(attr(node, "baseType") ?? "");
+  const children = projected.children.filter((child) => {
+    if (
+      !numericSingle ||
+      child.name !== "defaultvalue" ||
+      child.attributes.length ||
+      child.children.length !== 1
+    )
+      return true;
+    const value = child.children[0]!;
+    return (
+      value.name !== "value" ||
+      value.attributes.length !== 0 ||
+      value.children.length !== 0 ||
+      value.text?.trim() === "" ||
+      Number(value.text) !== 0
+    );
+  });
+  return { ...projected, text: undefined, children };
 }
 
 function responseSections(declaration: XmlElement) {
@@ -194,10 +256,7 @@ function preservesProcessing(source: XmlElement, target: XmlElement | null): boo
   if (!hasOnlyAttributes(source, ["template", "templateLocation"]) || !target) return false;
   const rules = childElements(source);
   if (rules.length > 0) {
-    return equalProcessingNodes(
-      rules.map(processingNode),
-      childElements(target).map(processingNode),
-    );
+    return equalQtiNodes(rules.map(canonicalNode), childElements(target).map(canonicalNode));
   }
   const template = attr(source, "template");
   if (!template || childElements(target).length > 0) return false;
@@ -215,19 +274,19 @@ function preservesProcessing(source: XmlElement, target: XmlElement | null): boo
 // Conservative structural equivalence for the writer's existing inline programs.
 // Naming changes between QTI versions do not change the expression tree; values,
 // attributes, child order, and all operators must otherwise agree exactly.
-interface CanonicalProcessingNode {
+interface CanonicalQtiNode {
   readonly namespace: string | null;
   readonly name: string;
   readonly attributes: readonly (readonly [string, string])[];
   readonly text: string | null | undefined;
-  readonly children: readonly CanonicalProcessingNode[];
+  readonly children: readonly CanonicalQtiNode[];
 }
 
-function normalizedProcessingName(name: string): string {
+function normalizedQtiName(name: string): string {
   return name.replace(/^qti-/, "").replaceAll("-", "").toLowerCase();
 }
 
-function processingNode(node: XmlElement): CanonicalProcessingNode {
+function canonicalNode(node: XmlElement): CanonicalQtiNode {
   const attributes: Array<[string, string]> = [];
   for (let index = 0; index < node.attributes.length; index++) {
     const attribute = node.attributes.item(index);
@@ -244,16 +303,16 @@ function processingNode(node: XmlElement): CanonicalProcessingNode {
     ].includes(node.namespaceURI ?? "")
       ? "qti"
       : node.namespaceURI,
-    name: normalizedProcessingName(localName(node)),
+    name: normalizedQtiName(localName(node)),
     attributes: attributes.toSorted(([left], [right]) => left.localeCompare(right)),
     text: children.length ? undefined : node.textContent,
-    children: children.map(processingNode),
+    children: children.map(canonicalNode),
   };
 }
 
-function equalProcessingNodes(
-  left: readonly CanonicalProcessingNode[],
-  right: readonly CanonicalProcessingNode[],
+function equalQtiNodes(
+  left: readonly CanonicalQtiNode[],
+  right: readonly CanonicalQtiNode[],
 ): boolean {
   return (
     left.length === right.length &&
@@ -269,7 +328,7 @@ function equalProcessingNodes(
           const attribute = other.attributes[attributeIndex];
           return attribute !== undefined && name === attribute[0] && value === attribute[1];
         }) &&
-        equalProcessingNodes(node.children, other.children)
+        equalQtiNodes(node.children, other.children)
       );
     })
   );

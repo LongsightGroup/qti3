@@ -124,11 +124,11 @@ export function mathOperatorValue(name: string, values: number[]): QtiValue {
     case "acos":
       return Math.abs(first) > 1 ? null : finiteOrNull(Math.acos(first));
     case "acot":
-      return finiteOrNull(Math.PI / 2 - Math.atan(1 / first));
+      return finiteOrNull(Math.atan(1 / first));
     case "acsc":
-      return Math.abs(first) < 1 ? null : finiteOrNull(Math.PI / 2 - Math.asin(1 / first));
+      return Math.abs(first) < 1 ? null : finiteOrNull(Math.asin(1 / first));
     case "asec":
-      return Math.abs(first) < 1 ? null : finiteOrNull(Math.PI / 2 - Math.acos(1 / first));
+      return Math.abs(first) < 1 ? null : finiteOrNull(Math.acos(1 / first));
     case "asin":
       return Math.abs(first) > 1 ? null : finiteOrNull(Math.asin(first));
     case "atan":

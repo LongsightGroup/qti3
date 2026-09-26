@@ -952,7 +952,7 @@ test.describe("player lifecycle", () => {
     </qti-choice-interaction>
     <qti-end-attempt-interaction response-identifier="END" title="Finish"/>
   </qti-item-body>
-  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+  <qti-response-processing><qti-response-condition><qti-response-if><qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value></qti-response-if><qti-response-else><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value></qti-response-else></qti-response-condition></qti-response-processing>
 </qti-assessment-item>`;
 
     await page.goto("/");
@@ -1206,3 +1206,124 @@ test("rejects null and missing restored state without replacing the current atte
   expect(result.diagnostics).toEqual(["player.restoreState", "player.restoreState"]);
   expect(result.restored).toBe(0);
 });
+
+// QTI 3 §5.45: trigger identity is per processing invocation, never a sticky answer.
+for (const embedded of [false, true]) {
+  test(`end-attempt trigger resets across buttons, host submit and restore (embedded=${embedded})`, async ({
+    page,
+  }) => {
+    const buttons =
+      '<qti-end-attempt-interaction response-identifier="HINT" title="Hint"/><qti-end-attempt-interaction response-identifier="DONE" title="Finish"/>';
+    const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="end-trigger" title="End trigger" adaptive="true" time-dependent="false">
+      <qti-response-declaration identifier="HINT" cardinality="single" base-type="boolean"><qti-default-value><qti-value>true</qti-value></qti-default-value></qti-response-declaration>
+      <qti-response-declaration identifier="DONE" cardinality="single" base-type="boolean"/>
+      <qti-outcome-declaration identifier="HINTVALUE" cardinality="single" base-type="boolean"/>
+      <qti-item-body>${embedded ? `<p>${buttons}</p>` : buttons}</qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="HINTVALUE"><qti-variable identifier="HINT"/></qti-set-outcome-value></qti-response-processing>
+    </qti-assessment-item>`;
+    await page.goto("/");
+    const player = page.locator("qti-assessment-item-player");
+    await player.evaluate(async (element, itemXml) => {
+      await element.loadXml(itemXml);
+    }, xml);
+    expect(await player.evaluate((element) => element.scoreAttempt()?.outcomes.HINTVALUE)).toBe(
+      false,
+    );
+    await player.getByRole("button", { name: "Hint", exact: true }).click();
+    const state = await player.evaluate((element) => element.serialize());
+    expect(state?.responses).toEqual({ HINT: true, DONE: false });
+    expect(state?.outcomes.HINTVALUE).toBe(true);
+    await player.evaluate(
+      async (element, input) => {
+        await element.loadXml(input.xml, { state: input.state });
+      },
+      { xml, state },
+    );
+    await player.getByRole("button", { name: "Finish", exact: true }).click();
+    expect(await player.evaluate((element) => element.serialize()?.responses)).toEqual({
+      HINT: false,
+      DONE: true,
+    });
+    expect(await player.evaluate((element) => element.serialize()?.outcomes.HINTVALUE)).toBe(false);
+    await player.getByRole("button", { name: "Hint", exact: true }).click();
+    expect(await player.evaluate((element) => element.scoreAttempt()?.outcomes.HINTVALUE)).toBe(
+      false,
+    );
+    const responseChange = await player.evaluate((element) => {
+      let detail: unknown;
+      const capture = (event: Event) => {
+        if (event instanceof CustomEvent) detail = event.detail;
+      };
+      element.addEventListener("qti-responsechange", capture);
+      const hint = Array.from(element.querySelectorAll("button")).find(
+        (button) => button.textContent === "Hint",
+      );
+      if (!hint) throw new Error("Expected hint button");
+      hint.click();
+      element.removeEventListener("qti-responsechange", capture);
+      return detail;
+    });
+    expect(responseChange).toEqual({ responseIdentifier: "HINT", value: true });
+  });
+}
+
+// Rejected host commands must not advance the QTI attempt lifecycle or emit success events.
+for (const operation of ["scoreAttempt", "endAttempt"] as const) {
+  test(`${operation} rejects an unknown end-attempt trigger without completing the item`, async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const result = await page
+      .locator("qti-assessment-item-player")
+      .evaluate(async (player, method) => {
+        await player.loadXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="invalid-trigger" title="Invalid trigger" adaptive="false" time-dependent="false">
+        <qti-response-declaration identifier="DONE" cardinality="single" base-type="boolean"/>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+        <qti-item-body><qti-end-attempt-interaction response-identifier="DONE" title="Finish"/></qti-item-body>
+        <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value></qti-response-processing>
+      </qti-assessment-item>`);
+        const before = player.serialize();
+        const diagnostics: string[] = [];
+        const successEvents: string[] = [];
+        player.addEventListener("qti-diagnostics", (event) => {
+          const detail = (event as CustomEvent<{ diagnostics: { code: string }[] }>).detail;
+          diagnostics.push(...detail.diagnostics.map((entry) => entry.code));
+        });
+        for (const name of ["qti-score", "qti-endattempt", "qti-statechange"]) {
+          player.addEventListener(name, () => successEvents.push(name));
+        }
+        const rejected = player[method]({ endAttemptResponseIdentifier: "TYPO" });
+        const after = player.serialize();
+        const rejectedEvents = [...successEvents];
+        player.endAttempt({ endAttemptResponseIdentifier: "DONE" });
+        return {
+          before,
+          after,
+          rejected,
+          diagnostics,
+          rejectedEvents,
+          acceptedEvents: successEvents,
+          accepted: player.serialize(),
+        };
+      }, operation);
+    expect(result.before?.status).toBe("initialized");
+    if (operation === "scoreAttempt") {
+      expect(result.rejected?.diagnostics).toContainEqual(
+        expect.objectContaining({ code: "session.endAttempt.identifier", severity: "error" }),
+      );
+    } else expect(result.rejected).toBeUndefined();
+    expect(result.after).toEqual({
+      ...result.before,
+      builtInVariables: { ...result.before?.builtInVariables, duration: expect.any(Number) },
+    });
+    expect(result.after?.builtInVariables?.duration).toBeGreaterThanOrEqual(
+      result.before?.builtInVariables?.duration ?? 0,
+    );
+    expect(result.diagnostics).toEqual(["session.endAttempt.identifier"]);
+    expect(result.rejectedEvents).toEqual([]);
+    expect(result.accepted?.status).toBe("completed");
+    expect(result.accepted?.outcomes.SCORE).toBe(1);
+    expect(result.acceptedEvents).toContain("qti-score");
+    expect(result.acceptedEvents).toContain("qti-endattempt");
+  });
+}

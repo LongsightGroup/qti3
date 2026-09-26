@@ -515,3 +515,12 @@ session options) for reproducible presentation; this is independent of processin
 `randomSeed`. Core hosts inspect `session.presentation()` before rendering.
 See [interaction shuffling](../../docs/interaction-shuffling.md) for fixed choices,
 restore diagnostics, defaults, accessibility and the versioned state contract.
+
+### End-attempt processing triggers
+
+Pass `session.score({ endAttemptResponseIdentifier: "HINT" })` when an end-attempt interaction
+triggers processing. The core sets that response to true and all other end-attempt responses to
+false before processing. `session.score()` represents ordinary host submission and resets all of
+them to false. Declaration defaults are ignored. Server scoring, adaptive turns, and submission
+materialization accept the same `endAttemptResponseIdentifier` input; saved response values do
+not identify the current trigger. The browser player supplies the identifier when a button is used.

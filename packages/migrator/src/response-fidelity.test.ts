@@ -1,6 +1,12 @@
-import { createItemSession, parseQtiXml } from "@longsightgroup/qti3-core";
+import { qti2SingleTextScoring } from "./test-helpers.js";
+import { createItemSession, parseQtiXml, validateAssessmentItem } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { migrateQtiItemToQti3, migrateQtiToQti3Package } from "./index.js";
+
+const mapProcessing =
+  '<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/map_response"/>';
+const matchProcessing =
+  '<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>';
 
 describe("QTI 2 response migration fidelity", () => {
   it.each([
@@ -20,6 +26,7 @@ describe("QTI 2 response migration fidelity", () => {
     (_label, attributes, entries) => {
       const result = migrateQtiItemToQti3({
         xml: item(
+          mapProcessing,
           choiceDeclaration(
             `<correctResponse><value>A</value></correctResponse><mapping ${attributes}>${entries}</mapping>`,
           ),
@@ -37,6 +44,7 @@ describe("QTI 2 response migration fidelity", () => {
   it("retains representable mapping scores", () => {
     const result = migrateQtiItemToQti3({
       xml: item(
+        mapProcessing,
         choiceDeclaration(
           '<correctResponse><value>A</value></correctResponse><mapping defaultValue="0"><mapEntry mapKey="A" mappedValue="1"/><mapEntry mapKey="B" mappedValue="0"/></mapping>',
         ),
@@ -54,6 +62,7 @@ describe("QTI 2 response migration fidelity", () => {
       const result = migrateQtiItemToQti3(
         {
           xml: item(
+            matchProcessing,
             choiceDeclaration("<defaultValue><value>B</value></defaultValue>"),
             choiceBody(),
           ),
@@ -69,6 +78,7 @@ describe("QTI 2 response migration fidelity", () => {
   it("diagnoses discarded defaults even alongside a real correct response", () => {
     const result = migrateQtiItemToQti3({
       xml: item(
+        matchProcessing,
         choiceDeclaration(
           "<defaultValue><value>B</value></defaultValue><correctResponse><value>A</value></correctResponse>",
         ),
@@ -86,7 +96,8 @@ describe("QTI 2 response migration fidelity", () => {
     (baseType) => {
       const result = migrateQtiItemToQti3({
         xml: item(
-          `<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="${baseType}"><correctResponse><value>42</value></correctResponse></responseDeclaration>`,
+          qti2SingleTextScoring,
+          `<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="${baseType}"><correctResponse><value>42</value></correctResponse><mapping defaultValue="0"><mapEntry mapKey="42" mappedValue="1" caseSensitive="true"/></mapping></responseDeclaration>`,
           '<itemBody><p>Number: <textEntryInteraction responseIdentifier="RESPONSE" expectedLength="2" patternMask="[0-9]{2}" placeholderText="00"/></p></itemBody>',
         ),
       });
@@ -108,8 +119,8 @@ describe("QTI 2 response migration fidelity", () => {
 
   it("preserves representable text mapping weights, case, and an independent answer key", () => {
     const source = textItem("Paris").replace(
-      "</responseDeclaration>",
-      '<mapping defaultValue="0"><mapEntry mapKey="Paris" mappedValue="0.5" caseSensitive="false"/><mapEntry mapKey="Lyon" mappedValue="0.25" caseSensitive="true"/></mapping></responseDeclaration>',
+      /<mapping[^>]*>.*?<\/mapping>/,
+      '<mapping defaultValue="0"><mapEntry mapKey="Paris" mappedValue="0.5" caseSensitive="false"/><mapEntry mapKey="Lyon" mappedValue="0.25" caseSensitive="true"/></mapping>',
     );
     const result = migrateQtiItemToQti3({ xml: source });
     expect(result.diagnostics).toEqual([]);
@@ -130,8 +141,8 @@ describe("QTI 2 response migration fidelity", () => {
     ],
   ])("preserves overlapping map-entry order", (entries, expected) => {
     const source = textItem("Paris").replace(
-      "</responseDeclaration>",
-      `<mapping defaultValue="0">${entries}</mapping></responseDeclaration>`,
+      /<mapping[^>]*>.*?<\/mapping>/,
+      `<mapping defaultValue="0">${entries}</mapping>`,
     );
     const result = migrateQtiItemToQti3({ xml: source });
     expect(result.diagnostics).toEqual([]);
@@ -140,8 +151,8 @@ describe("QTI 2 response migration fidelity", () => {
 
   it("preserves an omitted map caseSensitive as case-insensitive", () => {
     const source = textItem("Paris").replace(
-      "</responseDeclaration>",
-      '<mapping defaultValue="0"><mapEntry mapKey="Paris" mappedValue="2"/></mapping></responseDeclaration>',
+      /<mapping[^>]*>.*?<\/mapping>/,
+      '<mapping defaultValue="0"><mapEntry mapKey="Paris" mappedValue="2"/></mapping>',
     );
     const result = migrateQtiItemToQti3({ xml: source });
     expect(result.diagnostics).toEqual([]);
@@ -159,6 +170,7 @@ describe("QTI 2 response migration fidelity", () => {
     ],
   ])("rejects lost %s mapping weights", (baseType, interaction) => {
     const source = item(
+      mapProcessing,
       `<responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="${baseType}"><correctResponse><value>A B</value></correctResponse><mapping defaultValue="0"><mapEntry mapKey="A B" mappedValue="5"/></mapping></responseDeclaration>`,
       `<itemBody>${interaction}</itemBody>`,
     );
@@ -180,6 +192,7 @@ describe("QTI 2 response migration fidelity", () => {
 
   it("refuses nonrepresentable slider mapping limits", () => {
     const source = item(
+      mapProcessing,
       '<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="integer"><correctResponse><value>5</value></correctResponse><mapping defaultValue="0" upperBound="0.5"><mapEntry mapKey="5" mappedValue="2"/></mapping></responseDeclaration>',
       '<itemBody><sliderInteraction responseIdentifier="RESPONSE" lowerBound="0" upperBound="10" step="1"/></itemBody>',
     );
@@ -192,6 +205,7 @@ describe("QTI 2 response migration fidelity", () => {
 
   it("does not emit package output after rejecting mapping loss", async () => {
     const source = item(
+      mapProcessing,
       choiceDeclaration(
         '<correctResponse><value>A</value></correctResponse><mapping defaultValue="0"><mapEntry mapKey="A" mappedValue="5"/></mapping>',
       ),
@@ -206,6 +220,7 @@ describe("QTI 2 response migration fidelity", () => {
 
   it("honors an explicit review-stub policy for unrepresentable response semantics", () => {
     const source = item(
+      matchProcessing,
       choiceDeclaration(
         "<defaultValue><value>B</value></defaultValue><correctResponse><value>A</value></correctResponse>",
       ),
@@ -220,8 +235,8 @@ describe("QTI 2 response migration fidelity", () => {
   });
 });
 
-function item(declaration: string, body: string): string {
-  return `<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="fidelity" title="Synthetic fidelity item" adaptive="false" timeDependent="false">${declaration}${body}</assessmentItem>`;
+function item(processing: string, declaration: string, body: string): string {
+  return `<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="fidelity" title="Synthetic fidelity item" adaptive="false" timeDependent="false">${declaration}<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>${body}${processing}</assessmentItem>`;
 }
 
 function choiceDeclaration(content: string): string {
@@ -234,7 +249,8 @@ function choiceBody(): string {
 
 function textItem(correct: string): string {
   return item(
-    `<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>${correct}</value></correctResponse></responseDeclaration>`,
+    qti2SingleTextScoring,
+    `<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"><correctResponse><value>${correct}</value></correctResponse><mapping defaultValue="0"><mapEntry mapKey="${correct}" mappedValue="1" caseSensitive="true"/></mapping></responseDeclaration>`,
     '<itemBody><p><textEntryInteraction responseIdentifier="RESPONSE"/></p></itemBody>',
   );
 }
@@ -243,6 +259,8 @@ function score(xml: string | undefined, response: string | number): unknown {
   if (!xml) throw new Error("Expected migrated item XML.");
   const parsed = parseQtiXml(xml);
   if (!parsed.document) throw new Error("Expected parsed migrated item.");
+  expect(parsed.diagnostics).toEqual([]);
+  expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);
   const session = createItemSession(parsed.document);
   session.respond("RESPONSE", response);
   return session.score().outcomes.SCORE;

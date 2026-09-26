@@ -252,9 +252,9 @@ function scoredBooleanXml(): string {
         <qti-default-value><qti-value>0</qti-value></qti-default-value>
       </qti-outcome-declaration>
       <qti-item-body>
-        <qti-end-attempt-interaction response-identifier="RESPONSE" title="Finish"/>
+        <p>Boolean response supplied by the host.</p>
       </qti-item-body>
-      <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>
+      <qti-response-processing><qti-response-condition><qti-response-if><qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value></qti-response-if></qti-response-condition></qti-response-processing>
     </qti-assessment-item>
   `;
 }

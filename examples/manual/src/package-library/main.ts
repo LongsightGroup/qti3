@@ -51,7 +51,11 @@ deleteButton.addEventListener("click", () => {
   void run(removeSelectedPackage, input);
 });
 submitButton.addEventListener("click", () => {
-  void run(() => player.scoreAttempt());
+  void run(() => {
+    const result = player.scoreAttempt();
+    if (result?.diagnostics.some((diagnostic) => diagnostic.severity === "error"))
+      showScore(result);
+  });
 });
 resetButton.addEventListener("click", () => {
   void run(() => player.reset(), submitButton);

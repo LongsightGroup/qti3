@@ -17,7 +17,7 @@ import {
   validatePairMatchMax,
   validatePairReferences,
 } from "./pair-declaration.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -93,7 +93,10 @@ ${bodyFragment}
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "map_response"),
+    responseProcessingXml: standardResponseProcessingXml(
+      responseIdentifier,
+      input.scoring ?? "map_response",
+    ),
   });
 }
 

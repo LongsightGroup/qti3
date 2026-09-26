@@ -45,6 +45,7 @@ export function numericTuple4(values: number[]): [number, number, number, number
 
 export function coerceValue(value: string, baseType: string | undefined): QtiScalarValue {
   if (baseType === "integer") return parseInteger(value) ?? value;
+  if (baseType === "point") return parseQtiPoint(value) ?? value;
   if (baseType === "float") return parseFiniteNumber(value) ?? value;
   if (baseType === "pair" || baseType === "directedPair") {
     return parseQtiPair(value, baseType) ?? value;
@@ -55,6 +56,15 @@ export function coerceValue(value: string, baseType: string | undefined): QtiSca
     // Invalid boolean literals fall through to the raw string; validation rejects them separately.
   }
   return value;
+}
+
+/** Canonical integer coordinates; the public point representation remains a string. */
+export function parseQtiPoint(value: string): string | undefined {
+  const parts = value.trim().split(/\s+/);
+  if (parts.length !== 2) return undefined;
+  const x = parseInteger(parts[0]);
+  const y = parseInteger(parts[1]);
+  return x === undefined || y === undefined ? undefined : `${x} ${y}`;
 }
 
 /** Parse and canonicalize a QTI pair while preserving directed-pair endpoint order. */

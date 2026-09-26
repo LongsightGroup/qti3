@@ -13,7 +13,7 @@ import {
   optionalPromptSection,
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -87,7 +87,7 @@ ${optionalPromptSection(input.promptHtml)}${bodyContent}
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, "match_correct"),
   });
 }
 

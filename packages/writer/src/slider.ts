@@ -8,11 +8,7 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
-import {
-  mapResponseProcessingXml,
-  matchCorrectProcessingXml,
-  responseProcessingTemplateXml,
-} from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -80,7 +76,7 @@ ${sliderMappingXml(input, scoring)}  </qti-response-declaration>`;
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: sliderResponseProcessingXml(scoring, responseIdentifier),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, scoring),
   });
 }
 
@@ -116,16 +112,6 @@ ${mappings
   .join("\n")}
     </qti-mapping>
 `;
-}
-
-function sliderResponseProcessingXml(
-  scoring: Qti3SliderScoring,
-  responseIdentifier: string,
-): string {
-  if (responseIdentifier === "RESPONSE") return responseProcessingTemplateXml(scoring);
-  return scoring === "map_response"
-    ? mapResponseProcessingXml(responseIdentifier)
-    : matchCorrectProcessingXml(responseIdentifier);
 }
 
 function sliderScoring(input: Qti3SliderBuilderInput): Qti3SliderScoring {

@@ -94,7 +94,16 @@ attribute continues to migrate.
 Authored QTI 2 response processing is accepted when its canonical standard template or its
 inline expression tree is preserved by the writer. Changed inline rules (which override a
 coexisting template), unknown templates, and changed template semantics return `qti2_response_processing_not_preserved`. The migrator
-does not replace a supplied scoring program with an inferred answer-key program.
+does not replace a supplied scoring program with an inferred answer-key program. Absent or empty
+processing is also checked: if the writer would introduce scoring, migration returns the same
+unsupported diagnostic. Outcome declarations, types, defaults, and metadata must be preserved;
+otherwise migration returns `qti2_outcomes_not_preserved`. Explicit numeric zero defaults are
+recognized as equivalent to implicit numeric zero defaults.
+
+Nonzero `matchMin` on association choices, gap choices, and associable hotspots returns `qti2_match_min_not_preserved` because
+the authoring model cannot yet express it. These failures produce no converted item unless the
+caller explicitly requests a review stub. QTI 2 `fixed` accepts both XML Boolean spellings,
+including `fixed="1"` for a pinned choice.
 
 QTI 1.2 scoring currently accepts a single positive conjunction that sets `SCORE` to 1 (or adds 1 once),
 with a zero default, over the supported single-response forms. Negation, alternative scoring
