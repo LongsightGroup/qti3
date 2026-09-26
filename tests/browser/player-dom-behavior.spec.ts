@@ -1369,3 +1369,32 @@ for (const type of ["associate", "graphicAssociate", "match", "gapMatch"] as con
     expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(1);
   });
 }
+
+for (const kind of ["hottext", "gap"] as const) {
+  test(`migrated ${kind} keeps prompt and surrounding instructions in candidate order`, async ({
+    page,
+  }) => {
+    const { migrateQtiItemToQti3 } = await import("../../packages/migrator/src/index.js");
+    const gap = kind === "gap";
+    const interaction = gap
+      ? '<gapMatchInteraction responseIdentifier="RESPONSE" shuffle="false"><prompt>Place the label.</prompt><gapText identifier="A" matchMax="1">Alpha</gapText><p>Sentence <gap identifier="G"/>.</p></gapMatchInteraction>'
+      : '<hottextInteraction responseIdentifier="RESPONSE" maxChoices="1"><prompt>Select the adjective.</prompt><p>The <hottext identifier="A">green</hottext> door.</p></hottextInteraction>';
+    const source = `<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="instructions" title="Instructions" adaptive="false" timeDependent="false"><responseDeclaration identifier="RESPONSE" cardinality="${gap ? "multiple" : "single"}" baseType="${gap ? "directedPair" : "identifier"}"><correctResponse><value>${gap ? "A G" : "A"}</value></correctResponse></responseDeclaration><outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/><itemBody><div><p>Introduction.</p>${interaction}<p>Trailing instructions.</p></div></itemBody><responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/></assessmentItem>`;
+    const result = migrateQtiItemToQti3({ xml: source });
+    expect(result.diagnostics).toEqual([]);
+    if (!result.xml) throw new Error("Expected migration");
+    await page.goto("/");
+    const player = page.locator("qti-assessment-item-player");
+    await player.evaluate(async (element, xml) => {
+      await element.loadXml(xml);
+    }, result.xml);
+    const prompt = gap ? "Place the label." : "Select the adjective.";
+    await expect(player.getByText("Introduction.", { exact: true })).toBeVisible();
+    await expect(player.getByText(prompt, { exact: true })).toBeVisible();
+    await expect(player.getByText("Trailing instructions.", { exact: true })).toBeVisible();
+    const text = await player.innerText();
+    expect(text.indexOf("Introduction.")).toBeLessThan(text.indexOf(prompt));
+    expect(text.indexOf(prompt)).toBeLessThan(text.indexOf("Trailing instructions."));
+    await expectNoAxeViolationsOnPlayer(page);
+  });
+}

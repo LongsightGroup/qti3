@@ -84,11 +84,11 @@ export interface QtiItemSession {
   /** Reads an existing response or effective default without beginning an attempt. */
   presentationResponse(identifier: string): QtiValue;
   /** Starts an attempt without requiring a response; repeated calls and resume are idempotent. */
-  beginAttempt(): void;
-  respond(identifier: string, value: QtiValue): void;
-  setInteractionState(identifier: string, state: QtiPortableCustomStateValue): void;
+  beginAttempt(): QtiDiagnostic[];
+  respond(identifier: string, value: QtiValue): QtiDiagnostic[];
+  setInteractionState(identifier: string, state: QtiPortableCustomStateValue): QtiDiagnostic[];
   interactionState(identifier: string): QtiPortableCustomStateValue | undefined;
-  setStatus(status: QtiAttemptStatus): void;
+  setStatus(status: QtiAttemptStatus): QtiDiagnostic[];
   /** Only the end-attempt interaction that triggered this invocation is true; host scoring resets all. */
   score(options?: { endAttemptResponseIdentifier?: string | undefined }): QtiScoreResult;
   serialize(): QtiAttemptStateV1;
@@ -242,6 +242,14 @@ export function createItemSession(
   Object.assign(outcomes, priorOutcomes);
   Object.assign(interactionStates, priorInteractionStates);
 
+  let closed =
+    document.item.adaptive &&
+    (status === "completed" || outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED);
+  if (closed) {
+    status = "completed";
+    builtIns.state.attemptInProgress = false;
+  }
+
   const presentation = prepareQtiPresentation(
     document.item,
     templateValues,
@@ -275,81 +283,112 @@ export function createItemSession(
           : (responseDefaults[identifier] ?? null),
       );
     },
-    beginAttempt: startAttempt,
+    beginAttempt() {
+      return mutate(() => {
+        startAttempt();
+        return [];
+      });
+    },
     correctResponses() {
       return cloneValueRecord(correctResponses);
     },
     respond(identifier: string, value: QtiValue) {
-      responses[identifier] = cloneValue(value);
-      validationMessages = [];
-      startAttempt();
+      return mutate(() => {
+        responses[identifier] = cloneValue(value);
+        validationMessages = [];
+        startAttempt();
+        return [];
+      });
     },
     setInteractionState(identifier: string, state: QtiPortableCustomStateValue) {
-      if (!portableCustomResponseIdentifiers.has(identifier)) {
-        throw new Error(`Cannot set interaction state for non-PCI response ${identifier}.`);
-      }
-      interactionStates[identifier] = clonePortableCustomState(state);
-      validationMessages = [];
-      startAttempt();
+      return mutate(() => {
+        if (!portableCustomResponseIdentifiers.has(identifier)) {
+          throw new Error(`Cannot set interaction state for non-PCI response ${identifier}.`);
+        }
+        interactionStates[identifier] = clonePortableCustomState(state);
+        validationMessages = [];
+        startAttempt();
+        return [];
+      });
     },
     interactionState(identifier: string) {
       const state = interactionStates[identifier];
       return state === undefined ? undefined : clonePortableCustomState(state);
     },
     setStatus(nextStatus: QtiAttemptStatus) {
-      captureTime();
-      if (nextStatus === "interacting") startAttempt();
-      if (nextStatus === "completed") builtIns.state.attemptInProgress = false;
-      status = nextStatus;
+      return mutate(() => {
+        captureTime();
+        if (nextStatus === "interacting") startAttempt();
+        if (nextStatus === "completed") builtIns.state.attemptInProgress = false;
+        status = nextStatus;
+        return [];
+      });
     },
     score(scoreOptions = {}) {
-      const trigger = scoreOptions.endAttemptResponseIdentifier;
-      if (trigger !== undefined && !endAttemptIdentifiers.includes(trigger)) {
-        const diagnostics: QtiDiagnostic[] = [
-          {
-            code: "session.endAttempt.identifier",
-            severity: "error",
-            message: `No end-attempt interaction declares response identifier ${trigger}.`,
-          },
+      const mutationDiagnostics = mutate(() => {
+        const trigger = scoreOptions.endAttemptResponseIdentifier;
+        if (trigger !== undefined && !endAttemptIdentifiers.includes(trigger)) {
+          const diagnostics: QtiDiagnostic[] = [
+            {
+              code: "session.endAttempt.identifier",
+              severity: "error",
+              message: `No end-attempt interaction declares response identifier ${trigger}.`,
+            },
+          ];
+          return diagnostics;
+        }
+        evaluation.diagnostics.length = 0;
+        builtInDiagnostics.length = 0;
+        captureTime();
+        if (
+          document.item.adaptive ||
+          status !== "initialized" ||
+          scoreOptions.endAttemptResponseIdentifier !== undefined
+        ) {
+          startAttempt();
+        }
+        const completionStatus = outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
+        if (!document.item.adaptive) {
+          resetRecord(outcomes, cloneValueRecord(defaultOutcomes));
+          outcomes[COMPLETION_STATUS] = completionStatus;
+        }
+        for (const identifier of endAttemptIdentifiers) {
+          responses[identifier] = identifier === scoreOptions.endAttemptResponseIdentifier;
+        }
+        applyResponseProcessing(processingContext);
+        builtIns.state.attemptInProgress = false;
+        const diagnostics = [
+          ...templateDiagnostics,
+          ...evaluation.diagnostics,
+          ...builtInDiagnostics,
         ];
-        const state = snapshot();
-        return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
-      }
-      evaluation.diagnostics.length = 0;
-      builtInDiagnostics.length = 0;
-      captureTime();
-      if (
-        document.item.adaptive ||
-        status !== "initialized" ||
-        scoreOptions.endAttemptResponseIdentifier !== undefined
-      ) {
-        startAttempt();
-      }
-      const completionStatus = outcomes[COMPLETION_STATUS] ?? COMPLETION_NOT_ATTEMPTED;
-      if (!document.item.adaptive) {
-        resetRecord(outcomes, cloneValueRecord(defaultOutcomes));
-        outcomes[COMPLETION_STATUS] = completionStatus;
-      }
-      for (const identifier of endAttemptIdentifiers) {
-        responses[identifier] = identifier === scoreOptions.endAttemptResponseIdentifier;
-      }
-      applyResponseProcessing(processingContext);
-      builtIns.state.attemptInProgress = false;
-      const diagnostics = [
-        ...templateDiagnostics,
-        ...evaluation.diagnostics,
-        ...builtInDiagnostics,
-      ];
-      if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
-      validationMessages = diagnostics;
+        if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
+        validationMessages = diagnostics;
+        return diagnostics;
+      });
       const state = snapshot();
-      return { outcomes: cloneValueRecord(outcomes), diagnostics, state };
+      return { outcomes: cloneValueRecord(outcomes), diagnostics: mutationDiagnostics, state };
     },
     serialize() {
       captureTime();
       return snapshot();
     },
   };
+
+  function mutate(operation: () => QtiDiagnostic[]): QtiDiagnostic[] {
+    if (closed) return [completedDiagnostic()];
+    const diagnostics = operation();
+    if (document.item.adaptive && status === "completed") closed = true;
+    return diagnostics;
+  }
+
+  function completedDiagnostic(): QtiDiagnostic {
+    return {
+      code: "session.completed",
+      severity: "error",
+      message: "A completed adaptive item cannot accept another submission.",
+    };
+  }
 
   function snapshot(): QtiAttemptStateV1 {
     return serialize({

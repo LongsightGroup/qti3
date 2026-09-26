@@ -1,10 +1,4 @@
-import {
-  coerceValue,
-  parseCoords,
-  parseInteger,
-  parseShape,
-  parseXmlBoolean,
-} from "./parser-values.js";
+import { coerceValue, parseCoords, parseShape, parseXmlBoolean } from "./parser-values.js";
 import { responseConditionsFromRules } from "./processing-rules.js";
 import type {
   QtiLookupOutcomeValue,
@@ -264,9 +258,9 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   if (node.localName === "qti-random-integer") {
     return {
       type: "randomInteger",
-      min: Number(node.attributes.min ?? 0),
-      max: Number(node.attributes.max ?? 0),
-      step: Number(node.attributes.step ?? 1),
+      min: node.attributes.min,
+      max: node.attributes.max,
+      step: node.attributes.step,
       attributes: node.attributes,
       source: node.source,
     };
@@ -275,8 +269,8 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
   if (node.localName === "qti-random-float") {
     return {
       type: "randomFloat",
-      min: Number(node.attributes.min ?? 0),
-      max: Number(node.attributes.max ?? 0),
+      min: node.attributes.min,
+      max: node.attributes.max,
       attributes: node.attributes,
       source: node.source,
     };
@@ -406,16 +400,14 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
 
   if (node.localName === "qti-round-to") {
     const expression = parseFirstExpression(node);
-    const roundingMode = node.attributes["rounding-mode"];
-    const figures = Number(node.attributes.figures ?? 0);
-    if (
-      expression &&
-      (roundingMode === "decimalPlaces" || roundingMode === "significantFigures") &&
-      Number.isInteger(figures) &&
-      (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0)
-    ) {
-      return { type: "roundTo", expression, roundingMode, figures, source: node.source };
-    }
+    if (expression)
+      return {
+        type: "roundTo",
+        expression,
+        roundingMode: node.attributes["rounding-mode"] ?? "",
+        figures: node.attributes.figures,
+        source: node.source,
+      };
   }
 
   if (node.localName === "qti-truncate") {
@@ -478,7 +470,7 @@ function parseExpression(node: XmlNode): QtiProcessingExpression | undefined {
       .map(parseExpression)
       .filter((expression): expression is QtiProcessingExpression => expression !== undefined);
     const roundingMode = node.attributes["rounding-mode"] ?? "significantFigures";
-    const figures = parseInteger(node.attributes.figures) ?? node.attributes.figures ?? "";
+    const figures = node.attributes.figures;
     if (left && right) {
       return { type: "equalRounded", left, right, roundingMode, figures, source: node.source };
     }

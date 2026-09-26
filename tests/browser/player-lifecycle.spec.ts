@@ -1327,3 +1327,57 @@ for (const operation of ["scoreAttempt", "endAttempt"] as const) {
     expect(result.acceptedEvents).toContain("qti-endattempt");
   });
 }
+
+// QTI 3 §§2.2, 2.5: completed adaptive responses stay fixed, including after restoration.
+test("restored adaptive completion locks responses and reports rejected host mutations", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const player = page.locator("qti-assessment-item-player");
+  const result = await player.evaluate(async (element) => {
+    await element.loadXml(`<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="closed-restored" title="Closed restored" adaptive="true" time-dependent="false">
+      <qti-response-declaration identifier="R" cardinality="single" base-type="string"/>
+      <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+      <qti-item-body><p>Answer: <qti-text-entry-interaction response-identifier="R"/></p></qti-item-body>
+      <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">1</qti-base-value></qti-set-outcome-value><qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value></qti-response-processing>
+    </qti-assessment-item>`);
+    const completed = element.scoreAttempt({ validateResponses: false });
+    if (!completed) throw new Error("Expected completed score");
+    element.restore({ ...completed.state, status: "interacting" });
+    const before = element.serialize();
+    const events: string[] = [];
+    const diagnostics: string[] = [];
+    element.addEventListener("qti-diagnostics", (event) => {
+      const detail = (event as CustomEvent<{ diagnostics: { code: string }[] }>).detail;
+      diagnostics.push(...detail.diagnostics.map((entry) => entry.code));
+    });
+    for (const name of [
+      "qti-responsechange",
+      "qti-statechange",
+      "qti-score",
+      "qti-suspend",
+      "qti-endattempt",
+    ])
+      element.addEventListener(name, () => events.push(name));
+    const input = element.querySelector("input");
+    if (!input) throw new Error("Expected text entry");
+    const disabled = input.disabled;
+    input.value = "rejected";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    element.suspend();
+    element.scoreAttempt({ validateResponses: false });
+    element.endAttempt({ validateResponses: false });
+    return { before, after: element.serialize(), events, diagnostics, disabled };
+  });
+  expect(result.disabled).toBe(true);
+  expect(result.before?.status).toBe("completed");
+  expect(result.before?.outcomes.SCORE).toBe(1);
+  expect(result.after).toEqual(result.before);
+  expect(result.events).toEqual([]);
+  expect(result.diagnostics).toEqual([
+    "session.completed",
+    "session.completed",
+    "session.completed",
+  ]);
+});

@@ -27,6 +27,15 @@ if (qtiTranscoderSupportMatrix.length !== profiles.length * interactions.length)
   failures.push("The support matrix is not the registry/profile cross product.");
 }
 
+const fidelityRefusalCodes = new Set([
+  "qti12_response_processing_unsupported",
+  "qti2_response_processing_not_preserved",
+  "qti2_outcomes_not_preserved",
+  "qti2_match_min_not_preserved",
+  "qti2_template_not_preserved",
+  "qti2_correct_response_not_preserved",
+]);
+
 const { observations, failures: caseFailures } = runTranscoderEvidenceMatrix({
   interactions: interactions.map((entry) => entry.interactionType),
   fixtureXml,
@@ -43,13 +52,8 @@ const { observations, failures: caseFailures } = runTranscoderEvidenceMatrix({
     if (
       !reverse.xml &&
       !reverse.authoringItem &&
-      [
-        "qti12_response_processing_unsupported",
-        "qti2_response_processing_not_preserved",
-        "qti2_outcomes_not_preserved",
-        "qti2_match_min_not_preserved",
-      ].includes(unsupportedCode) &&
-      errors.every((diagnostic) => diagnostic.code === unsupportedCode)
+      errors.length > 0 &&
+      errors.every((diagnostic) => fidelityRefusalCodes.has(diagnostic.code))
     )
       return { status: "unsupported", code: unsupportedCode };
     return reverse.xml && errors.length === 0

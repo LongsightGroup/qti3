@@ -275,3 +275,9 @@ one area mapping target. When `maxChoices` is omitted, these point interactions 
 Graphic Gap Match requires hotspot targets, emitted as `qti-associable-hotspot` elements on the
 graphic. The writer diagnoses `targetType: "inlineGap"` as unsupported for this interaction.
 Use Gap Match for inline `qti-gap` targets in text.
+
+Use `itemBodyHtml` to preserve surrounding item content and the position of the rendered
+interaction body. Supply trusted XML containing exactly one empty
+`<qti-interaction-placeholder/>`. The shared item assembler replaces that placeholder
+with the renderer's body; `bodyHtml` and `promptHtml` retain their existing meanings.
+Malformed placement templates return `invalid_item_body_template` diagnostics.

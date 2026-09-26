@@ -613,15 +613,15 @@ export type QtiProcessingExpression = (
   | { type: "variable"; identifier: string }
   | {
       type: "randomInteger";
-      min: number;
-      max: number;
-      step: number;
+      min: string | undefined;
+      max: string | undefined;
+      step: string | undefined;
       attributes: Record<string, string>;
     }
   | {
       type: "randomFloat";
-      min: number;
-      max: number;
+      min: string | undefined;
+      max: string | undefined;
       attributes: Record<string, string>;
     }
   | { type: "random"; expression: QtiProcessingExpression }
@@ -642,8 +642,8 @@ export type QtiProcessingExpression = (
   | {
       type: "roundTo";
       expression: QtiProcessingExpression;
-      roundingMode: "decimalPlaces" | "significantFigures";
-      figures: number;
+      roundingMode: string;
+      figures: string | undefined;
     }
   | { type: "truncate"; expression: QtiProcessingExpression }
   | { type: "integerToFloat"; expression: QtiProcessingExpression }
@@ -662,7 +662,7 @@ export type QtiProcessingExpression = (
       left: QtiProcessingExpression;
       right: QtiProcessingExpression;
       roundingMode: string;
-      figures: number | string;
+      figures: string | undefined;
     }
   | {
       type: "numericCompare";

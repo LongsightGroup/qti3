@@ -387,7 +387,10 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       return;
     }
     const { session: nextSession, presentationInteractions } = prepared;
-    if (options.status) nextSession.setStatus(options.status);
+    if (options.status) {
+      const diagnostics = nextSession.setStatus(options.status);
+      if (diagnostics.length) this.emitDiagnostics(diagnostics);
+    }
     if (!this.isCurrentLoad(generation)) return;
 
     this.loadedItem = {
@@ -503,7 +506,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   suspend(): void {
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
-    loadedItem.session.setStatus("suspended");
+    const diagnostics = loadedItem.session.setStatus("suspended");
+    if (diagnostics.length) {
+      this.emitDiagnostics(diagnostics);
+      return;
+    }
     this.updateAttemptAvailability();
     const state = this.serialize();
     if (!state) return;
@@ -516,10 +523,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     if (!result || result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) return;
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
-    if (
-      !loadedItem.document.item.adaptive ||
-      result.state.outcomes.completionStatus === "completed"
-    ) {
+    if (!loadedItem.document.item.adaptive) {
       loadedItem.session.setStatus("completed");
     }
     this.updateAttemptAvailability();
@@ -709,7 +713,13 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       }
       if (interaction?.type === "textEntry" || interaction?.type === "extendedText") {
         const companion = interaction.attributes["string-identifier"];
-        if (companion) loadedItem.session.respond(companion, value);
+        if (companion) {
+          const diagnostics = loadedItem.session.respond(companion, value);
+          if (diagnostics.length) {
+            this.emitDiagnostics(diagnostics);
+            return;
+          }
+        }
         if (typeof value === "string") value = captureQtiTextResponse(interaction, value);
         else if (Array.isArray(value))
           value = value.flatMap((entry) => {
@@ -717,7 +727,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
             return typeof captured === "string" || typeof captured === "number" ? [captured] : [];
           });
       }
-      loadedItem.session.respond(responseIdentifier, value);
+      const diagnostics = loadedItem.session.respond(responseIdentifier, value);
+      if (diagnostics.length) {
+        this.emitDiagnostics(diagnostics);
+        return;
+      }
       this.applyInlineValidation(responseIdentifier, undefined);
       this.dispatchPlayerEvent("qti-responsechange", { responseIdentifier, value });
       this.emitStateChange();
@@ -785,8 +799,10 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         ? this.currentInteractionState(responseIdentifier)
         : undefined,
       renderMarkup: (nodes) => renderContentNodes(nodes, this.contentContext()),
-      setInteractionState: (identifier, state) =>
-        this.loadedItem?.session.setInteractionState(identifier, state),
+      setInteractionState: (identifier, state) => {
+        const diagnostics = this.loadedItem?.session.setInteractionState(identifier, state);
+        if (diagnostics?.length) this.emitDiagnostics(diagnostics);
+      },
       setValidity: (identifier, valid, message) => {
         const diagnostic = portableCustomValidityDiagnostic(identifier, valid, message);
         this.applyInlineValidation(identifier, diagnostic);

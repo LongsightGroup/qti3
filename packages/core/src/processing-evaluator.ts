@@ -1,4 +1,4 @@
-import { parseNumericOperatorAttribute } from "./operator-attribute.js";
+import { parseNumericOperatorAttribute, randomOperatorAttributes } from "./operator-attribute.js";
 import type { QtiDiagnostic, QtiDocument, QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { QtiCustomOperatorRegistry } from "./custom-operators.js";
@@ -29,7 +29,8 @@ export interface EvaluationContext {
   random: () => number;
   customOperators: QtiCustomOperatorRegistry;
   evaluate(expression: QtiProcessingExpression): QtiValue;
-  indexValue(identifierOrInteger: string): number | undefined;
+  indexValue(identifierOrInteger: string | undefined): number | undefined;
+  numericAttribute(raw: string | undefined): number | undefined;
   numericOperands(expressions: QtiProcessingExpression[]): number[] | null;
   undeclaredResponseValue(identifier: string): QtiValue | undefined;
 }
@@ -73,14 +74,18 @@ export function createEvaluationContext(
     evaluate(expression) {
       return evaluateProcessingExpression(expression, context);
     },
-    indexValue(identifierOrInteger) {
-      const attribute = parseNumericOperatorAttribute(identifierOrInteger);
+    indexValue(raw) {
+      const value = context.numericAttribute(raw);
+      return value !== undefined && Number.isInteger(value) ? value : undefined;
+    },
+    numericAttribute(raw) {
+      const attribute = parseNumericOperatorAttribute(raw);
       if (attribute.type === "invalid") return undefined;
       const value =
         attribute.type === "literal"
           ? attribute.value
           : (outcomes[attribute.identifier] ?? templateValues[attribute.identifier]);
-      return typeof value === "number" && Number.isInteger(value) ? value : undefined;
+      return typeof value === "number" && Number.isFinite(value) ? value : undefined;
     },
     numericOperands(expressions) {
       const numericValues: number[] = [];
@@ -124,12 +129,23 @@ function evaluateExpressionValue(
     case "null":
       return null;
     case "randomInteger": {
-      const step = expression.step > 0 ? expression.step : 1;
-      const count = Math.floor((expression.max - expression.min) / step) + 1;
-      return expression.min + Math.floor(context.random() * count) * step;
+      const attributes = randomOperatorAttributes(expression);
+      const min = context.indexValue(attributes.min);
+      const max = context.indexValue(attributes.max);
+      const step = context.indexValue(attributes.step);
+      if (min === undefined || max === undefined || step === undefined || step <= 0 || max < min)
+        return null;
+      const count = Math.floor((max - min) / step) + 1;
+      return min + Math.floor(context.random() * count) * step;
     }
-    case "randomFloat":
-      return expression.min + context.random() * (expression.max - expression.min);
+    case "randomFloat": {
+      const attributes = randomOperatorAttributes(expression);
+      const min = context.numericAttribute(attributes.min);
+      const max = context.numericAttribute(attributes.max);
+      return min === undefined || max === undefined || max < min
+        ? null
+        : min + context.random() * (max - min);
+    }
     case "random": {
       const values = context.evaluate(expression.expression);
       if (!Array.isArray(values) || values.length === 0) return null;

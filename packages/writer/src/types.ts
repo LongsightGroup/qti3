@@ -82,6 +82,8 @@ export interface Qti3AuthoringItemBase {
   readonly lang?: string | undefined;
   readonly bodyHtml?: Qti3TrustedXmlFragment | undefined;
   readonly promptHtml?: Qti3TrustedXmlFragment | undefined;
+  /** Full item-body wrapper with one empty qti-interaction-placeholder for the rendered body. */
+  readonly itemBodyHtml?: Qti3TrustedXmlFragment | undefined;
   /** Interaction-specific writers default this to "RESPONSE" when omitted. */
   readonly responseIdentifier?: string | undefined;
   readonly sharedVocabulary?: QtiSharedVocabularyState | undefined;

@@ -1,3 +1,4 @@
+import { placeRenderedBody, validateItemBodyTemplate } from "./item-body-template.js";
 import { authoringResponseIdentifiers } from "./interaction-responses.js";
 import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
 import { assessmentItemShell, type AssessmentItemShellInput } from "./shell.js";
@@ -50,7 +51,11 @@ export function validatePreparedItem<T extends Qti3AuthoringItem>(
   validate: (input: T) => Qti3WriterDiagnostic[],
   feedback: PreparedFeedback = prepareItemFeedback(item),
 ): Qti3WriterDiagnostic[] {
-  return [...validate(item), ...feedback.diagnostics];
+  return [
+    ...validate(item),
+    ...validateItemBodyTemplate(item.itemBodyHtml),
+    ...feedback.diagnostics,
+  ];
 }
 
 export function writePreparedItem<T extends Qti3AuthoringItem>(
@@ -59,10 +64,11 @@ export function writePreparedItem<T extends Qti3AuthoringItem>(
   render: (input: T) => RenderedItemSections,
   feedback: PreparedFeedback = prepareItemFeedback(item),
 ): Qti3WriterResult {
-  const diagnostics = [...validate(item), ...feedback.diagnostics];
-  return diagnostics.length
-    ? { ok: false, diagnostics }
-    : { ok: true, xml: assembleItem(render(item), feedback), diagnostics: [] };
+  const diagnostics = validatePreparedItem(item, validate, feedback);
+  if (diagnostics.length) return { ok: false, diagnostics };
+  const sections = render(item);
+  const bodyXml = placeRenderedBody(sections.bodyXml, item.itemBodyHtml);
+  return { ok: true, xml: assembleItem({ ...sections, bodyXml }, feedback), diagnostics: [] };
 }
 
 export function buildPreparedItem<T extends Qti3AuthoringItem>(

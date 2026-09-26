@@ -1,4 +1,4 @@
-import { mapGapMatch } from "./qti2-interactions-basic.js";
+import { mapGapMatch, mapOrder } from "./qti2-interactions-basic.js";
 import { describe, expect, it } from "vitest";
 import { mapChoice, mapMatch, mapTextEntryItem } from "./qti2-interactions-basic.js";
 import type { Qti2Context } from "./qti2-context.js";
@@ -12,6 +12,21 @@ import {
 } from "./xml.js";
 
 describe("basic QTI 2 interaction mapping", () => {
+  it("retains an earlier blocked interaction when another interaction has no answer key", () => {
+    const context = qti2Context(`<itemBody>
+      <gapMatchInteraction responseIdentifier="G"><gapText identifier="A" matchMax="1" fixed="true">Alpha</gapText><p><gap identifier="G1"/></p></gapMatchInteraction>
+      <orderInteraction responseIdentifier="O"><simpleChoice identifier="A">Alpha</simpleChoice><simpleChoice identifier="B">Beta</simpleChoice></orderInteraction>
+    </itemBody>`);
+    mapGapMatch(interaction(context, "gapmatchinteraction"), context);
+    const earlier = [...(context.blocked ?? [])];
+    expect(earlier).toHaveLength(1);
+    expect(mapOrder(interaction(context, "orderinteraction"), context)).toBeUndefined();
+    expect(context.blocked).toEqual([
+      ...earlier,
+      expect.objectContaining({ code: "qti2_correct_response_not_preserved" }),
+    ]);
+  });
+
   it("blocks legacy gap fixed attributes instead of silently dropping them", () => {
     const context = qti2Context(
       `<responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value></correctResponse></responseDeclaration><itemBody><gapMatchInteraction responseIdentifier="RESPONSE"><gapText identifier="A" matchMax="1" fixed="true">Alpha</gapText><p><gap identifier="G1"/></p></gapMatchInteraction></itemBody>`,

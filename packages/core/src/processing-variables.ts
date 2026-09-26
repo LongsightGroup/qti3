@@ -150,11 +150,11 @@ export function processingVariables(item: QtiAssessmentItem) {
   );
   return {
     has: (identifier: string) => names.has(identifier),
-    numericAttribute(raw: string | number, baseType: "integer" | "number"): boolean {
-      const attribute = parseNumericOperatorAttribute(String(raw));
+    numericAttribute(raw: string | undefined, baseType: "integer" | "number"): boolean {
+      const attribute = parseNumericOperatorAttribute(raw);
       if (attribute.type === "invalid") return false;
       if (attribute.type === "literal") {
-        return baseType === "number" || /^[+-]?\d+$/.test(String(raw).trim());
+        return baseType === "number" || /^[+-]?\d+$/.test((raw ?? "").trim());
       }
       const declaration = declarations.get(attribute.identifier);
       return (

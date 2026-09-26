@@ -524,3 +524,13 @@ false before processing. `session.score()` represents ordinary host submission a
 them to false. Declaration defaults are ignored. Server scoring, adaptive turns, and submission
 materialization accept the same `endAttemptResponseIdentifier` input; saved response values do
 not identify the current trigger. The browser player supplies the identifier when a button is used.
+
+Completed adaptive sessions reject further responses and scoring with `session.completed`
+diagnostics. Restoring a completed session does not reopen it; read-only adaptive-turn
+refreshes remain available. `beginAttempt()`, `setStatus()`, `respond()`, and
+`setInteractionState()` return diagnostics
+(an empty array on success) so hosts can observe rejected mutations.
+
+Numeric references also apply to `qti-round-to` figures and `qti-random-integer` /
+`qti-random-float` bounds (and integer step). Use the standard `{identifier}` spelling.
+Invalid values resolved at runtime, such as a zero step or inverted bounds, yield NULL.

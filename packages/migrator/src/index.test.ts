@@ -309,21 +309,21 @@ describe("@longsightgroup/qti3-migrator", () => {
     );
   });
 
-  it("rejects QTI 2.x choice repairs by default and allows them only under safe policy", () => {
+  it("rejects QTI 2.x answer invention even under safe repair", () => {
     const strict = migrateQtiItemToQti3({
       filename: "bad-choice.xml",
       xml: qti21ChoiceWithoutKey(),
     });
     expect(strict.xml).toBeUndefined();
-    expect(strict.diagnostics[0]?.code).toBe("qti2_choice_correct_response_missing");
+    expect(strict.diagnostics[0]?.code).toBe("qti2_correct_response_not_preserved");
 
     const safe = migrateQtiItemToQti3(
       { filename: "bad-choice.xml", xml: qti21ChoiceWithoutKey() },
       { repairPolicy: "safe" },
     );
-    expect(safe.authoringItem?.interactionType).toBe("choice");
+    expect(safe.authoringItem).toBeUndefined();
     expect(safe.diagnostics.map((diagnostic) => diagnostic.code)).toContain(
-      "qti2_choice_correct_response_missing_repaired",
+      "qti2_correct_response_not_preserved",
     );
   });
 
@@ -548,7 +548,7 @@ function qti21GraphicOrderItem(): string {
     "identifier",
     "A B",
     `<hotspotChoice identifier="A" shape="rect" coords="0,0,10,10"/><hotspotChoice identifier="B" shape="rect" coords="10,0,20,10"/>`,
-  );
+  ).replace("<value>A B</value>", "<value>A</value><value>B</value>");
 }
 
 function qti21GraphicAssociateItem(): string {

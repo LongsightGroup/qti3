@@ -85,9 +85,9 @@ export function serializeExpression(
       return renderElement(
         "qti-random-integer",
         knownAttributesWithBagFallback(expression.attributes, [
-          { name: "min", fallback: finiteNumberFallback(expression.min) },
-          { name: "max", fallback: finiteNumberFallback(expression.max) },
-          { name: "step", fallback: finiteNumberFallback(expression.step) },
+          { name: "min", fallback: expression.min },
+          { name: "max", fallback: expression.max },
+          { name: "step", fallback: expression.step },
         ]),
         [],
         indent,
@@ -96,8 +96,8 @@ export function serializeExpression(
       return renderElement(
         "qti-random-float",
         knownAttributesWithBagFallback(expression.attributes, [
-          { name: "min", fallback: finiteNumberFallback(expression.min) },
-          { name: "max", fallback: finiteNumberFallback(expression.max) },
+          { name: "min", fallback: expression.min },
+          { name: "max", fallback: expression.max },
         ]),
         [],
         indent,
@@ -414,10 +414,6 @@ function requireIdentifier(
     source,
   });
   return false;
-}
-
-function finiteNumberFallback(value: number): number | undefined {
-  return Number.isFinite(value) ? value : undefined;
 }
 
 function isSerializableBaseValue(value: QtiValue): value is string | number | boolean {

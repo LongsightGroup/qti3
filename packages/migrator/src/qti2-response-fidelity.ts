@@ -27,6 +27,20 @@ export function validateQti2ResponseFidelity(
     ]),
   );
   const diagnostics: QtiMigrationDiagnostic[] = [];
+  if (
+    findDescendantByLocalName(source, "templateprocessing") ||
+    findDescendantByLocalName(source, "templatedeclaration")
+  ) {
+    diagnostics.push(
+      diagnostic(
+        "qti2_template_not_preserved",
+        "error",
+        "QTI 2 template declarations and processing cannot be preserved by the authoring model.",
+        { path, sourceFormat },
+      ),
+    );
+  }
+
   const processing = findDescendantByLocalName(source, "responseprocessing");
   const writtenProcessing = findDescendantByLocalName(target, "qti-response-processing");
   if (
@@ -79,6 +93,27 @@ export function validateQti2ResponseFidelity(
     const written = declarations.get(identifier);
     const sourceSections = responseSections(declaration);
     const targetSections = written ? responseSections(written) : undefined;
+    const sourceCorrect = childElements(declaration).find(
+      (child) => localName(child) === "correctresponse",
+    );
+    const targetCorrect =
+      written &&
+      childElements(written).find((child) => localName(child) === "qti-correct-response");
+    if (
+      !equalQtiNodes(
+        sourceCorrect ? [canonicalNode(sourceCorrect)] : [],
+        targetCorrect ? [canonicalNode(targetCorrect)] : [],
+      )
+    ) {
+      diagnostics.push(
+        diagnostic(
+          "qti2_correct_response_not_preserved",
+          "error",
+          `Response "${identifier}" correct response cannot be preserved by the authoring model.`,
+          { path, sourceFormat },
+        ),
+      );
+    }
     for (const kind of ["defaultValue", "mapping", "areaMapping"] as const) {
       const original = sourceSections[kind];
       if (!original) continue;

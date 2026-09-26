@@ -5,8 +5,7 @@ import {
   generalizedGcd,
   generalizedLcm,
   mathOperatorValue,
-  roundToDecimalPlaces,
-  roundToSignificantFigures,
+  roundWithMode,
   statsOperatorValue,
 } from "./processing-operators.js";
 import { numericValue, numericValueOrNull, valueContainer } from "./processing-values.js";
@@ -92,10 +91,14 @@ export function evaluateNumericExpression(
     }
     case "roundTo": {
       const value = numericValueOrNull(context.evaluate(expression.expression));
-      if (value === null) return null;
-      return expression.roundingMode === "decimalPlaces"
-        ? roundToDecimalPlaces(value, expression.figures)
-        : roundToSignificantFigures(value, expression.figures);
+      const figures = context.indexValue(expression.figures);
+      if (
+        value === null ||
+        figures === undefined ||
+        (expression.roundingMode === "decimalPlaces" ? figures < 0 : figures <= 0)
+      )
+        return null;
+      return roundWithMode(value, expression.roundingMode, figures);
     }
     case "truncate": {
       const value = numericValueOrNull(context.evaluate(expression.expression));

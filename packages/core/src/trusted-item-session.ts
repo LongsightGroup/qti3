@@ -168,7 +168,11 @@ export function runTrustedItemSession(
   }
 
   if (input.attemptStatus && input.attemptStatus !== "completed") {
-    sessionResult.session.setStatus(input.attemptStatus);
+    const diagnostics = sessionResult.session.setStatus(input.attemptStatus);
+    if (diagnostics.length)
+      return emptyTrustedItemSessionFailure(diagnostics, {
+        state: sessionResult.session.serialize(),
+      });
   }
 
   let submission = input.submission;
@@ -194,11 +198,10 @@ export function runTrustedItemSession(
   );
   const diagnostics = applicationResult.diagnostics;
   if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
-    return emptyTrustedItemSessionFailure(diagnostics);
+    return emptyTrustedItemSessionFailure(diagnostics, {
+      state: sessionResult.session.serialize(),
+    });
   }
-
-  // Capture the submitted attempt before closing it, so built-in counters reflect participation.
-  if (input.attemptStatus === "completed") sessionResult.session.setStatus("completed");
 
   const shouldScore =
     input.scoring === "always" ||
@@ -258,6 +261,19 @@ export function runTrustedItemSession(
     state = stripUndeclaredResponses(state, parsedResult.parsed.responseIdentifiers);
     outcomes = state.outcomes;
     score = externalScore ? null : readNumericScore(outcomes.SCORE);
+  }
+
+  // A host-requested close follows the final score; closing first would reject that score.
+  if (input.attemptStatus === "completed" && state.status !== "completed") {
+    const statusDiagnostics = sessionResult.session.setStatus("completed");
+    if (statusDiagnostics.length)
+      return emptyTrustedItemSessionFailure(statusDiagnostics, {
+        state: sessionResult.session.serialize(),
+      });
+    state = stripUndeclaredResponses(
+      sessionResult.session.serialize(),
+      parsedResult.parsed.responseIdentifiers,
+    );
   }
 
   return {
@@ -357,7 +373,7 @@ function applyTrustedResponseApplication(
       });
       continue;
     }
-    session.respond(identifier, value);
+    diagnostics.push(...session.respond(identifier, value));
     appliedSubmission = true;
   }
 
@@ -372,7 +388,7 @@ function applyTrustedResponseApplication(
     }
 
     try {
-      session.setInteractionState(identifier, state);
+      diagnostics.push(...session.setInteractionState(identifier, state));
       appliedSubmission = true;
     } catch (error) {
       diagnostics.push({

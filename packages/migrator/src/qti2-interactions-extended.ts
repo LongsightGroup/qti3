@@ -3,7 +3,7 @@ import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 import { bodyWithoutInteraction, interactionPresentation, trusted } from "./qti2-body.js";
 import { graphicObject } from "./qti2-graphic.js";
 import { type Qti2Context, responseIdentifierFor } from "./qti2-context.js";
-import { hasMapping, responseValues } from "./qti2-response.js";
+import { hasMapping, responseValues, requireAnswerKey } from "./qti2-response.js";
 import { xmlBooleanAttribute } from "./xml-boolean.js";
 import {
   attr,
@@ -116,11 +116,16 @@ export function mapPositionObject(
   };
 }
 
-export function mapSlider(interaction: XmlElement, context: Qti2Context): Qti3AuthoringItem {
+export function mapSlider(
+  interaction: XmlElement,
+  context: Qti2Context,
+): Qti3AuthoringItem | undefined {
   const responseIdentifier = responseIdentifierFor(interaction);
   const declaration = context.responseDeclMap.get(responseIdentifier);
   const lowerBound = toNumber(attr(interaction, "lowerBound")) ?? 0;
-  const correctResponse = Number(responseValues(declaration)[0] ?? lowerBound);
+  const answers = responseValues(declaration);
+  if (!requireAnswerKey(context, answers)) return undefined;
+  const correctResponse = Number(answers[0]);
   const mappings = declaration
     ? findAllDescendantsByLocalName(declaration, "mapentry")
         .map((entry) => ({
@@ -140,7 +145,7 @@ export function mapSlider(interaction: XmlElement, context: Qti2Context): Qti3Au
     responseIdentifier,
     lowerBound,
     upperBound: toNumber(attr(interaction, "upperBound")) ?? 1,
-    correctResponse: Number.isFinite(correctResponse) ? correctResponse : lowerBound,
+    correctResponse,
     step: toNumber(attr(interaction, "step")),
     stepLabel: xmlBooleanAttribute(attr(interaction, "stepLabel")),
     orientation: attr(interaction, "orientation") === "vertical" ? "vertical" : "horizontal",

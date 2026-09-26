@@ -13,6 +13,8 @@ import {
   bodyWithInlineChoicePlaceholders,
   bodyWithTextEntryPlaceholders,
   interactionPresentation,
+  interactionBodyTemplate,
+  prompt,
   trusted,
 } from "./qti2-body.js";
 import { associableChoices, gapChoice, simpleChoices } from "./qti2-choices.js";
@@ -27,6 +29,7 @@ import {
 import { applyRepairPolicy, blockMigrationOnRepair } from "./repair-policy.js";
 import {
   hasMapping,
+  requireAnswerKey,
   orderedIdentifierValues,
   pairValues,
   responseValues,
@@ -55,6 +58,7 @@ export function mapChoice(
   const correctValues = orderedIdentifierValues(declaration);
   const presentation = interactionPresentation(interaction, context.body, "separate");
   if (cardinality === "ordered") {
+    if (!requireAnswerKey(context, correctValues)) return undefined;
     return {
       interactionType: "order",
       identifier: context.identifier,
@@ -62,9 +66,7 @@ export function mapChoice(
       ...presentation,
       responseIdentifier,
       choices,
-      correctOrder: correctValues.length
-        ? correctValues
-        : choices.map((choice) => choice.identifier),
+      correctOrder: correctValues,
       shuffle: xmlBooleanAttribute(attr(interaction, "shuffle")),
       minChoices: toNumber(attr(interaction, "minChoices")),
       maxChoices,
@@ -75,15 +77,7 @@ export function mapChoice(
   const correctResponse = correctValues.filter((value) =>
     choices.some((choice) => choice.identifier === value),
   );
-  const repair = applyRepairPolicy({
-    needed: !correctResponse.length,
-    context,
-    code: "qti2_choice_correct_response_missing",
-    message: "QTI 2.x choice interaction has no valid correct response.",
-    repairMessage:
-      "QTI 2.x choice response was missing or invalid; using the first declared choice.",
-  });
-  if (blockMigrationOnRepair(context, repair)) return undefined;
+  if (!requireAnswerKey(context, correctResponse)) return undefined;
   return {
     interactionType: "choice",
     identifier: context.identifier,
@@ -92,9 +86,7 @@ export function mapChoice(
     responseIdentifier,
     responseCardinality: choiceCardinality,
     choices,
-    correctResponse: correctResponse.length
-      ? correctResponse
-      : choices.slice(0, 1).map((choice) => choice.identifier),
+    correctResponse,
     shuffle: xmlBooleanAttribute(attr(interaction, "shuffle")),
     minChoices: toNumber(attr(interaction, "minChoices")),
     maxChoices: choiceCardinality === "single" ? 1 : maxChoices,
@@ -102,10 +94,14 @@ export function mapChoice(
   };
 }
 
-export function mapOrder(interaction: XmlElement, context: Qti2Context): Qti3AuthoringItem {
+export function mapOrder(
+  interaction: XmlElement,
+  context: Qti2Context,
+): Qti3AuthoringItem | undefined {
   const responseIdentifier = responseIdentifierFor(interaction);
   const choices = simpleChoices(interaction);
   const correctOrder = orderedIdentifierValues(context.responseDeclMap.get(responseIdentifier));
+  if (!requireAnswerKey(context, correctOrder)) return undefined;
   return {
     interactionType: "order",
     identifier: context.identifier,
@@ -113,7 +109,7 @@ export function mapOrder(interaction: XmlElement, context: Qti2Context): Qti3Aut
     ...interactionPresentation(interaction, context.body, "separate"),
     responseIdentifier,
     choices,
-    correctOrder: correctOrder.length ? correctOrder : choices.map((choice) => choice.identifier),
+    correctOrder,
     shuffle: xmlBooleanAttribute(attr(interaction, "shuffle")),
     minChoices: toNumber(attr(interaction, "minChoices")),
     maxChoices: toNumber(attr(interaction, "maxChoices")),
@@ -256,6 +252,8 @@ export function mapHottext(interaction: XmlElement, context: Qti2Context): Qti3A
     identifier: context.identifier,
     title: context.title,
     bodyHtml: bodyWithHottextPlaceholders(interaction, hottexts),
+    itemBodyHtml: interactionBodyTemplate(context.body, interaction),
+    promptHtml: prompt(interaction),
     responseIdentifier,
     choices,
     correctResponse: responseValues(context.responseDeclMap.get(responseIdentifier)).map((value) =>
@@ -280,6 +278,8 @@ export function mapGapMatch(interaction: XmlElement, context: Qti2Context): Qti3
     identifier: context.identifier,
     title: context.title,
     bodyHtml: bodyWithGapPlaceholders(interaction),
+    itemBodyHtml: interactionBodyTemplate(context.body, interaction),
+    promptHtml: prompt(interaction),
     responseIdentifier,
     choices,
     targets,
