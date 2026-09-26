@@ -80,11 +80,11 @@ export const expressionCoverage = {
     xml: '    <qti-variable identifier="RESPONSE"/>',
   },
   randomInteger: {
-    expression: { type: "randomInteger", min: 1, max: 10, step: 1, attributes: {} },
+    expression: { type: "randomInteger", min: "1", max: "10", step: "1", attributes: {} },
     xml: '    <qti-random-integer min="1" max="10" step="1"/>',
   },
   randomFloat: {
-    expression: { type: "randomFloat", min: 0, max: 1, attributes: {} },
+    expression: { type: "randomFloat", min: "0", max: "1", attributes: {} },
     xml: '    <qti-random-float min="0" max="1"/>',
   },
   random: {
@@ -229,7 +229,7 @@ export const expressionCoverage = {
       type: "roundTo",
       expression: baseOne,
       roundingMode: "decimalPlaces",
-      figures: 1,
+      figures: "1",
     },
     xml: [
       '    <qti-round-to rounding-mode="decimalPlaces" figures="1">',
@@ -288,7 +288,7 @@ export const expressionCoverage = {
       left: baseOne,
       right: baseOne,
       roundingMode: "decimalPlaces",
-      figures: 1,
+      figures: "1",
     },
     xml: [
       '    <qti-equal-rounded rounding-mode="decimalPlaces" figures="1">',

@@ -1,3 +1,5 @@
+import { parseNumericOperatorAttribute } from "./operator-attribute.js";
+import { validateRandomExpression } from "./validation-random-expression.js";
 import { processingVariables, type ProcessingVariables } from "./processing-variables.js";
 import type {
   QtiAssessmentItem,
@@ -456,21 +458,17 @@ function validateExpressionReferences(
     }
   }
 
-  if (expression.type === "randomInteger") {
-    validateRandomIntegerExpression(expression, diagnostics);
-  }
-
-  if (expression.type === "randomFloat") {
-    validateRandomFloatExpression(expression, diagnostics);
+  if (expression.type === "randomInteger" || expression.type === "randomFloat") {
+    validateRandomExpression(expression, variables, diagnostics);
   }
 
   if (expression.type === "baseValue") {
     validateBaseValueExpression(expression, diagnostics);
   }
 
-  if (expression.type === "equalRounded") {
+  if (expression.type === "equalRounded" || expression.type === "roundTo") {
     validateRounding(
-      "qti-equal-rounded",
+      expression.type === "roundTo" ? "qti-round-to" : "qti-equal-rounded",
       expression.roundingMode,
       expression.figures,
       variables,
@@ -589,7 +587,7 @@ const statsOperatorNames = new Set<string>(STATS_OPERATOR_NAMES);
 function validateRounding(
   qtiName: string,
   roundingMode: string,
-  figures: number | string,
+  figures: string | undefined,
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
   source: QtiDiagnostic["source"],
@@ -603,10 +601,12 @@ function validateRounding(
       source,
     });
   }
+  const attribute = parseNumericOperatorAttribute(figures);
   const validFigures =
     variables.numericAttribute(figures, "integer") &&
-    (typeof figures === "string" ||
-      (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0));
+    (attribute.type === "reference" ||
+      (attribute.type === "literal" &&
+        (roundingMode === "decimalPlaces" ? attribute.value >= 0 : attribute.value > 0)));
   if (!validFigures) {
     diagnostics.push({
       code: "processing.roundingFigures",
@@ -834,123 +834,6 @@ function validateBaseValueExpression(
       source: expression.source,
     });
   }
-}
-
-function validateRandomIntegerExpression(
-  expression: Extract<QtiProcessingExpression, { type: "randomInteger" }>,
-  diagnostics: QtiDiagnostic[],
-): void {
-  validateRandomIntegerAttribute(expression, "min", diagnostics);
-  validateRandomIntegerAttribute(expression, "max", diagnostics);
-
-  if (expression.attributes.step !== undefined) {
-    validateRandomIntegerAttribute(expression, "step", diagnostics);
-    if (isInteger(expression.attributes.step) && Number(expression.attributes.step) <= 0) {
-      diagnostics.push({
-        code: "processing.randomInteger.step",
-        severity: "error",
-        message: "qti-random-integer requires step to be greater than 0.",
-        path: expression.source?.path,
-        source: expression.source,
-      });
-    }
-  }
-
-  const min = expression.attributes.min;
-  const max = expression.attributes.max;
-  if (
-    min !== undefined &&
-    max !== undefined &&
-    isInteger(min) &&
-    isInteger(max) &&
-    Number(min) > Number(max)
-  ) {
-    diagnostics.push({
-      code: "processing.randomInteger.bounds",
-      severity: "error",
-      message: "qti-random-integer requires min to be less than or equal to max.",
-      path: expression.source?.path,
-      source: expression.source,
-    });
-  }
-}
-
-function validateRandomIntegerAttribute(
-  expression: Extract<QtiProcessingExpression, { type: "randomInteger" }>,
-  attribute: "min" | "max" | "step",
-  diagnostics: QtiDiagnostic[],
-): void {
-  const value = expression.attributes[attribute];
-  if (value === undefined) {
-    diagnostics.push({
-      code: "processing.randomInteger.attribute",
-      severity: "error",
-      message: `qti-random-integer requires ${attribute}.`,
-      path: expression.source?.path,
-      source: expression.source,
-    });
-    return;
-  }
-  if (isInteger(value)) return;
-  diagnostics.push({
-    code: "processing.randomInteger.integer",
-    severity: "error",
-    message: `qti-random-integer requires integer ${attribute}, got ${value}.`,
-    path: expression.source?.path,
-    source: expression.source,
-  });
-}
-
-function validateRandomFloatExpression(
-  expression: Extract<QtiProcessingExpression, { type: "randomFloat" }>,
-  diagnostics: QtiDiagnostic[],
-): void {
-  validateRandomFloatAttribute(expression, "max", diagnostics);
-  if (expression.attributes.min !== undefined)
-    validateRandomFloatAttribute(expression, "min", diagnostics);
-
-  const min = expression.attributes.min ?? "0";
-  const max = expression.attributes.max;
-  if (
-    max !== undefined &&
-    isFiniteNumber(min) &&
-    isFiniteNumber(max) &&
-    Number(min) > Number(max)
-  ) {
-    diagnostics.push({
-      code: "processing.randomFloat.bounds",
-      severity: "error",
-      message: "qti-random-float requires min to be less than or equal to max.",
-      path: expression.source?.path,
-      source: expression.source,
-    });
-  }
-}
-
-function validateRandomFloatAttribute(
-  expression: Extract<QtiProcessingExpression, { type: "randomFloat" }>,
-  attribute: "min" | "max",
-  diagnostics: QtiDiagnostic[],
-): void {
-  const value = expression.attributes[attribute];
-  if (value === undefined) {
-    diagnostics.push({
-      code: "processing.randomFloat.attribute",
-      severity: "error",
-      message: `qti-random-float requires ${attribute}.`,
-      path: expression.source?.path,
-      source: expression.source,
-    });
-    return;
-  }
-  if (isFiniteNumber(value)) return;
-  diagnostics.push({
-    code: "processing.randomFloat.numeric",
-    severity: "error",
-    message: `qti-random-float requires numeric ${attribute}, got ${value}.`,
-    path: expression.source?.path,
-    source: expression.source,
-  });
 }
 
 function validateProcessingIdentifier(

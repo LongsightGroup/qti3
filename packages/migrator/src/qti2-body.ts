@@ -171,3 +171,13 @@ export function collectInteractionElements(root: XmlElement): XmlElement[] {
   walk(root);
   return out;
 }
+
+/** Preserve the original interaction position and surrounding item content. */
+export function interactionBodyTemplate(
+  body: XmlElement,
+  interaction: XmlElement,
+): ReturnType<typeof qti3TrustedXmlFragment> {
+  return trusted(
+    serializeChildrenReplacing(body, new Map([[interaction, "<qti-interaction-placeholder/>"]])),
+  );
+}

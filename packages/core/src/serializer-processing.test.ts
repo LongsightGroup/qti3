@@ -340,9 +340,9 @@ describe("serializer processing", () => {
           identifier: "SCORE",
           expression: {
             type: "randomInteger",
-            min: Number.NaN,
-            max: Number.NaN,
-            step: Number.NaN,
+            min: undefined,
+            max: undefined,
+            step: undefined,
             attributes: { min: "{$MIN}", max: "{$MAX}", step: "{$STEP}" },
           },
         },

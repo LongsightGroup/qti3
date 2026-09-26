@@ -113,3 +113,9 @@ For example, Canvas matching conditions that add 50 points per pair are rejected
 they cannot be represented by the writer's all-or-nothing matching model.
 
 String correct responses and text-entry mapping keys preserve significant whitespace.
+
+QTI 2 migration rejects template declarations or template processing with
+`qti2_template_not_preserved` until those semantics can be preserved. It also rejects
+changes to correct responses with `qti2_correct_response_not_preserved`, including
+invented answer keys under safe repair. Hottext and gap-match migration preserve prompts,
+surrounding item-body content, and the original interaction position.

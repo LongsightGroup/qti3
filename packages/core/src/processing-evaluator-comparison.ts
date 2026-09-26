@@ -53,10 +53,7 @@ export function evaluateComparisonExpression(
       );
     }
     case "equalRounded": {
-      const figures =
-        typeof expression.figures === "number"
-          ? expression.figures
-          : context.indexValue(expression.figures);
+      const figures = context.indexValue(expression.figures);
       const validRounding =
         typeof figures === "number" &&
         Number.isInteger(figures) &&
