@@ -15,7 +15,7 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -94,7 +94,7 @@ export function renderQti3AssociateItem(input: Qti3AssociateBuilderInput): Rende
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(scoring),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, scoring),
   });
 }
 

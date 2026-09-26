@@ -38,7 +38,7 @@ describe("qti-any-n parsing and validation", () => {
   it("accepts declared variable-reference bounds", () => {
     const result = parseQtiXml(
       anyNItemXml(
-        `min="MINIMUM" max="MAXIMUM"`,
+        `min="{MINIMUM}" max="{MAXIMUM}"`,
         `<qti-outcome-declaration identifier="MINIMUM" cardinality="single" base-type="integer"/>
          <qti-template-declaration identifier="MAXIMUM" cardinality="single" base-type="integer"/>`,
       ),
@@ -47,13 +47,13 @@ describe("qti-any-n parsing and validation", () => {
     expect(result.ok).toBe(true);
     expect(anyNExpression(result)).toMatchObject({
       type: "anyN",
-      min: "MINIMUM",
-      max: "MAXIMUM",
+      min: "{MINIMUM}",
+      max: "{MAXIMUM}",
     });
   });
 
   it("diagnoses undeclared variable-reference bounds", () => {
-    const result = parseQtiXml(anyNItemXml(`min="MISSING_MIN" max="MISSING_MAX"`));
+    const result = parseQtiXml(anyNItemXml(`min="{MISSING_MIN}" max="{MISSING_MAX}"`));
 
     expect(result.ok).toBe(false);
     expect(result.diagnostics).toEqual(
@@ -67,7 +67,7 @@ describe("qti-any-n parsing and validation", () => {
   it("rejects response variables that the evaluator cannot use as bounds", () => {
     const result = parseQtiXml(
       anyNItemXml(
-        `min="RESPONSE_BOUND" max="2"`,
+        `min="{RESPONSE_BOUND}" max="2"`,
         '<qti-response-declaration identifier="RESPONSE_BOUND" cardinality="single" base-type="integer"/>',
       ),
     );

@@ -429,9 +429,15 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       this.emitStateChange(state);
       return undefined;
     }
+    const result = loadedItem.session.score({
+      endAttemptResponseIdentifier: options.endAttemptResponseIdentifier,
+    });
+    if (result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+      this.emitDiagnostics(result.diagnostics);
+      return result;
+    }
     loadedItem.validationMessages = [];
     this.renderValidationMessages();
-    const result = loadedItem.session.score();
     this.dispatchPlayerEvent("qti-score", result);
     this.updateDynamicBodyState();
     this.updateAttemptAvailability();
@@ -507,7 +513,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
 
   endAttempt(options: QtiScoreAttemptOptions = {}): void {
     const result = this.scoreAttempt(options);
-    if (!result) return;
+    if (!result || result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) return;
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
     if (
@@ -675,7 +681,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
           )
         : null,
       isCompleted: () => this.attemptIsCompleted(),
-      endAttempt: () => this.endAttempt(),
+      endAttempt: () => this.endAttempt({ endAttemptResponseIdentifier: responseIdentifier }),
       renderPortableCustom: (portableInteraction, portableUpdate, portableValue) =>
         this.renderPortableCustomResponse(portableInteraction, portableUpdate, portableValue),
       renderPromptContent: (nodes) => renderContentNodes(nodes, this.contentContext()),
@@ -734,7 +740,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
               )
             : null,
           messages: this.playerMessages(),
-          endAttempt: () => this.endAttempt(),
+          endAttempt: () => this.endAttempt({ endAttemptResponseIdentifier: responseIdentifier }),
         });
       },
       currentVariableValue: (identifier) => currentVariableValue(sessionState(), identifier),

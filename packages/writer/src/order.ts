@@ -14,7 +14,7 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -97,7 +97,7 @@ ${correctValues.map((value) => `      <qti-value>${escapeXmlText(value)}</qti-va
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml("match_correct"),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, "match_correct"),
   });
 }
 

@@ -577,7 +577,8 @@ function createAdaptiveFeedbackFixture(): QtiFixture {
     attempts: [
       {
         name: "hint",
-        responses: { HINT: true },
+        endAttemptResponseIdentifier: "HINT",
+        responses: {},
         expectedOutcomes: { SCORE: 0, FEEDBACK: "HINT_FEEDBACK", completionStatus: "unknown" },
         expectedResponses: { HINT: true },
         expectedState: { status: "interacting" },

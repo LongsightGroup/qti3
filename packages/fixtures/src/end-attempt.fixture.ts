@@ -56,24 +56,33 @@ export function createEndAttemptFixture(): QtiFixture {
     expectedValidationDiagnostics: [],
     attempts: [
       {
-        name: "answer-after-hint",
-        responses: { HINT: true, RESPONSE: "A" },
+        name: "correct-answer-triggered-by-hint",
+        endAttemptResponseIdentifier: "HINT",
+        responses: { RESPONSE: "A" },
         expectedResponses: { HINT: true, RESPONSE: "A" },
         expectedOutcomes: { SCORE: 1, FEEDBACK: "PLANNING_HINT", completionStatus: "completed" },
         expectedState: { status: "completed" },
       },
       {
         name: "hint-alone-earns-no-credit",
-        responses: { HINT: true },
+        endAttemptResponseIdentifier: "HINT",
+        responses: {},
         expectedResponses: { HINT: true },
         expectedOutcomes: { SCORE: 0, FEEDBACK: "PLANNING_HINT", completionStatus: "incomplete" },
         expectedState: { status: "interacting" },
       },
       {
         name: "incorrect-answer-with-hint",
-        responses: { HINT: true, RESPONSE: "B" },
+        endAttemptResponseIdentifier: "HINT",
+        responses: { RESPONSE: "B" },
         expectedOutcomes: { SCORE: 0, FEEDBACK: "PLANNING_HINT", completionStatus: "incomplete" },
         expectedState: { status: "interacting" },
+      },
+      {
+        name: "host-submission-ignores-stale-hint-response",
+        responses: { HINT: true, RESPONSE: "A" },
+        expectedResponses: { HINT: false, RESPONSE: "A" },
+        expectedOutcomes: { SCORE: 1, FEEDBACK: null, completionStatus: "completed" },
       },
       {
         name: "correct-answer-without-hint",

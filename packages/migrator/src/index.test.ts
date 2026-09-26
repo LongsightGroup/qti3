@@ -481,6 +481,7 @@ function qti21ChoiceItem(): string {
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
     <correctResponse><value>B</value></correctResponse>
   </responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody>
     <p>Pick one.</p>
     <choiceInteraction responseIdentifier="RESPONSE" maxChoices="1">
@@ -488,6 +489,7 @@ function qti21ChoiceItem(): string {
       <simpleChoice identifier="B">Beta</simpleChoice>
     </choiceInteraction>
   </itemBody>
+<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>`;
 }
 
@@ -495,6 +497,7 @@ function qti21ChoiceWithoutKey(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="choice_item" title="Choice">
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"/>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody>
     <p>Pick one.</p>
     <choiceInteraction responseIdentifier="RESPONSE" maxChoices="1">
@@ -502,6 +505,7 @@ function qti21ChoiceWithoutKey(): string {
       <simpleChoice identifier="B">Beta</simpleChoice>
     </choiceInteraction>
   </itemBody>
+<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>`;
 }
 
@@ -511,7 +515,9 @@ function qti21InlineChoiceItem(): string {
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
     <correctResponse><value>B</value></correctResponse>
   </responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody><p>Choose <inlineChoiceInteraction responseIdentifier="RESPONSE"><inlineChoice identifier="A">one</inlineChoice><inlineChoice identifier="B">two</inlineChoice></inlineChoiceInteraction>.</p></itemBody>
+<responseProcessing><setOutcomeValue identifier="SCORE"><baseValue baseType="float">0</baseValue></setOutcomeValue><responseCondition><responseIf><and><not><isNull><variable identifier="RESPONSE"/></isNull></not><match><variable identifier="RESPONSE"/><correct identifier="RESPONSE"/></match></and><setOutcomeValue identifier="SCORE"><baseValue baseType="float">1</baseValue></setOutcomeValue></responseIf></responseCondition></responseProcessing>
 </assessmentItem>`;
 }
 
@@ -519,15 +525,19 @@ function qti21HottextItem(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="hottext_item" title="Hottext">
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>H1</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody><hottextInteraction responseIdentifier="RESPONSE" maxChoices="1"><p>Select <hottext identifier="H1">this</hottext>.</p></hottextInteraction></itemBody>
+<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>`;
 }
 
 function qti21GapMatchItem(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="gap_item" title="Gap">
-  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value></correctResponse></responseDeclaration>
+  <responseDeclaration identifier="RESPONSE" cardinality="multiple" baseType="directedPair"><correctResponse><value>A G1</value></correctResponse><mapping defaultValue="0"><mapEntry mapKey="A G1" mappedValue="1"/></mapping></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody><gapMatchInteraction responseIdentifier="RESPONSE"><gapText identifier="A" matchMax="1">Alpha</gapText><p><gap identifier="G1"/></p></gapMatchInteraction></itemBody>
+<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/map_response"/>
 </assessmentItem>`;
 }
 
@@ -571,7 +581,9 @@ function graphicItem(
   return `<?xml version="1.0" encoding="UTF-8"?>
 <assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="${interactionName}" title="${interactionName}">
   <responseDeclaration identifier="RESPONSE" cardinality="${cardinality}" baseType="${baseType}"><correctResponse><value>${value}</value></correctResponse></responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
   <itemBody><${interactionName} responseIdentifier="RESPONSE"><object data="image.png" alt="Image" type="image/png"/>${children}</${interactionName}></itemBody>
+<responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
 </assessmentItem>`;
 }
 

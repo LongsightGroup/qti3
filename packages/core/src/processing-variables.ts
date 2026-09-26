@@ -1,5 +1,7 @@
+import { parseNumericOperatorAttribute } from "./operator-attribute.js";
 import type {
   QtiBaseType,
+  QtiAssessmentItem,
   QtiDocument,
   QtiOutcomeDeclaration,
   QtiProcessingExpression,
@@ -128,3 +130,39 @@ function resolveVariableDeclaration(
     document.item.templateDeclarations.find((declaration) => declaration.identifier === identifier)
   );
 }
+
+/** Reference lookup keeps original declarations; builtins participate only in name checks. */
+export function processingVariables(item: QtiAssessmentItem) {
+  const names = new Set([
+    ...item.responseDeclarations.map((entry) => entry.identifier),
+    ...item.outcomeDeclarations.map((entry) => entry.identifier),
+    ...item.templateDeclarations.map((entry) => entry.identifier),
+    "completionStatus",
+    "numAttempts",
+    "QTI_CONTEXT",
+    ...(item.timeDependent ? ["duration"] : []),
+  ]);
+  const declarations = new Map(
+    [...item.outcomeDeclarations, ...item.templateDeclarations].map((entry) => [
+      entry.identifier,
+      entry,
+    ]),
+  );
+  return {
+    has: (identifier: string) => names.has(identifier),
+    numericAttribute(raw: string | number, baseType: "integer" | "number"): boolean {
+      const attribute = parseNumericOperatorAttribute(String(raw));
+      if (attribute.type === "invalid") return false;
+      if (attribute.type === "literal") {
+        return baseType === "number" || /^[+-]?\d+$/.test(String(raw).trim());
+      }
+      const declaration = declarations.get(attribute.identifier);
+      return (
+        declaration?.cardinality === "single" &&
+        (declaration.baseType === "integer" ||
+          (baseType === "number" && declaration.baseType === "float"))
+      );
+    },
+  };
+}
+export type ProcessingVariables = ReturnType<typeof processingVariables>;

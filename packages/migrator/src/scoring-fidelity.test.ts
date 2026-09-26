@@ -1,3 +1,4 @@
+import { qti2SingleTextScoring } from "./test-helpers.js";
 import {
   createItemSession,
   parseQtiXml,
@@ -132,7 +133,12 @@ describe("migration scoring contracts", () => {
 
 describe("string value fidelity (QTI string datatype preserves whitespace)", () => {
   it.each([" A ", " ", "A B"])("preserves migration and direct writer answer %j", (answer) => {
-    const migrated = migrateQtiItemToQti3({ xml: qti2("", answer, true) });
+    const migrated = migrateQtiItemToQti3({
+      xml: qti2(qti2SingleTextScoring, answer, true).replace(
+        "</responseDeclaration>",
+        `<mapping defaultValue="0"><mapEntry mapKey="${answer}" mappedValue="1" caseSensitive="true"/></mapping></responseDeclaration>`,
+      ),
+    });
     expect(migrated.diagnostics).toEqual([]);
     const authored = buildQti3TextEntryItem({
       identifier: "raw-string",

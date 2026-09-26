@@ -63,6 +63,7 @@ export function runTrustedAdaptiveItemTurn(
     priorState: priorStateResult.state,
     submission: {
       trustedResponses: input.trustedResponses,
+      endAttemptResponseIdentifier: input.endAttemptResponseIdentifier,
       trustedInteractionStates: input.trustedInteractionStates,
     },
     scoring: "onSubmission",

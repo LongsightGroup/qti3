@@ -15,7 +15,7 @@ const POINT_RESPONSE_PROCESSING_TEMPLATE_URIS = {
   map_response_point: "https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point",
 } as const satisfies Record<Qti3PointResponseProcessingTemplate, string>;
 
-export function responseProcessingTemplateXml(
+function responseProcessingTemplateXml(
   template: Qti3ResponseProcessingTemplate | Qti3PointResponseProcessingTemplate,
 ): string {
   if (template === "map_response_point") {
@@ -24,19 +24,20 @@ export function responseProcessingTemplateXml(
   return `  <qti-response-processing template="${RESPONSE_PROCESSING_TEMPLATE_URIS[template]}"/>`;
 }
 
-export function mapResponsePointProcessingXml(responseIdentifier: string): string {
+function mapResponseRulesXml(
+  responseIdentifier: string,
+  operator: "map-response" | "map-response-point" = "map-response",
+): string {
   const identifier = escapeXmlAttribute(responseIdentifier);
-  return `  <qti-response-processing>
-    <qti-set-outcome-value identifier="SCORE">
-      <qti-map-response-point identifier="${identifier}"/>
-    </qti-set-outcome-value>
-  </qti-response-processing>`;
-}
-
-function mapResponseRulesXml(responseIdentifier: string): string {
-  return `    <qti-set-outcome-value identifier="SCORE">
-      <qti-map-response identifier="${escapeXmlAttribute(responseIdentifier)}"/>
-    </qti-set-outcome-value>`;
+  return `    <qti-response-condition>
+      <qti-response-if>
+        <qti-is-null><qti-variable identifier="${identifier}"/></qti-is-null>
+        <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="SCORE"><qti-${operator} identifier="${identifier}"/></qti-set-outcome-value>
+      </qti-response-else>
+    </qti-response-condition>`;
 }
 
 function matchCorrectRulesXml(responseIdentifier: string): string {
@@ -59,11 +60,7 @@ function matchCorrectRulesXml(responseIdentifier: string): string {
     </qti-response-condition>`;
 }
 
-export function mapResponseProcessingXml(responseIdentifier: string): string {
-  return `  <qti-response-processing>\n${mapResponseRulesXml(responseIdentifier)}\n  </qti-response-processing>`;
-}
-
-export function matchCorrectProcessingXml(responseIdentifier: string): string {
+function matchCorrectProcessingXml(responseIdentifier: string): string {
   return `  <qti-response-processing>\n${matchCorrectRulesXml(responseIdentifier)}\n  </qti-response-processing>`;
 }
 
@@ -223,13 +220,13 @@ function uniqueIdentifiers(values: readonly string[]): string[] {
   return identifiers;
 }
 
-/** Standard choice scoring uses templates for RESPONSE and equivalent inline rules for custom identifiers. */
-export function choiceResponseProcessingXml(
+/** Bind the standard algorithms to the authored response identifier. */
+export function standardResponseProcessingXml(
   responseIdentifier: string,
-  scoring: Qti3ResponseProcessingTemplate,
+  scoring: Qti3ResponseProcessingTemplate | Qti3PointResponseProcessingTemplate,
 ): string {
   if (responseIdentifier === "RESPONSE") return responseProcessingTemplateXml(scoring);
-  return scoring === "map_response"
-    ? mapResponseProcessingXml(responseIdentifier)
-    : matchCorrectProcessingXml(responseIdentifier);
+  if (scoring === "match_correct") return matchCorrectProcessingXml(responseIdentifier);
+  const operator = scoring === "map_response" ? "map-response" : "map-response-point";
+  return `  <qti-response-processing>\n${mapResponseRulesXml(responseIdentifier, operator)}\n  </qti-response-processing>`;
 }

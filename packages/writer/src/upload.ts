@@ -11,7 +11,7 @@ import {
   optionalPromptSection,
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -63,7 +63,9 @@ ${optionalPromptSection(input.promptHtml)}    </qti-upload-interaction>`;
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: correctResponse ? responseProcessingTemplateXml("match_correct") : "",
+    responseProcessingXml: correctResponse
+      ? standardResponseProcessingXml(responseIdentifier, "match_correct")
+      : "",
     scoreDefaultZero: Boolean(correctResponse),
   });
 }

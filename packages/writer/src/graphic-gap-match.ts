@@ -22,7 +22,7 @@ import {
   validatePairMatchMax,
   validatePairReferences,
 } from "./pair-declaration.js";
-import { responseProcessingTemplateXml } from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -124,7 +124,10 @@ ${targetsXml}
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: responseProcessingTemplateXml(input.scoring ?? "match_correct"),
+    responseProcessingXml: standardResponseProcessingXml(
+      responseIdentifier,
+      input.scoring ?? "match_correct",
+    ),
   });
 }
 

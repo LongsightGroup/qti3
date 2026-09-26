@@ -1,3 +1,4 @@
+import { processingVariables, type ProcessingVariables } from "./processing-variables.js";
 import type {
   QtiAssessmentItem,
   QtiDiagnostic,
@@ -122,14 +123,7 @@ export function validateProcessingReferences(
   const outcomes = new Set(item.outcomeDeclarations.map((declaration) => declaration.identifier));
   outcomes.add(COMPLETION_STATUS);
   const templates = new Set(item.templateDeclarations.map((declaration) => declaration.identifier));
-  const variables = new Set([
-    ...responses,
-    ...outcomes,
-    ...templates,
-    "numAttempts",
-    "QTI_CONTEXT",
-    ...(item.timeDependent ? ["duration"] : []),
-  ]);
+  const variables = processingVariables(item);
 
   for (const rule of item.templateProcessing?.rules ?? []) {
     validateTemplateRule(rule, responses, outcomes, templates, variables, diagnostics);
@@ -144,7 +138,7 @@ function validateResponseCondition(
   condition: QtiResponseCondition,
   outcomes: Set<string>,
   responses: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   validateExpressionReferences(condition.ifExpression, responses, variables, diagnostics);
@@ -167,7 +161,7 @@ function validateTemplateRule(
   responses: Set<string>,
   outcomes: Set<string>,
   templates: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   if (rule.type === "exitTemplate") return;
@@ -254,7 +248,7 @@ function validateResponseRule(
   rule: QtiResponseRule,
   outcomes: Set<string>,
   responses: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   if (rule.type === "exitResponse") return;
@@ -279,7 +273,7 @@ function validateLookupOutcomeRule(
   rule: Extract<QtiResponseRule, { type: "lookupOutcomeValue" }>,
   outcomes: Set<string>,
   responses: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   validateProcessingIdentifier(
@@ -304,7 +298,7 @@ function validateSetOutcomeRule(
   rule: QtiSetOutcomeValue,
   outcomes: Set<string>,
   responses: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   validateProcessingIdentifier(
@@ -328,7 +322,7 @@ function validateSetOutcomeRule(
 function validateExpressionReferences(
   expression: QtiProcessingExpression | undefined,
   responses: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   if (!expression) return;
@@ -489,9 +483,22 @@ function validateExpressionReferences(
     validateEqualTolerance(expression, variables, diagnostics);
   }
 
+  if (expression.type === "index") {
+    if (!variables.numericAttribute(expression.n, "integer")) {
+      diagnostics.push({
+        code: "processing.index.n",
+        severity: "error",
+        message:
+          "qti-index n requires an integer or a declared template or outcome variable reference.",
+        source: expression.source,
+        path: expression.source?.path,
+      });
+    }
+  }
+
   if (expression.type === "anyN") {
-    validateAnyNBound("min", expression.min, responses, variables, diagnostics, expression.source);
-    validateAnyNBound("max", expression.max, responses, variables, diagnostics, expression.source);
+    validateAnyNBound("min", expression.min, variables, diagnostics, expression.source);
+    validateAnyNBound("max", expression.max, variables, diagnostics, expression.source);
   }
 
   if (expression.type === "mathConstant" && !mathConstantNames.has(expression.name)) {
@@ -583,7 +590,7 @@ function validateRounding(
   qtiName: string,
   roundingMode: string,
   figures: number | string,
-  variables: ReadonlySet<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
   source: QtiDiagnostic["source"],
 ): void {
@@ -597,10 +604,9 @@ function validateRounding(
     });
   }
   const validFigures =
-    typeof figures === "string"
-      ? variables.has(figures)
-      : Number.isInteger(figures) &&
-        (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0);
+    variables.numericAttribute(figures, "integer") &&
+    (typeof figures === "string" ||
+      (roundingMode === "decimalPlaces" ? figures >= 0 : figures > 0));
   if (!validFigures) {
     diagnostics.push({
       code: "processing.roundingFigures",
@@ -614,7 +620,7 @@ function validateRounding(
 
 function validateRepeatExpression(
   expression: Extract<QtiProcessingExpression, { type: "repeat" }>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   if (isInteger(expression.numberRepeats)) {
@@ -642,17 +648,11 @@ function validateRepeatExpression(
     diagnostics.push(repeatCountDiagnostic(expression));
     return;
   }
-  validateProcessingIdentifier(
-    expression.numberRepeats,
-    "processing.repeat.numberRepeats",
-    expression.source,
-    diagnostics,
-  );
-  if (expression.numberRepeats && !variables.has(expression.numberRepeats)) {
+  if (!variables.numericAttribute(expression.numberRepeats, "integer")) {
     diagnostics.push({
       code: "processing.repeat.numberRepeats.reference",
       severity: "error",
-      message: `qti-repeat references missing template or outcome variable ${expression.numberRepeats}.`,
+      message: `qti-repeat requires a declared variable reference, received ${expression.numberRepeats}.`,
       path: expression.source?.path,
       source: expression.source,
     });
@@ -662,8 +662,7 @@ function validateRepeatExpression(
 function validateAnyNBound(
   attribute: "min" | "max",
   value: string,
-  responses: Set<string>,
-  variables: Set<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
   source: QtiDiagnostic["source"],
 ): void {
@@ -688,7 +687,7 @@ function validateAnyNBound(
     });
     return;
   }
-  if (!variables.has(value) || responses.has(value)) {
+  if (!variables.numericAttribute(value, "integer")) {
     diagnostics.push({
       code: `processing.anyN.${attribute}.reference`,
       severity: "error",

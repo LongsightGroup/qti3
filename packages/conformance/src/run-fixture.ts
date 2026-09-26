@@ -49,7 +49,9 @@ export function runFixture(fixture: QtiFixture): QtiConformanceResult {
     for (const [identifier, value] of Object.entries(attempt.responses)) {
       session.respond(identifier, value);
     }
-    const scored = session.score();
+    const scored = session.score({
+      endAttemptResponseIdentifier: attempt.endAttemptResponseIdentifier,
+    });
     const state = scored.state;
 
     for (const [identifier, expected] of Object.entries(attempt.expectedResponses ?? {})) {

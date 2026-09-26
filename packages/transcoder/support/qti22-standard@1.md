@@ -46,7 +46,7 @@
 - Scoring policy: manual
 - Fallback: —
 - Golden SHA-256: `8dcecaca8d3e63bf1847f1454846a5bd72e93884138e58f31dfcbd71db38bab3`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti2_outcomes_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `qti22-standard@1/gapMatch`
 

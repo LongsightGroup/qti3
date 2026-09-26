@@ -1,4 +1,6 @@
-import { parseFiniteNumber, parseXmlBoolean } from "./parser-values.js";
+import { parseNumericOperatorAttribute } from "./operator-attribute.js";
+import type { ProcessingVariables } from "./processing-variables.js";
+import { parseXmlBoolean } from "./parser-values.js";
 import type { QtiDiagnostic, QtiProcessingExpression, QtiValue } from "./types.js";
 
 type EqualExpression = Extract<QtiProcessingExpression, { type: "equal" }>;
@@ -44,7 +46,7 @@ function parseTolerance(
 /** Validate tolerance attributes and numeric literal or declared-variable operands. */
 export function validateEqualTolerance(
   expression: EqualExpression,
-  variables: ReadonlySet<string>,
+  variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
   const parsed = parseTolerance(expression.attributes);
@@ -52,8 +54,7 @@ export function validateEqualTolerance(
   if (!parsed.ok) messages.push(parsed.message);
   else if (parsed.value.mode !== "exact") {
     for (const token of [parsed.value.lower, parsed.value.upper]) {
-      const number = parseFiniteNumber(token);
-      if (number === undefined ? !variables.has(token) : number < 0) {
+      if (!variables.numericAttribute(token, "number") || Number(token) < 0) {
         messages.push(
           "qti-equal tolerance must be nonnegative numeric values or declared variable references.",
         );
@@ -84,8 +85,8 @@ export function equalWithTolerance(
   if (!parsed.ok) return null;
   const tolerance = parsed.value;
   if (tolerance.mode === "exact") return left === right;
-  const lower = parseFiniteNumber(tolerance.lower) ?? resolve(tolerance.lower);
-  const upper = parseFiniteNumber(tolerance.upper) ?? resolve(tolerance.upper);
+  const lower = resolveTolerance(tolerance.lower, resolve);
+  const upper = resolveTolerance(tolerance.upper, resolve);
   if (
     typeof lower !== "number" ||
     typeof upper !== "number" ||
@@ -101,4 +102,13 @@ export function equalWithTolerance(
     (tolerance.includeLower ? right >= minimum : right > minimum) &&
     (tolerance.includeUpper ? right <= maximum : right < maximum)
   );
+}
+
+function resolveTolerance(raw: string, resolve: (identifier: string) => QtiValue): QtiValue {
+  const attribute = parseNumericOperatorAttribute(raw);
+  return attribute.type === "literal"
+    ? attribute.value
+    : attribute.type === "reference"
+      ? resolve(attribute.identifier)
+      : null;
 }

@@ -146,7 +146,9 @@ describe("@longsightgroup/qti3-fixtures", () => {
         session.respond(identifier, value);
       }
 
-      const scored = session.score();
+      const scored = session.score({
+        endAttemptResponseIdentifier: attempt.endAttemptResponseIdentifier,
+      });
       expect(scored.diagnostics.filter((diagnostic) => diagnostic.severity === "error")).toEqual(
         [],
       );

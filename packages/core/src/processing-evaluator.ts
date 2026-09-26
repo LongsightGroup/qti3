@@ -1,3 +1,4 @@
+import { parseNumericOperatorAttribute } from "./operator-attribute.js";
 import type { QtiDiagnostic, QtiDocument, QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { QtiCustomOperatorRegistry } from "./custom-operators.js";
@@ -73,11 +74,13 @@ export function createEvaluationContext(
       return evaluateProcessingExpression(expression, context);
     },
     indexValue(identifierOrInteger) {
-      const parsed = Number(identifierOrInteger);
-      if (Number.isInteger(parsed)) return parsed;
-      const value = outcomes[identifierOrInteger] ?? templateValues[identifierOrInteger] ?? null;
-      const numeric = numericValueOrNull(value);
-      return numeric !== null && Number.isInteger(numeric) ? numeric : undefined;
+      const attribute = parseNumericOperatorAttribute(identifierOrInteger);
+      if (attribute.type === "invalid") return undefined;
+      const value =
+        attribute.type === "literal"
+          ? attribute.value
+          : (outcomes[attribute.identifier] ?? templateValues[attribute.identifier]);
+      return typeof value === "number" && Number.isInteger(value) ? value : undefined;
     },
     numericOperands(expressions) {
       const numericValues: number[] = [];

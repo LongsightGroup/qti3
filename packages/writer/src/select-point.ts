@@ -16,10 +16,7 @@ import {
   optionalPromptSection,
   resolveResponseIdentifier,
 } from "./interaction-shell.js";
-import {
-  mapResponsePointProcessingXml,
-  responseProcessingTemplateXml,
-} from "./response-processing.js";
+import { standardResponseProcessingXml } from "./response-processing.js";
 import {
   dedupePointValues,
   pointCardinality,
@@ -89,10 +86,7 @@ ${optionalPromptSection(input.promptHtml)}      <object ${xmlAttributeList(rende
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml:
-      responseIdentifier === "RESPONSE"
-        ? responseProcessingTemplateXml("map_response_point")
-        : mapResponsePointProcessingXml(responseIdentifier),
+    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, "map_response_point"),
   });
 }
 

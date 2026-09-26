@@ -24,12 +24,15 @@ test.describe("player interaction sweep", () => {
         await provideResponse(page, interaction.type, response, responseIdentifier);
       }
 
+      if (attempt.endAttemptResponseIdentifier) {
+        await provideResponse(page, "endAttempt", true, attempt.endAttemptResponseIdentifier);
+      }
       const stateBeforeScore = await page
         .locator("qti-assessment-item-player")
         .evaluate((element) => {
           return element.serialize();
         });
-      if (stateBeforeScore.status !== "completed") {
+      if (stateBeforeScore.status !== "completed" && !attempt.endAttemptResponseIdentifier) {
         await page.locator("#debug-score").click();
       }
       const state = await page.locator("qti-assessment-item-player").evaluate((element) => {

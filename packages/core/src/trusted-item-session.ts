@@ -27,6 +27,8 @@ export type QtiTrustedInputDiagnosticPrefix = "serverScoring" | "adaptiveTurn" |
 export type QtiTrustedSubmissionValidation = "trusted" | "strict";
 
 export interface QtiTrustedResponseApplication {
+  /** Current end-attempt trigger, supplied by the host; omit for ordinary submission. */
+  endAttemptResponseIdentifier?: string | undefined;
   trustedResponses?: QtiTrustedResponsesInput;
   trustedInteractionStates?: Record<string, QtiPortableCustomStateValue> | undefined;
 }
@@ -198,7 +200,10 @@ export function runTrustedItemSession(
   // Capture the submitted attempt before closing it, so built-in counters reflect participation.
   if (input.attemptStatus === "completed") sessionResult.session.setStatus("completed");
 
-  const shouldScore = input.scoring === "always" || applicationResult.appliedSubmission;
+  const shouldScore =
+    input.scoring === "always" ||
+    applicationResult.appliedSubmission ||
+    submission.endAttemptResponseIdentifier !== undefined;
   const externalScore = itemHasExternalScore(parsedResult.parsed.document.item);
 
   let outcomes = sessionResult.session.serialize().outcomes;
@@ -211,6 +216,7 @@ export function runTrustedItemSession(
       sessionResult.session,
       diagnostics,
       input.diagnosticPrefix,
+      submission.endAttemptResponseIdentifier,
     );
     if (!scoredResult.ok) {
       return emptyTrustedItemSessionFailure(scoredResult.diagnostics);
@@ -384,11 +390,12 @@ function scoreTrustedItemSession(
   session: QtiItemSession,
   diagnostics: QtiDiagnostic[],
   diagnosticPrefix: QtiTrustedInputDiagnosticPrefix,
+  endAttemptResponseIdentifier: string | undefined,
 ):
   | { ok: true; scored: ReturnType<QtiItemSession["score"]> }
   | { ok: false; diagnostics: QtiDiagnostic[] } {
   try {
-    return { ok: true, scored: session.score() };
+    return { ok: true, scored: session.score({ endAttemptResponseIdentifier }) };
   } catch (error) {
     return {
       ok: false,

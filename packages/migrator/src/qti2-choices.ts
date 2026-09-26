@@ -1,3 +1,4 @@
+import { xmlBooleanAttribute } from "./xml-boolean.js";
 import { diagnostic } from "./diagnostics.js";
 import type { Qti2Context } from "./qti2-context.js";
 import {
@@ -24,7 +25,7 @@ export function simpleChoices(root: XmlElement): Qti3AuthoringChoice[] {
     identifier: normalizeIdentifier(attr(choice, "identifier"), `CHOICE_${index + 1}`),
     contentHtml: trusted(serializeChildren(choice)),
     text: textOf(choice) || undefined,
-    fixed: attr(choice, "fixed") === "true",
+    fixed: xmlBooleanAttribute(attr(choice, "fixed")),
   }));
 }
 
@@ -37,7 +38,7 @@ export function associableChoices(
     identifier: normalizeIdentifier(attr(choice, "identifier"), `${prefix}_${index + 1}`),
     contentHtml: trusted(serializeChildren(choice)),
     text: textOf(choice) || undefined,
-    fixed: attr(choice, "fixed") === "true",
+    fixed: xmlBooleanAttribute(attr(choice, "fixed")),
     matchMax: toNumber(attr(choice, "matchMax")),
   }));
 }

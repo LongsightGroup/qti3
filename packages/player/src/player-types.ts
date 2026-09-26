@@ -28,6 +28,8 @@ export interface QtiPlayerSessionControl {
 }
 
 export interface QtiScoreAttemptOptions {
+  /** Response identifier of the end-attempt button that triggered processing; omit for host submission. */
+  endAttemptResponseIdentifier?: string | undefined;
   /** Override the session host policy while retaining QTI constraint validation. */
   requireScoredResponses?: boolean | undefined;
   validateResponses?: boolean | undefined;

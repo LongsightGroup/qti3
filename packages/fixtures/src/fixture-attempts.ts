@@ -2,6 +2,8 @@ import type { QtiAttemptStateV1, QtiValue } from "@longsightgroup/qti3-core";
 
 export interface QtiFixtureAttempt {
   name: string;
+  /** End-attempt interaction responsible for this processing invocation, if any. */
+  endAttemptResponseIdentifier?: string | undefined;
   responses: Record<string, QtiValue>;
   expectedOutcomes: Record<string, QtiValue>;
   expectedResponses?: Record<string, QtiValue> | undefined;
