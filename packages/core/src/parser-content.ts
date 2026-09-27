@@ -1,3 +1,4 @@
+import { validateRubricContent } from "./rubric.js";
 import { isInteractionElement } from "./interaction-element.js";
 import { appendContentTextNode, flatTextFromContent } from "./content-text.js";
 import { QTI_ASI_NAMESPACE } from "./qti-namespaces.js";
@@ -13,16 +14,20 @@ export function parseModalFeedbackContent(
   node: XmlNode,
   diagnostics: QtiDiagnostic[],
 ): QtiContentNode[] {
-  return parseContent(node, (interaction) => {
-    diagnostics.push({
-      code: "feedback.interaction.forbidden",
-      severity: "error",
-      message: "qti-modal-feedback must not contain interactions.",
-      path: interaction.source.path,
-      source: interaction.source,
-    });
-    return undefined;
-  });
+  return parseContent(
+    node,
+    (interaction) => {
+      diagnostics.push({
+        code: "feedback.interaction.forbidden",
+        severity: "error",
+        message: "qti-modal-feedback must not contain interactions.",
+        path: interaction.source.path,
+        source: interaction.source,
+      });
+      return undefined;
+    },
+    diagnostics,
+  );
 }
 
 /** Parse a trusted modal-feedback fragment without inventing an assessment item or declarations. */
@@ -47,6 +52,7 @@ export function parseQtiModalFeedbackFragment(xml: string): {
 export function parseContent(
   node: XmlNode,
   interaction: (node: XmlNode) => QtiContentNode | undefined,
+  diagnostics: QtiDiagnostic[],
 ): QtiContentNode[] {
   const content: QtiContentNode[] = [];
   for (const entry of node.content) {
@@ -54,7 +60,7 @@ export function parseContent(
       appendContentTextNode(content, entry, node.source);
       continue;
     }
-    const parsed = parseContentNode(entry, interaction);
+    const parsed = parseContentNode(entry, interaction, diagnostics);
     if (parsed) content.push(parsed);
   }
   return content;
@@ -63,8 +69,32 @@ export function parseContent(
 function parseContentNode(
   node: XmlNode,
   interaction: (node: XmlNode) => QtiContentNode | undefined,
+  diagnostics: QtiDiagnostic[],
 ): QtiContentNode | undefined {
   if (isInteractionElement(node)) return interaction(node);
+  if (isQtiElement(node, "qti-rubric-block")) {
+    return {
+      kind: "element",
+      qtiName: node.localName,
+      namespaceUri: node.uri,
+      attributes: node.attributes,
+      source: node.source,
+      children: parseContent(
+        node,
+        (forbidden) => {
+          diagnostics.push({
+            code: "rubric.interaction.forbidden",
+            severity: "error",
+            message: "Rubric blocks must not contain interactions.",
+            source: forbidden.source,
+            path: forbidden.source.path,
+          });
+          return undefined;
+        },
+        diagnostics,
+      ),
+    };
+  }
 
   if (isQtiElement(node, "qti-printed-variable")) {
     return {
@@ -84,7 +114,7 @@ function parseContentNode(
       outcomeIdentifier: node.attributes["outcome-identifier"] ?? "",
       showHide: node.attributes["show-hide"] === "hide" ? "hide" : "show",
       attributes: node.attributes,
-      children: parseContent(node, interaction),
+      children: parseContent(node, interaction, diagnostics),
       source: node.source,
     };
   }
@@ -94,7 +124,31 @@ function parseContentNode(
     qtiName: node.localName,
     namespaceUri: node.uri,
     attributes: node.attributes,
-    children: parseContent(node, interaction),
+    children: parseContent(node, interaction, diagnostics),
     source: node.source,
   };
+}
+
+/** Validate rubric contracts in an authoring fragment without inventing response declarations. */
+export function validateQtiRubricFragment(xml: string, testLevel = false): QtiDiagnostic[] {
+  const tree = parseXmlTree(
+    `<qti-content-body xmlns="${QTI_ASI_NAMESPACE}">${xml}</qti-content-body>`,
+  );
+  const diagnostics: QtiDiagnostic[] = tree.errors.map((error) => ({
+    code: "xml.parse",
+    severity: "error",
+    message: error.message,
+  }));
+  if (!tree.root || diagnostics.length) return diagnostics;
+  const retainInteraction = (node: XmlNode): QtiContentNode => ({
+    kind: "element",
+    qtiName: node.localName,
+    namespaceUri: node.uri,
+    attributes: node.attributes,
+    source: node.source,
+    children: parseContent(node, retainInteraction, diagnostics),
+  });
+  const content = parseContent(tree.root, retainInteraction, diagnostics);
+  validateRubricContent(content, diagnostics, testLevel);
+  return diagnostics;
 }

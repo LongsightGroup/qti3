@@ -120,8 +120,20 @@ it.each([
   );
 });
 
-it("preserves unbounded Select Point and whole-list ordering defaults", () => {
-  for (const type of ["selectPoint", "order", "graphicOrder"] as const) {
-    expect(maximumAllowedResponses(testInteraction({ type }))).toBeUndefined();
+it("bounds whole-list ordering by the available choices while Select Point stays unbounded", () => {
+  expect(maximumAllowedResponses(testInteraction({ type: "selectPoint" }))).toBeUndefined();
+  for (const type of ["order", "graphicOrder"] as const) {
+    const interaction = testInteraction({
+      type,
+      choices: ["A", "B"].map((identifier) => ({
+        identifier,
+        text: identifier,
+        role: "simpleChoice",
+        qtiName: "qti-simple-choice",
+        attributes: {},
+      })),
+    });
+    expect(maximumAllowedResponses(interaction)).toBe(2);
+    expect(minimumRequiredResponses(interaction)).toBe(2);
   }
 });

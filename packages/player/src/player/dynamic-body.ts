@@ -4,6 +4,7 @@ import { isTemplateContentVisible } from "./content-state.js";
 
 export interface DynamicBodyContext {
   variableValue(identifier: string): QtiValue;
+  feedbackOutcomeValue(identifier: string): QtiValue;
   templateValue(identifier: string): QtiValue;
 }
 
@@ -21,7 +22,7 @@ export function syncDynamicBodyState(root: ParentNode, context: DynamicBodyConte
     const identifier = element.dataset.feedbackIdentifier;
     const outcomeIdentifier = element.dataset.outcomeIdentifier;
     if (!identifier || !outcomeIdentifier) continue;
-    const value = context.variableValue(outcomeIdentifier);
+    const value = context.feedbackOutcomeValue(outcomeIdentifier);
     const hasIdentifier = Array.isArray(value)
       ? value.map(String).includes(identifier)
       : qtiValueToString(value) === identifier;

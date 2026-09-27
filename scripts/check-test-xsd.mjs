@@ -7,10 +7,14 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseQtiTest } from "../packages/core/dist/index.js";
 import {
+  buildQti3RubricBlock,
+  buildQti3ExtendedTextItem,
   writeQti3AssessmentTest,
   writeQti3FixedAssessmentTest,
   qti3TrustedXmlFragment,
 } from "../packages/writer/dist/index.js";
+
+import { migrateQtiItemToQti3 } from "../packages/migrator/dist/index.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const closure = JSON.parse(
@@ -91,6 +95,33 @@ try {
     ["--nonet", "--noout", "--schema", join(directory, closure.main), instance],
     { stdio: "inherit" },
   );
+  // QTI 3.0.1 §5.120: independently check the writer/migrator, not only our parser.
+  const rubricXml = buildQti3ExtendedTextItem({
+    identifier: "rubric",
+    title: "Rubric",
+    bodyHtml: buildQti3RubricBlock({
+      view: ["candidate"],
+      use: "instructions",
+      placement: "inline",
+      content: qti3TrustedXmlFragment("<p>Read carefully.</p>"),
+    }),
+  });
+  const migrated = migrateQtiItemToQti3({
+    xml: `<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="rubric" title="Rubric" adaptive="false" timeDependent="false"><responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration><outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/><itemBody><rubricBlock view="candidate scorer"><p>Read carefully.</p></rubricBlock><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><simpleChoice identifier="A">Alpha</simpleChoice><simpleChoice identifier="B">Beta</simpleChoice></choiceInteraction></itemBody><responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/></assessmentItem>`,
+  });
+  if (!migrated.xml) throw new Error("Rubric migration failed.");
+  for (const [name, xml] of [
+    ["rubric", rubricXml],
+    ["migrated-rubric", migrated.xml],
+  ]) {
+    const path = join(directory, `${name}.xml`);
+    await writeFile(path, xml);
+    execFileSync(
+      "xmllint",
+      ["--nonet", "--noout", "--schema", join(directory, closure.main), path],
+      { stdio: "inherit" },
+    );
+  }
   console.log(
     "QTI 3 staged assessment: official ASI schema validation passed (pinned source hashes).",
   );

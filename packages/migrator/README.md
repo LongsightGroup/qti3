@@ -119,3 +119,12 @@ QTI 2 migration rejects template declarations or template processing with
 changes to correct responses with `qti2_correct_response_not_preserved`, including
 invented answer keys under safe repair. Hottext and gap-match migration preserve prompts,
 surrounding item-body content, and the original interaction position.
+
+QTI 2 rubric blocks retain their `view` audiences when translated to `qti-rubric-block`.
+Adaptive QTI 2 items return `qti2_adaptive_not_preserved`, including under safe repair: the
+current authoring writer cannot preserve adaptive lifecycle semantics. No converted item is
+produced unless the caller explicitly requests a review stub.
+
+QTI 2 rubric blocks become QTI 3 rubrics with a `qti-content-body` wrapper and
+`use="instructions"`, reflecting QTI 2's definition of rubrics as instructions to the selected
+audiences. The source `view` remains unchanged; a scorer audience alone does not imply a scoring use.

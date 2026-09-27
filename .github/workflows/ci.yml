@@ -20,6 +20,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level high
+      - name: Install official-schema validator
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
       - name: Run full release check (includes pnpm verify and browser matrix)
         run: pnpm release:check

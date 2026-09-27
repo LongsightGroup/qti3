@@ -48,6 +48,8 @@ export async function setPlayerMessageCatalog(
 }
 
 export async function pasteXml(page: Page, xml: string): Promise<void> {
+  // The demo initializes its editor and listeners asynchronously before its first render.
+  await waitForPlayerLoad(page);
   const loader = page.locator("#xml-loader");
   if (!(await loader.evaluate((element) => (element as HTMLDetailsElement).open))) {
     await loader.locator("summary").click();
@@ -61,10 +63,7 @@ function itemIdentifierFromXml(xml: string): string | undefined {
   return /\bidentifier\s*=\s*["']([^"']+)["']/.exec(xml)?.[1];
 }
 
-async function waitForPlayerLoad(
-  page: Page,
-  expectedIdentifier: string | undefined,
-): Promise<void> {
+export async function waitForPlayerLoad(page: Page, expectedIdentifier?: string): Promise<void> {
   await page.waitForFunction((identifier) => {
     const player = document.querySelector("qti-assessment-item-player") as
       | (HTMLElement & { serialize?: () => { itemIdentifier?: string } })

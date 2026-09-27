@@ -59,6 +59,7 @@ export function validateItemResponses(
 ): QtiDiagnostic[] {
   return validateQtiResponseVariables({
     item: document.item,
+    templateValues: state.templateValues,
     responses: state.responses,
     responseIdentifiers: options.responseIdentifiers,
     requireScoredResponses: options.requireScoredResponses,

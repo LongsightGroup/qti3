@@ -534,3 +534,30 @@ refreshes remain available. `beginAttempt()`, `setStatus()`, `respond()`, and
 Numeric references also apply to `qti-round-to` figures and `qti-random-integer` /
 `qti-random-float` bounds (and integer step). Use the standard `{identifier}` spelling.
 Invalid values resolved at runtime, such as a zero step or inverted bounds, yield NULL.
+
+Saved attempts include `responseProcessingCompleted`, which becomes true after successful
+response processing. An absent marker means processing has not been recorded. Hosts can use
+this to restore modal feedback without rescoring or showing it on a fresh attempt.
+`session.initialOutcomeValue(identifier)` returns the effective initial outcome after template
+processing, independently of restored or scored outcomes.
+
+Order and graphic-order responses must contain every available choice exactly once unless
+`min-choices` requests a subset. Incomplete saves may contain partial orders, but never duplicate
+or unknown identifiers. Pass the generated `templateValues` to response validation when checking
+a particular clone, so template-hidden choices are excluded from its response domain.
+
+Rubric blocks require `view`, `use`, and one `qti-content-body`. Nested rubrics and
+interactions in rubrics are errors; forbidden interactions are excluded from the live
+interaction list. Valid `ext:` uses produce a warning describing the missing custom policy.
+Rubric-local stylesheets and catalogs return `rubric.resource.unsupported` rather than
+falling back to item scope. `parseQtiTestExecution` rejects test-level rubrics, including
+fixed tests: interchange support does not imply delivery of their instructions.
+
+The feedback marker describes the currently stored outcomes, not whether the latest response
+has been graded. Response edits retain it; starting another processing invocation clears it,
+and only successful processing sets it again. Failed rescoring therefore cannot restore modal
+feedback as though its partially updated outcomes came from successful processing.
+
+Response validation requires explicit `templateValues` for template-controlled choices and
+returns `response.templateValues.required` if clone context is omitted. Restore uses the saved
+clone's values. Full-order and subset checks share the same projected choice-domain contract.

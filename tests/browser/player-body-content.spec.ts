@@ -6,11 +6,11 @@ import {
   sharedVocabularyBodyItemXml,
   unsafeBodyItemXml,
 } from "./body-content-fixtures.js";
-import { pasteXml } from "./player-helpers.js";
+import { pasteXml, waitForPlayerLoad } from "./player-helpers.js";
 import { getTextToSpeechTraversal, playerLocator } from "./player-test-api.js";
 
 test.describe("player body content", () => {
-  for (const view of ["scorer", "author tutor", "", undefined]) {
+  for (const view of ["scorer", "author tutor"]) {
     test(`omits rubric content outside candidate view (${view ?? "missing"})`, async ({ page }) => {
       const viewAttribute = view === undefined ? "" : `view="${view}"`;
       const xml = mathBodyItemXml.replace(
@@ -187,4 +187,50 @@ declare global {
   interface Window {
     qtiUnsafe?: boolean;
   }
+}
+
+// QTI 3.0.1 §5.120 and implementation guide §3.7.5: source order is valid for both placement classes.
+test("preserves rubric placement classes and source order", async ({ page }) => {
+  const xml = mathBodyItemXml.replace(
+    "<qti-item-body>",
+    `<qti-item-body><p id="before-rubrics">Before</p><qti-rubric-block view="candidate" use="instructions" class="qti-rubric-inline"><qti-content-body><p>Inline instructions</p></qti-content-body></qti-rubric-block><qti-rubric-block view="candidate" use="instructions" class="qti-rubric-discretionary-placement"><qti-content-body><p>Discretionary instructions</p></qti-content-body></qti-rubric-block><p id="after-rubrics">After</p>`,
+  );
+  const { parseQtiXml, validateAssessmentItem } = await import("../../packages/core/src/index.js");
+  const parsed = parseQtiXml(xml);
+  expect(parsed.diagnostics).toEqual([]);
+  if (!parsed.document) throw new Error("Expected item");
+  expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);
+  await page.goto("/");
+  await pasteXml(page, xml);
+  const player = playerLocator(page);
+  await expect(player.locator("section.qti-rubric-inline")).toHaveText("Inline instructions");
+  await expect(player.locator("section.qti-rubric-discretionary-placement")).toHaveText(
+    "Discretionary instructions",
+  );
+  expect(
+    await player
+      .locator(
+        "#before-rubrics, .qti-rubric-inline, .qti-rubric-discretionary-placement, #after-rubrics",
+      )
+      .allTextContents(),
+  ).toEqual(["Before", "Inline instructions", "Discretionary instructions", "After"]);
+});
+
+for (const content of [
+  '<qti-rubric-block use="instructions"><qti-content-body>Missing audience</qti-content-body></qti-rubric-block>',
+  '<qti-rubric-block view="scorer" use="scoring"><qti-content-body><qti-text-entry-interaction response-identifier="SECRET"/></qti-content-body></qti-rubric-block>',
+  '<qti-rubric-block view="candidate" use="instructions"><qti-stylesheet href="local.css" type="text/css"/><qti-content-body>Unscoped instructions</qti-content-body></qti-rubric-block>',
+  '<qti-rubric-block view="candidate" use="instructions"><qti-content-body>Catalog instructions</qti-content-body><qti-catalog-info/></qti-rubric-block>',
+]) {
+  test(`refuses invalid or unsupported rubrics: ${content}`, async ({ page }) => {
+    await page.goto("/");
+    await waitForPlayerLoad(page);
+    const xml = mathBodyItemXml.replace("<qti-item-body>", `<qti-item-body>${content}`);
+    const player = playerLocator(page);
+    await player.evaluate(async (element, input) => {
+      await element.loadXml(input);
+    }, xml);
+    expect(await player.evaluate((element) => element.serialize())).toBeUndefined();
+    await expect(player.getByRole("radio")).toHaveCount(0);
+  });
 }

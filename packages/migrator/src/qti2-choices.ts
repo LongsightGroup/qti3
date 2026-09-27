@@ -1,3 +1,4 @@
+import { serializeQti2ContentChildren } from "./qti2-body.js";
 import { xmlBooleanAttribute } from "./xml-boolean.js";
 import { diagnostic } from "./diagnostics.js";
 import type { Qti2Context } from "./qti2-context.js";
@@ -14,7 +15,6 @@ import {
   findAllDescendantsByLocalName,
   findDescendantByLocalName,
   localName,
-  serializeChildren,
   textOf,
   toNumber,
   type XmlElement,
@@ -23,7 +23,7 @@ import {
 export function simpleChoices(root: XmlElement): Qti3AuthoringChoice[] {
   return findAllDescendantsByLocalName(root, "simplechoice").map((choice, index) => ({
     identifier: normalizeIdentifier(attr(choice, "identifier"), `CHOICE_${index + 1}`),
-    contentHtml: trusted(serializeChildren(choice)),
+    contentHtml: trusted(serializeQti2ContentChildren(choice)),
     text: textOf(choice) || undefined,
     fixed: xmlBooleanAttribute(attr(choice, "fixed")),
   }));
@@ -36,7 +36,7 @@ export function associableChoices(
   if (!root) return [];
   return findAllDescendantsByLocalName(root, "simpleassociablechoice").map((choice, index) => ({
     identifier: normalizeIdentifier(attr(choice, "identifier"), `${prefix}_${index + 1}`),
-    contentHtml: trusted(serializeChildren(choice)),
+    contentHtml: trusted(serializeQti2ContentChildren(choice)),
     text: textOf(choice) || undefined,
     fixed: xmlBooleanAttribute(attr(choice, "fixed")),
     matchMax: toNumber(attr(choice, "matchMax")),
@@ -65,7 +65,7 @@ export function gapChoice(
   return {
     identifier: normalizeIdentifier(attr(choice, "identifier"), `G${index + 1}`),
     kind: "text",
-    contentHtml: trusted(serializeChildren(choice)),
+    contentHtml: trusted(serializeQti2ContentChildren(choice)),
     text: textOf(choice) || undefined,
     matchMax: toNumber(attr(choice, "matchMax")),
   };

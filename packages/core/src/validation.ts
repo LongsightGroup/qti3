@@ -1,3 +1,4 @@
+import { validateRubricContent } from "./rubric.js";
 import { validateAssessmentItemChildren } from "./validation-item-children.js";
 import type {
   QtiAssessmentItem,
@@ -47,6 +48,7 @@ export function validateAssessmentItem(document: QtiDocument): QtiValidationResu
   validateAssessmentItemRoot(item, diagnostics);
   validateAssessmentItemChildren(item, diagnostics);
   validateItemBody(item, diagnostics);
+  validateRubricContent(item.body, diagnostics);
   validateItemBodySharedVocabulary(item, diagnostics);
   validateDeclarationIdentifiers(item, diagnostics);
   validateOutcomeLookupTables(item, diagnostics);

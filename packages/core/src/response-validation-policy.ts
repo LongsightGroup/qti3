@@ -1,3 +1,4 @@
+import { orderResponseContract } from "./order-response.js";
 import type { QtiChoice, QtiDiagnostic, QtiInteraction, QtiValue } from "./types.js";
 import { parseQtiMediaDefinition } from "./media-definition.js";
 import { parseXmlBoolean } from "./parser-values.js";
@@ -20,10 +21,7 @@ export function responseCount(value: QtiValue): number {
 
 /** Order and graphic order ignore max-choices unless min-choices is authored. */
 export function orderSubsetLimitsActive(interaction: QtiInteraction): boolean {
-  return (
-    (interaction.type === "order" || interaction.type === "graphicOrder") &&
-    interaction.attributes["min-choices"] !== undefined
-  );
+  return orderResponseContract(interaction)?.subset ?? false;
 }
 
 export function responseLimitAttribute(
@@ -46,6 +44,8 @@ function interactionRequiresResponse(interaction: QtiInteraction): boolean {
 export function minimumRequiredResponses(interaction: QtiInteraction | undefined): number {
   if (!interaction) return 0;
   if (interaction.type === "media") return minimumMediaPlays(interaction);
+  const order = orderResponseContract(interaction);
+  if (order) return order.minimum;
   const explicit = responseLimitAttribute(interaction, "min-choices", "min-associations");
   if (explicit === undefined) return interactionRequiresResponse(interaction) ? 1 : 0;
   return parseNonNegativeInteger(explicit) ?? 1;
@@ -60,12 +60,8 @@ export function maximumAllowedResponses(
     const maximum = interaction.attributes["max-strings"];
     return maximum === undefined ? undefined : parseNonNegativeInteger(maximum);
   }
-  if (
-    (interaction.type === "order" || interaction.type === "graphicOrder") &&
-    !orderSubsetLimitsActive(interaction)
-  ) {
-    return undefined;
-  }
+  const order = orderResponseContract(interaction);
+  if (order) return order.maximum;
   const explicit = responseLimitAttribute(interaction, "max-choices", "max-associations");
   if (explicit === undefined) {
     switch (interaction.type) {
@@ -123,6 +119,8 @@ export function responseValidationPolicy(
   interaction: QtiInteraction | undefined,
   requireScoredResponses = false,
 ): QtiResponseValidationPolicy {
+  const order = orderResponseContract(interaction);
+  if (order) return { checkMinimum: order.minimum > 0, checkMaximum: true, checkMatchMax: false };
   const authoredMinimum =
     interaction === undefined
       ? undefined

@@ -1,3 +1,4 @@
+import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import { isQtiIdentifier } from "./identifier.js";
 import type { Qti3AuthoringItemBase, Qti3WriterDiagnostic, Qti3WriterResult } from "./types.js";
 import { Qti3WriterError } from "./types.js";
@@ -43,6 +44,14 @@ export function isPositiveInteger(value: number): boolean {
 
 export function validateItemBase(input: Qti3AuthoringItemBase): Qti3WriterDiagnostic[] {
   const diagnostics: Qti3WriterDiagnostic[] = [];
+  for (const field of ["bodyHtml", "promptHtml", "itemBodyHtml"] as const) {
+    if (input[field] !== undefined)
+      diagnostics.push(
+        ...validateQtiRubricFragment(input[field])
+          .filter((entry) => entry.severity === "error")
+          .map((entry) => ({ code: entry.code, path: field, message: entry.message })),
+      );
+  }
   const identifierDiagnostic = validateQtiIdentifier(
     "identifier",
     "Assessment item identifier",

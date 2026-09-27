@@ -766,6 +766,8 @@ export interface QtiTemplateProcessingStateV1 {
 }
 
 export interface QtiAttemptStateV1 {
+  /** True after a successful response-processing invocation; distinguishes feedback from fresh state. */
+  responseProcessingCompleted?: boolean | undefined;
   /** Replay metadata for the generated clone; does not contain generated answer keys. */
   templateProcessing?: QtiTemplateProcessingStateV1 | undefined;
   /** Saved choice permutations; separate from candidate responses. */

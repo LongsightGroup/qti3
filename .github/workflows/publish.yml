@@ -27,6 +27,8 @@ jobs:
           package-manager-cache: false
       - run: npm --version
       - run: pnpm install --frozen-lockfile
+      - name: Install official-schema validator
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
       - run: pnpm release:check
       - run: |

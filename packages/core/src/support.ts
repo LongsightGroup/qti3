@@ -301,6 +301,26 @@ export const processingSupport: QtiProcessingElementSupport[] = [
 
 export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
   {
+    qtiName: "qti-rubric-block",
+    category: "itemMetadata",
+    support: "rendered",
+    specReference: "QTI 3.0.1 ASI §5.120",
+    parse: true,
+    validate: true,
+    render: true,
+    process: false,
+    fixtures: [
+      "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
+    ],
+    tests: [
+      "packages/core/src/rubric.test.ts",
+      "packages/writer/src/rubric.test.ts",
+      "tests/browser/player-body-content.spec.ts",
+    ],
+    notes:
+      "Item rubric audience, required attributes/content, nesting and forbidden interactions are checked. Candidate content stays in source order; placement classes pass through. Scoped stylesheets/catalogs are rejected. Test rubric delivery is unsupported.",
+  },
+  {
     qtiName: "qti-catalog-info",
     category: "itemMetadata",
     support: "parsed",

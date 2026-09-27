@@ -517,3 +517,14 @@ session options) for reproducible presentation; this is independent of processin
 `randomSeed`. Core hosts inspect `session.presentation()` before rendering.
 See [interaction shuffling](../../docs/interaction-shuffling.md) for fixed choices,
 restore diagnostics, defaults, accessibility and the versioned state contract.
+
+Feedback restoration uses saved outcomes without rerunning response processing. Fresh attempts
+have no modal feedback, including after restoration. Completed nonadaptive review with
+`sessionControl.showFeedback: false` suppresses modal feedback and restores integrated feedback
+visibility from the effective initial outcome defaults, including template-generated defaults.
+Per QTI 3 §7.19.3, adaptive review retains final feedback even when this flag is false.
+
+Candidate rubric sections retain source order. Both `qti-rubric-inline` and
+`qti-rubric-discretionary-placement` pass through; the default player does not relocate them.
+Invalid rubrics and rubric-local resources that require unsupported scoping prevent item load.
+Test-, part-, and section-level rubric delivery is not implemented by this item player.

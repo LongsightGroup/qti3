@@ -33,6 +33,7 @@ const fidelityRefusalCodes = new Set([
   "qti2_outcomes_not_preserved",
   "qti2_match_min_not_preserved",
   "qti2_template_not_preserved",
+  "qti2_adaptive_not_preserved",
   "qti2_correct_response_not_preserved",
 ]);
 

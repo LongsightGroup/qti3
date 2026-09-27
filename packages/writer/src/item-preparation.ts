@@ -1,3 +1,4 @@
+import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import { placeRenderedBody, validateItemBodyTemplate } from "./item-body-template.js";
 import { authoringResponseIdentifiers } from "./interaction-responses.js";
 import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
@@ -68,7 +69,13 @@ export function writePreparedItem<T extends Qti3AuthoringItem>(
   if (diagnostics.length) return { ok: false, diagnostics };
   const sections = render(item);
   const bodyXml = placeRenderedBody(sections.bodyXml, item.itemBodyHtml);
-  return { ok: true, xml: assembleItem({ ...sections, bodyXml }, feedback), diagnostics: [] };
+  const xml = assembleItem({ ...sections, bodyXml }, feedback);
+  const rubricDiagnostics = validateQtiRubricFragment(xml)
+    .filter((entry) => entry.severity === "error")
+    .map((entry) => ({ code: entry.code, message: entry.message, path: entry.path ?? "rubric" }));
+  return rubricDiagnostics.length
+    ? { ok: false, diagnostics: rubricDiagnostics }
+    : { ok: true, xml, diagnostics: [] };
 }
 
 export function buildPreparedItem<T extends Qti3AuthoringItem>(

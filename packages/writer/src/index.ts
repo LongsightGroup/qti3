@@ -194,3 +194,5 @@ export {
   writeQti3FixedAssessmentTest,
   type QtiFixedTestDefinition,
 } from "./assessment-test-fixed.js";
+
+export { buildQti3RubricBlock, type Qti3RubricBlockInput } from "./rubric.js";
