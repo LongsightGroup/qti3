@@ -87,3 +87,5 @@ This directory is the source workspace for `qti3`, a framework-neutral QTI 3 ref
 - When moving behavior from Vitest to Playwright, preserve the assertion intent: visible DOM state, accessibility attributes, and serialized player state should still be covered.
 
 - Conformance regressions must follow [spec regression testing](docs/spec-regression-testing.md): independent expected results, validated positive fixtures, and migration grade preservation or explicit rejection.
+
+- New, changed, and retained tests must meet the [minimum test quality bar](docs/test-quality-bar.md). Name a caller-visible contract, a plausible regression, an independent expected result, and evidence that the decisive assertion detects the regression. Remove language tautologies, self-comparisons, implementation-layout checks, prose-only proof, and duplicates of stronger coverage. Preserve distinct behavioral boundaries; do not optimize for test count.

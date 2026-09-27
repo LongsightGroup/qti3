@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   createDefaultQti3PnpCapabilities,
@@ -7,7 +5,6 @@ import {
   parseQti3PnpObject,
   parseQti3PnpXml,
   qti3PnpSupportDefinitions,
-  qti3PnpSupportNames,
   resolveQti3Pnp,
   validateQti3Pnp,
   type NormalizedQti3PnpProfile,
@@ -336,12 +333,6 @@ describe("@longsightgroup/qti3-pnp", () => {
     expect(serialized).not.toContain("access-for-all-pnp");
   });
 
-  it("defines every known support in the registry", () => {
-    const definitions = new Set(qti3PnpSupportDefinitions.map((definition) => definition.name));
-
-    expect(qti3PnpSupportNames.every((name) => definitions.has(name))).toBe(true);
-  });
-
   it("reports catalog-only and runtime support levels explicitly", () => {
     const braille = qti3PnpSupportDefinitions.find((definition) => definition.name === "braille");
     const calculator = qti3PnpSupportDefinitions.find(
@@ -372,13 +363,6 @@ describe("@longsightgroup/qti3-pnp", () => {
     );
 
     expect(JSON.stringify(additionalTime?.params)).not.toContain("xorGroup");
-  });
-
-  it("keeps the public entrypoint as an export barrel", () => {
-    const indexSource = readFileSync(fileURLToPath(new URL("./index.ts", import.meta.url)), "utf8");
-
-    expect(indexSource).not.toContain("function ");
-    expect(indexSource).not.toContain("const ");
   });
 
   it("lets host policy block a support without becoming a policy engine", () => {
