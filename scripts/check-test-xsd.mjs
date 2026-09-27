@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -121,6 +121,17 @@ try {
       ["--nonet", "--noout", "--schema", join(directory, closure.main), path],
       { stdio: "inherit" },
     );
+  }
+  // These are the exact independent XML inputs consumed by the execution-boundary regressions.
+  for (const fixtureDirectory of ["test-delivery", "rubric-content"]) {
+    const fixtures = join(root, "tests/fixtures", fixtureDirectory);
+    for (const name of (await readdir(fixtures)).filter((entry) => entry.endsWith(".xml"))) {
+      execFileSync(
+        "xmllint",
+        ["--nonet", "--noout", "--schema", join(directory, closure.main), join(fixtures, name)],
+        { stdio: "inherit" },
+      );
+    }
   }
   console.log(
     "QTI 3 staged assessment: official ASI schema validation passed (pinned source hashes).",

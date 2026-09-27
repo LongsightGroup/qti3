@@ -148,7 +148,7 @@ describe("closed test expression language", () => {
   it("classifies fixed XML and validates sequenced XML on the same boundary", () => {
     expect(parseQtiTestExecution(testXml(bool(true)))).toEqual({
       ok: true,
-      value: { kind: "fixed" },
+      value: { kind: "sequenced", test: expect.any(Object) },
     });
     const branch = `<qti-branch-rule target="EXIT_TEST">${bool(true)}</qti-branch-rule>`;
     expect(parseQtiTestExecution(testXml(bool(true), "boolean", branch))).toMatchObject({

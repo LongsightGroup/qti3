@@ -6,5 +6,5 @@
   "trailingComma": "all",
   "endOfLine": "lf",
   "insertFinalNewline": true,
-  "ignorePatterns": []
+  "ignorePatterns": ["packages/conformance/src/information-model-inventory.ts"]
 }

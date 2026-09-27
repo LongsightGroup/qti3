@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed QTI 3.0.1 rubric-scoping fixture. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="rubric" title="Rubric" adaptive="false" time-dependent="false">
+  <qti-item-body><qti-rubric-block view="candidate" use="instructions"><qti-stylesheet href="local.css" type="text/css"/><qti-content-body><p>Instructions</p></qti-content-body></qti-rubric-block></qti-item-body>
+</qti-assessment-item>

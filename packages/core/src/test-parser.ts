@@ -15,7 +15,7 @@ import {
 } from "./test-model.js";
 import type { QtiDiagnostic, QtiOutcomeDeclaration } from "./types.js";
 
-/** Whether a test requires runtime selection rather than ordinary fixed navigation. */
+/** Whether a test requires the runtime for sequencing or outcome processing. */
 export type QtiTestExecution =
   | { readonly kind: "fixed" }
   | { readonly kind: "sequenced"; readonly test: QtiExecutableTest };
@@ -25,9 +25,9 @@ export function parseQtiTestExecution(xml: string): QtiTestResult<QtiTestExecuti
   const parsed = parseTestRoot(xml);
   if (!parsed.ok) return parsed;
   const deliveryDiagnostics: QtiDiagnostic[] = [];
-  rejectUndeliveredTestContent(parsed.value, deliveryDiagnostics);
+  rejectUnsupportedTestDelivery(parsed.value, deliveryDiagnostics);
   if (deliveryDiagnostics.length) return { ok: false, diagnostics: deliveryDiagnostics };
-  if (!requiresSequence(parsed.value)) return { ok: true, value: { kind: "fixed" } };
+  if (!requiresTestRuntime(parsed.value)) return { ok: true, value: { kind: "fixed" } };
   const result = parseTestDefinition(parsed.value);
   return result.ok ? { ok: true, value: { kind: "sequenced", test: result.value } } : result;
 }
@@ -50,17 +50,18 @@ function parseTestRoot(xml: string): QtiTestResult<XmlNode> {
   return { ok: true, value: root };
 }
 
-function requiresSequence(node: XmlNode): boolean {
+function requiresTestRuntime(node: XmlNode): boolean {
   return (
     (node.uri === QTI_ASI_NAMESPACE &&
       [
+        "qti-outcome-processing",
         "qti-branch-rule",
         "qti-pre-condition",
         "qti-selection",
         "qti-ordering",
         "qti-adaptive-selection",
       ].includes(node.localName)) ||
-    node.children.some(requiresSequence)
+    node.children.some(requiresTestRuntime)
   );
 }
 
@@ -203,27 +204,42 @@ function parseTestOutcomeProcessing(
   return rules;
 }
 
-/** Classification must not authorize delivery that omits candidate content. */
-function rejectUndeliveredTestContent(node: XmlNode, diagnostics: QtiDiagnostic[]): void {
-  if (node.uri === QTI_ASI_NAMESPACE && node.localName === "qti-rubric-block") {
-    diagnostics.push({
+// These constructs are preserved by interchange tooling but have no test-delivery implementation.
+const unsupportedTestDelivery = new Map(
+  Object.entries({
+    "qti-rubric-block": {
       code: "test.rubric.unsupported",
-      severity: "error",
       message:
         "Test-level rubric delivery is not supported. Preserve this test for interchange; do not deliver it without its rubrics.",
-      source: node.source,
-      path: node.source.path,
-    });
-  }
-  if (node.uri === QTI_ASI_NAMESPACE && node.localName === "qti-test-feedback") {
-    diagnostics.push({
+    },
+    "qti-test-feedback": {
       code: "test.feedback.unsupported",
-      severity: "error",
       message:
         "Test feedback delivery is not supported. Preserve this test for interchange; do not deliver it without evaluating and presenting its feedback.",
+    },
+    "qti-time-limits": {
+      code: "test.time-limits.unsupported",
+      message:
+        "Test time limits are not enforced by this execution profile. Preserve this test for interchange; do not deliver it without enforcing its time limits.",
+    },
+    "qti-item-session-control": {
+      code: "test.session-control.unsupported",
+      message:
+        "Test-level item session controls are not applied by this execution profile. Preserve this test for interchange; do not deliver it without applying its inherited session controls.",
+    },
+  }),
+);
+
+/** Classification must not authorize delivery that omits authored test behavior. */
+function rejectUnsupportedTestDelivery(node: XmlNode, diagnostics: QtiDiagnostic[]): void {
+  const unsupported =
+    node.uri === QTI_ASI_NAMESPACE ? unsupportedTestDelivery.get(node.localName) : undefined;
+  if (unsupported)
+    diagnostics.push({
+      ...unsupported,
+      severity: "error",
       source: node.source,
       path: node.source.path,
     });
-  }
-  for (const child of node.children) rejectUndeliveredTestContent(child, diagnostics);
+  for (const child of node.children) rejectUnsupportedTestDelivery(child, diagnostics);
 }

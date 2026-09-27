@@ -2,7 +2,7 @@ import { testExpressionSyntax } from "./test-expression.js";
 import type { QtiTestElementSupport } from "./types.js";
 
 /** Explicit scope and evidence for the finite forward-branching execution profile. */
-export const testExecutionSupport: readonly QtiTestElementSupport[] = [
+const executableTestSupport: readonly QtiTestElementSupport[] = [
   "qti-assessment-test",
   "qti-test-part",
   "qti-assessment-section",
@@ -29,3 +29,42 @@ export const testExecutionSupport: readonly QtiTestElementSupport[] = [
   ],
   notes: `parseQtiTest / startQtiTest / submitQtiTestAnswer only: one linear, individually submitted part; flat fixed sections; forward section branches and EXIT_TEST; scalar test outcomes, SCORE aggregation by one category, expressions: ${testExpressionSyntax.map((entry) => entry.name).join(", ")}. Unsupported test features are rejected. Not item-player or general test-runner certification.`,
 }));
+
+/** Executable test support and explicit delivery refusals; interchange has a broader scope. */
+export const testExecutionSupport: readonly QtiTestElementSupport[] = [
+  ...executableTestSupport,
+  ...[
+    {
+      qtiName: "qti-test-feedback",
+      section: "5.157",
+      fixture: "feedback-test-during.xml",
+      diagnostic: "test.feedback.unsupported",
+    },
+    {
+      qtiName: "qti-time-limits",
+      section: "7.40",
+      fixture: "timing-test.xml",
+      diagnostic: "test.time-limits.unsupported",
+    },
+    {
+      qtiName: "qti-item-session-control",
+      section: "7.19",
+      fixture: "controls-part.xml",
+      diagnostic: "test.session-control.unsupported",
+    },
+  ].map(
+    ({ qtiName, section, fixture, diagnostic }): QtiTestElementSupport => ({
+      qtiName,
+      category: "test",
+      support: "unsupported",
+      specReference: `QTI 3.0.1 ASI §${section}`,
+      parse: false,
+      validate: true,
+      render: false,
+      process: false,
+      fixtures: [`tests/fixtures/test-delivery/${fixture}`],
+      tests: ["packages/core/src/test-delivery-content.test.ts"],
+      notes: `parseQtiTestExecution rejects delivery with ${diagnostic}. Interchange preservation does not imply execution support.`,
+    }),
+  ),
+];

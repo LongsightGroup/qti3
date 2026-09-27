@@ -7,7 +7,7 @@ import {
 } from "./index.js";
 
 // QTI 3 §7.19.3: review without feedback uses effective defaults, including template processing.
-it("retains processing history and regenerates initial outcomes independently of saved outcomes", () => {
+it("[ASI-FEEDBACK-STATE] retains processing history and regenerates initial outcomes independently of saved outcomes", () => {
   const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-state" title="Feedback state" time-dependent="false">
     <qti-outcome-declaration identifier="FEEDBACK" cardinality="multiple" base-type="identifier"><qti-default-value><qti-value>AUTHORED</qti-value></qti-default-value></qti-outcome-declaration>
     <qti-template-processing><qti-set-default-value identifier="FEEDBACK"><qti-multiple><qti-base-value base-type="identifier">GENERATED</qti-base-value></qti-multiple></qti-set-default-value></qti-template-processing>

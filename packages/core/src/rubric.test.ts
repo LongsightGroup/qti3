@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import {
   parseQtiXml,
@@ -18,7 +19,7 @@ it.each([
   "testConstructor",
   "tutor",
   "candidate scorer",
-])("accepts the defined audience %s", (view) => {
+])("[ASI-RUBRIC-AUDIENCE] accepts the defined audience %s", (view) => {
   const parsed = parseQtiXml(item(block("Instructions", `view="${view}" use="instructions"`)));
   expect(parsed.diagnostics).toEqual([]);
   if (!parsed.document) throw new Error("Expected item");
@@ -42,7 +43,7 @@ it.each([
   expect(parsed.ok).toBe(false);
   expect(parsed.diagnostics).toContainEqual(expect.objectContaining({ code, severity: "error" }));
 });
-it("excludes hidden rubric interactions from the live response list", () => {
+it("[ASI-RUBRIC-INTERACTIONS] excludes hidden rubric interactions from the live response list", () => {
   const parsed = parseQtiXml(
     item(
       block(
@@ -83,3 +84,19 @@ it("rejects test template content and refuses fixed delivery that would omit rub
   );
   expect(result).toMatchObject({ ok: false, diagnostics: [{ code: "test.rubric.unsupported" }] });
 });
+
+// Valid rubric-local resource placement is still unsupported by the item player.
+it.each(["stylesheet", "catalog"])(
+  "[ASI-RUBRIC-RESOURCES] rejects scoped resource delivery: %s",
+  (resource) => {
+    const xml = readFileSync(
+      new URL(`../../../tests/fixtures/rubric-content/${resource}.xml`, import.meta.url),
+      "utf8",
+    );
+    const parsed = parseQtiXml(xml);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "rubric.resource.unsupported", severity: "error" }),
+    );
+  },
+);
