@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { describe, expect, it } from "vitest";
 import { validateQtiTest } from "./test-validation.js";
 import {
@@ -38,7 +39,7 @@ describe("QTI test sessions", () => {
       [0, 0, 1, 1, 2, 2],
       [1, 1, 2, 2, 2, 2],
     ];
-    let frontier = new Map([[0, startQtiTest(test)]]);
+    let frontier = new Map([[0, requireTestResult(startQtiTest(test))]]);
     let checked = 0;
     for (let stage = 0; stage < 20; stage++) {
       const next = new Map<number, QtiTestSession>();
@@ -74,7 +75,7 @@ describe("QTI test sessions", () => {
       [1, 1, 2, 2, 2, 2],
     ];
     for (const level of [0, 1, 2]) {
-      let session = startQtiTest(test);
+      let session = requireTestResult(startQtiTest(test));
       session = answerBlock(test, session, level === 0 ? 0 : 5);
       session = answerBlock(test, session, level === 2 ? 5 : 2);
       session = answerBlock(test, session, score);
@@ -90,7 +91,7 @@ describe("QTI test sessions", () => {
     (length) => {
       const test = testOf(length);
       for (const scores of [[5], [0], [2], [5, 5, 0, 0, 3, 4]]) {
-        let session = startQtiTest(test);
+        let session = requireTestResult(startQtiTest(test));
         for (let stage = 0; stage < length / 5; stage++) {
           session = answerBlock(test, session, scores[stage % scores.length] ?? 0);
           const restored = restoreQtiTestSession(
@@ -108,7 +109,7 @@ describe("QTI test sessions", () => {
 
   it("does not accumulate scores on reprocessing or accept duplicate/future answers", () => {
     const test = testOf();
-    const initial = startQtiTest(test);
+    const initial = requireTestResult(startQtiTest(test));
     const state = answerBlock(test, initial, 5);
     expect(state.outcomes.stage0_level0_score).toBe(5);
     const next = answerBlock(test, state, 3);

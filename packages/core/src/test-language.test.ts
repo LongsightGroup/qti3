@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { parseQtiTest, parseQtiTestExecution } from "./test-parser.js";
 import { parseQtiXml } from "./parser.js";
@@ -59,14 +60,15 @@ describe("closed test expression language", () => {
     ['<qti-base-value base-type="identifier">choice_A</qti-base-value>', "identifier", "choice_A"],
   ])("parses, evaluates and serializes %s", (xml, baseType, expected) => {
     const test = executable(testXml(xml, baseType));
-    expect(startQtiTest(test).outcomes.RESULT).toBe(expected);
+    expect(requireTestResult(startQtiTest(test)).outcomes.RESULT).toBe(expected);
     const expression = test.outcomeProcessing[0]?.expression;
     if (!expression) throw new Error("Missing expression");
     const serialized = serializeTestExpression(expression);
     if (!serialized.ok) throw new Error("Expression did not serialize");
-    expect(startQtiTest(executable(testXml(serialized.value, baseType))).outcomes.RESULT).toBe(
-      expected,
-    );
+    expect(
+      requireTestResult(startQtiTest(executable(testXml(serialized.value, baseType)))).outcomes
+        .RESULT,
+    ).toBe(expected);
   });
 
   it.each([
@@ -83,7 +85,9 @@ describe("closed test expression language", () => {
       null,
     ],
   ])("preserves QTI null semantics for %s", (xml, expected) => {
-    expect(startQtiTest(executable(testXml(xml))).outcomes.RESULT).toBe(expected);
+    expect(requireTestResult(startQtiTest(executable(testXml(xml)))).outcomes.RESULT).toBe(
+      expected,
+    );
   });
 
   it("aggregates all or categorized scores and recomputes sequential assignments", () => {
@@ -97,7 +101,7 @@ describe("closed test expression language", () => {
         "</qti-sum></qti-set-outcome-value></qti-outcome-processing>",
     );
     const test = executable(xml);
-    let session = startQtiTest(test);
+    let session = requireTestResult(startQtiTest(test));
     expect(session.outcomes).toMatchObject({ RESULT: null, PRIOR: null });
     for (const submission of [
       { itemRef: "one", score: 2 },
@@ -170,7 +174,10 @@ describe("closed test expression language", () => {
       [`<qti-branch-rule target="EXIT_TEST">${bool(true)}</qti-branch-rule>`, "completed"],
     ]) {
       const test = executable(testXml(bool(true), "boolean", conditions));
-      const first = submitQtiTestAnswer(test, startQtiTest(test), { itemRef: "one", score: 1 });
+      const first = submitQtiTestAnswer(test, requireTestResult(startQtiTest(test)), {
+        itemRef: "one",
+        score: 1,
+      });
       if (!first.ok) throw new Error("First answer failed");
       expect(first.value).toMatchObject({ status: "active", currentItemRef: "two" });
       const second = submitQtiTestAnswer(test, first.value, { itemRef: "two", score: 1 });
@@ -192,7 +199,7 @@ describe("closed test expression language", () => {
     const result = validateQtiTest(definition);
     if (!result.ok) throw new Error("Definition invalid");
     items.length = 0;
-    expect(startQtiTest(result.value)).toMatchObject({
+    expect(requireTestResult(startQtiTest(result.value))).toMatchObject({
       currentItemRef: "owned",
       outcomes: { RESULT: 4 },
     });

@@ -651,6 +651,10 @@ non-finite number, the evaluator reports `processing.numeric.nonFinite` and retu
 QTI NULL. This keeps overflow out of subsequent operators and saved state. Hosts must
 check scoring diagnostics before treating an outcome as a usable grade.
 
+Test startup, submission, and snapshot restoration return `QtiTestResult`. Check `ok` before
+using `value`; non-finite test processing returns `test.processing.nonFinite`. A rejected
+submission leaves the input session unchanged, including its outcomes and current item.
+
 ## Randomized item instances
 
 `qti3` supports QTI-native randomized item instances through template processing.

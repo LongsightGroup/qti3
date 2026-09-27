@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { expect, it } from "vitest";
 import { stagedTestFixture } from "../../../tests/fixtures/staged-test.js";
 import { validateQtiTest } from "./test-validation.js";
@@ -11,15 +12,19 @@ it("recomputes outcomes from committed items without counting another block or a
     { itemRef: "stage0_level0_item1", score: 0 },
     { itemRef: "stage1_level1_item0", score: 1 },
   ];
-  const first = processTestOutcomes(validated.value, submissions).outcomes;
+  const first = requireTestResult(processTestOutcomes(validated.value, submissions)).outcomes;
   expect(first.stage0_level0_score).toBe(1);
   expect(first.stage1_level1_score).toBe(1);
-  expect(processTestOutcomes(validated.value, submissions).outcomes).toEqual(first);
+  expect(requireTestResult(processTestOutcomes(validated.value, submissions)).outcomes).toEqual(
+    first,
+  );
   expect(
-    processTestOutcomes(validated.value, [
-      ...submissions,
-      { itemRef: "stage0_level0_item2", score: 1 },
-    ]).outcomes.stage0_level0_score,
+    requireTestResult(
+      processTestOutcomes(validated.value, [
+        ...submissions,
+        { itemRef: "stage0_level0_item2", score: 1 },
+      ]),
+    ).outcomes.stage0_level0_score,
   ).toBe(2);
   expect(first.stage0_level0_score).toBe(1);
 });

@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
@@ -37,7 +38,7 @@ describe("staged test package conformance", () => {
     if (!imported.assessmentTest) throw new Error("Test resource lost");
     const parsed = parseQtiTest(imported.assessmentTest.xml);
     if (!parsed.ok) throw new Error("Execution contract lost");
-    let session = startQtiTest(parsed.value);
+    let session = requireTestResult(startQtiTest(parsed.value));
     while (session.status === "active") {
       const result = submitQtiTestAnswer(parsed.value, session, {
         itemRef: session.currentItemRef,

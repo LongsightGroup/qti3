@@ -62,9 +62,15 @@ export function lookupOutcomeValue(
   return entry?.targetValue ?? lookupTable.defaultValue;
 }
 
+export interface ImageBounds {
+  width: number;
+  height: number;
+}
+
 export function scoreAreaMapping(
   response: QtiValue,
   areaMapping: NonNullable<QtiResponseDeclaration["areaMapping"]>,
+  imageBounds?: ImageBounds,
 ): number {
   const points = Array.isArray(response)
     ? response.map(qtiScalarToString)
@@ -81,7 +87,7 @@ export function scoreAreaMapping(
     }
     let matchedArea = false;
     for (const [index, entry] of areaMapping.entries.entries()) {
-      if (!pointInsideArea(parsed, entry)) continue;
+      if (!pointInsideArea(parsed, entry, imageBounds)) continue;
       matchedArea = true;
       if (!matchedAreaIndexes.has(index)) {
         matchedAreaIndexes.add(index);
@@ -109,7 +115,17 @@ export function parsePoint(value: string): { x: number; y: number } | undefined 
 export function pointInsideArea(
   point: { x: number; y: number },
   entry: NonNullable<QtiResponseDeclaration["areaMapping"]>["entries"][number],
+  imageBounds?: ImageBounds,
 ): boolean {
+  if (entry.shape === "default") {
+    return (
+      imageBounds !== undefined &&
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x <= imageBounds.width &&
+      point.y <= imageBounds.height
+    );
+  }
   if (entry.shape === "circle") {
     const [cx, cy, radius] = entry.coords;
     if (cx === undefined || cy === undefined || radius === undefined) return false;
@@ -124,11 +140,7 @@ export function pointInsideArea(
     return point.x >= left && point.x <= right && point.y >= top && point.y <= bottom;
   }
 
-  if (entry.shape === "poly") {
-    return pointInsidePolygon(point, entry.coords);
-  }
-
-  return false;
+  return pointInsidePolygon(point, entry.coords);
 }
 
 function pointInsidePolygon(point: { x: number; y: number }, coords: number[]): boolean {

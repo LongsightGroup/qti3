@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { parseQtiTest, parseQtiTestExecution } from "./test-parser.js";
@@ -54,7 +55,7 @@ it("[ASI-TEST-PROFILE-POSITIVE] preserves the supported fixed route and trusted 
       { identifier: "J", href: "items/two.xml", categories: ["other"] },
     ],
   });
-  const first = submitQtiTestAnswer(parsed.value, startQtiTest(parsed.value), {
+  const first = submitQtiTestAnswer(parsed.value, requireTestResult(startQtiTest(parsed.value)), {
     itemRef: "I",
     score: 1,
   });
@@ -84,7 +85,7 @@ it("[ASI-TEST-DEFAULT-OUTCOME] retains outcome defaults without inventing aggreg
     throw new Error("Expected outcome runtime");
   const test = classified.value.test;
   expect(validateQtiTest(test).ok).toBe(true);
-  const started = startQtiTest(test);
+  const started = requireTestResult(startQtiTest(test));
   expect(started.outcomes).toEqual({ TOTAL: 7 });
   const submitted = submitQtiTestAnswer(test, started, { itemRef: "I", score: 3.5 });
   expect(submitted).toMatchObject({
