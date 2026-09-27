@@ -147,3 +147,38 @@ it("[ASI-TEST-PROFILE-DIAGNOSTICS] retains root errors when part modes also fail
     });
   }
 });
+
+// Adding outcome semantics must not change whether an unsupported feature is accepted.
+it.each([
+  "nonlinear",
+  "simultaneous",
+  "multiple-parts",
+  "nested-section",
+  "section-reference",
+  "invisible-section",
+  "split-section",
+  "weight",
+  "mapping",
+  "template-default",
+  "selection",
+  "ordering",
+])(
+  "[ASI-TEST-PROFILE-ROUTING] execution acceptance is independent of outcome routing: %s",
+  (name) => {
+    const xml = fixture(name);
+    const declaration =
+      '<qti-outcome-declaration identifier="TOTAL" cardinality="single" base-type="float"><qti-default-value><qti-value>7</qti-value></qti-default-value></qti-outcome-declaration>';
+    const withOutcome = xml.replace("<qti-test-part ", `${declaration}<qti-test-part `);
+    expect(withOutcome).not.toBe(xml);
+    for (const parse of [parseQtiTest, parseQtiTestExecution]) {
+      const plain = parse(xml);
+      const routed = parse(withOutcome);
+      expect(plain.ok).toBe(false);
+      expect(routed.ok).toBe(false);
+      if (plain.ok || routed.ok) throw new Error("Unsupported route accepted");
+      expect(routed.diagnostics.map(({ code, severity }) => ({ code, severity }))).toEqual(
+        plain.diagnostics.map(({ code, severity }) => ({ code, severity })),
+      );
+    }
+  },
+);

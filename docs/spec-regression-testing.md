@@ -58,3 +58,6 @@ and [QTI 1.2 condition and score semantics](https://www.imsglobal.org/node/52326
 For reviewed information-model claims, register the exact boundary and tagged assertions in
 [the conformance ledger](information-model-conformance.md). The evidence gate checks actual
 passing case counts; source citations and parent-element tests do not establish attribute coverage.
+
+For bounded generated sessions, migration matrices, replay instructions, and automatic fault
+injection, see [semantic testing pilots](semantic-testing.md).

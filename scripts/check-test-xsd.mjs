@@ -123,7 +123,12 @@ try {
     );
   }
   // These are the exact independent XML inputs consumed by the execution-boundary regressions.
-  for (const fixtureDirectory of ["test-delivery", "rubric-content", "test-profile"]) {
+  for (const fixtureDirectory of [
+    "test-delivery",
+    "rubric-content",
+    "test-profile",
+    "semantic-pilots",
+  ]) {
     const fixtures = join(root, "tests/fixtures", fixtureDirectory);
     for (const name of (await readdir(fixtures)).filter((entry) => entry.endsWith(".xml"))) {
       execFileSync(

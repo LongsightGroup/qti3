@@ -172,6 +172,11 @@ export const qtiInformationModelRequirements = [
         marker: "[ASI-ADAPTIVE-CLOSED]",
         cases: 1,
       },
+      {
+        path: "packages/core/src/session-sequences.test.ts",
+        marker: "[ASI-ADAPTIVE-SEQUENCES]",
+        cases: 258,
+      },
     ],
   },
   {
@@ -277,6 +282,11 @@ export const qtiInformationModelRequirements = [
       {
         path: "packages/core/src/test-execution-profile.test.ts",
         marker: "[ASI-TEST-PROFILE-REJECTION]",
+        cases: 12,
+      },
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-PROFILE-ROUTING]",
         cases: 12,
       },
       {
