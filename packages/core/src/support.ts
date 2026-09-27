@@ -64,7 +64,10 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
 ];
 
 const processingTypeTests = ["packages/core/src/processing-type-contracts.test.ts"];
-const processingBoundaryTests = ["packages/core/src/processing-boundaries.test.ts"];
+const processingBoundaryTests = [
+  "packages/core/src/scoring-boundary-regressions.test.ts",
+  "packages/core/src/processing-boundaries.test.ts",
+];
 
 const templateProcessingEntry = processingEntryFor(processingTemplateTest);
 const responseProcessingEntry = processingEntryFor(processingResponseTest);

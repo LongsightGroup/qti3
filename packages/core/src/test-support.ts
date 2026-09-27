@@ -22,6 +22,7 @@ const executableTestSupport: readonly QtiTestElementSupport[] = [
   fixtures: ["tests/fixtures/staged-assessment-test.xml"],
   tests: [
     "packages/core/src/test-session.test.ts",
+    "packages/core/src/scoring-boundary-regressions.test.ts",
     "packages/core/src/test-validation.test.ts",
     "packages/core/src/test-language.test.ts",
     "packages/writer/src/assessment-test.test.ts",

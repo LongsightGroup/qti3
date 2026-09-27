@@ -1,6 +1,6 @@
 import { assertNever } from "./assert-never.js";
 import type { QtiTestExpression } from "./test-expression.js";
-import type { QtiExecutableTest } from "./test-model.js";
+import { testFailure, type QtiTestResult, type QtiExecutableTest } from "./test-model.js";
 
 /** Trusted server-scored submission. Item scores are finite scalar numbers. */
 export interface QtiTestSubmission {
@@ -21,8 +21,28 @@ export interface TestExpressionValues {
 export function evaluateTestExpression(
   expression: QtiTestExpression,
   values: TestExpressionValues,
+): QtiTestResult<TestValue> {
+  const state = { failed: false };
+  const evaluate = (child: QtiTestExpression): TestValue => {
+    if (state.failed) return null;
+    const result = evaluateTestNode(child, values, evaluate);
+    if (typeof result === "number" && !Number.isFinite(result)) {
+      state.failed = true;
+      return null;
+    }
+    return result;
+  };
+  const value = evaluate(expression);
+  return state.failed
+    ? testFailure("processing.nonFinite", "Test processing produced a non-finite number.")
+    : { ok: true, value };
+}
+
+function evaluateTestNode(
+  expression: QtiTestExpression,
+  values: TestExpressionValues,
+  evaluate: (child: QtiTestExpression) => TestValue,
 ): TestValue {
-  const evaluate = (child: QtiTestExpression) => evaluateTestExpression(child, values);
   switch (expression.type) {
     case "baseValue":
       return expression.value;
@@ -90,18 +110,21 @@ export function evaluateTestExpression(
 export function processTestOutcomes(
   test: QtiExecutableTest,
   submissions: readonly QtiTestSubmission[],
-): { readonly outcomes: Record<string, TestValue> } {
+): QtiTestResult<{ readonly outcomes: Record<string, TestValue> }> {
   const outcomes: Record<string, TestValue> = Object.fromEntries(
     test.outcomeDeclarations.map((d) => [d.identifier, d.defaultValue]),
   );
   const categories = new Map(
     test.sections.flatMap((s) => s.items.map((i) => [i.identifier, i.categories] as const)),
   );
-  for (const rule of test.outcomeProcessing)
-    outcomes[rule.identifier] = evaluateTestExpression(rule.expression, {
+  for (const rule of test.outcomeProcessing) {
+    const result = evaluateTestExpression(rule.expression, {
       outcomes,
       submissions,
       categories,
     });
-  return { outcomes };
+    if (!result.ok) return result;
+    outcomes[rule.identifier] = result.value;
+  }
+  return { ok: true, value: { outcomes } };
 }

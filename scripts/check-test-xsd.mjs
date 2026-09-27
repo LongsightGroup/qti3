@@ -147,6 +147,7 @@ try {
       "run",
       "packages/core/src/processing-boundaries.test.ts",
       "packages/core/src/processing-type-contracts.test.ts",
+      "packages/core/src/scoring-boundary-regressions.test.ts",
     ],
     {
       cwd: root,

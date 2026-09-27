@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { parseQtiTestExecution } from "./test-parser.js";
@@ -71,7 +72,7 @@ it("[ASI-TEST-OUTCOMES] executes outcome processing on an otherwise fixed route"
   if (!result.ok || result.value.kind !== "sequenced") throw new Error("Expected test runtime");
   const test = result.value.test;
   expect(validateQtiTest(test).ok).toBe(true);
-  const initial = startQtiTest(test);
+  const initial = requireTestResult(startQtiTest(test));
   expect(initial.outcomes.TOTAL).toBeNull();
   const submitted = submitQtiTestAnswer(test, initial, { itemRef: "I", score: 3.5 });
   expect(submitted).toMatchObject({

@@ -1,3 +1,4 @@
+import { requireTestResult } from "../../../tests/fixtures/test-result.js";
 import { describe, expect, it } from "vitest";
 import { parseQtiTest, startQtiTest, submitQtiTestAnswer } from "@longsightgroup/qti3-core";
 import { stagedTestFixture } from "../../../tests/fixtures/staged-test.js";
@@ -9,7 +10,7 @@ describe("assessment test XML", () => {
     if (!written.ok) throw new Error(JSON.stringify(written.diagnostics));
     const parsed = parseQtiTest(written.value);
     if (!parsed.ok) throw new Error(JSON.stringify(parsed.diagnostics));
-    let session = startQtiTest(parsed.value);
+    let session = requireTestResult(startQtiTest(parsed.value));
     const path: string[] = [];
     while (session.status === "active") {
       path.push(session.currentItemRef);

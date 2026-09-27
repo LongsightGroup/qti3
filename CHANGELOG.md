@@ -89,6 +89,11 @@
 - Use the requested mapping when a response declares both `qti-mapping` and
   `qti-area-mapping`. Standard mapping templates use the same evaluator as inline
   expressions, including its overflow checks.
+- Score default area mappings against the associated image bounds, preserving area priority
+  and once-per-area counting. Report missing image dimensions instead of guessing.
+- Reject non-finite test outcomes and branch expressions without committing a submission.
+  `startQtiTest` now returns `QtiTestResult<QtiTestSession>` so startup processing failures
+  use the same diagnostic channel as submission and restoration.
 - Require explicit numeric assignment conversions, Boolean processing conditions, and typed
   lookup inputs with a declared table. Reject variance and standard deviation inputs with
   fewer than two observations instead of returning zero.

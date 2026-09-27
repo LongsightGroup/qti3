@@ -7,7 +7,7 @@ import {
 } from "../../packages/core/src/index.js";
 
 /** Positive fixtures must pass semantic checks and, in the XSD gate, the official schema. */
-export function validQtiDocument(xml: string): QtiDocument {
+export function assertQtiXmlSchema(xml: string): void {
   const schema = process.env.QTI3_TEST_XSD_SCHEMA;
   if (schema) {
     const result = spawnSync("xmllint", ["--nonet", "--noout", "--schema", schema, "-"], {
@@ -17,6 +17,10 @@ export function validQtiDocument(xml: string): QtiDocument {
     if (result.error) throw result.error;
     expect(result.status, `${result.stderr}\nFixture:\n${xml}`).toBe(0);
   }
+}
+
+export function validQtiDocument(xml: string): QtiDocument {
+  assertQtiXmlSchema(xml);
   const parsed = parseQtiXml(xml);
   expect(parsed.diagnostics).toEqual([]);
   expect(parsed.ok).toBe(true);

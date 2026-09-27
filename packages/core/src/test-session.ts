@@ -32,14 +32,19 @@ export interface QtiTestSessionSnapshot {
 }
 
 /** Start a validated test at its first item. */
-export function startQtiTest(test: QtiExecutableTest): QtiTestSession {
+export function startQtiTest(test: QtiExecutableTest): QtiTestResult<QtiTestSession> {
+  const processed = processTestOutcomes(test, []);
+  if (!processed.ok) return processed;
   const first = test.sections[0].items[0];
   return {
-    status: "active",
-    testIdentifier: test.identifier,
-    currentItemRef: first.identifier,
-    submissions: [],
-    outcomes: processTestOutcomes(test, []).outcomes,
+    ok: true,
+    value: {
+      status: "active",
+      testIdentifier: test.identifier,
+      currentItemRef: first.identifier,
+      submissions: [],
+      outcomes: processed.value.outcomes,
+    },
   };
 }
 
@@ -64,27 +69,26 @@ export function submitQtiTestAnswer(
     ...session.submissions,
     { itemRef: submission.itemRef, score: submission.score },
   ];
-  const { outcomes } = processTestOutcomes(test, submissions);
+  const processed = processTestOutcomes(test, submissions);
+  if (!processed.ok) return processed;
+  const { outcomes } = processed.value;
   const base = { testIdentifier: test.identifier, submissions, outcomes };
-  const next = nextItemAfter(
-    test,
-    sectionIndex,
-    submission.itemRef,
-    (expression) =>
-      evaluateTestExpression(expression, {
-        outcomes,
-        submissions,
-        categories: new Map(
-          test.sections.flatMap((candidate) =>
-            candidate.items.map((item) => [item.identifier, item.categories] as const),
-          ),
+  const next = nextItemAfter(test, sectionIndex, submission.itemRef, (expression) =>
+    evaluateTestExpression(expression, {
+      outcomes,
+      submissions,
+      categories: new Map(
+        test.sections.flatMap((candidate) =>
+          candidate.items.map((item) => [item.identifier, item.categories] as const),
         ),
-      }) === true,
+      ),
+    }),
   );
+  if (!next.ok) return next;
   return {
     ok: true,
-    value: next
-      ? { ...base, status: "active", currentItemRef: next.identifier }
+    value: next.value
+      ? { ...base, status: "active", currentItemRef: next.value.identifier }
       : { ...base, status: "completed" },
   };
 }
@@ -93,19 +97,29 @@ function nextItemAfter(
   test: QtiExecutableTest,
   sectionIndex: number,
   itemRef: string,
-  evaluate: (expression: import("./test-expression.js").QtiTestExpression) => boolean,
-): QtiTestItemRef | undefined {
+  evaluate: (
+    expression: import("./test-expression.js").QtiTestExpression,
+  ) => QtiTestResult<QtiValue>,
+): QtiTestResult<QtiTestItemRef | undefined> {
   const section = test.sections[sectionIndex];
-  if (!section) return undefined;
+  if (!section) return { ok: true, value: undefined };
   const nextItem =
     section.items[section.items.findIndex((item) => item.identifier === itemRef) + 1];
-  if (nextItem) return nextItem;
-  const branch = section.branches.find((candidate) => evaluate(candidate.expression));
-  if (branch?.target === "EXIT_TEST") return undefined;
-  const nextSection = branch
-    ? test.sections.find((candidate) => candidate.identifier === branch.target)
-    : test.sections[sectionIndex + 1];
-  return nextSection?.items[0];
+  if (nextItem) return { ok: true, value: nextItem };
+  for (const branch of section.branches) {
+    const result = evaluate(branch.expression);
+    if (!result.ok) return result;
+    if (result.value === true) {
+      return {
+        ok: true,
+        value:
+          branch.target === "EXIT_TEST"
+            ? undefined
+            : test.sections.find((candidate) => candidate.identifier === branch.target)?.items[0],
+      };
+    }
+  }
+  return { ok: true, value: test.sections[sectionIndex + 1]?.items[0] };
 }
 
 /** Project session state into its minimal persisted contract. */
@@ -136,7 +150,9 @@ export function restoreQtiTestSession(
     return testFailure("session.snapshot", "Invalid test session snapshot.");
   if (input.submissions.length > test.sections.reduce((n, s) => n + s.items.length, 0))
     return testFailure("session.length", "Session exceeds test inventory.");
-  let session = startQtiTest(test);
+  const started = startQtiTest(test);
+  if (!started.ok) return started;
+  let session = started.value;
   for (const raw of input.submissions) {
     const value: unknown = raw;
     if (

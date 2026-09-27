@@ -1,3 +1,4 @@
+import { parseFiniteNumber } from "./parser-values.js";
 import type { QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { EvaluationContext } from "./processing-evaluator.js";
@@ -49,7 +50,30 @@ export function evaluateVariableExpression(
         return scoreMapping(response, declaration.mapping, declaration.baseType);
       }
       if (expression.type === "mapResponsePoint" && declaration?.areaMapping) {
-        return scoreAreaMapping(response, declaration.areaMapping);
+        const image = context.document.item.interactions.find(
+          (interaction) => interaction.responseIdentifier === expression.identifier,
+        )?.object;
+        const width = parseFiniteNumber(image?.width);
+        const height = parseFiniteNumber(image?.height);
+        const bounds =
+          width !== undefined && width > 0 && height !== undefined && height > 0
+            ? { width, height }
+            : undefined;
+        if (
+          !isNullResponse(response) &&
+          !bounds &&
+          declaration.areaMapping.entries.some((entry) => entry.shape === "default")
+        ) {
+          context.diagnostics.push({
+            code: "processing.areaMapping.imageBounds",
+            severity: "error",
+            message:
+              "Default area mapping requires the associated image's positive width and height.",
+            source: expression.source,
+          });
+          return null;
+        }
+        return scoreAreaMapping(response, declaration.areaMapping, bounds);
       }
       context.diagnostics.push({
         code: "processing.mapping.required",
