@@ -31,7 +31,10 @@ it("pins the 3.0.1 document and keeps every inventoried heading visible", () => 
   expect(audit.unauditedSections).toContain("5.97.1");
   expect(audit.unauditedSections).toContain("5.97.4");
   expect(audit.sectionsWithReviewedRequirements + audit.unauditedSections.length).toBe(1921);
-  expect(audit.openRequirements).toContain("fixed-acceptance-profile");
+  expect(
+    qtiInformationModelRequirements.find((rule) => rule.id === "fixed-acceptance-profile")
+      ?.disposition,
+  ).toBe("implemented");
 });
 
 const requirement: QtiInformationModelRequirement = {

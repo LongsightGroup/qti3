@@ -15,27 +15,31 @@ import {
 } from "./test-model.js";
 import type { QtiDiagnostic, QtiOutcomeDeclaration } from "./types.js";
 
-/** Whether a test requires the runtime for sequencing or outcome processing. */
+/** Whether a validated test requires the runtime for sequencing or test outcomes. */
 export type QtiTestExecution =
   | { readonly kind: "fixed" }
   | { readonly kind: "sequenced"; readonly test: QtiExecutableTest };
 
-/** Classify sequencing on the parsed tree and reject unsupported executable routes. */
+/** Classify only tests accepted by the same closed profile used by the test runtime. */
 export function parseQtiTestExecution(xml: string): QtiTestResult<QtiTestExecution> {
-  const parsed = parseTestRoot(xml);
+  const parsed = parseQtiTest(xml);
   if (!parsed.ok) return parsed;
-  const deliveryDiagnostics: QtiDiagnostic[] = [];
-  rejectUnsupportedTestDelivery(parsed.value, deliveryDiagnostics);
-  if (deliveryDiagnostics.length) return { ok: false, diagnostics: deliveryDiagnostics };
-  if (!requiresTestRuntime(parsed.value)) return { ok: true, value: { kind: "fixed" } };
-  const result = parseTestDefinition(parsed.value);
-  return result.ok ? { ok: true, value: { kind: "sequenced", test: result.value } } : result;
+  const test = parsed.value;
+  const requiresRuntime =
+    test.outcomeDeclarations.length > 0 ||
+    test.outcomeProcessing.length > 0 ||
+    test.sections.some((section) => section.branches.length > 0);
+  return { ok: true, value: requiresRuntime ? { kind: "sequenced", test } : { kind: "fixed" } };
 }
 
-/** Parse the supported executable test profile; never silently ignore routing features. */
+/** Parse the supported executable test profile; never silently ignore authored behavior. */
 export function parseQtiTest(xml: string): QtiTestResult<QtiExecutableTest> {
   const parsed = parseTestRoot(xml);
-  return parsed.ok ? parseTestDefinition(parsed.value) : parsed;
+  if (!parsed.ok) return parsed;
+  const diagnostics: QtiDiagnostic[] = [];
+  rejectUnsupportedTestDelivery(parsed.value, diagnostics);
+  if (diagnostics.length) return { ok: false, diagnostics };
+  return parseTestDefinition(parsed.value);
 }
 
 function parseTestRoot(xml: string): QtiTestResult<XmlNode> {
@@ -50,21 +54,6 @@ function parseTestRoot(xml: string): QtiTestResult<XmlNode> {
   return { ok: true, value: root };
 }
 
-function requiresTestRuntime(node: XmlNode): boolean {
-  return (
-    (node.uri === QTI_ASI_NAMESPACE &&
-      [
-        "qti-outcome-processing",
-        "qti-branch-rule",
-        "qti-pre-condition",
-        "qti-selection",
-        "qti-ordering",
-        "qti-adaptive-selection",
-      ].includes(node.localName)) ||
-    node.children.some(requiresTestRuntime)
-  );
-}
-
 function parseTestDefinition(root: XmlNode): QtiTestResult<QtiExecutableTest> {
   const diagnostics: QtiDiagnostic[] = [];
   checkTestXml(
@@ -74,7 +63,7 @@ function parseTestDefinition(root: XmlNode): QtiTestResult<QtiExecutableTest> {
     diagnostics,
   );
   const part = parseTestPart(root, diagnostics);
-  if (!part.ok) return part;
+  if (!part.ok) return { ok: false, diagnostics: [...diagnostics, ...part.diagnostics] };
   const declarations = root.children
     .filter((node) => node.localName === "qti-outcome-declaration")
     .map((node) => parseTestDeclaration(node, diagnostics));

@@ -24,8 +24,8 @@ never supplies evidence for its attributes, defaults, or child content.
 The initial ledger covers selected delivery, rubric, order, restoration, and migration contracts
 from recent correctness work. Even a section with a reviewed requirement may contain many
 unaudited requirements. The report does not assign a conformance percentage or claim that
-unreviewed sections are unsupported. It also retains an open audit of the full fixed-test
-acceptance profile. Broader coverage of browser behavior, packaging, accessibility, expression
+unreviewed sections are unsupported. The [test execution acceptance review](test-execution-profile-review.md) records the fixed-profile
+bypass findings, corrections, and remaining capability limits. Broader coverage of browser behavior, packaging, accessibility, expression
 semantics, and interaction combinations still requires review.
 
 ## Inspect and reproduce
@@ -78,9 +78,9 @@ Start each audit from accepted input and trace its meaning through the public bo
 both XML elements and attributes. For every accepted feature, identify its consumer or an
 explicit rejection before delivery. Check namespace ownership and extension policy separately.
 
-Continue the fixed-test audit across nested sections, reference attributes, weights, variable
-mappings, and navigation/submission modes. Then extend the ledger to response domains and
-processing operators, followed by cross-feature session sequences and browser visibility.
+The fixed-test acceptance audit now covers nested sections, reference attributes, weights, variable
+mappings, and navigation/submission modes at the execution boundary. Extend the ledger next to
+response domains and processing operators, followed by cross-feature session sequences and browser visibility.
 Generate bounded combinations of relevant attributes and actions; avoid a Cartesian product
 that only increases test count without new assertions. Use independent algorithms and fixed
 expected scores, then mutation-test the assertions that guard high-impact behavior.

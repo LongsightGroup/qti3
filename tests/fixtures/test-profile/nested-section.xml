@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic, MIT-licensed QTI 3.0.1 test-execution profile fixture. -->
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="T" title="Test">
+  <qti-test-part identifier="P" navigation-mode="linear" submission-mode="individual">
+    <qti-assessment-section identifier="S" title="Section" visible="true">
+      <qti-assessment-section identifier="N" title="Nested" visible="true">
+      <qti-assessment-item-ref identifier="I" href="items/one.xml" category="group"/>
+      <qti-assessment-item-ref identifier="J" href="items/two.xml" category="other"/>
+      </qti-assessment-section>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>

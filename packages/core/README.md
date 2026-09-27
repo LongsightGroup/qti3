@@ -564,8 +564,11 @@ Response validation requires explicit `templateValues` for template-controlled c
 returns `response.templateValues.required` if clone context is omitted. Restore uses the saved
 clone's values. Full-order and subset checks share the same projected choice-domain contract.
 
-`parseQtiTestExecution` routes tests with outcome processing through the test runtime even
-without branching. It rejects test time limits (`test.time-limits.unsupported`) and inherited
+`parseQtiTestExecution` first validates the same closed profile as `parseQtiTest`. It routes
+tests with declared outcomes or outcome processing through the test runtime even without branching. It rejects test time limits (`test.time-limits.unsupported`) and inherited
 item-session controls (`test.session-control.unsupported`) because that execution profile does
 not enforce them. Package interchange can preserve their metadata without authorizing delivery.
-The `fixed` classification is a routing result, not comprehensive validation of every test feature.
+A `fixed` result requires one linear, individually submitted part with flat visible sections.
+Other modes, nested or referenced sections, weights, variable mappings, template defaults, and
+unknown extensions are rejected. This profile validation does not replace full XSD validation.
+See the [acceptance review](../../docs/test-execution-profile-review.md) for evidence and limits.

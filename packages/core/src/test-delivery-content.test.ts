@@ -15,9 +15,6 @@ const fixture = (name: string) =>
 // https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/imsqti_asi_v3p0p1_infomodel_v1p0.html
 function testXml(partContent = "", testContent = ""): string {
   return `<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="T" title="Test">
-  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier">
-    <qti-default-value><qti-value>DONE</qti-value></qti-default-value>
-  </qti-outcome-declaration>
   <qti-test-part identifier="P" navigation-mode="linear" submission-mode="individual">
     <qti-assessment-section identifier="S" title="Section" visible="true">
       <qti-assessment-item-ref identifier="I" href="item.xml"/>
@@ -42,10 +39,7 @@ it.each([
 ])(
   "[ASI-TEST-FEEDBACK] rejects feedback-only fixed delivery at %s scope with access %s",
   (scope, access) => {
-    const content = feedback(access);
-    const result = parseQtiTestExecution(
-      scope === "part" ? testXml(content) : testXml("", content),
-    );
+    const result = parseQtiTestExecution(fixture(`feedback-${scope}-${access}`));
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.diagnostics).toHaveLength(1);
@@ -62,10 +56,11 @@ it("keeps ordinary fixed tests deliverable", () => {
   expect(parseQtiTestExecution(testXml())).toEqual({ ok: true, value: { kind: "fixed" } });
 });
 
-it("does not mistake foreign-namespace content for QTI test feedback", () => {
-  expect(
-    parseQtiTestExecution(testXml('<qti-test-feedback xmlns="urn:example:extension"/>')),
-  ).toEqual({ ok: true, value: { kind: "fixed" } });
+it("rejects foreign extensions without misidentifying them as QTI test feedback", () => {
+  const result = parseQtiTestExecution(
+    testXml('<qti-test-feedback xmlns="urn:example:extension"/>'),
+  );
+  expect(result).toMatchObject({ ok: false, diagnostics: [{ code: "test.xml.unsupported" }] });
 });
 
 // §2.9: outcome processing is required even when navigation needs no branching.

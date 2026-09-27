@@ -27,7 +27,7 @@ const executableTestSupport: readonly QtiTestElementSupport[] = [
     "packages/writer/src/assessment-test.test.ts",
     "packages/conformance/src/staged-assessment.test.ts",
   ],
-  notes: `parseQtiTest / startQtiTest / submitQtiTestAnswer only: one linear, individually submitted part; flat fixed sections; forward section branches and EXIT_TEST; scalar test outcomes, SCORE aggregation by one category, expressions: ${testExpressionSyntax.map((entry) => entry.name).join(", ")}. Unsupported test features are rejected. Not item-player or general test-runner certification.`,
+  notes: `parseQtiTest / parseQtiTestExecution / startQtiTest / submitQtiTestAnswer only: one linear, individually submitted part; flat fixed sections; forward section branches and EXIT_TEST; scalar test outcomes, SCORE aggregation by one category, expressions: ${testExpressionSyntax.map((entry) => entry.name).join(", ")}. Fixed and sequenced classification share this closed validator. Nested/referenced sections, other modes, weights, mappings and template-default overrides are rejected. Not item-player or general test-runner certification.`,
 }));
 
 /** Executable test support and explicit delivery refusals; interchange has a broader scope. */
