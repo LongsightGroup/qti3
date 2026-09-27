@@ -161,5 +161,20 @@ The item-import command accepts the same `--validator-report`, `--validator-pack
 failed import case. Missing input is `unavailable`; a readable untrusted report is
 `unverified`; invalid or unsuccessful trusted evidence is `rejected`.
 
+## Information model review
+
+`reviewPublishedQtiInformationModel` checks the published
+[QTI 3.0 ASI information model](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html)
+(IMS Final, 1 May 2022) against the support matrix. Section numbers in that document are the
+ones cited from item tests. The review records four outcomes:
+
+- `element-tested` or `diagnostic` when a class or behavior section names a support-matrix element.
+- `mentioned` when a test cites that section.
+- `open` when an in-scope rule has neither.
+- `out-of-scope` for test delivery, outcome processing, results reporting, and shared stimulus.
+
+A supported interaction does not mark its characteristics tested. Regenerate the inventory with
+`node scripts/extract-qti-information-model.mjs <index.html>` after a published spec update.
+
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

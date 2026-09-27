@@ -54,3 +54,28 @@ export {
 
 export { checkQti3BasicImportReport } from "./certification-report-check.js";
 export type { QtiCertificationIdentity } from "./certification-identity.js";
+
+export { reviewPublishedQtiInformationModel } from "./information-model-current.js";
+export {
+  qtiInformationModelInventory,
+  qtiInformationModelSource,
+} from "./information-model-inventory.js";
+export {
+  collectQtiInformationModelReferences,
+  findQtiInformationModelReviewViolations,
+  informationModelReviewRow,
+  qtiInformationModelEvidence,
+  qtiNameFromInformationModelTitle,
+  reviewQtiInformationModel,
+  summarizeQtiInformationModelReview,
+  type QtiInformationModelClaim,
+  type QtiInformationModelEntry,
+  type QtiInformationModelEvidence,
+  type QtiInformationModelKind,
+  type QtiInformationModelReference,
+  type QtiInformationModelReview,
+  type QtiInformationModelReviewRow,
+  type QtiInformationModelReviewSummary,
+  type QtiInformationModelScope,
+  type QtiInformationModelUnresolvedReference,
+} from "./information-model.js";
