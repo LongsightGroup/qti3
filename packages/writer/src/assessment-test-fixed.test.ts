@@ -43,7 +43,7 @@ it("writes fixed options and content in QTI 3 schema order without claiming sequ
   expect(result.value).toContain("<qti-content-body><p>Read carefully.</p></qti-content-body>");
   expect(parseQtiTestExecution(result.value)).toMatchObject({
     ok: false,
-    diagnostics: [{ code: "test.rubric.unsupported" }],
+    diagnostics: [{ code: "test.rubric.unsupported" }, { code: "test.feedback.unsupported" }],
   });
 });
 

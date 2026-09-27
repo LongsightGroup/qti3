@@ -24,9 +24,9 @@ export type QtiTestExecution =
 export function parseQtiTestExecution(xml: string): QtiTestResult<QtiTestExecution> {
   const parsed = parseTestRoot(xml);
   if (!parsed.ok) return parsed;
-  const rubricDiagnostics: QtiDiagnostic[] = [];
-  rejectUndeliveredRubrics(parsed.value, rubricDiagnostics);
-  if (rubricDiagnostics.length) return { ok: false, diagnostics: rubricDiagnostics };
+  const deliveryDiagnostics: QtiDiagnostic[] = [];
+  rejectUndeliveredTestContent(parsed.value, deliveryDiagnostics);
+  if (deliveryDiagnostics.length) return { ok: false, diagnostics: deliveryDiagnostics };
   if (!requiresSequence(parsed.value)) return { ok: true, value: { kind: "fixed" } };
   const result = parseTestDefinition(parsed.value);
   return result.ok ? { ok: true, value: { kind: "sequenced", test: result.value } } : result;
@@ -203,8 +203,8 @@ function parseTestOutcomeProcessing(
   return rules;
 }
 
-/** Classification must not silently authorize fixed delivery that omits instructions. */
-function rejectUndeliveredRubrics(node: XmlNode, diagnostics: QtiDiagnostic[]): void {
+/** Classification must not authorize delivery that omits candidate content. */
+function rejectUndeliveredTestContent(node: XmlNode, diagnostics: QtiDiagnostic[]): void {
   if (node.uri === QTI_ASI_NAMESPACE && node.localName === "qti-rubric-block") {
     diagnostics.push({
       code: "test.rubric.unsupported",
@@ -215,5 +215,15 @@ function rejectUndeliveredRubrics(node: XmlNode, diagnostics: QtiDiagnostic[]): 
       path: node.source.path,
     });
   }
-  for (const child of node.children) rejectUndeliveredRubrics(child, diagnostics);
+  if (node.uri === QTI_ASI_NAMESPACE && node.localName === "qti-test-feedback") {
+    diagnostics.push({
+      code: "test.feedback.unsupported",
+      severity: "error",
+      message:
+        "Test feedback delivery is not supported. Preserve this test for interchange; do not deliver it without evaluating and presenting its feedback.",
+      source: node.source,
+      path: node.source.path,
+    });
+  }
+  for (const child of node.children) rejectUndeliveredTestContent(child, diagnostics);
 }

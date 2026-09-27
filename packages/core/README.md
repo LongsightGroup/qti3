@@ -551,7 +551,9 @@ interactions in rubrics are errors; forbidden interactions are excluded from the
 interaction list. Valid `ext:` uses produce a warning describing the missing custom policy.
 Rubric-local stylesheets and catalogs return `rubric.resource.unsupported` rather than
 falling back to item scope. `parseQtiTestExecution` rejects test-level rubrics, including
-fixed tests: interchange support does not imply delivery of their instructions.
+fixed tests, with `test.rubric.unsupported`. It also rejects test feedback at test or part
+scope with `test.feedback.unsupported`: interchange support does not imply delivery of
+instructions or evaluation and presentation of outcome-controlled feedback.
 
 The feedback marker describes the currently stored outcomes, not whether the latest response
 has been graded. Response edits retain it; starting another processing invocation clears it,
