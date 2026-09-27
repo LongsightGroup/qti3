@@ -4,8 +4,6 @@ import {
   buildQti3InlineChoiceItem,
   qti3TrustedXmlFragment,
   validateQti3InlineChoiceItem,
-  writeQti3AssessmentItem,
-  type Qti3AuthoringItem,
 } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
 
@@ -101,30 +99,6 @@ describe("qti3-writer inline choice", () => {
     ]);
     expect(xml).toContain('<qti-map-response identifier="FIRST"/>');
     expect(xml).toContain('<qti-map-response identifier="SECOND"/>');
-  });
-
-  it("supports the unified writer API", () => {
-    const item: Qti3AuthoringItem = {
-      interactionType: "inlineChoice",
-      identifier: "inline-choice-unified",
-      title: "Inline choice unified",
-      bodyHtml: qti3TrustedXmlFragment(
-        '<p>Select <qti-inline-choice-interaction response-identifier="RESPONSE"></qti-inline-choice-interaction>.</p>',
-      ),
-      slots: [
-        {
-          responseIdentifier: "RESPONSE",
-          correctResponse: "A",
-          options: [
-            { identifier: "A", text: "Yes" },
-            { identifier: "B", text: "No" },
-          ],
-        },
-      ],
-    };
-
-    const parsed = expectValidParsedItem(writeQti3AssessmentItem(item));
-    expect(parsed.interactions[0]?.qtiName).toBe("qti-inline-choice-interaction");
   });
 
   it("rejects invalid inline-choice authoring inputs", () => {

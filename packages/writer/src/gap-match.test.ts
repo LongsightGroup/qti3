@@ -4,8 +4,6 @@ import {
   buildQti3GapMatchItem,
   qti3TrustedXmlFragment,
   validateQti3GapMatchItem,
-  writeQti3AssessmentItem,
-  type Qti3AuthoringItem,
 } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
 
@@ -118,21 +116,6 @@ describe("qti3-writer gap match", () => {
     const item = expectValidParsedItem(xml);
     expect(item.interactions[0]?.choices[0]?.qtiName).toBe("qti-gap-img");
     expect(item.responseProcessing?.template).toContain("rptemplates/match_correct");
-  });
-
-  it("supports the unified writer API", () => {
-    const item: Qti3AuthoringItem = {
-      interactionType: "gapMatch",
-      identifier: "gap-match-unified",
-      title: "Gap Match Unified",
-      bodyHtml: qti3TrustedXmlFragment('<p><qti-gap identifier="G1"/></p>'),
-      choices: [{ identifier: "A", kind: "text", text: "A" }],
-      targets: [{ identifier: "G1" }],
-      correctResponse: [{ sourceIdentifier: "A", targetIdentifier: "G1" }],
-    };
-
-    const parsed = expectValidParsedItem(writeQti3AssessmentItem(item));
-    expect(parsed.interactions[0]?.qtiName).toBe("qti-gap-match-interaction");
   });
 
   it("rejects invalid gap match authoring inputs", () => {

@@ -4,24 +4,23 @@ import { defaultPlayerMessageCatalog } from "./player-message-catalog-default.js
 import { defaultPlayerMessageResolver } from "./player-message-resolver.js";
 
 describe("createPlayerMessageResolver", () => {
-  it("builds English defaults equivalent to defaultPlayerMessageResolver", () => {
-    const fromCatalog = createPlayerMessageResolver(defaultPlayerMessageCatalog);
-    expect(fromCatalog.message("remove")).toBe(defaultPlayerMessageResolver.message("remove"));
-    expect(fromCatalog.message("associationPairLabel", { source: "A", target: "B" })).toBe(
-      defaultPlayerMessageResolver.message("associationPairLabel", { source: "A", target: "B" }),
-    );
-    expect(fromCatalog.message("extendedTextCounter", { count: 1, expectedLength: 20 })).toBe(
-      defaultPlayerMessageResolver.message("extendedTextCounter", { count: 1, expectedLength: 20 }),
-    );
-    expect(fromCatalog.message("associationsMade", { count: 2 })).toBe(
-      defaultPlayerMessageResolver.message("associationsMade", { count: 2 }),
-    );
-    expect(fromCatalog.message("graphicOrderNoRegionsSelected")).toBe(
-      defaultPlayerMessageResolver.message("graphicOrderNoRegionsSelected"),
-    );
-    expect(fromCatalog.message("interactionHotspots", { type: "graphicOrder" })).toBe(
-      defaultPlayerMessageResolver.message("interactionHotspots", { type: "graphicOrder" }),
-    );
+  it("formats English labels, parameters, plurals, and interaction names", () => {
+    for (const messages of [
+      createPlayerMessageResolver(defaultPlayerMessageCatalog),
+      defaultPlayerMessageResolver,
+    ]) {
+      expect(messages.message("remove")).toBe("Remove");
+      expect(messages.message("associationPairLabel", { source: "A", target: "B" })).toBe("A to B");
+      expect(messages.message("extendedTextCounter", { count: 1, expectedLength: 20 })).toBe(
+        "1 / 20",
+      );
+      expect(messages.message("associationsMade", { count: 1 })).toBe("1 association made.");
+      expect(messages.message("associationsMade", { count: 2 })).toBe("2 associations made.");
+      expect(messages.message("graphicOrderNoRegionsSelected")).toBe("No regions ordered.");
+      expect(messages.message("interactionHotspots", { type: "graphicOrder" })).toBe(
+        "Graphic order hotspots",
+      );
+    }
   });
 
   it("merges partial locale files over English", () => {
@@ -38,9 +37,7 @@ describe("createPlayerMessageResolver", () => {
     expect(messages.message("extendedTextCounter", { count: 3, expectedLength: 10 })).toBe(
       "3 av 10",
     );
-    expect(messages.message("noPointSelected")).toBe(
-      defaultPlayerMessageResolver.message("noPointSelected"),
-    );
+    expect(messages.message("noPointSelected")).toBe("No point selected");
   });
 
   it("uses hotspotSelectionSummary.one and .other when count is provided", () => {

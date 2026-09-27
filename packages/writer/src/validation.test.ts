@@ -952,6 +952,11 @@ describe("qti3-writer validation", () => {
         example.interactionType === "custom"
           ? expectValidParsedItemAllowingDiagnostics(xml, ["interaction.deprecated"])
           : expectValidParsedItem(xml);
+      // Compare each dispatch result, not only the set: swapping two arms must fail.
+      const expected = qti3WriterInteractionSupport.find(
+        (support) => support.interactionType === example.interactionType,
+      );
+      expect(item.interactions[0]?.qtiName).toBe(expected?.qtiName);
       return item.interactions[0]?.qtiName;
     });
     expect(new Set(emittedNames)).toEqual(
