@@ -288,3 +288,6 @@ still creates a scorer/scoring rubric. Nested interactions and rubrics are rejec
 in fixed-test instructions; test instructions also reject template content. Rubric-local
 stylesheets and catalogs are currently unsupported. Fixed-test rubrics and test feedback are interchange only;
 core test execution rejects them rather than delivering a test without its instructions or feedback.
+
+Fixed-test time limits and session controls preserved by interchange are not execution support.
+The core execution classifier rejects authored limits or controls that its test runtime cannot enforce.

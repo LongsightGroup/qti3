@@ -14,7 +14,7 @@ const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_
 <qti-item-body><qti-end-attempt-interaction response-identifier="DONE" title="Finish"/></qti-item-body>
 <qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value><qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value></qti-response-processing></qti-assessment-item>`;
 
-it("rejects edits and scoring of a completed adaptive session, including restore", () => {
+it("[ASI-ADAPTIVE-CLOSED] rejects edits and scoring of a completed adaptive session, including restore", () => {
   const parsed = parseQtiXml(xml);
   expect(parsed.diagnostics).toEqual([]);
   if (!parsed.document) throw new Error("Expected item");

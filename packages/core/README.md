@@ -563,3 +563,9 @@ feedback as though its partially updated outcomes came from successful processin
 Response validation requires explicit `templateValues` for template-controlled choices and
 returns `response.templateValues.required` if clone context is omitted. Restore uses the saved
 clone's values. Full-order and subset checks share the same projected choice-domain contract.
+
+`parseQtiTestExecution` routes tests with outcome processing through the test runtime even
+without branching. It rejects test time limits (`test.time-limits.unsupported`) and inherited
+item-session controls (`test.session-control.unsupported`) because that execution profile does
+not enforce them. Package interchange can preserve their metadata without authorizing delivery.
+The `fixed` classification is a routing result, not comprehensive validation of every test feature.

@@ -17,7 +17,7 @@ const choice = `<choiceInteraction responseIdentifier="RESPONSE" maxChoices="1">
 
 // QTI 2.1 §6.4: rubric view identifies its audience, independently of placement.
 it.each(["scorer", "candidate", "candidate scorer"])(
-  "preserves rubric audience %s and grades",
+  "[ASI-MIGRATE-RUBRIC] preserves rubric audience %s and grades",
   (view) => {
     for (const body of [
       `<rubricBlock view="${view}">Guidance</rubricBlock>${choice}`,
@@ -48,21 +48,24 @@ it.each(["scorer", "candidate", "candidate scorer"])(
 );
 
 // QTI 2.1 §4.1: migration cannot change adaptive sessions into mutable non-adaptive review.
-it.each(["true", "1", " true "])("refuses adaptive=%s even under safe repair", (adaptive) => {
-  for (const repairPolicy of ["none", "safe"] as const) {
-    for (const version of ["1", "2"]) {
-      const result = migrateQtiItemToQti3(
-        { xml: source(choice, adaptive, `http://www.imsglobal.org/xsd/imsqti_v2p${version}`) },
-        { repairPolicy },
-      );
-      expect(result.xml).toBeUndefined();
-      expect(result.authoringItem).toBeUndefined();
-      expect(result.diagnostics).toContainEqual(
-        expect.objectContaining({ code: "qti2_adaptive_not_preserved", severity: "error" }),
-      );
+it.each(["true", "1", " true "])(
+  "[ASI-MIGRATE-ADAPTIVE] refuses adaptive=%s even under safe repair",
+  (adaptive) => {
+    for (const repairPolicy of ["none", "safe"] as const) {
+      for (const version of ["1", "2"]) {
+        const result = migrateQtiItemToQti3(
+          { xml: source(choice, adaptive, `http://www.imsglobal.org/xsd/imsqti_v2p${version}`) },
+          { repairPolicy },
+        );
+        expect(result.xml).toBeUndefined();
+        expect(result.authoringItem).toBeUndefined();
+        expect(result.diagnostics).toContainEqual(
+          expect.objectContaining({ code: "qti2_adaptive_not_preserved", severity: "error" }),
+        );
+      }
     }
-  }
-});
+  },
+);
 
 it("keeps foreign namespace content intact beside a rubric", () => {
   const result = migrateQtiItemToQti3({

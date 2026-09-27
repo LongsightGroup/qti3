@@ -163,3 +163,12 @@ failed import case. Missing input is `unavailable`; a readable untrusted report 
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3
+
+## Information-model evidence
+
+`pnpm check:information-model` (after building) checks the selected clause-level claims against
+actual test results. The ledger pins the September 2024 QTI 3.0.1 ASI model, separates delivery
+from interchange, and reports unaudited headings without treating related element tests as
+attribute coverage. It is part of `pnpm verify`; it does not claim full conformance.
+See [the evidence workflow](../../docs/information-model-conformance.md) for scope, source
+regeneration, and adding a requirement.

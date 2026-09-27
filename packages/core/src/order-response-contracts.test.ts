@@ -32,7 +32,7 @@ function documentFor(type: "order" | "graphic-order", limits = "", hidden = fals
 }
 
 it.each(["order", "graphic-order"] as const)(
-  "validates full %s permutations and grades",
+  "[ASI-ORDER-FULL] validates full %s permutations and grades",
   (type) => {
     const document = documentFor(type, 'max-choices="1"'); // Ignored without min-choices.
     for (const response of [null, [], ["A"], ["A", "A", "A"], ["A", "B", "X"]]) {
@@ -67,19 +67,22 @@ it.each(["order", "graphic-order"] as const)(
   },
 );
 
-it.each(["order", "graphic-order"] as const)("validates %s subsets without duplicates", (type) => {
-  const document = documentFor(type, 'min-choices="1" max-choices="2"');
-  for (const response of [["A"], ["C", "B"]]) {
-    expect(
-      validateQtiResponseVariables({ item: document.item, responses: { RESPONSE: response } }).ok,
-    ).toBe(true);
-  }
-  for (const response of [[], ["A", "B", "C"], ["A", "A"]]) {
-    expect(
-      validateQtiResponseVariables({ item: document.item, responses: { RESPONSE: response } }).ok,
-    ).toBe(false);
-  }
-});
+it.each(["order", "graphic-order"] as const)(
+  "[ASI-ORDER-SUBSET] validates %s subsets without duplicates",
+  (type) => {
+    const document = documentFor(type, 'min-choices="1" max-choices="2"');
+    for (const response of [["A"], ["C", "B"]]) {
+      expect(
+        validateQtiResponseVariables({ item: document.item, responses: { RESPONSE: response } }).ok,
+      ).toBe(true);
+    }
+    for (const response of [[], ["A", "B", "C"], ["A", "A"]]) {
+      expect(
+        validateQtiResponseVariables({ item: document.item, responses: { RESPONSE: response } }).ok,
+      ).toBe(false);
+    }
+  },
+);
 
 it("requires only the visible choices in a generated order clone", () => {
   const document = documentFor("order", "", true);
@@ -101,7 +104,7 @@ it("requires only the visible choices in a generated order clone", () => {
   ).toBe(false);
 });
 
-it("restores only the saved clone's visible order domain and rejects omitted clone context", () => {
+it("[ASI-ORDER-RESTORE] restores only the saved clone's visible order domain and rejects omitted clone context", () => {
   const document = documentFor("order", "", true);
   const state = createItemSession(document).serialize();
   expect(

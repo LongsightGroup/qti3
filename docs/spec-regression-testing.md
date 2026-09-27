@@ -50,7 +50,11 @@ Examples:
   plus significant string whitespace through migration and direct authoring.
 - `tests/browser/player-mathml.spec.ts`: MathML token replacement and XML Boolean spellings.
 
-Normative sources: [QTI 3 information model](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html),
+Normative sources: [QTI 3.0.1 information model](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/imsqti_asi_v3p0p1_infomodel_v1p0.html),
 [standard map-response template](https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml),
 [QTI 2.1 information model, response processing](https://www.imsglobal.org/question/qtiv2p1/imsqti_infov2p1.html),
 and [QTI 1.2 condition and score semantics](https://www.imsglobal.org/node/52326).
+
+For reviewed information-model claims, register the exact boundary and tagged assertions in
+[the conformance ledger](information-model-conformance.md). The evidence gate checks actual
+passing case counts; source citations and parent-element tests do not establish attribute coverage.
