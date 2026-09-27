@@ -706,9 +706,11 @@ Hosts upgrading from `0.10.x` should review the
 [0.11.0 compatibility notes](CHANGELOG.md#0110---2026-09-17) for changes to numeric defaults,
 mapping scores, comparisons, and interpolation tables.
 
-Hosts upgrading to `0.12.3` should review the
-[0.12.3 compatibility notes](CHANGELOG.md#0123---2026-09-25) for shuffled presentation state,
-template-clone restoration, NULL responses, and typed mapping keys.
+Hosts upgrading to `0.13.0` should review the
+[0.13.0 compatibility notes](CHANGELOG.md#0130---2026-09-27) for session mutation results,
+end-attempt triggers, test-delivery rejections, order response domains, and QTI 2 migration
+refusals. Hosts that skipped `0.12.3` should also review its
+[compatibility notes](CHANGELOG.md#0123---2026-09-25).
 
 ## Certification
 
