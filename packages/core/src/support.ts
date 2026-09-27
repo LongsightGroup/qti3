@@ -63,6 +63,8 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
   },
 ];
 
+const processingBoundaryTests = ["packages/core/src/processing-boundaries.test.ts"];
+
 const templateProcessingEntry = processingEntryFor(processingTemplateTest);
 const responseProcessingEntry = processingEntryFor(processingResponseTest);
 const mappingProcessingEntry = processingEntryFor(processingMappingTest);
@@ -126,7 +128,10 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     "packages/fixtures/xml/advanced-processing-reference.xml",
     "packages/fixtures/xml/adaptive-feedback-reference.xml",
   ]),
-  mappingProcessingEntry("qti-lookup-outcome-value"),
+  {
+    ...mappingProcessingEntry("qti-lookup-outcome-value", [], processingBoundaryTests),
+    notes: "Lookup targets and defaults must conform to the declared outcome base type.",
+  },
   responseProcessingEntry("qti-exit-response"),
   templateProcessingEntry("qti-exit-template"),
   responseProcessingEntry("qti-response-processing-fragment"),
@@ -136,10 +141,10 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
   operatorProcessingEntry("qti-null"),
-  mappingProcessingEntry("qti-match-table"),
+  mappingProcessingEntry("qti-match-table", [], processingBoundaryTests),
   mappingProcessingEntry("qti-match-table-entry"),
   {
-    ...mappingProcessingEntry("qti-interpolation-table"),
+    ...mappingProcessingEntry("qti-interpolation-table", [], processingBoundaryTests),
     notes:
       "Selects the first authored entry whose source-value is below the input, including equality only when include-boundary permits it.",
   },
@@ -171,19 +176,19 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     ...mappingProcessingEntry(
       "qti-map-response",
       [],
-      ["packages/core/src/scoring-spec-contracts.test.ts"],
+      ["packages/core/src/scoring-spec-contracts.test.ts", ...processingBoundaryTests],
     ),
     notes:
-      "Numeric and Boolean map keys use typed equality. String map entries honor case-sensitive (default false); mapping counts each distinct response value once using QTI base-type equality, then applies bounds.",
+      "Requires qti-mapping; an answer key or area mapping cannot substitute for it. Numeric and Boolean map keys use typed equality. String map entries honor case-sensitive (default false); mapping counts each distinct response value once using QTI base-type equality, then applies bounds.",
   },
   {
     ...mappingProcessingEntry(
       "qti-map-response-point",
       [],
-      ["packages/core/src/scoring-spec-contracts.test.ts"],
+      ["packages/core/src/scoring-spec-contracts.test.ts", ...processingBoundaryTests],
     ),
     notes:
-      "Each point selects the first matching authored area; each selected area contributes at most once.",
+      "Requires qti-area-mapping. Each point selects the first matching authored area; each selected area contributes at most once.",
   },
   {
     ...responseProcessingEntry("qti-variable", [
@@ -232,22 +237,28 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   operatorProcessingEntry("qti-container-size", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  operatorProcessingEntry("qti-sum", [
-    "packages/fixtures/xml/template-processing-reference.xml",
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-  ]),
-  operatorProcessingEntry("qti-product", [
-    "packages/fixtures/xml/random-integer-template-reference.xml",
-  ]),
+  operatorProcessingEntry(
+    "qti-sum",
+    [
+      "packages/fixtures/xml/template-processing-reference.xml",
+      "packages/fixtures/xml/random-integer-template-reference.xml",
+    ],
+    processingBoundaryTests,
+  ),
+  operatorProcessingEntry(
+    "qti-product",
+    ["packages/fixtures/xml/random-integer-template-reference.xml"],
+    processingBoundaryTests,
+  ),
   operatorProcessingEntry("qti-min"),
   operatorProcessingEntry("qti-max"),
-  operatorProcessingEntry("qti-subtract"),
+  operatorProcessingEntry("qti-subtract", [], processingBoundaryTests),
   operatorProcessingEntry("qti-divide"),
   operatorProcessingEntry("qti-power"),
   operatorProcessingEntry("qti-integer-divide"),
   operatorProcessingEntry("qti-integer-modulus"),
   operatorProcessingEntry("qti-round"),
-  operatorProcessingEntry("qti-round-to"),
+  operatorProcessingEntry("qti-round-to", [], processingBoundaryTests),
   operatorProcessingEntry("qti-truncate"),
   operatorProcessingEntry("qti-integer-to-float"),
   operatorProcessingEntry("qti-and"),
@@ -285,9 +296,17 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   operatorProcessingEntry("qti-delete"),
   operatorProcessingEntry("qti-duration-gte"),
   operatorProcessingEntry("qti-duration-lt"),
-  operatorProcessingEntry("qti-gcd", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  operatorProcessingEntry(
+    "qti-gcd",
+    ["packages/fixtures/xml/advanced-processing-reference.xml"],
+    processingBoundaryTests,
+  ),
   mappingProcessingEntry("qti-inside", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
-  operatorProcessingEntry("qti-lcm", ["packages/fixtures/xml/advanced-processing-reference.xml"]),
+  operatorProcessingEntry(
+    "qti-lcm",
+    ["packages/fixtures/xml/advanced-processing-reference.xml"],
+    processingBoundaryTests,
+  ),
   operatorProcessingEntry("qti-math-constant"),
   operatorProcessingEntry("qti-math-operator"),
   operatorProcessingEntry("qti-repeat", [

@@ -116,6 +116,17 @@ export function evaluateProcessingExpression(
 ): QtiValue {
   // QTI 3 §2.2.2: empty strings and containers are NULL, including intermediate results.
   const value = evaluateExpressionValue(expression, context);
+  // The public value/state contract supports finite numbers only. Diagnose overflow
+  // before an intermediate result reaches another operator or persisted state.
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    context.diagnostics.push({
+      code: "processing.numeric.nonFinite",
+      severity: "error",
+      message: `${expression.type} produced a non-finite numeric result; this engine cannot represent it.`,
+      source: expression.source,
+    });
+    return null;
+  }
   return isNullResponse(value) ? null : value;
 }
 

@@ -182,7 +182,7 @@ function validateDeclarationValueMetadata(
 function validateDeclarationValue(
   declaration: QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration,
   value: QtiValue,
-  role: "defaultValue" | "correctResponse",
+  role: "defaultValue" | "correctResponse" | "lookupDefaultValue" | "lookupTargetValue",
   diagnostics: QtiDiagnostic[],
 ): void {
   if (value === null || declaration.cardinality === "record" || !declaration.baseType) return;
@@ -407,8 +407,20 @@ function validateOutcomeLookupTables(item: QtiAssessmentItem, diagnostics: QtiDi
         source: lookupTable.source,
       });
     }
+    validateDeclarationValue(
+      { ...outcome, source: lookupTable.source },
+      lookupTable.defaultValue,
+      "lookupDefaultValue",
+      diagnostics,
+    );
     for (const entry of lookupTable.entries) {
       validateLookupTableEntryAttributes(lookupTable.type, entry, diagnostics);
+      validateDeclarationValue(
+        { ...outcome, source: entry.source },
+        entry.targetValue,
+        "lookupTargetValue",
+        diagnostics,
+      );
     }
   }
 }
