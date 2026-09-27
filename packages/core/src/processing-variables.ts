@@ -122,6 +122,8 @@ export function processingVariables(item: QtiAssessmentItem) {
       inferProcessingExpressionType(expression, (identifier) =>
         processingVariableType(item, identifier),
       ),
+    outcomeDeclaration: (identifier: string) =>
+      item.outcomeDeclarations.find((entry) => entry.identifier === identifier),
     declarationType: (identifier: string) => processingVariableType(item, identifier),
     numericAttribute(raw: string | undefined, baseType: "integer" | "number"): boolean {
       const attribute = parseNumericOperatorAttribute(raw);

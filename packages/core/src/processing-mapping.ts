@@ -1,21 +1,53 @@
-import type { QtiDocument, QtiResponseDeclaration, QtiValue } from "./types.js";
-import { coerceValue, parseXmlBoolean } from "./parser-values.js";
+import {
+  inferProcessingExpressionType,
+  type ProcessingExpressionType,
+} from "./processing-expression-type.js";
+import { processingVariableType } from "./processing-variables.js";
+import type {
+  QtiDocument,
+  QtiResponseDeclaration,
+  QtiValue,
+  QtiLookupTable,
+  QtiDiagnostic,
+  QtiProcessingExpression,
+} from "./types.js";
+import { coerceValue, parseXmlBoolean, parseFiniteNumber } from "./parser-values.js";
 import { qtiScalarToString, qtiValueToStringList } from "./value-format.js";
-import { isNullResponse, numericValue, valuesEqual } from "./processing-values.js";
+import { isNullResponse, valuesEqual } from "./processing-values.js";
 import { isRecordValue } from "./value-guards.js";
 
 export function lookupOutcomeValue(
   document: QtiDocument,
   identifier: string,
   value: QtiValue,
+  expression: QtiProcessingExpression,
+  diagnostics: QtiDiagnostic[],
 ): QtiValue {
   const declaration = document.item.outcomeDeclarations.find(
     (outcome) => outcome.identifier === identifier,
   );
   const lookupTable = declaration?.lookupTable;
-  if (!lookupTable) return null;
+  const type = inferProcessingExpressionType(expression, (id) =>
+    processingVariableType(document.item, id),
+  );
+  if (!validateLookupContract(lookupTable, type, expression, diagnostics) || !lookupTable)
+    return null;
   if (isNullResponse(value)) return lookupTable.defaultValue;
-  const numeric = numericValue(value);
+  const numeric =
+    type?.baseType === "duration" && typeof value === "string" ? parseFiniteNumber(value) : value;
+  if (
+    typeof numeric !== "number" ||
+    !Number.isFinite(numeric) ||
+    (lookupTable.type === "match" && !Number.isInteger(numeric))
+  ) {
+    diagnostics.push({
+      code: "processing.lookup.type",
+      severity: "error",
+      message: "Lookup input must be a single numeric value; match tables require integers.",
+      source: expression.source,
+    });
+    return null;
+  }
   if (lookupTable.type === "match") {
     return (
       lookupTable.entries.find((entry) => entry.sourceValue === numeric)?.targetValue ??
@@ -162,4 +194,30 @@ function numericBound(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : undefined;
+}
+
+/** Shared static/runtime lookup requirements, using the original outcome table. */
+export function validateLookupContract(
+  table: QtiLookupTable | undefined,
+  type: ProcessingExpressionType | undefined,
+  expression: QtiProcessingExpression,
+  diagnostics: QtiDiagnostic[],
+): boolean {
+  const invalidType =
+    type &&
+    (type.cardinality !== "single" ||
+      (type.baseType !== undefined &&
+        (table?.type === "match"
+          ? type.baseType !== "integer"
+          : !["integer", "float", "duration"].includes(type.baseType))));
+  if (table && !invalidType) return true;
+  diagnostics.push({
+    code: table ? "processing.lookup.type" : "processing.lookup.table",
+    severity: "error",
+    message: table
+      ? "Lookup input must be single integer, float or duration; match tables require integers."
+      : "Lookup outcome rules require an outcome with a lookup table.",
+    source: expression.source,
+  });
+  return false;
 }

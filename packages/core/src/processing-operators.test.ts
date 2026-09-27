@@ -581,7 +581,7 @@ describe("processing operators", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="numeric-helper-processing" title="numeric-helper-processing" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
-        <qti-outcome-declaration identifier="MIN_VALUE" cardinality="single" base-type="float"/>
+        <qti-outcome-declaration identifier="MIN_VALUE" cardinality="single" base-type="integer"/>
         <qti-outcome-declaration identifier="MAX_VALUE" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="POWER_VALUE" cardinality="single" base-type="float"/>
         <qti-outcome-declaration identifier="RANDOM_VALUE" cardinality="single" base-type="float"/>

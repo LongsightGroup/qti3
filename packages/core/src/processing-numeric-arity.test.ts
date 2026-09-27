@@ -33,7 +33,7 @@ describe("numeric processing arity", () => {
     ["max", 4],
   ])("preserves non-empty qti-%s evaluation", (operator, expected) => {
     const children =
-      '<qti-base-value base-type="integer">2</qti-base-value><qti-base-value base-type="integer">4</qti-base-value>';
+      '<qti-base-value base-type="float">2</qti-base-value><qti-base-value base-type="float">4</qti-base-value>';
     const result = parseQtiXml(processingItem(`<qti-${operator}>${children}</qti-${operator}>`));
 
     expect(result.ok).toBe(true);

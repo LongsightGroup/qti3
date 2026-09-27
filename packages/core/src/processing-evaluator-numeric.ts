@@ -123,6 +123,15 @@ export function evaluateNumericExpression(
       const expressions = expression.expressions ?? [expression.expression];
       if (expressions.length !== 1) return null;
       const values = context.numericOperands(expressions, "container");
+      if (values && expression.name !== "mean" && values.length < 2) {
+        context.diagnostics.push({
+          code: "processing.stats.size",
+          severity: "error",
+          message: "Variance and standard deviation require at least two values.",
+          source: expression.source,
+        });
+        return null;
+      }
       return values ? statsOperatorValue(expression.name, values) : null;
     }
     default:

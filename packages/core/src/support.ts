@@ -134,8 +134,13 @@ export const processingSupport: QtiProcessingElementSupport[] = [
     processingTypeTests,
   ),
   {
-    ...mappingProcessingEntry("qti-lookup-outcome-value", [], processingBoundaryTests),
-    notes: "Lookup targets and defaults must conform to the declared outcome base type.",
+    ...mappingProcessingEntry(
+      "qti-lookup-outcome-value",
+      [],
+      [...processingBoundaryTests, ...processingTypeTests],
+    ),
+    notes:
+      "Lookup rules require a table and single numeric inputs (integer for match tables); targets and defaults must match the outcome type.",
   },
   responseProcessingEntry("qti-exit-response"),
   templateProcessingEntry("qti-exit-template"),
@@ -317,9 +322,11 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   operatorProcessingEntry("qti-repeat", [
     "packages/fixtures/xml/advanced-processing-reference.xml",
   ]),
-  operatorProcessingEntry("qti-stats-operator", [
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-  ]),
+  operatorProcessingEntry(
+    "qti-stats-operator",
+    ["packages/fixtures/xml/advanced-processing-reference.xml"],
+    processingTypeTests,
+  ),
   operatorProcessingEntry("qti-custom-operator"),
 ];
 
