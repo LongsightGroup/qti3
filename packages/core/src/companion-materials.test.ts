@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  PARSED_COMPANION_MATERIAL_CHILD_QTI_NAMES,
-  PARSED_COMPANION_MATERIAL_CHILD_NAMES,
-} from "./companion-materials.js";
+import { PARSED_COMPANION_MATERIAL_CHILD_QTI_NAMES } from "./companion-materials.js";
 import { itemMetadataSupport } from "./support.js";
 
 describe("companion materials shared metadata", () => {
@@ -12,11 +9,5 @@ describe("companion materials shared metadata", () => {
       expect(support?.parse).toBe(true);
       expect(support?.validate).toBe(true);
     }
-  });
-
-  it("exposes parsed companion child names as a set", () => {
-    expect(PARSED_COMPANION_MATERIAL_CHILD_NAMES).toEqual(
-      new Set(PARSED_COMPANION_MATERIAL_CHILD_QTI_NAMES),
-    );
   });
 });

@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import type {
   QtiAreaMapEntry,
   QtiAssessmentSectionPackageModel,
@@ -43,9 +42,10 @@ import type {
   QtiTestPartSubmissionMode,
   QtiTimeLimits,
   QtiTimingMetadata,
-} from "./index.js";
+} from "../src/index.js";
 
-type PublicParserModelTypes = [
+/** Compiler-only contract: these documented model types remain importable from core. */
+export type PublicParserModelTypes = [
   QtiResponseDeclaration,
   QtiOutcomeDeclaration,
   QtiMapEntry,
@@ -90,11 +90,3 @@ type PublicParserModelTypes = [
   QtiResponseValidationInput,
   QtiResponseValidationResult,
 ];
-
-const typeExportsCompile: PublicParserModelTypes | undefined = undefined;
-
-describe("public parser model type exports", () => {
-  it("exposes parser model types from the core entrypoint", () => {
-    expect(typeExportsCompile).toBeUndefined();
-  });
-});

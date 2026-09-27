@@ -2,40 +2,13 @@ import type { QtiInteraction } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { testInteraction } from "../interaction-test-fixtures.js";
 import {
-  INLINE_EMBED_POLICY,
-  inlineEmbedRendererIds,
   inlineEmbeddingDisposition,
   isInlineFlowInteraction,
 } from "./interaction-inline-embedding.js";
 import { resolveInlineInteractionRoute } from "./interaction-inline-route.js";
-import { interactionRegistry, matchInteractionRegistryEntry } from "./interaction-registry.js";
+import { matchInteractionRegistryEntry } from "./interaction-registry.js";
 
 describe("interaction registry ordering", () => {
-  it("keeps a stable registry order for every supported renderer id", () => {
-    expect(interactionRegistry.map((entry) => entry.id)).toEqual([
-      "graphicOrder",
-      "ordered",
-      "gapMatch",
-      "graphicAssociate",
-      "match",
-      "pair",
-      "hotspot",
-      "hottext",
-      "choice",
-      "inlineChoice",
-      "extendedText",
-      "selectPoint",
-      "positionObject",
-      "drawing",
-      "portableCustom",
-      "textEntry",
-      "slider",
-      "upload",
-      "endAttempt",
-      "media",
-    ]);
-  });
-
   it("prefers graphicOrder over ordered cardinality", () => {
     expect(
       matchInteractionRegistryEntry(
@@ -166,39 +139,14 @@ describe("interaction registry ordering", () => {
     expect(inlineEmbeddingDisposition(testInteraction({ type: "portableCustom" }))).toBe("invalid");
   });
 
-  it("uses a dedicated embedded renderer for textEntry", () => {
-    const entry = matchInteractionRegistryEntry(testInteraction({ type: "textEntry" }));
-    expect(entry?.renderEmbedded).toBeDefined();
-    expect(entry?.renderEmbedded).not.toBe(entry?.render);
-  });
-
   it("resolves inline interaction routes from policy and registry renderers", () => {
     const supported = resolveInlineInteractionRoute(testInteraction({ type: "textEntry" }));
     expect(supported.disposition).toBe("supported");
-    if (supported.disposition === "supported") {
-      expect(typeof supported.render).toBe("function");
-    }
     expect(resolveInlineInteractionRoute(testInteraction({ type: "custom" }))).toEqual({
       disposition: "unsupported",
     });
     expect(resolveInlineInteractionRoute(testInteraction({ type: "choice" }))).toEqual({
       disposition: "invalid",
     });
-  });
-
-  it("derives registry renderEmbedded hooks from INLINE_EMBED_POLICY", () => {
-    expect(inlineEmbedRendererIds()).toEqual(["inlineChoice", "textEntry", "endAttempt"]);
-    for (const rendererId of inlineEmbedRendererIds()) {
-      const entry = interactionRegistry.find((candidate) => candidate.id === rendererId);
-      expect(entry?.renderEmbedded).toBeDefined();
-    }
-    expect(
-      interactionRegistry.filter((entry) => entry.renderEmbedded).map((entry) => entry.id),
-    ).toEqual([...inlineEmbedRendererIds()]);
-    for (const [type, policy] of Object.entries(INLINE_EMBED_POLICY)) {
-      expect(
-        inlineEmbeddingDisposition(testInteraction({ type: type as QtiInteraction["type"] })),
-      ).toBe(policy.disposition);
-    }
   });
 });

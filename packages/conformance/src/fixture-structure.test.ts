@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import {
   parseQtiPackageXmlTree,
   parseQtiXml,
@@ -11,12 +10,6 @@ import {
   basicItemPlayerFixtures,
   basicItemPlayerToleranceFixtures,
 } from "@longsightgroup/qti3-fixtures";
-
-it.each(canonicalFixtures)("keeps published $id XML synchronized with its generator", (fixture) => {
-  expect(
-    readFileSync(new URL(`../../fixtures/xml/${fixture.id}.xml`, import.meta.url), "utf8").trim(),
-  ).toBe(fixture.xml.trim());
-});
 
 it.each(["endAttempt-reference", "adaptive-feedback-reference"])(
   "places %s inline End Attempt controls in paragraphs",

@@ -10,7 +10,8 @@
     "src/**/*.test.ts",
     "src/**/*.fixtures.ts",
     "src/interaction-test-fixtures.ts",
-    "../../tests/fixtures/**/*.ts"
+    "../../tests/fixtures/**/*.ts",
+    "test/**/*.ts"
   ],
   "references": [
     {

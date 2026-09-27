@@ -1,5 +1,7 @@
 # Spec regression tests
 
+All tests must meet the [minimum regression value bar](test-quality-bar.md).
+
 A passing round trip can preserve the same mistake on both sides. Conformance regressions
 must establish the expected behavior independently of the implementation being tested.
 
