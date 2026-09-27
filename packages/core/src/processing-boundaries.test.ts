@@ -1,11 +1,6 @@
+import { validQtiDocument as validDocument } from "../../../tests/fixtures/valid-qti-document.js";
 import { describe, expect, it } from "vitest";
-import {
-  createItemSession,
-  isQtiAttemptStateV1,
-  parseQtiXml,
-  validateAssessmentItem,
-  type QtiDocument,
-} from "./index.js";
+import { createItemSession, isQtiAttemptStateV1, parseQtiXml, type QtiDocument } from "./index.js";
 
 const numericOutcome =
   '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>';
@@ -25,15 +20,6 @@ function item(
     <qti-item-body>${body}</qti-item-body>
     ${template ? "" : `<qti-response-processing>${rules}</qti-response-processing>`}
   </qti-assessment-item>`;
-}
-
-function validDocument(xml: string): QtiDocument {
-  const parsed = parseQtiXml(xml);
-  expect(parsed.diagnostics).toEqual([]);
-  expect(parsed.ok).toBe(true);
-  if (!parsed.document) throw new Error("Expected document");
-  expect(validateAssessmentItem(parsed.document)).toEqual({ ok: true, diagnostics: [] });
-  return parsed.document;
 }
 
 function setScore(expression: string): string {

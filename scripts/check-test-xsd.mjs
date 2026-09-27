@@ -138,9 +138,23 @@ try {
       );
     }
   }
-  console.log(
-    "QTI 3 staged assessment: official ASI schema validation passed (pinned source hashes).",
+  // Validate the exact positive XML used by these tests, including generated cases.
+  // Intentionally invalid inputs do not use validQtiDocument and remain diagnostic tests.
+  execFileSync(
+    process.execPath,
+    [
+      join(root, "node_modules/vitest/vitest.mjs"),
+      "run",
+      "packages/core/src/processing-boundaries.test.ts",
+      "packages/core/src/processing-type-contracts.test.ts",
+    ],
+    {
+      cwd: root,
+      env: { ...process.env, QTI3_TEST_XSD_SCHEMA: join(directory, closure.main) },
+      stdio: "inherit",
+    },
   );
+  console.log("QTI 3 fixtures: official ASI schema validation passed (pinned source hashes).");
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

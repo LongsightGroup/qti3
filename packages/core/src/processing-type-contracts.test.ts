@@ -1,12 +1,6 @@
+import { validQtiDocument as valid } from "../../../tests/fixtures/valid-qti-document.js";
 import { expect, it } from "vitest";
-import {
-  createItemSession,
-  isQtiAttemptStateV1,
-  parseQtiXml,
-  validateAssessmentItem,
-  type QtiDocument,
-  type QtiValue,
-} from "./index.js";
+import { createItemSession, isQtiAttemptStateV1, parseQtiXml, type QtiValue } from "./index.js";
 
 function xml(declarations: string, rules: string, template = false): string {
   return `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="types" title="Type contracts" adaptive="false" time-dependent="false">${declarations}${template ? `<qti-template-processing>${rules}</qti-template-processing>` : ""}<qti-item-body><p>Type contracts.</p></qti-item-body>${template ? "" : `<qti-response-processing>${rules}</qti-response-processing>`}</qti-assessment-item>`;
@@ -18,14 +12,6 @@ const set = (expression: string) =>
 const base = (type: string, value: string) =>
   `<qti-base-value base-type="${type}">${value}</qti-base-value>`;
 const custom = '<qti-custom-operator class="dynamic"/>';
-function valid(source: string): QtiDocument {
-  const result = parseQtiXml(source);
-  expect(result.diagnostics).toEqual([]);
-  expect(result.ok).toBe(true);
-  if (!result.document) throw new Error("Expected parsed document");
-  expect(validateAssessmentItem(result.document)).toEqual({ ok: true, diagnostics: [] });
-  return result.document;
-}
 
 // QTI 3.0.1 §8.17 and §2.11.3.28: multiple containers ignore order but retain
 // multiplicities. Unicode collation equivalence cannot replace exact value equality.

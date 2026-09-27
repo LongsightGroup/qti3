@@ -13,7 +13,12 @@ For each changed rule:
    results using the writer, parser, or processing helper under test.
 3. Parse **and validate** positive XML fixtures before scoring. A parsed document alone
    does not establish that the item is valid. Keep intentionally invalid inputs in separate
-   diagnostic tests.
+   diagnostic tests. Positive processing fixtures use `validQtiDocument` from
+   `tests/fixtures/valid-qti-document.ts`. In `pnpm check:test-xsd`, that helper also validates
+   the exact XML against the hash-pinned official QTI schema using `xmllint`. Register new
+   suites in `scripts/check-test-xsd.mjs` so CI's `pnpm release:check` runs that schema check.
+   Ordinary `pnpm test` and `pnpm verify` run the helper's parser and semantic checks only.
+   Existing inline fixtures in other suites are not automatically covered.
 4. Exercise the public path: XML to session outcomes, source XML to migration to outcomes,
    or XML to browser DOM. Test helpers must not bypass the contract being claimed.
 5. Cover the semantic boundaries: unanswered values, empty strings/containers, equivalent
