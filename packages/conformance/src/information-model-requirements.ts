@@ -261,13 +261,61 @@ export const qtiInformationModelRequirements = [
   },
   {
     id: "fixed-acceptance-profile",
-    sections: ["4.4", "5.6"],
-    elements: ["qti-assessment-test", "qti-assessment-item-ref"],
+    sections: ["4.2", "4.4", "5.6", "5.159", "7.48", "7.50", "5.152"],
+    elements: [
+      "qti-assessment-test",
+      "qti-assessment-section",
+      "qti-assessment-item-ref",
+      "qti-test-part",
+    ],
     boundary: "deliver",
-    disposition: "open",
-    rule: "Fixed classification must not imply that every authored test feature can be delivered.",
+    disposition: "implemented",
+    rule: "Fixed and sequenced classification must share the validated execution profile; absence of routing instructions cannot bypass validation.",
     limitation:
-      "Audit attributes, nested structures, weights, variable mappings, and extension handling against the host contract; no complete fixed-profile claim yet.",
-    evidence: [],
+      "One linear, individually submitted part, flat visible sections, distinct package-local item paths and scalar outcomes. Nested/referenced sections, multiple parts, other modes, reference weights/mappings/template defaults and unknown extensions are explicitly rejected. This is a closed delivery profile, not full ASI support or runtime XSD validation.",
+    evidence: [
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-PROFILE-REJECTION]",
+        cases: 12,
+      },
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-PROFILE-POSITIVE]",
+        cases: 1,
+      },
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-PROFILE-INVALID]",
+        cases: 14,
+      },
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-PROFILE-EXTENSIONS]",
+        cases: 4,
+      },
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-PROFILE-DIAGNOSTICS]",
+        cases: 1,
+      },
+    ],
+  },
+  {
+    id: "test-outcome-default-routing",
+    sections: ["2.9", "4.5"],
+    elements: ["qti-outcome-declaration"],
+    boundary: "process",
+    disposition: "implemented",
+    rule: "Declared test outcomes need initialization even when no outcome-processing rules are present.",
+    limitation:
+      "Scalar outcome defaults in the closed test execution profile. The runtime does not invent score aggregation when no rules are authored.",
+    evidence: [
+      {
+        path: "packages/core/src/test-execution-profile.test.ts",
+        marker: "[ASI-TEST-DEFAULT-OUTCOME]",
+        cases: 1,
+      },
+    ],
   },
 ] as const satisfies readonly QtiInformationModelRequirement[];
