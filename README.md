@@ -646,6 +646,11 @@ Items with `SCORE` marked `external-scored="human"` or `external-scored="externa
 `score: null`; submission materialization reports `manual-scoring-required`. Hosts obtain and store
 the external grade. An authored outcome default in saved state is not a completed grade.
 
+Numeric values in the public JSON state must be finite. If an expression returns a
+non-finite number, the evaluator reports `processing.numeric.nonFinite` and returns
+QTI NULL. This keeps overflow out of subsequent operators and saved state. Hosts must
+check scoring diagnostics before treating an outcome as a usable grade.
+
 ## Randomized item instances
 
 `qti3` supports QTI-native randomized item instances through template processing.

@@ -7,6 +7,7 @@ import type {
   QtiProcessingExpression,
   QtiResponseCondition,
   QtiResponseRule,
+  QtiResponseDeclaration,
   QtiSetOutcomeValue,
   QtiTemplateRule,
 } from "./types.js";
@@ -121,7 +122,9 @@ export function validateProcessingReferences(
   item: QtiAssessmentItem,
   diagnostics: QtiDiagnostic[],
 ): void {
-  const responses = new Set(item.responseDeclarations.map((declaration) => declaration.identifier));
+  const responses = new Map(
+    item.responseDeclarations.map((declaration) => [declaration.identifier, declaration]),
+  );
   const outcomes = new Set(item.outcomeDeclarations.map((declaration) => declaration.identifier));
   outcomes.add(COMPLETION_STATUS);
   const templates = new Set(item.templateDeclarations.map((declaration) => declaration.identifier));
@@ -139,7 +142,7 @@ export function validateProcessingReferences(
 function validateResponseCondition(
   condition: QtiResponseCondition,
   outcomes: Set<string>,
-  responses: Set<string>,
+  responses: ReadonlyMap<string, QtiResponseDeclaration>,
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
@@ -160,7 +163,7 @@ function validateResponseCondition(
 
 function validateTemplateRule(
   rule: QtiTemplateRule,
-  responses: Set<string>,
+  responses: ReadonlyMap<string, QtiResponseDeclaration>,
   outcomes: Set<string>,
   templates: Set<string>,
   variables: ProcessingVariables,
@@ -249,7 +252,7 @@ function validateTemplateRule(
 function validateResponseRule(
   rule: QtiResponseRule,
   outcomes: Set<string>,
-  responses: Set<string>,
+  responses: ReadonlyMap<string, QtiResponseDeclaration>,
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
@@ -274,7 +277,7 @@ function validateResponseRule(
 function validateLookupOutcomeRule(
   rule: Extract<QtiResponseRule, { type: "lookupOutcomeValue" }>,
   outcomes: Set<string>,
-  responses: Set<string>,
+  responses: ReadonlyMap<string, QtiResponseDeclaration>,
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
@@ -299,7 +302,7 @@ function validateLookupOutcomeRule(
 function validateSetOutcomeRule(
   rule: QtiSetOutcomeValue,
   outcomes: Set<string>,
-  responses: Set<string>,
+  responses: ReadonlyMap<string, QtiResponseDeclaration>,
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
@@ -323,7 +326,7 @@ function validateSetOutcomeRule(
 
 function validateExpressionReferences(
   expression: QtiProcessingExpression | undefined,
-  responses: Set<string>,
+  responses: ReadonlyMap<string, QtiResponseDeclaration>,
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
@@ -394,6 +397,19 @@ function validateExpressionReferences(
         message: `Processing expression references missing response declaration ${expression.identifier}.`,
         path: expression.source?.path,
         source: expression.source,
+      });
+    }
+    const declaration = responses.get(expression.identifier);
+    if (
+      declaration &&
+      !(expression.type === "mapResponse" ? declaration.mapping : declaration.areaMapping)
+    ) {
+      diagnostics.push({
+        code: "processing.mapping.required",
+        severity: "error",
+        message: `${expression.type} requires its corresponding mapping on response ${expression.identifier}.`,
+        source: expression.source,
+        path: expression.source?.path,
       });
     }
   }

@@ -30,34 +30,6 @@ export function lookupOutcomeValue(
   return entry?.targetValue ?? lookupTable.defaultValue;
 }
 
-export function mapOrMatchResponse(
-  declaration: QtiResponseDeclaration,
-  response: QtiValue,
-  correctResponse: QtiValue,
-): number {
-  if (declaration.areaMapping) return scoreAreaMapping(response, declaration.areaMapping);
-  if (declaration.mapping) return scoreMapping(response, declaration.mapping, declaration.baseType);
-  return valuesEqual(
-    response,
-    correctResponse,
-    declaration.cardinality === "ordered",
-    declaration.baseType,
-  )
-    ? 1
-    : 0;
-}
-
-/** Standard mapping templates bypass mapping bounds for unanswered responses. */
-export function scoreStandardMapTemplate(
-  declaration: QtiResponseDeclaration | undefined,
-  response: QtiValue,
-  correctResponse: QtiValue,
-): number {
-  return !declaration || isNullResponse(response)
-    ? 0
-    : mapOrMatchResponse(declaration, response, correctResponse);
-}
-
 export function scoreAreaMapping(
   response: QtiValue,
   areaMapping: NonNullable<QtiResponseDeclaration["areaMapping"]>,
@@ -143,7 +115,8 @@ function pointInsidePolygon(point: { x: number; y: number }, coords: number[]): 
   return inside;
 }
 
-function scoreMapping(
+/** Map distinct response values using the explicitly authored mapping. */
+export function scoreMapping(
   response: QtiValue,
   mapping: NonNullable<QtiResponseDeclaration["mapping"]>,
   baseType: QtiResponseDeclaration["baseType"],

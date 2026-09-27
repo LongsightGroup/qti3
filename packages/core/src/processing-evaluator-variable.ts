@@ -1,7 +1,7 @@
 import type { QtiProcessingExpression, QtiValue } from "./types.js";
 import { assertNever } from "./assert-never.js";
 import type { EvaluationContext } from "./processing-evaluator.js";
-import { mapOrMatchResponse, scoreAreaMapping } from "./processing-mapping.js";
+import { scoreMapping, scoreAreaMapping } from "./processing-mapping.js";
 import { isNullResponse, qtiMatchValues } from "./processing-values.js";
 import {
   defaultValueForIdentifier,
@@ -41,24 +41,23 @@ export function evaluateVariableExpression(
           )
         : false;
     }
-    case "mapResponse": {
-      const declaration = getResponseDeclaration(context.document, expression.identifier);
-      return declaration
-        ? mapOrMatchResponse(
-            declaration,
-            context.responses[expression.identifier] ?? null,
-            context.correctResponses[expression.identifier] ?? null,
-          )
-        : 0;
-    }
+    case "mapResponse":
     case "mapResponsePoint": {
       const declaration = getResponseDeclaration(context.document, expression.identifier);
-      return declaration?.areaMapping
-        ? scoreAreaMapping(
-            context.responses[expression.identifier] ?? null,
-            declaration.areaMapping,
-          )
-        : 0;
+      const response = context.responses[expression.identifier] ?? null;
+      if (expression.type === "mapResponse" && declaration?.mapping) {
+        return scoreMapping(response, declaration.mapping, declaration.baseType);
+      }
+      if (expression.type === "mapResponsePoint" && declaration?.areaMapping) {
+        return scoreAreaMapping(response, declaration.areaMapping);
+      }
+      context.diagnostics.push({
+        code: "processing.mapping.required",
+        severity: "error",
+        message: `${expression.type} requires its corresponding mapping on response ${expression.identifier}.`,
+        source: expression.source,
+      });
+      return null;
     }
     case "correct":
       return context.correctResponses[expression.identifier] ?? null;

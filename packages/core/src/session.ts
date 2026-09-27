@@ -29,7 +29,7 @@ export type {
 import { createEvaluationContext, type EvaluationContext } from "./processing-evaluator.js";
 import { seededRandom } from "./processing-random.js";
 import { getResponseDeclaration } from "./processing-variables.js";
-import { lookupOutcomeValue, scoreStandardMapTemplate } from "./processing-mapping.js";
+import { lookupOutcomeValue } from "./processing-mapping.js";
 import { responseProcessingTemplateKind } from "./processing-templates.js";
 import { assertCompatiblePriorState } from "./attempt-state.js";
 export { assertQtiAttemptStateV1, isQtiAttemptStateV1 } from "./attempt-state.js";
@@ -47,7 +47,12 @@ import {
   cloneValueRecord,
   serialize,
 } from "./processing-state.js";
-import { booleanValue, normalizeValueForCardinality, qtiMatchValues } from "./processing-values.js";
+import {
+  booleanValue,
+  isNullResponse,
+  normalizeValueForCardinality,
+  qtiMatchValues,
+} from "./processing-values.js";
 
 import { createSessionBuiltIns, type QtiSessionEnvironment } from "./session-builtins.js";
 export type { QtiSessionEnvironment } from "./session-builtins.js";
@@ -576,12 +581,10 @@ function applyResponseProcessing(context: SessionProcessingContext): void {
     return;
   }
   if (templateKind === "mapResponse" || templateKind === "mapResponsePoint") {
-    const declaration = getResponseDeclaration(evaluation.document, "RESPONSE");
-    evaluation.outcomes.SCORE = scoreStandardMapTemplate(
-      declaration,
-      evaluation.responses.RESPONSE ?? null,
-      evaluation.correctResponses.RESPONSE ?? null,
-    );
+    const response = evaluation.responses.RESPONSE ?? null;
+    evaluation.outcomes.SCORE = isNullResponse(response)
+      ? 0
+      : evaluation.evaluate({ type: templateKind, identifier: "RESPONSE" });
     return;
   }
 

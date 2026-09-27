@@ -97,10 +97,17 @@ export function generalizedGcd(values: number[]): number {
 
 export function generalizedLcm(values: number[]): number {
   if (values.some((value) => value === 0)) return 0;
-  return values.reduce((result, value) => lcm(result, Math.abs(value)), 1);
+  let result = 1;
+  for (const value of values) {
+    result = lcm(result, Math.abs(value));
+    // Stop before an overflowing intermediate value enters the next GCD.
+    if (!Number.isFinite(result)) return result;
+  }
+  return result;
 }
 
 function gcd(left: number, right: number): number {
+  if (!Number.isFinite(left) || !Number.isFinite(right)) return Number.NaN;
   let a = Math.abs(left);
   let b = Math.abs(right);
   while (b !== 0) {
@@ -112,7 +119,7 @@ function gcd(left: number, right: number): number {
 }
 
 function lcm(left: number, right: number): number {
-  return Math.abs(left * right) / gcd(left, right);
+  return Math.abs((left / gcd(left, right)) * right);
 }
 
 export function mathOperatorValue(name: string, values: number[]): QtiValue {
