@@ -2,6 +2,126 @@
 
 ## Unreleased
 
+## 0.13.0 - 2026-09-27
+
+### Added
+
+- Score an end-attempt interaction with `session.score({ endAttemptResponseIdentifier })`.
+  That response is true for the invocation and every other end-attempt response is false.
+  Ordinary `session.score()` sets all of them to false. Declaration defaults are ignored.
+  Server scoring, adaptive turns, submission materialization, and the browser player accept
+  the same identifier. An unknown identifier returns `session.endAttempt.identifier` and
+  leaves the session unchanged.
+- Record successful response processing on attempt state as optional
+  `responseProcessingCompleted`. An absent marker means processing has not been recorded.
+  `session.initialOutcomeValue(identifier)` returns the effective initial outcome after
+  template processing, independently of restored or scored outcomes.
+- Place surrounding item content with writer `itemBodyHtml`. The fragment must contain
+  exactly one empty `<qti-interaction-placeholder/>`. Malformed templates return
+  `invalid_item_body_template`. `buildQti3RubricBlock()` writes a validated rubric
+  fragment. Core exports `validateQtiRubricFragment()`, `QTI_RUBRIC_VIEWS`, and
+  `QTI_RUBRIC_USES`.
+- Check reviewed QTI 3.0.1 information-model claims with `pnpm check:information-model`.
+  `pnpm test:semantic` and `pnpm check:semantic-mutations` exercise execution routing,
+  adaptive attempt sequences, and QTI 1.2 choice migration, including curated fault
+  injection. `pnpm release:check` runs the mutation gate. See
+  [information-model conformance](docs/information-model-conformance.md) and
+  [semantic testing](docs/semantic-testing.md).
+
+### Changed
+
+- `beginAttempt()`, `respond()`, `setInteractionState()`, and `setStatus()` return
+  diagnostics. An empty array means the mutation was accepted. A completed adaptive
+  session rejects further responses and scoring with `session.completed` and stays
+  closed after restore. Read-only adaptive-turn refreshes remain available.
+- Bind standard writer scoring to the authored response identifier. The `RESPONSE`
+  identifier still uses the standard template. Other identifiers use equivalent inline
+  rules, and unanswered `map_response` and `map_response_point` scores are 0. Choice
+  feedback uses the same NULL-safe mapping rules.
+- Resolve numeric operator attributes, including `{identifier}` references, for
+  `qti-round-to` figures, `qti-equal` tolerances, and `qti-random-integer` /
+  `qti-random-float` bounds and integer step. A zero step, inverted bounds, or other
+  invalid runtime value yields NULL.
+- Require order and graphic-order responses to contain every available choice exactly
+  once, unless `min-choices` requests a subset. Incomplete saves may contain partial
+  orders, but never duplicate or unknown identifiers. Response validation of a
+  template-controlled choice domain requires explicit `templateValues` and returns
+  `response.templateValues.required` when that clone context is omitted. Restore uses
+  the saved clone's values.
+- Require each rubric block to have `view`, `use`, and one `qti-content-body`. Nested
+  rubrics and interactions inside rubrics are errors. A valid `ext:` use warns that no
+  custom policy is configured. Rubric-local stylesheets and catalogs return
+  `rubric.resource.unsupported`. Candidate rubric sections keep source order. Both
+  `qti-rubric-inline` and `qti-rubric-discretionary-placement` pass through; the default
+  player does not relocate them.
+- Validate test delivery with the same closed profile as `parseQtiTest`. Declared
+  outcomes or outcome processing select the test runtime even without branching. A
+  `fixed` result requires one linear, individually submitted part with flat visible
+  sections. Time limits, inherited item-session controls, test and part feedback, test
+  rubrics, nested or referenced sections, weights, variable mappings, template defaults,
+  and unknown extensions are rejected. Package interchange can still preserve that
+  metadata. See the
+  [test execution acceptance review](docs/test-execution-profile-review.md).
+- Reject QTI 2 migration that would invent scoring, discard outcomes, drop nonzero
+  `matchMin`, change correct responses, or drop template declarations and template
+  processing (`qti2_response_processing_not_preserved`, `qti2_outcomes_not_preserved`,
+  `qti2_match_min_not_preserved`, `qti2_correct_response_not_preserved`,
+  `qti2_template_not_preserved`). Adaptive items return `qti2_adaptive_not_preserved`.
+  QTI 2 rubric blocks keep their `view` audiences, gain a `qti-content-body`, and use
+  `use="instructions"`. Hottext and gap match keep prompts, surrounding body content,
+  and the original interaction position. Explicit numeric zero defaults match implicit
+  numeric zero defaults. XML Boolean `fixed`, including `fixed="1"`, pins a choice.
+  These failures withhold migrated XML unless the caller requests a review stub.
+
+### Fixed
+
+- Return NULL with `processing.numeric.nonFinite` when an expression produces a
+  non-finite number, keeping overflow out of subsequent operators and saved attempt
+  state. Prevent GCD and LCM from hanging on non-finite inputs or intermediate results.
+  Compute LCM by dividing before multiplying to avoid unnecessary overflow.
+- Use the requested mapping when a response declares both `qti-mapping` and
+  `qti-area-mapping`. Standard mapping templates use the same evaluator as inline
+  expressions, including its overflow checks.
+- Validate lookup-table targets and defaults against the declared outcome base type.
+  Invalid text values can no longer pass validation for numeric outcomes.
+- Evaluate `acot` as `atan(1/x)`, `acsc` as `asin(1/x)`, and `asec` as `acos(1/x)`.
+  Values outside the real domain still return NULL.
+- Keep modal feedback tied to successful response processing. Response edits retain the
+  marker. Starting another processing invocation clears it, and only a successful
+  invocation sets it again. Failed rescoring does not present modal feedback from
+  partially updated outcomes. Fresh attempts, including after restoration, have no modal
+  feedback. Completed nonadaptive review with `sessionControl.showFeedback: false`
+  suppresses modal feedback and uses the effective initial outcome defaults. Adaptive
+  review keeps final feedback when that flag is false.
+- Keep a player scoring failure from marking the attempt completed. Host error reporting
+  is unchanged.
+
+### Compatibility
+
+- Inline `qti-map-response` and `qti-map-response-point` require their corresponding
+  mapping. A missing mapping returns `processing.mapping.required`; an answer key or
+  the other mapping type no longer substitutes for it.
+- `beginAttempt()`, `respond()`, `setInteractionState()`, and `setStatus()` return
+  `QtiDiagnostic[]`. Completed adaptive items reject those mutations and further
+  `score()` calls with `session.completed`.
+- End-attempt responses no longer keep declaration defaults. Each `score()` invocation
+  sets exactly one trigger to true, or all of them to false for ordinary host submission.
+- Parsed `qti-random-integer`, `qti-random-float`, `qti-round-to`, and `qti-equal-rounded`
+  figure and bound fields keep their source attributes, including variable references,
+  instead of numbers resolved at parse time.
+- `acot`, `acsc`, and `asec` now use the reciprocal inverse functions.
+- Tests that previously classified as `fixed` while carrying time limits, session
+  controls, feedback, rubrics, nested sections, weights, variable mappings, or template
+  defaults are rejected at execution. Interchange can still store them.
+- Order responses that are not a complete permutation of the available choices fail
+  validation, except partial orders allowed by `min-choices` or incomplete saves.
+  Template-controlled domains require `templateValues`.
+- QTI 2 items that migrated by inventing an answer key, dropping outcomes, dropping
+  `matchMin`, or dropping template processing are now refused.
+- Attempt states saved before 0.13.0 omit `responseProcessingCompleted`. Restore treats
+  that absence as processing not recorded, so modal feedback stays hidden until the
+  attempt is scored successfully again.
+
 ## 0.12.3 - 2026-09-25
 
 ### Added
