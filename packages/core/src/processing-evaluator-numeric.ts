@@ -8,8 +8,6 @@ import {
   roundWithMode,
   statsOperatorValue,
 } from "./processing-operators.js";
-import { numericValue, numericValueOrNull, valueContainer } from "./processing-values.js";
-import { isRecordValue } from "./value-guards.js";
 
 type NumericExpression = Extract<
   QtiProcessingExpression,
@@ -43,17 +41,17 @@ export function evaluateNumericExpression(
   switch (expression.type) {
     case "sum": {
       if (expression.expressions.length === 0) return null;
-      const values = context.numericOperands(expression.expressions);
+      const values = context.numericOperands(expression.expressions, "either");
       return values ? values.reduce((sum, value) => sum + value, 0) : null;
     }
     case "product": {
       if (expression.expressions.length === 0) return null;
-      const values = context.numericOperands(expression.expressions);
+      const values = context.numericOperands(expression.expressions, "either");
       return values ? values.reduce((product, value) => product * value, 1) : null;
     }
     case "min":
     case "max": {
-      const values = context.numericOperands(expression.expressions);
+      const values = context.numericOperands(expression.expressions, "either");
       if (!values || values.length === 0) return null;
       return expression.type === "min" ? Math.min(...values) : Math.max(...values);
     }
@@ -61,36 +59,37 @@ export function evaluateNumericExpression(
       const values = context.numericOperands([expression.left, expression.right]);
       return values && values.length === 2 ? values[0]! - values[1]! : null;
     }
-    case "divide":
-      return divide(context.evaluate(expression.left), context.evaluate(expression.right));
+    case "divide": {
+      const values = context.numericOperands([expression.left, expression.right]);
+      if (!values || values[1] === 0) return null;
+      const quotient = values[0]! / values[1]!;
+      return Number.isFinite(quotient) ? quotient : null;
+    }
     case "power": {
       const values = context.numericOperands([expression.left, expression.right]);
       if (!values || values.length !== 2) return null;
       const value = Math.pow(values[0]!, values[1]!);
       return Number.isFinite(value) ? value : null;
     }
-    case "integerDivide": {
-      const values = integerOperands(
-        context.evaluate(expression.left),
-        context.evaluate(expression.right),
-      );
-      return values ? Math.floor(values.dividend / values.divisor) : null;
-    }
+    case "integerDivide":
     case "integerModulus": {
-      const values = integerOperands(
-        context.evaluate(expression.left),
-        context.evaluate(expression.right),
+      const values = context.numericOperands(
+        [expression.left, expression.right],
+        "single",
+        "integer",
       );
-      return values
-        ? values.dividend - Math.floor(values.dividend / values.divisor) * values.divisor
-        : null;
+      if (!values || values[1] === 0) return null;
+      const dividend = values[0]!;
+      const divisor = values[1]!;
+      const quotient = Math.floor(dividend / divisor);
+      return expression.type === "integerDivide" ? quotient : dividend - quotient * divisor;
     }
     case "round": {
-      const value = numericValueOrNull(context.evaluate(expression.expression));
+      const value = context.numericOperands([expression.expression])?.[0] ?? null;
       return value === null ? null : Math.round(value);
     }
     case "roundTo": {
-      const value = numericValueOrNull(context.evaluate(expression.expression));
+      const value = context.numericOperands([expression.expression])?.[0] ?? null;
       const figures = context.indexValue(expression.figures);
       if (
         value === null ||
@@ -101,21 +100,15 @@ export function evaluateNumericExpression(
       return roundWithMode(value, expression.roundingMode, figures);
     }
     case "truncate": {
-      const value = numericValueOrNull(context.evaluate(expression.expression));
+      const value = context.numericOperands([expression.expression])?.[0] ?? null;
       return value === null ? null : Math.trunc(value);
     }
     case "integerToFloat":
-      return numericValueOrNull(context.evaluate(expression.expression));
+      return context.numericOperands([expression.expression], "single", "integer")?.[0] ?? null;
     case "gcd":
     case "lcm": {
-      const values = expression.expressions.flatMap((item) => {
-        const value = context.evaluate(item);
-        return value === null ? [null] : valueContainer(value);
-      });
-      if (values.length === 0 || values.some((value) => value === null || isRecordValue(value))) {
-        return null;
-      }
-      const integers = values.map((value) => Math.trunc(numericValue(value)));
+      const integers = context.numericOperands(expression.expressions, "either", "integer");
+      if (!integers || integers.length === 0) return null;
       return expression.type === "gcd" ? generalizedGcd(integers) : generalizedLcm(integers);
     }
     case "mathConstant":
@@ -123,36 +116,16 @@ export function evaluateNumericExpression(
       if (expression.name === "e") return Math.E;
       return null;
     case "mathOperator": {
-      const values = expression.expressions.map((item) => context.evaluate(item));
-      if (values.length === 0 || values.some((value) => value === null)) return null;
-      return mathOperatorValue(expression.name, values.map(numericValue));
+      const values = context.numericOperands(expression.expressions);
+      return values?.length ? mathOperatorValue(expression.name, values) : null;
     }
     case "statsOperator": {
       const expressions = expression.expressions ?? [expression.expression];
       if (expressions.length !== 1) return null;
-      const value = context.evaluate(expressions[0]!);
-      if (value === null) return null;
-      return statsOperatorValue(expression.name, valueContainer(value).map(numericValue));
+      const values = context.numericOperands(expressions, "container");
+      return values ? statsOperatorValue(expression.name, values) : null;
     }
     default:
       return assertNever(expression);
   }
-}
-
-function divide(dividendValue: QtiValue, divisorValue: QtiValue): QtiValue {
-  const values = integerOperands(dividendValue, divisorValue);
-  if (!values) return null;
-  const quotient = values.dividend / values.divisor;
-  return Number.isFinite(quotient) ? quotient : null;
-}
-
-function integerOperands(
-  dividendValue: QtiValue,
-  divisorValue: QtiValue,
-): { dividend: number; divisor: number } | undefined {
-  if (dividendValue === null || divisorValue === null) return undefined;
-  const dividend = numericValueOrNull(dividendValue);
-  const divisor = numericValueOrNull(divisorValue);
-  if (dividend === null || divisor === null || divisor === 0) return undefined;
-  return { dividend, divisor };
 }

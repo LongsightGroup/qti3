@@ -1,3 +1,5 @@
+import { processingValueMatchesType } from "./processing-type-contracts.js";
+import { processingVariableType } from "./processing-variables.js";
 import { identifierIsVisible } from "./identifier-visibility.js";
 import {
   prepareQtiPresentation,
@@ -528,7 +530,12 @@ function applyTemplateRule(context: SessionProcessingContext, rule: QtiTemplateR
     return false;
   }
 
-  const value = evaluation.evaluate(rule.expression);
+  const value = checkedAssignmentValue(
+    evaluation,
+    rule.identifier,
+    evaluation.evaluate(rule.expression),
+    rule.expression,
+  );
   if (rule.type === "setTemplateValue") {
     evaluation.templateValues[rule.identifier] = value;
     return false;
@@ -624,7 +631,12 @@ function applyResponseRules(context: SessionProcessingContext, rules: QtiRespons
       );
       continue;
     }
-    evaluation.outcomes[rule.identifier] = evaluation.evaluate(rule.expression);
+    evaluation.outcomes[rule.identifier] = checkedAssignmentValue(
+      evaluation,
+      rule.identifier,
+      evaluation.evaluate(rule.expression),
+      rule.expression,
+    );
   }
   return false;
 }
@@ -651,4 +663,21 @@ function sessionVariableLookup(
     if (identifier === "duration" && timeDependent) return duration();
     return undefined;
   };
+}
+
+function checkedAssignmentValue(
+  evaluation: EvaluationContext,
+  identifier: string,
+  value: QtiValue,
+  expression: QtiProcessingExpression,
+): QtiValue {
+  const type = processingVariableType(evaluation.document.item, identifier);
+  if (!type || processingValueMatchesType(value, type)) return value;
+  evaluation.diagnostics.push({
+    code: "processing.assignment.type",
+    severity: "error",
+    message: `Processing result does not match variable ${identifier} (${type.cardinality} ${type.baseType ?? "record"}).`,
+    source: expression.source,
+  });
+  return null;
 }

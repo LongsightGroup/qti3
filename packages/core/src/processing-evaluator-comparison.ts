@@ -5,7 +5,6 @@ import type { EvaluationContext } from "./processing-evaluator.js";
 import {
   containsValues,
   durationSeconds,
-  numericValueOrNull,
   qtiMatchValues,
   valuesEqual,
   valueContainer,
@@ -46,8 +45,10 @@ export function evaluateComparisonExpression(
       );
     }
     case "equal": {
-      const left = context.evaluate(expression.left);
-      const right = context.evaluate(expression.right);
+      const values = context.numericOperands([expression.left, expression.right]);
+      if (!values) return null;
+      const left = values[0]!;
+      const right = values[1]!;
       return equalWithTolerance(expression, left, right, (identifier) =>
         context.evaluate({ type: "variable", identifier }),
       );
@@ -61,23 +62,19 @@ export function evaluateComparisonExpression(
           ? figures >= 0
           : expression.roundingMode === "significantFigures" && figures > 0);
       if (!validRounding) return null;
-      const left = context.evaluate(expression.left);
-      const right = context.evaluate(expression.right);
-      if (left === null || right === null) return null;
-      const leftNumber = numericValueOrNull(left);
-      const rightNumber = numericValueOrNull(right);
-      if (leftNumber === null || rightNumber === null) return null;
+      const values = context.numericOperands([expression.left, expression.right]);
+      if (!values) return null;
+      const leftNumber = values[0]!;
+      const rightNumber = values[1]!;
       const roundedLeft = roundWithMode(leftNumber, expression.roundingMode, figures);
       const roundedRight = roundWithMode(rightNumber, expression.roundingMode, figures);
       return roundedLeft === null || roundedRight === null ? null : roundedLeft === roundedRight;
     }
     case "numericCompare": {
-      const leftValue = context.evaluate(expression.left);
-      const rightValue = context.evaluate(expression.right);
-      if (leftValue === null || rightValue === null) return null;
-      const left = numericValueOrNull(leftValue);
-      const right = numericValueOrNull(rightValue);
-      if (left === null || right === null) return null;
+      const values = context.numericOperands([expression.left, expression.right]);
+      if (!values) return null;
+      const left = values[0]!;
+      const right = values[1]!;
       if (expression.operator === "lt") return left < right;
       if (expression.operator === "lte") return left <= right;
       if (expression.operator === "gt") return left > right;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="basic-template-processing" title="basic-template-processing" time-dependent="false" xml:lang="en">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>

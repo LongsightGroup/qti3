@@ -63,6 +63,7 @@ export const deprecatedInteractionSupport: QtiInteractionElementSupport[] = [
   },
 ];
 
+const processingTypeTests = ["packages/core/src/processing-type-contracts.test.ts"];
 const processingBoundaryTests = ["packages/core/src/processing-boundaries.test.ts"];
 
 const templateProcessingEntry = processingEntryFor(processingTemplateTest);
@@ -123,11 +124,15 @@ export const processingSupport: QtiProcessingElementSupport[] = [
   responseProcessingEntry("qti-response-else", [
     "packages/fixtures/xml/generic-match-processing-reference.xml",
   ]),
-  responseProcessingEntry("qti-set-outcome-value", [
-    "packages/fixtures/xml/generic-match-processing-reference.xml",
-    "packages/fixtures/xml/advanced-processing-reference.xml",
-    "packages/fixtures/xml/adaptive-feedback-reference.xml",
-  ]),
+  responseProcessingEntry(
+    "qti-set-outcome-value",
+    [
+      "packages/fixtures/xml/generic-match-processing-reference.xml",
+      "packages/fixtures/xml/advanced-processing-reference.xml",
+      "packages/fixtures/xml/adaptive-feedback-reference.xml",
+    ],
+    processingTypeTests,
+  ),
   {
     ...mappingProcessingEntry("qti-lookup-outcome-value", [], processingBoundaryTests),
     notes: "Lookup targets and defaults must conform to the declared outcome base type.",
@@ -164,7 +169,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
       "packages/fixtures/xml/generic-match-processing-reference.xml",
       "packages/fixtures/xml/advanced-processing-reference.xml",
     ],
-    ["packages/core/src/scoring-spec-contracts.test.ts"],
+    ["packages/core/src/scoring-spec-contracts.test.ts", ...processingTypeTests],
   ),
   mappingProcessingEntry("qti-correct"),
   {
@@ -243,7 +248,7 @@ export const processingSupport: QtiProcessingElementSupport[] = [
       "packages/fixtures/xml/template-processing-reference.xml",
       "packages/fixtures/xml/random-integer-template-reference.xml",
     ],
-    processingBoundaryTests,
+    [...processingBoundaryTests, ...processingTypeTests],
   ),
   operatorProcessingEntry(
     "qti-product",

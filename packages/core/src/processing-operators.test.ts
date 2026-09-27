@@ -213,6 +213,7 @@ describe("processing operators", () => {
     const result = parseQtiXml(`
       <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="null-operators" title="null-operators" time-dependent="false">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+        <qti-response-declaration identifier="NUMBER" cardinality="single" base-type="float"/>
         <qti-response-declaration identifier="FLAGS" cardinality="multiple" base-type="identifier"/>
         <qti-outcome-declaration identifier="MATCH_NULL" cardinality="single" base-type="boolean"/>
         <qti-outcome-declaration identifier="EQUAL_NULL" cardinality="single" base-type="boolean"/>
@@ -236,19 +237,19 @@ describe("processing operators", () => {
           </qti-set-outcome-value>
           <qti-set-outcome-value identifier="EQUAL_NULL">
             <qti-equal>
-              <qti-variable identifier="RESPONSE"/>
-              <qti-base-value base-type="string">A</qti-base-value>
+              <qti-variable identifier="NUMBER"/>
+              <qti-base-value base-type="float">1</qti-base-value>
             </qti-equal>
           </qti-set-outcome-value>
           <qti-set-outcome-value identifier="SUM_NULL">
             <qti-sum>
-              <qti-variable identifier="RESPONSE"/>
+              <qti-variable identifier="NUMBER"/>
               <qti-base-value base-type="float">1</qti-base-value>
             </qti-sum>
           </qti-set-outcome-value>
           <qti-set-outcome-value identifier="PRODUCT_NULL">
             <qti-product>
-              <qti-variable identifier="RESPONSE"/>
+              <qti-variable identifier="NUMBER"/>
               <qti-base-value base-type="float">2</qti-base-value>
             </qti-product>
           </qti-set-outcome-value>
