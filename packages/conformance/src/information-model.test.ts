@@ -68,7 +68,7 @@ describe("QTI information-model review", () => {
     ]);
   });
 
-  it("does not treat a characteristic as tested because its class is supported", () => {
+  it("keeps a cited characteristic mentioned and inherits the element tests otherwise", () => {
     const review = reviewQtiInformationModel({
       inventory: [
         {
@@ -76,6 +76,12 @@ describe("QTI information-model review", () => {
           title: '"OrderInteraction" Class Description',
           kind: "class",
           anchor: "Order",
+        },
+        {
+          id: "5.97.1",
+          title: '"shuffle" Characteristic Description',
+          kind: "characteristic",
+          anchor: "Shuffle",
         },
         {
           id: "5.97.2",
@@ -103,6 +109,11 @@ describe("QTI information-model review", () => {
     expect(informationModelReviewRow(review, "5.97")?.claim).toMatchObject({
       type: "element-tested",
       qtiName: "qti-order-interaction",
+    });
+    expect(informationModelReviewRow(review, "5.97.1")?.claim).toEqual({
+      type: "with-element",
+      qtiName: "qti-order-interaction",
+      tests: ["packages/core/src/order-response-contracts.test.ts"],
     });
     expect(informationModelReviewRow(review, "5.97.2")?.claim).toEqual({
       type: "mentioned",
@@ -140,43 +151,10 @@ describe("QTI information-model review", () => {
     ).toEqual([]);
     expect(missingEvidenceFiles(review, repoRoot)).toEqual([]);
     expect(qtiInformationModelEvidence(elementSupport).length).toBeGreaterThan(0);
-    expect(summary.openBehavior).toEqual(openItemBehaviorSections);
-    expect(summary.openTestedClassDetails).toBe(openTestedClassDetailCount);
+    expect(summary.openBehavior).toEqual([]);
+    expect(summary.openTestedClassDetails).toBe(0);
   });
 });
-
-const openItemBehaviorSections = [
-  "2.2.1",
-  "2.2.2.1",
-  "2.2.2.2",
-  "2.2.2.3",
-  "2.3.1",
-  "2.3.2.1",
-  "2.3.2.2",
-  "2.3.2.3",
-  "2.3.2.4",
-  "2.3.2.5",
-  "2.3.2.6",
-  "2.3.2.7",
-  "2.3.2.8",
-  "2.3.4",
-  "2.3.5",
-  "2.3.6",
-  "2.3.7",
-  "2.5.1",
-  "2.5.2",
-  "2.7.1",
-  "2.12",
-  "2.13.1",
-  "2.13.2",
-  "2.13.3",
-  "2.14.1",
-  "2.14.2",
-  "2.14.3",
-] as const;
-
-// Child characteristics of supported classes that no current test cites.
-const openTestedClassDetailCount = 226;
 
 function missingEvidenceFiles(
   review: ReturnType<typeof reviewPublishedQtiInformationModel>,
@@ -185,11 +163,15 @@ function missingEvidenceFiles(
   const missing: string[] = [];
   for (const row of review.rows) {
     const tests =
-      row.claim.type === "element-tested" || row.claim.type === "diagnostic"
+      row.claim.type === "element-tested" ||
+      row.claim.type === "diagnostic" ||
+      row.claim.type === "with-element"
         ? row.claim.tests
-        : row.claim.type === "test-tooling"
-          ? row.claim.tests
-          : [];
+        : row.claim.type === "mentioned"
+          ? row.claim.paths
+          : row.claim.type === "test-tooling"
+            ? row.claim.tests
+            : [];
     for (const testPath of tests) {
       if (!exists(join(root, testPath))) missing.push(`${row.id} -> ${testPath}`);
     }

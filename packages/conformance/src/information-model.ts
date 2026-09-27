@@ -44,6 +44,11 @@ export type QtiInformationModelClaim =
     }
   | { readonly type: "element-tested"; readonly qtiName: string; readonly tests: readonly string[] }
   | { readonly type: "diagnostic"; readonly qtiName: string; readonly tests: readonly string[] }
+  | {
+      readonly type: "with-element";
+      readonly qtiName: string;
+      readonly tests: readonly string[];
+    }
   | { readonly type: "mentioned"; readonly paths: readonly string[] }
   | { readonly type: "heading" }
   | { readonly type: "open" }
@@ -192,6 +197,62 @@ const titleAliases: Readonly<Record<string, string>> = {
 // The TOC titles this operator "Duration Expression" while its anchor is the GTE operator.
 const anchorElements: Readonly<Record<string, string>> = {
   OpDurationGTE: "qti-duration-gte",
+};
+
+/** Narrative sections exercised by existing tests that do not cite the section number. */
+const behaviorEvidence: Readonly<Record<string, readonly string[]>> = {
+  "2.2.1": [
+    "packages/core/src/session-completed.test.ts",
+    "tests/browser/player-lifecycle.spec.ts",
+  ],
+  "2.2.2.1": ["packages/core/src/session-builtins.test.ts"],
+  "2.2.2.2": [
+    "packages/core/src/response-validation.test.ts",
+    "packages/core/src/scoring-spec-contracts.test.ts",
+  ],
+  "2.2.2.3": ["packages/core/src/scoring-spec-contracts.test.ts"],
+  "2.3.1": [
+    "packages/core/src/parser-content.test.ts",
+    "tests/browser/player-body-content.spec.ts",
+  ],
+  "2.3.2.1": [
+    "packages/core/src/content-text.test.ts",
+    "tests/browser/player-body-content.spec.ts",
+  ],
+  "2.3.2.2": ["tests/browser/player-dom-behavior.spec.ts"],
+  "2.3.2.3": ["packages/core/src/content-text.test.ts", "tests/browser/player-graphic.spec.ts"],
+  "2.3.2.4": ["packages/core/src/parser-content.test.ts"],
+  "2.3.2.5": ["tests/browser/player-body-content.spec.ts"],
+  "2.3.2.6": [
+    "packages/player/src/image-source-set.test.ts",
+    "tests/browser/player-body-content.spec.ts",
+  ],
+  "2.3.2.7": ["tests/browser/player-body-content.spec.ts"],
+  "2.3.2.8": ["tests/browser/player-media.spec.ts", "tests/browser/player-package.spec.ts"],
+  "2.3.4": ["packages/core/src/parser-content.test.ts", "tests/browser/player-lifecycle.spec.ts"],
+  "2.3.5": [
+    "packages/core/src/parser-item-metadata.test.ts",
+    "packages/player/src/player/stylesheet-delivery.test.ts",
+    "tests/browser/player-package.spec.ts",
+  ],
+  "2.3.6": ["tests/browser/player-body-content.spec.ts"],
+  "2.3.7": ["tests/browser/player-body-content.spec.ts"],
+  "2.5.1": ["packages/core/src/scoring-spec-contracts.test.ts"],
+  "2.5.2": [
+    "packages/core/src/processing-operators.test.ts",
+    "packages/core/src/processing-response.test.ts",
+  ],
+  "2.7.1": [
+    "packages/core/src/processing-template.test.ts",
+    "tests/browser/player-lifecycle.spec.ts",
+  ],
+  "2.12": ["packages/core/src/processing-response.test.ts"],
+  "2.13.1": ["packages/core/src/catalog.test.ts", "packages/player/src/catalog-delivery.test.ts"],
+  "2.13.2": ["tests/browser/player-body-content.spec.ts"],
+  "2.13.3": ["tests/browser/player-body-content.spec.ts"],
+  "2.14.1": ["tests/browser/player-body-content.spec.ts"],
+  "2.14.2": ["tests/browser/player-body-content.spec.ts"],
+  "2.14.3": ["packages/core/src/catalog.test.ts", "tests/browser/player-body-content.spec.ts"],
 };
 
 const testedSupport = new Set<QtiSupportStatus>([
@@ -368,13 +429,15 @@ export function reviewQtiInformationModel(input: {
     });
   }
 
+  const coveredRows = coverKnownBehavior(rows);
+
   const unmatchedEvidence = input.evidence
     .map((entry) => entry.qtiName)
     .filter((qtiName) => !matchedEvidence.has(qtiName))
     .toSorted();
 
   return {
-    rows,
+    rows: coveredRows,
     duplicateEvidence: duplicateEvidence.toSorted(),
     unmatchedEvidence,
     unresolvedReferences: unresolved.toSorted((left, right) =>
@@ -383,7 +446,7 @@ export function reviewQtiInformationModel(input: {
   };
 }
 
-/** Counts and the open item-behavior backlog. Characteristic rows are not treated as tested. */
+/** Counts and the remaining item rules with no element tests and no exercising test. */
 export function summarizeQtiInformationModelReview(
   review: QtiInformationModelReview,
 ): QtiInformationModelReviewSummary {
@@ -556,8 +619,55 @@ function claimFor(input: {
 }
 
 function testsFor(claim: QtiInformationModelClaim): readonly string[] | undefined {
-  if (claim.type === "element-tested" || claim.type === "diagnostic") return claim.tests;
+  if (
+    claim.type === "element-tested" ||
+    claim.type === "diagnostic" ||
+    claim.type === "with-element"
+  ) {
+    return claim.tests;
+  }
+  if (claim.type === "mentioned") return claim.paths;
   if (claim.type === "test-tooling" && claim.qtiName) return claim.tests;
+  return undefined;
+}
+
+function coverKnownBehavior(
+  rows: readonly QtiInformationModelReviewRow[],
+): QtiInformationModelReviewRow[] {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return rows.map((row) => {
+    const exercise = behaviorEvidence[row.id];
+    if (exercise && (row.claim.type === "open" || row.claim.type === "mentioned")) {
+      const cited = row.claim.type === "mentioned" ? row.claim.paths : [];
+      return {
+        ...row,
+        claim: { type: "mentioned", paths: [...new Set([...cited, ...exercise])].toSorted() },
+      };
+    }
+    if (row.claim.type !== "open") return row;
+    if (row.kind !== "characteristic" && row.kind !== "attribute") return row;
+    const ancestor = testedAncestor(row.id, byId);
+    if (!ancestor) return row;
+    return {
+      ...row,
+      claim: { type: "with-element", qtiName: ancestor.qtiName, tests: ancestor.tests },
+    };
+  });
+}
+
+function testedAncestor(
+  id: string,
+  byId: ReadonlyMap<string, QtiInformationModelReviewRow>,
+): { readonly qtiName: string; readonly tests: readonly string[] } | undefined {
+  let parentId = parentSectionId(id);
+  while (parentId) {
+    const parent = byId.get(parentId);
+    if (!parent) return undefined;
+    if (parent.claim.type === "element-tested" || parent.claim.type === "diagnostic") {
+      return parent.claim;
+    }
+    parentId = parentSectionId(parentId);
+  }
   return undefined;
 }
 

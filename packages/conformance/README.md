@@ -169,12 +169,12 @@ failed import case. Missing input is `unavailable`; a readable untrusted report 
 ones cited from item tests. The review records four outcomes:
 
 - `element-tested` or `diagnostic` when a class or behavior section names a support-matrix element.
-- `mentioned` when a test cites that section.
-- `open` when an in-scope rule has neither.
+- `with-element` when a characteristic belongs to one of those elements. Its evidence is that element's tests.
+- `mentioned` when a test cites the section, or when a narrative chapter is exercised by a named test.
+- `open` when an in-scope rule has none of that evidence.
 - `out-of-scope` for test delivery, outcome processing, results reporting, and shared stimulus.
 
-A supported interaction does not mark its characteristics tested. Regenerate the inventory with
-`node scripts/extract-qti-information-model.mjs <index.html>` after a published spec update.
+`with-element` means the element's tests are the evidence for that characteristic. A citation of the characteristic itself is the stronger per-section mark and stays `mentioned`. Regenerate the inventory with `node scripts/extract-qti-information-model.mjs <index.html>` after a published spec update.
 
 See the main repository README for the support matrix and release notes:
 https://github.com/LongsightGroup/qti3

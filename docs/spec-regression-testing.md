@@ -51,10 +51,11 @@ Examples:
 - `tests/browser/player-mathml.spec.ts`: MathML token replacement and XML Boolean spellings.
 
 The conformance package inventories that information model and binds each section to the
-support matrix or to a source citation. `reviewPublishedQtiInformationModel` leaves a section
-open until a test cites it or the section names a supported element. Closing an open section
-still follows the rules above. Run the extractor again when the published information model
-changes: `node scripts/extract-qti-information-model.mjs <index.html>`.
+support matrix, to a source citation, or to a test that already exercises that chapter.
+Characteristics of a supported element use that element's tests. `reviewPublishedQtiInformationModel`
+leaves a section open only when none of those apply. Closing an open section still follows the
+rules above. Run the extractor again when the published information model changes:
+`node scripts/extract-qti-information-model.mjs <index.html>`.
 
 Normative sources: [QTI 3 information model](https://www.imsglobal.org/sites/default/files/spec/qti/v3/info/index.html),
 [standard map-response template](https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml),
