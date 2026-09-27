@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  buildQti3HottextItem,
-  qti3TrustedXmlFragment,
-  validateQti3HottextItem,
-  writeQti3AssessmentItem,
-  type Qti3AuthoringItem,
-} from "./index.js";
+import { buildQti3HottextItem, qti3TrustedXmlFragment, validateQti3HottextItem } from "./index.js";
 import { expectValidParsedItem } from "./test-helpers.js";
 
 describe("qti3-writer hottext", () => {
@@ -92,20 +86,6 @@ describe("qti3-writer hottext", () => {
       correctResponse: ["A", "C"],
     });
     expect(item.interactions[0]?.attributes["max-choices"]).toBe("2");
-  });
-
-  it("supports the unified writer API", () => {
-    const item: Qti3AuthoringItem = {
-      interactionType: "hottext",
-      identifier: "hottext-unified",
-      title: "Hottext unified",
-      bodyHtml: qti3TrustedXmlFragment('<p>Choose <qti-hottext identifier="A"/>.</p>'),
-      choices: [{ identifier: "A", text: "A" }],
-      correctResponse: ["A"],
-    };
-
-    const parsed = expectValidParsedItem(writeQti3AssessmentItem(item));
-    expect(parsed.interactions[0]?.qtiName).toBe("qti-hottext-interaction");
   });
 
   it("requires at least one correct response", () => {

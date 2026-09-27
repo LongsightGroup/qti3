@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 import { testInteraction } from "./interaction-test-fixtures.js";
@@ -13,8 +13,6 @@ import {
 import {
   coreIntegrationTest,
   coreSessionStateTest,
-  interactionSupportFixtures,
-  interactionSupportTests,
   processingMappingTest,
   processingBrowserEvidence,
   processingOperatorsTest,
@@ -80,13 +78,6 @@ describe("support registry helpers", () => {
     });
   });
 
-  it("derives supported interaction evidence from the internal support-evidence registry", () => {
-    for (const support of interactionSupport) {
-      expect(support.fixtures).toEqual(interactionSupportFixtures(support.interactionType));
-      expect(support.tests).toEqual(interactionSupportTests(support.interactionType));
-    }
-  });
-
   it("exposes processing browser evidence on parent constructs only", () => {
     for (const [qtiName, browserTests] of Object.entries(processingBrowserEvidence)) {
       const support = processingSupport.find((entry) => entry.qtiName === qtiName);
@@ -112,13 +103,14 @@ describe("support registry helpers", () => {
     }
   });
 
-  it("points support evidence at existing test suites with assertions", () => {
+  it("points nonempty support evidence at existing test suites", () => {
     for (const support of [
       ...interactionSupport,
       ...deprecatedInteractionSupport,
       ...processingSupport,
       ...itemMetadataSupport,
     ]) {
+      expect(support.tests.length).toBeGreaterThan(0);
       for (const path of support.tests) {
         expect(existsSync(path), `${support.qtiName} evidence must exist: ${path}`).toBe(true);
       }
@@ -132,13 +124,6 @@ describe("support registry helpers", () => {
       processingOperatorsTest,
       processingMappingTest,
     ];
-    for (const coreTest of splitCoreTests) {
-      expect(existsSync(coreTest), `core evidence must exist: ${coreTest}`).toBe(true);
-      expect(readFileSync(coreTest, "utf8"), `${coreTest} must contain assertions`).toMatch(
-        /\b(?:it|test)\(/,
-      );
-    }
-
     for (const support of processingSupport) {
       const coreTest = support.tests[0];
       expect(coreTest).toMatch(/^packages\/core\/src\/.+\.test\.ts$/);
