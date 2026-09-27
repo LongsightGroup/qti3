@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed fixture. Every accepted scoring turn earns one point; FINISH closes. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="sequence" title="Sequence" adaptive="true" time-dependent="false">
+  <qti-response-declaration identifier="FINISH" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body><p><qti-end-attempt-interaction response-identifier="FINISH" title="Finish"/></p></qti-item-body>
+  <qti-response-processing>
+    <qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value>
+    <qti-response-condition><qti-response-if><qti-variable identifier="FINISH"/>
+      <qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value>
+    </qti-response-if></qti-response-condition>
+  </qti-response-processing>
+</qti-assessment-item>
