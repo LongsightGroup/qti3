@@ -124,3 +124,155 @@ it("rejects dynamic assignment results before they can make saved state unrestor
     expect(createItemSession(document, saved, options).serialize()).toEqual(state);
   }
 });
+
+// QTI 3.0.1 §5.130: assignments require explicit conversion in both numeric directions.
+it("requires explicit numeric assignment conversion while preserving converted results", () => {
+  for (const template of [false, true]) {
+    const declaration = template
+      ? outcome.replace("outcome-declaration", "template-declaration")
+      : outcome;
+    const rule = (expression: string) =>
+      template
+        ? `<qti-set-template-value identifier="RESULT">${expression}</qti-set-template-value>`
+        : set(expression);
+    const rejected = parseQtiXml(xml(declaration, rule(base("integer", "7")), template));
+    expect(rejected.ok).toBe(false);
+    expect(rejected.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "processing.assignment.type" }),
+    );
+    if (!rejected.document) throw new Error("Expected document");
+    const rejectedSession = createItemSession(rejected.document);
+    expect(rejectedSession.score().diagnostics).toContainEqual(
+      expect.objectContaining({ code: "processing.assignment.type" }),
+    );
+    expect(
+      template
+        ? rejectedSession.serialize().templateValues?.RESULT
+        : rejectedSession.serialize().outcomes.RESULT,
+    ).toBeNull();
+    const document = valid(
+      xml(
+        declaration,
+        rule(`<qti-integer-to-float>${base("integer", "7")}</qti-integer-to-float>`),
+        template,
+      ),
+    );
+    const session = createItemSession(document);
+    expect(session.score().diagnostics).toEqual([]);
+    expect(
+      template ? session.serialize().templateValues?.RESULT : session.serialize().outcomes.RESULT,
+    ).toBe(7);
+  }
+});
+
+// QTI 3.0.1 §§5.114, 5.151: conditional branches require single Booleans.
+it("rejects non-Boolean conditions in both phases and checks dynamic branch selection", () => {
+  for (const template of [false, true]) {
+    const phase = template ? "template" : "response";
+    const declaration = template
+      ? outcome.replace("outcome-declaration", "template-declaration")
+      : outcome;
+    const assignment = (value: string) =>
+      template
+        ? `<qti-set-template-value identifier="RESULT">${base("float", value)}</qti-set-template-value>`
+        : set(base("float", value));
+    const rules = (expression: string) =>
+      `<qti-${phase}-condition><qti-${phase}-if>${expression}${assignment("1")}</qti-${phase}-if><qti-${phase}-else>${assignment("0")}</qti-${phase}-else></qti-${phase}-condition>`;
+    const rejected = parseQtiXml(xml(declaration, rules(base("string", "0")), template));
+    expect(rejected.ok).toBe(false);
+    expect(rejected.diagnostics).toContainEqual(
+      expect.objectContaining({ code: "processing.condition.type" }),
+    );
+    const document = valid(xml(declaration, rules(custom), template));
+    for (const value of ["0", [true], true, false, null] satisfies QtiValue[]) {
+      const session = createItemSession(document, undefined, {
+        customOperators: { dynamic: () => value },
+      });
+      const score = session.score();
+      expect(template ? session.serialize().templateValues?.RESULT : score.outcomes.RESULT).toBe(
+        value === true ? 1 : 0,
+      );
+      if (typeof value === "string" || Array.isArray(value))
+        expect(score.diagnostics).toContainEqual(
+          expect.objectContaining({ code: "processing.condition.type" }),
+        );
+      else expect(score.diagnostics).toEqual([]);
+    }
+  }
+});
+
+// QTI 3.0.1 §5.87.2: lookup inputs are single numeric/duration; match requires integer.
+it("requires lookup tables and typed inputs without breaking numeric, duration or NULL lookups", () => {
+  const table =
+    '<qti-interpolation-table default-value="0"><qti-interpolation-table-entry source-value="1" target-value="10"/></qti-interpolation-table>';
+  const declaration = outcome.replace("/>", `>${table}</qti-outcome-declaration>`);
+  const lookup = (expression: string) =>
+    `<qti-lookup-outcome-value identifier="RESULT">${expression}</qti-lookup-outcome-value>`;
+  for (const [decl, expression, code] of [
+    [outcome, base("integer", "1"), "processing.lookup.table"],
+    [declaration, base("boolean", "true"), "processing.lookup.type"],
+    [declaration, `<qti-multiple>${base("integer", "1")}</qti-multiple>`, "processing.lookup.type"],
+  ]) {
+    const result = parseQtiXml(xml(decl!, lookup(expression!)));
+    expect(result.ok).toBe(false);
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({ code }));
+  }
+  for (const [expression, expected] of [
+    [base("integer", "1"), 10],
+    [base("float", "1.5"), 10],
+    [base("duration", "2"), 10],
+    ["<qti-null/>", 0],
+  ] as const) {
+    const score = createItemSession(valid(xml(declaration, lookup(expression)))).score();
+    expect(score.outcomes.RESULT).toBe(expected);
+    expect(score.diagnostics).toEqual([]);
+  }
+  const document = valid(xml(declaration, lookup(custom)));
+  const score = createItemSession(document, undefined, {
+    customOperators: { dynamic: () => true },
+  }).score();
+  expect(score.outcomes.RESULT).toBeNull();
+  expect(score.diagnostics).toContainEqual(
+    expect.objectContaining({ code: "processing.lookup.type" }),
+  );
+  const matchDeclaration =
+    '<qti-outcome-declaration identifier="RESULT" cardinality="single" base-type="string"><qti-match-table><qti-match-table-entry source-value="1" target-value="identifier"/></qti-match-table></qti-outcome-declaration>';
+  const rejected = parseQtiXml(xml(matchDeclaration, lookup(base("float", "1"))));
+  expect(rejected.ok).toBe(false);
+  expect(rejected.diagnostics).toContainEqual(
+    expect.objectContaining({ code: "processing.lookup.type" }),
+  );
+  expect(
+    createItemSession(valid(xml(matchDeclaration, lookup(base("integer", "1"))))).score().outcomes
+      .RESULT,
+  ).toBe("identifier");
+});
+
+// QTI 3.0.1 §8.36 requires >1 observations for all variance/SD operators.
+it("rejects undersized statistics without inventing zero variance", () => {
+  for (const [operator, expected] of [
+    ["sampleVariance", 2],
+    ["sampleSD", Math.SQRT2],
+    ["popVariance", 1],
+    ["popSD", 1],
+    ["mean", 4],
+  ] as const) {
+    const document = valid(
+      xml(outcome, set(`<qti-stats-operator name="${operator}">${custom}</qti-stats-operator>`)),
+    );
+    for (const values of [[5], [3, 5], null]) {
+      const score = createItemSession(document, undefined, {
+        customOperators: { dynamic: () => values },
+      }).score();
+      const undersized = values?.length === 1 && operator !== "mean";
+      expect(score.outcomes.RESULT).toBe(
+        undersized || values === null ? null : values.length === 1 ? 5 : expected,
+      );
+      if (undersized)
+        expect(score.diagnostics).toContainEqual(
+          expect.objectContaining({ code: "processing.stats.size" }),
+        );
+      else expect(score.diagnostics).toEqual([]);
+    }
+  }
+});

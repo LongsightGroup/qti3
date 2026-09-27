@@ -137,13 +137,6 @@ function scalarComparisonKey(value: QtiScalarValue, baseType?: QtiBaseType): str
   return String(value);
 }
 
-export function numericValue(value: QtiValue): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "boolean") return value ? 1 : 0;
-  if (typeof value === "string") return Number(value);
-  return 0;
-}
-
 export function durationSeconds(value: QtiValue): number | null {
   if (value === null || Array.isArray(value) || isRecordValue(value)) return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;

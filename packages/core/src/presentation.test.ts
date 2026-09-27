@@ -208,7 +208,7 @@ describe("attempt presentation", () => {
     const doc = document(
       xml().replace(
         '<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>',
-        '<qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-random-integer min="0" max="100000"/></qti-set-outcome-value></qti-response-processing>',
+        '<qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-integer-to-float><qti-random-integer min="0" max="100000"/></qti-integer-to-float></qti-set-outcome-value></qti-response-processing>',
       ),
     );
     const a = createItemSession(doc, undefined, { randomSeed: 123, presentationSeed: 1 });

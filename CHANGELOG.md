@@ -89,6 +89,9 @@
 - Use the requested mapping when a response declares both `qti-mapping` and
   `qti-area-mapping`. Standard mapping templates use the same evaluator as inline
   expressions, including its overflow checks.
+- Require explicit numeric assignment conversions, Boolean processing conditions, and typed
+  lookup inputs with a declared table. Reject variance and standard deviation inputs with
+  fewer than two observations instead of returning zero.
 - Validate lookup-table targets and defaults against the declared outcome base type.
   Invalid text values can no longer pass validation for numeric outcomes.
 - Evaluate `acot` as `atan(1/x)`, `acsc` as `asin(1/x)`, and `asec` as `acos(1/x)`.

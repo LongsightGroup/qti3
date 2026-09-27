@@ -1,4 +1,5 @@
-import { processingValueMatchesType } from "./processing-type-contracts.js";
+import { inferProcessingExpressionType } from "./processing-expression-type.js";
+import { processingValueMatchesType, processingTypesMatch } from "./processing-type-contracts.js";
 import { processingVariableType } from "./processing-variables.js";
 import { identifierIsVisible } from "./identifier-visibility.js";
 import {
@@ -50,7 +51,6 @@ import {
   serialize,
 } from "./processing-state.js";
 import {
-  booleanValue,
   isNullResponse,
   normalizeValueForCardinality,
   qtiMatchValues,
@@ -502,7 +502,16 @@ function evaluateProcessingBoolean(
   context: SessionProcessingContext,
   expression: QtiResponseCondition["ifExpression"],
 ): boolean {
-  return expression ? booleanValue(context.evaluation.evaluate(expression)) : false;
+  if (!expression) return false;
+  const value = context.evaluation.evaluate(expression);
+  if (value === null || typeof value === "boolean") return value === true;
+  context.evaluation.diagnostics.push({
+    code: "processing.condition.type",
+    severity: "error",
+    message: "Processing conditions require a single Boolean value or NULL.",
+    source: expression.source,
+  });
+  return false;
 }
 
 function resolveConditionalRules<Rule>(
@@ -628,6 +637,8 @@ function applyResponseRules(context: SessionProcessingContext, rules: QtiRespons
         evaluation.document,
         rule.identifier,
         evaluation.evaluate(rule.expression),
+        rule.expression,
+        evaluation.diagnostics,
       );
       continue;
     }
@@ -672,7 +683,11 @@ function checkedAssignmentValue(
   expression: QtiProcessingExpression,
 ): QtiValue {
   const type = processingVariableType(evaluation.document.item, identifier);
-  if (!type || processingValueMatchesType(value, type)) return value;
+  const actual = inferProcessingExpressionType(expression, (id) =>
+    processingVariableType(evaluation.document.item, id),
+  );
+  if (!type || (processingTypesMatch(actual, type) && processingValueMatchesType(value, type)))
+    return value;
   evaluation.diagnostics.push({
     code: "processing.assignment.type",
     severity: "error",

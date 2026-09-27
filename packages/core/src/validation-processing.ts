@@ -1,5 +1,7 @@
+import { validateLookupContract } from "./processing-mapping.js";
 import {
   validateProcessingAssignment,
+  validateBooleanCondition,
   validateNumericOperands,
 } from "./processing-type-contracts.js";
 import { parseNumericOperatorAttribute } from "./operator-attribute.js";
@@ -150,11 +152,13 @@ function validateResponseCondition(
   variables: ProcessingVariables,
   diagnostics: QtiDiagnostic[],
 ): void {
+  validateBooleanCondition(condition.ifExpression, variables, diagnostics);
   validateExpressionReferences(condition.ifExpression, responses, variables, diagnostics);
   for (const rule of condition.thenRules) {
     validateResponseRule(rule, outcomes, responses, variables, diagnostics);
   }
   for (const branch of condition.elseIfs) {
+    validateBooleanCondition(branch.expression, variables, diagnostics);
     validateExpressionReferences(branch.expression, responses, variables, diagnostics);
     for (const rule of branch.rules) {
       validateResponseRule(rule, outcomes, responses, variables, diagnostics);
@@ -175,16 +179,19 @@ function validateTemplateRule(
 ): void {
   if (rule.type === "exitTemplate") return;
   if (rule.type === "templateConstraint") {
+    validateBooleanCondition(rule.expression, variables, diagnostics);
     validateExpressionReferences(rule.expression, responses, variables, diagnostics);
     return;
   }
 
   if (rule.type === "templateCondition") {
+    validateBooleanCondition(rule.ifExpression, variables, diagnostics);
     validateExpressionReferences(rule.ifExpression, responses, variables, diagnostics);
     for (const branchRule of rule.thenRules) {
       validateTemplateRule(branchRule, responses, outcomes, templates, variables, diagnostics);
     }
     for (const branch of rule.elseIfs) {
+      validateBooleanCondition(branch.expression, variables, diagnostics);
       validateExpressionReferences(branch.expression, responses, variables, diagnostics);
       for (const branchRule of branch.rules) {
         validateTemplateRule(branchRule, responses, outcomes, templates, variables, diagnostics);
@@ -300,6 +307,14 @@ function validateLookupOutcomeRule(
       path: rule.source?.path,
       source: rule.source,
     });
+  }
+  if (outcomes.has(rule.identifier)) {
+    validateLookupContract(
+      variables.outcomeDeclaration(rule.identifier)?.lookupTable,
+      variables.typeOf(rule.expression),
+      rule.expression,
+      diagnostics,
+    );
   }
   validateExpressionReferences(rule.expression, responses, variables, diagnostics);
 }

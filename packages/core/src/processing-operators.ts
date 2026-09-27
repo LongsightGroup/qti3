@@ -198,9 +198,9 @@ export function statsOperatorValue(name: string, values: number[]): QtiValue {
     case "mean":
       return meanValue;
     case "sampleVariance":
-      return meanWithDivisor(squareDiffs, values.length > 1 ? values.length - 1 : 1);
+      return meanWithDivisor(squareDiffs, values.length - 1);
     case "sampleSD":
-      return Math.sqrt(meanWithDivisor(squareDiffs, values.length > 1 ? values.length - 1 : 1));
+      return Math.sqrt(meanWithDivisor(squareDiffs, values.length - 1));
     case "popVariance":
       return mean(squareDiffs);
     case "popSD":

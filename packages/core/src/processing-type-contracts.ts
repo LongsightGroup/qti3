@@ -15,15 +15,7 @@ export function validateProcessingAssignment(
 ): void {
   const target = variables.declarationType(identifier);
   const actual = variables.typeOf(expression);
-  if (!target || !actual) return;
-  if (
-    target.cardinality === actual.cardinality &&
-    (!target.baseType ||
-      !actual.baseType ||
-      target.baseType === actual.baseType ||
-      (target.baseType === "float" && actual.baseType === "integer"))
-  )
-    return;
+  if (!target || processingTypesMatch(actual, target)) return;
   diagnostics.push({
     code: "processing.assignment.type",
     severity: "error",
@@ -151,4 +143,35 @@ export function processingValueMatchesType(
     if (baseType === "boolean") return typeof entry === "boolean";
     return qtiScalarMatchesBaseType(entry, baseType);
   });
+}
+
+/** Conditions accept NULL or one Boolean, never truthiness conversions. */
+export function validateBooleanCondition(
+  expression: QtiProcessingExpression | undefined,
+  variables: ProcessingVariables,
+  diagnostics: QtiDiagnostic[],
+): void {
+  if (!expression) return;
+  const type = variables.typeOf(expression);
+  if (!type || (type.cardinality === "single" && (!type.baseType || type.baseType === "boolean")))
+    return;
+  diagnostics.push({
+    code: "processing.condition.type",
+    severity: "error",
+    message: "Processing conditions require a single Boolean value or NULL.",
+    source: expression.source,
+    path: expression.source?.path,
+  });
+}
+
+/** Unknown expression types defer to runtime value checks; known types require exact agreement. */
+export function processingTypesMatch(
+  actual: ProcessingExpressionType | undefined,
+  target: ProcessingExpressionType,
+): boolean {
+  return (
+    !actual ||
+    (target.cardinality === actual.cardinality &&
+      (!target.baseType || !actual.baseType || target.baseType === actual.baseType))
+  );
 }

@@ -109,7 +109,14 @@ it.each([
 ])("returns NULL for invalid resolved numeric bounds: %s", (expression) => {
   const declarations =
     '<qti-template-declaration identifier="N" base-type="integer" cardinality="single"><qti-default-value><qti-value>1</qti-value></qti-default-value></qti-template-declaration><qti-template-declaration identifier="ZERO" base-type="integer" cardinality="single"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-template-declaration>';
-  const parsed = parseQtiXml(item(expression, "float", "single", declarations));
+  const parsed = parseQtiXml(
+    item(
+      expression,
+      expression.startsWith("<qti-random-integer") ? "integer" : "float",
+      "single",
+      declarations,
+    ),
+  );
   expect(parsed.diagnostics).toEqual([]);
   if (!parsed.document) throw new Error("Expected item");
   expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);

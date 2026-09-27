@@ -60,7 +60,7 @@ describe("numeric processing boundaries", () => {
       "subtract",
       `<qti-subtract>${base("float", "1e308")}${base("float", "-1e308")}</qti-subtract>`,
     ],
-    ["product", product],
+    ["product", `<qti-integer-to-float>${product}</qti-integer-to-float>`],
     [
       "roundTo",
       `<qti-round-to rounding-mode="significantFigures" figures="1">${base("float", "1.79e308")}</qti-round-to>`,
@@ -78,10 +78,17 @@ describe("numeric processing boundaries", () => {
 
   it("propagates overflowing operands through GCD without entering an unbounded loop", () => {
     // Fail before exercising GCD if the upstream overflow guard regresses.
-    const guard = createItemSession(validDocument(item(numericOutcome, setScore(product)))).score();
+    const guard = createItemSession(
+      validDocument(
+        item(numericOutcome, setScore(`<qti-integer-to-float>${product}</qti-integer-to-float>`)),
+      ),
+    ).score();
     expect(guard.outcomes.SCORE).toBeNull();
     const document = validDocument(
-      item(numericOutcome, setScore(`<qti-gcd>${product}${base("integer", "2")}</qti-gcd>`)),
+      item(
+        numericOutcome.replace('base-type="float"', 'base-type="integer"'),
+        setScore(`<qti-gcd>${product}${base("integer", "2")}</qti-gcd>`),
+      ),
     );
     const session = createItemSession(document);
     expect(session.score().outcomes.SCORE).toBeNull();
@@ -91,7 +98,12 @@ describe("numeric processing boundaries", () => {
   it("keeps large finite LCM results finite by dividing before multiplying", () => {
     const power = `<qti-product>${base("integer", "1073741824").repeat(20)}</qti-product>`;
     const expression = `<qti-lcm>${power}${power}</qti-lcm>`;
-    const document = validDocument(item(numericOutcome, setScore(expression)));
+    const document = validDocument(
+      item(
+        numericOutcome.replace('base-type="float"', 'base-type="integer"'),
+        setScore(expression),
+      ),
+    );
     const score = createItemSession(document).score();
     expect(score.outcomes.SCORE).toBe(2 ** 600);
     expect(score.diagnostics).toEqual([]);
@@ -100,7 +112,10 @@ describe("numeric processing boundaries", () => {
     const left = `<qti-product>${scale}${base("integer", "1024")}</qti-product>`;
     const right = `<qti-product>${scale}${base("integer", "2147483647")}</qti-product>`;
     const overflowing = validDocument(
-      item(numericOutcome, setScore(`<qti-lcm>${left}${right}${base("integer", "2")}</qti-lcm>`)),
+      item(
+        numericOutcome.replace('base-type="float"', 'base-type="integer"'),
+        setScore(`<qti-lcm>${left}${right}${base("integer", "2")}</qti-lcm>`),
+      ),
     );
     const session = createItemSession(overflowing);
     const failed = session.score();
@@ -114,7 +129,7 @@ describe("numeric processing boundaries", () => {
   it("diagnoses template overflow and restores the generated NULL value", () => {
     const document = validDocument(
       item(
-        '<qti-template-declaration identifier="T" cardinality="single" base-type="float"/>',
+        '<qti-template-declaration identifier="T" cardinality="single" base-type="integer"/>',
         `<qti-set-template-value identifier="T">${product}</qti-set-template-value>`,
         true,
       ),
