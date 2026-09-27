@@ -3,7 +3,7 @@ import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/sr
 import { UNSUPPORTED_INTERACTION_ITEM } from "./fixtures/dom-behavior-items.js";
 import { sliderItem } from "./fixtures/slider-items.js";
 import { multipleGraphicGapItem } from "./player-graphic-gap-fixtures.js";
-import { loadFixture, pasteXml } from "./player-helpers.js";
+import { loadFixture, pasteXml, waitForPlayerLoad } from "./player-helpers.js";
 
 const SEEDED_TEMPLATE_ITEM = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="seeded-player-session" title="seeded-player-session" time-dependent="false">
@@ -40,6 +40,7 @@ test.describe("player lifecycle", () => {
     const xml = fixture.xml.replace('time-dependent="false"', 'time-dependent="true"');
     await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
     await page.goto("/");
+    await waitForPlayerLoad(page);
     await page.clock.pauseAt(new Date("2026-01-01T01:00:00Z"));
     const player = page.locator("qti-assessment-item-player");
     await player.evaluate(async (element, item) => {

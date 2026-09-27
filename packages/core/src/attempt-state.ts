@@ -77,7 +77,7 @@ export function assertCompatiblePriorState(
     assertRestoredValueMatchesDeclaration("response", declaration, priorState.responses);
   }
   assertRestoredSliderResponses(document, priorState.responses);
-  assertRestoredGapResponses(document, priorState.responses);
+  assertRestoredCollectionResponses(document, priorState);
   for (const declaration of document.item.outcomeDeclarations) {
     assertRestoredValueMatchesDeclaration("outcome", declaration, priorState.outcomes);
   }
@@ -98,12 +98,12 @@ export function assertCompatiblePriorState(
   }
 }
 
-function assertRestoredGapResponses(
-  document: QtiDocument,
-  responses: Record<string, QtiValue>,
-): void {
+function assertRestoredCollectionResponses(document: QtiDocument, state: QtiAttemptStateV1): void {
   const responseIdentifiers = document.item.interactions.flatMap((interaction) =>
-    (interaction.type === "graphicGapMatch" || interaction.type === "gapMatch") &&
+    (interaction.type === "graphicGapMatch" ||
+      interaction.type === "gapMatch" ||
+      interaction.type === "order" ||
+      interaction.type === "graphicOrder") &&
     interaction.responseIdentifier
       ? [interaction.responseIdentifier]
       : [],
@@ -113,7 +113,8 @@ function assertRestoredGapResponses(
   // the authored domain or silently discard pairs to fit the interaction limits.
   const result = validateQtiResponseVariables({
     item: document.item,
-    responses,
+    responses: state.responses,
+    templateValues: state.templateValues,
     responseIdentifiers,
     allowIncompleteResponses: true,
   });
@@ -221,6 +222,12 @@ function attemptStateErrors(value: unknown): string[] {
   }
 
   const errors: string[] = [];
+  if (
+    value.responseProcessingCompleted !== undefined &&
+    typeof value.responseProcessingCompleted !== "boolean"
+  ) {
+    errors.push("QTI attempt state responseProcessingCompleted must be a boolean.");
+  }
   if (value.templateProcessing !== undefined) {
     const generation = value.templateProcessing;
     if (

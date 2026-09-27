@@ -1,3 +1,4 @@
+import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import {
   isNonNegativeInteger,
   validateItemBase,
@@ -101,6 +102,14 @@ export function validateQti3ExtendedTextItemStructure(
   input: Qti3ExtendedTextBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
+  if (input.rubricHtml !== undefined)
+    diagnostics.push(
+      ...validateQtiRubricFragment(
+        `<qti-rubric-block view="scorer" use="scoring"><qti-content-body>${input.rubricHtml}</qti-content-body></qti-rubric-block>`,
+      )
+        .filter((entry) => entry.severity === "error")
+        .map((entry) => ({ code: entry.code, path: "rubricHtml", message: entry.message })),
+    );
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
     "responseIdentifier",

@@ -1,3 +1,4 @@
+import { isQtiNamespace } from "./qti-namespaces.js";
 import { diagnostic } from "./diagnostics.js";
 import { normalizeIdentifier } from "./text.js";
 import type { QtiMigrationDiagnostic, QtiMigrationSourceFormat } from "./types.js";
@@ -331,13 +332,7 @@ function canonicalNode(node: XmlElement): CanonicalQtiNode {
   }
   const children = childElements(node);
   return {
-    namespace: [
-      "http://www.imsglobal.org/xsd/imsqti_v2p1",
-      "http://www.imsglobal.org/xsd/imsqti_v2p2",
-      "http://www.imsglobal.org/xsd/imsqtiasi_v3p0",
-    ].includes(node.namespaceURI ?? "")
-      ? "qti"
-      : node.namespaceURI,
+    namespace: isQtiNamespace(node.namespaceURI) ? "qti" : node.namespaceURI,
     name: normalizedQtiName(localName(node)),
     attributes: attributes.toSorted(([left], [right]) => left.localeCompare(right)),
     text: children.length ? undefined : node.textContent,

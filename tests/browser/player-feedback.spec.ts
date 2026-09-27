@@ -1,3 +1,5 @@
+import { parseQtiXml, validateAssessmentItem } from "../../packages/core/src/index.js";
+import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import { expect, test } from "@playwright/test";
 import { buildQti3ChoiceItem, qti3TrustedXmlFragment } from "../../packages/writer/src/index.js";
 import { pasteXml } from "./player-helpers.js";
@@ -257,4 +259,200 @@ test("loads multiple-choice modal feedback and updates selected explanations", a
   await expect(feedback).toContainText("nuclear fusion");
   await expect(feedback).toContainText("reflects sunlight");
   await expect(feedback).not.toContainText("combustion");
+});
+
+function feedbackItem(adaptive: boolean, complete: boolean, templateDefault = false): string {
+  const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="feedback-policy" title="Feedback policy" adaptive="${adaptive}" time-dependent="false">
+    <qti-response-declaration identifier="END" cardinality="single" base-type="boolean"/>
+    <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"><qti-default-value><qti-value>START</qti-value></qti-default-value></qti-outcome-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+    ${templateDefault ? '<qti-template-processing><qti-set-default-value identifier="FEEDBACK"><qti-base-value base-type="identifier">GENERATED</qti-base-value></qti-set-default-value></qti-template-processing>' : ""}
+    <qti-item-body>
+      <qti-feedback-block outcome-identifier="FEEDBACK" identifier="HELP" show-hide="show"><p>Scoring solution.</p></qti-feedback-block>
+      <qti-feedback-block outcome-identifier="FEEDBACK" identifier="HELP" show-hide="hide"><p>Original instructions.</p></qti-feedback-block>
+      <p><qti-feedback-inline outcome-identifier="FEEDBACK" identifier="${templateDefault ? "GENERATED" : "START"}" show-hide="show">Initial inline guidance.</qti-feedback-inline></p>
+      <qti-end-attempt-interaction response-identifier="END" title="Submit"/>
+    </qti-item-body>
+    <qti-response-processing>
+      <qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value>
+      <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">HELP</qti-base-value></qti-set-outcome-value>
+      ${complete ? '<qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value>' : ""}
+    </qti-response-processing>
+    <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="HELP" show-hide="show"><p>Useful hint.</p></qti-modal-feedback>
+    <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="INITIAL" show-hide="hide"><p>Post-submission alternative.</p></qti-modal-feedback>
+  </qti-assessment-item>`;
+  const parsed = parseQtiXml(xml);
+  expect(parsed.diagnostics).toEqual([]);
+  if (!parsed.document) throw new Error("Expected feedback document");
+  expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);
+  return xml;
+}
+
+// QTI 3 §§2.2,2.5: restoring feedback uses saved outcomes, never another scoring invocation.
+test("modal feedback survives JSON restore, saved-state load and locale rerender", async ({
+  page,
+}) => {
+  const xml = feedbackItem(true, false);
+  await page.goto("/");
+  const player = page.locator("qti-assessment-item-player");
+  await player.evaluate(async (element, input) => {
+    await element.loadXml(input);
+  }, xml);
+  await expect(player.locator(".qti3-feedback")).toBeHidden();
+  // A fresh saved state must not reveal a hide-mode modal just because its predicate matches.
+  await player.evaluate((element) => {
+    const state = element.serialize();
+    if (state) element.restore(state);
+  });
+  await expect(player.locator(".qti3-feedback")).toBeHidden();
+  await player.getByRole("button", { name: "Submit", exact: true }).click();
+  await expect(player.locator(".qti3-feedback")).toContainText("Useful hint.");
+  const saved = await player.evaluate((element) => element.serialize());
+  expect(saved?.outcomes.SCORE).toBe(1);
+  expect(saved?.responseProcessingCompleted).toBe(true);
+  await player.evaluate((element, state) => {
+    if (state) element.restore(JSON.parse(JSON.stringify(state)));
+  }, saved);
+  await expect(player.locator(".qti3-feedback")).toBeVisible();
+  await expect(player.locator(".qti3-feedback")).toContainText("Useful hint.");
+  await player.evaluate(
+    async (element, input) => {
+      await element.loadXml(input.xml, { state: input.state });
+    },
+    { xml, state: saved },
+  );
+  await expect(player.locator(".qti3-feedback")).toContainText("Useful hint.");
+  await player.evaluate((element) => {
+    element.setAttribute("language-of-interface", "en-US");
+  });
+  await expect(player.locator(".qti3-feedback")).toContainText("Useful hint.");
+  expect((await player.evaluate((element) => element.serialize()))?.outcomes.SCORE).toBe(1);
+  expect(
+    (await player.evaluate((element) => element.serialize()))?.builtInVariables?.numAttempts,
+  ).toBe(saved?.builtInVariables?.numAttempts);
+  await player.evaluate((element) => element.reset());
+  await expect(player.locator(".qti3-feedback")).toBeHidden();
+});
+
+// QTI 3 §7.19.2–3: suppression includes integrated feedback and restores default visibility.
+for (const templateDefault of [false, true]) {
+  test(`suppressed nonadaptive review uses initial feedback outcomes (template=${templateDefault})`, async ({
+    page,
+  }) => {
+    const xml = feedbackItem(false, false, templateDefault);
+    await page.goto("/");
+    const player = page.locator("qti-assessment-item-player");
+    await player.evaluate(async (element, input) => {
+      await element.loadXml(input, { sessionControl: { showFeedback: false } });
+    }, xml);
+    await player.getByRole("button", { name: "Submit", exact: true }).click();
+    const saved = await player.evaluate((element) => element.serialize());
+    expect(saved?.status).toBe("completed");
+    expect(saved?.outcomes.FEEDBACK).toBe("HELP");
+    for (const phase of ["completed", "restore", "load", "rerender"]) {
+      if (phase === "restore")
+        await player.evaluate((element, state) => {
+          if (state) element.restore(state);
+        }, saved);
+      if (phase === "load")
+        await player.evaluate(
+          async (element, input) => {
+            await element.loadXml(input.xml, {
+              state: input.state,
+              sessionControl: { showFeedback: false },
+            });
+          },
+          { xml, state: saved },
+        );
+      if (phase === "rerender")
+        await player.evaluate((element) => {
+          element.setAttribute("language-of-interface", "en-US");
+        });
+      await expect(player.getByText("Scoring solution.", { exact: true })).toBeHidden();
+      await expect(player.getByText("Original instructions.", { exact: true })).toBeVisible();
+      await expect(player.getByText("Initial inline guidance.", { exact: true })).toBeVisible();
+      await expect(player.locator(".qti3-feedback")).toBeHidden();
+      expect((await player.evaluate((element) => element.serialize()))?.outcomes.FEEDBACK).toBe(
+        "HELP",
+      );
+    }
+    await expectNoAxeViolationsOnPlayer(page);
+  });
+}
+
+for (const adaptive of [false, true]) {
+  test(`permitted completed review retains both feedback forms (adaptive=${adaptive})`, async ({
+    page,
+  }) => {
+    const xml = feedbackItem(adaptive, true);
+    await page.goto("/");
+    const player = page.locator("qti-assessment-item-player");
+    await player.evaluate(
+      async (element, input) => {
+        await element.loadXml(input.xml, { sessionControl: { showFeedback: !input.adaptive } });
+      },
+      { xml, adaptive },
+    );
+    await player.getByRole("button", { name: "Submit", exact: true }).click();
+    await expect(player.getByText("Scoring solution.", { exact: true })).toBeVisible();
+    await expect(player.getByText("Original instructions.", { exact: true })).toBeHidden();
+    await expect(player.locator(".qti3-feedback")).toContainText("Useful hint.");
+    await expect(player.locator(".qti3-feedback")).toBeVisible();
+  });
+}
+
+// Completed review policy must apply before feedback enters the DOM or score state is published.
+test("endAttempt commits review status before its only feedback render", async ({ page }) => {
+  await page.goto("/");
+  await pasteXml(page, feedbackItem(false, false));
+  const observed = await page.locator("qti-assessment-item-player").evaluate(
+    async (element, xml) => {
+      await element.loadXml(xml, { sessionControl: { showFeedback: false } });
+      const panel = element.querySelector(".qti3-feedback");
+      if (!panel) throw new Error("Expected feedback panel");
+      const observer = new MutationObserver(() => {});
+      observer.observe(panel, { childList: true, subtree: true });
+      const statuses: string[] = [];
+      element.addEventListener("qti-score", (event) => statuses.push(event.detail.state.status), {
+        once: true,
+      });
+      element.endAttempt();
+      const inserted = observer
+        .takeRecords()
+        .flatMap((record) => [...record.addedNodes].map((node) => node.textContent));
+      observer.disconnect();
+      return { inserted, statuses, state: element.serialize() };
+    },
+    feedbackItem(false, false),
+  );
+  expect(observed.inserted).toEqual([]);
+  expect(observed.statuses).toEqual(["completed"]);
+  expect(observed.state?.status).toBe("completed");
+});
+
+test("failed rescore clears modal feedback and remains hidden after restoration", async ({
+  page,
+}) => {
+  const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="failed-feedback" title="Failed feedback" time-dependent="false"><qti-response-declaration identifier="PATTERN" cardinality="single" base-type="string"/><qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/><qti-outcome-declaration identifier="MATCH" cardinality="single" base-type="boolean"/><qti-item-body><p>Pattern: <qti-text-entry-interaction response-identifier="PATTERN"/></p></qti-item-body><qti-response-processing><qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">HELP</qti-base-value></qti-set-outcome-value><qti-set-outcome-value identifier="MATCH"><qti-pattern-match pattern="{PATTERN}"><qti-base-value base-type="string">A</qti-base-value></qti-pattern-match></qti-set-outcome-value></qti-response-processing><qti-modal-feedback outcome-identifier="FEEDBACK" identifier="HELP" show-hide="show"><p>Successful processing feedback.</p></qti-modal-feedback></qti-assessment-item>`;
+  const parsed = parseQtiXml(xml);
+  expect(parsed.diagnostics).toEqual([]);
+  if (!parsed.document) throw new Error("Expected item");
+  expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);
+  await page.goto("/");
+  await pasteXml(page, xml);
+  const player = page.locator("qti-assessment-item-player");
+  await player.locator("input").fill("A");
+  await player.evaluate((element) => element.scoreAttempt());
+  await expect(player.locator(".qti3-feedback")).toBeVisible();
+  await player.locator("input").fill("[");
+  const failed = await player.evaluate((element) => element.scoreAttempt());
+  expect(failed?.diagnostics).toContainEqual(
+    expect.objectContaining({ code: "processing.pattern.syntax" }),
+  );
+  expect(failed?.state.responseProcessingCompleted).toBe(false);
+  await expect(player.locator(".qti3-feedback")).toBeHidden();
+  await player.evaluate((element, state) => {
+    if (state) element.restore(state);
+  }, failed?.state);
+  await expect(player.locator(".qti3-feedback")).toBeHidden();
 });

@@ -85,6 +85,8 @@ export interface QtiItemSession {
   presentationResponse(identifier: string): QtiValue;
   /** Starts an attempt without requiring a response; repeated calls and resume are idempotent. */
   beginAttempt(): QtiDiagnostic[];
+  /** Effective initial outcome after template processing, without restored response-processing values. */
+  initialOutcomeValue(identifier: string): QtiValue;
   respond(identifier: string, value: QtiValue): QtiDiagnostic[];
   setInteractionState(identifier: string, state: QtiPortableCustomStateValue): QtiDiagnostic[];
   interactionState(identifier: string): QtiPortableCustomStateValue | undefined;
@@ -126,6 +128,7 @@ export function createItemSession(
   const templateValues: Record<string, QtiValue> = {};
   const interactionStates: Record<string, QtiPortableCustomStateValue> = {};
   const correctResponses: Record<string, QtiValue> = {};
+  let responseProcessingCompleted = priorState?.responseProcessingCompleted ?? false;
   let status: QtiAttemptStatus = priorState?.status ?? "initialized";
   const builtInDiagnostics: QtiDiagnostic[] = [];
   const reportBuiltInDiagnostic = (diagnostic: QtiDiagnostic) => {
@@ -289,6 +292,9 @@ export function createItemSession(
         return [];
       });
     },
+    initialOutcomeValue(identifier) {
+      return cloneValue(defaultOutcomes[identifier] ?? null);
+    },
     correctResponses() {
       return cloneValueRecord(correctResponses);
     },
@@ -337,6 +343,7 @@ export function createItemSession(
           ];
           return diagnostics;
         }
+        responseProcessingCompleted = false;
         evaluation.diagnostics.length = 0;
         builtInDiagnostics.length = 0;
         captureTime();
@@ -363,6 +370,8 @@ export function createItemSession(
           ...builtInDiagnostics,
         ];
         if (outcomes[COMPLETION_STATUS] === COMPLETION_COMPLETED) status = "completed";
+        if (!diagnostics.some((diagnostic) => diagnostic.severity === "error"))
+          responseProcessingCompleted = true;
         validationMessages = diagnostics;
         return diagnostics;
       });
@@ -392,6 +401,7 @@ export function createItemSession(
 
   function snapshot(): QtiAttemptStateV1 {
     return serialize({
+      responseProcessingCompleted,
       itemIdentifier: document.item.identifier,
       status,
       responses,

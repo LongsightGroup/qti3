@@ -1,3 +1,5 @@
+import { orderResponseContract, validateOrderResponse } from "./order-response.js";
+import { projectVisibleChoices } from "./presentation.js";
 import type {
   QtiAssessmentItem,
   QtiBaseType,
@@ -33,6 +35,7 @@ export type { QtiNamedResponseInput as QtiResponseVariableInput } from "./respon
 export type QtiResponseVariablesInput = Record<string, unknown> | readonly QtiNamedResponseInput[];
 
 export type QtiResponseValidationDiagnosticCode =
+  | "response.templateValues.required"
   | "response.required"
   | "response.maximum"
   | "response.matchMax"
@@ -67,6 +70,8 @@ type QtiResponseVariablesParseResult =
 
 export interface QtiResponseValidationInput {
   item: QtiAssessmentItem;
+  /** Required clone context when any validated choices are template-controlled. */
+  templateValues?: Readonly<Record<string, QtiValue>> | undefined;
   responses: QtiResponseVariablesInput;
   allowIncompleteResponses?: boolean | undefined;
   /** Host policy: require a scored response when no minimum is authored; defaults to false. */
@@ -101,7 +106,31 @@ export function parseQtiResponseVariables(
   const scopedResponseIdentifiers = input.responseIdentifiers
     ? new Set(input.responseIdentifiers)
     : undefined;
-  const interactionsByResponse = indexInteractionsByResponse(input.item.interactions);
+  if (
+    input.templateValues === undefined &&
+    input.item.interactions.some(
+      (interaction) =>
+        (!scopedResponseIdentifiers ||
+          (interaction.responseIdentifier !== undefined &&
+            scopedResponseIdentifiers.has(interaction.responseIdentifier))) &&
+        interaction.choices.some(
+          (choice) => choice.attributes["template-identifier"] !== undefined,
+        ),
+    )
+  ) {
+    diagnostics.push({
+      code: "response.templateValues.required",
+      severity: "error",
+      message:
+        "Validating template-controlled choices requires the generated clone's templateValues.",
+    });
+    return { ok: false, diagnostics };
+  }
+  const interactionsByResponse = indexInteractionsByResponse(
+    input.item.interactions.map((interaction) =>
+      input.templateValues ? projectVisibleChoices(interaction, input.templateValues) : interaction,
+    ),
+  );
 
   for (const declaration of input.item.responseDeclarations) {
     if (
@@ -299,8 +328,10 @@ function validateResponseDomain(
   diagnostics: QtiResponseValidationDiagnostic[],
 ): void {
   if (value === null) return;
-  const interactionsWithChoices = interactions.filter((interaction) =>
-    interaction.choices.some((choice) => choice.identifier.length > 0),
+  const interactionsWithChoices = interactions.filter(
+    (interaction) =>
+      !orderResponseContract(interaction) &&
+      interaction.choices.some((choice) => choice.identifier.length > 0),
   );
   const baseType = declaration.baseType;
   if (
@@ -401,6 +432,21 @@ function validateDeclarationResponse(
   requireScoredResponses: boolean | undefined,
   diagnostics: QtiResponseValidationDiagnostic[],
 ): void {
+  const order = orderResponseContract(interaction);
+  if (order) {
+    const problem = validateOrderResponse(order, value ?? null, allowIncompleteResponses === true);
+    if (problem === "domain") pushResponseDomainDiagnostic(declaration, value ?? null, diagnostics);
+    else if (problem)
+      diagnostics.push(
+        attachResponseIdentifier(
+          declaration.identifier,
+          problem === "minimum"
+            ? requiredResponseDiagnostic(declaration.identifier, interaction, order.minimum)
+            : maximumResponseDiagnostic(declaration.identifier, interaction, order.maximum),
+        ),
+      );
+    return;
+  }
   if (interaction && !allowIncompleteResponses) {
     diagnostics.push(
       ...matchMinDiagnostics(declaration.identifier, interaction, value ?? null).map((diagnostic) =>

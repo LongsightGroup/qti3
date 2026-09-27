@@ -1,4 +1,5 @@
 import {
+  validateQtiRubricFragment,
   isQtiIdentifier,
   isQtiPackageItemHref,
   testFailure,
@@ -72,7 +73,11 @@ export function writeQti3FixedAssessmentTest(test: QtiFixedTestDefinition): QtiT
       if (!register(feedback.identifier) || !isQtiIdentifier(feedback.outcomeIdentifier))
         return testFailure("fixed_feedback", "Invalid feedback identifier.");
   }
-  return { ok: true, value: testDocument(test, test.parts.map(writePart)) };
+  const xml = testDocument(test, test.parts.map(writePart));
+  const diagnostics = validateQtiRubricFragment(xml, true).filter(
+    (entry) => entry.severity === "error",
+  );
+  return diagnostics.length ? { ok: false, diagnostics } : { ok: true, value: xml };
 }
 
 function writePart(part: QtiFixedTestDefinition["parts"][number]): string {

@@ -175,7 +175,8 @@ export function prepareQtiPresentation(
     : { ok: true, state: { schema: "qti3.presentation.v1", orders }, interactions };
 }
 
-function projectVisibleChoices(
+/** Project the same template-controlled choice domain for delivery and response validation. */
+export function projectVisibleChoices(
   interaction: QtiInteraction,
   templateValues: Readonly<Record<string, QtiValue>>,
 ): QtiInteraction {

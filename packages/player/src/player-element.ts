@@ -1,3 +1,4 @@
+import { feedbackPresentation } from "./player/feedback-presentation.js";
 import { preparePlayerSession } from "./player/session-presentation.js";
 import { playerErrorDiagnostic } from "./player/diagnostics.js";
 import {
@@ -329,7 +330,12 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     };
     const result = parseQtiXml(xml);
     if (!this.isCurrentLoad(generation)) return;
-    if (!result.document) {
+    if (
+      !result.document ||
+      result.diagnostics.some(
+        (diagnostic) => diagnostic.severity === "error" && diagnostic.code.startsWith("rubric."),
+      )
+    ) {
       this.transitionCurrentLoadToError(
         generation,
         result.diagnostics,
@@ -412,6 +418,13 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   scoreAttempt(options: QtiScoreAttemptOptions = {}): QtiScoreResult | undefined {
+    return this.processAttempt(options, false);
+  }
+
+  private processAttempt(
+    options: QtiScoreAttemptOptions,
+    complete: boolean,
+  ): QtiScoreResult | undefined {
     const loadedItem = this.loadedItem;
     if (!loadedItem) return undefined;
     const shouldValidateResponses =
@@ -432,19 +445,24 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       this.emitStateChange(state);
       return undefined;
     }
-    const result = loadedItem.session.score({
+    let result = loadedItem.session.score({
       endAttemptResponseIdentifier: options.endAttemptResponseIdentifier,
     });
     if (result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+      if (!result.state.responseProcessingCompleted) this.renderFeedback();
       this.emitDiagnostics(result.diagnostics);
       return result;
+    }
+    if (complete && !loadedItem.document.item.adaptive) {
+      loadedItem.session.setStatus("completed");
+      result = { ...result, state: loadedItem.session.serialize() };
     }
     loadedItem.validationMessages = [];
     this.renderValidationMessages();
     this.dispatchPlayerEvent("qti-score", result);
     this.updateDynamicBodyState();
     this.updateAttemptAvailability();
-    if (loadedItem.sessionControl.showFeedback) this.renderFeedback(result.outcomes);
+    this.renderFeedback();
     this.emitStateChange(result.state);
     return result;
   }
@@ -519,14 +537,10 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
   }
 
   endAttempt(options: QtiScoreAttemptOptions = {}): void {
-    const result = this.scoreAttempt(options);
+    const result = this.processAttempt(options, true);
     if (!result || result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) return;
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
-    if (!loadedItem.document.item.adaptive) {
-      loadedItem.session.setStatus("completed");
-    }
-    this.updateAttemptAvailability();
     const state = this.serialize();
     if (!state) return;
     this.dispatchPlayerEvent("qti-endattempt", { state });
@@ -671,6 +685,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       this.assetObserver = observeResolvedAssets(root, loadedItem.resolveAsset);
     }
     this.replaceChildren(root);
+    this.renderFeedback();
   }
 
   private renderInteraction(interaction: QtiInteraction): HTMLElement {
@@ -740,6 +755,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
 
   private contentContext(): PlayerContentContext {
     const sessionState = () => this.loadedItem?.session.serialize();
+    const feedback = this.feedbackState();
     return {
       interactionAt: (index) => this.loadedItem?.presentationInteractions[index],
       renderBlockInteraction: (interaction) => this.renderInteraction(interaction),
@@ -767,7 +783,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         );
       },
       isFeedbackVisible: (node) =>
-        isFeedbackVisible(node, currentVariableValue(sessionState(), node.outcomeIdentifier)),
+        isFeedbackVisible(node, feedback?.outcomeValue(node.outcomeIdentifier) ?? null),
       isTemplateContentVisible: (element) => {
         const templateIdentifier = element.dataset.templateIdentifier;
         return isTemplateContentVisible(
@@ -814,9 +830,11 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
 
   private updateDynamicBodyState(): void {
     const sessionState = this.loadedItem?.session.serialize();
+    const feedback = this.feedbackState();
     syncDynamicBodyState(this, {
       variableValue: (identifier) => currentVariableValue(sessionState, identifier),
       templateValue: (identifier) => currentTemplateValue(sessionState, identifier),
+      feedbackOutcomeValue: (identifier) => feedback?.outcomeValue(identifier) ?? null,
     });
   }
 
@@ -910,13 +928,25 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
     if (loadedItem.validationMessages.length !== before) this.renderValidationMessages();
   }
 
-  private renderFeedback(outcomes: Record<string, QtiValue>): void {
+  private feedbackState(): ReturnType<typeof feedbackPresentation> | undefined {
+    const loadedItem = this.loadedItem;
+    return (
+      loadedItem &&
+      feedbackPresentation(
+        loadedItem.session,
+        loadedItem.session.serialize(),
+        loadedItem.sessionControl.showFeedback,
+      )
+    );
+  }
+
+  private renderFeedback(): void {
     const loadedItem = this.loadedItem;
     if (!loadedItem) return;
     syncFeedbackPanel(
       this.querySelector<HTMLElement>(".qti3-feedback"),
       loadedItem.document.item,
-      outcomes,
+      this.feedbackState()?.modalOutcomes,
       this.contentContext(),
     );
   }

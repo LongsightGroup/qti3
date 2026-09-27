@@ -24,6 +24,7 @@ export function serialize(state: Omit<QtiAttemptStateV1, "schema">): QtiAttemptS
   } = state;
   return {
     schema: ATTEMPT_STATE_SCHEMA,
+    responseProcessingCompleted: state.responseProcessingCompleted,
     ...(templateProcessing === undefined
       ? {}
       : {

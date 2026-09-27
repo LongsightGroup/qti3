@@ -86,7 +86,7 @@ describe("response-limits", () => {
             attributes: { "max-associations": "1", "max-choices": "2" },
           }),
         ),
-      ).toBeUndefined();
+      ).toBe(0);
       expect(
         maximumAllowedResponses(
           testInteraction({
@@ -94,7 +94,7 @@ describe("response-limits", () => {
             attributes: { "max-associations": "1" },
           }),
         ),
-      ).toBeUndefined();
+      ).toBe(0);
       expect(
         orderSubsetLimitsActive(
           testInteraction({

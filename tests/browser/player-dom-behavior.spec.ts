@@ -1398,3 +1398,26 @@ for (const kind of ["hottext", "gap"] as const) {
     await expectNoAxeViolationsOnPlayer(page);
   });
 }
+
+// QTI 2.1 §6.4: scorer rubrics must never reach the candidate DOM after migration.
+test("migrated rubric audiences hide scoring guidance while retaining candidate guidance", async ({
+  page,
+}) => {
+  const { migrateQtiItemToQti3 } = await import("../../packages/migrator/src/index.js");
+  const source = `<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" identifier="rubric-audiences" title="Rubric audiences" adaptive="false" timeDependent="false">
+    <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier"><correctResponse><value>A</value></correctResponse></responseDeclaration>
+    <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"/>
+    <itemBody><rubricBlock view="scorer"><p>Scorer answer key: Alpha</p></rubricBlock><rubricBlock view="candidate scorer"><p>Candidate guidance.</p></rubricBlock><choiceInteraction responseIdentifier="RESPONSE" maxChoices="1"><simpleChoice identifier="A">Alpha</simpleChoice><simpleChoice identifier="B">Beta</simpleChoice></choiceInteraction></itemBody>
+    <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>
+  </assessmentItem>`;
+  const migrated = migrateQtiItemToQti3({ xml: source });
+  expect(migrated.diagnostics).toEqual([]);
+  if (!migrated.xml) throw new Error("Expected migrated rubric item");
+  await page.goto("/");
+  await pasteXml(page, migrated.xml);
+  const player = page.locator("qti-assessment-item-player");
+  await expect(player.getByText("Candidate guidance.", { exact: true })).toBeVisible();
+  await expect(player.getByText("Scorer answer key: Alpha", { exact: true })).toHaveCount(0);
+  expect(await player.textContent()).not.toContain("Scorer answer key");
+  await expectNoAxeViolationsOnPlayer(page);
+});

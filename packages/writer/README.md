@@ -281,3 +281,10 @@ interaction body. Supply trusted XML containing exactly one empty
 `<qti-interaction-placeholder/>`. The shared item assembler replaces that placeholder
 with the renderer's body; `bodyHtml` and `promptHtml` retain their existing meanings.
 Malformed placement templates return `invalid_item_body_template` diagnostics.
+
+Use `buildQti3RubricBlock({ view, use, placement, content })` to create a validated rubric
+fragment for an item's `bodyHtml` or `itemBodyHtml`. The extended-text `rubricHtml` convenience
+still creates a scorer/scoring rubric. Nested interactions and rubrics are rejected, including
+in fixed-test instructions; test instructions also reject template content. Rubric-local
+stylesheets and catalogs are currently unsupported. Fixed-test rubrics are interchange only;
+core test execution rejects them rather than delivering a test without its instructions.

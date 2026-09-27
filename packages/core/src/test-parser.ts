@@ -24,6 +24,9 @@ export type QtiTestExecution =
 export function parseQtiTestExecution(xml: string): QtiTestResult<QtiTestExecution> {
   const parsed = parseTestRoot(xml);
   if (!parsed.ok) return parsed;
+  const rubricDiagnostics: QtiDiagnostic[] = [];
+  rejectUndeliveredRubrics(parsed.value, rubricDiagnostics);
+  if (rubricDiagnostics.length) return { ok: false, diagnostics: rubricDiagnostics };
   if (!requiresSequence(parsed.value)) return { ok: true, value: { kind: "fixed" } };
   const result = parseTestDefinition(parsed.value);
   return result.ok ? { ok: true, value: { kind: "sequenced", test: result.value } } : result;
@@ -198,4 +201,19 @@ function parseTestOutcomeProcessing(
     }
   }
   return rules;
+}
+
+/** Classification must not silently authorize fixed delivery that omits instructions. */
+function rejectUndeliveredRubrics(node: XmlNode, diagnostics: QtiDiagnostic[]): void {
+  if (node.uri === QTI_ASI_NAMESPACE && node.localName === "qti-rubric-block") {
+    diagnostics.push({
+      code: "test.rubric.unsupported",
+      severity: "error",
+      message:
+        "Test-level rubric delivery is not supported. Preserve this test for interchange; do not deliver it without its rubrics.",
+      source: node.source,
+      path: node.source.path,
+    });
+  }
+  for (const child of node.children) rejectUndeliveredRubrics(child, diagnostics);
 }

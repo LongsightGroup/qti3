@@ -1,3 +1,4 @@
+import { serializeQti2ContentChildren } from "./qti2-body.js";
 import type {
   Qti3AuthoringItem,
   Qti3GapMatchChoice,
@@ -40,7 +41,6 @@ import {
   attr,
   findAllDescendantsByAnyLocalName,
   findAllDescendantsByLocalName,
-  serializeChildren,
   textOf,
   toNumber,
   type XmlElement,
@@ -220,7 +220,7 @@ export function mapInlineChoiceItem(context: Qti2Context): Qti3AuthoringItem {
       required: xmlBooleanAttribute(attr(entry, "required")),
       options: findAllDescendantsByLocalName(entry, "inlinechoice").map((choice, choiceIndex) => ({
         identifier: normalizeIdentifier(attr(choice, "identifier"), `CHOICE_${choiceIndex + 1}`),
-        contentHtml: trusted(serializeChildren(choice)),
+        contentHtml: trusted(serializeQti2ContentChildren(choice)),
         text: textOf(choice) || undefined,
         fixed: xmlBooleanAttribute(attr(choice, "fixed")),
       })),
@@ -243,7 +243,7 @@ export function mapHottext(interaction: XmlElement, context: Qti2Context): Qti3A
   const choices = hottexts.map(
     (hottext, index): Qti3HottextChoice => ({
       identifier: normalizeIdentifier(attr(hottext, "identifier"), `H${index + 1}`),
-      contentHtml: trusted(serializeChildren(hottext)),
+      contentHtml: trusted(serializeQti2ContentChildren(hottext)),
       text: textOf(hottext) || undefined,
     }),
   );

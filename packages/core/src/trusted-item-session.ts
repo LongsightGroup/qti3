@@ -179,6 +179,7 @@ export function runTrustedItemSession(
   if (input.submissionValidation === "strict") {
     const validation = parseQtiResponseVariables({
       item: parsedResult.parsed.document.item,
+      templateValues: sessionResult.session.serialize().templateValues,
       responses: input.submission.trustedResponses ?? {},
       allowIncompleteResponses: input.allowIncompleteResponses,
       allowedUndeclaredResponseIdentifiers: input.allowedUndeclaredResponseIdentifiers,

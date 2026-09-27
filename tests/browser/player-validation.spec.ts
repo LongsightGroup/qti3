@@ -664,3 +664,53 @@ test("reports an unused required association choice when scoring", async ({ page
   );
   await expect(page.locator("#score-panel")).toHaveAttribute("data-status", "blocked");
 });
+
+// QTI 3 §5.97.2: omitting min-choices requires a complete permutation, even with max-choices=1.
+test("whole-list order rejects partial submission and duplicate restoration", async ({ page }) => {
+  const { parseQtiXml, validateAssessmentItem } = await import("../../packages/core/src/index.js");
+  const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="whole-order" title="Whole order" time-dependent="false">
+    <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier"><qti-correct-response><qti-value>A</qti-value><qti-value>B</qti-value><qti-value>C</qti-value></qti-correct-response></qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+    <qti-item-body><qti-order-interaction response-identifier="RESPONSE" max-choices="1"><qti-simple-choice identifier="A">Alpha</qti-simple-choice><qti-simple-choice identifier="B">Beta</qti-simple-choice><qti-simple-choice identifier="C">Gamma</qti-simple-choice></qti-order-interaction></qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"/>
+  </qti-assessment-item>`;
+  const parsed = parseQtiXml(xml);
+  expect(parsed.diagnostics).toEqual([]);
+  if (!parsed.document) throw new Error("Expected item");
+  expect(validateAssessmentItem(parsed.document).diagnostics).toEqual([]);
+  await page.goto("/");
+  const player = page.locator("qti-assessment-item-player");
+  await player.evaluate(async (element, input) => {
+    await element.loadXml(input);
+  }, xml);
+  const initial = await player.evaluate((element) => element.serialize());
+  const partial = await player.evaluate((element, state) => {
+    if (!state) throw new Error("Expected state");
+    element.restore({ ...state, responses: { RESPONSE: ["A"] } });
+    return element.scoreAttempt();
+  }, initial);
+  expect(partial).toBeUndefined();
+  await expect(player.locator('[data-validation-for="RESPONSE"]')).toHaveText(
+    "RESPONSE requires at least 3 responses.",
+  );
+  const afterDuplicate = await player.evaluate((element, state) => {
+    if (!state) throw new Error("Expected state");
+    element.restore({ ...state, responses: { RESPONSE: ["A", "A", "A"] } });
+    return element.serialize();
+  }, initial);
+  expect(afterDuplicate?.responses.RESPONSE).toEqual(["A"]);
+  for (const [response, expected] of [
+    [["C", "B", "A"], 0],
+    [["A", "B", "C"], 1],
+  ] as const) {
+    const scored = await player.evaluate(
+      (element, input) => {
+        if (!input.state) throw new Error("Expected state");
+        element.restore({ ...input.state, responses: { RESPONSE: [...input.response] } });
+        return element.scoreAttempt();
+      },
+      { state: initial, response },
+    );
+    expect(scored?.outcomes.SCORE).toBe(expected);
+  }
+});

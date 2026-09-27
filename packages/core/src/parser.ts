@@ -294,16 +294,20 @@ function parseContentChildren(
   responseDeclarationMap: Map<string, QtiResponseDeclaration>,
   interactions: QtiInteraction[],
 ): QtiContentNode[] {
-  return parseContent(node, (interactionNode) => {
-    const interaction = parseInteraction(interactionNode, diagnostics, responseDeclarationMap);
-    return {
-      kind: "interaction",
-      interactionIndex: interactions.push(interaction) - 1,
-      qtiName: interactionNode.localName,
-      responseIdentifier: interaction.responseIdentifier,
-      source: interactionNode.source,
-    };
-  });
+  return parseContent(
+    node,
+    (interactionNode) => {
+      const interaction = parseInteraction(interactionNode, diagnostics, responseDeclarationMap);
+      return {
+        kind: "interaction",
+        interactionIndex: interactions.push(interaction) - 1,
+        qtiName: interactionNode.localName,
+        responseIdentifier: interaction.responseIdentifier,
+        source: interactionNode.source,
+      };
+    },
+    diagnostics,
+  );
 }
 
 function parseInteraction(

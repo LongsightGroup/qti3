@@ -1,3 +1,4 @@
+import { xmlBooleanAttribute } from "./xml-boolean.js";
 import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 
 import { diagnostic } from "./diagnostics.js";
@@ -53,10 +54,22 @@ export function migrateQti2ItemXml(
       ],
     };
   }
+  // The writer currently emits non-adaptive items only. Never downgrade an adaptive source.
+  if (xmlBooleanAttribute(attr(root, "adaptive"))) {
+    diagnostics.push(
+      diagnostic(
+        "qti2_adaptive_not_preserved",
+        "error",
+        "Adaptive QTI 2 item lifecycle semantics cannot be preserved by the authoring model.",
+        { path, sourceFormat },
+      ),
+    );
+  }
   const body = findDescendantByLocalName(root, "itembody");
   if (!body) {
     return {
       diagnostics: [
+        ...diagnostics,
         diagnostic("qti2_item_body_missing", "error", "QTI 2.x item is missing itemBody.", {
           path,
           sourceFormat,
@@ -82,8 +95,8 @@ export function migrateQti2ItemXml(
     diagnostics,
   };
   const interactionCheck = resolveInteractionDispatch(body, sourceFormat, path);
-  if (interactionCheck.diagnostics.length) {
-    return { diagnostics: interactionCheck.diagnostics };
+  if (interactionCheck.diagnostics.length || diagnostics.length) {
+    return { diagnostics: [...diagnostics, ...interactionCheck.diagnostics] };
   }
   const dispatch = interactionCheck.dispatch;
   if (!dispatch) {

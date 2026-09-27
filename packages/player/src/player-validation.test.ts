@@ -94,8 +94,20 @@ describe("player-validation", () => {
       ).toBe(2);
       expect(minimumRequiredResponses(testInteraction({ type, attributes: {} }))).toBe(0);
       expect(
-        minimumRequiredResponses(testInteraction({ type, attributes: { required: "true" } })),
-      ).toBe(1);
+        minimumRequiredResponses(
+          testInteraction({
+            type,
+            attributes: { required: "true" },
+            choices: ["A", "B"].map((identifier) => ({
+              identifier,
+              text: identifier,
+              qtiName: "qti-simple-choice",
+              role: "simpleChoice",
+              attributes: {},
+            })),
+          }),
+        ),
+      ).toBe(2);
     },
   );
 
@@ -168,7 +180,7 @@ describe("player-validation", () => {
         ),
       ).toEqual({
         checkMinimum: false,
-        checkMaximum: false,
+        checkMaximum: true,
         checkMatchMax: false,
       });
 
@@ -177,7 +189,13 @@ describe("player-validation", () => {
           interactions: [
             testInteraction({
               type,
-              choices: [],
+              choices: ["A", "B"].map((identifier) => ({
+                identifier,
+                text: identifier,
+                role: "simpleChoice",
+                qtiName: "qti-simple-choice",
+                attributes: {},
+              })),
               attributes: { "max-choices": "1", "data-max-selections-message": "Too many." },
             }),
           ],

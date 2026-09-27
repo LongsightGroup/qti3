@@ -1,3 +1,4 @@
+import { migratedQti2ContentName } from "./qti-namespaces.js";
 import { escapeXmlAttribute } from "@longsightgroup/qti3-core";
 import { qti3TrustedXmlFragment } from "@longsightgroup/qti3-writer";
 import { normalizeIdentifier } from "./text.js";
@@ -125,6 +126,11 @@ export function trusted(html: string): ReturnType<typeof qti3TrustedXmlFragment>
   return qti3TrustedXmlFragment(html.trim() || "<p></p>");
 }
 
+/** Translate QTI 2 audience controls in every body, prompt, and choice fragment. */
+export function serializeQti2ContentChildren(element: XmlElement): string {
+  return serializeChildrenReplacing(element, new Map());
+}
+
 function serializeChildrenReplacing(
   element: XmlElement,
   replacements: ReadonlyMap<XmlElement, string>,
@@ -141,12 +147,14 @@ function serializeChildrenReplacing(
 function serializeReplacing(node: XmlNode, replacements: ReadonlyMap<XmlElement, string>): string {
   if (!isXmlElement(node)) return serializeNode(node);
   const element = node;
+  const name = migratedQti2ContentName(element.namespaceURI, element.localName ?? element.nodeName);
+  if (name === undefined) return serializeNode(element);
   const replacement = replacements.get(element);
   if (replacement !== undefined) return replacement;
-  return `<${element.nodeName}${attributesXml(element)}>${serializeChildrenReplacing(
-    element,
-    replacements,
-  )}</${element.nodeName}>`;
+  const children = serializeChildrenReplacing(element, replacements);
+  if (name === "qti-rubric-block")
+    return `<qti-rubric-block${attributesXml(element)} use="instructions"><qti-content-body>${children}</qti-content-body></qti-rubric-block>`;
+  return `<${name}${attributesXml(element)}>${children}</${name}>`;
 }
 
 function attributesXml(element: XmlElement): string {

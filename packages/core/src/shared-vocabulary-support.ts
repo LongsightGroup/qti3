@@ -290,6 +290,15 @@ function interactionStylesheetEntry(
 }
 
 export const sharedVocabularyClassSupport: SharedVocabularyClassSupport[] = [
+  svEntry("qti-rubric-inline", "content", "pass-through", {
+    notes: "Preserved on rubric sections, which remain in source order.",
+    tests: ["tests/browser/player-body-content.spec.ts"],
+  }),
+  svEntry("qti-rubric-discretionary-placement", "content", "pass-through", {
+    notes:
+      "Preserved for hosts. Relocation is optional; the default player keeps rubric sections in source order.",
+    tests: ["tests/browser/player-body-content.spec.ts"],
+  }),
   contentStylesheetEntry(
     "qti-layout-row",
     "Twelve-column content layout row; validated for supported child column spans and offsets.",

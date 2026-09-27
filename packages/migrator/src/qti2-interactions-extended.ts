@@ -1,3 +1,4 @@
+import { serializeQti2ContentChildren } from "./qti2-body.js";
 import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 
 import { bodyWithoutInteraction, interactionPresentation, trusted } from "./qti2-body.js";
@@ -9,7 +10,6 @@ import {
   attr,
   findAllDescendantsByLocalName,
   findDescendantByLocalName,
-  serializeChildren,
   textOf,
   toNumber,
   type XmlElement,
@@ -181,7 +181,7 @@ export function mapCustom(interaction: XmlElement, context: Qti2Context): Qti3Au
     responseBaseType: customBaseType(attr(declaration, "baseType")),
     responseCardinality: customCardinality(attr(declaration, "cardinality")),
     definition: attr(interaction, "definition") ?? undefined,
-    interactionMarkupHtml: trusted(serializeChildren(interaction)),
+    interactionMarkupHtml: trusted(serializeQti2ContentChildren(interaction)),
   };
 }
 
