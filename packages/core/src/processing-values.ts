@@ -122,7 +122,10 @@ function compareScalarValues(
   right: QtiScalarValue,
   baseType?: QtiBaseType,
 ): number {
-  return scalarComparisonKey(left, baseType).localeCompare(scalarComparisonKey(right, baseType));
+  const a = scalarComparisonKey(left, baseType);
+  const b = scalarComparisonKey(right, baseType);
+  // Collation can equate distinct Unicode strings; sorting must agree with equality.
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function scalarComparisonKey(value: QtiScalarValue, baseType?: QtiBaseType): string {
@@ -139,16 +142,6 @@ export function numericValue(value: QtiValue): number {
   if (typeof value === "boolean") return value ? 1 : 0;
   if (typeof value === "string") return Number(value);
   return 0;
-}
-
-export function numericValueOrNull(value: QtiValue): number | null {
-  if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  if (typeof value === "boolean") return value ? 1 : 0;
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
 }
 
 export function durationSeconds(value: QtiValue): number | null {

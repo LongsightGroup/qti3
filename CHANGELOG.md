@@ -75,6 +75,13 @@
 
 ### Fixed
 
+- Compare unordered response containers with an ordering consistent with exact value
+  equality. Reordering composed and decomposed Unicode strings no longer changes
+  `qti-match` results; ordered containers and duplicate counts remain significant.
+- Check assignment types and numeric operand types before processing. Dynamic results
+  from custom operators and record fields are checked before assignment, so invalid
+  values cannot produce a successful score that fails on restore. Numeric operators
+  no longer coerce Boolean or string operands into numbers.
 - Return NULL with `processing.numeric.nonFinite` when an expression produces a
   non-finite number, keeping overflow out of subsequent operators and saved attempt
   state. Prevent GCD and LCM from hanging on non-finite inputs or intermediate results.
@@ -98,6 +105,10 @@
 
 ### Compatibility
 
+- Processing programs with incompatible assignment types or numeric operands now return
+  `processing.assignment.type` or `processing.operand.type`. Dynamic violations return
+  NULL with an error diagnostic. The template-processing reference fixture now declares
+  its numeric response as `integer` to match its generated answer.
 - Inline `qti-map-response` and `qti-map-response-point` require their corresponding
   mapping. A missing mapping returns `processing.mapping.required`; an answer key or
   the other mapping type no longer substitutes for it.

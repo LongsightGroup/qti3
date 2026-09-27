@@ -1,3 +1,7 @@
+import {
+  validateProcessingAssignment,
+  validateNumericOperands,
+} from "./processing-type-contracts.js";
 import { parseNumericOperatorAttribute } from "./operator-attribute.js";
 import { validateRandomExpression } from "./validation-random-expression.js";
 import { processingVariables, type ProcessingVariables } from "./processing-variables.js";
@@ -246,6 +250,7 @@ function validateTemplateRule(
     }
   }
 
+  validateProcessingAssignment(rule.identifier, rule.expression, variables, diagnostics);
   validateExpressionReferences(rule.expression, responses, variables, diagnostics);
 }
 
@@ -321,6 +326,7 @@ function validateSetOutcomeRule(
       source: rule.source,
     });
   }
+  validateProcessingAssignment(rule.identifier, rule.expression, variables, diagnostics);
   validateExpressionReferences(rule.expression, responses, variables, diagnostics);
 }
 
@@ -331,6 +337,7 @@ function validateExpressionReferences(
   diagnostics: QtiDiagnostic[],
 ): void {
   if (!expression) return;
+  validateNumericOperands(expression, variables, diagnostics);
 
   if (expression.type === "variable") {
     validateProcessingIdentifier(

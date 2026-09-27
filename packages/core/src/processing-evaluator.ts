@@ -13,7 +13,7 @@ import { evaluateGeometryExpression } from "./processing-evaluator-geometry.js";
 import { evaluateNumericExpression } from "./processing-evaluator-numeric.js";
 import { evaluateStringExpression } from "./processing-evaluator-string.js";
 import { evaluateVariableExpression } from "./processing-evaluator-variable.js";
-import { isNullResponse, numericValueOrNull } from "./processing-values.js";
+import { isNullResponse } from "./processing-values.js";
 import { isRecordValue } from "./value-guards.js";
 
 export interface EvaluationContext {
@@ -31,7 +31,11 @@ export interface EvaluationContext {
   evaluate(expression: QtiProcessingExpression): QtiValue;
   indexValue(identifierOrInteger: string | undefined): number | undefined;
   numericAttribute(raw: string | undefined): number | undefined;
-  numericOperands(expressions: QtiProcessingExpression[]): number[] | null;
+  numericOperands(
+    expressions: QtiProcessingExpression[],
+    cardinality?: "single" | "container" | "either",
+    baseType?: "number" | "integer",
+  ): number[] | null;
   undeclaredResponseValue(identifier: string): QtiValue | undefined;
 }
 
@@ -87,16 +91,33 @@ export function createEvaluationContext(
           : (outcomes[attribute.identifier] ?? templateValues[attribute.identifier]);
       return typeof value === "number" && Number.isFinite(value) ? value : undefined;
     },
-    numericOperands(expressions) {
+    numericOperands(expressions, cardinality = "single", baseType = "number") {
       const numericValues: number[] = [];
       for (const expression of expressions) {
         const value = context.evaluate(expression);
-        if (value === null || isRecordValue(value)) return null;
+        if (value === null) return null;
         const values = Array.isArray(value) ? value : [value];
+        if (
+          isRecordValue(value) ||
+          (cardinality === "single" && Array.isArray(value)) ||
+          (cardinality === "container" && !Array.isArray(value)) ||
+          values.some(
+            (item) =>
+              typeof item !== "number" ||
+              !Number.isFinite(item) ||
+              (baseType === "integer" && !Number.isInteger(item)),
+          )
+        ) {
+          context.diagnostics.push({
+            code: "processing.operand.type",
+            severity: "error",
+            message: `Expected ${baseType} operands with ${cardinality} cardinality.`,
+            source: expression.source,
+          });
+          return null;
+        }
         for (const item of values) {
-          const numeric = numericValueOrNull(item);
-          if (numeric === null) return null;
-          numericValues.push(numeric);
+          if (typeof item === "number") numericValues.push(item);
         }
       }
       return numericValues;

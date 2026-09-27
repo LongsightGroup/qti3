@@ -10,7 +10,10 @@ import type {
   QtiValue,
 } from "./types.js";
 import { builtInVariableBaseType } from "./session-builtins.js";
-import { parseBaseType } from "./parser-values.js";
+import {
+  inferProcessingExpressionType,
+  type ProcessingExpressionType,
+} from "./processing-expression-type.js";
 
 export function getResponseDeclaration(
   document: QtiDocument,
@@ -41,7 +44,7 @@ export function resolveOptionalVariableValue(
   templateValues: Record<string, QtiValue>,
 ): QtiValue | undefined {
   if (identifier === "completionStatus") return outcomes.completionStatus ?? "not_attempted";
-  const declaration = resolveVariableDeclaration(document, identifier);
+  const declaration = resolveVariableDeclaration(document.item, identifier);
   if (!declaration) return undefined;
   if (declaration.kind === "response") return responses[identifier] ?? null;
   if (declaration.kind === "outcome") return outcomes[identifier] ?? null;
@@ -49,85 +52,50 @@ export function resolveOptionalVariableValue(
 }
 
 export function defaultValueForIdentifier(document: QtiDocument, identifier: string): QtiValue {
-  return resolveVariableDeclaration(document, identifier)?.defaultValue ?? null;
+  return resolveVariableDeclaration(document.item, identifier)?.defaultValue ?? null;
 }
 
 export function expressionIsOrdered(
   expression: QtiProcessingExpression,
   document: QtiDocument,
 ): boolean {
-  if (expression.type === "ordered" || expression.type === "repeat") return true;
-  if (expression.type === "delete") return expressionIsOrdered(expression.collection, document);
-  if (
-    (expression.type === "variable" ||
-      expression.type === "correct" ||
-      expression.type === "default") &&
-    variableCardinality(document, expression.identifier) === "ordered"
-  ) {
-    return true;
-  }
-  return false;
+  return (
+    inferProcessingExpressionType(expression, (identifier) =>
+      processingVariableType(document.item, identifier),
+    )?.cardinality === "ordered"
+  );
 }
 
-/** Resolve the declared atomic base type for an expression when it is statically knowable. */
+/** Resolve an expression's statically known atomic type using the declaration contract. */
 export function expressionBaseType(
   expression: QtiProcessingExpression,
   document: QtiDocument,
 ): QtiBaseType | undefined {
-  if (expression.type === "baseValue") return parseBaseType(expression.baseType);
-  if (expression.type === "isNull") return "boolean";
-  if (
-    expression.type === "variable" ||
-    expression.type === "correct" ||
-    expression.type === "default"
-  ) {
-    return (
-      builtInVariableBaseType(expression.identifier) ??
-      resolveVariableDeclaration(document, expression.identifier)?.baseType
-    );
-  }
-  if (expression.type === "index") return expressionBaseType(expression.expression, document);
-  if (expression.type === "delete") return expressionBaseType(expression.collection, document);
-  if (expression.type === "random") return expressionBaseType(expression.expression, document);
-  if (
-    expression.type === "multiple" ||
-    expression.type === "ordered" ||
-    expression.type === "repeat"
-  ) {
-    return commonExpressionBaseType(expression.expressions, document);
-  }
-  return undefined;
+  return inferProcessingExpressionType(expression, (identifier) =>
+    processingVariableType(document.item, identifier),
+  )?.baseType;
 }
 
-function commonExpressionBaseType(
-  expressions: QtiProcessingExpression[],
-  document: QtiDocument,
-): QtiBaseType | undefined {
-  const [first, ...rest] = expressions;
-  if (!first) return undefined;
-  const baseType = expressionBaseType(first, document);
-  if (!baseType) return undefined;
-  return rest.every((expression) => expressionBaseType(expression, document) === baseType)
-    ? baseType
-    : undefined;
-}
-
-function variableCardinality(document: QtiDocument, identifier: string): string | undefined {
-  return resolveVariableDeclaration(document, identifier)?.cardinality;
+/** Read a variable type from its declaration or the built-in contract. */
+export function processingVariableType(
+  item: QtiAssessmentItem,
+  identifier: string,
+): ProcessingExpressionType | undefined {
+  if (identifier === "QTI_CONTEXT") return { cardinality: "record" };
+  const baseType = builtInVariableBaseType(identifier);
+  return baseType
+    ? { baseType, cardinality: "single" }
+    : resolveVariableDeclaration(item, identifier);
 }
 
 function resolveVariableDeclaration(
-  document: QtiDocument,
+  item: QtiAssessmentItem,
   identifier: string,
 ): QtiResponseDeclaration | QtiOutcomeDeclaration | QtiTemplateDeclaration | undefined {
   return (
-    document.item.responseDeclarations.find(
-      (declaration) => declaration.identifier === identifier,
-    ) ??
-    document.item.outcomeDeclarations.find(
-      (declaration) => declaration.identifier === identifier,
-    ) ??
-    document.item.templateDeclarations.find((declaration) => declaration.identifier === identifier)
+    item.responseDeclarations.find((declaration) => declaration.identifier === identifier) ??
+    item.outcomeDeclarations.find((declaration) => declaration.identifier === identifier) ??
+    item.templateDeclarations.find((declaration) => declaration.identifier === identifier)
   );
 }
 
@@ -150,6 +118,11 @@ export function processingVariables(item: QtiAssessmentItem) {
   );
   return {
     has: (identifier: string) => names.has(identifier),
+    typeOf: (expression: QtiProcessingExpression) =>
+      inferProcessingExpressionType(expression, (identifier) =>
+        processingVariableType(item, identifier),
+      ),
+    declarationType: (identifier: string) => processingVariableType(item, identifier),
     numericAttribute(raw: string | undefined, baseType: "integer" | "number"): boolean {
       const attribute = parseNumericOperatorAttribute(raw);
       if (attribute.type === "invalid") return false;

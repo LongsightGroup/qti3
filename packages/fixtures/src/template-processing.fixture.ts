@@ -18,7 +18,7 @@ export function formatTemplateProcessingPrompt(
 export function createTemplateProcessingItemXml(identifier: string): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="${identifier}" title="${identifier}" time-dependent="false" xml:lang="en">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
   <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
     <qti-default-value><qti-value>0</qti-value></qti-default-value>
   </qti-outcome-declaration>
@@ -51,9 +51,9 @@ export function createTemplateProcessingFixture(): QtiFixture {
     attempts: [
       {
         name: "generated-correct",
-        responses: { RESPONSE: String(TEMPLATE_PROCESSING_CORRECT_RESPONSE) },
+        responses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
         expectedOutcomes: { SCORE: 1 },
-        expectedResponses: { RESPONSE: String(TEMPLATE_PROCESSING_CORRECT_RESPONSE) },
+        expectedResponses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
         expectedState: {
           templateValues: {
             BASE: TEMPLATE_PROCESSING_BASE,
@@ -79,9 +79,9 @@ export function createBasicTemplateProcessingFixture(): QtiFixture {
     attempts: [
       {
         name: "generated-correct",
-        responses: { RESPONSE: String(TEMPLATE_PROCESSING_CORRECT_RESPONSE) },
+        responses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
         expectedOutcomes: { SCORE: 1 },
-        expectedResponses: { RESPONSE: String(TEMPLATE_PROCESSING_CORRECT_RESPONSE) },
+        expectedResponses: { RESPONSE: TEMPLATE_PROCESSING_CORRECT_RESPONSE },
         expectedState: {
           templateValues: {
             BASE: TEMPLATE_PROCESSING_BASE,
