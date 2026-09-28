@@ -297,7 +297,7 @@ function preservesProcessing(source: XmlElement, target: XmlElement | null): boo
   const template = attr(source, "template");
   if (!template || childElements(target).length > 0) return false;
   const match =
-    /^https?:\/\/www\.imsglobal\.org\/question\/qti_v2p[12]\/rptemplates\/(match_correct|map_response|map_response_point)(?:\.xml)?$/.exec(
+    /^https?:\/\/www\.imsglobal\.org\/question\/qti_v2p[012]\/rptemplates\/(match_correct|map_response|map_response_point)(?:\.xml)?$/.exec(
       template,
     );
   if (!match) return false;

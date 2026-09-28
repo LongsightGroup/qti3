@@ -1,4 +1,5 @@
 const qti2Namespaces: ReadonlySet<string> = new Set([
+  "http://www.imsglobal.org/xsd/imsqti_v2p0",
   "http://www.imsglobal.org/xsd/imsqti_v2p1",
   "http://www.imsglobal.org/xsd/imsqti_v2p2",
 ]);

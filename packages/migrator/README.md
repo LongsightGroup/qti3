@@ -2,6 +2,13 @@
 
 Framework-neutral QTI 1.2 and QTI 2.x to QTI 3 migration utilities.
 
+QTI 2.0's `http://www.imsglobal.org/xsd/imsqti_v2p0` namespace is recognized
+alongside QTI 2.1 and 2.2 when translating content and checking scoring fidelity.
+Standard QTI 2.0 response-processing template URLs are recognized too; unsupported
+programs still produce preservation errors. `qti20-fidelity.test.ts` verifies choice
+structure, rubric translation, correct/incorrect/unanswered grades, and rejection of
+unpreserved scoring under both repair policies.
+
 The migrator reads legacy QTI package or item XML and produces QTI-shaped authoring models from `@longsightgroup/qti3-writer`. It does not own application-specific draft models or authoring UI review policy.
 
 ```ts
