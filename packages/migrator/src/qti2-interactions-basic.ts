@@ -202,6 +202,7 @@ export function mapExtendedText(interaction: XmlElement, context: Qti2Context): 
     minStrings: toNumber(attr(interaction, "minStrings")),
     maxStrings: toNumber(attr(interaction, "maxStrings")),
     placeholderText: attr(interaction, "placeholderText") ?? undefined,
+    patternMask: attr(interaction, "patternMask") ?? undefined,
     format: extendedTextFormat(attr(interaction, "format")),
     responseBaseType: baseType(attr(declaration, "baseType") ?? attr(declaration, "base-type")),
     responseCardinality: responseCardinality(attr(declaration, "cardinality")),

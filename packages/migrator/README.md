@@ -99,6 +99,12 @@ Text-entry migration preserves string, integer, and float types; input constrain
 weights and case sensitivity; and the correct response independently of its mapping weight.
 Match-correct text answers remain case-sensitive. Other response types and unrepresentable mapping
 defaults or bounds return diagnostics. `defaultValue` is never interpreted as `correctResponse`.
+Extended-text migration also preserves `patternMask` input constraints.
+
+QTI 1.2 material preserves ordered text and image components. Plain text remains literal text;
+`text/html` material is accepted when it contains a well-formed XHTML fragment, including encoded
+or CDATA content. Malformed HTML, unsupported content types, and unsupported material components
+return `qti12_material_not_preserved`, including under safe repair.
 
 QTI assessment-test structure preservation is not implemented yet. When a legacy package contains an
 assessment-test resource, migration returns a flat review part and reports

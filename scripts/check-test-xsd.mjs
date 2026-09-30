@@ -151,6 +151,7 @@ try {
       "packages/migrator/src/qti20-fidelity.test.ts",
       "packages/migrator/src/item-preservation-regressions.test.ts",
       "packages/migrator/src/graphic-and-composite-fidelity.test.ts",
+      "packages/migrator/src/material-content-fidelity.test.ts",
     ],
     {
       cwd: root,

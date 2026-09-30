@@ -3,7 +3,8 @@ import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 import { assertNever } from "@longsightgroup/qti3-core";
 
 import { prepareQti12Scoring } from "./qti12-scoring.js";
-import { presentationBodyHtml } from "./qti12-body.js";
+import { prepareQti12Content } from "./qti12-body.js";
+import { qti3TrustedXmlFragment } from "@longsightgroup/qti3-writer";
 import {
   classifyQti12Item,
   essayAuthoringItem,
@@ -68,7 +69,6 @@ function migrateQti12ItemElement(
   const identifier = normalizeIdentifier(attr(item, "ident"), `ITEM_${index + 1}`);
   const title = attr(item, "title")?.trim() || `Item ${index + 1}`;
   const presentation = findDescendantByLocalName(item, "presentation");
-  const bodyHtml = presentationBodyHtml(presentation);
   const classification = classifyQti12Item(item);
   const responseCount = [
     "response_lid",
@@ -96,6 +96,12 @@ function migrateQti12ItemElement(
   const scoring = prepareQti12Scoring(item, path, classification.kind);
   if (!scoring.ok) return { diagnostics: scoring.diagnostics };
   const correct = scoring.correct;
+  const prepared = prepareQti12Content(item, path);
+  if (!prepared.ok) return { diagnostics: prepared.diagnostics };
+  const content = prepared.content;
+  const bodyHtml = qti3TrustedXmlFragment(
+    presentation ? content.materialHtml(presentation) : "<p></p>",
+  );
 
   switch (classification.kind) {
     case "essay":
@@ -113,6 +119,7 @@ function migrateQti12ItemElement(
       );
     case "associate":
       return mapQti12Associate(
+        content,
         identifier,
         title,
         classification.associateResponse,
@@ -123,6 +130,7 @@ function migrateQti12ItemElement(
       );
     case "canvasMatch":
       return mapQti12CanvasMatch(
+        content,
         identifier,
         title,
         classification.choiceResponses,
@@ -133,6 +141,7 @@ function migrateQti12ItemElement(
       );
     case "choice":
       return mapQti12Choice(
+        content,
         identifier,
         title,
         classification.choiceResponse,
@@ -143,6 +152,7 @@ function migrateQti12ItemElement(
       );
     case "textEntry":
       return mapQti12TextEntry(
+        content,
         identifier,
         title,
         classification.fibResponse,

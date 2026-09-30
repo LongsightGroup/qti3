@@ -7,7 +7,7 @@ import {
 } from "@longsightgroup/qti3-writer";
 
 import { diagnostic } from "./diagnostics.js";
-import { materialHtml } from "./qti12-body.js";
+import type { Qti12Content } from "./qti12-body.js";
 import {
   directTextOf,
   inferImageDimensions,
@@ -32,6 +32,7 @@ export interface Qti12MapperResult {
 }
 
 export function mapQti12CanvasMatch(
+  content: Qti12Content,
   identifier: string,
   title: string,
   responses: readonly XmlElement[],
@@ -44,7 +45,7 @@ export function mapQti12CanvasMatch(
   const targetPolicies = new Map<string, boolean>();
   const conflicting = responses.some((response) => {
     if (choiceShuffle(response) !== shuffle) return true;
-    return responseChoices(response, "TARGET").some((choice) => {
+    return responseChoices(content, response, "TARGET").some((choice) => {
       const previous = targetPolicies.get(choice.identifier);
       const fixed = choice.fixed === true;
       if (previous !== undefined && previous !== fixed) return true;
@@ -68,13 +69,15 @@ export function mapQti12CanvasMatch(
     const material = findDescendantByLocalName(response, "material");
     return {
       identifier: responseIdentifier,
-      contentHtml: qti3TrustedXmlFragment(material ? materialHtml(material) : responseIdentifier),
+      contentHtml: qti3TrustedXmlFragment(
+        material ? content.materialHtml(material) : responseIdentifier,
+      ),
       text: textOf(material) || responseIdentifier,
       matchMax: 1,
       fixed: true,
     };
   });
-  const targets = canvasMatchTargets(responses);
+  const targets = canvasMatchTargets(content, responses);
   const targetIdentifiers = new Set(targets.map((target) => target.identifier));
   const correctResponse = sources.flatMap((source) => {
     const targetIdentifier = (correct.get(source.identifier) ?? [])
@@ -108,6 +111,7 @@ export function mapQti12CanvasMatch(
 }
 
 export function mapQti12Choice(
+  content: Qti12Content,
   identifier: string,
   title: string,
   response: XmlElement,
@@ -118,7 +122,7 @@ export function mapQti12Choice(
 ): Qti12MapperResult {
   const sourceResponseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const { source, target: responseIdentifier } = qti12ResponseIdentifiers(sourceResponseIdentifier);
-  const choices = responseChoices(response, "CHOICE");
+  const choices = responseChoices(content, response, "CHOICE");
   const rawCorrect = correct.get(source) ?? [];
   const correctResponse = rawCorrect
     .map((value) => normalizeIdentifier(value))
@@ -156,6 +160,7 @@ export function mapQti12Choice(
 }
 
 export function mapQti12Associate(
+  content: Qti12Content,
   identifier: string,
   title: string,
   response: XmlElement,
@@ -166,7 +171,10 @@ export function mapQti12Associate(
 ): Qti12MapperResult {
   const sourceResponseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const { source, target: responseIdentifier } = qti12ResponseIdentifiers(sourceResponseIdentifier);
-  const choices = responseChoices(response, "CHOICE").map((choice) => ({ ...choice, matchMax: 2 }));
+  const choices = responseChoices(content, response, "CHOICE").map((choice) => ({
+    ...choice,
+    matchMax: 2,
+  }));
   const pairs = (correct.get(source) ?? [])
     .map((entry) => {
       const [sourceIdentifier = "", targetIdentifier = ""] = entry.split(/\s+/);
@@ -205,6 +213,7 @@ export function mapQti12Associate(
 }
 
 export function mapQti12TextEntry(
+  content: Qti12Content,
   identifier: string,
   title: string,
   response: XmlElement,
@@ -224,7 +233,9 @@ export function mapQti12TextEntry(
         interactionType: "extendedText",
         identifier,
         title,
-        bodyHtml: qti3TrustedXmlFragment(presentation ? materialHtml(presentation) : "<p></p>"),
+        bodyHtml: qti3TrustedXmlFragment(
+          presentation ? content.materialHtml(presentation) : "<p></p>",
+        ),
         responseIdentifier,
         responseBaseType: "string",
         responseCardinality: "single",
@@ -249,7 +260,7 @@ export function mapQti12TextEntry(
       identifier,
       title,
       bodyHtml: qti3TrustedXmlFragment(
-        `${presentation ? materialHtml(presentation) : "<p></p>"}<p><qti-text-entry-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"/></p>`,
+        `${presentation ? content.materialHtml(presentation) : "<p></p>"}<p><qti-text-entry-interaction response-identifier="${escapeXmlAttribute(responseIdentifier)}"/></p>`,
       ),
       responses: [
         {
@@ -346,7 +357,10 @@ export function mapQti12Hotspot(
   };
 }
 
-function canvasMatchTargets(responses: readonly XmlElement[]): Qti3MatchChoice[] {
+function canvasMatchTargets(
+  content: Qti12Content,
+  responses: readonly XmlElement[],
+): Qti3MatchChoice[] {
   const targets: Qti3MatchChoice[] = [];
   const seen = new Set<string>();
   for (const response of responses) {
@@ -360,7 +374,7 @@ function canvasMatchTargets(responses: readonly XmlElement[]): Qti3MatchChoice[]
       seen.add(identifier);
       targets.push({
         identifier,
-        contentHtml: qti3TrustedXmlFragment(materialHtml(label)),
+        contentHtml: qti3TrustedXmlFragment(content.materialHtml(label)),
         text: textOf(label) || identifier,
         matchMax: 1,
         fixed: attr(label, "rshuffle")?.toLowerCase() === "no",
@@ -375,10 +389,14 @@ function choiceShuffle(response: XmlElement | undefined): boolean {
   return attr(renderer, "shuffle")?.toLowerCase() === "yes";
 }
 
-function responseChoices(response: XmlElement, prefix: string): Qti3AuthoringChoice[] {
+function responseChoices(
+  content: Qti12Content,
+  response: XmlElement,
+  prefix: string,
+): Qti3AuthoringChoice[] {
   return findAllDescendantsByLocalName(response, "response_label").map((label, index) => ({
     identifier: normalizeIdentifier(attr(label, "ident"), `${prefix}_${index + 1}`),
-    contentHtml: qti3TrustedXmlFragment(materialHtml(label)),
+    contentHtml: qti3TrustedXmlFragment(content.materialHtml(label)),
     text: textOf(label) || undefined,
     fixed: attr(label, "rshuffle")?.toLowerCase() === "no",
   }));
