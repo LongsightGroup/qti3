@@ -29,12 +29,13 @@ export function interactionPresentation(
   mode: "separate" | "prompt-only" = "separate",
 ): {
   readonly bodyHtml?: ReturnType<typeof qti3TrustedXmlFragment> | undefined;
+  readonly itemBodyHtml?: ReturnType<typeof qti3TrustedXmlFragment> | undefined;
   readonly promptHtml?: ReturnType<typeof qti3TrustedXmlFragment> | undefined;
 } {
   const promptHtml = prompt(interaction);
   if (mode === "prompt-only") return { promptHtml };
   return {
-    bodyHtml: bodyWithoutInteraction(body, interaction),
+    itemBodyHtml: interactionBodyTemplate(body, interaction),
     promptHtml,
   };
 }

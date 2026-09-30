@@ -86,6 +86,7 @@ export function migrateQti2ItemXml(
   const context: Qti2Context = {
     identifier: normalizeIdentifier(attr(root, "identifier"), "ITEM"),
     title: attr(root, "title")?.trim() || "Imported Item",
+    lang: attr(root, "xml:lang") ?? undefined,
     body,
     responseDecls,
     responseDeclMap,
@@ -169,7 +170,7 @@ function finishQti2ItemMigration(
       ],
     };
   }
-  return { authoringItem, diagnostics };
+  return { authoringItem: { ...authoringItem, lang: context.lang }, diagnostics };
 }
 
 function resolveInteractionDispatch(

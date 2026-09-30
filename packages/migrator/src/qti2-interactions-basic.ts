@@ -239,6 +239,7 @@ export function mapInlineChoiceItem(context: Qti2Context): Qti3AuthoringItem {
 
 export function mapHottext(interaction: XmlElement, context: Qti2Context): Qti3AuthoringItem {
   const responseIdentifier = responseIdentifierFor(interaction);
+  const cardinality = attr(context.responseDeclMap.get(responseIdentifier), "cardinality");
   const hottexts = findAllDescendantsByLocalName(interaction, "hottext");
   const choices = hottexts.map(
     (hottext, index): Qti3HottextChoice => ({
@@ -249,6 +250,7 @@ export function mapHottext(interaction: XmlElement, context: Qti2Context): Qti3A
   );
   return {
     interactionType: "hottext",
+    responseCardinality: cardinality === "multiple" ? "multiple" : "single",
     identifier: context.identifier,
     title: context.title,
     bodyHtml: bodyWithHottextPlaceholders(interaction, hottexts),

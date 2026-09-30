@@ -28,6 +28,16 @@ export function validateQti2ResponseFidelity(
     ]),
   );
   const diagnostics: QtiMigrationDiagnostic[] = [];
+  if (findDescendantByLocalName(source, "modalfeedback")) {
+    diagnostics.push(
+      diagnostic(
+        "qti2_modal_feedback_not_preserved",
+        "error",
+        "Authored QTI 2 modal feedback cannot be preserved by this migration path.",
+        { path, sourceFormat },
+      ),
+    );
+  }
   if (
     findDescendantByLocalName(source, "templateprocessing") ||
     findDescendantByLocalName(source, "templatedeclaration")
@@ -92,6 +102,20 @@ export function validateQti2ResponseFidelity(
   for (const declaration of findAllDescendantsByLocalName(source, "responsedeclaration")) {
     const identifier = normalizeIdentifier(attr(declaration, "identifier"));
     const written = declarations.get(identifier);
+    if (
+      !written ||
+      attr(declaration, "cardinality") !== attr(written, "cardinality") ||
+      attr(declaration, "baseType") !== attr(written, "base-type")
+    ) {
+      diagnostics.push(
+        diagnostic(
+          "qti2_response_type_not_preserved",
+          "error",
+          `Response "${identifier}" declaration, cardinality, or base type cannot be preserved by the authoring model.`,
+          { path, sourceFormat },
+        ),
+      );
+    }
     const sourceSections = responseSections(declaration);
     const targetSections = written ? responseSections(written) : undefined;
     const sourceCorrect = childElements(declaration).find(

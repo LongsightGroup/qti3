@@ -222,6 +222,8 @@ export interface Qti3HottextChoice {
 
 export interface Qti3HottextAuthoringItem extends Qti3AuthoringItemBase {
   readonly interactionType: "hottext";
+  /** Preserve the declared response shape independently of the selection limit. */
+  readonly responseCardinality?: "single" | "multiple" | undefined;
   /** Trusted bodyHtml must contain empty qti-hottext placeholders for writer-owned choices. */
   readonly bodyHtml: Qti3TrustedXmlFragment;
   readonly choices: readonly Qti3HottextChoice[];

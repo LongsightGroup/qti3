@@ -149,6 +149,7 @@ try {
       "packages/core/src/processing-type-contracts.test.ts",
       "packages/core/src/scoring-boundary-regressions.test.ts",
       "packages/migrator/src/qti20-fidelity.test.ts",
+      "packages/migrator/src/item-preservation-regressions.test.ts",
     ],
     {
       cwd: root,

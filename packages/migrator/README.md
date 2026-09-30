@@ -2,6 +2,14 @@
 
 Framework-neutral QTI 1.2 and QTI 2.x to QTI 3 migration utilities.
 
+QTI 2 item language and the placement of surrounding content are retained when
+migrating block interactions. Hottext response cardinality is preserved independently
+of its selection limit. Missing response declarations or changed cardinality/base type
+produce `qti2_response_type_not_preserved`. Item-level modal feedback is not yet
+translated and produces `qti2_modal_feedback_not_preserved`. Both errors block a
+successful migration, including with safe repair; explicitly requested review stubs
+retain the errors. Regression coverage is in `item-preservation-regressions.test.ts`.
+
 QTI 2.0's `http://www.imsglobal.org/xsd/imsqti_v2p0` namespace is recognized
 alongside QTI 2.1 and 2.2 when translating content and checking scoring fidelity.
 Standard QTI 2.0 response-processing template URLs are recognized too; unsupported

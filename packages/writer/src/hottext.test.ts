@@ -176,3 +176,23 @@ describe("qti3-writer hottext", () => {
     ).toThrow("Single-response hottext");
   });
 });
+
+it("rejects single-cardinality hottext that allows multiple selections", () => {
+  const diagnostics = validateQti3HottextItem({
+    identifier: "single-bounds",
+    title: "Single bounds",
+    responseCardinality: "single",
+    maxChoices: 2,
+    bodyHtml: qti3TrustedXmlFragment(
+      '<p><qti-hottext identifier="A"/> <qti-hottext identifier="B"/></p>',
+    ),
+    choices: [
+      { identifier: "A", text: "Alpha" },
+      { identifier: "B", text: "Beta" },
+    ],
+    correctResponse: ["A"],
+  });
+  expect(diagnostics).toContainEqual(
+    expect.objectContaining({ code: "invalid_hottext_response_cardinality" }),
+  );
+});

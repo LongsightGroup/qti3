@@ -11,6 +11,7 @@ import { attr, type XmlElement } from "./xml.js";
 export interface Qti2Context {
   readonly identifier: string;
   readonly title: string;
+  readonly lang?: string | undefined;
   readonly body: XmlElement;
   readonly responseDecls: readonly XmlElement[];
   readonly responseDeclMap: ReadonlyMap<string, XmlElement>;

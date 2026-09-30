@@ -44,7 +44,7 @@ export function renderQti3HottextItem(input: Qti3HottextBuilderInput): RenderedI
     "Hottext response identifier",
   );
   const escapedResponseIdentifier = escapeXmlAttribute(responseIdentifier);
-  const cardinality = input.maxChoices === 1 ? "single" : "multiple";
+  const cardinality = input.responseCardinality ?? (input.maxChoices === 1 ? "single" : "multiple");
   const correctResponse = dedupeNonemptyTrimmed(input.correctResponse).map((value) =>
     assertQtiIdentifier(value, "Hottext correct response identifier"),
   );
@@ -161,6 +161,15 @@ export function validateQti3HottextItemStructure(
 }
 
 function validateBounds(input: Qti3HottextBuilderInput, diagnostics: Qti3WriterDiagnostic[]): void {
+  if (input.responseCardinality === "single" && (input.maxChoices ?? 1) !== 1) {
+    diagnostics.push(
+      writerDiagnostic(
+        "invalid_hottext_response_cardinality",
+        "responseCardinality",
+        "Single-cardinality hottext requires a maximum of one choice.",
+      ),
+    );
+  }
   if (input.minChoices !== undefined && !isNonNegativeInteger(input.minChoices)) {
     diagnostics.push(
       writerDiagnostic(
@@ -221,7 +230,10 @@ function validateCorrectResponse(
       ),
     );
   }
-  if (input.maxChoices === 1 && correctResponse.length > 1) {
+  if (
+    (input.responseCardinality === "single" || input.maxChoices === 1) &&
+    correctResponse.length > 1
+  ) {
     diagnostics.push(
       writerDiagnostic(
         "invalid_hottext_correct_response_count",
