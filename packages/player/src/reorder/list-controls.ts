@@ -3,7 +3,7 @@ import type { PlayerMessageResolver } from "../player-message-resolver.js";
 import type { OrderOrientation } from "../interactions/shared-vocabulary.js";
 import { orderedItemAccessibleName } from "./a11y.js";
 
-const orderDragControlSelector = "button, .qti3-reorder-handle";
+const orderDragControlSelector = "button, a[href]";
 
 export interface ReorderHandleOptions {
   identifier: string;

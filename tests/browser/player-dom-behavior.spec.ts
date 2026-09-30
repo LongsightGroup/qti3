@@ -1,4 +1,5 @@
 import { interactionFixtures } from "../../packages/fixtures/src/index.js";
+import { flightOrderFixture } from "../../packages/fixtures/src/challenges/flight-order.fixture.js";
 import { expectNoAxeViolationsOnPlayer } from "./axe-helpers.js";
 import { expect, test, type Locator } from "@playwright/test";
 import {
@@ -107,6 +108,35 @@ async function moveOrderSlotChoiceToTarget(
 }
 
 test.describe("player DOM behavior", () => {
+  test("dragging flight stage handles reorders and scores the visible answer", async ({ page }) => {
+    await page.goto("/");
+    await pasteXml(page, flightOrderFixture.xml.replace('shuffle="true"', 'shuffle="false"'));
+    const player = page.locator("qti-assessment-item-player");
+    const handles = player.locator(".qti3-reorder-handle");
+    const orbit = handles.filter({ hasText: "Enter orbit" });
+    const liftoff = handles.filter({ hasText: "Liftoff" });
+
+    await orbit.dragTo(liftoff);
+    await expect(handles).toHaveText(["Ignition", "Enter orbit", "Liftoff", "Landing"]);
+    expect(await currentResponse(page, "FLIGHT")).toEqual([
+      "IGNITION",
+      "ORBIT",
+      "LIFTOFF",
+      "LANDING",
+    ]);
+    expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(2);
+
+    await orbit.dragTo(liftoff);
+    await expect(handles).toHaveText(["Ignition", "Liftoff", "Enter orbit", "Landing"]);
+    expect(await currentResponse(page, "FLIGHT")).toEqual([
+      "IGNITION",
+      "LIFTOFF",
+      "ORBIT",
+      "LANDING",
+    ]);
+    expect((await scoreCurrentAttempt(page))?.outcomes.SCORE).toBe(4);
+  });
+
   test("does not project foreign-namespace elements as QTI content", async ({ page }) => {
     await page.goto("/");
     await pasteXml(
