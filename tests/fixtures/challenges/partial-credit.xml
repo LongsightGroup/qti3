@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic, MIT-licensed. Two independently scored responses, then a bounded total. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="challenge-partial-credit" title="Rocky planets and Uranus" adaptive="false" time-dependent="false">
+  <qti-response-declaration identifier="EVIDENCE" cardinality="multiple" base-type="identifier">
+    <qti-mapping default-value="-1" lower-bound="0" upper-bound="4">
+      <qti-map-entry map-key="A" mapped-value="3"/>
+      <qti-map-entry map-key="B" mapped-value="2"/>
+      <qti-map-entry map-key="C" mapped-value="-4"/>
+    </qti-mapping>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="MEASUREMENT" cardinality="single" base-type="integer">
+    <qti-correct-response><qti-value>7</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-outcome-declaration identifier="EVIDENCE_POINTS" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="MEASUREMENT_POINTS" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-item-body>
+    <p>Which of these are rocky planets? Select all that apply.</p>
+    <qti-choice-interaction response-identifier="EVIDENCE" max-choices="4" shuffle="true">
+      <qti-simple-choice identifier="A">Mars</qti-simple-choice>
+      <qti-simple-choice identifier="B">Venus</qti-simple-choice>
+      <qti-simple-choice identifier="C">Jupiter</qti-simple-choice>
+      <qti-simple-choice identifier="D" fixed="true">Saturn</qti-simple-choice>
+    </qti-choice-interaction>
+    <p>Counting outward from the Sun, what number planet is Uranus? <qti-text-entry-interaction response-identifier="MEASUREMENT" expected-length="2"/></p>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-set-outcome-value identifier="EVIDENCE_POINTS"><qti-map-response identifier="EVIDENCE"/></qti-set-outcome-value>
+    <qti-response-condition>
+      <qti-response-if><qti-is-null><qti-variable identifier="MEASUREMENT"/></qti-is-null>
+        <qti-set-outcome-value identifier="MEASUREMENT_POINTS"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+      <qti-response-else-if><qti-match><qti-variable identifier="MEASUREMENT"/><qti-correct identifier="MEASUREMENT"/></qti-match>
+        <qti-set-outcome-value identifier="MEASUREMENT_POINTS"><qti-base-value base-type="float">3</qti-base-value></qti-set-outcome-value>
+      </qti-response-else-if>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="MEASUREMENT_POINTS"><qti-base-value base-type="float">-2</qti-base-value></qti-set-outcome-value>
+      </qti-response-else>
+    </qti-response-condition>
+    <qti-set-outcome-value identifier="SCORE">
+      <qti-max><qti-base-value base-type="float">0</qti-base-value><qti-min><qti-base-value base-type="float">5</qti-base-value><qti-sum><qti-variable identifier="SCORE"/><qti-variable identifier="EVIDENCE_POINTS"/><qti-variable identifier="MEASUREMENT_POINTS"/></qti-sum></qti-min></qti-max>
+    </qti-set-outcome-value>
+  </qti-response-processing>
+</qti-assessment-item>

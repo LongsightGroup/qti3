@@ -10,6 +10,39 @@ import { fileURLToPath } from "node:url";
 // drift, timeouts, missing tests and import failures never count as killed mutants.
 const mutants = [
   {
+    id: "challenge-mapping-upper-bound",
+    file: "packages/core/src/processing-mapping.ts",
+    before: "if (upper !== undefined) clamped = Math.min(clamped, upper);",
+    after: "if (upper !== undefined) clamped = clamped;",
+    occurrences: 1,
+    witness: "challenge partial credit:",
+  },
+  {
+    id: "challenge-nonadaptive-reset",
+    file: "packages/core/src/session.ts",
+    before: "if (!document.item.adaptive) {",
+    after: "if (false) {",
+    occurrences: 1,
+    witness: "challenge partial credit:",
+  },
+  {
+    id: "challenge-adaptive-retention",
+    file: "packages/core/src/session.ts",
+    before: "if (!document.item.adaptive) {",
+    after: "if (true) {",
+    occurrences: 1,
+    witness: "challenge adaptive:",
+  },
+  {
+    id: "challenge-stale-hint-trigger",
+    file: "packages/core/src/session.ts",
+    before: "responses[identifier] = identifier === scoreOptions.endAttemptResponseIdentifier;",
+    after:
+      "if (identifier === scoreOptions.endAttemptResponseIdentifier) responses[identifier] = true;",
+    occurrences: 1,
+    witness: "challenge adaptive:",
+  },
+  {
     id: "restored-outcomes",
     file: "packages/core/src/session.ts",
     before: "Object.assign(outcomes, priorOutcomes);",
@@ -59,6 +92,7 @@ const mutants = [
   },
 ];
 const files = [
+  "packages/core/src/challenge-items.test.ts",
   "packages/core/src/test-execution-profile.test.ts",
   "packages/core/src/session-sequences.test.ts",
   "packages/migrator/src/choice-semantic-matrix.test.ts",

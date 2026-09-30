@@ -29,6 +29,12 @@ They do not establish complete QTI conformance or replace browser, schema, and e
 The existing migration scoring-fidelity suite also runs in the pilot command. It checks explicit
 source grades and refusal of unpreserved scoring programs under both normal and safe repair.
 
+The [synthetic challenge collection](../tests/fixtures/challenges/README.md) also runs in this
+command. It combines bounded partial credit across multiple responses and adaptive hints,
+penalties, retries, feedback, and completion. Literal grade tables and step-by-step journey
+expectations remain independent of the implementation. Each scenario also runs with JSON
+restoration at action boundaries; the exact fixture XML is registered in the official schema gate.
+
 The existing Playwright test `restored adaptive completion locks responses and reports rejected
 host mutations` in `tests/browser/player-lifecycle.spec.ts` covers browser locks and events.
 It remains part of the full release check; Node sequences make no DOM claim.
@@ -36,14 +42,18 @@ It remains part of the full release check; Node sequences make no DOM claim.
 ## Semantic mutation gate
 
 `pnpm check:semantic-mutations /tmp/semantic-mutations.json` first requires every pilot test
-in a temporary source copy to pass. It then injects six curated faults, one at a time:
+in a temporary source copy to pass. It then injects ten curated faults, one at a time:
 
 - ignore declared outcomes when choosing test execution;
 - allow mutations after adaptive completion;
 - discard restored outcomes;
 - invent the first choice as the migrated answer key;
 - discard imported shuffle;
-- discard pinned-choice attributes.
+- discard pinned-choice attributes;
+- ignore mapping upper bounds in the partial-credit challenge;
+- retain non-adaptive outcomes between scoring invocations;
+- reset adaptive outcomes between scoring invocations;
+- retain a stale hint trigger when another action submits the item.
 
 Each fault must produce a failure in its designated behavioral suite, with the same collected
 cases as the baseline. Skips, collection errors, timeouts, and a changed mutation anchor fail the

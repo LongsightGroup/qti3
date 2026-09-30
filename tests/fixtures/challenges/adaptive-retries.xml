@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic, MIT-licensed. Hints cost one point; each failed submission costs one point. Three failures close the item. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="challenge-adaptive" title="Hints and retries" adaptive="true" time-dependent="false">
+  <qti-response-declaration identifier="ANSWER" cardinality="single" base-type="integer">
+    <qti-correct-response><qti-value>7</qti-value></qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="HINT" cardinality="single" base-type="boolean"/>
+  <qti-response-declaration identifier="DONE" cardinality="single" base-type="boolean"/>
+  <qti-outcome-declaration identifier="HINTS" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="FAILURES" cardinality="single" base-type="integer"/>
+  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>
+  <qti-outcome-declaration identifier="FEEDBACK" cardinality="single" base-type="identifier"/>
+  <qti-item-body>
+    <p>What is two plus five? A correct answer earns six points minus one per hint and failed submission, with a minimum of zero. Three failed submissions end the question.</p>
+    <p><qti-text-entry-interaction response-identifier="ANSWER" expected-length="2"/></p>
+    <p><qti-end-attempt-interaction response-identifier="HINT" title="Show hint"/>
+    <qti-end-attempt-interaction response-identifier="DONE" title="Check answer"/></p>
+  </qti-item-body>
+  <qti-response-processing>
+    <qti-response-condition>
+      <qti-response-if><qti-variable identifier="HINT"/>
+        <qti-set-outcome-value identifier="HINTS"><qti-sum><qti-variable identifier="HINTS"/><qti-base-value base-type="integer">1</qti-base-value></qti-sum></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">HELP</qti-base-value></qti-set-outcome-value>
+      </qti-response-if>
+      <qti-response-else-if><qti-match><qti-variable identifier="ANSWER"/><qti-correct identifier="ANSWER"/></qti-match>
+        <qti-set-outcome-value identifier="SCORE"><qti-max><qti-base-value base-type="float">0</qti-base-value><qti-subtract><qti-base-value base-type="float">6</qti-base-value><qti-integer-to-float><qti-sum><qti-variable identifier="HINTS"/><qti-variable identifier="FAILURES"/></qti-sum></qti-integer-to-float></qti-subtract></qti-max></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">SUCCESS</qti-base-value></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value>
+      </qti-response-else-if>
+      <qti-response-else>
+        <qti-set-outcome-value identifier="FAILURES"><qti-sum><qti-variable identifier="FAILURES"/><qti-base-value base-type="integer">1</qti-base-value></qti-sum></qti-set-outcome-value>
+        <qti-response-condition>
+          <qti-response-if><qti-gte><qti-variable identifier="FAILURES"/><qti-base-value base-type="integer">3</qti-base-value></qti-gte>
+            <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">EXHAUSTED</qti-base-value></qti-set-outcome-value>
+            <qti-set-outcome-value identifier="completionStatus"><qti-base-value base-type="identifier">completed</qti-base-value></qti-set-outcome-value>
+          </qti-response-if>
+          <qti-response-else-if><qti-is-null><qti-variable identifier="ANSWER"/></qti-is-null>
+            <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">EMPTY</qti-base-value></qti-set-outcome-value>
+          </qti-response-else-if>
+          <qti-response-else>
+            <qti-set-outcome-value identifier="FEEDBACK"><qti-base-value base-type="identifier">RETRY</qti-base-value></qti-set-outcome-value>
+          </qti-response-else>
+        </qti-response-condition>
+      </qti-response-else>
+    </qti-response-condition>
+  </qti-response-processing>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="HELP" show-hide="show"><qti-content-body><p>Start at five and count two more.</p></qti-content-body></qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="SUCCESS" show-hide="show"><qti-content-body><p>Correct.</p></qti-content-body></qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="EMPTY" show-hide="show"><qti-content-body><p>Enter an answer before checking.</p></qti-content-body></qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="RETRY" show-hide="show"><qti-content-body><p>Try adding again.</p></qti-content-body></qti-modal-feedback>
+  <qti-modal-feedback outcome-identifier="FEEDBACK" identifier="EXHAUSTED" show-hide="show"><qti-content-body><p>The answer is seven. No attempts remain.</p></qti-content-body></qti-modal-feedback>
+</qti-assessment-item>

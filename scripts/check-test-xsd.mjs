@@ -148,6 +148,7 @@ try {
       "packages/core/src/processing-boundaries.test.ts",
       "packages/core/src/processing-type-contracts.test.ts",
       "packages/core/src/scoring-boundary-regressions.test.ts",
+      "packages/core/src/challenge-items.test.ts",
       "packages/migrator/src/qti20-fidelity.test.ts",
       "packages/migrator/src/item-preservation-regressions.test.ts",
       "packages/migrator/src/graphic-and-composite-fidelity.test.ts",
