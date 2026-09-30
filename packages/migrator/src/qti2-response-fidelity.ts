@@ -85,8 +85,18 @@ export function validateQti2ResponseFidelity(
       ),
     );
   }
-  for (const name of ["simpleassociablechoice", "gaptext", "gapimg", "associablehotspot"]) {
+  for (const name of ["simpleassociablechoice", "gaptext", "gapimg", "gap", "associablehotspot"]) {
     for (const choice of findAllDescendantsByLocalName(source, name)) {
+      if (attr(choice, "matchGroup")?.trim()) {
+        diagnostics.push(
+          diagnostic(
+            "qti2_match_group_not_preserved",
+            "error",
+            `Choice "${attr(choice, "identifier") ?? ""}" restricts associations using matchGroup, which this migration cannot preserve.`,
+            { path, sourceFormat },
+          ),
+        );
+      }
       const minimum = attr(choice, "matchMin");
       if (minimum === null || Number(minimum) === 0) continue;
       diagnostics.push(

@@ -104,6 +104,9 @@ export function renderQti3GraphicGapMatchItem(
         `shape="${target.shape}"`,
         `coords="${escapeXmlAttribute(target.coords.trim())}"`,
         `match-max="${String(target.matchMax ?? 1)}"`,
+        target.hotspotLabel === undefined
+          ? ""
+          : `hotspot-label="${escapeXmlAttribute(target.hotspotLabel)}"`,
       ];
       return [`      <qti-associable-hotspot ${xmlAttributeList(attrs)}/>`];
     })

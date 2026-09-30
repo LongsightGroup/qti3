@@ -2,9 +2,12 @@ import { attr, toNumber, type XmlElement } from "./xml.js";
 
 export function graphicObject(object: XmlElement | null, coords: readonly string[]) {
   const dimensions = inferImageDimensions(coords);
+  const fallback = object?.textContent?.trim() || undefined;
+  const description = attr(object, "alt") ?? attr(object, "label");
   return {
     data: attr(object, "data") ?? "",
-    alt: attr(object, "alt") ?? attr(object, "label") ?? "Image",
+    alt: description ?? fallback ?? "Image",
+    longDescription: description === null ? undefined : fallback,
     type: attr(object, "type") ?? undefined,
     width: toNumber(attr(object, "width")) ?? dimensions.width,
     height: toNumber(attr(object, "height")) ?? dimensions.height,

@@ -92,7 +92,11 @@ ${correctXml}  </qti-response-declaration>`;
         assertQtiIdentifier(choice.identifier, "Hotspot identifier"),
       );
       const coords = choice.coords.trim();
-      return `      <qti-hotspot-choice identifier="${identifier}" shape="${choice.shape}" coords="${escapeXmlAttribute(coords)}"/>`;
+      const label =
+        choice.hotspotLabel === undefined
+          ? ""
+          : ` hotspot-label="${escapeXmlAttribute(choice.hotspotLabel)}"`;
+      return `      <qti-hotspot-choice identifier="${identifier}" shape="${choice.shape}" coords="${escapeXmlAttribute(coords)}"${label}/>`;
     })
     .join("\n");
   const bodyXml = `${optionalBodySection(input.bodyHtml)}${longDescription.blockXml}    <qti-hotspot-interaction ${interactionAttrs}>

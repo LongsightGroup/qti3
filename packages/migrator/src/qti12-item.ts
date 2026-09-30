@@ -70,6 +70,29 @@ function migrateQti12ItemElement(
   const presentation = findDescendantByLocalName(item, "presentation");
   const bodyHtml = presentationBodyHtml(presentation);
   const classification = classifyQti12Item(item);
+  const responseCount = [
+    "response_lid",
+    "response_str",
+    "response_num",
+    "response_grp",
+    "response_xy",
+  ].reduce((count, name) => count + findAllDescendantsByLocalName(item, name).length, 0);
+  if (
+    responseCount > 1 &&
+    (classification.kind !== "canvasMatch" ||
+      responseCount !== classification.choiceResponses.length)
+  ) {
+    return {
+      diagnostics: [
+        diagnostic(
+          "qti12_composite_responses_unsupported",
+          "error",
+          "This QTI 1.2 mapper cannot preserve multiple response interactions and their scoring conditions.",
+          { path, sourceFormat: "qti12" },
+        ),
+      ],
+    };
+  }
   const scoring = prepareQti12Scoring(item, path, classification.kind);
   if (!scoring.ok) return { diagnostics: scoring.diagnostics };
   const correct = scoring.correct;

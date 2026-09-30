@@ -442,6 +442,7 @@ export interface Qti3HotspotChoice {
   readonly identifier: string;
   readonly shape: Qti3HotspotShape;
   readonly coords: string;
+  readonly hotspotLabel?: string | undefined;
 }
 
 export interface Qti3GraphicObject {
@@ -714,6 +715,7 @@ export interface Qti3GraphicGapImageChoice {
 export type Qti3GraphicGapChoice = Qti3GraphicGapTextChoice | Qti3GraphicGapImageChoice;
 
 export interface Qti3GraphicGapHotspotTarget {
+  readonly hotspotLabel?: string | undefined;
   readonly targetType?: "hotspot" | undefined;
   readonly identifier: string;
   readonly shape: Qti3HotspotShape;

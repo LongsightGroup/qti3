@@ -2,6 +2,15 @@
 
 Framework-neutral QTI 1.2 and QTI 2.x to QTI 3 migration utilities.
 
+QTI 1.2 items with multiple responses are rejected with
+`qti12_composite_responses_unsupported` unless the mapper handles every response
+through the matching conversion. This prevents scoring only the first answer of a
+multi-answer condition. Nonempty QTI 2 `matchGroup` restrictions produce
+`qti2_match_group_not_preserved`; empty groups remain unrestricted. Both refusals
+apply with safe repair. Hotspot migration preserves surrounding instructions,
+region labels, and textual object descriptions. Graphic association and graphic
+gap targets also retain their region labels. See `graphic-and-composite-fidelity.test.ts`.
+
 QTI 2 item language and the placement of surrounding content are retained when
 migrating block interactions. Hottext response cardinality is preserved independently
 of its selection limit. Missing response declarations or changed cardinality/base type

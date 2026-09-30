@@ -33,13 +33,14 @@ export function mapHotspot(interaction: XmlElement, context: Qti2Context): Qti3A
       identifier: normalizeIdentifier(attr(choice, "identifier"), `H${index + 1}`),
       shape: hotspotShape(attr(choice, "shape")),
       coords: attr(choice, "coords") ?? "",
+      hotspotLabel: attr(choice, "hotspotLabel") ?? undefined,
     }),
   );
   return {
     interactionType: "hotspot",
     identifier: context.identifier,
     title: context.title,
-    ...interactionPresentation(interaction, context.body, "prompt-only"),
+    ...interactionPresentation(interaction, context.body, "separate"),
     responseIdentifier,
     object: graphicObject(
       object,
@@ -94,6 +95,7 @@ export function mapGraphicAssociate(
       shape: hotspotShape(attr(hotspot, "shape")),
       coords: attr(hotspot, "coords") ?? "",
       matchMax: toNumber(attr(hotspot, "matchMax")),
+      hotspotLabel: attr(hotspot, "hotspotLabel") ?? undefined,
     }),
   );
   return {
@@ -144,6 +146,7 @@ export function mapGraphicGapMatch(
     shape: hotspotShape(attr(target, "shape")),
     coords: attr(target, "coords") ?? "",
     matchMax: toNumber(attr(target, "matchMax")),
+    hotspotLabel: attr(target, "hotspotLabel") ?? undefined,
   }));
   const inlineTargets: Qti3GraphicGapTarget[] = findAllDescendantsByLocalName(
     interaction,
