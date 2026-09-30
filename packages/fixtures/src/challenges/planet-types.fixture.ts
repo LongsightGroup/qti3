@@ -1,0 +1,63 @@
+import type { QtiFixture } from "../index.js";
+
+/** Challenge 04 — Classify three planets: synthetic MIT-licensed integration fixture. */
+export const planetTypesFixture: QtiFixture = {
+  id: "challenge-planet-types",
+  title: "Challenge 04 — Classify three planets",
+  category: "processing",
+  xml: `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed question; expected results are independently authored. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="challenge-planet-types" title="Challenge 04 — Classify three planets" adaptive="false" time-dependent="false" xml:lang="en">
+<qti-response-declaration identifier="CLASSIFY" cardinality="multiple" base-type="directedPair"><qti-mapping default-value="-2"><qti-map-entry map-key="MERCURY ROCKY" mapped-value="3"/><qti-map-entry map-key="VENUS ROCKY" mapped-value="2"/><qti-map-entry map-key="JUPITER GAS" mapped-value="4"/></qti-mapping></qti-response-declaration><qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
+
+<qti-item-body><qti-match-interaction response-identifier="CLASSIFY" max-associations="3" shuffle="true"><qti-prompt>Match each planet to its type. You may reuse a type.</qti-prompt><qti-simple-match-set><qti-simple-associable-choice identifier="MERCURY" match-max="1">Mercury</qti-simple-associable-choice><qti-simple-associable-choice identifier="VENUS" match-max="1">Venus</qti-simple-associable-choice><qti-simple-associable-choice identifier="JUPITER" match-max="1">Jupiter</qti-simple-associable-choice></qti-simple-match-set><qti-simple-match-set><qti-simple-associable-choice identifier="ROCKY" match-max="2">Rocky planet</qti-simple-associable-choice><qti-simple-associable-choice identifier="GAS" match-max="3">Gas giant</qti-simple-associable-choice></qti-simple-match-set></qti-match-interaction></qti-item-body>
+<qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-map-response identifier="CLASSIFY"/></qti-set-outcome-value></qti-response-processing>
+</qti-assessment-item>`,
+  expectedParseDiagnostics: [],
+  expectedValidationDiagnostics: [],
+  attempts: [
+    {
+      name: "all correct",
+      responses: {
+        CLASSIFY: ["MERCURY ROCKY", "VENUS ROCKY", "JUPITER GAS"],
+      },
+      expectedOutcomes: {
+        SCORE: 9,
+      },
+    },
+    {
+      name: "reused target",
+      responses: {
+        CLASSIFY: ["VENUS ROCKY", "MERCURY ROCKY"],
+      },
+      expectedOutcomes: {
+        SCORE: 5,
+      },
+    },
+    {
+      name: "one wrong",
+      responses: {
+        CLASSIFY: ["MERCURY GAS"],
+      },
+      expectedOutcomes: {
+        SCORE: -2,
+      },
+    },
+    {
+      name: "mixed",
+      responses: {
+        CLASSIFY: ["MERCURY GAS", "JUPITER GAS"],
+      },
+      expectedOutcomes: {
+        SCORE: 2,
+      },
+    },
+    {
+      name: "unanswered",
+      responses: {},
+      expectedOutcomes: {
+        SCORE: 0,
+      },
+    },
+  ],
+};

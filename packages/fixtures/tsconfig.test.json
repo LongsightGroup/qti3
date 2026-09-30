@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.test.ts", "../../tests/fixtures/valid-qti-document.ts"],
+  "references": [{ "path": "./tsconfig.json" }, { "path": "../core/tsconfig.json" }]
+}

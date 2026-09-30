@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed question; expected results are independently authored. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="challenge-unicode" title="Challenge 06 — Symbols and accented names" adaptive="false" time-dependent="false" xml:lang="en">
+<qti-response-declaration identifier="SYMBOL" cardinality="single" base-type="string"><qti-mapping default-value="0"><qti-map-entry map-key="Co" mapped-value="2" case-sensitive="true"/></qti-mapping></qti-response-declaration><qti-response-declaration identifier="CITY" cardinality="single" base-type="string"><qti-mapping default-value="0"><qti-map-entry map-key="Québec" mapped-value="1" case-sensitive="false"/></qti-mapping></qti-response-declaration><qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
+
+<qti-item-body><p>Use the correct capitalization for the chemical symbol. For the city, accents matter but capitalization does not. Do not add spaces around either answer.</p><p>Chemical symbol for cobalt: <qti-text-entry-interaction response-identifier="SYMBOL" expected-length="8"/></p><p>Complete the name of the Canadian city: _____ City (use the French spelling). <qti-text-entry-interaction response-identifier="CITY" expected-length="8"/></p></qti-item-body>
+<qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-map-response identifier="SYMBOL"/><qti-map-response identifier="CITY"/></qti-sum></qti-set-outcome-value></qti-response-processing>
+</qti-assessment-item>

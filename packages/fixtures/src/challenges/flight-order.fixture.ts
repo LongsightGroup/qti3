@@ -1,0 +1,54 @@
+import type { QtiFixture } from "../index.js";
+
+/** Challenge 03 — Put a spaceflight in order: synthetic MIT-licensed integration fixture. */
+export const flightOrderFixture: QtiFixture = {
+  id: "challenge-flight-order",
+  title: "Challenge 03 — Put a spaceflight in order",
+  category: "processing",
+  xml: `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed question; expected results are independently authored. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="challenge-flight-order" title="Challenge 03 — Put a spaceflight in order" adaptive="false" time-dependent="false" xml:lang="en">
+<qti-response-declaration identifier="FLIGHT" cardinality="ordered" base-type="identifier"></qti-response-declaration><qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
+
+<qti-item-body><qti-order-interaction response-identifier="FLIGHT" shuffle="true"><qti-prompt>Arrange the flight stages from first to last. Each correct position earns one point.</qti-prompt><qti-simple-choice identifier="IGNITION">Ignition</qti-simple-choice><qti-simple-choice identifier="LIFTOFF">Liftoff</qti-simple-choice><qti-simple-choice identifier="ORBIT">Enter orbit</qti-simple-choice><qti-simple-choice identifier="LANDING">Landing</qti-simple-choice></qti-order-interaction></qti-item-body>
+<qti-response-processing><qti-response-condition><qti-response-if><qti-match><qti-index n="1"><qti-variable identifier="FLIGHT"/></qti-index><qti-base-value base-type="identifier">IGNITION</qti-base-value></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if></qti-response-condition><qti-response-condition><qti-response-if><qti-match><qti-index n="2"><qti-variable identifier="FLIGHT"/></qti-index><qti-base-value base-type="identifier">LIFTOFF</qti-base-value></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if></qti-response-condition><qti-response-condition><qti-response-if><qti-match><qti-index n="3"><qti-variable identifier="FLIGHT"/></qti-index><qti-base-value base-type="identifier">ORBIT</qti-base-value></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if></qti-response-condition><qti-response-condition><qti-response-if><qti-match><qti-index n="4"><qti-variable identifier="FLIGHT"/></qti-index><qti-base-value base-type="identifier">LANDING</qti-base-value></qti-match><qti-set-outcome-value identifier="SCORE"><qti-sum><qti-variable identifier="SCORE"/><qti-base-value base-type="float">1</qti-base-value></qti-sum></qti-set-outcome-value></qti-response-if></qti-response-condition></qti-response-processing>
+</qti-assessment-item>`,
+  expectedParseDiagnostics: [],
+  expectedValidationDiagnostics: [],
+  attempts: [
+    {
+      name: "correct",
+      responses: {
+        FLIGHT: ["IGNITION", "LIFTOFF", "ORBIT", "LANDING"],
+      },
+      expectedOutcomes: {
+        SCORE: 4,
+      },
+    },
+    {
+      name: "middle swap",
+      responses: {
+        FLIGHT: ["IGNITION", "ORBIT", "LIFTOFF", "LANDING"],
+      },
+      expectedOutcomes: {
+        SCORE: 2,
+      },
+    },
+    {
+      name: "reverse",
+      responses: {
+        FLIGHT: ["LANDING", "ORBIT", "LIFTOFF", "IGNITION"],
+      },
+      expectedOutcomes: {
+        SCORE: 0,
+      },
+    },
+    {
+      name: "unanswered",
+      responses: {},
+      expectedOutcomes: {
+        SCORE: 0,
+      },
+    },
+  ],
+};

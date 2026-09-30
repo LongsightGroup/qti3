@@ -10,6 +10,81 @@ import { fileURLToPath } from "node:url";
 // drift, timeouts, missing tests and import failures never count as killed mutants.
 const mutants = [
   {
+    id: "collection-template-answer",
+    file: "packages/core/src/session.ts",
+    before:
+      "evaluation.correctResponses[rule.identifier] = normalizeValueForCardinality(\n      value,",
+    after:
+      "evaluation.correctResponses[rule.identifier] = normalizeValueForCardinality(\n      null,",
+    occurrences: 1,
+    witness: "challenge collection: challenge-garden:",
+  },
+  {
+    id: "collection-tolerance-boundary",
+    file: "packages/core/src/processing-equality.ts",
+    before: "tolerance.includeLower ? right >= minimum : right > minimum",
+    after: "true ? right >= minimum : right > minimum",
+    occurrences: 1,
+    witness: "challenge collection: challenge-sensor:",
+  },
+  {
+    id: "collection-order-index",
+    file: "packages/core/src/processing-evaluator-collection.ts",
+    before: "return values[n - 1] ?? null;",
+    after: "return values[n] ?? null;",
+    occurrences: 1,
+    witness: "challenge collection: challenge-flight-order:",
+  },
+  {
+    id: "collection-mapping-penalty",
+    file: "packages/core/src/processing-mapping.ts",
+    before: "return entry?.mappedValue ?? mapping.defaultValue;",
+    after: "return entry?.mappedValue ?? 0;",
+    occurrences: 1,
+    witness: "challenge collection: challenge-planet-types:",
+  },
+  {
+    id: "collection-string-case",
+    file: "packages/core/src/processing-mapping.ts",
+    before:
+      'const caseSensitive = parseXmlBoolean(candidate.attributes["case-sensitive"]) ?? false;',
+    after: "const caseSensitive = false;",
+    occurrences: 1,
+    witness: "challenge collection: challenge-unicode:",
+  },
+  {
+    id: "collection-area-priority",
+    file: "packages/core/src/processing-mapping.ts",
+    before: "// Authored priority applies even when this area was already counted.\n      break;",
+    after: "// Fault: overlapping areas all score.",
+    occurrences: 1,
+    witness: "challenge collection: challenge-target:",
+  },
+  {
+    id: "collection-lookup-boundary",
+    file: "packages/core/src/processing-mapping.ts",
+    before: "candidate.includeBoundary !== false && numeric === candidate.sourceValue",
+    after: "numeric === candidate.sourceValue",
+    occurrences: 1,
+    witness: "challenge collection: challenge-lab-badge:",
+  },
+  {
+    id: "collection-sample-variance",
+    file: "packages/core/src/processing-operators.ts",
+    before: "return meanWithDivisor(squareDiffs, values.length - 1);",
+    after: "return meanWithDivisor(squareDiffs, values.length);",
+    occurrences: 1,
+    witness: "challenge collection: challenge-weather-statistics:",
+  },
+  {
+    id: "collection-stage-exit",
+    file: "packages/core/src/session.ts",
+    before: 'if (rule.type === "exitResponse") return true;',
+    after: 'if (rule.type === "exitResponse") continue;',
+    occurrences: 1,
+    witness: "challenge collection: challenge-mission:",
+  },
+  {
     id: "challenge-mapping-upper-bound",
     file: "packages/core/src/processing-mapping.ts",
     before: "if (upper !== undefined) clamped = Math.min(clamped, upper);",
@@ -92,6 +167,7 @@ const mutants = [
   },
 ];
 const files = [
+  "packages/fixtures/src/challenges.test.ts",
   "packages/core/src/challenge-items.test.ts",
   "packages/core/src/test-execution-profile.test.ts",
   "packages/core/src/session-sequences.test.ts",

@@ -42,7 +42,7 @@ It remains part of the full release check; Node sequences make no DOM claim.
 ## Semantic mutation gate
 
 `pnpm check:semantic-mutations /tmp/semantic-mutations.json` first requires every pilot test
-in a temporary source copy to pass. It then injects ten curated faults, one at a time:
+in a temporary source copy to pass. It then injects nineteen curated faults, one at a time:
 
 - ignore declared outcomes when choosing test execution;
 - allow mutations after adaptive completion;
@@ -54,6 +54,12 @@ in a temporary source copy to pass. It then injects ten curated faults, one at a
 - retain non-adaptive outcomes between scoring invocations;
 - reset adaptive outcomes between scoring invocations;
 - retain a stale hint trigger when another action submits the item.
+
+The [ten-question challenge collection](../packages/fixtures/CHALLENGES.md) adds nine faults:
+discard template answer keys, include an excluded tolerance boundary, shift ordered indexes,
+drop default mapping penalties, ignore string case policy, count overlapping target areas,
+include an excluded lookup boundary, use population variance for sample variance, and ignore
+an adaptive stage's exit rule. These faults must fail assertions in the new collection.
 
 Each fault must produce a failure in its designated behavioral suite, with the same collected
 cases as the baseline. Skips, collection errors, timeouts, and a changed mutation anchor fail the

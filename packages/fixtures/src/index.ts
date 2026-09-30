@@ -9,6 +9,7 @@ import {
 } from "@longsightgroup/qti3-core";
 import { createBasicRichInlineChoiceFixture } from "./basic-rich-inline-choice.fixture.js";
 import { catalogFixtures } from "./catalog.fixture.js";
+import { challengeFixtures } from "./challenges/index.js";
 import { createEndAttemptFixture } from "./end-attempt.fixture.js";
 import { basicCorrectAttempt, type QtiFixtureAttempt } from "./fixture-attempts.js";
 import { modalFeedbackFixtures } from "./modal-feedback.fixture.js";
@@ -18,7 +19,7 @@ import {
   createTemplateProcessingFixture,
 } from "./template-processing.fixture.js";
 
-export { catalogFixtures };
+export { catalogFixtures, challengeFixtures };
 export type { QtiFixtureAttempt };
 
 export interface QtiExpectedDiagnostic {
@@ -82,6 +83,7 @@ export const canonicalFixtures: QtiFixture[] = [
   ...processingFixtures,
   ...adaptiveFixtures,
   ...catalogFixtures,
+  ...challengeFixtures,
 ];
 
 /** Every packaged assessment-item fixture used for player rendering and accessibility sweeps. */
@@ -92,6 +94,7 @@ export const allQuestionItemFixtures: QtiFixture[] = [
   ...catalogFixtures,
   ...basicItemPlayerFixtures,
   ...basicItemPlayerToleranceFixtures,
+  ...challengeFixtures,
 ];
 
 export function getFixtureById(id: string): QtiFixture | undefined {

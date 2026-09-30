@@ -6,6 +6,7 @@ import {
   basicItemPlayerToleranceFixtures,
   catalogFixtures,
   canonicalFixtures,
+  challengeFixtures,
   interactionFixtures,
   processingFixtures,
 } from "./index.js";
@@ -43,6 +44,7 @@ describe("@longsightgroup/qti3-fixtures", () => {
     ]);
     expect(canonicalFixtures).toHaveLength(
       interactionFixtures.length +
+        challengeFixtures.length +
         processingFixtures.length +
         adaptiveFixtures.length +
         catalogFixtures.length,

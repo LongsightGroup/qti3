@@ -1,0 +1,63 @@
+import type { QtiFixture } from "../index.js";
+
+/** Challenge 05 — Complete the water cycle: synthetic MIT-licensed integration fixture. */
+export const waterCycleFixture: QtiFixture = {
+  id: "challenge-water-cycle",
+  title: "Challenge 05 — Complete the water cycle",
+  category: "processing",
+  xml: `<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed question; expected results are independently authored. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="challenge-water-cycle" title="Challenge 05 — Complete the water cycle" adaptive="false" time-dependent="false" xml:lang="en">
+<qti-response-declaration identifier="CYCLE" cardinality="multiple" base-type="directedPair"><qti-mapping default-value="-1"><qti-map-entry map-key="WATER START" mapped-value="1"/><qti-map-entry map-key="VAPOR GAS" mapped-value="1"/><qti-map-entry map-key="WATER END" mapped-value="1"/></qti-mapping></qti-response-declaration><qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"></qti-outcome-declaration>
+
+<qti-item-body><qti-gap-match-interaction response-identifier="CYCLE" shuffle="true" max-associations="3"><qti-prompt>Complete the water cycle. You may use “water” twice.</qti-prompt><qti-gap-text identifier="WATER" match-max="2">water</qti-gap-text><qti-gap-text identifier="VAPOR" match-max="1">water vapor</qti-gap-text><qti-gap-text identifier="ICE" match-max="1">ice</qti-gap-text><p>When liquid <qti-gap identifier="START"/> evaporates, it becomes <qti-gap identifier="GAS"/>. Cooling that gas produces liquid <qti-gap identifier="END"/>.</p></qti-gap-match-interaction></qti-item-body>
+<qti-response-processing><qti-set-outcome-value identifier="SCORE"><qti-map-response identifier="CYCLE"/></qti-set-outcome-value></qti-response-processing>
+</qti-assessment-item>`,
+  expectedParseDiagnostics: [],
+  expectedValidationDiagnostics: [],
+  attempts: [
+    {
+      name: "correct reuse",
+      responses: {
+        CYCLE: ["WATER START", "VAPOR GAS", "WATER END"],
+      },
+      expectedOutcomes: {
+        SCORE: 3,
+      },
+    },
+    {
+      name: "reordered pairs",
+      responses: {
+        CYCLE: ["WATER END", "WATER START", "VAPOR GAS"],
+      },
+      expectedOutcomes: {
+        SCORE: 3,
+      },
+    },
+    {
+      name: "wrong gas",
+      responses: {
+        CYCLE: ["WATER START", "ICE GAS", "WATER END"],
+      },
+      expectedOutcomes: {
+        SCORE: 1,
+      },
+    },
+    {
+      name: "partial reuse",
+      responses: {
+        CYCLE: ["WATER START", "WATER END"],
+      },
+      expectedOutcomes: {
+        SCORE: 2,
+      },
+    },
+    {
+      name: "unanswered",
+      responses: {},
+      expectedOutcomes: {
+        SCORE: 0,
+      },
+    },
+  ],
+};

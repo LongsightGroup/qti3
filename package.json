@@ -55,7 +55,7 @@
     "certification:check": "pnpm test:external:required && QTI3_REQUIRE_EXTERNAL=1 pnpm release:check && pnpm certification:evidence",
     "certification:evidence": "node scripts/certification-evidence.mjs",
     "check:information-model": "node scripts/check-information-model.mjs",
-    "test:semantic": "vitest run packages/core/src/test-execution-profile.test.ts packages/core/src/session-sequences.test.ts packages/core/src/challenge-items.test.ts packages/migrator/src/choice-semantic-matrix.test.ts packages/migrator/src/scoring-fidelity.test.ts",
+    "test:semantic": "vitest run packages/fixtures/src/challenges.test.ts packages/core/src/test-execution-profile.test.ts packages/core/src/session-sequences.test.ts packages/core/src/challenge-items.test.ts packages/migrator/src/choice-semantic-matrix.test.ts packages/migrator/src/scoring-fidelity.test.ts",
     "check:semantic-mutations": "node scripts/check-semantic-mutations.mjs"
   },
   "devDependencies": {
