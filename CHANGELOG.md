@@ -2,6 +2,55 @@
 
 ## Unreleased
 
+## 0.13.1 - 2026-10-01
+
+### Added
+
+- Add twelve synthetic, MIT-licensed challenge items covering partial credit, negative
+  mappings, adaptive hints and retries, positional scoring, numeric tolerance boundaries,
+  reused matching and gap choices, Unicode case policies, overlapping target regions,
+  lookup feedback, template-derived statistics, and staged completion. Fixed expected
+  results, browser regressions, official schema checks, and semantic mutation checks
+  exercise these combinations. See [the ten-question challenge guide](packages/fixtures/CHALLENGES.md)
+  and [partial-credit and retry scenarios](tests/fixtures/challenges/README.md).
+- Add scoring rules and example answers for the ten manual challenges. Flight ordering
+  reports the number of stages in the correct position; lab results report the earned badge.
+- Add a separate [integration guide](https://longsightgroup.github.io/qti3/integration.html)
+  with player installation, XML loading, scoring, and links to core and framework adapters.
+
+### Changed
+
+- Place host scoring controls and results beneath the item in the interactive manual.
+  Organize responses, outcomes, XML, diagnostics, events, metadata, and accessibility
+  evidence into keyboard-accessible tabs. Collapse the PNP editor and event logs initially.
+- Run schema-heavy area-scoring scenarios as individual tests so each schema validation
+  has its own timeout. Preserve the existing scoring and diagnostic assertions.
+
+### Fixed
+
+- Preserve QTI 2.0 choice grades when response processing uses the QTI 2.0 or QTI 2.1
+  `match_correct` template. Unsupported scoring programs remain explicit migration failures.
+- Preserve QTI 2 item language, surrounding content order, hottext response cardinality,
+  and extended-text pattern masks during migration. Keep hotspot instructions, region
+  labels, and object descriptions.
+- Reject migrations that would discard QTI 2 modal feedback, change response declaration
+  types, lose matching-group restrictions, or omit QTI 1.2 responses. These failures return
+  typed diagnostics and withhold successful migrated XML, including with safe repair enabled.
+- Preserve ordered QTI 1.2 material content, including HTML text and images. Keep plain text
+  literal instead of interpreting it as markup. Reject malformed HTML, unsupported text
+  types, and material references that cannot be preserved.
+- Allow dragging plain order choices from their visible labels. Buttons and links inside
+  those choices remain excluded from dragging. A Chromium regression checks reordering
+  in both directions and the resulting partial-credit scores.
+- Clear stale manual scoring results and challenge explanations when an attempt resets
+  or is restored.
+
+### Compatibility notes
+
+- Migration now rejects additional inputs whose content or scoring constraints cannot be
+  preserved. Review the returned diagnostics when a previously accepted item no longer
+  produces migrated XML.
+
 ## 0.13.0 - 2026-09-27
 
 ### Added
