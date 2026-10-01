@@ -1,4 +1,6 @@
 import { resolvePackageAssetUrl } from "./package-library/package-assets.js";
+import { initializeInspectionTabs } from "./inspection-tabs.js";
+import { renderChallengeGuide } from "./challenge-guide.js";
 import { readBrowserPackageZip } from "./package-library/browser-package.js";
 import {
   accessibilityProofMatrix,
@@ -24,6 +26,7 @@ import {
 } from "@longsightgroup/qti3-player";
 
 defineQtiAssessmentItemPlayer();
+initializeInspectionTabs();
 
 const fixtureSelect = document.querySelector<HTMLSelectElement>("#fixture");
 const loadFixture = document.querySelector<HTMLButtonElement>("#load-fixture");
@@ -361,6 +364,9 @@ for (const eventName of [
       latestCompanionMaterials = player.getCompanionMaterialsResolution() ?? null;
       currentInteractionTypes = interactionTypesFromDetail(detail);
       resetScorePanel();
+    } else if (eventName === "qti-reset" || eventName === "qti-restore") {
+      latestValidationMessages = [];
+      resetScorePanel();
     } else if (eventName === "qti-responsechange") {
       latestValidationMessages = [];
       markScoreStale();
@@ -416,6 +422,7 @@ function updateFixtureNavigation(): void {
 }
 
 function resetScorePanel(): void {
+  renderChallengeGuide(player.serialize()?.itemIdentifier);
   scorePanel.dataset.status = "idle";
   scoreStatus.textContent = "Not scored yet.";
   scoreValue.textContent = "-";
@@ -425,6 +432,7 @@ function resetScorePanel(): void {
 }
 
 function markScoreStale(): void {
+  renderChallengeGuide(player.serialize()?.itemIdentifier);
   if (scorePanel.dataset.status === "idle") return;
   scorePanel.dataset.status = "idle";
   scoreStatus.textContent = "Responses changed. Score again to update results.";
@@ -464,9 +472,12 @@ function renderScoreResult(detail: unknown): void {
   responseCount.textContent = String(Object.keys(responses).length);
   validationCount.textContent = String(diagnostics.length);
   scoreDetails.textContent = JSON.stringify({ responses, outcomes, diagnostics }, null, 2);
+  renderChallengeGuide(player.serialize()?.itemIdentifier, outcomes);
 }
 
 function renderDebugPanels(): void {
+  const debugXml = document.querySelector<HTMLElement>("#debug-xml");
+  if (debugXml) debugXml.textContent = xmlInput.value;
   const state = player.serialize();
   debugResponses.textContent = stableJson(state?.responses ?? {});
   debugOutcomes.textContent = stableJson(state?.outcomes ?? {});

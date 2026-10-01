@@ -1081,6 +1081,7 @@ test("maps PNP through the manual into exact, keyboard-accessible catalog contro
     });
     (window as Window & { pnpEvents?: unknown[] }).pnpEvents = events;
   });
+  await page.locator("#pnp-tools > summary").click();
   await page.locator("#pnp-xml").fill(`<access-for-all-pnp>
     <keyword-emphasis/>
     <activate-at-initialization-set><glossary-on-screen language="fr"/></activate-at-initialization-set>

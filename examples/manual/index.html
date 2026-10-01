@@ -580,6 +580,73 @@
           box-shadow: none;
         }
       }
+
+      [hidden] {
+        display: none !important;
+      }
+      .intro-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-block-start: 1rem;
+      }
+      .integration-guide {
+        margin-block-start: 1rem;
+        max-inline-size: 75ch;
+      }
+      .integration-guide p,
+      .integration-guide pre {
+        margin-block: 0.75rem;
+      }
+      .inspector {
+        margin-block-start: 1.5rem;
+      }
+      .inspector-tabs {
+        display: flex;
+        gap: 0.25rem;
+        overflow-x: auto;
+        padding: 0.25rem;
+      }
+      .inspector-tabs button {
+        flex-shrink: 0;
+        padding-inline: 0.75rem;
+      }
+      .inspector-tabs [aria-selected="true"] {
+        color: var(--accent);
+        border-block-end: 3px solid currentColor;
+        font-weight: 700;
+      }
+      [role="tabpanel"] {
+        margin-block-start: 0.75rem;
+        max-block-size: 32rem;
+        overflow: auto;
+      }
+      [role="tabpanel"]:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: 2px;
+      }
+      #challenge-guide {
+        padding-block: 1rem;
+        border-block: 1px solid var(--line);
+      }
+      #challenge-guide p {
+        margin-block: 0.5rem;
+        max-inline-size: 75ch;
+      }
+      #challenge-result {
+        font-weight: 600;
+      }
+      .debug-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-block: 0.75rem;
+      }
+      #debug-score {
+        background: var(--accent);
+        color: white;
+        padding-inline: 1rem;
+      }
     </style>
   </head>
   <body>
@@ -610,6 +677,43 @@
             The core is framework-neutral. The player uses Web Components, with React and Preact
             adapters. The repository also includes a CLI, fixtures, and conformance tests.
           </p>
+          <div class="intro-actions">
+            <a href="#manual">Try examples</a><a href="#integration">Use in your app</a>
+          </div>
+          <details id="integration" class="integration-guide">
+            <summary>Use qti3 in your app</summary>
+            <p>Install the native Web Component player with your package manager:</p>
+            <pre><code>pnpm add @longsightgroup/qti3-player</code></pre>
+            <p>Add the player element to your page:</p>
+            <pre><code>&lt;qti-assessment-item-player id="player"&gt;&lt;/qti-assessment-item-player&gt;</code></pre>
+            <p>In your bundled JavaScript, register the element and load your item XML:</p>
+            <pre><code>import { defineQtiAssessmentItemPlayer } from "@longsightgroup/qti3-player";
+
+defineQtiAssessmentItemPlayer();
+const player = document.querySelector("qti-assessment-item-player");
+const response = await fetch("/items/example.xml");
+if (!response.ok) throw new Error("Unable to load item XML");
+await player.loadXml(await response.text());
+
+// Call from your host's score button.
+const result = player.scoreAttempt();</code></pre>
+            <p>
+              Use
+              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/core">core</a> for
+              DOM-free scoring, or the
+              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player-react"
+                >React</a
+              >
+              and
+              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player-preact"
+                >Preact</a
+              >
+              adapters. See the
+              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player"
+                >player API and asset-loading guide</a
+              >.
+            </p>
+          </details>
         </div>
       </section>
 
@@ -685,8 +789,8 @@
                   </div>
                 </details>
               </div>
-              <section class="pnp-panel" aria-labelledby="pnp-heading">
-                <h3 id="pnp-heading">PNP resolver</h3>
+              <details class="pnp-panel" id="pnp-tools">
+                <summary id="pnp-heading">Accessibility preferences (PNP)</summary>
                 <form id="pnp-form" action="/" method="post">
                   <label for="pnp-xml">
                     Synthetic PNP XML
@@ -701,7 +805,10 @@
                   <summary>Resolved PNP debug</summary>
                   <pre id="debug-pnp">{}</pre>
                 </details>
-              </section>
+              </details>
+            </aside>
+            <div class="player-stage">
+              <qti-assessment-item-player id="player"></qti-assessment-item-player>
               <div id="score-panel" class="score-panel" data-status="idle" aria-live="polite">
                 <h3>Score result</h3>
                 <p id="score-status">Not scored yet.</p>
@@ -724,73 +831,191 @@
                   <pre id="score-details">{}</pre>
                 </details>
               </div>
-              <h3>Debug actions</h3>
+              <h3>Attempt actions</h3>
               <div class="debug-actions">
                 <button id="debug-score" type="button">Score attempt</button>
                 <button id="debug-suspend" type="button">Suspend</button>
                 <button id="debug-end" type="button">End attempt</button>
                 <button id="debug-reset" type="button">Reset</button>
               </div>
-              <h3>Debug panels</h3>
-              <div class="debug-grid">
-                <details class="debug-panel" open>
-                  <summary>Responses</summary>
+              <section id="challenge-guide" hidden aria-labelledby="challenge-guide-heading">
+                <h3 id="challenge-guide-heading">Explore the scoring</h3>
+                <p id="challenge-result" aria-live="polite"></p>
+                <details>
+                  <summary>Scoring rules and examples</summary>
+                  <p id="challenge-rules"></p>
+                  <p>
+                    Reset between independent scenarios. Match choices by name when their positions
+                    shuffle.
+                  </p>
+                  <ul id="challenge-examples"></ul>
+                </details>
+              </section>
+              <section class="inspector" aria-labelledby="inspector-heading">
+                <h3 id="inspector-heading">Inspect item</h3>
+                <div class="inspector-tabs" role="tablist" aria-label="Item inspection">
+                  <button
+                    type="button"
+                    role="tab"
+                    id="tab-responses"
+                    aria-controls="panel-responses"
+                    aria-selected="true"
+                    tabindex="0"
+                  >
+                    Responses</button
+                  ><button
+                    type="button"
+                    role="tab"
+                    id="tab-outcomes"
+                    aria-controls="panel-outcomes"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    Outcomes</button
+                  ><button
+                    type="button"
+                    role="tab"
+                    id="tab-xml"
+                    aria-controls="panel-xml"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    XML</button
+                  ><button
+                    type="button"
+                    role="tab"
+                    id="tab-diagnostics"
+                    aria-controls="panel-diagnostics"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    Diagnostics</button
+                  ><button
+                    type="button"
+                    role="tab"
+                    id="tab-events"
+                    aria-controls="panel-events"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    Events</button
+                  ><button
+                    type="button"
+                    role="tab"
+                    id="tab-metadata"
+                    aria-controls="panel-metadata"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    Metadata</button
+                  ><button
+                    type="button"
+                    role="tab"
+                    id="tab-accessibility"
+                    aria-controls="panel-accessibility"
+                    aria-selected="false"
+                    tabindex="-1"
+                  >
+                    Accessibility
+                  </button>
+                </div>
+                <div
+                  role="tabpanel"
+                  id="panel-responses"
+                  aria-labelledby="tab-responses"
+                  tabindex="0"
+                >
                   <pre id="debug-responses">{}</pre>
-                </details>
-                <details class="debug-panel" open>
-                  <summary>Outcomes</summary>
+                </div>
+                <div
+                  role="tabpanel"
+                  id="panel-outcomes"
+                  aria-labelledby="tab-outcomes"
+                  tabindex="0"
+                  hidden
+                >
                   <pre id="debug-outcomes">{}</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Template values</summary>
-                  <pre id="debug-template-values">{}</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Catalogs</summary>
-                  <pre id="debug-catalogs">[]</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Stylesheets</summary>
-                  <pre id="debug-stylesheets">[]</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Companion materials</summary>
-                  <pre id="debug-companion-materials">null</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Package</summary>
-                  <pre id="debug-package">{}</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Validation messages</summary>
-                  <pre id="debug-validation">[]</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Diagnostics</summary>
+                </div>
+                <div role="tabpanel" id="panel-xml" aria-labelledby="tab-xml" tabindex="0" hidden>
+                  <pre id="debug-xml"></pre>
+                </div>
+                <div
+                  role="tabpanel"
+                  id="panel-diagnostics"
+                  aria-labelledby="tab-diagnostics"
+                  tabindex="0"
+                  hidden
+                >
+                  <h4>Diagnostics</h4>
                   <pre id="debug-diagnostics">[]</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Serialized state</summary>
-                  <pre id="debug-state">{}</pre>
-                </details>
-                <details class="debug-panel" open>
-                  <summary>Action log</summary>
-                  <pre id="debug-action-log" aria-live="polite">[]</pre>
-                </details>
-                <details class="debug-panel">
-                  <summary>Accessibility proof</summary>
-                  <div id="debug-a11y-proof" class="a11y-proof">No interaction loaded.</div>
-                </details>
-                <details class="debug-panel">
-                  <summary>Manual AT scripts</summary>
-                  <div id="debug-at-scripts" class="at-scripts">No interaction loaded.</div>
-                </details>
-              </div>
-              <h3>Latest event</h3>
-              <pre id="events" aria-live="polite"></pre>
-            </aside>
-            <div class="player-stage">
-              <qti-assessment-item-player id="player"></qti-assessment-item-player>
+                  <h4>Validation messages</h4>
+                  <pre id="debug-validation">[]</pre>
+                </div>
+                <div
+                  role="tabpanel"
+                  id="panel-events"
+                  aria-labelledby="tab-events"
+                  tabindex="0"
+                  hidden
+                >
+                  <details>
+                    <summary>Action log</summary>
+                    <pre id="debug-action-log">[]</pre>
+                  </details>
+                  <details>
+                    <summary>Latest event</summary>
+                    <pre id="events"></pre>
+                  </details>
+                </div>
+                <div
+                  role="tabpanel"
+                  id="panel-metadata"
+                  aria-labelledby="tab-metadata"
+                  tabindex="0"
+                  hidden
+                >
+                  <details class="debug-panel">
+                    <summary>Template values</summary>
+                    <pre id="debug-template-values">{}</pre>
+                  </details>
+                  <details class="debug-panel">
+                    <summary>Catalogs</summary>
+                    <pre id="debug-catalogs">[]</pre>
+                  </details>
+                  <details class="debug-panel">
+                    <summary>Stylesheets</summary>
+                    <pre id="debug-stylesheets">[]</pre>
+                  </details>
+                  <details class="debug-panel">
+                    <summary>Companion materials</summary>
+                    <pre id="debug-companion-materials">null</pre>
+                  </details>
+                  <details class="debug-panel">
+                    <summary>Package</summary>
+                    <pre id="debug-package">{}</pre>
+                  </details>
+                  <details class="debug-panel">
+                    <summary>Serialized state</summary>
+                    <pre id="debug-state">{}</pre>
+                  </details>
+                </div>
+                <div
+                  role="tabpanel"
+                  id="panel-accessibility"
+                  aria-labelledby="tab-accessibility"
+                  tabindex="0"
+                  hidden
+                >
+                  <details class="debug-panel">
+                    <summary>Accessibility proof</summary>
+                    <div id="debug-a11y-proof" class="a11y-proof">No interaction loaded.</div>
+                  </details>
+                  <details class="debug-panel">
+                    <summary>Manual AT scripts</summary>
+                    <div id="debug-at-scripts" class="at-scripts">No interaction loaded.</div>
+                  </details>
+                </div>
+              </section>
             </div>
           </div>
         </div>
