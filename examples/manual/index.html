@@ -590,14 +590,6 @@
         gap: 1rem;
         margin-block-start: 1rem;
       }
-      .integration-guide {
-        margin-block-start: 1rem;
-        max-inline-size: 75ch;
-      }
-      .integration-guide p,
-      .integration-guide pre {
-        margin-block: 0.75rem;
-      }
       .inspector {
         margin-block-start: 1.5rem;
       }
@@ -678,42 +670,8 @@
             adapters. The repository also includes a CLI, fixtures, and conformance tests.
           </p>
           <div class="intro-actions">
-            <a href="#manual">Try examples</a><a href="#integration">Use in your app</a>
+            <a href="#manual">Try examples</a><a href="integration.html">Use in your app</a>
           </div>
-          <details id="integration" class="integration-guide">
-            <summary>Use qti3 in your app</summary>
-            <p>Install the native Web Component player with your package manager:</p>
-            <pre><code>pnpm add @longsightgroup/qti3-player</code></pre>
-            <p>Add the player element to your page:</p>
-            <pre><code>&lt;qti-assessment-item-player id="player"&gt;&lt;/qti-assessment-item-player&gt;</code></pre>
-            <p>In your bundled JavaScript, register the element and load your item XML:</p>
-            <pre><code>import { defineQtiAssessmentItemPlayer } from "@longsightgroup/qti3-player";
-
-defineQtiAssessmentItemPlayer();
-const player = document.querySelector("qti-assessment-item-player");
-const response = await fetch("/items/example.xml");
-if (!response.ok) throw new Error("Unable to load item XML");
-await player.loadXml(await response.text());
-
-// Call from your host's score button.
-const result = player.scoreAttempt();</code></pre>
-            <p>
-              Use
-              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/core">core</a> for
-              DOM-free scoring, or the
-              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player-react"
-                >React</a
-              >
-              and
-              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player-preact"
-                >Preact</a
-              >
-              adapters. See the
-              <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player"
-                >player API and asset-loading guide</a
-              >.
-            </p>
-          </details>
         </div>
       </section>
 

@@ -65,14 +65,25 @@ test("flight guidance explains partial credit and clears after reset or another 
   await expect(page.locator("#score-status")).toHaveText("Scored successfully.");
 });
 
-test("integration entry opens the installation and player example", async ({ page }) => {
+test("integration entry navigates to the separate installation guide", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Use in your app", exact: true }).click();
-  await expect(page.locator("#integration")).toHaveAttribute("open", "");
+  await expect(page).toHaveURL(/\/integration\.html$/);
+  await expect(
+    page.getByRole("heading", { name: "Use qti3 in your app", exact: true }),
+  ).toBeVisible();
   await expect(page.locator("#integration")).toContainText("pnpm add @longsightgroup/qti3-player");
   await expect(page.locator("#integration")).toContainText("defineQtiAssessmentItemPlayer();");
   await expect(page.locator("#integration")).toContainText("player.loadXml(await response.text())");
   await expect(page.locator("#integration")).toContainText("player.scoreAttempt()");
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Use qti3 in your app", exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await page.getByRole("link", { name: "Return to the interactive manual", exact: true }).click();
+  await expect(page).toHaveURL(/\/#manual$/);
 });
 
 test("workspace keeps host scoring after the item and reflows with accessible tabs", async ({

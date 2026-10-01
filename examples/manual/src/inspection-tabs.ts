@@ -38,10 +38,4 @@ export function initializeInspectionTabs(): void {
       }
     });
   }
-  document
-    .querySelector<HTMLAnchorElement>('a[href="#integration"]')
-    ?.addEventListener("click", () => {
-      const guide = document.querySelector<HTMLDetailsElement>("#integration");
-      if (guide) guide.open = true;
-    });
 }

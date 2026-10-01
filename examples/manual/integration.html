@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Use in your app · qti3</title>
+    <meta
+      name="description"
+      content="Install the qti3 Web Component player, load assessment item XML, and connect scoring to your application."
+    />
+    <link rel="canonical" href="https://longsightgroup.github.io/qti3/integration.html" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/convert/style.css" />
+    <style>
+      .integration-content {
+        max-inline-size: 75ch;
+        padding-block-end: 3rem;
+      }
+      .integration-content p,
+      .integration-content pre {
+        margin-block: 1rem;
+      }
+      .integration-content pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="wordmark" href="./" aria-label="qti3 homepage">qti3</a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="./#manual">Interactive manual</a>
+          <a href="integration.html" aria-current="page">Use in your app</a>
+          <a href="convert.html">Create and convert</a>
+          <a href="https://github.com/LongsightGroup/qti3">GitHub source</a>
+        </nav>
+      </div>
+    </header>
+    <main id="content" class="content-width">
+      <div class="intro">
+        <h1>Use qti3 in your app</h1>
+        <p>
+          Render a QTI 3 assessment item with the native Web Component player and connect scoring to
+          your host application.
+        </p>
+      </div>
+      <section
+        id="integration"
+        class="integration-content"
+        aria-labelledby="player-integration-heading"
+      >
+        <h2 id="player-integration-heading">Install and load an item</h2>
+        <p>Install the native Web Component player with your package manager:</p>
+        <pre><code>pnpm add @longsightgroup/qti3-player</code></pre>
+        <p>Add the player element to your page:</p>
+        <pre><code>&lt;qti-assessment-item-player id="player"&gt;&lt;/qti-assessment-item-player&gt;</code></pre>
+        <p>In your bundled JavaScript, register the element and load your item XML:</p>
+        <pre><code>import { defineQtiAssessmentItemPlayer } from "@longsightgroup/qti3-player";
+
+defineQtiAssessmentItemPlayer();
+const player = document.querySelector("qti-assessment-item-player");
+const response = await fetch("/items/example.xml");
+if (!response.ok) throw new Error("Unable to load item XML");
+await player.loadXml(await response.text());
+
+// Call from your host's score button.
+const result = player.scoreAttempt();</code></pre>
+        <p>
+          Use
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/core">core</a> for
+          DOM-free scoring, or the
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player-react">React</a>
+          and
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player-preact"
+            >Preact</a
+          >
+          adapters. See the
+          <a href="https://github.com/LongsightGroup/qti3/tree/main/packages/player"
+            >player API and asset-loading guide</a
+          >.
+        </p>
+
+        <p><a href="./#manual">Return to the interactive manual</a></p>
+      </section>
+    </main>
+  </body>
+</html>
