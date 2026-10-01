@@ -20,20 +20,21 @@ function areaItem(entries: string, dimensions = 'width="100" height="100"') {
 }
 
 // QTI 3.0.1 §8.34: default means the entire image; §2.11.1.6: priority and once per area.
-it("scores default image areas with bounds, authored priority and once-per-area counting", () => {
-  for (const [entries, points, expected] of [
-    [wholeImage, ["25 25", "75 75"], 5],
-    [wholeImage + rectangle, ["25 25", "75 75"], 5],
-    [rectangle + wholeImage, ["25 25", "75 75"], 11],
-    [wholeImage, ["101 25"], -1],
-    [rectangle, ["75 75"], -1],
-  ] as const) {
-    const session = createItemSession(validQtiDocument(areaItem(entries)));
-    expect(session.respond("RESPONSE", [...points])).toEqual([]);
-    const score = session.score();
-    expect(score.diagnostics).toEqual([]);
-    expect(score.outcomes.SCORE).toBe(expected);
-  }
+it.each([
+  ["counts the default area only once", wholeImage, ["25 25", "75 75"], 5],
+  ["gives the first default area priority", wholeImage + rectangle, ["25 25", "75 75"], 5],
+  ["gives the first rectangle priority", rectangle + wholeImage, ["25 25", "75 75"], 11],
+  ["rejects points outside image bounds", wholeImage, ["101 25"], -1],
+  ["uses the default value outside mapped areas", rectangle, ["75 75"], -1],
+] as const)("scores image areas: %s", (_name, entries, points, expected) => {
+  const session = createItemSession(validQtiDocument(areaItem(entries)));
+  expect(session.respond("RESPONSE", [...points])).toEqual([]);
+  const score = session.score();
+  expect(score.diagnostics).toEqual([]);
+  expect(score.outcomes.SCORE).toBe(expected);
+});
+
+it("reports missing image bounds only when scoring an answered point response", () => {
   const session = createItemSession(validQtiDocument(areaItem(wholeImage, "")));
   expect(session.score().outcomes.SCORE).toBe(0);
   session.respond("RESPONSE", ["25 25"]);
