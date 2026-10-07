@@ -14,6 +14,7 @@ import { createQtiInteractionRegionMarkers } from "../player/interaction-regions
 import { errorView } from "../player-validation.js";
 import { mediaPlayCount } from "../response-limits.js";
 import { parseAuthoredAssetUrl } from "../asset-url-policy.js";
+import { copySafeAttributes } from "../content/content-dom.js";
 import { createMediaPauseTiming, mediaPauseTimingConfigured } from "./media-pause-timing.js";
 
 export interface MediaResponseBinding {
@@ -55,6 +56,8 @@ export function renderMediaResponse(
   if (object && mediaType === "video") {
     const video = document.createElement("video");
     configureMediaElement(video, interaction, object, label, definition.value, mediaResponse);
+    const poster = object.attributes.poster;
+    if (poster !== undefined) copySafeAttributes(video, { poster });
     regions.control(video);
     if (object.width) video.width = Number(object.width);
     if (object.height) video.height = Number(object.height);

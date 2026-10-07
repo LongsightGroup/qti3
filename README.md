@@ -297,6 +297,9 @@ them or emit `player.stylesheet.unresolved` diagnostics.
   `<video>` element for host styling or custom enhancement. The player also supports
   `data-qti-media-player-pause-delay` and `data-qti-media-player-pause-duration` as
   second-based timers around playback start and user-initiated pauses.
+  Video poster images use the same safe URL and host asset-resolution policy as images.
+  Package discovery includes poster references, including images absent from manifest file lists;
+  missing package-local posters produce an explicit asset diagnostic.
 - `qti-slider-interaction` uses a typed numeric definition for bounds, step size, orientation,
   reverse direction, response validation, and keyboard operation. The player keeps display values
   and scored values on the same decimal-safe scale.

@@ -50,6 +50,7 @@ const PACKAGE_ASSET_REF_SPECS: readonly PackageAssetRefSpec[] = [
   { kind: "attribute", localName: "object", attribute: "data" },
   { kind: "attribute", localName: "audio", attribute: "src" },
   { kind: "attribute", localName: "video", attribute: "src" },
+  { kind: "attribute", localName: "video", attribute: "poster" },
   { kind: "attribute", localName: "source", attribute: "src" },
   { kind: "attribute", localName: "track", attribute: "src" },
   { kind: "text", localName: "qti-file-href" },

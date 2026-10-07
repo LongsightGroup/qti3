@@ -13,6 +13,31 @@ import {
 } from "./player-helpers.js";
 
 test.describe("player package loading", () => {
+  for (const [label, resolved] of [
+    ["script URL", "javascript:unsafeCode()"],
+    ["audio data URL", "data:audio/wav;base64,AA=="],
+  ]) {
+    test(`rejects a host-resolved video poster with an unsafe image sink: ${label}`, async ({
+      page,
+    }) => {
+      const xml = await readFile(
+        new URL("../fixtures/media-assets/packaged-video.xml", import.meta.url),
+        "utf8",
+      );
+      await page.goto("/");
+      const player = page.locator("qti-assessment-item-player");
+      await player.evaluate(
+        async (element, input) => {
+          await element.loadXml(input.xml, {
+            resolveAsset: (url) => (url === "media/poster.svg" ? input.resolved : `/unused/${url}`),
+          });
+        },
+        { xml, resolved },
+      );
+      await expect(player.locator("video")).toHaveCount(1);
+      await expect(player.locator("video")).not.toHaveAttribute("poster", /.+/);
+    });
+  }
   test("attaches host-resolved qti-stylesheet resources during item rendering", async ({
     page,
   }) => {
@@ -147,29 +172,26 @@ test.describe("player package loading", () => {
     );
   });
 
-  test("resolves packaged media sources and tracks from a zip upload", async ({ page }) => {
+  test("resolves packaged media posters, sources and tracks from a zip upload", async ({
+    page,
+  }) => {
+    const posterSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="18"><rect width="32" height="18" fill="#2463eb"/></svg>';
     const zip = createItemPackageZip({
       resources: [
         qtiItemResource("media", "items/media.xml", [
           "items/media/clip.mp4",
+          "items/media/poster.svg",
           "items/captions/clip.vtt",
         ]),
       ],
       files: {
-        "items/media.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-media" title="packaged-media" time-dependent="false">
-  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
-  <qti-item-body>
-    <qti-media-interaction response-identifier="RESPONSE" autostart="false">
-      <qti-prompt>Play the packaged clip.</qti-prompt>
-      <video width="320" height="180">
-        <source src="media/clip.mp4" type="video/mp4"/>
-        <track kind="captions" src="captions/clip.vtt" srclang="en" label="English"/>
-      </video>
-    </qti-media-interaction>
-  </qti-item-body>
-</qti-assessment-item>`,
+        "items/media.xml": await readFile(
+          new URL("../fixtures/media-assets/packaged-video.xml", import.meta.url),
+          "utf8",
+        ),
         "items/media/clip.mp4": Buffer.from("not-real-mp4"),
+        "items/media/poster.svg": Buffer.from(posterSvg),
         "items/captions/clip.vtt": Buffer.from("WEBVTT\n\n00:00.000 --> 00:01.000\nCaption\n"),
       },
     });
@@ -183,6 +205,23 @@ test.describe("player package loading", () => {
 
     await expect(page.locator("#file-summary")).toContainText("items/media.xml");
     const video = page.locator("qti-assessment-item-player video");
+    await expect(video).toHaveAttribute("poster", /^blob:/);
+    expect(
+      await video.evaluate(async (element) => {
+        const poster = element.getAttribute("poster");
+        if (!poster) throw new Error("Expected a packaged poster URL");
+        const image = new Image();
+        image.src = poster;
+        await image.decode();
+        const response = await fetch(poster);
+        return {
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+          mediaType: response.headers.get("content-type"),
+          content: await response.text(),
+        };
+      }),
+    ).toEqual({ width: 32, height: 18, mediaType: "image/svg+xml", content: posterSvg });
     await expect(video.locator("source")).toHaveAttribute("src", /^blob:/);
     await expect(video.locator("track")).toHaveAttribute("src", /^blob:/);
     await expect

@@ -174,14 +174,9 @@ export function sanitizeContentAttributes(
   for (const [name, value] of Object.entries(attributes)) {
     const urlContext = contentAttributeUrlContext(elementName, name);
     if (!isSafeContentAttribute(name, value, urlContext)) continue;
-    const normalizedName = name.toLowerCase();
-    if (
-      resolveAsset &&
-      (normalizedName === "href" || normalizedName === "src" || normalizedName === "data") &&
-      isResolvableAssetUrl(value)
-    ) {
+    if (resolveAsset && urlContext && isResolvableAssetUrl(value)) {
       const resolved = resolveAsset(value);
-      const safeResolved = parseResolvedAssetUrl(resolved, urlContext ?? "content");
+      const safeResolved = parseResolvedAssetUrl(resolved, urlContext);
       if (!safeResolved) continue;
       sanitized[name] = safeResolved;
       continue;
@@ -254,8 +249,8 @@ function isSafeContentAttribute(
   const normalizedName = name.toLowerCase();
   if (normalizedName.startsWith("on")) return false;
   if (normalizedName === "style") return false;
-  if (normalizedName === "href" || normalizedName === "src" || normalizedName === "data") {
-    return parseAuthoredAssetUrl(value, urlContext ?? "content") !== undefined;
+  if (urlContext) {
+    return parseAuthoredAssetUrl(value, urlContext) !== undefined;
   }
   return (
     normalizedName === "alt" ||
@@ -269,7 +264,6 @@ function isSafeContentAttribute(
     normalizedName === "kind" ||
     normalizedName === "label" ||
     normalizedName === "lang" ||
-    normalizedName === "poster" ||
     normalizedName === "preload" ||
     normalizedName === "role" ||
     normalizedName === "rowspan" ||
@@ -290,6 +284,7 @@ function contentAttributeUrlContext(
   attributeName: string,
 ): QtiRenderedAssetUrlContext | undefined {
   const normalizedAttribute = attributeName.toLowerCase();
+  if (normalizedAttribute === "poster") return "image";
   if (normalizedAttribute === "href") return "navigation";
   if (normalizedAttribute === "data" && elementName === "object") return "object";
   if (normalizedAttribute !== "src") return normalizedAttribute === "data" ? "content" : undefined;

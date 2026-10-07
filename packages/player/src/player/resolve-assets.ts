@@ -1,12 +1,16 @@
 import { mapImageSourceSet } from "../image-source-set.js";
-import { isResolvableAssetUrl, isSafeResolvedAssetUrl } from "../content/content-dom.js";
+import {
+  isResolvableAssetUrl,
+  isSafeResolvedAssetUrl,
+  sanitizeContentAttributes,
+} from "../content/content-dom.js";
 import type { QtiPlayerResolveAsset } from "../player-types.js";
 
 export function resolveRenderedAssets(root: ParentNode, resolveAsset: QtiPlayerResolveAsset): void {
   if (root instanceof Element) {
     resolveElementAssets(root, resolveAsset);
   }
-  for (const element of root.querySelectorAll("[src], [href], [data], [srcset]")) {
+  for (const element of root.querySelectorAll("[src], [href], [data], [poster], [srcset]")) {
     resolveElementAssets(element, resolveAsset);
   }
 }
@@ -21,7 +25,7 @@ export function resolveElementAssets(element: Element, resolveAsset: QtiPlayerRe
     if (resolved) element.setAttribute("srcset", resolved);
     else element.removeAttribute("srcset");
   }
-  for (const attribute of ["src", "href", "data"]) {
+  for (const attribute of ["src", "href", "data", "poster"]) {
     resolveElementAssetAttribute(element, attribute, resolveAsset);
   }
 }
@@ -33,8 +37,12 @@ export function resolveElementAssetAttribute(
 ): void {
   const value = element.getAttribute(attribute);
   if (!value || !isResolvableAssetUrl(value)) return;
-  const resolved = resolveAsset(value);
-  if (!isSafeResolvedAssetUrl(resolved)) {
+  const resolved = sanitizeContentAttributes(
+    { [attribute]: value },
+    resolveAsset,
+    element.localName,
+  )[attribute];
+  if (resolved === undefined) {
     element.removeAttribute(attribute);
     return;
   }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed poster/source/caption asset fixture. -->
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="packaged-media" title="Packaged video" adaptive="false" time-dependent="false">
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="integer"/>
+  <qti-item-body>
+    <qti-media-interaction response-identifier="RESPONSE" autostart="false">
+      <qti-prompt>Play the packaged clip.</qti-prompt>
+      <video width="320" height="180" poster="media/poster.svg">
+        <source src="media/clip.mp4" type="video/mp4"/>
+        <track kind="captions" src="captions/clip.vtt" srclang="en" label="English"/>
+      </video>
+    </qti-media-interaction>
+  </qti-item-body>
+</qti-assessment-item>
