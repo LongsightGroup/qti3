@@ -23,6 +23,12 @@ view includes `candidate` enter the result. Run this projection before sending t
 to an untrusted candidate client; filtering in the browser alone does not protect source
 content. Resolve package asset references against the assessment test's path.
 
+After serializing a content tree, use `parseSafeContentProjection` at its JSON
+boundary before rendering. It parses the text/element structure and reapplies the
+same sanitizer, optionally resolving package assets through the host's authorized
+URLs. Malformed, excessively deep or oversized trees return typed diagnostics;
+unsafe elements and attributes follow the canonical content removal policy.
+
 The host displays each result at its authored scope, using `scopeType` and
 `scopeIdentifier`. Keep test instructions outside individual item content; do not prepend
 them to question XML. This API does not render a test or authorize test execution.

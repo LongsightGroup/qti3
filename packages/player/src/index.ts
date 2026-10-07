@@ -108,3 +108,5 @@ export {
 } from "./player-message-catalog-validate.js";
 export { resolvePlayerMessages } from "./player-locale.js";
 export { QtiAssessmentItemPlayer, defineQtiAssessmentItemPlayer } from "./player-element.js";
+export { parseSafeContentProjection } from "./content/parse-safe-content-projection.js";
+export type { SafeProjectedContentNode } from "./content/safe-content-projection.js";
