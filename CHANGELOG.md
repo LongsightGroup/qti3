@@ -4,6 +4,12 @@
 
 ### Added
 
+- Parse static assessment, part and section rubrics with `parseQtiTestRubrics`, preserving
+  their authored owners. `createCandidateTestRubricDelivery` filters candidate audiences
+  through the existing safe content projection. Dynamic rubric content and test execution
+  with rubrics remain explicit unsupported cases.
+- Decode serialized host content with `parseSafeContentProjection`. The typed boundary
+  checks tree shapes and limits, reapplies sanitization and resolves authorized assets.
 - Author explicit choice point maxima with `maximumScore`, including zero and fractional
   values. The shared QTI processing rules, feedback and maximum metadata agree; custom
   scoring conflicts return diagnostics. Existing implicit choice scoring is unchanged.
@@ -21,6 +27,14 @@
 
 ### Fixed
 
+- Validate and resolve video poster URLs through the image asset policy. Discover package
+  poster references, diagnose missing images and preserve posters in media interaction
+  rendering. Packaged posters decode with their original bytes and media type.
+- Apply each rendered attribute's URL policy to host-resolved assets. Resolvers must return
+  URLs suitable for the image, navigation, object, media or track sink; incompatible data
+  URLs are removed.
+- Pin reviewed transitive development security patches without weakening the dependency
+  audit or changing runtime dependencies.
 - Preserve explicit inline-choice matching maxima through standard QTI 2 export/reimport.
   Existing processing/outcome fidelity gates still reject custom programs and
   unmatched maximum metadata.
@@ -41,28 +55,6 @@
 - Keep diagnostics already collected when fixed-test ordering rejects an empty part, section,
   or item list. A non-boolean section shuffle or item fixed flag on the fixed-test writer is
   reported on its own, rather than as an invalid identifier.
-
-## 0.13.2 - 2026-10-07
-
-### Added
-
-- Parse static assessment, part and section rubrics with `parseQtiTestRubrics`, preserving
-  their authored owners. `createCandidateTestRubricDelivery` filters candidate audiences
-  through the existing safe content projection. Dynamic rubric content and test execution
-  with rubrics remain explicit unsupported cases.
-- Decode serialized host content with `parseSafeContentProjection`. The typed boundary
-  checks tree shapes and limits, reapplies sanitization and resolves authorized assets.
-
-### Fixed
-
-- Validate and resolve video poster URLs through the image asset policy. Discover package
-  poster references, diagnose missing images and preserve posters in media interaction
-  rendering. Packaged posters decode with their original bytes and media type.
-- Apply each rendered attribute's URL policy to host-resolved assets. Resolvers must return
-  URLs suitable for the image, navigation, object, media or track sink; incompatible data
-  URLs are removed.
-- Pin reviewed transitive development security patches without weakening the dependency
-  audit or changing runtime dependencies.
 
 ## 0.13.1 - 2026-10-01
 
