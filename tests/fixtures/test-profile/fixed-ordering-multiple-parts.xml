@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic, MIT-licensed QTI 3.0.1 fixed-section ordering fixture. -->
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="ORDERED" title="Fixed section ordering">
+  <qti-test-part identifier="P1" navigation-mode="nonlinear" submission-mode="individual">
+    <qti-assessment-section identifier="S1" title="Shuffled questions" visible="true">
+      <qti-ordering shuffle="true"/>
+      <qti-assessment-item-ref identifier="A" href="items/a.xml"/>
+      <qti-assessment-item-ref identifier="B" href="items/b.xml" fixed="true"/>
+      <qti-assessment-item-ref identifier="C" href="items/c.xml"/>
+      <qti-assessment-item-ref identifier="D" href="items/d.xml"/>
+    </qti-assessment-section>
+    <qti-assessment-section identifier="S2" title="Authored questions" visible="true">
+      <qti-ordering shuffle="false"/>
+      <qti-assessment-item-ref identifier="E" href="items/e.xml"/>
+      <qti-assessment-item-ref identifier="F" href="items/f.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+  <qti-test-part identifier="P2" navigation-mode="linear" submission-mode="simultaneous">
+    <qti-assessment-section identifier="S3" title="Another part" visible="true">
+      <qti-ordering shuffle="1"/>
+      <qti-assessment-item-ref identifier="G" href="items/g.xml"/>
+      <qti-assessment-item-ref identifier="H" href="items/h.xml"/>
+      <qti-assessment-item-ref identifier="I" href="items/i.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Parse flat fixed-test section ordering with `parseQtiFixedTestOrdering` and generate or
+  restore per-attempt question orders with `prepareQtiFixedTestOrder`. Fixed reference
+  positions and part/section boundaries remain intact. Invalid saved permutations and
+  unsupported selection, branching or nested-section policies return diagnostics.
+- Write section shuffle rules and fixed item-reference hints with the fixed-test writer,
+  preserving authored question order in the canonical XML.
+
 ## 0.13.2 - 2026-10-07
 
 ### Added

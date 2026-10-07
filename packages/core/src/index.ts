@@ -422,6 +422,13 @@ export { isQtiIdentifier } from "./qti-identifier.js";
 export { isQtiPackageItemHref } from "./qti-package-paths.js";
 export { testFailure } from "./test-model.js";
 export { testExecutionSupport } from "./test-support.js";
+export { parseQtiFixedTestOrdering, prepareQtiFixedTestOrder } from "./test-ordering.js";
+export type {
+  QtiFixedTestItemRef,
+  QtiFixedTestOrdering,
+  QtiFixedTestOrderState,
+  QtiFixedTestOrderInput,
+} from "./test-ordering.js";
 export { inspectQtiBinaryChoice } from "./binary-choice.js";
 export type { QtiBinaryChoicePolicy } from "./binary-choice.js";
 

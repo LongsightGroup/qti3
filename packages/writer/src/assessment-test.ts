@@ -3,7 +3,7 @@ import {
   serializeTestExpression,
   type QtiTestDefinition,
   type QtiTestResult,
-  type QtiTestItemRef,
+  type QtiFixedTestItemRef,
 } from "@longsightgroup/qti3-core";
 import { escapeXmlText, xmlAttributes } from "./xml.js";
 
@@ -53,8 +53,8 @@ export function writeQti3AssessmentTest(definition: QtiTestDefinition): QtiTestR
   };
 }
 
-export function writeTestItemRef(item: QtiTestItemRef): string {
-  return `<qti-assessment-item-ref${xmlAttributes({ identifier: item.identifier, href: item.href, category: item.categories.length ? item.categories.join(" ") : undefined })}/>`;
+export function writeTestItemRef(item: QtiFixedTestItemRef): string {
+  return `<qti-assessment-item-ref${xmlAttributes({ identifier: item.identifier, href: item.href, fixed: item.fixed, category: item.categories.length ? item.categories.join(" ") : undefined })}/>`;
 }
 
 export function testDocument(

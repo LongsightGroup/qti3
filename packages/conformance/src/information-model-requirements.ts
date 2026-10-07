@@ -3,6 +3,24 @@ import type { QtiInformationModelRequirement } from "./information-model.js";
 /** Reviewed boundary-specific claims and explicit audit backlog; never inferred from element support. */
 export const qtiInformationModelRequirements = [
   {
+    id: "fixed-section-ordering",
+    sections: ["5.98", "5.98.1", "5.6.3", "10.1.3"],
+    elements: ["qti-ordering", "qti-assessment-item-ref"],
+    boundary: "process",
+    disposition: "implemented",
+    rule: "Fixed-section question shuffling preserves authored fixed slots and part/section boundaries; saved permutations are restored without regeneration.",
+    limitation:
+      "The fixed-ordering API supports flat visible sections only. It rejects selection, nested sections, branches/preconditions and ordering extensions. Host navigation, timing, delivery and per-attempt persistence are separate responsibilities; the branching executor still rejects ordering.",
+    evidence: [
+      { path: "packages/core/src/test-ordering.test.ts", marker: "[ASI-FIXED-ORDER]", cases: 2 },
+      {
+        path: "packages/writer/src/assessment-test-ordering.test.ts",
+        marker: "[ASI-FIXED-ORDER-WRITER]",
+        cases: 1,
+      },
+    ],
+  },
+  {
     id: "test-feedback",
     sections: ["5.157", "5.157.1", "5.157.2"],
     elements: ["qti-test-feedback"],

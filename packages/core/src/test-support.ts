@@ -34,6 +34,23 @@ const executableTestSupport: readonly QtiTestElementSupport[] = [
 /** Executable test support and explicit delivery refusals; interchange has a broader scope. */
 export const testExecutionSupport: readonly QtiTestElementSupport[] = [
   ...executableTestSupport,
+  {
+    qtiName: "qti-ordering",
+    category: "test",
+    support: "supported",
+    specReference: "QTI 3.0.1 ASI section ordering; implementation guide §4.5.2",
+    parse: true,
+    validate: true,
+    render: false,
+    process: true,
+    fixtures: ["tests/fixtures/test-profile/fixed-ordering-multiple-parts.xml"],
+    tests: [
+      "packages/core/src/test-ordering.test.ts",
+      "packages/writer/src/assessment-test-ordering.test.ts",
+    ],
+    notes:
+      "parseQtiFixedTestOrdering / prepareQtiFixedTestOrder only: flat visible sections; section-local shuffle; fixed item-reference slots; multiple part boundaries retained; exact versioned saved-order restoration. Selection, nested sections, branches/preconditions and extension ordering are rejected. Hosts still own navigation/timing/content delivery. The separate branching test executor does not accept ordering. Not a general test-runner certification.",
+  },
   ...[
     {
       qtiName: "qti-test-feedback",

@@ -658,6 +658,26 @@ Test startup, submission, and snapshot restoration return `QtiTestResult`. Check
 using `value`; non-finite test processing returns `test.processing.nonFinite`. A rejected
 submission leaves the input session unchanged, including its outcomes and current item.
 
+## Fixed assessment question order
+
+`parseQtiFixedTestOrdering(xml)` reads `qti-ordering` rules for flat, visible sections.
+`prepareQtiFixedTestOrder(definition, { kind: "new", seed })` generates section-local
+item-reference permutations. The host supplies a fresh attempt seed from its entropy
+source and persists the returned `qti3.fixed-test-order.v1` state with that attempt.
+Part and section order remains authored; item references with `fixed="true"` retain
+their authored slots. The canonical XML and item scoring are unchanged.
+
+On resume, pass the saved JSON as `{ kind: "restore", state }` against the same immutable
+published test. Restoration checks exact section inventories, fixed slots and authored
+orders, then returns a copy of the saved permutation. It never regenerates an order or
+chooses an implicit seed. Check the typed result before delivering any questions.
+
+The fixed-test writer accepts `shuffle` on sections and `fixed` on item references.
+Selection, nested sections, branches, preconditions and custom ordering extensions are
+explicitly outside this fixed-ordering profile. This API does not enforce navigation,
+timing or feedback; those remain the execution owner's responsibility. The separate
+branching test executor continues to reject ordering rather than silently ignoring it.
+
 ## Randomized item instances
 
 `qti3` supports QTI-native randomized item instances through template processing.

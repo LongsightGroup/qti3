@@ -3,7 +3,7 @@ import {
   isQtiIdentifier,
   isQtiPackageItemHref,
   testFailure,
-  type QtiTestItemRef,
+  type QtiFixedTestItemRef,
   type QtiTestResult,
 } from "@longsightgroup/qti3-core";
 import type { Qti3TrustedXmlFragment } from "./types.js";
@@ -26,7 +26,8 @@ export interface QtiFixedTestDefinition {
     readonly sections: readonly {
       readonly identifier: string;
       readonly title: string;
-      readonly items: readonly QtiTestItemRef[];
+      readonly shuffle?: boolean | undefined;
+      readonly items: readonly QtiFixedTestItemRef[];
     }[];
     readonly feedback: readonly {
       readonly identifier: string;
@@ -63,10 +64,17 @@ export function writeQti3FixedAssessmentTest(test: QtiFixedTestDefinition): QtiT
     )
       return testFailure("fixed_part", "Invalid fixed test part or time limits.");
     for (const section of part.sections) {
-      if (!register(section.identifier))
+      if (
+        !register(section.identifier) ||
+        (section.shuffle !== undefined && typeof section.shuffle !== "boolean")
+      )
         return testFailure("fixed_section", "Invalid or duplicate section identifier.");
       for (const item of section.items)
-        if (!register(item.identifier) || !isQtiPackageItemHref(item.href))
+        if (
+          !register(item.identifier) ||
+          !isQtiPackageItemHref(item.href) ||
+          (item.fixed !== undefined && typeof item.fixed !== "boolean")
+        )
           return testFailure("fixed_reference", "Invalid fixed item reference.");
     }
     for (const feedback of part.feedback)
@@ -91,7 +99,7 @@ function writePart(part: QtiFixedTestDefinition["parts"][number]): string {
     : "";
   const sections = part.sections.map(
     (section) =>
-      `<qti-assessment-section${xmlAttributes({ identifier: section.identifier, title: section.title, visible: true })}>${section.items.map(writeTestItemRef).join("\n")}</qti-assessment-section>`,
+      `<qti-assessment-section${xmlAttributes({ identifier: section.identifier, title: section.title, visible: true })}>${section.shuffle === undefined ? "" : `<qti-ordering${xmlAttributes({ shuffle: section.shuffle })}/>`}${section.items.map(writeTestItemRef).join("\n")}</qti-assessment-section>`,
   );
   const feedback = part.feedback.map(
     (entry) =>

@@ -45,10 +45,20 @@ function validateStructure(test: QtiTestDefinition, reject: Reject): void {
   const hrefs = new Set<string>();
   for (const section of test.sections) {
     identifier(section.identifier);
+    if (Object.hasOwn(section, "shuffle"))
+      reject(
+        "ordering.unsupported",
+        "Section ordering belongs to the fixed-test profile, not the branching executor.",
+      );
     if (!section.title.trim() || !section.items.length)
       reject("section.empty", "Sections require a title and at least one item.");
     for (const item of section.items) {
       identifier(item.identifier);
+      if (Object.hasOwn(item, "fixed"))
+        reject(
+          "ordering.unsupported",
+          "Fixed reference slots belong to the fixed-test ordering profile.",
+        );
       if (!isQtiPackageItemHref(item.href) || hrefs.has(item.href))
         reject("item.href", "Item references must have distinct package-local paths.");
       hrefs.add(item.href);
