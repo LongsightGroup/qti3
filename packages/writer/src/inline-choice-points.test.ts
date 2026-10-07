@@ -1,4 +1,4 @@
-import { createItemSession } from "@longsightgroup/qti3-core";
+import { createItemSession, type QtiDocument } from "@longsightgroup/qti3-core";
 import { describe, expect, it } from "vitest";
 import { validQtiDocument } from "../../../tests/fixtures/valid-qti-document.js";
 import {
@@ -27,8 +27,7 @@ function dropdown(slots: number): Qti3InlineChoiceAuthoringItem {
   };
 }
 
-function score(xml: string, values: readonly (string | null)[]) {
-  const document = validQtiDocument(xml);
+function score(document: QtiDocument, values: readonly (string | null)[]) {
   const session = createItemSession(document);
   document.item.responseDeclarations.forEach((declaration, index) => {
     session.respond(declaration.identifier, values[index] ?? null);
@@ -57,16 +56,16 @@ describe("explicit dropdown point maxima", () => {
       expect(inline.ok).toBe(true);
       expect(choice.ok).toBe(true);
       if (!inline.ok || !choice.ok) throw new Error("Expected valid point presentations.");
-      expect(createItemSession(validQtiDocument(inline.xml)).score().outcomes.MAXSCORE).toBe(
-        maximumScore,
-      );
+      const inlineDocument = validQtiDocument(inline.xml);
+      const choiceDocument = validQtiDocument(choice.xml);
+      expect(createItemSession(inlineDocument).score().outcomes.MAXSCORE).toBe(maximumScore);
       for (const [response, expected] of [
         ["A", maximumScore],
         ["B", 0],
         [null, 0],
       ] as const) {
-        expect(score(inline.xml, [response])).toBe(expected);
-        expect(score(choice.xml, [response])).toBe(expected);
+        expect(score(inlineDocument, [response])).toBe(expected);
+        expect(score(choiceDocument, [response])).toBe(expected);
       }
       if (maximumScore === 0) expect(inline.xml).not.toContain("normal-maximum=");
       else expect(inline.xml).toContain(`normal-maximum="${maximumScore}"`);
@@ -79,9 +78,8 @@ describe("explicit dropdown point maxima", () => {
       const result = writeQti3AssessmentItemResult({ ...dropdown(2), maximumScore });
       expect(result.ok).toBe(true);
       if (!result.ok) throw new Error("Expected valid multi-slot points.");
-      expect(createItemSession(validQtiDocument(result.xml)).score().outcomes.MAXSCORE).toBe(
-        maximumScore,
-      );
+      const document = validQtiDocument(result.xml);
+      expect(createItemSession(document).score().outcomes.MAXSCORE).toBe(maximumScore);
       for (const [responses, expected] of [
         [["A", "A"], maximumScore],
         [["A", "B"], 0],
@@ -90,15 +88,16 @@ describe("explicit dropdown point maxima", () => {
         [["A", null], 0],
         [[null, null], 0],
       ] as const)
-        expect(score(result.xml, responses)).toBe(expected);
+        expect(score(document, responses)).toBe(expected);
     },
   );
 
   it("preserves the existing per-slot matching score when the maximum is omitted", () => {
     const result = writeQti3AssessmentItemResult(dropdown(2));
     if (!result.ok) throw new Error("Expected ordinary dropdown matching.");
-    expect(score(result.xml, ["A", "A"])).toBe(2);
-    expect(score(result.xml, ["A", "B"])).toBe(0);
+    const document = validQtiDocument(result.xml);
+    expect(score(document, ["A", "A"])).toBe(2);
+    expect(score(document, ["A", "B"])).toBe(0);
     expect(result.xml).not.toContain('identifier="MAXSCORE"');
   });
 
