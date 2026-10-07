@@ -310,3 +310,12 @@ core test execution rejects them rather than delivering a test without its instr
 
 Fixed-test time limits and session controls preserved by interchange are not execution support.
 The core execution classifier rejects authored limits or controls that its test runtime cannot enforce.
+
+Inline-choice items support an explicit finite non-negative `maximumScore` with
+`all_or_nothing` matching. Every dropdown must be answered correctly to earn that
+item maximum; wrong or unanswered slots score zero. Omission retains the existing
+one point per slot for a fully correct item. Explicit zero emits `MAXSCORE` zero
+without a positive `normal-maximum` attribute. Option mappings, custom modal
+processing and conflicting MAXSCORE identifiers return diagnostics rather than
+being replaced or scaled. A one-slot dropdown and single-answer choice can thus
+carry the same explicit matching points.

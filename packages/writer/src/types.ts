@@ -212,6 +212,12 @@ export interface Qti3InlineChoiceAuthoringItem extends Qti3AuthoringItemBase {
   readonly bodyHtml: Qti3TrustedXmlFragment;
   readonly slots: readonly Qti3InlineChoiceSlot[];
   readonly scoring?: Qti3InlineChoiceScoring | undefined;
+  /**
+   * Explicit finite non-negative item maximum for writer-generated all-or-nothing matching.
+   * Every slot must be correct to earn this maximum; omission retains one point per slot.
+   * Cannot be combined with mapped scores, custom modal processing or a MAXSCORE outcome.
+   */
+  readonly maximumScore?: number | undefined;
   readonly classNames?: readonly string[] | undefined;
 }
 

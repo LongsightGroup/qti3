@@ -13,6 +13,9 @@
   unsupported selection, branching or nested-section policies return diagnostics.
 - Write section shuffle rules and fixed item-reference hints with the fixed-test writer,
   preserving authored question order in the canonical XML.
+- Support explicit non-negative point maxima for inline-choice all-or-nothing matching.
+  Single-answer choice and dropdown presentations can retain the same grade; custom
+  mapped/overriding programs remain explicit refusals rather than being scaled.
 
 ### Fixed
 

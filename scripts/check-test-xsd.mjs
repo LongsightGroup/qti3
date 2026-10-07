@@ -150,6 +150,7 @@ try {
       "packages/core/src/test-ordering.test.ts",
       "packages/writer/src/assessment-test-ordering.test.ts",
       "packages/writer/src/choice-points.test.ts",
+      "packages/writer/src/inline-choice-points.test.ts",
       "packages/writer/src/modal-feedback-schema.test.ts",
       "packages/transcoder/src/zero-point-export.test.ts",
       "packages/transcoder/src/canvas-point-precision.test.ts",

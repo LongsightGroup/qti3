@@ -65,9 +65,10 @@ export function renderQti3InlineChoiceItem(
         ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
         : allOrNothingCorrectProcessingXml(
             input.slots.map((slot) => slot.responseIdentifier),
-            input.slots.length,
+            input.maximumScore ?? input.slots.length,
           ),
     scoreDefaultZero: true,
+    maximumScore: input.maximumScore,
   });
 }
 
@@ -147,6 +148,32 @@ export function validateQti3InlineChoiceItemStructure(
   input: Qti3InlineChoiceBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
+  if (input.maximumScore !== undefined) {
+    if (!Number.isFinite(input.maximumScore) || input.maximumScore < 0) {
+      diagnostics.push(
+        writerDiagnostic(
+          "invalid_inline_choice_maximum_score",
+          "maximumScore",
+          "Inline choice maximumScore must be a finite non-negative number.",
+        ),
+      );
+    }
+    if (
+      input.scoring === "map_response" ||
+      input.modalFeedback?.responseProcessingXml !== undefined ||
+      input.modalFeedback?.outcomes.some((outcome) => outcome.identifier.trim() === "MAXSCORE") ||
+      input.slots.some((slot) => slot.responseIdentifier.trim() === "MAXSCORE")
+    ) {
+      diagnostics.push(
+        writerDiagnostic(
+          "conflicting_inline_choice_score_program",
+          "maximumScore",
+          "An explicit inline choice maximum requires writer-generated all-or-nothing matching and a unique MAXSCORE outcome.",
+        ),
+      );
+    }
+  }
+
   if (!input.bodyHtml.trim()) {
     diagnostics.push(
       writerDiagnostic(
