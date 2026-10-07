@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -81,20 +81,13 @@ try {
     ],
   });
   if (!fixed.ok) throw new Error("Fixed test fixture did not serialize.");
+  const instances = [];
   const fixedInstance = join(directory, "fixed.xml");
   await writeFile(fixedInstance, fixed.value);
-  execFileSync(
-    "xmllint",
-    ["--nonet", "--noout", "--schema", join(directory, closure.main), fixedInstance],
-    { stdio: "inherit" },
-  );
+  instances.push(fixedInstance);
   const instance = join(directory, "test.xml");
   await writeFile(instance, written.value);
-  execFileSync(
-    "xmllint",
-    ["--nonet", "--noout", "--schema", join(directory, closure.main), instance],
-    { stdio: "inherit" },
-  );
+  instances.push(instance);
   // QTI 3.0.1 §5.120: independently check the writer/migrator, not only our parser.
   const rubricXml = buildQti3ExtendedTextItem({
     identifier: "rubric",
@@ -116,11 +109,7 @@ try {
   ]) {
     const path = join(directory, `${name}.xml`);
     await writeFile(path, xml);
-    execFileSync(
-      "xmllint",
-      ["--nonet", "--noout", "--schema", join(directory, closure.main), path],
-      { stdio: "inherit" },
-    );
+    instances.push(path);
   }
   // These are the exact independent XML inputs consumed by the execution-boundary regressions.
   for (const fixtureDirectory of [
@@ -132,16 +121,14 @@ try {
   ]) {
     const fixtures = join(root, "tests/fixtures", fixtureDirectory);
     for (const name of (await readdir(fixtures)).filter((entry) => entry.endsWith(".xml"))) {
-      execFileSync(
-        "xmllint",
-        ["--nonet", "--noout", "--schema", join(directory, closure.main), join(fixtures, name)],
-        { stdio: "inherit" },
-      );
+      instances.push(join(fixtures, name));
     }
   }
-  // Validate the exact positive XML used by these tests, including generated cases.
+  // Record the exact positive XML used by these tests, including generated cases.
   // Intentionally invalid inputs do not use validQtiDocument and remain diagnostic tests.
-  execFileSync(
+  const candidates = join(directory, "candidates");
+  await mkdir(candidates);
+  const vitestResult = spawnSync(
     process.execPath,
     [
       join(root, "node_modules/vitest/vitest.mjs"),
@@ -170,11 +157,71 @@ try {
     ],
     {
       cwd: root,
-      env: { ...process.env, QTI3_TEST_XSD_SCHEMA: join(directory, closure.main) },
+      env: {
+        ...process.env,
+        QTI3_TEST_XSD_SCHEMA: join(directory, closure.main),
+        QTI3_TEST_XSD_OUT: candidates,
+      },
       stdio: "inherit",
     },
   );
-  console.log("QTI 3 fixtures: official ASI schema validation passed (pinned source hashes).");
+  const collected = (await readdir(candidates))
+    .filter((name) => name.endsWith(".xml"))
+    .map((name) => join(candidates, name));
+  const documents = [...instances, ...collected];
+  const problems = [];
+  if (vitestResult.error) problems.push(vitestResult.error.message);
+  else if (vitestResult.status !== 0) {
+    problems.push(`Schema-gated tests failed (exit ${vitestResult.status}).`);
+  }
+  try {
+    await validateInstances(join(directory, closure.main), documents);
+  } catch (error) {
+    problems.push(error instanceof Error ? error.message : String(error));
+  }
+  if (problems.length > 0) throw new Error(problems.join("\n\n"));
+  console.log(
+    `QTI 3 fixtures: official ASI schema validation passed (${documents.length} documents, pinned source hashes).`,
+  );
 } finally {
   await rm(directory, { recursive: true, force: true });
+}
+
+/** One xmllint process compiles the schema once, then validates every document. */
+async function validateInstances(schema, files) {
+  if (files.length === 0) return;
+  const result = spawnSync("xmllint", ["--nonet", "--noout", "--schema", schema, ...files], {
+    encoding: "utf8",
+  });
+  if (result.error && isErrorCode(result.error, "E2BIG") && files.length > 1) {
+    const mid = Math.ceil(files.length / 2);
+    await validateInstances(schema, files.slice(0, mid));
+    await validateInstances(schema, files.slice(mid));
+    return;
+  }
+  if (result.error) throw result.error;
+  if (result.status === 0) return;
+  const output = `${result.stderr}${result.stdout}`;
+  const excerpts = [];
+  for (const file of files) {
+    if (!output.includes(file)) continue;
+    const namePath = file.replace(/\.xml$/, ".name");
+    let testName = "";
+    try {
+      testName = (await readFile(namePath, "utf8")).trim();
+    } catch (error) {
+      if (!isErrorCode(error, "ENOENT")) throw error;
+    }
+    const xml = await readFile(file, "utf8");
+    excerpts.push(`${file}${testName ? `\nTest: ${testName}` : ""}\n${xml}`);
+  }
+  throw new Error(
+    excerpts.length > 0
+      ? `${output}\n${excerpts.join("\n---\n")}`
+      : output || "xmllint schema validation failed.",
+  );
+}
+
+function isErrorCode(error, code) {
+  return typeof error === "object" && error !== null && "code" in error && error.code === code;
 }
