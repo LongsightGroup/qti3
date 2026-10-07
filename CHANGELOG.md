@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+## 0.13.2 - 2026-10-07
+
+### Added
+
+- Parse static assessment, part and section rubrics with `parseQtiTestRubrics`, preserving
+  their authored owners. `createCandidateTestRubricDelivery` filters candidate audiences
+  through the existing safe content projection. Dynamic rubric content and test execution
+  with rubrics remain explicit unsupported cases.
+- Decode serialized host content with `parseSafeContentProjection`. The typed boundary
+  checks tree shapes and limits, reapplies sanitization and resolves authorized assets.
+
+### Fixed
+
+- Validate and resolve video poster URLs through the image asset policy. Discover package
+  poster references, diagnose missing images and preserve posters in media interaction
+  rendering. Packaged posters decode with their original bytes and media type.
+- Apply each rendered attribute's URL policy to host-resolved assets. Resolvers must return
+  URLs suitable for the image, navigation, object, media or track sink; incompatible data
+  URLs are removed.
+- Pin reviewed transitive development security patches without weakening the dependency
+  audit or changing runtime dependencies.
+
 ## 0.13.1 - 2026-10-01
 
 ### Added
