@@ -16,6 +16,9 @@
 
 ### Fixed
 
+- Preserve canonical explicit choice point programs through QTI 2.1/2.2 reimport.
+  Outcome normal-maximum metadata survives the standard QTI 2 wire conversion.
+  Changed/custom programs and unmatched outcome metadata still require explicit review.
 - Preserve authored fractional point maxima in Canvas item metadata and assessment totals
   instead of rounding each question to two decimal places.
 - Preserve explicit zero-point maxima in native Canvas and Moodle item/package exports.

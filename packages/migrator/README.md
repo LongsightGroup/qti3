@@ -26,6 +26,12 @@ programs still produce preservation errors. `qti20-fidelity.test.ts` verifies ch
 structure, rubric translation, correct/incorrect/unanswered grades, and rejection of
 unpreserved scoring under both repair policies.
 
+QTI 2 choice items may retain an explicit finite non-negative MAXSCORE default through
+the canonical choice writer. Import still requires exact structural processing and
+outcome fidelity: maximum metadata alone never authorizes replacing a custom program.
+`choice-point-roundtrip.test.ts` verifies fractional/zero grades and refusals of changed
+programs through standard QTI 2.1/2.2 and the Brightspace export profile.
+
 The migrator reads legacy QTI package or item XML and produces QTI-shaped authoring models from `@longsightgroup/qti3-writer`. It does not own application-specific draft models or authoring UI review policy.
 
 ```ts

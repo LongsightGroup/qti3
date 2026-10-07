@@ -213,6 +213,23 @@ async function variantXml(variant) {
   switch (variant.kind) {
     case "accessibility":
       return accessibilityVariantXml();
+    case "choice-points":
+      return writeQti3AssessmentItem({
+        interactionType: "choice",
+        identifier: "CHOICE_POINTS",
+        title: "Portable choice points",
+        responseIdentifier: "ANSWER",
+        responseCardinality: variant.multiple ? "multiple" : "single",
+        choices: [
+          { identifier: "A", text: "Alpha" },
+          { identifier: "B", text: "Beta" },
+          { identifier: "C", text: "Gamma" },
+        ],
+        correctResponse: variant.multiple ? ["A", "B"] : ["A"],
+        maxChoices: variant.multiple ? 3 : 1,
+        scoring: variant.multiple ? "map_response" : "match_correct",
+        maximumScore: variant.maximumScore,
+      });
     case "graphic-image":
       return graphicImageVariantXml(variant.interaction, variant.form);
     case "nested-end-attempt":

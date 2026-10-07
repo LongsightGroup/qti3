@@ -23,6 +23,7 @@ import {
   localName,
   parseXml,
   serializeChildren,
+  textOf,
   type XmlElement,
 } from "./xml.js";
 
@@ -90,6 +91,7 @@ export function migrateQti2ItemXml(
     body,
     responseDecls,
     responseDeclMap,
+    maximumScore: choiceMaximumScore(root),
     sourceFormat,
     path,
     options,
@@ -147,6 +149,26 @@ export function migrateQti2ItemXml(
   }
   const authoringItem = mapper(dispatch.interaction, context);
   return finishQti2ItemMigration(context, authoringItem, diagnostics);
+}
+
+// A candidate authoring value only. finalizeItemResult rejects any processing or
+// outcome difference, so maximum metadata never substitutes for the actual score program.
+function choiceMaximumScore(root: XmlElement): number | undefined {
+  const declarations = findAllDescendantsByLocalName(root, "outcomedeclaration").filter(
+    (entry) => attr(entry, "identifier") === "MAXSCORE",
+  );
+  if (declarations.length !== 1) return undefined;
+  const declaration = declarations[0];
+  if (attr(declaration, "cardinality") !== "single" || attr(declaration, "baseType") !== "float") {
+    return undefined;
+  }
+  const defaultValue = findDescendantByLocalName(declaration, "defaultvalue");
+  const values = findAllDescendantsByLocalName(defaultValue, "value");
+  if (values.length !== 1) return undefined;
+  const raw = textOf(values[0]);
+  if (raw === "") return undefined;
+  const maximum = Number(raw);
+  return Number.isFinite(maximum) && maximum >= 0 ? maximum : undefined;
 }
 
 function finishQti2ItemMigration(

@@ -15,6 +15,8 @@ export interface Qti2Context {
   readonly body: XmlElement;
   readonly responseDecls: readonly XmlElement[];
   readonly responseDeclMap: ReadonlyMap<string, XmlElement>;
+  /** Explicit source choice maximum; final processing/outcome fidelity must still agree. */
+  readonly maximumScore?: number | undefined;
   readonly sourceFormat: QtiMigrationSourceFormat;
   readonly path: string;
   readonly options: ResolvedQtiMigrationOptions;

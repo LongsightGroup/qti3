@@ -1,5 +1,13 @@
 const commonVariants = [{ id: "accessibility-choice", kind: "accessibility" }];
 const qti2Variants = [
+  ...[0, 3, 3.125].flatMap((maximumScore) =>
+    [false, true].map((multiple) => ({
+      id: `choice-points-${multiple ? "mapped" : "matched"}-${maximumScore}`,
+      kind: "choice-points",
+      maximumScore,
+      multiple,
+    })),
+  ),
   ...[
     "hotspot",
     "graphicOrder",

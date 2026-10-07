@@ -689,7 +689,10 @@ function serializeOutcomeDeclaration(
   return serializeVariableDeclaration(
     "outcomeDeclaration",
     declaration,
-    revision.target === "qti22" ? attributes({ externalScored }) : "",
+    attributes({
+      normalMaximum: declaration.attributes["normal-maximum"],
+      externalScored: revision.target === "qti22" ? externalScored : undefined,
+    }),
   );
 }
 

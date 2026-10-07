@@ -91,6 +91,7 @@ export function mapChoice(
     minChoices: toNumber(attr(interaction, "minChoices")),
     maxChoices: choiceCardinality === "single" ? 1 : maxChoices,
     scoring: hasMapping(declaration) ? "map_response" : "match_correct",
+    maximumScore: context.maximumScore,
   };
 }
 
