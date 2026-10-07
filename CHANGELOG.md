@@ -19,6 +19,9 @@
 
 ### Fixed
 
+- Preserve explicit inline-choice matching maxima through standard QTI 2 export/reimport.
+  Existing processing/outcome fidelity gates still reject custom programs and
+  unmatched maximum metadata.
 - Disclose native choice scoring reconstruction in QTI 1.2, Canvas and Moodle exports.
   Partial-credit/custom rules are marked lossy in item and packaged conversion reports.
 - Preserve canonical explicit choice point programs through QTI 2.1/2.2 reimport.

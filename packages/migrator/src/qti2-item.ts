@@ -91,7 +91,7 @@ export function migrateQti2ItemXml(
     body,
     responseDecls,
     responseDeclMap,
-    maximumScore: choiceMaximumScore(root),
+    maximumScore: explicitMaximumScore(root),
     sourceFormat,
     path,
     options,
@@ -153,7 +153,7 @@ export function migrateQti2ItemXml(
 
 // A candidate authoring value only. finalizeItemResult rejects any processing or
 // outcome difference, so maximum metadata never substitutes for the actual score program.
-function choiceMaximumScore(root: XmlElement): number | undefined {
+function explicitMaximumScore(root: XmlElement): number | undefined {
   const declarations = findAllDescendantsByLocalName(root, "outcomedeclaration").filter(
     (entry) => attr(entry, "identifier") === "MAXSCORE",
   );

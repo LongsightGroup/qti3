@@ -157,6 +157,7 @@ try {
       "packages/transcoder/src/native-choice-scoring-loss.test.ts",
       "packages/transcoder/src/transcoder.test.ts",
       "packages/migrator/src/choice-point-roundtrip.test.ts",
+      "packages/migrator/src/inline-choice-point-roundtrip.test.ts",
       "packages/core/src/qti-package-media-assets.test.ts",
       "packages/core/src/processing-type-contracts.test.ts",
       "packages/core/src/scoring-boundary-regressions.test.ts",

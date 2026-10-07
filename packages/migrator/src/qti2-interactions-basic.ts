@@ -235,6 +235,7 @@ export function mapInlineChoiceItem(context: Qti2Context): Qti3AuthoringItem {
     title: context.title,
     bodyHtml: bodyWithInlineChoicePlaceholders(context.body, interactions, responseIdentifierFor),
     slots,
+    maximumScore: context.maximumScore,
     scoring: "all_or_nothing",
   };
 }

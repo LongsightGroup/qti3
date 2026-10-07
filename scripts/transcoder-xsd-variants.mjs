@@ -8,6 +8,14 @@ const qti2Variants = [
       multiple,
     })),
   ),
+  ...[0, 3, 3.125].flatMap((maximumScore) =>
+    [false, true].map((multipleSlots) => ({
+      id: `inline-choice-points-${multipleSlots ? "two" : "one"}-${maximumScore}`,
+      kind: "inline-choice-points",
+      maximumScore,
+      multipleSlots,
+    })),
+  ),
   ...[
     "hotspot",
     "graphicOrder",

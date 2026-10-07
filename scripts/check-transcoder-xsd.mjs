@@ -230,6 +230,26 @@ async function variantXml(variant) {
         scoring: variant.multiple ? "map_response" : "match_correct",
         maximumScore: variant.maximumScore,
       });
+    case "inline-choice-points": {
+      const ids = variant.multipleSlots ? ["FIRST", "SECOND"] : ["ANSWER"];
+      return writeQti3AssessmentItem({
+        interactionType: "inlineChoice",
+        identifier: "DROPDOWN_POINTS",
+        title: "Portable dropdown points",
+        maximumScore: variant.maximumScore,
+        bodyHtml: qti3TrustedXmlFragment(
+          `<p>${ids.map((id) => `<qti-inline-choice-interaction response-identifier="${id}"/>`).join(" and ")}</p>`,
+        ),
+        slots: ids.map((responseIdentifier) => ({
+          responseIdentifier,
+          correctResponse: "A",
+          options: [
+            { identifier: "A", text: "Alpha" },
+            { identifier: "B", text: "Beta" },
+          ],
+        })),
+      });
+    }
     case "graphic-image":
       return graphicImageVariantXml(variant.interaction, variant.form);
     case "nested-end-attempt":

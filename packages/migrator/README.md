@@ -164,3 +164,14 @@ produced unless the caller explicitly requests a review stub.
 QTI 2 rubric blocks become QTI 3 rubrics with a `qti-content-body` wrapper and
 `use="instructions"`, reflecting QTI 2's definition of rubrics as instructions to the selected
 audiences. The source `view` remains unchanged; a scorer audience alone does not imply a scoring use.
+
+Canonical inline-choice all-or-nothing matching can retain explicit finite
+non-negative point maxima through standard QTI 2.1/2.2 round trips.
+The parsed maximum is a candidate for the canonical writer. Actual processing
+and outcome metadata must still agree with the regenerated program before an
+item is emitted. Changed scoring or unmatched range metadata remains a refusal;
+maximum metadata alone never authorizes replacing a custom program.
+
+Brightspace retains its configured dropdown-to-text-answer downgrade and loss
+receipt. A useful downgraded export does not establish a lossless dropdown
+re-import; the conservative importer refuses programs it cannot reproduce.
