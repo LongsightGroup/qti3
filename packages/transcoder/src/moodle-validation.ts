@@ -185,7 +185,9 @@ function requireNestedText(
 }
 
 function numericChild(parent: Element, name: string): number | undefined {
-  const value = Number(childText(parent, name));
+  const text = childText(parent, name);
+  if (text === undefined || text === "") return undefined;
+  const value = Number(text);
   return Number.isFinite(value) ? value : undefined;
 }
 

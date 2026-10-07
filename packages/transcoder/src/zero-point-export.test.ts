@@ -36,8 +36,8 @@ describe("zero-point native export metadata", () => {
     );
     if (!result.ok) throw new Error("Expected valid zero-mark Moodle XML.");
     expect(validateGeneratedTargetXml(result.xml, "moodle-xml")).toEqual([]);
-    for (const grade of ["", "-1", "NaN", "Infinity"]) {
-      const replacement = grade ? `<defaultgrade>${grade}</defaultgrade>` : "";
+    for (const grade of [undefined, "", "-1", "NaN", "Infinity"]) {
+      const replacement = grade === undefined ? "" : `<defaultgrade>${grade}</defaultgrade>`;
       const invalid = result.xml.replace("<defaultgrade>0</defaultgrade>", replacement);
       expect(invalid).not.toBe(result.xml);
       expect(validateGeneratedTargetXml(invalid, "moodle-xml")).toContainEqual(
