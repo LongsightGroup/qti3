@@ -171,3 +171,36 @@ it.each([
 ])("refuses unsupported or invalid fixed ordering rather than ignoring it", (xml) => {
   expect(parseQtiFixedTestOrdering(xml).ok).toBe(false);
 });
+
+it("keeps earlier diagnostics when a section has no item references", () => {
+  const result = parseQtiFixedTestOrdering(`<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="ORDERED" title="Broken" custom="kept">
+  <qti-test-part identifier="P1" navigation-mode="linear" submission-mode="individual">
+    <qti-assessment-section identifier="S1" title="Empty" visible="true">
+      <qti-ordering shuffle="yes"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>`);
+  expect(result).toEqual({
+    ok: false,
+    diagnostics: [
+      {
+        code: "test.xml.unsupported",
+        severity: "error",
+        message: "Unsupported test element or attributes: qti-assessment-test.",
+        source: expect.any(Object),
+      },
+      {
+        code: "test.ordering.boolean",
+        severity: "error",
+        message: "Ordering flags must be QTI booleans.",
+        source: expect.any(Object),
+      },
+      {
+        code: "test.ordering.items",
+        severity: "error",
+        message: "Every ordered section requires item references.",
+      },
+    ],
+  });
+});

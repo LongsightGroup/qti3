@@ -7,11 +7,16 @@ export interface QtiTestBranch {
   readonly expression: QtiTestExpression;
 }
 
-/** A fixed item reference; categories participate in test-variable aggregation. */
+/** An item reference in a flat test section. Categories participate in test-variable aggregation. */
 export interface QtiTestItemRef {
   readonly identifier: string;
   readonly href: string;
   readonly categories: readonly string[];
+  /**
+   * Authored ordering-profile slot pin. Any explicit value, including false, is rejected by
+   * the branching executor. Omission means this profile has no ordering hint.
+   */
+  readonly fixed?: boolean | undefined;
 }
 
 /** A flat section in the supported linear, individually submitted test profile. */
@@ -20,6 +25,11 @@ export interface QtiTestSection {
   readonly title: string;
   readonly items: readonly QtiTestItemRef[];
   readonly branches: readonly QtiTestBranch[];
+  /**
+   * Authored ordering-profile shuffle policy. Any explicit value, including false, is rejected
+   * by the branching executor. Omission means this profile has no ordering hint.
+   */
+  readonly shuffle?: boolean | undefined;
 }
 
 /** Framework-neutral QTI test definition. Validation establishes executable support. */
@@ -39,8 +49,9 @@ export interface QtiTestOutcomeRule {
   readonly expression: QtiTestExpression;
 }
 
-type ExecutableSection = QtiTestSection & {
-  readonly items: readonly [QtiTestItemRef, ...QtiTestItemRef[]];
+type ExecutableItem = Omit<QtiTestItemRef, "fixed">;
+type ExecutableSection = Omit<QtiTestSection, "shuffle" | "items"> & {
+  readonly items: readonly [ExecutableItem, ...ExecutableItem[]];
 };
 type ExecutableOutcome = Readonly<QtiOutcomeDeclaration> & {
   readonly cardinality: "single";

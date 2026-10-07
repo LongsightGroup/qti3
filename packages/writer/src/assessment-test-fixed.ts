@@ -64,18 +64,16 @@ export function writeQti3FixedAssessmentTest(test: QtiFixedTestDefinition): QtiT
     )
       return testFailure("fixed_part", "Invalid fixed test part or time limits.");
     for (const section of part.sections) {
-      if (
-        !register(section.identifier) ||
-        (section.shuffle !== undefined && typeof section.shuffle !== "boolean")
-      )
+      if (!register(section.identifier))
         return testFailure("fixed_section", "Invalid or duplicate section identifier.");
-      for (const item of section.items)
-        if (
-          !register(item.identifier) ||
-          !isQtiPackageItemHref(item.href) ||
-          (item.fixed !== undefined && typeof item.fixed !== "boolean")
-        )
+      if (section.shuffle !== undefined && typeof section.shuffle !== "boolean")
+        return testFailure("fixed_shuffle", "Section shuffle must be a boolean.");
+      for (const item of section.items) {
+        if (!register(item.identifier) || !isQtiPackageItemHref(item.href))
           return testFailure("fixed_reference", "Invalid fixed item reference.");
+        if (item.fixed !== undefined && typeof item.fixed !== "boolean")
+          return testFailure("fixed_slot", "Item fixed must be a boolean.");
+      }
     }
     for (const feedback of part.feedback)
       if (!register(feedback.identifier) || !isQtiIdentifier(feedback.outcomeIdentifier))

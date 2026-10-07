@@ -7,10 +7,8 @@ import { seededRandom } from "./processing-random.js";
 import { testFailure, type QtiTestItemRef, type QtiTestResult } from "./test-model.js";
 import type { QtiDiagnostic } from "./types.js";
 
-/** A fixed-test reference whose authored slot can be protected during section shuffling. */
-export interface QtiFixedTestItemRef extends QtiTestItemRef {
-  readonly fixed?: boolean | undefined;
-}
+/** Item reference in the fixed-test ordering profile. Slot pinning uses `QtiTestItemRef.fixed`. */
+export type QtiFixedTestItemRef = QtiTestItemRef;
 
 const fixedOrdering = Symbol("qti3.fixed-test-ordering");
 
@@ -80,7 +78,11 @@ export function parseQtiFixedTestOrdering(xml: string): QtiTestResult<QtiFixedTe
   const sections: QtiFixedTestOrdering["sections"][number][] = [];
   const parts = root.children.filter((node) => node.localName === "qti-test-part");
   if (!parts.length)
-    return testFailure("ordering.parts", "Ordering requires at least one test part.");
+    return orderingFailure(
+      diagnostics,
+      "ordering.parts",
+      "Ordering requires at least one test part.",
+    );
   for (const part of parts) {
     const partIdentifier = register(part);
     checkTestXml(
@@ -91,7 +93,11 @@ export function parseQtiFixedTestOrdering(xml: string): QtiTestResult<QtiFixedTe
     );
     const children = part.children.filter((node) => node.localName === "qti-assessment-section");
     if (!children.length)
-      return testFailure("ordering.sections", "Every ordered part requires a section.");
+      return orderingFailure(
+        diagnostics,
+        "ordering.sections",
+        "Every ordered part requires a section.",
+      );
     for (const section of children) {
       const sectionIdentifier = register(section);
       checkTestXml(
@@ -156,12 +162,27 @@ export function parseQtiFixedTestOrdering(xml: string): QtiTestResult<QtiFixedTe
           };
         });
       if (!items.length)
-        return testFailure("ordering.items", "Every ordered section requires item references.");
+        return orderingFailure(
+          diagnostics,
+          "ordering.items",
+          "Every ordered section requires item references.",
+        );
       sections.push({ partIdentifier, sectionIdentifier, shuffle, items });
     }
   }
   if (diagnostics.length) return { ok: false, diagnostics };
   return { ok: true, value: { [fixedOrdering]: true, testIdentifier, sections } };
+}
+
+function orderingFailure(
+  diagnostics: readonly QtiDiagnostic[],
+  code: string,
+  message: string,
+): QtiTestResult<never> {
+  return {
+    ok: false,
+    diagnostics: [...diagnostics, { code: `test.${code}`, severity: "error", message }],
+  };
 }
 
 function booleanAttribute(
@@ -195,50 +216,66 @@ export function prepareQtiFixedTestOrder(
       "ordering.seed",
       "A string or finite numeric seed is required for shuffled test order.",
     );
+  const sections: QtiFixedTestOrderState["sections"][number][] = [];
+  for (const section of definition.sections) {
+    const itemRefs: QtiTestResult<readonly string[]> = section.shuffle
+      ? shuffledRefs(
+          section.items,
+          seededRandom(
+            JSON.stringify([
+              input.seed,
+              definition.testIdentifier,
+              section.partIdentifier,
+              section.sectionIdentifier,
+            ]),
+          ),
+        )
+      : { ok: true, value: section.items.map((item) => item.identifier) };
+    if (!itemRefs.ok) return itemRefs;
+    sections.push({
+      partIdentifier: section.partIdentifier,
+      sectionIdentifier: section.sectionIdentifier,
+      itemRefs: itemRefs.value,
+    });
+  }
   return {
     ok: true,
     value: {
       schema: "qti3.fixed-test-order.v1",
       testIdentifier: definition.testIdentifier,
-      sections: definition.sections.map((section) => ({
-        partIdentifier: section.partIdentifier,
-        sectionIdentifier: section.sectionIdentifier,
-        itemRefs: section.shuffle
-          ? shuffledRefs(
-              section.items,
-              seededRandom(
-                JSON.stringify([
-                  input.seed,
-                  definition.testIdentifier,
-                  section.partIdentifier,
-                  section.sectionIdentifier,
-                ]),
-              ),
-            )
-          : section.items.map((item) => item.identifier),
-      })),
+      sections,
     },
   };
 }
 
-function shuffledRefs(items: readonly QtiFixedTestItemRef[], random: () => number): string[] {
+function shuffledRefs(
+  items: readonly QtiFixedTestItemRef[],
+  random: () => number,
+): QtiTestResult<readonly string[]> {
   const movable = items.filter((item) => !item.fixed).map((item) => item.identifier);
   for (let index = movable.length - 1; index > 0; index--) {
     const other = Math.floor(random() * (index + 1));
     const left = movable[index];
     const right = movable[other];
     if (left === undefined || right === undefined)
-      throw new Error("Fixed ordering selected an invalid slot.");
+      return testFailure("ordering.shuffle", "Fixed ordering selected an invalid slot.");
     movable[index] = right;
     movable[other] = left;
   }
+  const itemRefs: string[] = [];
   let next = 0;
-  return items.map((item) => {
-    if (item.fixed) return item.identifier;
-    const identifier = movable[next++];
-    if (identifier === undefined) throw new Error("Fixed ordering lost a movable item.");
-    return identifier;
-  });
+  for (const item of items) {
+    if (item.fixed) {
+      itemRefs.push(item.identifier);
+      continue;
+    }
+    const identifier = movable[next];
+    next += 1;
+    if (identifier === undefined)
+      return testFailure("ordering.shuffle", "Fixed ordering lost a movable item.");
+    itemRefs.push(identifier);
+  }
+  return { ok: true, value: itemRefs };
 }
 
 function restoreOrder(

@@ -12,7 +12,9 @@
   positions and part/section boundaries remain intact. Invalid saved permutations and
   unsupported selection, branching or nested-section policies return diagnostics.
 - Write section shuffle rules and fixed item-reference hints with the fixed-test writer,
-  preserving authored question order in the canonical XML.
+  preserving authored question order in the canonical XML. The branching assessment-test
+  writer and executor reject those hints with `test.ordering.unsupported` instead of
+  dropping them.
 - Support explicit non-negative point maxima for inline-choice all-or-nothing matching.
   Single-answer choice and dropdown presentations can retain the same grade; custom
   mapped/overriding programs remain explicit refusals rather than being scaled.
@@ -23,7 +25,9 @@
   Existing processing/outcome fidelity gates still reject custom programs and
   unmatched maximum metadata.
 - Disclose native choice scoring reconstruction in QTI 1.2, Canvas and Moodle exports.
-  Partial-credit/custom rules are marked lossy in item and packaged conversion reports.
+  Partial-credit and custom choice rules are marked lossy in item and packaged conversion
+  reports. Moodle also marks multiple-answer choice, including standard all-or-nothing
+  matching, because wrong answers are rebuilt as point deductions.
 - Preserve canonical explicit choice point programs through QTI 2.1/2.2 reimport.
   Outcome normal-maximum metadata survives the standard QTI 2 wire conversion.
   Changed/custom programs and unmatched outcome metadata still require explicit review.
@@ -34,6 +38,9 @@
   Moodle numeric fields still reject empty elements as missing values.
 - Emit modal feedback inside the required QTI content-body element. Plain and rich
   feedback now pass official schema validation while retaining visibility and safe rendering.
+- Keep diagnostics already collected when fixed-test ordering rejects an empty part, section,
+  or item list. A non-boolean section shuffle or item fixed flag on the fixed-test writer is
+  reported on its own, rather than as an invalid identifier.
 
 ## 0.13.2 - 2026-10-07
 

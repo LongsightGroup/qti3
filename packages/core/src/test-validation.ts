@@ -45,7 +45,7 @@ function validateStructure(test: QtiTestDefinition, reject: Reject): void {
   const hrefs = new Set<string>();
   for (const section of test.sections) {
     identifier(section.identifier);
-    if (Object.hasOwn(section, "shuffle"))
+    if (section.shuffle !== undefined)
       reject(
         "ordering.unsupported",
         "Section ordering belongs to the fixed-test profile, not the branching executor.",
@@ -54,7 +54,7 @@ function validateStructure(test: QtiTestDefinition, reject: Reject): void {
       reject("section.empty", "Sections require a title and at least one item.");
     for (const item of section.items) {
       identifier(item.identifier);
-      if (Object.hasOwn(item, "fixed"))
+      if (item.fixed !== undefined)
         reject(
           "ordering.unsupported",
           "Fixed reference slots belong to the fixed-test ordering profile.",
@@ -156,10 +156,15 @@ function copyExecutableDefinition(test: QtiTestDefinition): QtiTestDefinition {
     sections: Object.freeze(
       test.sections.map((section) =>
         Object.freeze({
-          ...section,
+          identifier: section.identifier,
+          title: section.title,
           items: Object.freeze(
             section.items.map((item) =>
-              Object.freeze({ ...item, categories: Object.freeze([...item.categories]) }),
+              Object.freeze({
+                identifier: item.identifier,
+                href: item.href,
+                categories: Object.freeze([...item.categories]),
+              }),
             ),
           ),
           branches: Object.freeze(

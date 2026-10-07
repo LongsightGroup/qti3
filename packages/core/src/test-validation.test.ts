@@ -76,6 +76,30 @@ describe("executable test boundary", () => {
       }).ok,
     ).toBe(false);
   });
+  it("rejects explicit ordering hints, including false, and accepts omitted hints", () => {
+    const source = stagedTestFixture();
+    const first = source.sections[0];
+    const item = first?.items[0];
+    if (!first || !item) throw new Error("Missing staged section.");
+    expect(validateQtiTest(source).ok).toBe(true);
+    for (const sections of [
+      [{ ...first, shuffle: false }, ...source.sections.slice(1)],
+      [{ ...first, shuffle: true }, ...source.sections.slice(1)],
+      [
+        { ...first, items: [{ ...item, fixed: false }, ...first.items.slice(1)] },
+        ...source.sections.slice(1),
+      ],
+      [
+        { ...first, items: [{ ...item, fixed: true }, ...first.items.slice(1)] },
+        ...source.sections.slice(1),
+      ],
+    ]) {
+      expect(validateQtiTest({ ...source, sections })).toMatchObject({
+        ok: false,
+        diagnostics: [expect.objectContaining({ code: "test.ordering.unsupported" })],
+      });
+    }
+  });
   it("publishes support evidence only for the explicit execution profile", () => {
     for (const support of testExecutionSupport) {
       for (const file of [...support.fixtures, ...support.tests])

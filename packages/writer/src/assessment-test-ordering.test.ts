@@ -52,6 +52,76 @@ it("[ASI-FIXED-ORDER-WRITER] writes section ordering and fixed slots without rew
   expect(order.sections[0]?.itemRefs[1]).toBe("B");
 });
 
+it("reports non-boolean ordering flags instead of an identifier failure", () => {
+  const part = {
+    identifier: "part",
+    title: "Part",
+    navigationMode: "linear" as const,
+    submissionMode: "individual" as const,
+    feedback: [],
+  };
+  const shuffle = writeQti3FixedAssessmentTest({
+    identifier: "test",
+    title: "Shuffled questions",
+    parts: [
+      {
+        ...part,
+        sections: [
+          {
+            identifier: "section",
+            title: "Questions",
+            shuffle: "yes" as unknown as boolean,
+            items: [{ identifier: "A", href: "items/a.xml", categories: [] }],
+          },
+        ],
+      },
+    ],
+  });
+  expect(shuffle).toEqual({
+    ok: false,
+    diagnostics: [
+      {
+        code: "test.fixed_shuffle",
+        severity: "error",
+        message: "Section shuffle must be a boolean.",
+      },
+    ],
+  });
+  const slot = writeQti3FixedAssessmentTest({
+    identifier: "test",
+    title: "Shuffled questions",
+    parts: [
+      {
+        ...part,
+        sections: [
+          {
+            identifier: "section",
+            title: "Questions",
+            items: [
+              {
+                identifier: "A",
+                href: "items/a.xml",
+                categories: [],
+                fixed: "yes" as unknown as boolean,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+  expect(slot).toEqual({
+    ok: false,
+    diagnostics: [
+      {
+        code: "test.fixed_slot",
+        severity: "error",
+        message: "Item fixed must be a boolean.",
+      },
+    ],
+  });
+});
+
 it("refuses ordering hints at the separate branching writer rather than emitting unsupported XML", () => {
   const input = {
     identifier: "test",
