@@ -37,7 +37,7 @@ export function serializeCanvasItemMetadata(
   return `<itemmetadata>
       <qtimetadata>
         ${canvasMetadataField("question_type", questionType)}
-        ${canvasMetadataField("points_possible", formatScore(canvasPointsPossible(source)))}
+        ${canvasMetadataField("points_possible", String(itemMaximumScore(source.item)))}
         ${canvasMetadataField("original_answer_ids", answerIds.join(","))}
         ${canvasMetadataField(
           "assessment_question_identifierref",
@@ -124,10 +124,6 @@ function canvasMetadataField(label: string, value: string): string {
   )}</fieldentry></qtimetadatafield>`;
 }
 
-function canvasPointsPossible(source: NormalizedQti3Item): number {
-  return itemMaximumScore(source.item);
-}
-
 function qti12Identifier(value: string): string {
   const normalized = value.replace(/[^A-Za-z0-9_.-]/g, "_");
   return /^[A-Za-z_]/.test(normalized) ? normalized : `R_${normalized}`;
@@ -141,8 +137,4 @@ function qti12Area(shape: string | undefined): string {
       : shape === "default"
         ? "Default"
         : "Rectangle";
-}
-
-function formatScore(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }

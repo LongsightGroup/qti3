@@ -152,6 +152,7 @@ try {
       "packages/writer/src/choice-points.test.ts",
       "packages/writer/src/modal-feedback-schema.test.ts",
       "packages/transcoder/src/zero-point-export.test.ts",
+      "packages/transcoder/src/canvas-point-precision.test.ts",
       "packages/core/src/qti-package-media-assets.test.ts",
       "packages/core/src/processing-type-contracts.test.ts",
       "packages/core/src/scoring-boundary-regressions.test.ts",

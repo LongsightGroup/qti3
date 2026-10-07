@@ -16,6 +16,8 @@
 
 ### Fixed
 
+- Preserve authored fractional point maxima in Canvas item metadata and assessment totals
+  instead of rounding each question to two decimal places.
 - Preserve explicit zero-point maxima in native Canvas and Moodle item/package exports.
   Zero no longer takes the one-point default intended for missing maximum metadata.
   Moodle numeric fields still reject empty elements as missing values.
