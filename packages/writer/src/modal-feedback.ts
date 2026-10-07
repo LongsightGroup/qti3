@@ -185,7 +185,7 @@ function modalFeedbackEntriesXml(
   return feedback.entries
     .map((entry, index) => {
       const title = entry.title === undefined ? "" : ` title="${escapeXmlAttribute(entry.title)}"`;
-      return `  <qti-modal-feedback outcome-identifier="${escapeXmlAttribute(entry.outcomeIdentifier.trim())}" identifier="${escapeXmlAttribute(entry.identifier.trim())}" show-hide="${entry.showHide ?? "show"}"${title}>${contentXml[index]}</qti-modal-feedback>`;
+      return `  <qti-modal-feedback outcome-identifier="${escapeXmlAttribute(entry.outcomeIdentifier.trim())}" identifier="${escapeXmlAttribute(entry.identifier.trim())}" show-hide="${entry.showHide ?? "show"}"${title}><qti-content-body>${contentXml[index]}</qti-content-body></qti-modal-feedback>`;
     })
     .join("\n");
 }

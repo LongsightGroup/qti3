@@ -11,6 +11,11 @@
 - Write section shuffle rules and fixed item-reference hints with the fixed-test writer,
   preserving authored question order in the canonical XML.
 
+### Fixed
+
+- Emit modal feedback inside the required QTI content-body element. Plain and rich
+  feedback now pass official schema validation while retaining visibility and safe rendering.
+
 ## 0.13.2 - 2026-10-07
 
 ### Added

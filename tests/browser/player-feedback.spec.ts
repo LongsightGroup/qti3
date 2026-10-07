@@ -20,8 +20,12 @@ test.describe("player feedback", () => {
       },
     });
     const xml = valid.replace(
-      ">Safe feedback</qti-modal-feedback>",
-      '>Safe feedback<qti-choice-interaction response-identifier="RESPONSE"><qti-simple-choice identifier="X">Forbidden</qti-simple-choice></qti-choice-interaction></qti-modal-feedback>',
+      "Safe feedback</qti-content-body>",
+      'Safe feedback<qti-choice-interaction response-identifier="RESPONSE"><qti-simple-choice identifier="X">Forbidden</qti-simple-choice></qti-choice-interaction></qti-content-body>',
+    );
+    expect(xml).not.toBe(valid);
+    expect(parseQtiXml(xml).diagnostics).toContainEqual(
+      expect.objectContaining({ code: "feedback.interaction.forbidden" }),
     );
     await page.goto("/");
     await pasteXml(page, xml);

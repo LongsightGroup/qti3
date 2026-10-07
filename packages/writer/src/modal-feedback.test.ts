@@ -274,8 +274,21 @@ describe("item-level modal feedback", () => {
       },
     });
     const item = expectValidParsedItem(xml);
-    expect(item.modalFeedback[0]?.content).toEqual(
-      expect.arrayContaining([expect.objectContaining({ kind: "element", qtiName: "p" })]),
-    );
+    expect(item.modalFeedback[0]?.content).toMatchObject([
+      {
+        kind: "element",
+        qtiName: "qti-content-body",
+        children: [
+          {
+            kind: "element",
+            qtiName: "p",
+            children: [
+              { kind: "text", text: "Score: " },
+              { kind: "printedVariable", identifier: "SCORE" },
+            ],
+          },
+        ],
+      },
+    ]);
   });
 });
