@@ -1,12 +1,12 @@
 import type { QtiAssessmentItem, QtiValue } from "@longsightgroup/qti3-core";
 
-/** Resolve an explicit positive item score maximum, falling back when none is declared. */
+/** Resolve an explicit non-negative item maximum; a declared zero remains authoritative. */
 export function itemMaximumScore(item: QtiAssessmentItem, fallback = 1): number {
   const maxScore = item.outcomeDeclarations.find(
     (declaration) => declaration.identifier === "MAXSCORE",
   );
   const declaredMaximum = scalarNumber(maxScore?.defaultValue);
-  if (declaredMaximum !== undefined && declaredMaximum > 0) return declaredMaximum;
+  if (declaredMaximum !== undefined && declaredMaximum >= 0) return declaredMaximum;
 
   const score = item.outcomeDeclarations.find((declaration) => declaration.identifier === "SCORE");
   const normalMaximum = Number(score?.attributes["normal-maximum"]);

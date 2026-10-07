@@ -16,6 +16,8 @@
 
 ### Fixed
 
+- Preserve explicit zero-point maxima in native Canvas and Moodle item/package exports.
+  Zero no longer takes the one-point default intended for missing maximum metadata.
 - Emit modal feedback inside the required QTI content-body element. Plain and rich
   feedback now pass official schema validation while retaining visibility and safe rendering.
 

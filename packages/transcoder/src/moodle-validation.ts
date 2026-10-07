@@ -37,8 +37,10 @@ function validateQuestion(question: Element, index: number, failures: string[]):
     validateEmbeddedFiles(questionText, context, failures);
   }
   const defaultGrade = numericChild(question, "defaultgrade");
-  if (defaultGrade === undefined || defaultGrade <= 0) {
-    failures.push(`${context} defaultgrade must be positive`);
+  // Moodle's edit_question_form::validation rejects negative default marks, permitting zero.
+  // https://github.com/moodle/moodle/blob/main/public/question/type/edit_question_form.php
+  if (defaultGrade === undefined || defaultGrade < 0) {
+    failures.push(`${context} defaultgrade must be non-negative`);
   }
   const penalty = numericChild(question, "penalty");
   if (penalty === undefined || penalty < 0) {
