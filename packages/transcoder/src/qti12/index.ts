@@ -1,5 +1,6 @@
 import type { QtiInteraction } from "@longsightgroup/qti3-core";
 
+import { usesStandardUnitChoiceScore } from "../choice-score-policy.js";
 import type { Qti12InteractionPolicy } from "../profiles.js";
 import { serializeCanvasItemMetadata } from "../qti12-canvas.js";
 import { serializeRichContentBody } from "../rich-content-html.js";
@@ -42,7 +43,25 @@ export function writeQti12Item(
     fallback: response.fallback,
     responseXml: response.xml,
     processingXml: response.processingXml,
-    diagnostics: response.diagnostics,
+    diagnostics: [
+      ...response.diagnostics,
+      ...(source.item.interactions[index]?.type === "choice" &&
+      response.scoring === "automatic" &&
+      !usesStandardUnitChoiceScore(source.item)
+        ? [
+            {
+              code: isCanvasQti12Dialect(dialect)
+                ? "profile.canvas.scoring.choice_rebuilt"
+                : "profile.qti12.scoring.choice_rebuilt",
+              severity: "warning" as const,
+              path: source.sourcePath,
+              message: isCanvasQti12Dialect(dialect)
+                ? "Canvas choice scoring is rebuilt as all-or-nothing: a fully correct answer set earns 100% of the exported question maximum. Authored partial-credit mappings and custom response processing are not copied. Review scoring in the destination."
+                : "QTI 1.2 choice scoring is rebuilt as all-or-nothing: a fully correct answer set earns one point. Authored point maxima, partial-credit mappings and custom response processing are not copied. Review scoring in the destination.",
+            },
+          ]
+        : []),
+    ],
   }));
   const diagnostics = mappings.flatMap((mapping) => mapping.diagnostics);
   const identifier = source.item.identifier || "ITEM";

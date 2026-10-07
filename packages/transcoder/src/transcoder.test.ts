@@ -1,7 +1,12 @@
-import { deprecatedInteractionSupport, interactionSupport } from "@longsightgroup/qti3-core";
+import {
+  createItemSession,
+  deprecatedInteractionSupport,
+  interactionSupport,
+} from "@longsightgroup/qti3-core";
 import { writeQti3PackageZip } from "@longsightgroup/qti3-writer";
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
+import { validQtiDocument } from "../../../tests/fixtures/valid-qti-document.js";
 
 import {
   qtiTranscodeProfiles,
@@ -358,8 +363,17 @@ describe("Moodle XML profile", () => {
     const result = transcodeQti3Item({ kind: "xml", xml }, { profile: "moodle-xml@1" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    const session = createItemSession(validQtiDocument(xml));
+    session.respond("RESPONSE", "A");
+    expect(session.score().outcomes.SCORE).toBe(1);
     expect(result.xml).toContain("<defaultgrade>7.5</defaultgrade>");
-    expect(result.report.fidelity).toBe("exact");
+    expect(result.report.fidelity).toBe("lossy");
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "profile.moodle.xml.scoring.choice_rebuilt",
+        severity: "warning",
+      }),
+    );
   });
 
   it("rejects malformed type-specific Moodle question structures", () => {

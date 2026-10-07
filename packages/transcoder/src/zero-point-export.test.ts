@@ -53,7 +53,15 @@ describe("zero-point native export metadata", () => {
     "retains the zero-point question maximum through %s item export",
     (profile) => {
       const result = transcodeQti3Item({ kind: "xml", xml: zeroPointXml() }, { profile });
-      expect(result.diagnostics).toEqual([]);
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code:
+            profile === "moodle-xml@1"
+              ? "profile.moodle.xml.scoring.choice_rebuilt"
+              : "profile.canvas.scoring.choice_rebuilt",
+          severity: "warning",
+        }),
+      );
       expect(result.ok).toBe(true);
       if (!result.ok) throw new Error("Expected a usable zero-point export.");
       expect(result.xml).toContain(
@@ -80,7 +88,15 @@ describe("zero-point native export metadata", () => {
         },
         { profile },
       );
-      expect(result.diagnostics).toEqual([]);
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code:
+            profile === "moodle-xml@1"
+              ? "profile.moodle.xml.scoring.choice_rebuilt"
+              : "profile.canvas.scoring.choice_rebuilt",
+          severity: "warning",
+        }),
+      );
       expect(result.ok).toBe(true);
       if (!result.ok) throw new Error("Expected a usable zero-point package.");
       if (profile === "moodle-xml@1") {

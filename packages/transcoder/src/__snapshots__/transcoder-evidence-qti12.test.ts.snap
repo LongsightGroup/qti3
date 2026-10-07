@@ -231,6 +231,12 @@ exports[`qti12-standard@1 evidence > transcodes endAttempt 1`] = `
 {
   "diagnostics": [
     {
+      "code": "profile.qti12.scoring.choice_rebuilt",
+      "message": "QTI 1.2 choice scoring is rebuilt as all-or-nothing: a fully correct answer set earns one point. Authored point maxima, partial-credit mappings and custom response processing are not copied. Review scoring in the destination.",
+      "path": "endAttempt.xml",
+      "severity": "warning",
+    },
+    {
       "code": "profile.qti12.fallback.extended-text",
       "message": "Converted endAttempt to a QTI 1.2 extended-text representation.",
       "path": "endAttempt.xml",
@@ -242,17 +248,22 @@ exports[`qti12-standard@1 evidence > transcodes endAttempt 1`] = `
       "endAttempt.xml",
     ],
     "diagnosticCodes": [
+      "profile.qti12.scoring.choice_rebuilt",
       "profile.qti12.fallback.extended-text",
     ],
     "fidelity": "lossy",
     "identifier": "endAttempt-reference",
     "mappings": [
       {
-        "affectedPaths": [],
-        "diagnosticCodes": [],
+        "affectedPaths": [
+          "endAttempt.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.qti12.scoring.choice_rebuilt",
+        ],
         "emittedInteraction": "response_lid",
         "fallback": undefined,
-        "fidelity": "exact",
+        "fidelity": "lossy",
         "index": 0,
         "scoring": "automatic",
         "sourceInteraction": "choice",

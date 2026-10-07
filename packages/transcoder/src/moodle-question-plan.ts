@@ -1,5 +1,6 @@
 import type { QtiChoice, QtiInteraction } from "@longsightgroup/qti3-core";
 
+import { usesStandardUnitChoiceScore } from "./choice-score-policy.js";
 import { itemMaximumScore } from "./item-score.js";
 import { interactionPolicyFallback, type MoodleInteractionPolicy } from "./profiles.js";
 import { declarationFor } from "./qti12/mappers.js";
@@ -106,7 +107,23 @@ export function planMoodleItem(
       emitted: mapped.emitted,
       scoring: mapped.scoring,
       fallback: mapped.fallback,
-      diagnostics: mapped.diagnostics,
+      diagnostics: [
+        ...mapped.diagnostics,
+        ...(interaction.type === "choice" &&
+        mapped.scoring === "automatic" &&
+        (interaction.responseCardinality === "multiple" ||
+          !usesStandardUnitChoiceScore(source.item))
+          ? [
+              {
+                code: "profile.moodle.xml.scoring.choice_rebuilt",
+                severity: "warning" as const,
+                path: source.sourcePath,
+                message:
+                  "Moodle choice scoring is rebuilt from the answer key: correct answers receive equal point fractions, and multiple-answer wrong answers deduct points. Authored mappings and custom response processing are not copied. Review scoring in the destination.",
+              },
+            ]
+          : []),
+      ],
     };
   });
   return {

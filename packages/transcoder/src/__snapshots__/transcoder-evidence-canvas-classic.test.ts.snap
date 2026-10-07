@@ -259,6 +259,12 @@ exports[`canvas-classic-quizzes@1 evidence > transcodes endAttempt 1`] = `
 {
   "diagnostics": [
     {
+      "code": "profile.canvas.scoring.choice_rebuilt",
+      "message": "Canvas choice scoring is rebuilt as all-or-nothing: a fully correct answer set earns 100% of the exported question maximum. Authored partial-credit mappings and custom response processing are not copied. Review scoring in the destination.",
+      "path": "endAttempt.xml",
+      "severity": "warning",
+    },
+    {
       "code": "profile.qti12.fallback.extended-text",
       "message": "Converted endAttempt to a QTI 1.2 extended-text representation.",
       "path": "endAttempt.xml",
@@ -270,17 +276,22 @@ exports[`canvas-classic-quizzes@1 evidence > transcodes endAttempt 1`] = `
       "endAttempt.xml",
     ],
     "diagnosticCodes": [
+      "profile.canvas.scoring.choice_rebuilt",
       "profile.qti12.fallback.extended-text",
     ],
     "fidelity": "lossy",
     "identifier": "endAttempt-reference",
     "mappings": [
       {
-        "affectedPaths": [],
-        "diagnosticCodes": [],
+        "affectedPaths": [
+          "endAttempt.xml",
+        ],
+        "diagnosticCodes": [
+          "profile.canvas.scoring.choice_rebuilt",
+        ],
         "emittedInteraction": "response_lid",
         "fallback": undefined,
-        "fidelity": "exact",
+        "fidelity": "lossy",
         "index": 0,
         "scoring": "automatic",
         "sourceInteraction": "choice",

@@ -56,3 +56,14 @@ with the committed evidence hashes. `pnpm check:transcoder-xsd` validates every 
 against the vendored, SHA-256-locked schema closure. Moodle XML is a proprietary vendor format and
 is validated against its runtime semantic contract. Recorded product imports may supplement this
 evidence, but they are not required by `pnpm release:check`.
+
+## Native choice scoring
+
+QTI 1.2 and Canvas reconstruct choice scoring as all-or-nothing; standard QTI 1.2
+awards one point, while Canvas emits a percentage with native question maxima.
+Moodle reconstructs answer fractions and deducts points for wrong multiple-answer
+selections. Authored mapping/custom processing is not copied into these formats.
+Conversion warnings mark that reconstruction as lossy in each affected item and
+packaged report. Ordinary single-question, one-point standard matching has no extra
+warning; Moodle multiple-answer matching still needs review. A usable export does
+not establish that destination grades preserve an authored partial-credit policy.
