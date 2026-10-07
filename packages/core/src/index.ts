@@ -441,3 +441,4 @@ export { SHUFFLE_INTERACTION_TYPES } from "./presentation-definition.js";
 
 export { validateQtiRubricFragment } from "./parser-content.js";
 export { QTI_RUBRIC_VIEWS, QTI_RUBRIC_USES } from "./rubric.js";
+export { parseQtiTestRubrics, type QtiTestRubricBlock } from "./test-rubrics.js";

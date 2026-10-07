@@ -28,6 +28,7 @@ it.each([
 it.each([
   [block("Text", 'use="instructions"'), "rubric.view.required"],
   [block("Text", 'view="candidate"'), "rubric.use.required"],
+  [block("Text", 'view="candidate" use=""'), "rubric.use.invalid"],
   [block("Text", 'view="student" use="instructions"'), "rubric.view.invalid"],
   [block("Text", 'view="candidate" use="bogus"'), "rubric.use.invalid"],
   [block("Text", 'view="candidate" use="ext:"'), "rubric.use.invalid"],

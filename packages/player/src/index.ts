@@ -47,6 +47,10 @@ export type {
   QtiCatalogDeliverySupport,
 } from "./catalog-delivery.js";
 export { createCatalogDeliveryResolution } from "./catalog-delivery.js";
+export {
+  createCandidateTestRubricDelivery,
+  type QtiTestRubricDelivery,
+} from "./test-rubric-delivery.js";
 export type {
   QtiInteractionRegion,
   QtiInteractionRegionKind,

@@ -9,6 +9,7 @@
     { "path": "./packages/fixtures" },
     { "path": "./packages/fixtures/tsconfig.test.json" },
     { "path": "./packages/player" },
+    { "path": "./packages/player/tsconfig.test.json" },
     { "path": "./packages/player-preact" },
     { "path": "./packages/player-react" },
     { "path": "./packages/conformance" },

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed QTI 3.0.1 static test-rubric delivery fixture. -->
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="T" title="Scoped instructions">
+  <qti-rubric-block view="candidate"><qti-content-body><p>Test instructions.</p></qti-content-body></qti-rubric-block>
+  <qti-test-part identifier="P" title="Part one" navigation-mode="linear" submission-mode="simultaneous">
+    <qti-rubric-block view="scorer" use="scoring"><qti-content-body><p>Private scoring key.</p></qti-content-body></qti-rubric-block>
+    <qti-rubric-block view="candidate scorer" use="instructions"><qti-content-body><p>Read <strong>carefully</strong>.</p><ul><li>Keep every answer.</li></ul><p><a href="https://example.org/help">Help</a></p><img src="images/map.png" alt="Reference map"/></qti-content-body></qti-rubric-block>
+    <qti-assessment-section identifier="S" title="Section one" visible="true">
+      <qti-rubric-block view="candidate" use="navigation"><qti-content-body><p>Section instructions.</p></qti-content-body></qti-rubric-block>
+      <qti-assessment-item-ref identifier="I" href="items/one.xml"/>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>

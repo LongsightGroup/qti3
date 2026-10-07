@@ -31,8 +31,10 @@ export function validateRubricContent(
       else if (views.some((view) => !QTI_RUBRIC_VIEWS.some((allowed) => allowed === view)))
         report("rubric.view.invalid", "Rubric view contains an unknown audience.");
       const use = node.attributes.use?.trim();
-      if (!use) report("rubric.use.required", "Rubric blocks require use.");
-      else if (!QTI_RUBRIC_USES.some((allowed) => allowed === use)) {
+      // ASI §5.120.1 requires item use; §5.160.2 leaves test use optional.
+      if (use === undefined && !testLevel)
+        report("rubric.use.required", "Item rubric blocks require use.");
+      else if (use !== undefined && !QTI_RUBRIC_USES.some((allowed) => allowed === use)) {
         if (/^ext:\S+$/.test(use))
           report(
             "rubric.use.extension",

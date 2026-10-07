@@ -345,14 +345,17 @@ export const itemMetadataSupport: QtiItemMetadataElementSupport[] = [
     process: false,
     fixtures: [
       "packages/fixtures/packages/basic-item-player/valid-item-only/items/tolerance-extra-features.xml",
+      "tests/fixtures/test-delivery/rubric-static-scopes.xml",
     ],
     tests: [
       "packages/core/src/rubric.test.ts",
+      "packages/core/src/test-rubrics.test.ts",
+      "packages/player/test/test-rubric-delivery.test.ts",
       "packages/writer/src/rubric.test.ts",
       "tests/browser/player-body-content.spec.ts",
     ],
     notes:
-      "Item rubric audience, required attributes/content, nesting and forbidden interactions are checked. Candidate content stays in source order; placement classes pass through. Scoped stylesheets/catalogs are rejected. Test rubric delivery is unsupported.",
+      "Item rubric audience, required attributes/content, nesting and forbidden interactions are checked. Candidate content stays in source order; placement classes pass through. Static test rubrics have a host-delivery parser and safe candidate projection retaining test/part/section scope. Scoped stylesheets/catalogs, dynamic test rubric content and extension presentation uses are rejected. The test execution engine still rejects tests containing rubrics; hosts must explicitly support their delivery.",
   },
   {
     qtiName: "qti-catalog-info",

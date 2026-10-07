@@ -10,6 +10,26 @@ space-separated `view` list includes `candidate`. Scorer, author, and other audi
 rubrics are omitted from the rendered DOM, including links and controls. This rendering
 rule does not redact the source XML; hosts control which source content they deliver.
 
+## Static test instructions for host delivery
+
+`parseQtiTestRubrics` from `qti3-core` parses static rubrics without inventing an assessment
+item. Each block retains its test, part or section identifier. It uses the existing content
+parser and rubric validator, and rejects conditional feedback, printed variables, template
+content, interactions, scoped stylesheets/catalogs and extension presentation uses.
+
+`createCandidateTestRubricDelivery` projects those validated blocks into safe structured
+markup using the same sanitizer and asset resolver as catalog delivery. Only blocks whose
+view includes `candidate` enter the result. Run this projection before sending test content
+to an untrusted candidate client; filtering in the browser alone does not protect source
+content. Resolve package asset references against the assessment test's path.
+
+The host displays each result at its authored scope, using `scopeType` and
+`scopeIdentifier`. Keep test instructions outside individual item content; do not prepend
+them to question XML. This API does not render a test or authorize test execution.
+`parseQtiTestExecution` continues to reject tests containing rubrics until its execution
+host explicitly supports their delivery. No test feedback or dynamic rubric support is
+implied by this static-content API.
+
 ## Install
 
 ```sh

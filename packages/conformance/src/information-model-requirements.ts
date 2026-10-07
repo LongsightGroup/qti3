@@ -36,6 +36,28 @@ export const qtiInformationModelRequirements = [
     ],
   },
   {
+    id: "static-test-rubric-host-content",
+    sections: ["5.160", "5.160.1", "5.160.2"],
+    elements: ["qti-rubric-block"],
+    boundary: "parse",
+    disposition: "implemented",
+    rule: "Static test rubrics retain their authored owner, audience and structured content; candidate projection excludes other audiences.",
+    limitation:
+      "DOM-free host-content parsing/projection only. Dynamic content, scoped resources and extension uses are rejected; test execution still rejects rubrics and host rendering is a separate responsibility.",
+    evidence: [
+      {
+        path: "packages/core/src/test-rubrics.test.ts",
+        marker: "[ASI-TEST-RUBRIC-STATIC]",
+        cases: 1,
+      },
+      {
+        path: "packages/player/test/test-rubric-delivery.test.ts",
+        marker: "[ASI-TEST-RUBRIC-CANDIDATE]",
+        cases: 1,
+      },
+    ],
+  },
+  {
     id: "test-outcome-routing",
     sections: ["2.9", "5.102"],
     elements: ["qti-outcome-processing"],
