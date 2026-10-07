@@ -15,6 +15,8 @@ export function choiceModalFeedback(
   cardinality: "single" | "multiple",
   responseIdentifier: string,
   scoring: "match_correct" | "map_response",
+  maximumScore?: number,
+  correctCount = 1,
 ): Qti3ModalFeedback {
   const outcomeIdentifier = feedback.outcomeIdentifier ?? "FEEDBACK";
   return {
@@ -25,6 +27,8 @@ export function choiceModalFeedback(
         scoring,
         outcomeIdentifier.trim(),
         feedback.entries,
+        maximumScore,
+        correctCount,
       ),
     ),
     outcomes: [{ identifier: outcomeIdentifier, cardinality }],
@@ -84,6 +88,8 @@ export function prepareChoiceFeedback(item: Qti3ChoiceBuilderInput): PreparedFee
         item.responseCardinality,
         item.responseIdentifier ?? "RESPONSE",
         item.scoring ?? "match_correct",
+        item.maximumScore,
+        item.correctResponse.length,
       ),
       [item.responseIdentifier ?? "RESPONSE"],
       {

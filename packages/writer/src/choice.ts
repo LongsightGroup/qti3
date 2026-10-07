@@ -15,7 +15,7 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
-import { standardResponseProcessingXml } from "./response-processing.js";
+import { choiceResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
   buildPreparedItem,
@@ -96,7 +96,13 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, scoring),
+    responseProcessingXml: choiceResponseProcessingXml(
+      responseIdentifier,
+      scoring,
+      input.maximumScore,
+      correctValues.length,
+    ),
+    maximumScore: input.maximumScore,
   });
 }
 
@@ -128,6 +134,37 @@ export function validateQti3ChoiceItemStructure(
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
+  if (input.maximumScore !== undefined) {
+    if (!Number.isFinite(input.maximumScore) || input.maximumScore < 0) {
+      diagnostics.push(
+        writerDiagnostic(
+          "invalid_choice_maximum_score",
+          "maximumScore",
+          "Choice maximumScore must be a finite non-negative number.",
+        ),
+      );
+    }
+    if (
+      input.modalFeedback?.responseProcessingXml !== undefined ||
+      input.modalFeedback?.outcomes.some((outcome) => outcome.identifier.trim() === "MAXSCORE") ||
+      input.feedback?.outcomeIdentifier?.trim() === "MAXSCORE" ||
+      responseIdentifier === "MAXSCORE" ||
+      (input.maxChoices !== undefined &&
+        input.maxChoices > 0 &&
+        input.maxChoices < input.correctResponse.length) ||
+      ((input.scoring ?? "match_correct") === "match_correct" &&
+        input.minChoices !== undefined &&
+        input.minChoices > input.correctResponse.length)
+    ) {
+      diagnostics.push(
+        writerDiagnostic(
+          "conflicting_choice_score_program",
+          "maximumScore",
+          "An explicit choice maximum requires writer-generated scoring, a unique MAXSCORE outcome and a reachable complete correct response.",
+        ),
+      );
+    }
+  }
   const responseIdentifierDiagnostic = validateQtiIdentifier(
     "responseIdentifier",
     "Response identifier",

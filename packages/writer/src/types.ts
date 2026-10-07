@@ -144,6 +144,14 @@ export interface Qti3ChoiceAuthoringItem extends Qti3AuthoringItemBase {
   readonly minChoices?: number | undefined;
   readonly maxChoices?: number | undefined;
   readonly scoring?: Qti3ResponseProcessingTemplate | undefined;
+  /**
+   * Explicit non-negative finite point maximum for writer-generated choice scoring.
+   * match_correct awards this value only for the complete correct response. map_response
+   * gives equal shares for correct selections, with no deduction for incorrect selections.
+   * Omission preserves the standard one-point match or one-point-per-correct-choice mapping.
+   * Cannot be combined with custom modal-feedback processing or a MAXSCORE outcome.
+   */
+  readonly maximumScore?: number | undefined;
   readonly feedback?: Qti3ChoiceFeedback | undefined;
   readonly choiceVisibility?: "visible" | "hide" | undefined;
   readonly classNames?: readonly string[] | undefined;

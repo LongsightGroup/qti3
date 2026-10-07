@@ -4,6 +4,9 @@
 
 ### Added
 
+- Author explicit choice point maxima with `maximumScore`, including zero and fractional
+  values. The shared QTI processing rules, feedback and maximum metadata agree; custom
+  scoring conflicts return diagnostics. Existing implicit choice scoring is unchanged.
 - Parse flat fixed-test section ordering with `parseQtiFixedTestOrdering` and generate or
   restore per-attempt question orders with `prepareQtiFixedTestOrder`. Fixed reference
   positions and part/section boundaries remain intact. Invalid saved permutations and

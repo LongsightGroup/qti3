@@ -27,20 +27,25 @@ function responseProcessingTemplateXml(
 function mapResponseRulesXml(
   responseIdentifier: string,
   operator: "map-response" | "map-response-point" = "map-response",
+  weight?: { readonly maximum: number; readonly divisor: number },
 ): string {
   const identifier = escapeXmlAttribute(responseIdentifier);
+  const mapped = `<qti-${operator} identifier="${identifier}"/>`;
+  const score = weight
+    ? `<qti-product><qti-base-value base-type="float">${String(weight.maximum)}</qti-base-value><qti-divide>${mapped}<qti-base-value base-type="float">${String(weight.divisor)}</qti-base-value></qti-divide></qti-product>`
+    : mapped;
   return `    <qti-response-condition>
       <qti-response-if>
         <qti-is-null><qti-variable identifier="${identifier}"/></qti-is-null>
         <qti-set-outcome-value identifier="SCORE"><qti-base-value base-type="float">0</qti-base-value></qti-set-outcome-value>
       </qti-response-if>
       <qti-response-else>
-        <qti-set-outcome-value identifier="SCORE"><qti-${operator} identifier="${identifier}"/></qti-set-outcome-value>
+        <qti-set-outcome-value identifier="SCORE">${score}</qti-set-outcome-value>
       </qti-response-else>
     </qti-response-condition>`;
 }
 
-function matchCorrectRulesXml(responseIdentifier: string): string {
+function matchCorrectRulesXml(responseIdentifier: string, maximumScore = 1): string {
   const identifier = escapeXmlAttribute(responseIdentifier);
   return `    <qti-response-condition>
       <qti-response-if>
@@ -49,7 +54,7 @@ function matchCorrectRulesXml(responseIdentifier: string): string {
           <qti-correct identifier="${identifier}"/>
         </qti-match>
         <qti-set-outcome-value identifier="SCORE">
-          <qti-base-value base-type="float">1</qti-base-value>
+          <qti-base-value base-type="float">${String(maximumScore)}</qti-base-value>
         </qti-set-outcome-value>
       </qti-response-if>
       <qti-response-else>
@@ -71,13 +76,12 @@ export function choiceFeedbackProcessingXml(
   scoring: Qti3ResponseProcessingTemplate,
   outcomeIdentifier: string,
   entries: readonly Qti3ChoiceFeedbackEntry[],
+  maximumScore?: number,
+  correctCount = 1,
 ): string {
   const response = escapeXmlAttribute(responseIdentifier);
   const outcome = escapeXmlAttribute(outcomeIdentifier);
-  const scoreXml =
-    scoring === "map_response"
-      ? mapResponseRulesXml(responseIdentifier)
-      : matchCorrectRulesXml(responseIdentifier);
+  const scoreXml = choiceScoringRulesXml(responseIdentifier, scoring, maximumScore, correctCount);
   const feedbackConditions = entries
     .map((entry) => {
       const choice = escapeXmlText(entry.choiceIdentifier.trim());
@@ -116,6 +120,33 @@ ${scoreXml}
     </qti-set-outcome-value>
 ${feedbackConditions}
   </qti-response-processing>`;
+}
+
+/** Bind an explicit choice point maximum inside QTI processing, preserving implicit algorithms. */
+export function choiceResponseProcessingXml(
+  responseIdentifier: string,
+  scoring: Qti3ResponseProcessingTemplate,
+  maximumScore: number | undefined,
+  correctCount: number,
+): string {
+  if (maximumScore === undefined) return standardResponseProcessingXml(responseIdentifier, scoring);
+  const rules = choiceScoringRulesXml(responseIdentifier, scoring, maximumScore, correctCount);
+  return `  <qti-response-processing>\n${rules}\n  </qti-response-processing>`;
+}
+
+function choiceScoringRulesXml(
+  responseIdentifier: string,
+  scoring: Qti3ResponseProcessingTemplate,
+  maximumScore: number | undefined,
+  correctCount: number,
+): string {
+  return scoring === "match_correct"
+    ? matchCorrectRulesXml(responseIdentifier, maximumScore)
+    : mapResponseRulesXml(
+        responseIdentifier,
+        "map-response",
+        maximumScore === undefined ? undefined : { maximum: maximumScore, divisor: correctCount },
+      );
 }
 
 export function trustedResponseProcessingXml(xml: Qti3TrustedXmlFragment | undefined): string {

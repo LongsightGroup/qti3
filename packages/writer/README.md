@@ -37,6 +37,25 @@ if (!result.ok) {
 console.log(result.xml);
 ```
 
+Choice items accept an optional `maximumScore` for writer-generated point scoring. It must be a
+finite non-negative number. With `match_correct`, the complete correct response earns this value;
+incorrect and unanswered responses earn zero. With `map_response`, each correct selected choice
+earns an equal share of the maximum. Incorrect selections earn zero with no deduction, so selecting
+all choices earns the maximum. For example, a 3-point item with two correct choices awards 1.5 for
+one correct choice and 3 for both. This is a defined additive policy, not a penalty policy.
+
+The point value is encoded in QTI response processing, together with a `MAXSCORE` default and a
+positive `SCORE` `normal-maximum`. Zero-point items omit `normal-maximum`, whose QTI contract requires
+a positive value, and declare `MAXSCORE` as zero. Metadata does not rescale scores. Hosts aggregate
+the already-scored values. Omitting `maximumScore` preserves the existing one-point match or
+one-point-per-correct-selection mapping.
+
+An explicit maximum cannot replace custom `modalFeedback.responseProcessingXml`, reuse a
+`MAXSCORE` response/feedback outcome, or make the complete answer unreachable through selection
+limits. These conflicts return diagnostics and no XML. Choice feedback uses the same point rules.
+This API constructs new scoring; it does not rewrite imported scoring programs or configure host
+defaults. Converted destinations must preserve the program or disclose its loss.
+
 Choice items can map each selected choice to modal feedback, including a feedback identifier
 different from the choice identifier:
 

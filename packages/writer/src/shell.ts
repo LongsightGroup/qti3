@@ -13,6 +13,8 @@ export interface AssessmentItemShellInput extends Pick<
   readonly responseProcessingXml: string;
   readonly companionMaterialsXml?: string | undefined;
   readonly scoreDefaultZero?: boolean | undefined;
+  /** An explicit writer-generated maximum; zero is conveyed by MAXSCORE, not normal-maximum. */
+  readonly maximumScore?: number | undefined;
 }
 
 export function assessmentItemShell(input: AssessmentItemShellInput): string {
@@ -21,13 +23,23 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
   );
   const title = escapeXmlAttribute(input.title.trim() || "Untitled");
   const lang = escapeXmlAttribute(input.lang ?? "en-US");
+  const maximumAttribute =
+    input.maximumScore !== undefined && input.maximumScore > 0
+      ? ` normal-maximum="${String(input.maximumScore)}"`
+      : "";
   const outcomeDeclarationXml = input.scoreDefaultZero
-    ? `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">
+    ? `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"${maximumAttribute}>
     <qti-default-value>
       <qti-value>0</qti-value>
     </qti-default-value>
   </qti-outcome-declaration>`
-    : `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>`;
+    : `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"${maximumAttribute}/>`;
+  const maximumDeclarationXml =
+    input.maximumScore === undefined
+      ? ""
+      : `  <qti-outcome-declaration identifier="MAXSCORE" cardinality="single" base-type="float">
+    <qti-default-value><qti-value>${String(input.maximumScore)}</qti-value></qti-default-value>
+  </qti-outcome-declaration>`;
   return xmlLines([
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<qti-assessment-item`,
@@ -38,6 +50,7 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     `  identifier="${identifier}" title="${title}" time-dependent="false" xml:lang="${lang}">`,
     input.declarationsXml,
     outcomeDeclarationXml,
+    maximumDeclarationXml,
     input.outcomeDeclarationsXml,
     input.companionMaterialsXml,
     `  <qti-item-body>`,
