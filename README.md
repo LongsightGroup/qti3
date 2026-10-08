@@ -672,6 +672,11 @@ published test. Restoration checks exact section inventories, fixed slots and au
 orders, then returns a copy of the saved permutation. It never regenerates an order or
 chooses an implicit seed. Check the typed result before delivering any questions.
 
+Instruction-only sections remain in this state with empty item-reference arrays, preserving
+their leading, intermediate or ending scope. A fixed test must still contain at least one
+question reference. Hosts must display these scopes explicitly; flattening only item references
+would lose instruction placement. No placeholder question or response is generated.
+
 The fixed-test writer accepts `shuffle` on sections and `fixed` on item references.
 Selection, nested sections, branches, preconditions and custom ordering extensions are
 explicitly outside this fixed-ordering profile. This API does not enforce navigation,

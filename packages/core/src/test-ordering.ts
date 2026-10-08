@@ -161,15 +161,15 @@ export function parseQtiFixedTestOrdering(xml: string): QtiTestResult<QtiFixedTe
             fixed: booleanAttribute(item, "fixed", diagnostics),
           };
         });
-      if (!items.length)
-        return orderingFailure(
-          diagnostics,
-          "ordering.items",
-          "Every ordered section requires item references.",
-        );
       sections.push({ partIdentifier, sectionIdentifier, shuffle, items });
     }
   }
+  if (!sections.some((section) => section.items.length > 0))
+    return orderingFailure(
+      diagnostics,
+      "ordering.items",
+      "A fixed test requires at least one item reference.",
+    );
   if (diagnostics.length) return { ok: false, diagnostics };
   return { ok: true, value: { [fixedOrdering]: true, testIdentifier, sections } };
 }

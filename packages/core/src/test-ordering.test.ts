@@ -172,7 +172,7 @@ it.each([
   expect(parseQtiFixedTestOrdering(xml).ok).toBe(false);
 });
 
-it("keeps earlier diagnostics when a section has no item references", () => {
+it("keeps earlier diagnostics when the test has no item references", () => {
   const result = parseQtiFixedTestOrdering(`<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="ORDERED" title="Broken" custom="kept">
   <qti-test-part identifier="P1" navigation-mode="linear" submission-mode="individual">
@@ -199,7 +199,7 @@ it("keeps earlier diagnostics when a section has no item references", () => {
       {
         code: "test.ordering.items",
         severity: "error",
-        message: "Every ordered section requires item references.",
+        message: "A fixed test requires at least one item reference.",
       },
     ],
   });

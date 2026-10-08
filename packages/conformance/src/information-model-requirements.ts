@@ -27,9 +27,14 @@ export const qtiInformationModelRequirements = [
     disposition: "implemented",
     rule: "Fixed-section question shuffling preserves authored fixed slots and part/section boundaries; saved permutations are restored without regeneration.",
     limitation:
-      "The fixed-ordering API supports flat visible sections only. It rejects selection, nested sections, branches/preconditions and ordering extensions. Host navigation, timing, delivery and per-attempt persistence are separate responsibilities; the branching executor still rejects ordering.",
+      "The fixed-ordering API supports flat visible sections, including instruction-only scopes with empty reference arrays; the test needs at least one question reference. It rejects selection, nested sections, branches/preconditions and ordering extensions. Host navigation, instruction display, timing, delivery and per-attempt persistence are separate responsibilities; the branching executor still rejects ordering.",
     evidence: [
       { path: "packages/core/src/test-ordering.test.ts", marker: "[ASI-FIXED-ORDER]", cases: 2 },
+      {
+        path: "packages/core/src/test-ordering-instruction-sections.test.ts",
+        marker: "[ASI-INSTRUCTION-SECTION-ORDER]",
+        cases: 1,
+      },
       {
         path: "packages/writer/src/assessment-test-ordering.test.ts",
         marker: "[ASI-FIXED-ORDER-WRITER]",

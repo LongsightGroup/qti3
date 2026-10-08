@@ -43,13 +43,17 @@ export const testExecutionSupport: readonly QtiTestElementSupport[] = [
     validate: true,
     render: false,
     process: true,
-    fixtures: ["tests/fixtures/test-profile/fixed-ordering-multiple-parts.xml"],
+    fixtures: [
+      "tests/fixtures/test-profile/fixed-ordering-multiple-parts.xml",
+      "tests/fixtures/test-profile/fixed-ordering-instruction-sections.xml",
+    ],
     tests: [
       "packages/core/src/test-ordering.test.ts",
+      "packages/core/src/test-ordering-instruction-sections.test.ts",
       "packages/writer/src/assessment-test-ordering.test.ts",
     ],
     notes:
-      "parseQtiFixedTestOrdering / prepareQtiFixedTestOrder only: flat visible sections; section-local shuffle; fixed item-reference slots; multiple part boundaries retained; exact versioned saved-order restoration. Selection, nested sections, branches/preconditions and extension ordering are rejected. Hosts still own navigation/timing/content delivery. The separate branching test executor does not accept ordering. Not a general test-runner certification.",
+      "parseQtiFixedTestOrdering / prepareQtiFixedTestOrder only: flat visible sections, including instruction-only scopes with empty reference arrays; section-local shuffle; fixed item-reference slots; multiple part boundaries retained; exact versioned saved-order restoration. The test needs at least one item reference. Selection, nested sections, branches/preconditions and extension ordering are rejected. Hosts still own navigation, instruction display, timing and delivery. The separate branching test executor does not accept ordering. Not a general test-runner certification.",
   },
   ...[
     {

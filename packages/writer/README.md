@@ -317,6 +317,12 @@ shuffling stays within each section. `parseQtiTestRubrics` and
 display the instructions when learners enter that section; the core branching executor
 still rejects tests containing rubrics. Invalid rubric content returns diagnostics.
 
+Instruction-only sections can precede, separate or follow question sections. The fixed-ordering
+API retains those scopes with empty item-reference arrays when generating and restoring an
+attempt order; it does not create scored placeholder items. A test still needs at least one
+question reference. Hosts must display instruction-only scopes explicitly, including ending
+instructions; flattening only question references would omit their authored placement.
+
 Fixed-test time limits and session controls preserved by interchange are not execution support.
 The core execution classifier rejects authored limits or controls that its test runtime cannot enforce.
 

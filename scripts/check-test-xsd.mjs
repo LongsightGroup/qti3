@@ -135,6 +135,7 @@ try {
       "run",
       "packages/core/src/processing-boundaries.test.ts",
       "packages/core/src/test-ordering.test.ts",
+      "packages/core/src/test-ordering-instruction-sections.test.ts",
       "packages/writer/src/assessment-test-ordering.test.ts",
       "packages/writer/src/assessment-test-section-instructions.test.ts",
       "packages/writer/src/choice-points.test.ts",

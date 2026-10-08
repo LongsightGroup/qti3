@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic MIT-licensed QTI 3.0.1 ordered instruction-scope fixture. -->
+<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="INSTRUCTIONS" title="Instructions around two questions">
+  <qti-test-part identifier="P" navigation-mode="linear" submission-mode="individual">
+    <qti-assessment-section identifier="INTRO" title="Before questions" visible="true">
+      <qti-rubric-block view="candidate" use="instructions"><qti-content-body><p>Read before starting.</p></qti-content-body></qti-rubric-block>
+    </qti-assessment-section>
+    <qti-assessment-section identifier="FIRST" title="First question" visible="true">
+      <qti-assessment-item-ref identifier="Q1" href="items/one.xml"/>
+    </qti-assessment-section>
+    <qti-assessment-section identifier="BETWEEN" title="Between questions" visible="true">
+      <qti-ordering shuffle="true"/>
+      <qti-rubric-block view="candidate" use="instructions"><qti-content-body><p>Read the next passage.</p></qti-content-body></qti-rubric-block>
+    </qti-assessment-section>
+    <qti-assessment-section identifier="SECOND" title="Second question" visible="true">
+      <qti-assessment-item-ref identifier="Q2" href="items/two.xml" fixed="true"/>
+    </qti-assessment-section>
+    <qti-assessment-section identifier="END" title="After questions" visible="true">
+      <qti-rubric-block view="candidate" use="instructions"><qti-content-body><p>Check your responses before finishing.</p></qti-content-body></qti-rubric-block>
+    </qti-assessment-section>
+  </qti-test-part>
+</qti-assessment-test>

@@ -4,6 +4,9 @@
 
 ### Added
 
+- Retain instruction-only sections in fixed-test ordering and exact saved-order restoration.
+  Leading, intermediate and ending section scopes remain present without artificial question
+  references. A test with no item references is still rejected; hosts own instruction display.
 - Write static candidate instructions on fixed-test sections through the existing rubric
   validator. The content retains its section owner without adding a response or question;
   section ordering remains intact. Core branching execution still rejects rubrics.
