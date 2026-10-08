@@ -308,6 +308,15 @@ in fixed-test instructions; test instructions also reject template content. Rubr
 stylesheets and catalogs are currently unsupported. Fixed-test rubrics and test feedback are interchange only;
 core test execution rejects them rather than delivering a test without its instructions or feedback.
 
+`writeQti3FixedAssessmentTest` accepts trusted static `instructions` on each part and
+section. Section instructions serialize as a candidate/instructions rubric inside that
+section, after any ordering rule and before its item references. They add no response or
+item reference. Use successive sections to retain instructions between question groups;
+shuffling stays within each section. `parseQtiTestRubrics` and
+`createCandidateTestRubricDelivery` preserve this owner for host delivery. The host must
+display the instructions when learners enter that section; the core branching executor
+still rejects tests containing rubrics. Invalid rubric content returns diagnostics.
+
 Fixed-test time limits and session controls preserved by interchange are not execution support.
 The core execution classifier rejects authored limits or controls that its test runtime cannot enforce.
 

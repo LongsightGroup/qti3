@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Write static candidate instructions on fixed-test sections through the existing rubric
+  validator. The content retains its section owner without adding a response or question;
+  section ordering remains intact. Core branching execution still rejects rubrics.
+
 ## 0.13.2 - 2026-10-07
 
 ### Added

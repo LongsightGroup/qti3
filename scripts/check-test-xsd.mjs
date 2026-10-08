@@ -136,6 +136,7 @@ try {
       "packages/core/src/processing-boundaries.test.ts",
       "packages/core/src/test-ordering.test.ts",
       "packages/writer/src/assessment-test-ordering.test.ts",
+      "packages/writer/src/assessment-test-section-instructions.test.ts",
       "packages/writer/src/choice-points.test.ts",
       "packages/writer/src/inline-choice-points.test.ts",
       "packages/writer/src/modal-feedback-schema.test.ts",

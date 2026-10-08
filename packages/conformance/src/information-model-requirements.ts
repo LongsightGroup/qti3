@@ -3,6 +3,23 @@ import type { QtiInformationModelRequirement } from "./information-model.js";
 /** Reviewed boundary-specific claims and explicit audit backlog; never inferred from element support. */
 export const qtiInformationModelRequirements = [
   {
+    id: "fixed-section-instruction-writing",
+    sections: ["4.2.14", "5.160", "5.160.1", "5.160.2"],
+    elements: ["qti-rubric-block"],
+    boundary: "parse",
+    disposition: "implemented",
+    rule: "Fixed-test writing retains static candidate instructions on their authored section without creating an item reference or response.",
+    limitation:
+      "Interchange and static host-content projection only. Hosts own display on section entry; core branching execution still rejects rubrics. Section shuffle remains scoped to the authored section.",
+    evidence: [
+      {
+        path: "packages/writer/src/assessment-test-section-instructions.test.ts",
+        marker: "[ASI-SECTION-INSTRUCTIONS-WRITER]",
+        cases: 3,
+      },
+    ],
+  },
+  {
     id: "fixed-section-ordering",
     sections: ["5.98", "5.98.1", "5.6.3", "10.1.3"],
     elements: ["qti-ordering", "qti-assessment-item-ref"],

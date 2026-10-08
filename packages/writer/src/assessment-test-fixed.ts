@@ -26,6 +26,8 @@ export interface QtiFixedTestDefinition {
     readonly sections: readonly {
       readonly identifier: string;
       readonly title: string;
+      /** Static candidate instructions owned by this section, without an item response. */
+      readonly instructions?: Qti3TrustedXmlFragment | undefined;
       readonly shuffle?: boolean | undefined;
       readonly items: readonly QtiFixedTestItemRef[];
     }[];
@@ -92,12 +94,10 @@ function writePart(part: QtiFixedTestDefinition["parts"][number]): string {
     limits && (limits.minTime !== undefined || limits.maxTime !== undefined)
       ? `<qti-time-limits${xmlAttributes({ "min-time": limits.minTime, "max-time": limits.maxTime })}/>`
       : "";
-  const rubric = part.instructions
-    ? `<qti-rubric-block view="candidate" use="instructions"><qti-content-body>${part.instructions}</qti-content-body></qti-rubric-block>`
-    : "";
+  const rubric = writeInstructions(part.instructions);
   const sections = part.sections.map(
     (section) =>
-      `<qti-assessment-section${xmlAttributes({ identifier: section.identifier, title: section.title, visible: true })}>${section.shuffle === undefined ? "" : `<qti-ordering${xmlAttributes({ shuffle: section.shuffle })}/>`}${section.items.map(writeTestItemRef).join("\n")}</qti-assessment-section>`,
+      `<qti-assessment-section${xmlAttributes({ identifier: section.identifier, title: section.title, visible: true })}>${section.shuffle === undefined ? "" : `<qti-ordering${xmlAttributes({ shuffle: section.shuffle })}/>`}${writeInstructions(section.instructions)}${section.items.map(writeTestItemRef).join("\n")}</qti-assessment-section>`,
   );
   const feedback = part.feedback.map(
     (entry) =>
@@ -111,4 +111,10 @@ function writePart(part: QtiFixedTestDefinition["parts"][number]): string {
     ...feedback,
     "</qti-test-part>",
   ].join("\n");
+}
+
+function writeInstructions(instructions: Qti3TrustedXmlFragment | undefined): string {
+  return instructions
+    ? `<qti-rubric-block view="candidate" use="instructions"><qti-content-body>${instructions}</qti-content-body></qti-rubric-block>`
+    : "";
 }
