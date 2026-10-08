@@ -42,6 +42,7 @@ export default defineConfig({
       "packages/**/*.test.tsx",
       "tests/browser/shared-vocabulary-matrix/coverage-policy.test.ts",
       "tests/fixtures/valid-qti-document.test.ts",
+      "tests/fixtures/feedback-release.test.ts",
     ],
     allowOnly: !process.env.CI,
     clearMocks: true,

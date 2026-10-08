@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { catalogFixtures, interactionFixtures } from "../../packages/fixtures/src/index.js";
+import { feedbackReleaseItemXml } from "../fixtures/feedback-release-item.js";
 
 const validItemXml = interactionFixtures.find((fixture) => fixture.id === "choice-reference")!.xml;
 const catalogItemXml = catalogFixtures.find(
@@ -120,6 +121,40 @@ for (const adapter of adapterPages) {
       });
 
       expect(await callHarness(page, "loadXmlCallSnapshot")).toHaveLength(3);
+    });
+
+    test("reloads the real player when host feedback authorization changes", async ({ page }) => {
+      const xml = feedbackReleaseItemXml(false);
+      await callHarness(page, "render", { xml, loadOptions: { feedbackRelease: "withheld" } });
+      const player = page.locator("qti-assessment-item-player");
+      await expect(player).toContainText("Choose Alpha.");
+      await page.getByRole("radio", { name: "A. Alpha" }).check();
+      const state = await player.evaluate((element) => {
+        element.scoreAttempt();
+        return element.serialize();
+      });
+      expect(state?.outcomes.SCORE).toBe(2.5);
+      await expect(player).not.toContainText("Modal explanation.");
+      await callHarness(page, "rerender", {
+        xml,
+        loadOptions: { state, feedbackRelease: "released" },
+      });
+      await expect(player.getByRole("link", { name: "Answer link" })).toBeVisible();
+      await expect(page.getByRole("radio", { name: "A. Alpha" })).toBeChecked();
+      const released = await player.evaluate((element) => element.serialize());
+      expect(released?.responses).toEqual(state?.responses);
+      expect(released?.outcomes).toEqual(state?.outcomes);
+      // Only authorization changes here; the exact same state reference must still trigger reload.
+      await callHarness(page, "rerender", {
+        xml,
+        loadOptions: { state, feedbackRelease: "withheld" },
+      });
+      await expect(player.getByRole("link", { name: "Answer link" })).toHaveCount(0);
+      await expect(player.locator(".qti3-feedback-block, .qti3-feedback-inline")).toHaveCount(0);
+      await expect(player).not.toContainText("explanation.");
+      expect((await player.evaluate((element) => element.serialize()))?.outcomes).toEqual(
+        state?.outcomes,
+      );
     });
 
     test("does not reload for equivalent restored state with a new object reference", async ({

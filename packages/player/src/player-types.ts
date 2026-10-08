@@ -50,6 +50,14 @@ export type QtiPlayerResolveStylesheet = (
 ) => QtiResolvedStylesheet | undefined;
 
 export interface QtiPlayerLoadOptions {
+  /**
+   * Host authorization for authored feedback on every attempt phase. Withheld feedback is
+   * omitted from the DOM, independently of QTI completed-review showFeedback semantics.
+   * Defaults to released for standalone author previews. Exam hosts must configure this
+   * explicitly; it is retained across reset/restore but never read from learner attempt state.
+   * This is a presentation gate, not protection of source XML or serialized scoring outcomes.
+   */
+  feedbackRelease?: "withheld" | "released" | undefined;
   state?: QtiAttemptStateV1 | undefined;
   status?: QtiAttemptStatus | undefined;
   sessionControl?: QtiPlayerSessionControl | undefined;

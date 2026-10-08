@@ -328,6 +328,15 @@ printed variables. The writer package README documents the authoring fields, con
 diagnostics. Reference examples are `rich-modal-feedback-reference` and
 `multiple-choice-modal-feedback-reference`.
 
+For delayed learner feedback, load with `feedbackRelease: "withheld"`. This host authorization
+omits modal, block and inline feedback from the DOM in every attempt phase, including reset,
+restore and adaptive processing. It is independent of the QTI `sessionControl.showFeedback`
+completed-review setting. To release explanations, reload with the current saved state and
+`feedbackRelease: "released"`; the QTI visibility conditions and review setting still apply.
+Standalone author previews default to released. Exam hosts must configure the gate explicitly.
+The player retains score/outcome/response state and does not remove answer keys from source XML;
+hosts must separately protect source access, serialized outcomes and result/preview surfaces.
+
 ## Interaction shuffling
 
 The player shuffles choice, order, inline choice, associate, match, and gap match when

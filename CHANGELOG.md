@@ -4,6 +4,10 @@
 
 ### Added
 
+- Withhold authored modal, block and inline feedback from the player DOM through a host-owned
+  release gate, independently of QTI completed-review policy. Scoring and saved responses remain
+  intact; hosts own source/outcome protection and explicitly configure release when reloading.
+
 - Author complete-response correct/incorrect explanations for choice and inline-choice items.
   Generated QTI conditions use the answer key independently of point totals, retain the scoring
   program, clear feedback on unanswered retries, and reject competing feedback/custom models.

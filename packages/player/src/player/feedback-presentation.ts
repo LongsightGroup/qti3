@@ -5,6 +5,7 @@ export function feedbackPresentation(
   session: QtiItemSession,
   state: QtiAttemptStateV1,
   showFeedback: boolean | undefined,
+  release: "withheld" | "released",
 ): {
   outcomeValue(identifier: string): QtiValue;
   modalOutcomes: Record<string, QtiValue> | undefined;
@@ -14,6 +15,9 @@ export function feedbackPresentation(
   return {
     outcomeValue: (identifier) =>
       suppress ? session.initialOutcomeValue(identifier) : (state.outcomes[identifier] ?? null),
-    modalOutcomes: state.responseProcessingCompleted && !suppress ? state.outcomes : undefined,
+    modalOutcomes:
+      release === "released" && state.responseProcessingCompleted && !suppress
+        ? state.outcomes
+        : undefined,
   };
 }

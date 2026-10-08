@@ -23,6 +23,8 @@ export interface PlayerContentContext {
   mathTemplateValue(
     node: Extract<QtiContentNode, { kind: "element" }>,
   ): MathTemplateToken | undefined;
+  /** Host release gate; withheld authored feedback must never create content DOM nodes. */
+  canRenderFeedback(): boolean;
   isFeedbackVisible(node: Extract<QtiContentNode, { kind: "feedback" }>): boolean;
   isTemplateContentVisible(element: HTMLElement): boolean;
   /** Reports exact parsed-source provenance for each concrete element this renderer creates. */
@@ -44,6 +46,7 @@ function staticMarkupContentContext(): PlayerContentContext {
     renderEmbeddedInteraction: () => document.createElement("span"),
     currentVariableValue: () => null,
     mathTemplateValue: () => undefined,
+    canRenderFeedback: () => true,
     isFeedbackVisible: () => false,
     isTemplateContentVisible: () => false,
     observeRenderedElement: () => {},
@@ -69,7 +72,8 @@ export function renderContentNode(node: QtiContentNode, context: PlayerContentCo
     context.observeRenderedElement(node.source, element);
     return [element];
   }
-  if (node.kind === "feedback") return renderFeedbackContent(node, context);
+  if (node.kind === "feedback")
+    return context.canRenderFeedback() ? renderFeedbackContent(node, context) : [];
   // This player is a candidate delivery surface. Omit other audiences' content
   // entirely so scoring guidance cannot enter focus, speech, or find-in-page.
   if (

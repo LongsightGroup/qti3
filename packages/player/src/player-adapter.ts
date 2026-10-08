@@ -138,6 +138,7 @@ export function isQtiAssessmentItemPlayerAdapterPropName(name: string): boolean 
 export type QtiAssessmentItemPlayerLoadDependencies = readonly [
   string | undefined,
   QtiPlayerLoadOptions["status"] | undefined,
+  QtiPlayerLoadOptions["feedbackRelease"],
   boolean | undefined,
   boolean | undefined,
   QtiPlayerFetchXml | undefined,
@@ -159,6 +160,7 @@ export function qtiAssessmentItemPlayerLoadDependencies(
   return [
     qtiAssessmentItemPlayerLoadStateKey(loadOptions?.state),
     loadOptions?.status,
+    loadOptions?.feedbackRelease,
     loadOptions?.sessionControl?.validateResponses,
     loadOptions?.sessionControl?.showFeedback,
     loadOptions?.fetchXml,

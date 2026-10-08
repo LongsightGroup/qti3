@@ -127,6 +127,7 @@ interface LoadedPlayerItem {
   readonly resolveAsset: QtiPlayerResolveAsset | undefined;
   readonly stylesheets: QtiResolvedStylesheet[];
   readonly sessionControl: Required<QtiPlayerSessionControl>;
+  readonly feedbackRelease: "withheld" | "released";
   readonly authoringDiagnostics: QtiDiagnostic[];
   validationMessages: QtiDiagnostic[];
 }
@@ -407,6 +408,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
       resolveAsset: options.resolveAsset,
       stylesheets: stylesheetResolution.links,
       sessionControl: nextSessionControl,
+      feedbackRelease: options.feedbackRelease ?? "released",
       authoringDiagnostics: nextAuthoringDiagnostics,
       validationMessages: nextValidationMessages,
     };
@@ -782,6 +784,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
           identifier ? currentTemplateValue(sessionState(), identifier) : null,
         );
       },
+      canRenderFeedback: () => this.loadedItem?.feedbackRelease !== "withheld",
       isFeedbackVisible: (node) =>
         isFeedbackVisible(node, feedback?.outcomeValue(node.outcomeIdentifier) ?? null),
       isTemplateContentVisible: (element) => {
@@ -936,6 +939,7 @@ export class QtiAssessmentItemPlayer extends PlayerElementHost {
         loadedItem.session,
         loadedItem.session.serialize(),
         loadedItem.sessionControl.showFeedback,
+        loadedItem.feedbackRelease,
       )
     );
   }
