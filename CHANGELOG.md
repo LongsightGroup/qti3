@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Author complete-response correct/incorrect explanations for choice and inline-choice items.
+  Generated QTI conditions use the answer key independently of point totals, retain the scoring
+  program, clear feedback on unanswered retries, and reject competing feedback/custom models.
+  Hosts continue to own feedback release timing.
+
 ## 0.13.3 - 2026-10-08
 
 ### Added

@@ -101,6 +101,12 @@ export function prepareChoiceFeedback(item: Qti3ChoiceBuilderInput): PreparedFee
       },
     );
     prepared.diagnostics.push(...validateChoiceFeedback(item));
+    if (item.responseFeedback)
+      prepared.diagnostics.push({
+        code: "conflicting_feedback_models",
+        path: "responseFeedback",
+        message: "Use either selected-choice feedback or whole-response feedback on one item.",
+      });
     if (item.modalFeedback)
       prepared.diagnostics.push({
         code: "conflicting_feedback_models",

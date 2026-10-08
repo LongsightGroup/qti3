@@ -1,6 +1,7 @@
 import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import { placeRenderedBody, validateItemBodyTemplate } from "./item-body-template.js";
 import { authoringResponseIdentifiers } from "./interaction-responses.js";
+import { prepareResponseFeedback } from "./response-feedback.js";
 import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
 import { assessmentItemShell, type AssessmentItemShellInput } from "./shell.js";
 import {
@@ -24,6 +25,10 @@ export function itemSections(
 }
 
 function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
+  if (item.interactionType === "choice" || item.interactionType === "inlineChoice") {
+    const responseFeedback = prepareResponseFeedback(item);
+    if (responseFeedback) return responseFeedback;
+  }
   const responses = authoringResponseIdentifiers(item);
   const prepared = item.modalFeedback
     ? prepareModalFeedback(item.modalFeedback, responses)

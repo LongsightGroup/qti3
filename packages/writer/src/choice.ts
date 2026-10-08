@@ -101,6 +101,7 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
       scoring,
       input.maximumScore,
       correctValues.length,
+      input.responseFeedback,
     ),
     maximumScore: input.maximumScore,
   });
@@ -148,6 +149,7 @@ export function validateQti3ChoiceItemStructure(
       input.modalFeedback?.responseProcessingXml !== undefined ||
       input.modalFeedback?.outcomes.some((outcome) => outcome.identifier.trim() === "MAXSCORE") ||
       input.feedback?.outcomeIdentifier?.trim() === "MAXSCORE" ||
+      input.responseFeedback?.outcomeIdentifier?.trim() === "MAXSCORE" ||
       responseIdentifier === "MAXSCORE" ||
       (input.maxChoices !== undefined &&
         input.maxChoices > 0 &&

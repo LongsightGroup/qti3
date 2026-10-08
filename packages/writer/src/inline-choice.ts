@@ -8,6 +8,7 @@ import {
 import {
   allOrNothingCorrectProcessingXml,
   sumMappedResponsesProcessingXml,
+  withResponseFeedbackProcessingXml,
 } from "./response-processing.js";
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import {
@@ -60,13 +61,16 @@ export function renderQti3InlineChoiceItem(
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml:
+    responseProcessingXml: withResponseFeedbackProcessingXml(
       scoring === "map_response"
         ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
         : allOrNothingCorrectProcessingXml(
             input.slots.map((slot) => slot.responseIdentifier),
             input.maximumScore ?? input.slots.length,
           ),
+      input.slots.map((slot) => slot.responseIdentifier),
+      input.responseFeedback,
+    ),
     scoreDefaultZero: true,
     maximumScore: input.maximumScore,
   });
@@ -162,6 +166,7 @@ export function validateQti3InlineChoiceItemStructure(
       input.scoring === "map_response" ||
       input.modalFeedback?.responseProcessingXml !== undefined ||
       input.modalFeedback?.outcomes.some((outcome) => outcome.identifier.trim() === "MAXSCORE") ||
+      input.responseFeedback?.outcomeIdentifier?.trim() === "MAXSCORE" ||
       input.slots.some((slot) => slot.responseIdentifier.trim() === "MAXSCORE")
     ) {
       diagnostics.push(

@@ -1,5 +1,6 @@
 import type {
   Qti3ChoiceFeedbackEntry,
+  Qti3ResponseFeedback,
   Qti3PointResponseProcessingTemplate,
   Qti3ResponseProcessingTemplate,
   Qti3TrustedXmlFragment,
@@ -128,10 +129,54 @@ export function choiceResponseProcessingXml(
   scoring: Qti3ResponseProcessingTemplate,
   maximumScore: number | undefined,
   correctCount: number,
+  responseFeedback?: Qti3ResponseFeedback,
 ): string {
-  if (maximumScore === undefined) return standardResponseProcessingXml(responseIdentifier, scoring);
+  if (maximumScore === undefined && responseFeedback === undefined)
+    return standardResponseProcessingXml(responseIdentifier, scoring);
   const rules = choiceScoringRulesXml(responseIdentifier, scoring, maximumScore, correctCount);
-  return `  <qti-response-processing>\n${rules}\n  </qti-response-processing>`;
+  return withResponseFeedbackProcessingXml(
+    `  <qti-response-processing>\n${rules}\n  </qti-response-processing>`,
+    [responseIdentifier],
+    responseFeedback,
+  );
+}
+
+/** Extend writer-generated explicit processing without changing its scoring rules. */
+export function withResponseFeedbackProcessingXml(
+  processingXml: string,
+  responseIdentifiers: readonly string[],
+  feedback: Qti3ResponseFeedback | undefined,
+): string {
+  if (feedback === undefined) return processingXml;
+  const closing = "  </qti-response-processing>";
+  if (!processingXml.endsWith(closing))
+    throw new Error("Expected explicit writer-owned response processing.");
+  const outcome = escapeXmlAttribute((feedback.outcomeIdentifier ?? "RESPONSE_FEEDBACK").trim());
+  const matches = responseIdentifiers.map((id) => {
+    const identifier = escapeXmlAttribute(id.trim());
+    return `<qti-match><qti-variable identifier="${identifier}"/><qti-correct identifier="${identifier}"/></qti-match>`;
+  });
+  const answered = responseIdentifiers.map(
+    (id) =>
+      `<qti-not><qti-is-null><qti-variable identifier="${escapeXmlAttribute(id.trim())}"/></qti-is-null></qti-not>`,
+  );
+  const conjunction = (expressions: readonly string[]) =>
+    expressions.length === 1 ? expressions[0] : `<qti-and>${expressions.join("")}</qti-and>`;
+  const anyAnswered = answered.length === 1 ? answered[0] : `<qti-or>${answered.join("")}</qti-or>`;
+  const select = (identifier: "CORRECT" | "INCORRECT") =>
+    `<qti-set-outcome-value identifier="${outcome}"><qti-base-value base-type="identifier">${identifier}</qti-base-value></qti-set-outcome-value>`;
+  const rules = `    <qti-set-outcome-value identifier="${outcome}"><qti-null/></qti-set-outcome-value>
+    <qti-response-condition>
+      <qti-response-if>
+        ${conjunction([...answered, ...matches])}
+        ${select("CORRECT")}
+      </qti-response-if>
+      <qti-response-else-if>
+        ${anyAnswered}
+        ${select("INCORRECT")}
+      </qti-response-else-if>
+    </qti-response-condition>`;
+  return `${processingXml.slice(0, -closing.length)}${rules}\n${closing}`;
 }
 
 function choiceScoringRulesXml(

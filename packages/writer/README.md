@@ -88,6 +88,31 @@ each selected choice with an entry displays its feedback, and unselected choices
 Invalid feedback configurations return typed diagnostics. Each entry needs exactly one `text` or `contentHtml` value with visible
 text; accessible image `alt` text and dynamic printed variables count. `contentHtml` is a caller-supplied trusted XML fragment.
 
+Choice and inline-choice items can instead author `responseFeedback` for the whole response:
+
+```ts
+responseFeedback: {
+  correct: { text: "That is the complete answer." },
+  incorrect: {
+    contentHtml: qti3TrustedXmlFragment(
+      '<p>Review <a href="https://example.org/explanation">the explanation</a>.</p>',
+    ),
+  },
+}
+```
+
+Every declared response must match its correct answer to select `CORRECT`. An attempted response
+that differs selects `INCORRECT`; an unanswered item selects neither. This distinction is
+independent of scoring: a partial-credit response with an extra distractor is still incorrect,
+and zero-point questions retain their answer feedback conditions. The generated processing
+preserves scoring and clears the feedback outcome on every run. At least one explanation is
+required; either explanation may be omitted. Dropdown slots must all have answer keys.
+The single identifier outcome defaults to `RESPONSE_FEEDBACK`; `outcomeIdentifier` can name it
+explicitly. Content uses the same validation as modal feedback. This model cannot be combined
+with `feedback` or `modalFeedback`, so it cannot silently replace imported custom processing.
+Hosts must separately authorize feedback display and enforce release timing; authoring these
+explanations grants no permission to reveal them during an exam.
+
 For any supported interaction, use `modalFeedback` to author item-level QTI feedback. Declare one
 or more identifier outcomes with `single` or `multiple` cardinality, then add entries referencing
 those outcomes. Entries can use `showHide: "show"` (the default) or `"hide"`, an optional title, and

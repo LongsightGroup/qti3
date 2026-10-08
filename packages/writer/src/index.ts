@@ -67,6 +67,8 @@ export type {
   Qti3ChoiceBuilderInput,
   Qti3ChoiceFeedback,
   Qti3ChoiceFeedbackEntry,
+  Qti3ResponseFeedback,
+  Qti3ResponseFeedbackContent,
   Qti3ModalFeedback,
   Qti3ModalFeedbackEntry,
   Qti3ModalFeedbackOutcome,

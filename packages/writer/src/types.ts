@@ -135,6 +135,25 @@ export interface Qti3ChoiceFeedback {
   readonly entries: readonly Qti3ChoiceFeedbackEntry[];
 }
 
+/** Explanation selected by the complete response's correctness, independently of points. */
+export interface Qti3ResponseFeedbackContent {
+  readonly text?: string | undefined;
+  readonly contentHtml?: Qti3TrustedXmlFragment | undefined;
+}
+
+/**
+ * Correct feedback requires every response to match its declared answer key. Incorrect feedback
+ * requires at least one non-null response and a mismatch; unanswered items display neither.
+ * At least one content entry is required. Cannot be combined with another feedback model.
+ * The host owns release timing; this model does not authorize learner feedback disclosure.
+ */
+export interface Qti3ResponseFeedback {
+  /** Defaults to "RESPONSE_FEEDBACK". */
+  readonly outcomeIdentifier?: string | undefined;
+  readonly correct?: Qti3ResponseFeedbackContent | undefined;
+  readonly incorrect?: Qti3ResponseFeedbackContent | undefined;
+}
+
 export interface Qti3ChoiceAuthoringItem extends Qti3AuthoringItemBase {
   readonly interactionType: "choice";
   readonly responseCardinality: "single" | "multiple";
@@ -153,6 +172,7 @@ export interface Qti3ChoiceAuthoringItem extends Qti3AuthoringItemBase {
    */
   readonly maximumScore?: number | undefined;
   readonly feedback?: Qti3ChoiceFeedback | undefined;
+  readonly responseFeedback?: Qti3ResponseFeedback | undefined;
   readonly choiceVisibility?: "visible" | "hide" | undefined;
   readonly classNames?: readonly string[] | undefined;
 }
@@ -204,6 +224,7 @@ export interface Qti3InlineChoiceSlot {
 }
 
 export interface Qti3InlineChoiceAuthoringItem extends Qti3AuthoringItemBase {
+  readonly responseFeedback?: Qti3ResponseFeedback | undefined;
   readonly interactionType: "inlineChoice";
   /**
    * Trusted bodyHtml must contain an empty qti-inline-choice-interaction placeholder for every

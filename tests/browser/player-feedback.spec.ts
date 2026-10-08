@@ -5,6 +5,69 @@ import { buildQti3ChoiceItem, qti3TrustedXmlFragment } from "../../packages/writ
 import { pasteXml } from "./player-helpers.js";
 
 test.describe("player feedback", () => {
+  test("whole-response feedback separates complete answers and respects completed-review suppression", async ({
+    page,
+  }, testInfo) => {
+    const xml = buildQti3ChoiceItem({
+      identifier: "whole-response-feedback",
+      title: "Whole response feedback",
+      responseCardinality: "multiple",
+      scoring: "map_response",
+      maximumScore: 2.5,
+      choices: [
+        { identifier: "A", text: "Alpha" },
+        { identifier: "B", text: "Beta" },
+        { identifier: "C", text: "Gamma" },
+      ],
+      correctResponse: ["A", "B"],
+      responseFeedback: {
+        correct: { text: "Complete answer." },
+        incorrect: {
+          contentHtml: qti3TrustedXmlFragment(
+            '<p>Review <a href="https://example.org/explanation">the explanation</a>.</p>',
+          ),
+        },
+      },
+    });
+    await page.goto("/");
+    await pasteXml(page, xml);
+    const player = page.locator("qti-assessment-item-player");
+    const feedback = player.locator(".qti3-feedback");
+    const alpha = page.getByRole("checkbox", { name: "A. Alpha" });
+    const beta = page.getByRole("checkbox", { name: "B. Beta" });
+    const gamma = page.getByRole("checkbox", { name: "C. Gamma" });
+    await expect(feedback).toBeHidden();
+    await alpha.focus();
+    await page.keyboard.press("Space");
+    await beta.check();
+    await page.locator("#debug-score").click();
+    await expect(feedback).toHaveText("Complete answer.");
+    await gamma.check();
+    await page.locator("#debug-score").click();
+    await expect(feedback).not.toContainText("Complete answer.");
+    const link = feedback.getByRole("link", { name: "the explanation" });
+    await expect(link).toHaveAttribute("href", "https://example.org/explanation");
+    await link.focus();
+    await expect(link).toBeFocused();
+    await expect(feedback).toHaveAttribute("aria-live", "polite");
+    await expectNoAxeViolationsOnPlayer(page);
+    await page.screenshot({ path: testInfo.outputPath("response-feedback.png") });
+    expect((await player.evaluate((element) => element.serialize()))?.outcomes.SCORE).toBe(2.5);
+    // QTI completed-review suppression is separate from host-owned active exam release policy.
+    await player.evaluate(async (element, sourceXml) => {
+      await element.loadXml(sourceXml, { sessionControl: { showFeedback: false } });
+    }, xml);
+    await page.getByRole("checkbox", { name: "A. Alpha" }).check();
+    await page.locator("#debug-end").click();
+    const saved = await player.evaluate((element) => element.serialize());
+    expect(saved?.status).toBe("completed");
+    expect(saved?.outcomes.SCORE).toBe(1.25);
+    expect(saved?.outcomes.RESPONSE_FEEDBACK).toBe("INCORRECT");
+    await expect(feedback).toBeHidden();
+    await expect(player).not.toContainText("Complete answer.");
+    await expect(player.getByRole("link", { name: "the explanation" })).toHaveCount(0);
+  });
+
   test("does not render item interactions from forbidden feedback content", async ({ page }) => {
     const valid = buildQti3ChoiceItem({
       identifier: "forbidden-feedback",
