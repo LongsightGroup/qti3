@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.13.3 - 2026-10-09
 
 ### Added
 
@@ -12,10 +12,6 @@
   Generated QTI conditions use the answer key independently of point totals, retain the scoring
   program, clear feedback on unanswered retries, and reject competing feedback/custom models.
   Hosts continue to own feedback release timing.
-
-## 0.13.3 - 2026-10-08
-
-### Added
 
 - Retain instruction-only sections in fixed-test ordering and exact saved-order restoration.
   Leading, intermediate and ending section scopes remain present without artificial question
