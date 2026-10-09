@@ -5,10 +5,11 @@ import {
   validateQtiIdentifier,
   writerDiagnostic,
 } from "./diagnostics.js";
+import { responseFeedbackRulesXml } from "./response-feedback.js";
 import {
-  allOrNothingCorrectProcessingXml,
-  sumMappedResponsesProcessingXml,
-  withResponseFeedbackProcessingXml,
+  allOrNothingCorrectRulesXml,
+  explicitResponseProcessingXml,
+  sumMappedResponsesRulesXml,
 } from "./response-processing.js";
 import { sharedVocabularyXmlAttributes } from "./shared-vocabulary.js";
 import {
@@ -58,18 +59,17 @@ export function renderQti3InlineChoiceItem(
     .split("\n")
     .join("\n    ")}`;
 
+  const responseIdentifiers = input.slots.map((slot) => slot.responseIdentifier);
+  const scoringRules =
+    scoring === "map_response"
+      ? sumMappedResponsesRulesXml(responseIdentifiers)
+      : allOrNothingCorrectRulesXml(responseIdentifiers, input.maximumScore ?? input.slots.length);
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: withResponseFeedbackProcessingXml(
-      scoring === "map_response"
-        ? sumMappedResponsesProcessingXml(input.slots.map((slot) => slot.responseIdentifier))
-        : allOrNothingCorrectProcessingXml(
-            input.slots.map((slot) => slot.responseIdentifier),
-            input.maximumScore ?? input.slots.length,
-          ),
-      input.slots.map((slot) => slot.responseIdentifier),
-      input.responseFeedback,
+    responseProcessingXml: explicitResponseProcessingXml(
+      scoringRules,
+      responseFeedbackRulesXml(responseIdentifiers, input.responseFeedback),
     ),
     scoreDefaultZero: true,
     maximumScore: input.maximumScore,

@@ -1,4 +1,3 @@
-import { prepareChoiceFeedback } from "./choice-feedback.js";
 import { assertQtiIdentifier } from "./identifier.js";
 import {
   duplicateDiagnostics,
@@ -15,6 +14,7 @@ import {
   resolveResponseIdentifier,
   wrapInteractionBody,
 } from "./interaction-shell.js";
+import { responseFeedbackRulesXml } from "./response-feedback.js";
 import { choiceResponseProcessingXml } from "./response-processing.js";
 import {
   itemSections,
@@ -30,7 +30,6 @@ export function buildQti3ChoiceItem(input: Qti3ChoiceBuilderInput): string {
     { ...input, interactionType: "choice" },
     validateQti3ChoiceItemStructure,
     renderQti3ChoiceItem,
-    prepareChoiceFeedback(input),
   );
 }
 
@@ -38,7 +37,6 @@ export function validateQti3ChoiceItem(input: Qti3ChoiceBuilderInput): Qti3Write
   return validatePreparedItem(
     { ...input, interactionType: "choice" },
     validateQti3ChoiceItemStructure,
-    prepareChoiceFeedback(input),
   );
 }
 
@@ -101,7 +99,7 @@ ${choiceMappingXml(choices, scoring, correctValues)}  </qti-response-declaration
       scoring,
       input.maximumScore,
       correctValues.length,
-      input.responseFeedback,
+      responseFeedbackRulesXml([responseIdentifier], input.responseFeedback),
     ),
     maximumScore: input.maximumScore,
   });

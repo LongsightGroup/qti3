@@ -1,7 +1,5 @@
 import { validatePreparedItem, writePreparedItem } from "./item-preparation.js";
 import type { RenderedItemSections } from "./item-preparation.js";
-import { prepareChoiceFeedback } from "./choice-feedback.js";
-import type { PreparedFeedback } from "./modal-feedback.js";
 import { assertNever } from "@longsightgroup/qti3-core";
 import type { QtiInteractionType } from "@longsightgroup/qti3-core";
 
@@ -337,19 +335,10 @@ export const qti3WriterInteractionSupport: readonly Qti3WriterInteractionSupport
   notes: interaction.notes,
 }));
 
-function authoringFeedback(item: Qti3AuthoringItem): PreparedFeedback | undefined {
-  return item.interactionType === "choice" ? prepareChoiceFeedback(item) : undefined;
-}
-
 export function validateQti3AuthoringItem(item: Qti3AuthoringItem): Qti3WriterDiagnostic[] {
-  return validatePreparedItem(item, validateAuthoringStructure, authoringFeedback(item));
+  return validatePreparedItem(item, validateAuthoringStructure);
 }
 
 export function writeQti3AuthoringItemResult(item: Qti3AuthoringItem) {
-  return writePreparedItem(
-    item,
-    validateAuthoringStructure,
-    renderQti3AuthoringItem,
-    authoringFeedback(item),
-  );
+  return writePreparedItem(item, validateAuthoringStructure, renderQti3AuthoringItem);
 }

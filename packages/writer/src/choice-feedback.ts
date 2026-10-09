@@ -79,41 +79,29 @@ export function validateChoiceFeedback(input: Qti3ChoiceBuilderInput): Qti3Write
   return diagnostics;
 }
 
-/** Prepare the choice convenience model with diagnostics in its authoring paths. */
-export function prepareChoiceFeedback(item: Qti3ChoiceBuilderInput): PreparedFeedback | undefined {
-  if (item.feedback) {
-    const prepared = prepareModalFeedback(
-      choiceModalFeedback(
-        item.feedback,
-        item.responseCardinality,
-        item.responseIdentifier ?? "RESPONSE",
-        item.scoring ?? "match_correct",
-        item.maximumScore,
-        item.correctResponse.length,
-      ),
-      [item.responseIdentifier ?? "RESPONSE"],
-      {
-        root: "feedback",
-        // Generated outcome metadata has no separate field in the choice authoring model.
-        outcome: (_index, field) =>
-          field === "identifier" ? "feedback.outcomeIdentifier" : "feedback",
-        entry: (index) => `feedback.entries.${index}`,
-      },
-    );
-    prepared.diagnostics.push(...validateChoiceFeedback(item));
-    if (item.responseFeedback)
-      prepared.diagnostics.push({
-        code: "conflicting_feedback_models",
-        path: "responseFeedback",
-        message: "Use either selected-choice feedback or whole-response feedback on one item.",
-      });
-    if (item.modalFeedback)
-      prepared.diagnostics.push({
-        code: "conflicting_feedback_models",
-        path: "modalFeedback",
-        message: "Use either choice feedback or item-level modalFeedback on one item.",
-      });
-    return prepared;
-  }
-  return undefined;
+/** Prepare the selected-choice convenience model with diagnostics in its authoring paths. */
+export function prepareChoiceFeedback(
+  item: Qti3ChoiceBuilderInput,
+  feedback: Qti3ChoiceFeedback,
+): PreparedFeedback {
+  const prepared = prepareModalFeedback(
+    choiceModalFeedback(
+      feedback,
+      item.responseCardinality,
+      item.responseIdentifier ?? "RESPONSE",
+      item.scoring ?? "match_correct",
+      item.maximumScore,
+      item.correctResponse.length,
+    ),
+    [item.responseIdentifier ?? "RESPONSE"],
+    {
+      root: "feedback",
+      // Generated outcome metadata has no separate field in the choice authoring model.
+      outcome: (_index, field) =>
+        field === "identifier" ? "feedback.outcomeIdentifier" : "feedback",
+      entry: (index) => `feedback.entries.${index}`,
+    },
+  );
+  prepared.diagnostics.push(...validateChoiceFeedback(item));
+  return prepared;
 }

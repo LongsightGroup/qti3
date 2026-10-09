@@ -3,14 +3,51 @@ import type {
   Qti3ChoiceAuthoringItem,
   Qti3InlineChoiceAuthoringItem,
   Qti3ModalFeedbackEntry,
+  Qti3ResponseFeedback,
 } from "./types.js";
+import { escapeXmlAttribute } from "./xml.js";
+
+/**
+ * Inner processing rules that select CORRECT or INCORRECT from the complete response.
+ * Returns "" when no whole-response feedback is authored.
+ */
+export function responseFeedbackRulesXml(
+  responseIdentifiers: readonly string[],
+  feedback: Qti3ResponseFeedback | undefined,
+): string {
+  if (feedback === undefined) return "";
+  const outcome = escapeXmlAttribute((feedback.outcomeIdentifier ?? "RESPONSE_FEEDBACK").trim());
+  const matches = responseIdentifiers.map((id) => {
+    const identifier = escapeXmlAttribute(id.trim());
+    return `<qti-match><qti-variable identifier="${identifier}"/><qti-correct identifier="${identifier}"/></qti-match>`;
+  });
+  const answered = responseIdentifiers.map(
+    (id) =>
+      `<qti-not><qti-is-null><qti-variable identifier="${escapeXmlAttribute(id.trim())}"/></qti-is-null></qti-not>`,
+  );
+  const conjunction = (expressions: readonly string[]) =>
+    expressions.length === 1 ? expressions[0] : `<qti-and>${expressions.join("")}</qti-and>`;
+  const anyAnswered = answered.length === 1 ? answered[0] : `<qti-or>${answered.join("")}</qti-or>`;
+  const select = (identifier: "CORRECT" | "INCORRECT") =>
+    `<qti-set-outcome-value identifier="${outcome}"><qti-base-value base-type="identifier">${identifier}</qti-base-value></qti-set-outcome-value>`;
+  return `    <qti-set-outcome-value identifier="${outcome}"><qti-null/></qti-set-outcome-value>
+    <qti-response-condition>
+      <qti-response-if>
+        ${conjunction([...answered, ...matches])}
+        ${select("CORRECT")}
+      </qti-response-if>
+      <qti-response-else-if>
+        ${anyAnswered}
+        ${select("INCORRECT")}
+      </qti-response-else-if>
+    </qti-response-condition>`;
+}
 
 /** Lower exact-response explanations through the existing modal content contract. */
 export function prepareResponseFeedback(
   item: Qti3ChoiceAuthoringItem | Qti3InlineChoiceAuthoringItem,
-): PreparedFeedback | undefined {
-  const feedback = item.responseFeedback;
-  if (!feedback) return undefined;
+  feedback: Qti3ResponseFeedback,
+): PreparedFeedback {
   const outcomeIdentifier = feedback.outcomeIdentifier ?? "RESPONSE_FEEDBACK";
   const entries: Qti3ModalFeedbackEntry[] = [];
   const paths: string[] = [];
@@ -36,17 +73,6 @@ export function prepareResponseFeedback(
       entry: (index) => paths[index] ?? "responseFeedback",
     },
   );
-  if (
-    item.modalFeedback !== undefined ||
-    (item.interactionType === "choice" && item.feedback !== undefined)
-  ) {
-    prepared.diagnostics.push({
-      code: "conflicting_feedback_models",
-      path: "responseFeedback",
-      message:
-        "Use response feedback alone; another feedback model or custom processing must remain explicit.",
-    });
-  }
   if (
     item.interactionType === "choice" &&
     ((item.maxChoices !== undefined &&

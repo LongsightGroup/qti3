@@ -1,8 +1,9 @@
 import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import { placeRenderedBody, validateItemBodyTemplate } from "./item-body-template.js";
 import { authoringResponseIdentifiers } from "./interaction-responses.js";
-import { prepareResponseFeedback } from "./response-feedback.js";
+import { prepareChoiceFeedback } from "./choice-feedback.js";
 import { prepareModalFeedback, type PreparedFeedback } from "./modal-feedback.js";
+import { prepareResponseFeedback } from "./response-feedback.js";
 import { assessmentItemShell, type AssessmentItemShellInput } from "./shell.js";
 import {
   Qti3WriterError,
@@ -25,9 +26,35 @@ export function itemSections(
 }
 
 function prepareItemFeedback(item: Qti3AuthoringItem): PreparedFeedback {
-  if (item.interactionType === "choice" || item.interactionType === "inlineChoice") {
-    const responseFeedback = prepareResponseFeedback(item);
-    if (responseFeedback) return responseFeedback;
+  if (item.interactionType === "choice" && item.feedback) {
+    const prepared = prepareChoiceFeedback(item, item.feedback);
+    if (item.responseFeedback)
+      prepared.diagnostics.push({
+        code: "conflicting_feedback_models",
+        path: "responseFeedback",
+        message: "Use either selected-choice feedback or whole-response feedback on one item.",
+      });
+    if (item.modalFeedback)
+      prepared.diagnostics.push({
+        code: "conflicting_feedback_models",
+        path: "modalFeedback",
+        message: "Use either choice feedback or item-level modalFeedback on one item.",
+      });
+    return prepared;
+  }
+  if (
+    (item.interactionType === "choice" || item.interactionType === "inlineChoice") &&
+    item.responseFeedback
+  ) {
+    const prepared = prepareResponseFeedback(item, item.responseFeedback);
+    if (item.modalFeedback !== undefined)
+      prepared.diagnostics.push({
+        code: "conflicting_feedback_models",
+        path: "responseFeedback",
+        message:
+          "Use response feedback alone; another feedback model or custom processing must remain explicit.",
+      });
+    return prepared;
   }
   const responses = authoringResponseIdentifiers(item);
   const prepared = item.modalFeedback
