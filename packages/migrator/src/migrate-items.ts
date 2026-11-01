@@ -12,12 +12,7 @@ export function migrateItemXml(
   options: ResolvedQtiMigrationOptions,
 ): readonly PendingMigrationItem[] {
   if (sourceFormat === "qti12") {
-    return migrateQti12Xml(xml, path, options).map((result, index) => ({
-      identifier: result.authoringItem?.identifier ?? `ITEM_${index + 1}`,
-      title: result.authoringItem?.title ?? itemTitleFromXmlSafe(xml),
-      authoringItem: result.authoringItem,
-      diagnostics: result.diagnostics,
-    }));
+    return migrateQti12Xml(xml, path, options);
   }
   const result = migrateQti2ItemXml(xml, path, sourceFormat, options);
   return [

@@ -1,3 +1,5 @@
+import { prepareQti12Feedback } from "./qti12-feedback.js";
+import { qti12MetadataField } from "./qti12-classify.js";
 import type { Qti12ItemClassification } from "./qti12-classify.js";
 import { normalizeIdentifier } from "./text.js";
 import { diagnostic } from "./diagnostics.js";
@@ -13,6 +15,8 @@ import {
 } from "./xml.js";
 
 interface Qti12AnswerKey {
+  readonly maximumScore?: number | undefined;
+  readonly diagnostics?: readonly QtiMigrationDiagnostic[];
   readonly correct: ReadonlyMap<string, string[]>;
   readonly caseSensitive: ReadonlyMap<string, boolean>;
 }
@@ -26,23 +30,139 @@ export function prepareQti12Scoring(
   path: string,
   kind: Qti12ItemClassification["kind"],
 ): PreparedQti12Scoring {
+  let sourceBank = false;
+  for (let parent = item.parentNode; parent; parent = parent.parentNode) {
+    if (parent.nodeName.split(":").pop()?.toLowerCase() === "objectbank") sourceBank = true;
+  }
+  const prepared = prepareQti12Feedback(item);
+  if (!prepared.ok) return refuseScoring(path);
+  const scoring = prepareScoringProgram(prepared.item, path, kind, sourceBank);
+  if (!scoring.ok || !prepared.feedback) return scoring;
+  return {
+    ...scoring,
+    diagnostics: [
+      ...(scoring.diagnostics ?? []),
+      diagnostic(
+        "qti12_feedback_review",
+        "warning",
+        "Question content and scoring are retained. Source feedback remains in the original XML; configure its release and answer-specific explanations explicitly before delivery.",
+        { path, sourceFormat: "qti12" },
+      ),
+    ],
+  };
+}
+
+function prepareScoringProgram(
+  item: XmlElement,
+  path: string,
+  kind: Qti12ItemClassification["kind"],
+  sourceBank: boolean,
+): PreparedQti12Scoring {
+  const questionType = qti12MetadataField(item, "question_type");
+  const canvasChoice =
+    kind === "choice" &&
+    (questionType === "multiple_choice_question" || questionType === "true_false_question");
+  const points = qti12MetadataField(item, "points_possible")?.trim();
+  // An unassigned bank question still has an explicit 0..100 percentage program.
+  // Retain that source scale for review; the host blocks acceptance until real points are assigned.
+  const unassignedBankPoints =
+    canvasChoice && sourceBank && (points === undefined || points === "");
+  const maximumScore = unassignedBankPoints
+    ? 100
+    : canvasChoice &&
+        points &&
+        /^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/.test(points)
+      ? Number(points)
+      : undefined;
+  if (canvasChoice && (maximumScore === undefined || !Number.isFinite(maximumScore)))
+    return refuseScoring(path);
+  const award = canvasChoice ? 100 : 1;
   const processing = findAllDescendantsByLocalName(item, "resprocessing");
-  if (!processing.length) return { ok: true, correct: new Map(), caseSensitive: new Map() }; // Missing keys remain subject to the explicit repair policy.
+  if (!processing.length)
+    return canvasChoice
+      ? refuseScoring(path)
+      : { ok: true, correct: new Map(), caseSensitive: new Map() }; // Missing keys remain subject to the explicit repair policy.
   const block = processing[0];
   if (processing.length !== 1 || !block) return refuseScoring(path);
   const children = childElements(block);
   if (children.some((child) => !["outcomes", "respcondition"].includes(localName(child))))
     return refuseScoring(path);
   const conditions = children.filter((child) => localName(child) === "respcondition");
+  const canvasEssay =
+    kind === "essay" &&
+    (questionType === "essay_question" ||
+      (qti12MetadataField(item, "cc_profile") === "cc.essay.v0p1" &&
+        qti12MetadataField(item, "qmd_computerscored")?.toLowerCase() === "no"));
+  if (canvasEssay || (kind === "upload" && questionType === "file_upload_question")) {
+    const manualPoints = points === undefined ? undefined : Number(points);
+    if (
+      points !== undefined &&
+      (!/^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/.test(points) ||
+        !Number.isFinite(manualPoints))
+    )
+      return refuseScoring(path);
+    if (
+      !supportedDefaults(block, 0) ||
+      !conditions.every((condition) => {
+        const conditionChildren = childElements(condition);
+        if (
+          conditionChildren.length !== 1 ||
+          !conditionChildren[0] ||
+          localName(conditionChildren[0]) !== "conditionvar"
+        )
+          return false;
+        const predicates = childElements(conditionChildren[0]);
+        const predicate = predicates[0];
+        return (
+          predicates.length === 1 &&
+          predicate !== undefined &&
+          localName(predicate) === "other" &&
+          childElements(predicate).length === 0 &&
+          !textOf(predicate).trim()
+        );
+      })
+    )
+      return refuseScoring(path);
+    return {
+      ok: true,
+      correct: new Map(),
+      caseSensitive: new Map(),
+      maximumScore: manualPoints,
+      diagnostics:
+        manualPoints === undefined
+          ? []
+          : [
+              diagnostic(
+                "qti12_manual_points_review",
+                "warning",
+                `Manual grading is retained. Source maximum ${manualPoints} points is preserved in scorer guidance; configure the manual point ceiling in delivery.`,
+                { path, sourceFormat: "qti12" },
+              ),
+            ],
+    };
+  }
   if (conditions.length === 0) {
-    if (!supportedDefaults(block, 0)) return refuseScoring(path);
+    if (canvasChoice || !supportedDefaults(block, 0)) return refuseScoring(path);
     return { ok: true, correct: new Map(), caseSensitive: new Map() };
   }
   if (kind === "essay" || kind === "upload" || kind === "unsupported") return refuseScoring(path);
   const condition = conditions[0];
   if (conditions.length !== 1 || !condition) return refuseScoring(path);
-  if (!supportedDefaults(block, 1)) return refuseScoring(path);
-  const comparisons = parseCondition(item, condition);
+  if (!supportedDefaults(block, award)) return refuseScoring(path);
+  if (canvasChoice) {
+    const declarations = findAllDescendantsByLocalName(block, "decvar");
+    const pointFields = findAllDescendantsByLocalName(item, "qtimetadatafield").filter(
+      (field) =>
+        textOf(findDescendantByLocalName(field, "fieldlabel")).trim() === "points_possible",
+    );
+    if (
+      declarations.length !== 1 ||
+      (unassignedBankPoints ? pointFields.length > 1 : pointFields.length !== 1) ||
+      Number(attr(declarations[0], "maxvalue")) !== 100
+    )
+      return refuseScoring(path);
+  }
+  const comparisons = parseCondition(item, condition, award);
   if (!comparisons) return refuseScoring(path);
   const correct = new Map<string, string[]>();
   const caseSensitive = new Map<string, boolean>();
@@ -50,7 +170,22 @@ export function prepareQti12Scoring(
     correct.set(comparison.identifier, [comparison.value]);
     caseSensitive.set(comparison.identifier, comparison.caseSensitive);
   }
-  return { ok: true, correct, caseSensitive };
+  return {
+    ok: true,
+    correct,
+    caseSensitive,
+    maximumScore,
+    diagnostics: unassignedBankPoints
+      ? [
+          diagnostic(
+            "qti12_bank_points_unassigned",
+            "warning",
+            "This Canvas bank question has no assigned points. Its prompt, choices, answer key and original 0–100 percentage scoring scale are retained for review; 100 is not an assigned point ceiling. Assign points in the source bank or assessment and import again before delivery.",
+            { path, sourceFormat: "qti12" },
+          ),
+        ]
+      : [],
+  };
 }
 
 function refuseScoring(path: string): PreparedQti12Scoring {
@@ -60,14 +195,14 @@ function refuseScoring(path: string): PreparedQti12Scoring {
       diagnostic(
         "qti12_response_processing_unsupported",
         "error",
-        "QTI 1.2 scoring must be a single positive conjunction setting SCORE to 1 with a zero default; other predicates, scores, actions, or continuation programs cannot be preserved.",
+        "QTI 1.2 scoring or point metadata cannot be preserved by the supported conversion. Only explicit all-or-nothing answer programs with a zero default are accepted.",
         { path, sourceFormat: "qti12" },
       ),
     ],
   };
 }
 
-function supportedDefaults(item: XmlElement, maximum: 0 | 1): boolean {
+function supportedDefaults(item: XmlElement, maximum: number): boolean {
   if (
     findAllDescendantsByLocalName(item, "outcomes").some((entry) =>
       childElements(entry).some((child) => localName(child) !== "decvar"),
@@ -89,6 +224,7 @@ function supportedDefaults(item: XmlElement, maximum: 0 | 1): boolean {
 function parseCondition(
   item: XmlElement,
   condition: XmlElement,
+  award: number,
 ): readonly PositiveComparison[] | undefined {
   const children = childElements(condition);
   if (children.some((child) => !["conditionvar", "setvar"].includes(localName(child))))
@@ -104,7 +240,7 @@ function parseCondition(
     !predicate ||
     !["set", "add"].includes((attr(action, "action") ?? "Set").toLowerCase()) ||
     (attr(action, "varname") ?? "SCORE") !== "SCORE" ||
-    Number(textOf(action)) !== 1
+    Number(textOf(action)) !== award
   )
     return undefined;
   const nodes = parsePositiveConjunction(predicate);

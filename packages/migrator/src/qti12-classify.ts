@@ -38,6 +38,19 @@ export function classifyQti12Item(item: XmlElement): Qti12ItemClassification {
   const sakaiItemType = qti12MetadataField(item, "qmd_itemtype")?.toLowerCase();
 
   if (sakaiItemType === "essay") return { kind: "essay" };
+  if (
+    (canvasQuestionType === "essay_question" ||
+      (qti12MetadataField(item, "cc_profile") === "cc.essay.v0p1" &&
+        qti12MetadataField(item, "qmd_computerscored")?.toLowerCase() === "no")) &&
+    responseStrs.length === 1 &&
+    responseLids.length === 0 &&
+    responseNums.length === 0 &&
+    responseGrps.length === 0 &&
+    responseXys.length === 0 &&
+    responseStrs[0] &&
+    findDescendantByLocalName(responseStrs[0], "render_fib")
+  )
+    return { kind: "essay" };
 
   const hotspotResponse = [...responseLids, ...responseXys].find((response) =>
     findDescendantByLocalName(response, "render_hotspot"),
@@ -148,9 +161,12 @@ export function uploadAuthoringItem(
   identifier: string,
   title: string,
   bodyHtml: Qti3AuthoringItem["bodyHtml"],
+  rubricHtml?: Qti3AuthoringItem["bodyHtml"],
 ): Qti3AuthoringItem {
   return {
     interactionType: "upload",
+    externalScored: "human",
+    rubricHtml,
     identifier,
     title,
     bodyHtml,
@@ -162,9 +178,12 @@ export function essayAuthoringItem(
   identifier: string,
   title: string,
   bodyHtml: Qti3AuthoringItem["bodyHtml"],
+  rubricHtml?: Qti3AuthoringItem["bodyHtml"],
 ): Qti3AuthoringItem {
   return {
     interactionType: "extendedText",
+    externalScored: "human",
+    rubricHtml,
     identifier,
     title,
     bodyHtml,

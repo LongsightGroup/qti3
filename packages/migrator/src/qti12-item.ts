@@ -1,3 +1,4 @@
+import type { PendingMigrationItem } from "./item-finalize.js";
 import type { Qti3AuthoringItem } from "@longsightgroup/qti3-writer";
 
 import { assertNever } from "@longsightgroup/qti3-core";
@@ -7,6 +8,7 @@ import { prepareQti12Content } from "./qti12-body.js";
 import { qti3TrustedXmlFragment } from "@longsightgroup/qti3-writer";
 import {
   classifyQti12Item,
+  qti12MetadataField,
   essayAuthoringItem,
   unsupportedQti12Item,
   uploadAuthoringItem,
@@ -23,6 +25,8 @@ import { normalizeIdentifier } from "./text.js";
 import type { QtiMigrationDiagnostic, ResolvedQtiMigrationOptions } from "./types.js";
 import {
   attr,
+  childElements,
+  textOf,
   findAllDescendantsByLocalName,
   findDescendantByLocalName,
   localName,
@@ -34,10 +38,7 @@ export function migrateQti12Xml(
   xml: string,
   path: string,
   options: ResolvedQtiMigrationOptions,
-): readonly {
-  authoringItem?: Qti3AuthoringItem | undefined;
-  diagnostics: readonly QtiMigrationDiagnostic[];
-}[] {
+): readonly PendingMigrationItem[] {
   const doc = parseXml(xml, path);
   const root = doc.documentElement;
   const itemElements =
@@ -45,6 +46,8 @@ export function migrateQti12Xml(
   if (!itemElements.length) {
     return [
       {
+        identifier: "ITEM_1",
+        title: "Imported Item",
         diagnostics: [
           diagnostic("qti12_item_missing", "error", "No QTI 1.2 item elements found.", {
             path,
@@ -54,21 +57,80 @@ export function migrateQti12Xml(
       },
     ];
   }
-  return itemElements.map((item, index) => migrateQti12ItemElement(item, index, path, options));
+  const sourceGroups = findAllDescendantsByLocalName(root, "section").flatMap((section, index) => {
+    const ordering = childElements(section).find(
+      (child) => localName(child) === "selection_ordering",
+    );
+    if (!ordering) return [];
+    return [
+      {
+        identifier: attr(section, "ident") ?? `GROUP_${index + 1}`,
+        title: attr(section, "title")?.trim() || `Group ${index + 1}`,
+        selectionNumber: textOf(findDescendantByLocalName(ordering, "selection_number")).trim(),
+        pointsPerItem: textOf(findDescendantByLocalName(ordering, "points_per_item")).trim(),
+        sourceBankRef: textOf(findDescendantByLocalName(ordering, "sourcebank_ref")).trim(),
+        itemIdentifiers: findAllDescendantsByLocalName(section, "item").map((item) =>
+          normalizeIdentifier(attr(item, "ident"), `ITEM_${itemElements.indexOf(item) + 1}`),
+        ),
+      },
+    ];
+  });
+  return itemElements.map((item, index) => {
+    const identifier = normalizeIdentifier(attr(item, "ident"), `ITEM_${index + 1}`);
+    const title = attr(item, "title")?.trim() || `Item ${index + 1}`;
+    const migrated = migrateQti12ItemElement(item, identifier, title, path, options);
+    return {
+      identifier,
+      title,
+      ...migrated,
+      qti12SourceGroups: index === 0 ? sourceGroups : undefined,
+    };
+  });
 }
 
 function migrateQti12ItemElement(
   item: XmlElement,
-  index: number,
+  identifier: string,
+  title: string,
   path: string,
   options: ResolvedQtiMigrationOptions,
 ): {
+  standaloneHtml?: string | undefined;
   authoringItem?: Qti3AuthoringItem | undefined;
   diagnostics: readonly QtiMigrationDiagnostic[];
 } {
-  const identifier = normalizeIdentifier(attr(item, "ident"), `ITEM_${index + 1}`);
-  const title = attr(item, "title")?.trim() || `Item ${index + 1}`;
-  const presentation = findDescendantByLocalName(item, "presentation");
+  if (
+    qti12MetadataField(item, "question_type") === "text_only_question" &&
+    qti12MetadataField(item, "passage") === "true"
+  ) {
+    const points = qti12MetadataField(item, "points_possible");
+    const hasResponse = [
+      "response_lid",
+      "response_str",
+      "response_num",
+      "response_grp",
+      "response_xy",
+      "resprocessing",
+    ].some((name) => findAllDescendantsByLocalName(item, name).length > 0);
+    if (hasResponse || (points !== undefined && points.trim() !== "0"))
+      return {
+        diagnostics: [
+          diagnostic(
+            "qti12_response_processing_unsupported",
+            "error",
+            "A text-only passage cannot declare responses, scoring or nonzero points.",
+            { path, sourceFormat: "qti12" },
+          ),
+        ],
+      };
+    const prepared = prepareQti12Content(item, path);
+    if (!prepared.ok) return { diagnostics: prepared.diagnostics };
+    const presentation = findDescendantByLocalName(item, "presentation");
+    return {
+      standaloneHtml: presentation ? prepared.content.materialHtml(presentation) : "<p></p>",
+      diagnostics: [],
+    };
+  }
   const classification = classifyQti12Item(item);
   const responseCount = [
     "response_lid",
@@ -95,6 +157,31 @@ function migrateQti12ItemElement(
   }
   const scoring = prepareQti12Scoring(item, path, classification.kind);
   if (!scoring.ok) return { diagnostics: scoring.diagnostics };
+  const mapped = mapScoredQti12Item(
+    item,
+    identifier,
+    title,
+    path,
+    options,
+    classification,
+    scoring,
+  );
+  return { ...mapped, diagnostics: [...mapped.diagnostics, ...(scoring.diagnostics ?? [])] };
+}
+
+function mapScoredQti12Item(
+  item: XmlElement,
+  identifier: string,
+  title: string,
+  path: string,
+  options: ResolvedQtiMigrationOptions,
+  classification: ReturnType<typeof classifyQti12Item>,
+  scoring: Extract<ReturnType<typeof prepareQti12Scoring>, { readonly ok: true }>,
+): {
+  authoringItem?: Qti3AuthoringItem | undefined;
+  diagnostics: readonly QtiMigrationDiagnostic[];
+} {
+  const presentation = findDescendantByLocalName(item, "presentation");
   const correct = scoring.correct;
   const prepared = prepareQti12Content(item, path);
   if (!prepared.ok) return { diagnostics: prepared.diagnostics };
@@ -105,7 +192,19 @@ function migrateQti12ItemElement(
 
   switch (classification.kind) {
     case "essay":
-      return { authoringItem: essayAuthoringItem(identifier, title, bodyHtml), diagnostics: [] };
+      return {
+        authoringItem: essayAuthoringItem(
+          identifier,
+          title,
+          bodyHtml,
+          scoring.maximumScore === undefined
+            ? undefined
+            : qti3TrustedXmlFragment(
+                `<p>Manual grading. Source maximum: ${scoring.maximumScore} points.</p>`,
+              ),
+        ),
+        diagnostics: [],
+      };
     case "hotspot":
       return mapQti12Hotspot(
         identifier,
@@ -149,6 +248,7 @@ function migrateQti12ItemElement(
         correct,
         options,
         path,
+        scoring.maximumScore,
       );
     case "textEntry":
       return mapQti12TextEntry(
@@ -164,7 +264,16 @@ function migrateQti12ItemElement(
       );
     case "upload":
       return {
-        authoringItem: uploadAuthoringItem(identifier, title, bodyHtml),
+        authoringItem: uploadAuthoringItem(
+          identifier,
+          title,
+          bodyHtml,
+          scoring.maximumScore === undefined
+            ? undefined
+            : qti3TrustedXmlFragment(
+                `<p>Manual grading. Source maximum: ${scoring.maximumScore} points.</p>`,
+              ),
+        ),
         diagnostics: [],
       };
     case "unsupported":

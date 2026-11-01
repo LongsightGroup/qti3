@@ -1,3 +1,4 @@
+import { DOMParser, onErrorStopParsing } from "@xmldom/xmldom";
 import { escapeXmlAttribute, escapeXmlText } from "@longsightgroup/qti3-core";
 import { diagnostic } from "./diagnostics.js";
 import type { QtiMigrationDiagnostic } from "./types.js";
@@ -6,7 +7,6 @@ import {
   childElements,
   findAllDescendantsByLocalName,
   localName,
-  parseXml,
   serializeChildren,
   type XmlElement,
 } from "./xml.js";
@@ -33,15 +33,21 @@ export function prepareQti12Content(
         if (type === "text/plain") {
           parts.push(`<p>${escapeXmlText(component.textContent ?? "")}</p>`);
         } else if (type === "text/html") {
-          // Support well-formed XHTML fragments. Do not guess missing tags or decode twice.
+          // Canvas exports HTML fragments: decode HTML entities and normalize HTML void elements.
+          // The enclosing QTI document remains strictly parsed as XML.
           const markup = childElements(component).length
             ? serializeChildren(component)
             : (component.textContent ?? "");
           try {
-            const parsed = parseXml(`<div>${markup}</div>`, "QTI 1.2 HTML material");
-            parts.push(`<div>${serializeChildren(parsed.documentElement)}</div>`);
+            const parsed = new DOMParser({ onError: onErrorStopParsing }).parseFromString(
+              `<div xmlns="">${markup}</div>`,
+              "text/html",
+            );
+            const htmlRoot = parsed.documentElement;
+            if (!htmlRoot) throw new Error("HTML material has no root.");
+            parts.push(`<div>${serializeChildren(htmlRoot)}</div>`);
           } catch {
-            return refused(path, "HTML material must be a well-formed XHTML fragment.");
+            return refused(path, "HTML material could not be parsed safely.");
           }
         } else return refused(path, `Unsupported mattext content type "${type}".`);
       } else if (name === "matimage") {
@@ -61,8 +67,11 @@ export function prepareQti12Content(
       materialHtml(element) {
         const direct = fragments.get(element);
         if (direct !== undefined) return direct;
-        const materials = findAllDescendantsByLocalName(element, "material");
-        if (!materials.length) return serializeChildren(element).trim() || "<p></p>";
+        const materials = ownedMaterials(element);
+        if (!materials.length)
+          return localName(element) === "presentation"
+            ? "<p></p>"
+            : serializeChildren(element).trim() || "<p></p>";
         return materials
           .map((material) => {
             const fragment = fragments.get(material);
@@ -82,4 +91,19 @@ function refused(path: string, message: string) {
       diagnostic("qti12_material_not_preserved", "error", message, { path, sourceFormat: "qti12" }),
     ],
   } as const;
+}
+
+/** Response interactions own their materials; presentation flow wrappers only own their stem. */
+function ownedMaterials(root: XmlElement): XmlElement[] {
+  const materials: XmlElement[] = [];
+  for (const child of childElements(root)) {
+    const name = localName(child);
+    if (
+      ["response_lid", "response_str", "response_num", "response_grp", "response_xy"].includes(name)
+    )
+      continue;
+    if (name === "material") materials.push(child);
+    else materials.push(...ownedMaterials(child));
+  }
+  return materials;
 }

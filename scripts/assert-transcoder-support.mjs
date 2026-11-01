@@ -29,6 +29,7 @@ if (qtiTranscoderSupportMatrix.length !== profiles.length * interactions.length)
 
 const fidelityRefusalCodes = new Set([
   "qti12_response_processing_unsupported",
+  "qti12_material_not_preserved",
   "qti2_response_processing_not_preserved",
   "qti2_outcomes_not_preserved",
   "qti2_match_min_not_preserved",

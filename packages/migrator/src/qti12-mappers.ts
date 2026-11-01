@@ -119,6 +119,7 @@ export function mapQti12Choice(
   correct: ReadonlyMap<string, string[]>,
   options: ResolvedQtiMigrationOptions,
   path: string,
+  maximumScore?: number,
 ): Qti12MapperResult {
   const sourceResponseIdentifier = normalizeIdentifier(attr(response, "ident"), "RESPONSE");
   const { source, target: responseIdentifier } = qti12ResponseIdentifiers(sourceResponseIdentifier);
@@ -143,6 +144,7 @@ export function mapQti12Choice(
   return {
     authoringItem: {
       interactionType: "choice",
+      maximumScore,
       identifier,
       title,
       bodyHtml,

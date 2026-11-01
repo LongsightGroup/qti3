@@ -6,7 +6,7 @@
 - Scoring policy: manual
 - Fallback: extended-text
 - Golden SHA-256: `dcae34b90716026e0427a7dc1577dacc8be4f5be61f87b0bcb8483a32db89959`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/choice`
 
@@ -14,7 +14,7 @@
 - Scoring policy: automatic
 - Fallback: —
 - Golden SHA-256: `4be0dddfc91cda3d603b13cad918f2b1cfe434000c6d615eea9aabb58789eb08`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/custom`
 
@@ -22,7 +22,7 @@
 - Scoring policy: manual
 - Fallback: extended-text
 - Golden SHA-256: `3453fc9d58aa834fa8f4fd5df25bdf0fc3afe13c189ee08e5d657068c94a695a`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/drawing`
 
@@ -30,7 +30,7 @@
 - Scoring policy: manual
 - Fallback: extended-text
 - Golden SHA-256: `eadf91ad7e37a8145f16e86b0d97ce36410548b558c7b92dd341a0ad2c42303c`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/endAttempt`
 
@@ -38,7 +38,7 @@
 - Scoring policy: manual
 - Fallback: extended-text
 - Golden SHA-256: `685867bbf92354cf0f67aeda58a8d4f86516e3123bd72422771790d0f5ab625a`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/extendedText`
 
@@ -46,7 +46,7 @@
 - Scoring policy: manual
 - Fallback: —
 - Golden SHA-256: `9cc10dfc4849ad7f3aace21283e131ac91b7d1baa7b04d890315727beda0a916`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/gapMatch`
 
@@ -94,7 +94,7 @@
 - Scoring policy: automatic
 - Fallback: choice
 - Golden SHA-256: `ac820e96b230eaecd8c4e063f20b68725d214802f18e198417c13bcb640565f0`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/inlineChoice`
 
@@ -118,7 +118,7 @@
 - Scoring policy: manual
 - Fallback: extended-text
 - Golden SHA-256: `cd90938a5b58ac726ec377e34d6a342db5f8fe5443fed4edb4dd16d012824b37`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_material_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/order`
 
@@ -134,7 +134,7 @@
 - Scoring policy: manual
 - Fallback: extended-text
 - Golden SHA-256: `23eeb48dead2b8a3ee04228c059dc452a84e84eb591a6508b8b1ed2885a6b748`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_material_not_preserved, behavior, visible-content, assets, keyboard, accessibility
 
 ## `canvas-classic-quizzes@1/positionObject`
 
@@ -174,4 +174,4 @@
 - Scoring policy: manual
 - Fallback: —
 - Golden SHA-256: `93183bf5d485e1a78c16f4e88174cc3f5aabbe67dc7babe61604e025e5e514d0`
-- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration-unsupported:qti12_response_processing_unsupported, behavior, visible-content, assets, keyboard, accessibility
+- Executed evidence: source-semantic, target-semantic, golden-fixture, reverse-migration, behavior, visible-content, assets, keyboard, accessibility

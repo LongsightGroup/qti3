@@ -65,7 +65,20 @@ export interface QtiMigrationAsset {
   readonly mediaType?: string | undefined;
 }
 
+/** Original Canvas selection groups; these are evidence, not a fixed-test selection program. */
+export interface Qti12SourceGroup {
+  readonly identifier: string;
+  readonly title: string;
+  readonly selectionNumber: string;
+  readonly pointsPerItem: string;
+  readonly sourceBankRef: string;
+  readonly itemIdentifiers: readonly string[];
+}
+
 export interface QtiMigrationItemResult {
+  /** Unscored source passage, projected by the host as ordered standalone content. */
+  readonly standaloneHtml?: string | undefined;
+  readonly qti12SourceGroups?: readonly Qti12SourceGroup[] | undefined;
   readonly identifier: string;
   readonly title: string;
   readonly href: string;

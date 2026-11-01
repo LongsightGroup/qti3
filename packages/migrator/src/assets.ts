@@ -5,7 +5,7 @@ import type { QtiMigrationAsset } from "./types.js";
 
 export function migrationPackageAssets(entries: readonly MigrationEntry[]): QtiMigrationAsset[] {
   return entries
-    .filter((entry) => !entry.path.toLowerCase().endsWith(".xml"))
+    .filter((entry) => !/\.xml(?:\.qti)?$/i.test(entry.path))
     .map((entry) => ({
       path: entry.path,
       data: entry.bytes,

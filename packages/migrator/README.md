@@ -175,3 +175,12 @@ maximum metadata alone never authorizes replacing a custom program.
 Brightspace retains its configured dropdown-to-text-answer downgrade and loss
 receipt. A useful downgraded export does not establish a lossless dropdown
 re-import; the conservative importer refuses programs it cannot reproduce.
+
+Canvas/Sakai QTI 1.x conversion preserves item-owned identity, supported percentage-to-point
+scoring, manual essay/upload grading and HTML material. Recognized feedback instructions are
+separated from scoring with an explicit fidelity diagnostic; unsupported control flow is rejected.
+Source random-group draw/point metadata is returned as `qti12SourceGroups`. Explicit unscored
+Canvas passages return `standaloneHtml`, without an invented essay response. Hosts decide how
+to project these source structures and diagnostics into their authoring/review model.
+Blank Canvas object-bank points retain the original percentage scale with an unassigned-points
+diagnostic; the host must not treat that percentage scale as an assigned point ceiling.
