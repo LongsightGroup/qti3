@@ -298,6 +298,8 @@ export interface Qti3GapTarget {
 }
 
 export interface Qti3GapMatchPair {
+  /** Explicit map-response points for this pair; omission preserves one-point mapping. */
+  readonly score?: number | undefined;
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
 }
@@ -454,11 +456,14 @@ export interface Qti3MatchChoice {
 }
 
 export interface Qti3MatchPair {
+  /** Explicit map-response points for this pair; omission preserves one-point mapping. */
+  readonly score?: number | undefined;
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
 }
 
 export interface Qti3MatchAuthoringItem extends Qti3AuthoringItemBase {
+  readonly scoring?: Qti3ResponseProcessingTemplate | undefined;
   readonly interactionType: "match";
   readonly sources: readonly Qti3MatchChoice[];
   readonly targets: readonly Qti3MatchChoice[];

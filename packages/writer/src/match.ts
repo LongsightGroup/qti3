@@ -24,6 +24,7 @@ import {
 import type { Qti3MatchBuilderInput, Qti3WriterDiagnostic } from "./types.js";
 import {
   pairResponseDeclarationXml,
+  validatePairScores,
   validatePairMatchMax,
   validatePairReferences,
 } from "./pair-declaration.js";
@@ -54,6 +55,7 @@ export function renderQti3MatchItem(input: Qti3MatchBuilderInput): RenderedItemS
     responseIdentifier: escapedResponseIdentifier,
     baseType: "directedPair",
     pairs: input.correctResponse,
+    scoring: input.scoring,
   });
   const interactionAttrs = interactionAttributeList({
     responseIdentifier: escapedResponseIdentifier,
@@ -99,7 +101,10 @@ ${input.targets
   return itemSections(input, {
     declarationsXml,
     bodyXml,
-    responseProcessingXml: standardResponseProcessingXml(responseIdentifier, "match_correct"),
+    responseProcessingXml: standardResponseProcessingXml(
+      responseIdentifier,
+      input.scoring ?? "match_correct",
+    ),
   });
 }
 
@@ -107,6 +112,7 @@ export function validateQti3MatchItemStructure(
   input: Qti3MatchBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
+  validatePairScores(input.correctResponse, input.scoring ?? "match_correct", diagnostics);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
     "responseIdentifier",

@@ -14,6 +14,7 @@ import {
 } from "./interaction-shell.js";
 import {
   pairResponseDeclarationXml,
+  validatePairScores,
   validatePairMatchMax,
   validatePairReferences,
 } from "./pair-declaration.js";
@@ -118,6 +119,7 @@ export function validateQti3GapMatchItemStructure(
   input: Qti3GapMatchBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
+  validatePairScores(input.correctResponse, input.scoring ?? "map_response", diagnostics);
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
     "responseIdentifier",

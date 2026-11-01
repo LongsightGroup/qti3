@@ -3,6 +3,7 @@ import type { Qti3ResponseProcessingTemplate, Qti3WriterDiagnostic } from "./typ
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export interface Qti3PairLike {
+  readonly score?: number | undefined;
   readonly sourceIdentifier: string;
   readonly targetIdentifier: string;
 }
@@ -64,7 +65,7 @@ export function pairMappingXml(
 ${pairs
   .map(
     (pair) =>
-      `    <qti-map-entry map-key="${escapeXmlAttribute(pairValue(pair))}" mapped-value="1"/>`,
+      `    <qti-map-entry map-key="${escapeXmlAttribute(pairValue(pair))}" mapped-value="${String(pair.score ?? 1)}"/>`,
   )
   .join("\n")}
   </qti-mapping>
@@ -169,4 +170,23 @@ function incrementUseCount(counts: Map<string, number>, identifier: string): voi
 
 function normalizedUnorderedPairKey(pair: Qti3PairLike): string {
   return [pair.sourceIdentifier.trim(), pair.targetIdentifier.trim()].toSorted().join(" ");
+}
+
+/** Reject invalid pair weights and configurations that would silently ignore them. */
+export function validatePairScores(
+  pairs: readonly Qti3PairLike[],
+  scoring: Qti3ResponseProcessingTemplate,
+  diagnostics: Qti3WriterDiagnostic[],
+): void {
+  for (const [index, pair] of pairs.entries()) {
+    if (pair.score === undefined) continue;
+    if (!Number.isFinite(pair.score) || scoring !== "map_response")
+      diagnostics.push(
+        writerDiagnostic(
+          "invalid_pair_score",
+          `correctResponse.${index}.score`,
+          "Explicit finite pair scores require map_response scoring.",
+        ),
+      );
+  }
 }
