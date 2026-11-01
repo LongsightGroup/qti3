@@ -27,6 +27,7 @@ import type {
 
 export { detectQtiMigrationSource, migrateQtiResourceToQti3 };
 export type {
+  Qti12SourceGroup,
   QtiMigrationAsset,
   QtiMigrationDetectionResult,
   QtiMigrationDiagnostic,

@@ -156,7 +156,7 @@ export function detectMigrationSource(source: MigrationSource): QtiMigrationDete
         isPackage: true,
       };
     }
-    return detectManifest(manifest.text);
+    return detectManifest(manifest.text, source.entries);
   }
   if (!source.xml) {
     return { supported: false, confidence: 0, reason: "xml-missing", isPackage: false };
@@ -215,7 +215,10 @@ export function parseMigratableManifest(xml: string): MigratableManifest {
   return { title, resources, diagnostics };
 }
 
-function detectManifest(xml: string): QtiMigrationDetectionResult {
+function detectManifest(
+  xml: string,
+  entries: readonly MigrationEntry[],
+): QtiMigrationDetectionResult {
   const manifest = parseMigratableManifest(xml);
   const typeText = manifest.resources.map((resource) => resource.type.toLowerCase()).join(" ");
   if (typeText.includes("v2p2")) {
@@ -242,6 +245,32 @@ function detectManifest(xml: string): QtiMigrationDetectionResult {
       sourceFormat: "qti12",
       confidence: 0.85,
       reason: "manifest-qti12",
+      isPackage: true,
+    };
+  }
+  // Sakai content packaging labels its embedded questestinterop resource as 1.1.
+  // Confirm the payload before routing that resource through the QTI 1.x mapper.
+  const sakaiResources = manifest.resources.filter(
+    (resource) => resource.type.toLowerCase() === "imsqti_xmlv1p1",
+  );
+  if (
+    sakaiResources.length > 0 &&
+    sakaiResources.every((resource) => {
+      const path = resource.href?.replace(/^\.\//, "");
+      const entry = entries.find((candidate) => candidate.path === path);
+      if (!entry?.text) return false;
+      const root = parseXml(entry.text, entry.path).documentElement;
+      return (
+        localName(root) === "questestinterop" &&
+        findAllDescendantsByLocalName(root, "item").length > 0
+      );
+    })
+  ) {
+    return {
+      supported: true,
+      sourceFormat: "qti12",
+      confidence: 0.85,
+      reason: "manifest-sakai-qti12",
       isPackage: true,
     };
   }
@@ -313,7 +342,11 @@ function classifyMigratableResource(type: string): MigratableManifestResourceKin
     return "item";
   }
   if (value.includes("imsqti_test_xmlv2")) return "test";
-  if (value.includes("imsqti_xmlv1p2") || value.includes("qti_xmlv1p2")) {
+  if (
+    value === "imsqti_xmlv1p1" ||
+    value.includes("imsqti_xmlv1p2") ||
+    value.includes("qti_xmlv1p2")
+  ) {
     return "qti12-container";
   }
   return "other";

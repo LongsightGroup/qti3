@@ -12,6 +12,8 @@ import type { QtiMigrationDiagnostic, QtiMigrationItemResult } from "./types.js"
 import type { ResolvedQtiMigrationOptions } from "./types.js";
 
 export interface PendingMigrationItem {
+  readonly standaloneHtml?: string | undefined;
+  readonly qti12SourceGroups?: QtiMigrationItemResult["qti12SourceGroups"];
   readonly identifier: string;
   readonly title: string;
   readonly authoringItem?: Qti3AuthoringItem | undefined;
@@ -47,6 +49,25 @@ export function finalizeItemResult(
   href: string,
   options: ResolvedQtiMigrationOptions,
 ): QtiMigrationItemResult {
+  return {
+    ...finalizeItemContent(pending, href, options),
+    qti12SourceGroups: pending.qti12SourceGroups,
+  };
+}
+
+function finalizeItemContent(
+  pending: PendingMigrationItem,
+  href: string,
+  options: ResolvedQtiMigrationOptions,
+): QtiMigrationItemResult {
+  if (pending.standaloneHtml !== undefined && !hasErrors(pending.diagnostics))
+    return {
+      identifier: pending.identifier,
+      title: pending.title,
+      href,
+      standaloneHtml: pending.standaloneHtml,
+      diagnostics: pending.diagnostics,
+    };
   const diagnostics = [...pending.diagnostics];
   if (pending.authoringItem && !hasErrors(diagnostics)) {
     const writer = writeQti3AssessmentItemResult(pending.authoringItem);
