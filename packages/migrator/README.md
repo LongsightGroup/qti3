@@ -1,6 +1,6 @@
 # @longsightgroup/qti3-migrator
 
-Framework-neutral QTI 1.2 and QTI 2.x to QTI 3 migration utilities.
+Framework-neutral legacy QTI, Moodle XML, and GIFT to QTI 3 migration utilities.
 
 QTI 1.2 items with multiple responses are rejected with
 `qti12_composite_responses_unsupported` unless the mapper handles every response
@@ -146,7 +146,7 @@ with a zero default, over the supported single-response forms. Negation, alterna
 conditions, weighted/additive scores, and unpreserved defaults return
 `qti12_response_processing_unsupported`, including under `repairPolicy: "safe"`.
 For example, Canvas matching conditions that add 50 points per pair are rejected;
-they cannot be represented by the writer's all-or-nothing matching model.
+the legacy mapper does not yet translate their weighted source program to writer mappings.
 
 String correct responses and text-entry mapping keys preserve significant whitespace.
 
@@ -184,3 +184,58 @@ Canvas passages return `standaloneHtml`, without an invented essay response. Hos
 to project these source structures and diagnostics into their authoring/review model.
 Blank Canvas object-bank points retain the original percentage scale with an unassigned-points
 diagnostic; the host must not treat that percentage scale as an assigned point ceiling.
+
+## Moodle XML and GIFT
+
+Use an explicit source entry point when the format is known:
+
+```ts
+import { migrateMoodleXmlToQti3, migrateGiftToQti3 } from "@longsightgroup/qti3-migrator";
+
+const moodle = migrateMoodleXmlToQti3({ filename: "questions.xml", bytes: moodleBytes });
+const gift = migrateGiftToQti3({ filename: "questions.gift", xml: giftText });
+
+for (const item of moodle.items) {
+  if (item.xml) {
+    // Validated QTI 3; item.authoringItem is the corresponding writer model.
+  }
+  // Always inspect item.diagnostics and retain the original source.
+}
+```
+
+Both synchronous APIs return `LmsMigrationResult`. They accept exactly one UTF-8
+`bytes` or `xml` input and return source-owned diagnostics for malformed input.
+They do not change `detectQtiSource` or the legacy QTI package entry points.
+
+Supported source shapes include single/equal-share multiple choice, true/false,
+exact short/numerical answers, manual essays, matching, homogeneous Cloze blanks,
+and GIFT missing-word blanks. Moodle also supports all-or-nothing ordering and
+text drag gaps. Cloze weights, alternate-answer grades, case sensitivity, shuffle
+aliases, matching partial credit, repeated drag targets, and source point scales
+are retained. Matching/gap pairs use explicit writer mapping weights; omitted
+pair weights in existing writer callers still mean one point.
+
+Moodle base64 files are scoped to their owning content field. References become
+package-relative URLs, preserving escaped names. Missing or invalid required media
+blocks the owning item. `assets` contains the extracted bytes and paths. These APIs
+do not produce a ZIP or choose an assessment's delivery structure.
+
+`sourceMetadata` retains category, tags, maximum marks when explicit, source settings,
+and feedback/hint annotations. Annotation content includes normalized HTML, format,
+and behavior flags without duplicating embedded binary data. Plain combined choice
+feedback can become writer response feedback. Other feedback, hints, essay limits,
+ordering subset selection and drag group restrictions have explicit diagnostics;
+hosts must decide how to present and apply them. Description records return
+`standaloneHtml` with no invented scored interaction.
+
+Unsupported penalties/unequal choice mappings, tolerance/range/unit programs,
+wildcard answers, mixed Cloze/GIFT interaction composition, multi-response Cloze,
+and unsupported ordering grading return errors with no converted XML by default.
+`unsupportedPolicy: "stub"` explicitly requests review stubs and retains those
+errors; a stub is not a faithful conversion. Unsupported formatting is retained
+as literal text with a warning. Executable source markup is rejected.
+
+The host owns source retention, review acceptance, draft projection, persistence,
+student preview and delivery policy. No application editor or storage types are
+part of these APIs. Synthetic source-shaped scoring and schema regressions live in
+`lms-migration.test.ts` and `pair-scores.test.ts`.

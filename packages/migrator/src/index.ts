@@ -260,3 +260,12 @@ function partFromItems(
 ): QtiMigrationPart {
   return { identifier, title, itemHrefs: items.map((item) => item.href) };
 }
+
+export { migrateMoodleXmlToQti3 } from "./lms/moodle.js";
+export { migrateGiftToQti3 } from "./lms/gift.js";
+export type {
+  LmsMigrationItem,
+  LmsMigrationResult,
+  LmsSourceAnnotation,
+  LmsSourceMetadata,
+} from "./lms/types.js";

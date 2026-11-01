@@ -144,6 +144,8 @@ try {
       "packages/writer/src/response-feedback.test.ts",
       "packages/writer/src/human-grading.test.ts",
       "packages/migrator/src/legacy-lms-fidelity.test.ts",
+      "packages/migrator/src/lms-migration.test.ts",
+      "packages/writer/src/pair-scores.test.ts",
       "tests/fixtures/feedback-release.test.ts",
       "packages/transcoder/src/zero-point-export.test.ts",
       "packages/transcoder/src/canvas-point-precision.test.ts",
