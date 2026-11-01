@@ -9,7 +9,7 @@ import type {
   QtiPackageContentAssetDiscovery,
   QtiPackageItem,
 } from "./qti-package-types.js";
-import { packageDescendants, resolvePackageHref, type PackageXmlFile } from "./qti-package-xml.js";
+import { packageDescendants, type PackageXmlFile } from "./qti-package-xml.js";
 import type { QtiDiagnostic } from "./types.js";
 
 interface PendingAssetReference {
@@ -222,7 +222,35 @@ function resolveContentAssetHref(
     return normalizePackagePath(href, "package asset reference", diagnostics);
   }
   if (!isResolvableAssetUrl(href)) return undefined;
-  return resolvePackageHref(sourcePath, href, diagnostics);
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(href.split(/[?#]/, 1)[0] ?? "");
+  } catch {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.asset.invalid",
+      "error",
+      "Package asset URL has invalid percent encoding.",
+      sourcePath,
+    );
+    return undefined;
+  }
+  if (decoded.includes("\\") || decoded.includes("\0")) {
+    pushPackageDiagnostic(
+      diagnostics,
+      "package.asset.invalid",
+      "error",
+      "Package asset URL contains an invalid path separator or null byte.",
+      sourcePath,
+    );
+    return undefined;
+  }
+  // Decode only the URL path. A literal encoded question mark or hash belongs to the file name.
+  // Validate the decoded path before joining so encoded absolute URLs cannot become local assets.
+  if (decoded.startsWith("/") || /^[a-z][a-z0-9+.-]*:/i.test(decoded))
+    return normalizePackagePath(decoded, "package asset reference", diagnostics);
+  const base = sourcePath.includes("/") ? sourcePath.slice(0, sourcePath.lastIndexOf("/") + 1) : "";
+  return normalizePackagePath(`${base}${decoded}`, "package asset reference", diagnostics);
 }
 
 function materializeAssets(
