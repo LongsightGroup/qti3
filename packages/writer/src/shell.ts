@@ -13,6 +13,7 @@ export interface AssessmentItemShellInput extends Pick<
   readonly responseProcessingXml: string;
   readonly companionMaterialsXml?: string | undefined;
   readonly scoreDefaultZero?: boolean | undefined;
+  readonly externalScored?: "human" | undefined;
   /** An explicit writer-generated maximum; zero is conveyed by MAXSCORE, not normal-maximum. */
   readonly maximumScore?: number | undefined;
 }
@@ -27,13 +28,14 @@ export function assessmentItemShell(input: AssessmentItemShellInput): string {
     input.maximumScore !== undefined && input.maximumScore > 0
       ? ` normal-maximum="${String(input.maximumScore)}"`
       : "";
+  const externalAttribute = input.externalScored === "human" ? ' external-scored="human"' : "";
   const outcomeDeclarationXml = input.scoreDefaultZero
-    ? `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"${maximumAttribute}>
+    ? `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"${maximumAttribute}${externalAttribute}>
     <qti-default-value>
       <qti-value>0</qti-value>
     </qti-default-value>
   </qti-outcome-declaration>`
-    : `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"${maximumAttribute}/>`;
+    : `  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"${maximumAttribute}${externalAttribute}/>`;
   const maximumDeclarationXml =
     input.maximumScore === undefined
       ? ""

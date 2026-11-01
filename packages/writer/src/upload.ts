@@ -1,3 +1,4 @@
+import { validateManualScoring } from "./manual-scoring.js";
 import {
   isPositiveInteger,
   validateItemBase,
@@ -19,6 +20,7 @@ import {
   type RenderedItemSections,
 } from "./item-preparation.js";
 import type { Qti3UploadBuilderInput, Qti3WriterDiagnostic } from "./types.js";
+import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import { escapeXmlAttribute, escapeXmlText } from "./xml.js";
 
 export function buildQti3UploadItem(input: Qti3UploadBuilderInput): string {
@@ -60,9 +62,13 @@ export function renderQti3UploadItem(input: Qti3UploadBuilderInput): RenderedIte
   const bodyXml = `${optionalBodySection(input.bodyHtml)}    <qti-upload-interaction ${interactionAttrs}>
 ${optionalPromptSection(input.promptHtml)}    </qti-upload-interaction>`;
 
+  const rubricBlock = input.rubricHtml?.trim()
+    ? `    <qti-rubric-block view="scorer" use="scoring"><qti-content-body>${input.rubricHtml}</qti-content-body></qti-rubric-block>`
+    : "";
   return itemSections(input, {
     declarationsXml,
-    bodyXml,
+    bodyXml: [bodyXml, rubricBlock].filter(Boolean).join("\n"),
+    externalScored: input.externalScored,
     responseProcessingXml: correctResponse
       ? standardResponseProcessingXml(responseIdentifier, "match_correct")
       : "",
@@ -74,6 +80,22 @@ export function validateQti3UploadItemStructure(
   input: Qti3UploadBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
+  diagnostics.push(
+    ...validateManualScoring(
+      input.externalScored,
+      input.correctResponse !== undefined ||
+        input.scoring !== undefined ||
+        Boolean(input.modalFeedback?.responseProcessingXml),
+    ),
+  );
+  if (input.rubricHtml !== undefined)
+    diagnostics.push(
+      ...validateQtiRubricFragment(
+        `<qti-rubric-block view="scorer" use="scoring"><qti-content-body>${input.rubricHtml}</qti-content-body></qti-rubric-block>`,
+      )
+        .filter((entry) => entry.severity === "error")
+        .map((entry) => ({ code: entry.code, path: "rubricHtml", message: entry.message })),
+    );
   const responseIdentifier = resolveResponseIdentifier(input.responseIdentifier);
   const responseIdentifierDiagnostic = validateQtiIdentifier(
     "responseIdentifier",

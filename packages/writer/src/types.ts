@@ -324,6 +324,8 @@ export type Qti3GapMatchBuilderInput = Omit<Qti3GapMatchAuthoringItem, "interact
 
 export interface Qti3ExtendedTextAuthoringItem extends Qti3AuthoringItemBase {
   readonly interactionType: "extendedText";
+  /** Explicit human grading; SCORE remains pending instead of becoming an automatic zero. */
+  readonly externalScored?: "human" | undefined;
   readonly rubricHtml?: Qti3TrustedXmlFragment | undefined;
   readonly responseBaseType?: Qti3ExtendedTextResponseBaseType | undefined;
   readonly responseCardinality?: Qti3ExtendedTextResponseCardinality | undefined;
@@ -348,6 +350,8 @@ export type Qti3ExtendedTextBuilderInput = Omit<
 };
 
 export interface Qti3UploadAuthoringItem extends Qti3AuthoringItemBase {
+  readonly externalScored?: "human" | undefined;
+  readonly rubricHtml?: Qti3TrustedXmlFragment | undefined;
   readonly interactionType: "upload";
   readonly maxFileSize?: number | undefined;
   readonly fileTypes?: string | undefined;
