@@ -1,3 +1,4 @@
+import { validateManualScoring } from "./manual-scoring.js";
 import { validateQtiRubricFragment } from "@longsightgroup/qti3-core";
 import {
   isNonNegativeInteger,
@@ -95,6 +96,7 @@ ${indentXml(input.rubricHtml, 8)}
       .filter(Boolean)
       .join("\n"),
     responseProcessingXml: "",
+    externalScored: input.externalScored,
   });
 }
 
@@ -102,6 +104,12 @@ export function validateQti3ExtendedTextItemStructure(
   input: Qti3ExtendedTextBuilderInput,
 ): Qti3WriterDiagnostic[] {
   const diagnostics = validateItemBase(input);
+  diagnostics.push(
+    ...validateManualScoring(
+      input.externalScored,
+      Boolean(input.modalFeedback?.responseProcessingXml),
+    ),
+  );
   if (input.rubricHtml !== undefined)
     diagnostics.push(
       ...validateQtiRubricFragment(
