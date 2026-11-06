@@ -1,6 +1,6 @@
 {
   "name": "@longsightgroup/qti3-migrator",
-  "version": "0.13.3",
+  "version": "0.13.4",
   "description": "Framework-neutral legacy QTI, Moodle XML, and GIFT to QTI 3 migration utilities.",
   "keywords": [
     "assessment",

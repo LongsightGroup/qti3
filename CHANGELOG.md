@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.13.4 - 2026-11-05
+
+### Added
+
+- Convert Moodle XML and GIFT through framework-neutral migrator APIs. Supported source
+  forms retain scoring, content, embedded Moodle assets, and source metadata. Unsupported
+  programs return diagnostics; hosts own review, packaging, and delivery policy.
+- Author explicit human grading for extended-text and upload items with
+  `externalScored: "human"`. Scores remain pending, and competing automatic processing
+  returns a conflict diagnostic.
+- Author explicit mapping weights for match and gap-match pairs, preserving source point
+  scales and partial credit during LMS migration. Omitted weights still mean one point.
+
+### Fixed
+
+- Preserve Canvas/Sakai QTI 1.x item identities, supported percentage-to-point scoring,
+  manual essay/upload grading, and HTML material. Return source group metadata and
+  unscored passages for host review; diagnose unassigned points and feedback fidelity,
+  and reject unsupported control flow.
+- Resolve percent-encoded package asset paths, including filenames containing spaces,
+  question marks, and hashes. Reject malformed encoding and invalid decoded paths.
+- Update Vite, Vitest, and reviewed transitive development dependencies to resolve audit
+  advisories. Update Playwright to 1.64.1.
+
 ## 0.13.3 - 2026-10-09
 
 ### Added
